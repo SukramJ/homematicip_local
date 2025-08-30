@@ -25,6 +25,7 @@ from aiohomematic.const import (
     IP_ANY_V4,
     PORT_ANY,
     BackendSystemEvent,
+    CentralUnitState,
     DataPointCategory,
     DescriptionMarker,
     EventKey,
@@ -160,7 +161,7 @@ class BaseControlUnit:
             "Stopping central unit %s",
             self._instance_name,
         )
-        if self._central.started:
+        if self._central.state == CentralUnitState.RUNNING:
             await self._central.stop()
             _LOGGER.info("Stopped central unit for %s", self._instance_name)
 

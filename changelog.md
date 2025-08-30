@@ -1,11 +1,24 @@
 # Version 1.85.3 (2025-08-17)
 
 ## What's Changed
-- Bump aiohomematic to 2025.8.9
+- Bump aiohomematic to 2025.8.10
+  - Improve documentation
+    - Added docs/architecture.md describing high-level components (central, client, model, caches, support) and their interactions
+    - Added data flow for XML-RPC/JSON-RPC, event handling, and data point updates
+    - Added sequence diagrams for connect, device discovery, state change propagation
+  - Add customization for HmIP-LSC
+  - Avoid deadlocks within locks (cover)
+  - Detailing the central status
+  - Improve boundary logging und exception handling
+  - Improve decorators
   - Improve fetch_all_device_data
+  - Improve lock handling
   - Improve room assignment
+  - Shield network I/O against cancellation
+  - Validate custom datapoint definition on startup
 - Fix area/room assignment with enabled sub devices
 - Use greek small letter mu "\u03bc" instead of micro sign "\u00B5" for micro unit prefix
+
 # Version 1.85.2 (2025-08-07)
 
 ## What's Changed
