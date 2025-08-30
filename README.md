@@ -54,6 +54,9 @@ A good practice is to search in issues and discussions before starting a new one
 
 ## Documentation
 
+Additional topics:
+- Naming of devices and entities: docs/naming.md
+
 The [HomeMatic](https://www.homematic.com/) integration provides bi-directional communication with your HomeMatic hub (CCU, Homegear etc.).
 It uses an XML-RPC connection to set values on devices and subscribes to receive events the devices and the CCU emit.
 You can configure this integration multiple times if you want to integrate multiple HomeMatic hubs into Home Assistant.
