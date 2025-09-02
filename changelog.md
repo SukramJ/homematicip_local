@@ -3,7 +3,7 @@
 ## What's Changed
 - Document how devices and entities are named (docs/naming.md); aligned with AIOhomematic docs
 
-# Version 1.85.3 (2025-08-17)
+# Version 1.86.0 (2025-09-02)
 
 ## What's Changed
 - Bump aiohomematic to 2025.8.10
