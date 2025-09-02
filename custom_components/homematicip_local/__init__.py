@@ -25,6 +25,7 @@ from .const import (
     CONF_ENABLE_PROGRAM_SCAN,
     CONF_ENABLE_SYSTEM_NOTIFICATIONS,
     CONF_ENABLE_SYSVAR_SCAN,
+    CONF_INSTANCE_NAME,
     CONF_SYS_SCAN_INTERVAL,
     CONF_UN_IGNORES,
     DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS,
@@ -112,7 +113,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -
 
 async def async_remove_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:
     """Handle removal of an entry."""
-    cleanup_cache_dirs(central_name=entry.data["instance_name"], storage_folder=get_storage_folder(hass=hass))
+    cleanup_cache_dirs(central_name=entry.data[CONF_INSTANCE_NAME], storage_folder=get_storage_folder(hass=hass))
 
 
 async def async_remove_config_entry_device(
@@ -198,11 +199,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
         del_param(name=CONF_ENABLE_SYSTEM_NOTIFICATIONS)
         del_param(name=CONF_UN_IGNORES)
 
-        cleanup_cache_dirs(central_name=entry.data["instance_name"], storage_folder=get_storage_folder(hass=hass))
+        cleanup_cache_dirs(central_name=entry.data[CONF_INSTANCE_NAME], storage_folder=get_storage_folder(hass=hass))
         hass.config_entries.async_update_entry(entry, version=5, data=data)
     if entry.version == 5:
         data = dict(entry.data)
-        cleanup_cache_dirs(central_name=entry.data["instance_name"], storage_folder=get_storage_folder(hass=hass))
+        cleanup_cache_dirs(central_name=entry.data[CONF_INSTANCE_NAME], storage_folder=get_storage_folder(hass=hass))
         hass.config_entries.async_update_entry(entry, version=6, data=data)
     if entry.version == 6:
         data = dict(entry.data)
@@ -211,7 +212,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
         hass.config_entries.async_update_entry(entry, version=7, data=data)
     if entry.version == 7:
         data = dict(entry.data)
-        cleanup_cache_dirs(central_name=entry.data["instance_name"], storage_folder=get_storage_folder(hass=hass))
+        cleanup_cache_dirs(central_name=entry.data[CONF_INSTANCE_NAME], storage_folder=get_storage_folder(hass=hass))
         hass.config_entries.async_update_entry(entry, version=8, data=data)
     _LOGGER.info("Migration to version %s successful", entry.version)
     return True
