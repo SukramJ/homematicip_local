@@ -1,7 +1,8 @@
-# Unreleased
+# Version 1.86.1 (2025-09-03)
 
 ## What's Changed
 - Document how devices and entities are named (docs/naming.md); aligned with AIOhomematic docs
+- Ignore unconfigured entries
 
 # Version 1.86.0 (2025-09-02)
 
