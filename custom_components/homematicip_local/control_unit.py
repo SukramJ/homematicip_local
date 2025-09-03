@@ -627,7 +627,7 @@ class ControlConfig:
     def _check_instance_name_is_unique(self) -> bool:
         """Check if instance_name is unique in HA."""
         for entry in self._hass.config_entries.async_entries(domain=DOMAIN):
-            if entry.entry_id == self._entry_id:
+            if entry.entry_id == self._entry_id or len(entry.data) == 0:
                 continue
             if entry.data[CONF_INSTANCE_NAME] == self._instance_name:
                 return False
