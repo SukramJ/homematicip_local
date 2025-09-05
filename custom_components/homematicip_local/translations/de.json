@@ -548,6 +548,12 @@
                     "tilted": "Gekippt"
                 }
             },
+            "state": {
+                "name": ""
+            },
+            "status": {
+                "name": ""
+            },
             "stv_state": {
                 "name": "",
                 "state": {
@@ -555,12 +561,6 @@
                     "open": "Offen",
                     "tilted": "Gekippt"
                 }
-            },
-            "state": {
-                "name": ""
-            },
-            "status": {
-                "name": ""
             },
             "sunshine_counter_today": {
                 "name": "Sonnenscheinzähler Heute"
