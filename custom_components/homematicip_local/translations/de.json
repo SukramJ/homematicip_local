@@ -548,6 +548,14 @@
                     "tilted": "Gekippt"
                 }
             },
+            "stv_state": {
+                "name": "",
+                "state": {
+                    "closed": "Geschlossen",
+                    "open": "Offen",
+                    "tilted": "Gekippt"
+                }
+            },
             "state": {
                 "name": ""
             },
