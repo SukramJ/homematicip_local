@@ -544,6 +544,12 @@
                     "tilted": "Tilted"
                 }
             },
+            "state": {
+                "name": ""
+            },
+            "status": {
+                "name": ""
+            },
             "stv_state": {
                 "name": "",
                 "state": {
@@ -551,12 +557,6 @@
                     "open": "Open",
                     "tilted": "Tilted"
                 }
-            },
-            "state": {
-                "name": ""
-            },
-            "status": {
-                "name": ""
             },
             "sunshine_counter_today": {
                 "name": "Sunshine Counter Today"
