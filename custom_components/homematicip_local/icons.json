@@ -52,15 +52,15 @@
           "secondary_alarm": "mdi:smoke-detector-variant-alert"
         }
       },
-      "srh_state": {
+      "sunshineduration": {
+        "default": "mdi:weather-sunny"
+      },
+      "tri_state": {
         "default": "mdi:window-closed",
         "state": {
           "open": "mdi:window-open",
-          "tilted": "mdi:window-open"
+          "tilted": "mdi:angle-acute"
         }
-      },
-      "sunshineduration": {
-        "default": "mdi:weather-sunny"
       },
       "wind_dir": {
         "default": "mdi:windsock"
