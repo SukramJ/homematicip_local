@@ -544,6 +544,14 @@
                     "tilted": "Tilted"
                 }
             },
+            "stv_state": {
+                "name": "",
+                "state": {
+                    "closed": "Closed",
+                    "open": "Open",
+                    "tilted": "Tilted"
+                }
+            },
             "state": {
                 "name": ""
             },
