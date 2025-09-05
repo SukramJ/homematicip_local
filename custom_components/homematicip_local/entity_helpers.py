@@ -565,6 +565,14 @@ _SENSOR_DESCRIPTIONS_BY_DEVICE_AND_PARAM: Mapping[tuple[str | tuple[str, ...], s
         device_class=SensorDeviceClass.ENUM,
         translation_key="srh_state",
     ),
+    (
+        ("HmIP-STV"),
+        "STATE",
+    ): HmSensorEntityDescription(
+        key="STV_STATE",
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="stv_state",
+    ),
     ("HM-Sec-Key", "DIRECTION"): HmSensorEntityDescription(
         key="SEC-KEY_DIRECTION",
         device_class=SensorDeviceClass.ENUM,
