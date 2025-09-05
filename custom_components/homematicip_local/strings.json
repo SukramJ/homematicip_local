@@ -536,14 +536,6 @@
                     "secondary_alarm": "Secondary alarm"
                 }
             },
-            "srh_state": {
-                "name": "",
-                "state": {
-                    "closed": "Closed",
-                    "open": "Open",
-                    "tilted": "Tilted"
-                }
-            },
             "state": {
                 "name": ""
             },
@@ -570,6 +562,14 @@
             },
             "time_of_operation": {
                 "name": "Time of Operation"
+            },
+            "tri_state": {
+                "name": "",
+                "state": {
+                    "closed": "Closed",
+                    "open": "Open",
+                    "tilted": "Tilted"
+                }
             },
             "typical_particle_size": {
                 "name": "Typical Particle Size"

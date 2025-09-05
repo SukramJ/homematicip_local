@@ -558,12 +558,12 @@ _SENSOR_DESCRIPTIONS_BY_DEVICE_AND_PARAM: Mapping[tuple[str | tuple[str, ...], s
         translation_key="wkp_code_state",
     ),
     (
-        ("HmIP-SRH", "HM-Sec-RHS", "HM-Sec-xx", "ZEL STG RM FDK"),
+        ("HmIP-SRH", "HmIP-STV", "HM-Sec-RHS", "HM-Sec-xx", "ZEL STG RM FDK"),
         "STATE",
     ): HmSensorEntityDescription(
-        key="SRH_STATE",
+        key="TRI_STATE",
         device_class=SensorDeviceClass.ENUM,
-        translation_key="srh_state",
+        translation_key="tri_state",
     ),
     ("HM-Sec-Key", "DIRECTION"): HmSensorEntityDescription(
         key="SEC-KEY_DIRECTION",
