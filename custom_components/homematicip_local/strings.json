@@ -558,6 +558,14 @@
             "status": {
                 "name": ""
             },
+            "stv_state": {
+                "name": "",
+                "state": {
+                    "closed": "Closed",
+                    "open": "Open",
+                    "tilted": "Tilted"
+                }
+            },
             "sunshine_counter_today": {
                 "name": "Sunshine Counter Today"
             },
