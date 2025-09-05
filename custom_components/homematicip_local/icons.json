@@ -59,6 +59,13 @@
           "tilted": "mdi:window-open"
         }
       },
+      "stv_state": {
+        "default": "mdi:garage",
+        "state": {
+          "open": "mdi:garage-open",
+          "tilted": "mdi:garage-open"
+        }
+      },
       "sunshineduration": {
         "default": "mdi:weather-sunny"
       },
