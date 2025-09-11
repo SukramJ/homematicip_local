@@ -36,7 +36,7 @@ ATTR_PARAMETER: Final = "parameter"
 ATTR_VALUE_STATE: Final = "value_state"
 
 
-class AioHomematicGenericEntity(Generic[HmGenericDataPoint], Entity):
+class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
     """Representation of the HomematicIP generic entity."""
 
     _attr_has_entity_name = True
@@ -474,7 +474,7 @@ class AioHomematicGenericHubEntity(Entity):
                 entity_registry.async_remove(entity_id)
 
 
-class AioHomematicGenericProgramEntity(Generic[HmGenericProgramDataPoint], AioHomematicGenericHubEntity):
+class AioHomematicGenericProgramEntity(AioHomematicGenericHubEntity, Generic[HmGenericProgramDataPoint]):
     """Representation of the HomematicIP generic sysvar entity."""
 
     def __init__(
@@ -507,7 +507,7 @@ class AioHomematicGenericProgramEntity(Generic[HmGenericProgramDataPoint], AioHo
         return attributes
 
 
-class AioHomematicGenericSysvarEntity(Generic[HmGenericSysvarDataPoint], AioHomematicGenericHubEntity):
+class AioHomematicGenericSysvarEntity(AioHomematicGenericHubEntity, Generic[HmGenericSysvarDataPoint]):
     """Representation of the HomematicIP generic sysvar entity."""
 
     def __init__(
