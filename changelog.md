@@ -1,6 +1,12 @@
-# Version 1.86.1 (2025-09-06)
-- Bump aiohomematic to 2025.9.1
-  - Add worked examples to naming documentation
+# Version 1.86.1 (2025-09-12)
+- Bump aiohomematic to 2025.9.2
+  - Refactor CDP OperatingVoltageLevel
+  - Refactor event method handling
+  - Refactor decorators
+    - Add log_context to @\*\_property
+    - Add overloads to @\*\_property
+    - Add overloads to @inspector
+  - Add examples to naming documentation
   - Document how device, channel and data point names are created (docs/naming.md)
   - Use dedicated loggers for event and performance logging
 - Add HmIP-STV to tri_state
