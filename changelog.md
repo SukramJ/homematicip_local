@@ -1,5 +1,7 @@
-# Version 1.86.1 (2025-09-12)
-- Bump aiohomematic to 2025.9.2
+# Version 1.87.0 (2025-09-14)
+
+## What's Changed
+- Bump aiohomematic to 2025.9.3
   - Refactor CDP OperatingVoltageLevel
   - Refactor event method handling
   - Refactor decorators
