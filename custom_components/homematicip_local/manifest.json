@@ -10,13 +10,13 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/sukramj/aiohomematic/issues",
   "loggers": ["aiohomematic"],
-  "requirements": ["aiohomematic==2025.9.2"],
+  "requirements": ["aiohomematic==2025.9.3"],
   "ssdp": [
     {
       "manufacturer": "EQ3",
       "manufacturerURL": "http://www.homematic.com"
     }
   ],
-  "version": "1.86.1",
+  "version": "1.87.0",
   "zeroconf": []
 }
