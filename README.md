@@ -5,7 +5,7 @@ Homematic(IP) [Integration for Home Assistant](https://www.home-assistant.io/get
 
 Quick start:
 - Installation guide: https://github.com/sukramj/homematicip_local/wiki/Installation
-- Alternative installation by J. Maus (RaspberryMatic): https://github.com/jens-maus/RaspberryMatic/wiki/HomeAssistant-Integration
+- Alternative installation by J. Maus (OpenCCU): https://github.com/OpenCCU/OpenCCU/wiki/HomeAssistant-Integration
 - Wiki (additional information): https://github.com/sukramj/aiohomematic/wiki
 - Changelog: https://github.com/sukramj/homematicip_local/blob/master/changelog.md
 - License: https://github.com/sukramj/homematicip_local/blob/master/LICENSE
@@ -14,7 +14,7 @@ Please support the community by adding more valuable information to the wiki.
 
 ## At a glance
 
-- Local Home Assistant integration for HomeMatic and Homematic IP hubs (CCU2/3, RaspberryMatic, Debmatic, Homegear). No cloud required.
+- Local Home Assistant integration for HomeMatic and Homematic IP hubs (CCU2/3, OpenCCU/RaspberryMatic, Debmatic, Homegear). No cloud required.
 - Communication: Local XML-RPC for control and push state updates; JSON-RPC for names and rooms.
 - Installation: HACS recommended; manual installation supported.
 - Auto-discovery: Supported for CCU and compatible hubs.
@@ -97,7 +97,7 @@ A lot of additional entities were initially created _deactivated_ and can be _ac
 This integration can be used with any CCU-compatible HomeMatic hub that exposes the required XML-RPC interface. This includes:
 
 - CCU2/3
-- RaspberryMatic
+- OpenCCU/RaspberryMatic
 - Debmatic
 - Homegear
 - Home Assistant OS / Supervised with a suitable add-on + communication device
@@ -126,7 +126,7 @@ If running HA on docker it is recommended to use `network_mode: host`, or specif
 ### Authentication
 
 This integration always passes credentials to the HomeMatic hub when connecting.
-For CCU and descendants (RaspberryMatic, debmatic) it is **recommended** to enable authentication for XML-RPC communication (Settings/Control panel/Security/Authentication). JSON-RPC communication is always authenticated.
+For CCU and descendants (OpenCCU/RaspberryMatic, debmatic) it is **recommended** to enable authentication for XML-RPC communication (Settings/Control panel/Security/Authentication). JSON-RPC communication is always authenticated.
 
 The account used for communication is **required** to have admin privileges on your HomeMatic hub.
 It is important to note though, that special characters within your credentials may break the possibility to authenticate.
@@ -150,7 +150,7 @@ Adding Homematic(IP) Local to your Home Assistant instance can be done via the u
 
 ## Auto-discovery
 
-The integration supports auto-discovery for the CCU and compatible hubs like RaspberryMatic. The Home Assistant User Interface will notify you about the integration being available for setup. It will pre-fill the instance-name and IP address of your Homematic hub. If you have already set up the integration manually, you can either click the _Ignore_ button or re-configure your existing instance to let Home Assistant know the existing instance is the one it has detected. After re-configuring your instance a HA restart is required.
+The integration supports auto-discovery for the CCU and compatible hubs like OpenCCU/RaspberryMatic. The Home Assistant User Interface will notify you about the integration being available for setup. It will pre-fill the instance-name and IP address of your Homematic hub. If you have already set up the integration manually, you can either click the _Ignore_ button or re-configure your existing instance to let Home Assistant know the existing instance is the one it has detected. After re-configuring your instance a HA restart is required.
 
 Autodiscovery uses the last 10 digits of your rf-module's serial to uniquely identify your CCU, but there are rare cases where the CCU API and the UPNP-Message contains/returns different values. In these cases, where the auto-discovered instance does not disappear after a HA restart, just click on the _Ignore_ button.
 Known cases are in combination with the rf-module `HM-MOD-RPI-PCB`.
@@ -748,7 +748,7 @@ A one time execution is required to activate the events.
 To deactivate the events the action [remove_central_links](https://github.com/sukramj/homematicip_local?tab=readme-ov-file#homeassistantremove_central_links) can be used.
 
 #### Option B:
-With RaspberryMatic no program is needed for buttons. Events can directly activated/deactivated within ->Settings->Devices. Click the "+" of e.g. a remote control then click directly the "button-channel". Press "activate". There is no direct feedback but a action message should appear.
+With OpenCCU/RaspberryMatic no program is needed for buttons. Events can directly activated/deactivated within ->Settings->Devices. Click the "+" of e.g. a remote control then click directly the "button-channel". Press "activate". There is no direct feedback but a action message should appear.
 
 #### Option C:
 Create a program in the CCU:
@@ -815,7 +815,7 @@ Deviating behavior is acceptable for these devices and does not constitute a fau
 
 If the integration does not work as expected, try the following before opening an issue:
 - Review Home Assistant logs for entries related to this integration: homematicip_local and aiohomematic. Address any errors or warnings shown.
-- Verify required ports are open and reachable between HA and your hub (CCU/RaspberryMatic/Homegear). See Firewall and required ports above.
+- Verify required ports are open and reachable between HA and your hub (CCU/OpenCCU/RaspberryMatic/Homegear). See Firewall and required ports above.
 - Ensure the CCU user has admin privileges and that your password only contains supported characters (A-Z, a-z, 0-9 and .!$():;#-).
 - When running HA in Docker, prefer network_mode: host. Otherwise, set callback_host and callback_port in the configuration and allow inbound connections from the CCU to that port.
 - If you run multiple HA instances or connect to multiple CCUs, make instance_name unique per HA instance.
