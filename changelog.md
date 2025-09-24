@@ -1,7 +1,7 @@
-# Version 1.87.0 (2025-09-14)
+# Version 1.87.0 (2025-09-24)
 
 ## What's Changed
-- Bump aiohomematic to 2025.9.3
+- Bump aiohomematic to 2025.9.4
   - Refactor CDP OperatingVoltageLevel
   - Refactor event method handling
   - Refactor decorators
@@ -10,6 +10,7 @@
     - Add overloads to @inspector
   - Add examples to naming documentation
   - Document how device, channel and data point names are created (docs/naming.md)
+  - Remove dedicated @cached_property -> use @hm_property(cached=True) instead
   - Use dedicated loggers for event and performance logging
 - Add HmIP-STV to tri_state
 - Document how devices and entities are named (docs/naming.md); aligned with AIOhomematic docs
