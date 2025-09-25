@@ -223,7 +223,7 @@ SCHEMA_UPDATE_DEVICE_FIRMWARE_DATA = vol.Schema(
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Create the aiohomematic services."""
 
-    @verify_domain_control(hass, DOMAIN)
+    @verify_domain_control(DOMAIN)
     async def async_call_hmip_local_service(service: ServiceCall) -> ServiceResponse:
         """Call correct Homematic(IP) Local service."""
         service_name = service.service
