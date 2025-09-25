@@ -1,3 +1,11 @@
+# Version 1.87.1 (2025-09-25)
+
+# This release requires HA 2025.10.0 or later.
+
+## What's Changed
+
+- Remove deprecation warning (The deprecated argument hass was passed to verify_domain_control) of Home Assistant 2025.10.0 for Homematic(IP local)
+
 # Version 1.87.0 (2025-09-24)
 
 ## What's Changed

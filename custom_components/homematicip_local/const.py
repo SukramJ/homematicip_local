@@ -10,7 +10,7 @@ from aiohomematic.const import CATEGORIES
 from homeassistant.const import Platform
 
 DOMAIN: Final = "homematicip_local"
-HMIP_LOCAL_MIN_HA_VERSION: Final = "2025.8.0"
+HMIP_LOCAL_MIN_HA_VERSION: Final = "2025.10.0b0"
 ENABLE_EXPERIMENTAL_FEATURES: Final = False
 
 DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK: Final = True
