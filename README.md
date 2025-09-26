@@ -16,6 +16,7 @@ Please support the community by adding more valuable information to the wiki.
 ## Other Homeatic related integraions:
 
 To connect to your HomeMatic IP Cloud (Access Point), please use the [Homematic(IP) Cloud](https://www.home-assistant.io/integrations/homematicip_cloud) integration.
+
 To connect to your Home Control Unit (HmIP-HCU1), please use the [Homematic IP Local (HCU)](https://github.com/Ediminator/hacs-homematicip-hcu) integration.
 
 ## At a glance
