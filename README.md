@@ -4,6 +4,7 @@
 Homematic(IP) Local for OpenCCU is a custom [integration](https://www.home-assistant.io/getting-started/concepts-terminology/#integrations) for Home Assistant.
 
 ## Quick start:
+
 - Installation guide: https://github.com/sukramj/homematicip_local/wiki/Installation
 - Alternative installation by J. Maus (OpenCCU): https://github.com/OpenCCU/OpenCCU/wiki/HomeAssistant-Integration
 - Wiki (additional information): https://github.com/sukramj/aiohomematic/wiki
@@ -11,6 +12,11 @@ Homematic(IP) Local for OpenCCU is a custom [integration](https://www.home-assis
 - License: https://github.com/sukramj/homematicip_local/blob/master/LICENSE
 
 Please support the community by adding more valuable information to the wiki.
+
+## Other Homeatic related integraions:
+
+To connect to your HomeMatic IP Cloud (Access Point), please use the [Homematic(IP) Cloud](https://www.home-assistant.io/integrations/homematicip_cloud) integration.
+To connect to your Home Control Unit (HmIP-HCU1), please use the [Homematic IP Local (HCU)](https://github.com/Ediminator/hacs-homematicip-hcu) integration.
 
 ## At a glance
 
