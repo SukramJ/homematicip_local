@@ -1,5 +1,5 @@
 {
-  "name": "Homematic(IP) Local",
+  "name": "Homematic(IP) Local for OpenCCU",
   "hide_default_branch": false,
   "homeassistant": "2025.10.0b0",
   "hacs": "2.0.5"

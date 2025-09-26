@@ -34,11 +34,11 @@ from .const import (
 
 # Union for entity types used as base class for data points
 HmBaseDataPoint: TypeAlias = CalculatedDataPoint | CustomDataPoint | GenericDataPoint
-# Generic base type used for data points in Homematic(IP) Local
+# Generic base type used for data points in Homematic(IP) Local for OpenCCU
 HmGenericDataPoint = TypeVar("HmGenericDataPoint", bound=HmBaseDataPoint)
-# Generic base type used for sysvar data points in Homematic(IP) Local
+# Generic base type used for sysvar data points in Homematic(IP) Local for OpenCCU
 HmGenericProgramDataPoint = TypeVar("HmGenericProgramDataPoint", bound=GenericProgramDataPoint)
-# Generic base type used for sysvar data points in Homematic(IP) Local
+# Generic base type used for sysvar data points in Homematic(IP) Local for OpenCCU
 HmGenericSysvarDataPoint = TypeVar("HmGenericSysvarDataPoint", bound=GenericSysvarDataPoint)
 
 BASE_EVENT_DATA_SCHEMA = EVENT_DATA_SCHEMA.extend(

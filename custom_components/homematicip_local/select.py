@@ -1,4 +1,4 @@
-"""select for Homematic(IP) Local."""
+"""Select platform for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -26,12 +26,12 @@ async def async_setup_entry(
     entry: HomematicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Homematic(IP) Local select platform."""
+    """Set up the Homematic(IP) Local for OpenCCU select platform."""
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
     def async_add_select(data_points: tuple[DpSelect, ...]) -> None:
-        """Add select from Homematic(IP) Local."""
+        """Add select from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_SELECT: Adding %i data points", len(data_points))
 
         if entities := [
@@ -45,7 +45,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_hub_select(data_points: tuple[SysvarDpSelect, ...]) -> None:
-        """Add sysvar select from Homematic(IP) Local."""
+        """Add sysvar select from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_HUB_SELECT: Adding %i data points", len(data_points))
 
         if entities := [

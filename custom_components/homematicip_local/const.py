@@ -113,7 +113,7 @@ BLOCKED_CATEGORIES: Final[tuple[str, ...]] = ()
 
 
 def _get_hmip_local_platforms() -> tuple[Platform, ...]:
-    """Return relevant Homematic(IP) Local platforms."""
+    """Return relevant Homematic(IP) Local for OpenCCU platforms."""
     return tuple(
         Platform(pf)
         for pf in list(Platform)

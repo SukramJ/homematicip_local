@@ -1,4 +1,4 @@
-"""Describe Homematic(IP) Local logbook events."""
+"""Describe Homematic(IP) Local for OpenCCU logbook events."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def async_describe_events(
 
     @callback
     def async_describe_homematic_device_error_event(event: Event) -> dict[str, str]:
-        """Describe Homematic(IP) Local logbook device error event."""
+        """Describe Homematic(IP) Local for OpenCCU logbook device error event."""
         if not is_valid_event(event_data=event.data, schema=DEVICE_ERROR_EVENT_SCHEMA):
             return {}
         error_name = event.data[EventKey.PARAMETER].replace("_", " ").title()

@@ -1,4 +1,4 @@
-"""Homematic(IP) local is a Python 3 module for Home Assistant and Homematic(IP) devices."""
+"""Homematic(IP) Local for OpenCCU is a Python 3 module for Home Assistant and Homematic(IP) devices."""
 
 from __future__ import annotations
 
@@ -130,7 +130,7 @@ class BaseControlUnit:
 
     @property
     def central(self) -> CentralUnit:
-        """Return the Homematic(IP) Local central unit instance."""
+        """Return the Homematic(IP) Local for OpenCCU central unit instance."""
         return self._central
 
     @property
@@ -255,7 +255,7 @@ class ControlUnit(BaseControlUnit):
             self._instance_name,
         )
 
-        # Handle event of new device creation in Homematic(IP) Local.
+        # Handle event of new device creation in Homematic(IP) Local for OpenCCU.
         if system_event == BackendSystemEvent.DEVICES_CREATED:
             self._async_add_virtual_remotes_to_device_registry()
             for platform, data_points in kwargs["new_data_points"].items():
@@ -272,7 +272,7 @@ class ControlUnit(BaseControlUnit):
                     channel_events,
                 )
         elif system_event == BackendSystemEvent.HUB_REFRESHED:
-            # Handle event of new hub entity creation in Homematic(IP) Local.
+            # Handle event of new hub entity creation in Homematic(IP) Local for OpenCCU.
             for platform, hub_data_points in kwargs["new_hub_data_points"].items():
                 if hub_data_points and len(hub_data_points) > 0:
                     async_dispatcher_send(

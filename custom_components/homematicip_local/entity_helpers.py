@@ -1,4 +1,4 @@
-"""Support for Homematic(IP) Local sensors."""
+"""Support for Homematic(IP) Local for OpenCCU entities."""
 
 from __future__ import annotations
 
@@ -70,38 +70,38 @@ class HmNameSource(StrEnum):
 
 
 class HmEntityDescription(EntityDescription, frozen_or_thawed=True):
-    """Base class describing Homematic(IP) Local entities."""
+    """Base class describing Homematic(IP) Local for OpenCCU entities."""
 
     name_source: HmNameSource = HmNameSource.PARAMETER
 
 
 @dataclass(frozen=True, kw_only=True)
 class HmNumberEntityDescription(HmEntityDescription, NumberEntityDescription):
-    """Class describing Homematic(IP) Local number entities."""
+    """Class describing Homematic(IP) Local for OpenCCU number entities."""
 
     multiplier: float | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
 class HmSelectEntityDescription(HmEntityDescription, SelectEntityDescription):
-    """Class describing Homematic(IP) Local select entities."""
+    """Class describing Homematic(IP) Local for OpenCCU select entities."""
 
 
 @dataclass(frozen=True, kw_only=True)
 class HmSensorEntityDescription(HmEntityDescription, SensorEntityDescription):
-    """Class describing Homematic(IP) Local sensor entities."""
+    """Class describing Homematic(IP) Local for OpenCCU sensor entities."""
 
     multiplier: float | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
 class HmBinarySensorEntityDescription(HmEntityDescription, BinarySensorEntityDescription):
-    """Class describing Homematic(IP) Local binary sensor entities."""
+    """Class describing Homematic(IP) Local for OpenCCU binary sensor entities."""
 
 
 @dataclass(frozen=True, kw_only=True)
 class HmButtonEntityDescription(HmEntityDescription, ButtonEntityDescription):
-    """Class describing Homematic(IP) Local button entities."""
+    """Class describing Homematic(IP) Local for OpenCCU button entities."""
 
 
 _NUMBER_DESCRIPTIONS_BY_PARAM: Mapping[str | tuple[str, ...], EntityDescription] = {

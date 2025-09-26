@@ -1,4 +1,4 @@
-"""Homematic(IP) local is a Python 3 module for Home Assistant and Homematic(IP) devices."""
+"""Homematic(IP) Local for OpenCCU is a Python 3 module for Home Assistant and Homematic(IP) devices."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""valve for Homematic(IP) Local."""
+"""Valve platform for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -31,12 +31,12 @@ async def async_setup_entry(
     entry: HomematicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Homematic(IP) Local valve platform."""
+    """Set up the Homematic(IP) Local for OpenCCU valve platform."""
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
     def async_add_valve(data_points: tuple[CustomDpIpIrrigationValve, ...]) -> None:
-        """Add valve from Homematic(IP) Local."""
+        """Add valve from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_VALVE: Adding %i data points", len(data_points))
 
         if entities := [

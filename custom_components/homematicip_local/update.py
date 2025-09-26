@@ -1,4 +1,4 @@
-"""switch for Homematic(IP) Local."""
+"""Switch platform for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -29,12 +29,12 @@ async def async_setup_entry(
     entry: HomematicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Homematic(IP) Local update platform."""
+    """Set up the Homematic(IP) Local for OpenCCU update platform."""
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
     def async_add_update(data_points: tuple[DpUpdate, ...]) -> None:
-        """Add update from Homematic(IP) Local."""
+        """Add update from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_UPDATE: Adding %i data points", len(data_points))
 
         if entities := [

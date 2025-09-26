@@ -1,4 +1,4 @@
-"""Provides device actions for Homematic(IP) Local."""
+"""Provides device actions for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 
 
 async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict[str, Any]]:
-    """List device actions for Homematic(IP) Local devices."""
+    """List device actions for Homematic(IP) Local for OpenCCU devices."""
 
     device_registry = dr.async_get(hass)
     if (device := device_registry.async_get(device_id)) is None:

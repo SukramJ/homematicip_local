@@ -1,4 +1,4 @@
-"""button for Homematic(IP) Local."""
+"""button for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -25,12 +25,12 @@ async def async_setup_entry(
     entry: HomematicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Homematic(IP) Local binary_sensor platform."""
+    """Set up the Homematic(IP) Local for OpenCCU binary_sensor platform."""
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
     def async_add_button(data_points: tuple[DpButton, ...]) -> None:
-        """Add button from Homematic(IP) Local."""
+        """Add button from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_BUTTON: Adding %i data points", len(data_points))
 
         if entities := [
@@ -44,7 +44,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_program_button(data_points: tuple[ProgramDpButton, ...]) -> None:
-        """Add program button from Homematic(IP) Local."""
+        """Add program button from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_PROGRAM_BUTTON: Adding %i data points", len(data_points))
 
         if entities := [
@@ -74,7 +74,7 @@ async def async_setup_entry(
 
 
 class AioHomematicButton(AioHomematicGenericEntity[DpButton], ButtonEntity):
-    """Representation of the Homematic(IP) Local button."""
+    """Representation of the Homematic(IP) Local for OpenCCU button."""
 
     async def async_press(self) -> None:
         """Execute a button press."""
@@ -82,7 +82,7 @@ class AioHomematicButton(AioHomematicGenericEntity[DpButton], ButtonEntity):
 
 
 class AioHomematicProgramButton(AioHomematicGenericHubEntity, ButtonEntity):
-    """Representation of the Homematic(IP) Local button."""
+    """Representation of the Homematic(IP) Local for OpenCCU button."""
 
     def __init__(
         self,

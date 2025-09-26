@@ -1,4 +1,4 @@
-"""Config flow for Homematic(IP) local integration."""
+"""Config flow for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -308,7 +308,7 @@ async def _async_validate_config_and_get_system_information(
 
 
 class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle the instance flow for Homematic(IP) Local."""
+    """Handle the instance flow for Homematic(IP) Local for OpenCCU."""
 
     VERSION = 8
     CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
@@ -400,7 +400,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> ConfigFlowResult:
         """Handle a discovered HomeMatic CCU."""
-        _LOGGER.debug("Homematic(IP) Local SSDP discovery %s", pformat(discovery_info))
+        _LOGGER.debug("Homematic(IP) Local for OpenCCU SSDP discovery %s", pformat(discovery_info))
         instance_name = _get_instance_name(friendly_name=discovery_info.upnp.get("friendlyName")) or "CCU"
         serial = _get_serial(model_description=discovery_info.upnp.get("modelDescription"))
 
@@ -421,20 +421,20 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
-    """Handle Homematic(IP) Local options."""
+    """Handle Homematic(IP) Local for OpenCCU options."""
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize Homematic(IP) Local options flow."""
+        """Initialize Homematic(IP) Local for OpenCCU options flow."""
         self.entry = entry
         self._control_unit: ControlUnit = entry.runtime_data
         self.data: ConfigType = dict(self.entry.data.items())
 
     async def async_step_init(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
-        """Manage the Homematic(IP) Local options."""
+        """Manage the Homematic(IP) Local for OpenCCU options."""
         return await self.async_step_central(user_input=user_input)
 
     async def async_step_central(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
-        """Manage the Homematic(IP) Local devices options."""
+        """Manage the Homematic(IP) Local for OpenCCU devices options."""
         if user_input is not None:
             self.data = _get_ccu_data(self.data, user_input=user_input)
             return await self.async_step_interface()

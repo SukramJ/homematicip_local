@@ -1,4 +1,4 @@
-"""Homematic(IP) local is a Python 3 module for Home Assistant and Homematic(IP) devices."""
+"""Homematic(IP) Local for OpenCCU is a Python 3 module for Home Assistant and Homematic(IP) devices."""
 
 from __future__ import annotations
 
@@ -53,29 +53,29 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -> bool:
-    """Set up Homematic(IP) Local from a config entr11y."""
+    """Set up Homematic(IP) Local for OpenCCU from a config entr11y."""
     expected_version = await get_aiohomematic_version(hass=hass, domain=entry.domain, package_name="aiohomematic")
     if AwesomeVersion(expected_version) != AwesomeVersion(HAHM_VERSION):
         _LOGGER.error(
-            "This release of Homematic(IP) Local requires aiohomematic version %s, but found version %s. "
+            "This release of Homematic(IP) Local for OpenCCU requires aiohomematic version %s, but found version %s. "
             "Looks like HA has a problem with dependency management. "
             "This is NOT an issue of the integration.",
             expected_version,
             HAHM_VERSION,
         )
-        _LOGGER.warning("Homematic(IP) Local setup blocked")
+        _LOGGER.warning("Homematic(IP) Local for OpenCCU setup blocked")
         return False
     _LOGGER.debug(
-        "Homematic(IP) Local setup with aiohomematic version %s",
+        "Homematic(IP) Local for OpenCCU setup with aiohomematic version %s",
         HAHM_VERSION,
     )
 
     if AwesomeVersion(HMIP_LOCAL_MIN_HA_VERSION) > HA_VERSION:
         _LOGGER.warning(
-            "This release of Homematic(IP) Local requires HA version %s and above",
+            "This release of Homematic(IP) Local for OpenCCU requires HA version %s and above",
             HMIP_LOCAL_MIN_HA_VERSION,
         )
-        _LOGGER.warning("Homematic(IP) Local setup blocked")
+        _LOGGER.warning("HHomematic(IP) Local for OpenCCU setup blocked")
         return False
 
     hass.data.setdefault(HM_KEY, HomematicData())

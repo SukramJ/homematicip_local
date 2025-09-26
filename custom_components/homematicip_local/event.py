@@ -1,4 +1,4 @@
-"""event for Homematic(IP) Local."""
+"""Event platform for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -29,12 +29,12 @@ async def async_setup_entry(
     entry: HomematicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Homematic(IP) Local event platform."""
+    """Set up the Homematic(IP) Local for OpenCCU event platform."""
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
     def async_add_event(data_points: tuple[tuple[GenericEvent, ...], ...]) -> None:
-        """Add event from Homematic(IP) Local."""
+        """Add event from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_EVENT: Adding %i data points", len(data_points))
 
         if entities := [
@@ -59,7 +59,7 @@ async def async_setup_entry(
 
 
 class AioHomematicEvent(EventEntity):
-    """Representation of the Homematic(IP) Local event."""
+    """Representation of the Homematic(IP) Local for OpenCCU event."""
 
     _attr_device_class = EventDeviceClass.BUTTON
     _attr_entity_registry_enabled_default = True

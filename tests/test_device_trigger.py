@@ -1,4 +1,4 @@
-"""The tests for Homematic(IP) Local device triggers."""
+"""The tests for Homematic(IP) Local for OpenCCU device triggers."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ def calls(hass):
 
 
 async def no_test_get_triggers(hass, device_reg, entity_reg):
-    """Test we get the expected triggers from a Homematic(IP) Local."""
+    """Test we get the expected triggers from a Homematic(IP) Local for OpenCCU."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(

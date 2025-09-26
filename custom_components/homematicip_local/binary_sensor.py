@@ -1,4 +1,4 @@
-"""binary_sensor for Homematic(IP) Local."""
+"""Binary sensor platform for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -27,12 +27,12 @@ async def async_setup_entry(
     entry: HomematicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Homematic(IP) Local binary_sensor platform."""
+    """Set up the Homematic(IP) Local for OpenCCU binary_sensor platform."""
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
     def async_add_binary_sensor(data_points: tuple[DpBinarySensor, ...]) -> None:
-        """Add binary_sensor from Homematic(IP) Local."""
+        """Add binary_sensor from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_BINARY_SENSOR: Adding %i data points", len(data_points))
         if entities := [
             AioHomematicBinarySensor(control_unit=control_unit, data_point=data_point) for data_point in data_points
@@ -41,7 +41,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_hub_binary_sensor(data_points: tuple[SysvarDpBinarySensor, ...]) -> None:
-        """Add sysvar binary sensor from Homematic(IP) Local."""
+        """Add sysvar binary sensor from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_HUB_BINARY_SENSOR: Adding %i data points", len(data_points))
         if entities := [
             AioHomematicSysvarBinarySensor(control_unit=control_unit, data_point=data_point)
@@ -70,7 +70,7 @@ async def async_setup_entry(
 
 
 class AioHomematicBinarySensor(AioHomematicGenericRestoreEntity[DpBinarySensor], BinarySensorEntity):
-    """Representation of the Homematic(IP) Local binary sensor."""
+    """Representation of the Homematic(IP) Local for OpenCCU binary sensor."""
 
     @property
     def is_on(self) -> bool | None:

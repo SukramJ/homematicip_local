@@ -1,4 +1,4 @@
-"""switch for Homematic(IP) Local."""
+"""Switch platform for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 

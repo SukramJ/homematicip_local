@@ -1,4 +1,4 @@
-"""siren for Homematic(IP) Local."""
+"""Siren platform for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -32,12 +32,12 @@ async def async_setup_entry(
     entry: HomematicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Homematic(IP) Local siren platform."""
+    """Set up the Homematic(IP) Local for OpenCCU siren platform."""
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
     def async_add_siren(data_points: tuple[BaseCustomDpSiren, ...]) -> None:
-        """Add siren from Homematic(IP) Local."""
+        """Add siren from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_SIREN: Adding %i data points", len(data_points))
 
         if entities := [

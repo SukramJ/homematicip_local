@@ -1,4 +1,4 @@
-"""climate for Homematic(IP) Local."""
+"""Climate platform for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -99,12 +99,12 @@ async def async_setup_entry(
     entry: HomematicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Homematic(IP) Local climate platform."""
+    """Set up the Homematic(IP) Local for OpenCCU climate platform."""
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
     def async_add_climate(data_points: tuple[BaseCustomDpClimate, ...]) -> None:
-        """Add climate from Homematic(IP) Local."""
+        """Add climate from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_CLIMATE: Adding %i data points", len(data_points))
 
         if entities := [

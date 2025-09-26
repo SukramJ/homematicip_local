@@ -1,4 +1,4 @@
-"""light for Homematic(IP) Local."""
+"""Light platform for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -45,12 +45,12 @@ async def async_setup_entry(
     entry: HomematicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Homematic(IP) Local light platform."""
+    """Set up the Homematic(IP) Local for OpenCCU light platform."""
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
     def async_add_light(data_points: tuple[CustomDpDimmer, ...]) -> None:
-        """Add light from Homematic(IP) Local."""
+        """Add light from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_LIGHT: Adding %i data points", len(data_points))
 
         if entities := [
