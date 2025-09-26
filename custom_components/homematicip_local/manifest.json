@@ -1,6 +1,6 @@
 {
   "domain": "homematicip_local",
-  "name": "Homematic(IP) Local",
+  "name": "Homematic(IP) Local for OpenCCU",
   "after_dependencies": ["mqtt"],
   "codeowners": ["@SukramJ"],
   "config_flow": true,

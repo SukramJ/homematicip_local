@@ -1,4 +1,4 @@
-"""sensor for Homematic(IP) Local."""
+"""Sensor platform for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -31,12 +31,12 @@ async def async_setup_entry(
     entry: HomematicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Homematic(IP) Local sensor platform."""
+    """Set up the Homematic(IP) Local for OpenCCU sensor platform."""
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
     def async_add_sensor(data_points: tuple[DpSensor, ...]) -> None:
-        """Add sensor from Homematic(IP) Local."""
+        """Add sensor from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_SENSOR: Adding %i data points", len(data_points))
 
         if entities := [
@@ -50,7 +50,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_hub_sensor(data_points: tuple[SysvarDpSensor, ...]) -> None:
-        """Add sysvar sensor from Homematic(IP) Local."""
+        """Add sysvar sensor from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_HUB_SENSOR: Adding %i data points", len(data_points))
 
         if entities := [

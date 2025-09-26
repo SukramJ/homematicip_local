@@ -1,4 +1,4 @@
-"""Provides device triggers for Home Assistant Homematic(IP) Local."""
+"""Provides device triggers for Home Assistant Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
-    """List device triggers for Home Assistant Homematic(IP) Local devices."""
+    """List device triggers for Home Assistant Homematic(IP) Local for OpenCCU devices."""
     device_registry = dr.async_get(hass)
     if (device := device_registry.async_get(device_id)) is None:
         return []

@@ -1,4 +1,4 @@
-"""Generic entity for the Homematic(IP) Local component."""
+"""Generic entity for the Homematic(IP) Local for OpenCCU component."""
 
 from __future__ import annotations
 

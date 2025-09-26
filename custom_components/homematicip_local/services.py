@@ -225,7 +225,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     @verify_domain_control(DOMAIN)
     async def async_call_hmip_local_service(service: ServiceCall) -> ServiceResponse:
-        """Call correct Homematic(IP) Local service."""
+        """Call correct Homematic(IP) Local for OpenCCU service."""
         service_name = service.service
 
         if service_name == HmipLocalServices.CREATE_CENTRAL_LINKS:
@@ -408,7 +408,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
 
 async def async_unload_services(hass: HomeAssistant) -> None:
-    """Unload Homematic(IP) Local services."""
+    """Unload Homematic(IP) Local for OpenCCU services."""
     if len(async_get_loaded_config_entries(hass=hass)) > 0:
         return
 
@@ -417,7 +417,7 @@ async def async_unload_services(hass: HomeAssistant) -> None:
 
 
 async def _async_service_add_link(hass: HomeAssistant, service: ServiceCall) -> None:
-    """Service to call the addLink method for link creation on a Homematic(IP) Local connection."""
+    """Service to call the addLink method for link creation on a Homematic(IP) Local for OpenCCU connection."""
     sender_channel_address = service.data[CONF_SENDER_CHANNEL_ADDRESS]
     receiver_channel_address = service.data[CONF_RECEIVER_CHANNEL_ADDRESS]
     name = service.data.get(CONF_NAME, f"{sender_channel_address} -> {receiver_channel_address}")
@@ -437,7 +437,7 @@ async def _async_service_add_link(hass: HomeAssistant, service: ServiceCall) -> 
 
 
 async def _async_service_create_central_link(hass: HomeAssistant, service: ServiceCall) -> None:
-    """Service to create central links for Homematic(IP) Local devices."""
+    """Service to create central links for Homematic(IP) Local for OpenCCU devices."""
     try:
         if (entry_id := service.data.get(CONF_ENTRY_ID)) is not None and (
             control := _async_get_control_unit(hass=hass, entry_id=entry_id)
@@ -451,7 +451,7 @@ async def _async_service_create_central_link(hass: HomeAssistant, service: Servi
 
 
 async def _async_service_remove_central_link(hass: HomeAssistant, service: ServiceCall) -> None:
-    """Service to remove central links for Homematic(IP) Local devices."""
+    """Service to remove central links for Homematic(IP) Local for OpenCCU devices."""
     try:
         if (entry_id := service.data.get(CONF_ENTRY_ID)) is not None and (
             control := _async_get_control_unit(hass=hass, entry_id=entry_id)
@@ -465,7 +465,7 @@ async def _async_service_remove_central_link(hass: HomeAssistant, service: Servi
 
 
 async def _async_service_remove_link(hass: HomeAssistant, service: ServiceCall) -> None:
-    """Service to call the removeLink method for link removal on a Homematic(IP) Local connection."""
+    """Service to call the removeLink method for link removal on a Homematic(IP) Local for OpenCCU connection."""
     sender_channel_address = service.data[CONF_SENDER_CHANNEL_ADDRESS]
     receiver_channel_address = service.data[CONF_RECEIVER_CHANNEL_ADDRESS]
 
@@ -481,7 +481,7 @@ async def _async_service_remove_link(hass: HomeAssistant, service: ServiceCall) 
 
 
 async def _async_service_export_device_definition(hass: HomeAssistant, service: ServiceCall) -> None:
-    """Service to call setValue method for Homematic(IP) Local devices."""
+    """Service to call setValue method for Homematic(IP) Local for OpenCCU devices."""
     if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
         try:
             await hm_device.export_device_definition()
@@ -496,7 +496,7 @@ async def _async_service_export_device_definition(hass: HomeAssistant, service: 
 
 
 async def _async_service_force_device_availability(hass: HomeAssistant, service: ServiceCall) -> None:
-    """Service to force device availability on a Homematic(IP) Local devices."""
+    """Service to force device availability on a Homematic(IP) Local for OpenCCU devices."""
     if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
         hm_device.set_forced_availability(forced_availability=ForcedDeviceAvailability.FORCE_TRUE)
         _LOGGER.debug(
@@ -507,7 +507,7 @@ async def _async_service_force_device_availability(hass: HomeAssistant, service:
 
 
 async def _async_service_get_device_value(hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
-    """Service to call getValue method for Homematic(IP) Local devices."""
+    """Service to call getValue method for Homematic(IP) Local for OpenCCU devices."""
     channel_no = service.data[CONF_CHANNEL]
     parameter = service.data[CONF_PARAMETER]
 
@@ -527,7 +527,7 @@ async def _async_service_get_device_value(hass: HomeAssistant, service: ServiceC
 
 
 async def _async_service_get_link_peers(hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
-    """Service to call the getLinkPeers method on a Homematic(IP) Local connection."""
+    """Service to call the getLinkPeers method on a Homematic(IP) Local for OpenCCU connection."""
     channel_no = service.data.get(CONF_CHANNEL)
 
     if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
@@ -540,7 +540,7 @@ async def _async_service_get_link_peers(hass: HomeAssistant, service: ServiceCal
 
 
 async def _async_service_get_link_paramset(hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
-    """Service to call the getParamset method for links on a Homematic(IP) Local connection."""
+    """Service to call the getParamset method for links on a Homematic(IP) Local for OpenCCU connection."""
     sender_channel_address = service.data[CONF_SENDER_CHANNEL_ADDRESS]
     receiver_channel_address = service.data[CONF_RECEIVER_CHANNEL_ADDRESS]
 
@@ -558,7 +558,7 @@ async def _async_service_get_link_paramset(hass: HomeAssistant, service: Service
 
 
 async def _async_service_get_paramset(hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
-    """Service to call the getParamset method on a Homematic(IP) Local connection."""
+    """Service to call the getParamset method on a Homematic(IP) Local for OpenCCU connection."""
     channel_no = service.data.get(CONF_CHANNEL)
     paramset_key = ParamsetKey(service.data[CONF_PARAMSET_KEY])
 
@@ -577,7 +577,7 @@ async def _async_service_get_paramset(hass: HomeAssistant, service: ServiceCall)
 
 
 async def _async_service_get_variable_value(hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
-    """Service to call read value from Homematic(IP) Local system variable."""
+    """Service to call read value from Homematic(IP) Local for OpenCCU system variable."""
     entry_id = service.data[CONF_ENTRY_ID]
     name = service.data[CONF_NAME]
 
@@ -591,7 +591,7 @@ async def _async_service_get_variable_value(hass: HomeAssistant, service: Servic
 
 
 async def _async_service_set_device_value(hass: HomeAssistant, service: ServiceCall) -> None:
-    """Service to call setValue method for Homematic(IP) Local devices."""
+    """Service to call setValue method for Homematic(IP) Local for OpenCCU devices."""
     channel_no = service.data[CONF_CHANNEL]
     parameter = service.data[CONF_PARAMETER]
     value = service.data[CONF_VALUE]
@@ -629,7 +629,7 @@ async def _async_service_set_device_value(hass: HomeAssistant, service: ServiceC
 
 
 async def _async_service_set_variable_value(hass: HomeAssistant, service: ServiceCall) -> None:
-    """Service to call setValue method for Homematic(IP) Local system variable."""
+    """Service to call setValue method for Homematic(IP) Local for OpenCCU system variable."""
     entry_id = service.data[CONF_ENTRY_ID]
     name = service.data[CONF_NAME]
     value = service.data[CONF_VALUE]
@@ -654,7 +654,7 @@ async def _async_service_fetch_system_variables(hass: HomeAssistant, service: Se
 
 
 async def _async_service_put_link_paramset(hass: HomeAssistant, service: ServiceCall) -> None:
-    """Service to call the putParamset method for link manipulation on a Homematic(IP) Local connection."""
+    """Service to call the putParamset method for link manipulation on a Homematic(IP) Local for OpenCCU connection."""
     sender_channel_address = service.data[CONF_SENDER_CHANNEL_ADDRESS]
     receiver_channel_address = service.data[CONF_RECEIVER_CHANNEL_ADDRESS]
     # When passing in the paramset from a YAML file we get an OrderedDict
@@ -677,7 +677,7 @@ async def _async_service_put_link_paramset(hass: HomeAssistant, service: Service
 
 
 async def _async_service_put_paramset(hass: HomeAssistant, service: ServiceCall) -> None:
-    """Service to call the putParamset method on a Homematic(IP) Local connection."""
+    """Service to call the putParamset method on a Homematic(IP) Local for OpenCCU connection."""
     channel_no = service.data.get(CONF_CHANNEL)
     paramset_key = ParamsetKey(service.data[CONF_PARAMSET_KEY])
     # When passing in the paramset from a YAML file we get an OrderedDict
@@ -722,7 +722,7 @@ def _async_get_control_unit(hass: HomeAssistant, entry_id: str) -> ControlUnit |
 
 @callback
 def _async_get_hm_device_by_service_data(hass: HomeAssistant, service: ServiceCall) -> Device | None:
-    """Service to force device availability on a Homematic(IP) Local devices."""
+    """Service to force device availability on a Homematic(IP) Local for OpenCCU devices."""
     hm_device: Device | None = None
     message = "No device found"
 

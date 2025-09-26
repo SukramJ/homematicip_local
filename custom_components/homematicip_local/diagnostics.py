@@ -1,4 +1,4 @@
-"""Diagnostics support for Homematic(IP) Local."""
+"""Diagnostics support for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 

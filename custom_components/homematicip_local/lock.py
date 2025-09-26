@@ -1,4 +1,4 @@
-"""lock for Homematic(IP) Local."""
+"""Lock platform for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -26,12 +26,12 @@ async def async_setup_entry(
     entry: HomematicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Homematic(IP) Local lock platform."""
+    """Set up the Homematic(IP) Local for OpenCCU platform."""
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
     def async_add_lock(data_points: tuple[BaseCustomDpLock, ...]) -> None:
-        """Add lock from Homematic(IP) Local."""
+        """Add lock from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_LOCK: Adding %i data points", len(data_points))
 
         if entities := [

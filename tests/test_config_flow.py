@@ -1,4 +1,4 @@
-"""Test the Homematic(IP) Local config flow."""
+"""Test the Homematic(IP) Local for OpenCCU config flow."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""binary_sensor for Homematic(IP) Local."""
+"""binary_sensor for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -43,12 +43,12 @@ async def async_setup_entry(
     entry: HomematicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Homematic(IP) Local cover platform."""
+    """Set up the Homematic(IP) Local for OpenCCU cover platform."""
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
     def async_add_cover(data_points: tuple[HmGenericCover, ...]) -> None:
-        """Add cover from Homematic(IP) Local."""
+        """Add cover from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_COVER: Adding %i data points", len(data_points))
         entities: list[AioHomematicBaseCover] = []
 

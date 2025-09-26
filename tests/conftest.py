@@ -1,4 +1,4 @@
-"""Initializer helpers for Homematic(IP) Local."""
+"""Initializer helpers for Homematic(IP) Local for OpenCCU."""
 
 from __future__ import annotations
 
@@ -66,7 +66,7 @@ def entry_data_v5(entry_data_v1) -> dict[str, Any]:
 
 @pytest.fixture
 def mock_config_entry_v1(entry_data_v1) -> config_entries.ConfigEntry:  # )
-    """Create a mock config entry for Homematic(IP) Local."""
+    """Create a mock config entry for Homematic(IP) Local for OpenCCU."""
 
     entry = MockConfigEntry(
         entry_id=const.CONFIG_ENTRY_ID,
@@ -87,7 +87,7 @@ def mock_config_entry_v1(entry_data_v1) -> config_entries.ConfigEntry:  # )
 
 @pytest.fixture
 def mock_config_entry_v2(mock_config_entry_v1, entry_data_v5) -> config_entries.ConfigEntry:  # )
-    """Create a mock config entry for Homematic(IP) Local."""
+    """Create a mock config entry for Homematic(IP) Local for OpenCCU."""
 
     entry = MockConfigEntry(
         entry_id=const.CONFIG_ENTRY_ID,
@@ -108,7 +108,7 @@ def mock_config_entry_v2(mock_config_entry_v1, entry_data_v5) -> config_entries.
 
 @pytest.fixture
 def discovery_info() -> ssdp.SsdpServiceInfo:
-    """Create a discovery info for Homematic(IP) Local."""
+    """Create a discovery info for Homematic(IP) Local for OpenCCU."""
     return ssdp.SsdpServiceInfo(
         ssdp_usn=f"uuid:upnp-BasicDevice-1_0-3014F711A0001F{const.CONFIG_ENTRY_UNIQUE_ID}::upnp:rootdevice",
         ssdp_st="upnp:rootdevice",
