@@ -3,7 +3,7 @@
 
 Homematic(IP) Local for OpenCCU is a custom [integration](https://www.home-assistant.io/getting-started/concepts-terminology/#integrations) for Home Assistant.
 
-Quick start:
+## Quick start:
 - Installation guide: https://github.com/sukramj/homematicip_local/wiki/Installation
 - Alternative installation by J. Maus (OpenCCU): https://github.com/OpenCCU/OpenCCU/wiki/HomeAssistant-Integration
 - Wiki (additional information): https://github.com/sukramj/aiohomematic/wiki
