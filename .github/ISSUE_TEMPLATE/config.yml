@@ -1,4 +1,4 @@
-blank_issues_enabled: false
+blank_issues_enabled: true
 contact_links:
   - name: Create issues in the AIO Homematic Repository
     url: https://github.com/sukramj/aiohomematic/issues/new/choose
