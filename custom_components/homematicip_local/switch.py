@@ -37,12 +37,12 @@ async def async_setup_entry(
     entry: HomematicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Homematic(IP) Local switch platform."""
+    """Set up the Homematic(IP) Local for OpenCCU switch platform."""
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
     def async_add_switch(data_points: tuple[CustomDpSwitch | DpSwitch, ...]) -> None:
-        """Add switch from Homematic(IP) Local."""
+        """Add switch from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_SWITCH: Adding %i data points", len(data_points))
 
         if entities := [
@@ -56,7 +56,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_hub_switch(data_points: tuple[SysvarDpSwitch | ProgramDpSwitch, ...]) -> None:
-        """Add sysvar switch from Homematic(IP) Local."""
+        """Add sysvar switch from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_HUB_SWITCH: Adding %i data points", len(data_points))
 
         if sysvar_entities := [

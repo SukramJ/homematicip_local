@@ -1,5 +1,5 @@
 {
-  "name": "Homematic(IP) Local Dev",
+  "name": "Homematic(IP) Local for OpenCCU Dev",
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
   "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && script/setup",

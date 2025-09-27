@@ -78,7 +78,7 @@ You can configure this integration multiple times if you want to integrate multi
 
 Recommended: HACS
 - In Home Assistant, go to HACS > Integrations > Explore & Download Repositories.
-- Search for "Homematic(IP) Local" and install it.
+- Search for "Homematic(IP) Local for OpenCCU" and install it.
 - Restart Home Assistant when prompted.
 - If you do not see it, add this repository as a custom repository in HACS (Category: Integration): https://github.com/SukramJ/homematicip_local, then install.
 
@@ -148,7 +148,7 @@ If you are using Homegear and have not set up authentication, please enter dummy
 
 # Configuration
 
-Adding Homematic(IP) Local to your Home Assistant instance can be done via the user interface, by using this My button: [ADD INTEGRATION](https://my.home-assistant.io/redirect/config_flow_start?domain=homematicip_local)
+Adding Homematic(IP) Local for OpenCCU to your Home Assistant instance can be done via the user interface, by using this My button: [ADD INTEGRATION](https://my.home-assistant.io/redirect/config_flow_start?domain=homematicip_local)
 
 ## Manual configuration steps
 
@@ -156,7 +156,7 @@ Adding Homematic(IP) Local to your Home Assistant instance can be done via the u
 - In the sidebar click on [Configuration](https://my.home-assistant.io/redirect/config)
 - From the configuration menu select: [Integrations](https://my.home-assistant.io/redirect/integrations)
 - In the bottom right, click on the [Add Integration](https://my.home-assistant.io/redirect/config_flow_start?domain=homematicip_local) button.
-- From the list, search and select "Homematic(IP) Local".
+- From the list, search and select "Homematic(IP) Local for OpenCCU".
 - Follow the instructions on screen to complete the setup.
 
 ## Auto-discovery
@@ -388,7 +388,7 @@ These marked system variables and programs are created as activated in HA. The p
 
 ## Actions
 
-The Homematic(IP) Local integration makes various custom actions available.
+The Homematic(IP) Local for OpenCCU integration makes various custom actions available.
 
 ### `homematicip_local.add_link`
 
