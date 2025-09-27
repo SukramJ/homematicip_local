@@ -1,5 +1,9 @@
 # Homematic(IP) Local for OpenCCU
-[![releasebadge]][release] [![License][license-shield]](LICENSE.md) [![hainstall][hainstallbadge]][hainstall]
+[![releasebadge]][release] 
+[![License][license-shield]](LICENSE.md) 
+[![hainstall][hainstallbadge]][hainstall]
+[![GitHub Sponsors][sponsorsbadge]][sponsors]
+[![hacs][hacsbadge]][hacs]
 
 Homematic(IP) Local for OpenCCU is a custom [integration](https://www.home-assistant.io/getting-started/concepts-terminology/#integrations) for Home Assistant.
 
@@ -1071,6 +1075,10 @@ Just copy these files to "your ha-config_dir"/blueprints/automation
 [releasebadge]: https://img.shields.io/github/v/release/SukramJ/homematicip_local?style=for-the-badge
 [hainstall]: https://my.home-assistant.io/redirect/config_flow_start/?domain=homematicip_local
 [hainstallbadge]: https://img.shields.io/badge/dynamic/json?style=for-the-badge&logo=home-assistant&logoColor=ccc&label=usage&suffix=%20installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/custom_integrations.json&query=$.homematicip_local.total
+[sponsorsbadge]: https://img.shields.io/github/sponsors/SukramJ?style=for-the-badge&label=GitHub%20Sponsors&color=green
+[sponsors]: https://github.com/sponsors/SukramJ
+[hacs]: https://hacs.xyz
+[hacsbadge]: https://img.shields.io/badge/HACS-Default-green.svg?style=for-the-badge
 
 ## License
 
