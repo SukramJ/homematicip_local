@@ -184,7 +184,7 @@ def get_mock(instance, **kwargs):
 
 
 def get_data_point_mock[DP](data_point: DP) -> DP:
-    """Return the mocked homematic entity."""
+    """Return the mocked Homematic entity."""
     try:
         for method_name in _get_mockable_method_names(data_point):
             with contextlib.suppress(AttributeError):

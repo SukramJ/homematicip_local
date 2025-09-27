@@ -703,7 +703,7 @@
 # Version 1.50.0 (2023-12-01)
 
 - Bump hahomematic to 2023.12.1
-  - Add support for away_mode and classic homematic thermostats
+  - Add support for away_mode and classic Homematic thermostats
   - Collect config validation errors
 - Add validator to instance name (@ is not allowed)
 - Use collected config validation errors
@@ -856,7 +856,7 @@
   - Add Github flows for pylint and tests
   - Add infrastructure for platform tests
   - Increase config flow coverage
-  - Make homematic entities mockable
+  - Make Homematic entities mockable
 - Avoid init_central
 - Cleanup scheduler code
 - Increase master scan interval to 1h
@@ -2039,7 +2039,7 @@ Rounding support for Concentration of HmIP-SCTH230 will be re-added with HA 2023
 
 - Bump hahomematic to 0.37.3
   - Cleanup caching code
-  - Use homematic script to fetch initial data for CCU/HM
+  - Use Homematic script to fetch initial data for CCU/HM
 
 # Version 0.37.0 (2022-03-16)
 
@@ -2347,7 +2347,7 @@ Rounding support for Concentration of HmIP-SCTH230 will be re-added with HA 2023
 - Bump hahomematic to 0.22.0
   - Add rooms to device
 - Add area to device_info.
-  This works, if a homematic device is assigned to a single room in CCU. Multiple channels can be assigned to the same room.
+  This works, if a Homematic device is assigned to a single room in CCU. Multiple channels can be assigned to the same room.
   If the device is assigned to multiple rooms, or nothing is set, then the area in HA will stay empty
 
 # Version 0.21.1 (2022-01-13)
@@ -2455,7 +2455,7 @@ Rounding support for Concentration of HmIP-SCTH230 will be re-added with HA 2023
 - Bump hahomematic to 0.13.2
   - Fix cover state
   - Add method to delete a single device to central
-- Add a service to delete a homematic device from HM (No delete in CCU!)
+- Add a service to delete a Homematic device from HM (No delete in CCU!)
 - Fix read of previous device options
 
 # Version 0.13.0 (2022-01-04)

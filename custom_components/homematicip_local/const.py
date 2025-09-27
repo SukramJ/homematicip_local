@@ -101,7 +101,7 @@ FILTER_ERROR_EVENT_PARAMETERS: Final[tuple[str, ...]] = ("ERROR_CODE",)
 
 
 class HmEntityState(StrEnum):
-    """Enum with homematic entity states."""
+    """Enum with Homematic entity states."""
 
     NOT_VALID = "not valid"
     RESTORED = "restored"

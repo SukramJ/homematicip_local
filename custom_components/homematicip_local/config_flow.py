@@ -399,7 +399,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> ConfigFlowResult:
-        """Handle a discovered HomeMatic CCU."""
+        """Handle a discovered Homematic CCU."""
         _LOGGER.debug("Homematic(IP) Local for OpenCCU SSDP discovery %s", pformat(discovery_info))
         instance_name = _get_instance_name(friendly_name=discovery_info.upnp.get("friendlyName")) or "CCU"
         serial = _get_serial(model_description=discovery_info.upnp.get("modelDescription"))

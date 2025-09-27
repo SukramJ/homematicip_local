@@ -884,7 +884,7 @@
                     "name": "Kanal"
                 },
                 "device_address": {
-                    "description": "Geben Sie eine HomeMatic / HmIP Geräteadresse ein",
+                    "description": "Geben Sie eine Homematic / HmIP Geräteadresse ein",
                     "name": "Geräteadresse"
                 },
                 "device_id": {
