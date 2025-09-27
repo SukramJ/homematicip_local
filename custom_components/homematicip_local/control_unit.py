@@ -242,7 +242,7 @@ class ControlUnit(BaseControlUnit):
                 name=virtual_remote.name,
                 model=virtual_remote.model,
                 sw_version=virtual_remote.firmware,
-                # Link to the homematic control unit.
+                # Link to the Homematic control unit.
                 via_device=(DOMAIN, self._central.name),
             )
 

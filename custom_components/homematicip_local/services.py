@@ -780,7 +780,7 @@ def _async_get_control_units(hass: HomeAssistant) -> list[ControlUnit]:
 
 @callback
 def _async_get_hm_device_by_address(hass: HomeAssistant, device_address: str) -> Device | None:
-    """Return the homematic device."""
+    """Return the Homematic device."""
     for control_unit in _async_get_control_units(hass=hass):
         if hm_device := control_unit.central.get_device(address=device_address):
             return hm_device
@@ -798,7 +798,7 @@ def _async_get_cu_by_interface_id(hass: HomeAssistant, interface_id: str) -> Con
 
 @callback
 def _asnyc_get_hm_device_by_id(hass: HomeAssistant, device_id: str) -> Device | None:
-    """Return the homematic device."""
+    """Return the Homematic device."""
     device_entry: DeviceEntry | None = dr.async_get(hass).async_get(device_id)
     if not device_entry:
         return None

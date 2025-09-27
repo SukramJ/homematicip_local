@@ -25,7 +25,7 @@ To connect locally to your Homematic Home Control Unit (HmIP-HCU1), please use t
 
 ## At a glance
 
-- Local Home Assistant integration for HomeMatic(IP) hubs (CCU2/3, OpenCCU, Debmatic, Homegear). No cloud required.
+- Local Home Assistant integration for Homematic(IP) hubs (CCU2/3, OpenCCU, Debmatic, Homegear). No cloud required.
 - Communication: Local XML-RPC for control and push state updates; JSON-RPC for names and rooms.
 - Installation: HACS recommended; manual installation supported.
 - Auto-discovery: Supported for CCU and compatible hubs.
@@ -68,9 +68,9 @@ A good practice is to search in issues and discussions before starting a new one
 Additional topics:
 - Naming of devices and entities: docs/naming.md
 
-The [HomeMatic](https://www.homematic.com/) integration provides bi-directional communication with your HomeMatic hub (CCU, Homegear etc.).
+The [Homematic](https://www.homematic.com/) integration provides bi-directional communication with your Homematic hub (CCU, Homegear etc.).
 It uses an XML-RPC connection to set values on devices and subscribes to receive events the devices and the CCU emit.
-You can configure this integration multiple times if you want to integrate multiple HomeMatic hubs into Home Assistant.
+You can configure this integration multiple times if you want to integrate multiple Homematic hubs into Home Assistant.
 
 **Please take the time to read the entire documentation before asking for help. It will answer the most common questions that come up while working with this integration.**
 
@@ -90,7 +90,7 @@ After installation, proceed with configuration below via the Add Integration flo
 
 ## Device support
 
-HomeMatic and HomematicIP devices are integrated by automatically detecting the available parameters, for which suitable entities will be added to the corresponding device-object within Home Assistant.
+Homematic and HomematicIP devices are integrated by automatically detecting the available parameters, for which suitable entities will be added to the corresponding device-object within Home Assistant.
 However, for more complex devices (thermostats, some cover-devices and more) we perform a custom mapping to better represent the devices features. This is an internal detail you usually don't have to care about.
 It may become relevant though if new hardware becomes available.
 In such a case the automatic mode will be active. Therefore f.ex. a new thermostat-model might not include the `climate` entity.
@@ -105,7 +105,7 @@ A lot of additional entities were initially created _deactivated_ and can be _ac
 
 ### Hardware
 
-This integration can be used with any CCU-compatible HomeMatic hub that exposes the required XML-RPC interface. This includes:
+This integration can be used with any CCU-compatible Homematic hub that exposes the required XML-RPC interface. This includes:
 
 - CCU2/3
 - OpenCCU
@@ -120,11 +120,11 @@ Due to a bug in previous versions of the CCU2 / CCU3, this integration requires 
 
 ### Firewall and required ports
 
-To allow communication to your HomeMatic hub, a few ports on the hub have to be accessible from your Home Assistant machine. The relevant default ports are:
+To allow communication to your Homematic hub, a few ports on the hub have to be accessible from your Home Assistant machine. The relevant default ports are:
 
 - BidCosRF (_old_ wireless devices): `2001` / `42001` (with enabled TLS)
 - HomematicIP (wireless and wired): `2010` / `42010` (with enabled TLS)
-- HomeMatic wired (_old_ wired devices): `2000` / `42000` (with enabled TLS)
+- Homematic wired (_old_ wired devices): `2000` / `42000` (with enabled TLS)
 - Virtual thermostat groups: `9292` / `49292` (with enabled TLS)
 - JSON-RPC (used to get names and rooms): `80` / `443` (with enabled TLS)
 
@@ -136,10 +136,10 @@ If running HA on docker it is recommended to use `network_mode: host`, or specif
 
 ### Authentication
 
-This integration always passes credentials to the HomeMatic hub when connecting.
+This integration always passes credentials to the Homematic hub when connecting.
 For CCU and descendants (OpenCCU, debmatic) it is **recommended** to enable authentication for XML-RPC communication (Settings/Control panel/Security/Authentication). JSON-RPC communication is always authenticated.
 
-The account used for communication is **required** to have admin privileges on your HomeMatic hub.
+The account used for communication is **required** to have admin privileges on your Homematic hub.
 It is important to note though, that special characters within your credentials may break the possibility to authenticate.
 Allowed characters for a CCU password are: `A-Z`, `a-z`, `0-9` and `.!$():;#-`.
 The CCU WebUI also supports `ÄäÖöÜüß`, but these characters are not supported by the XML-RPC servers.
@@ -220,11 +220,11 @@ hmip_rf_port:
   type: integer
   default: 2010
 bidcos_rf_enabled:
-  description: Enable support for BidCos (HomeMatic wireless) devices.
+  description: Enable support for BidCos (Homematic wireless) devices.
   type: boolean
   default: false
 bidcos_rf_port:
-  description: Port for BidCos (HomeMatic wireless).
+  description: Port for BidCos (Homematic wireless).
   type: integer
   default: 2001
 virtual_devices_enabled:
@@ -240,11 +240,11 @@ virtual_devices_path:
   type: string
   default: /groups
 hs485d_enabled:
-  description: Enable support for HomeMatic wired devices.
+  description: Enable support for Homematic wired devices.
   type: boolean
   default: false
 hs485d_port:
-  description: Port for HomeMatic wired.
+  description: Port for Homematic wired.
   type: integer
   default: 2000
 cuxd_enabled:
@@ -448,7 +448,7 @@ Using this action too often could have a negative effect on the stability of you
 Reactivate a device in Home Assistant that has been made unavailable by an UNREACH event from CCU.
 This action will only override the availability status of a device and all its dependent entities. There is no communication to the backend to enforce a reactivation!
 
-This is not a solution for communication problems with homematic devices.
+This is not a solution for communication problems with Homematic devices.
 Use this only to reactivate devices with flaky communication to gain control again.
 
 ### `homematicip_local.get_device_value`
@@ -554,11 +554,11 @@ This is a simplified version of `homematicip_local.set_schedule_profile_weekday`
 
 ### `homematicip_local.get_variable_value`
 
-Get the value variable from your HomeMatic hub.
+Get the value variable from your Homematic hub.
 
 ### `homematicip_local.set_variable_value`
 
-Set the value of a variable on your HomeMatic hub.
+Set the value of a variable on your Homematic hub.
 
 Value lists accept the 0-based list position or the value as input.
 
@@ -714,7 +714,7 @@ If a device's channels are assigned to multiple rooms or nothing is set, the are
 
 ### Unignore device parameters
 
-Not all parameters of a HomeMatic or HomematicIP device are created as entity. These parameters are filtered out to provide a better user experience for the majority of the users. If you need more parameters as entities have a look at [this](https://github.com/sukramj/aiohomematic/blob/devel/docs/unignore.md) description. Starting with version 1.65.0 this can be configured in the reconfiguration flow under advanced options. You use this at your own risk!!!
+Not all parameters of a Homematic or HomematicIP device are created as entity. These parameters are filtered out to provide a better user experience for the majority of the users. If you need more parameters as entities have a look at [this](https://github.com/sukramj/aiohomematic/blob/devel/docs/unignore.md) description. Starting with version 1.65.0 this can be configured in the reconfiguration flow under advanced options. You use this at your own risk!!!
 
 BUT remember: Some parameters are already created as entities, but are **[deactivated](https://github.com/sukramj/homematicip_local#deactivated-entities)**.
 
@@ -1040,7 +1040,7 @@ BidCos-RF devices have an optional parameter for put_paramset which defines the 
 
 ## Available Blueprints
 
-The following blueprints can be used to simplify the usage of HomeMatic and HomematicIP device:
+The following blueprints can be used to simplify the usage of Homematic and HomematicIP device:
 
 - [Support for 2-button Remotes](https://github.com/sukramj/homematicip_local/blob/devel/blueprints/automation/homematicip_local-actions-for-2-button.yaml): Support for two button remote like HmIP-WRC2.
 - [Support for 4-button Key Ring Remote Control](https://github.com/sukramj/homematicip_local/blob/devel/blueprints/automation/homematicip_local-actions-for-key_ring_remote_control.yaml): Support for four button remote like HmIP-KRCA.

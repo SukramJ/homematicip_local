@@ -760,7 +760,7 @@
             "description": "Clear the cache. Requires a restart",
             "fields": {
                 "entry_id": {
-                    "description": "Name(s) of homematic central to clear the cache",
+                    "description": "Name(s) of Homematic central to clear the cache",
                     "name": "Central"
                 }
             },
@@ -802,7 +802,7 @@
                     "name": "Device"
                 },
                 "entry_id": {
-                    "description": "Name(s) of homematic central",
+                    "description": "Name(s) of Homematic central",
                     "name": "Central"
                 }
             },
@@ -858,7 +858,7 @@
             "description": "Fetch system variables from backend",
             "fields": {
                 "entry_id": {
-                    "description": "Name(s) of homematic central to fetch system variables from",
+                    "description": "Name(s) of Homematic central to fetch system variables from",
                     "name": "Central"
                 }
             },
@@ -982,7 +982,7 @@
             "description": "Read a value of a variable",
             "fields": {
                 "entry_id": {
-                    "description": "Name(s) of homematic central to read",
+                    "description": "Name(s) of Homematic central to read",
                     "name": "Central"
                 },
                 "name": {
@@ -1066,7 +1066,7 @@
                     "name": "Device"
                 },
                 "entry_id": {
-                    "description": "Name(s) of homematic central",
+                    "description": "Name(s) of Homematic central",
                     "name": "Central"
                 }
             },
@@ -1218,7 +1218,7 @@
             "description": "Write a value to a variable",
             "fields": {
                 "entry_id": {
-                    "description": "Name(s) of homematic central to set value",
+                    "description": "Name(s) of Homematic central to set value",
                     "name": "Central"
                 },
                 "name": {
@@ -1261,10 +1261,10 @@
             "name": "Turn on siren"
         },
         "update_device_firmware_data": {
-            "description": "Update device firmware data for all homematic data",
+            "description": "Update device firmware data for all Homematic data",
             "fields": {
                 "entry_id": {
-                    "description": "Name(s) of homematic central to update the device firmware data for",
+                    "description": "Name(s) of Homematic central to update the device firmware data for",
                     "name": "Central"
                 }
             },

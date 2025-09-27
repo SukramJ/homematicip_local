@@ -43,7 +43,7 @@ HomematicConfigEntry: TypeAlias = ConfigEntry[ControlUnit]
 
 @dataclass(kw_only=True, slots=True)
 class HomematicData:
-    """Common data for shared homematic ip local data."""
+    """Common data for shared Homematic ip local data."""
 
     default_callback_port: int | None = None
 

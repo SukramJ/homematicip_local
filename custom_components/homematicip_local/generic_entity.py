@@ -94,7 +94,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
             serial_number=hm_device.address,
             sw_version=hm_device.firmware,
             suggested_area=suggested_area,
-            # Link to the homematic control unit.
+            # Link to the Homematic control unit.
             via_device=(DOMAIN, via_device),
         )
 
@@ -154,7 +154,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
 
     @property
     def data_point(self) -> HmGenericDataPoint:
-        """Return the homematic entity."""
+        """Return the Homematic entity."""
         return self._data_point
 
     @property
@@ -201,7 +201,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
 
     @property
     def _ha_device_name(self) -> str:
-        """Return the homematic entity device name."""
+        """Return the Homematic entity device name."""
         hm_device = self._data_point.device
         if not self._cu.enable_sub_devices:
             return hm_device.name
