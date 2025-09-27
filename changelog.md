@@ -388,7 +388,7 @@
 ## What's Changed
 - Bump hahomematic to 2024.10.14
   - Use version from module hahomematic
-- Add check if Homematic(IP) local uses the expected version of hahomematic
+- Add check if Homematic(IP) Local for OpenCCU uses the expected version of hahomematic
 
 # Version 1.68.0 (2024-10-24)
 

@@ -1,6 +1,6 @@
 # Naming of devices and entities
 
-This document explains how Homematic(IP) Local names devices and entities in Home Assistant. It is inspired by and largely aligned with the AIOhomematic naming documentation: https://github.com/SukramJ/aiohomematic/blob/devel/docs/naming.md. Where Homematic(IP) Local behaves differently, this is highlighted.
+This document explains how Homematic(IP) Local for OpenCCU names devices and entities in Home Assistant. It is inspired by and largely aligned with the AIOhomematic naming documentation: https://github.com/SukramJ/aiohomematic/blob/devel/docs/naming.md. Where Homematic(IP) Local for OpenCCU behaves differently, this is highlighted.
 
 ## Terminology
 - Device: A physical device registered on the CCU (or a hub-level pseudo device). In HA this is the Device entry in the device registry.
@@ -34,7 +34,7 @@ Rules:
 - For calculated or generic entities:
   - Start from the data point’s name composed by the library (which is based on device/channel names and parameter names).
   - If sub devices are enabled and the device has sub devices, use only the parameter part from the name data as the base.
-  - Replace the raw parameter name (e.g. "Level") with the translated name provided by HA (e.g. "Brightness" for lights) unless translations explicitly define an empty string.
+  - Replace the raw parameter name (e.g. "Level") with the translated name provided by HA (e.g. "Brightness" for lights) unless translations explicitly define an empty string (e.g. STATE, STATUS).
 - For custom entities:
   - If the entity name starts with the device name, remove that device name to avoid duplication in HA’s UI.
   - Replace the raw parameter name with the HA translation similar to generic entities.
@@ -44,7 +44,7 @@ Rules:
 This logic is implemented in AioHomematicGenericEntity.name.
 
 ### Removing the translated part
-- Homematic(IP) Local uses HA’s translation support to determine if the translated name should be removed entirely. If the translation text for the specific entity name key is an empty string, the translated part is omitted.
+- Homematic(IP) Local for OpenCCU uses HA’s translation support to determine if the translated name should be removed entirely. If the translation text for the specific entity name key is an empty string, the translated part is omitted.
 
 This logic is implemented in AioHomematicGenericEntity._do_remove_name.
 
@@ -56,7 +56,7 @@ This logic is implemented in AioHomematicGenericEntity._do_remove_name.
 - Custom entity mappings: Some complex devices map multiple data points into specialized entities (e.g., climate, cover). The naming rules still apply after removing duplicated device names and translating parameter names.
 
 ## Differences vs AIOhomematic
-- Homematic(IP) Local is the HA integration built on top of AIOhomematic. Naming is kept aligned with AIOhomematic’s documentation where feasible. Minor differences mainly stem from HA translation handling and the sub-device grouping enhancements described above.
+- Homematic(IP) Local for OpenCCU is the HA integration built on top of AIOhomematic. Naming is kept aligned with AIOhomematic’s documentation where feasible. Minor differences mainly stem from HA translation handling and the sub-device grouping enhancements described above.
 
 ## Examples
 Note: These examples illustrate typical outcomes. Actual wording may vary with your language and device customizations on the CCU.
