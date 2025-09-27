@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Feature Requests
-    url: https://github.com/sukramj/aiohomematic/discussions
-    about: Please use our Discussion Forum for making feature requests.
+  - name: Create issues in the AIO Homematic Repository
+    url: https://github.com/sukramj/aiohomematic/issues/new/choose
+    about: Please create issues in the AIO Homematic Repository.
