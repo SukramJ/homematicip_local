@@ -3,7 +3,7 @@
 # This release requires HA 2025.10.0 or later.
 
 ## What's Changed
-- Bump aiohomematic to 2025.9.6
+- Bump aiohomematic to 2025.9.7
   - Fix device has_sub_devices
   - Fix magic method issue with log_context in xml_rpc client
 - Remove deprecation warning (The deprecated argument hass was passed to verify_domain_control) of Home Assistant 2025.10.0 for Homematic(IP local)
