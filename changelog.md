@@ -1,9 +1,13 @@
-# Version 1.87.1 (2025-09-25)
+# Version 1.87.1 (2025-09-29)
 
 # This release requires HA 2025.10.0 or later.
 
 ## What's Changed
-- Bump aiohomematic to 2025.9.7
+- Bump aiohomematic to 2025.9.8
+  - Add CuXD parameters CMD_RETL and CMD_RETS to ignore list, to avoid warnings when reading the value without an appropriate configuration.
+    - CMD_RETL warning: use CUX28010xx:16.CMD_QUERY_RET=1 to activate CUX28010xx:16.CMD_RETL command!
+    - CMD_RETS warning: use CUX28010xx:16.CMD_QUERY_RET=1 to activate CUX28010xx:16.CMD_RETS command!
+    - Add them to unignore if you are able to handle the warnings.
   - Fix device has_sub_devices
   - Fix magic method issue with log_context in xml_rpc client
 - Remove deprecation warning (The deprecated argument hass was passed to verify_domain_control) of Home Assistant 2025.10.0 for Homematic(IP local)
