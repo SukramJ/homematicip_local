@@ -3,7 +3,7 @@
 # This release requires HA 2025.10.0 or later.
 
 ## What's Changed
-- Bump aiohomematic to 2025.9.9
+- Bump aiohomematic to 2025.10.0
   - Add CuXD parameters CMD_RETL and CMD_RETS to ignore list, to avoid warnings when reading the value without an appropriate configuration.
     - CMD_RETL warning: use CUX28010xx:16.CMD_QUERY_RET=1 to activate CUX28010xx:16.CMD_RETL command!
     - CMD_RETS warning: use CUX28010xx:16.CMD_QUERY_RET=1 to activate CUX28010xx:16.CMD_RETS command!
