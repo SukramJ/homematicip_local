@@ -1,4 +1,4 @@
-# Version 1.87.1 (2025-09-29)
+# Version 1.88.0 (2025-10-01)
 
 # This release requires HA 2025.10.0 or later.
 
