@@ -386,8 +386,9 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         except InvalidConfig as ic:
             errors["base"] = "invalid_config"
             description_placeholders["invalid_items"] = ic.args[0]
-        except BaseHomematicException:
+        except BaseHomematicException as bhe:
             errors["base"] = "cannot_connect"
+            description_placeholders["invalid_items"] = bhe.args[0]
         else:
             return self.async_create_entry(title=self.data[CONF_INSTANCE_NAME], data=self.data)
 
@@ -497,8 +498,9 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
         except InvalidConfig as ic:
             errors["base"] = "invalid_config"
             description_placeholders["invalid_items"] = ic.args[0]
-        except BaseHomematicException:
+        except BaseHomematicException as bhe:
             errors["base"] = "cannot_connect"
+            description_placeholders["invalid_items"] = bhe.args[0]
         else:
             if system_information is not None:
                 self.hass.config_entries.async_update_entry(

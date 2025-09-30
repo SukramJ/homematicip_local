@@ -80,11 +80,11 @@ Recommended: HACS
 - In Home Assistant, go to HACS > Integrations > Explore & Download Repositories.
 - Search for "Homematic(IP) Local for OpenCCU" and install it.
 - Restart Home Assistant when prompted.
-- If you do not see it, add this repository as a custom repository in HACS (Category: Integration): https://github.com/SukramJ/homematicip_local, then install.
 
 Manual installation
 - Copy the directory custom_components/homematicip_local from this repository to your Home Assistant config/custom_components directory.
 - Restart Home Assistant.
+- Attention: The method does not support updates.
 
 After installation, proceed with configuration below via the Add Integration flow.
 
