@@ -1,10 +1,10 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen. Weitere Details finden Sie im HA-Protokoll",
+            "cannot_connect": "Verbindung fehlgeschlagen: {invalid_items}. Weitere Details findest Du im HA-Protokoll",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "invalid_config": "Ung\u00fcltiges Konfiguration: {invalid_items}",
-            "unknown": "Unerwarteter Fehler"
+            "unknown": "Unerwarteter Fehler. Weitere Details findest Du im HA-Protokoll"
         },
         "flow_title": "{name}/{host}",
         "step": {
@@ -649,11 +649,11 @@
             "title": "Fehler beim Abrufen der Anfangsdaten"
         },
         "interface_not_reachable": {
-            "description": "Keine Verbindung zu Schnittstelle {interface_id}.\n\nDiese Integration versucht eine automatische Wiederverbindung.\n\nWeitere Informationen finden Sie in den Protokolldateien von Home Assistant",
+            "description": "Keine Verbindung zu Schnittstelle {interface_id}.\n\nDiese Integration versucht eine automatische Wiederverbindung.\n\nWeitere Informationen findest Du in den Protokolldateien von Home Assistant",
             "title": "Interface {interface_id} nicht erreichbar"
         },
         "pending_pong_mismatch": {
-            "description": "Es besteht eine Differenz zwischen gesendeten Ping-Ereignissen und empfangenen Pong-Ereignissen für die HA-Instanz {instance_name}.\n\nMögliche Gründe:\n - Sie führen mehrere Instanzen von HA mit demselben Instanznamen aus, der für diese Integration konfiguriert ist. Fügen Sie eine Instanz erneut hinzu! Andernfalls empfängt diese HA-Instanz keine Aktualisierungsereignisse von Ihrer CCU.\n - Etwas hängt in der CCU oder wurde nicht bereinigt, also versuchen Sie einen CCU Neustart.\n - Ihr Setup ist falsch konfiguriert und HA kann keine Ereignisse von der CCU empfangen",
+            "description": "Es besteht eine Differenz zwischen gesendeten Ping-Ereignissen und empfangenen Pong-Ereignissen für die HA-Instanz {instance_name}.\n\nMögliche Gründe:\n - Du führst mehrere Instanzen von HA mit demselben Instanznamen aus, der für diese Integration konfiguriert ist. Füge eine Instanz erneut hinzu! Andernfalls empfängt diese HA-Instanz keine Aktualisierungsereignisse von Ihrer CCU.\n - Etwas hängt in der CCU oder wurde nicht bereinigt, also versuche einen CCU Neustart.\n - Ihr Setup ist falsch konfiguriert und HA kann keine Ereignisse von der CCU empfangen",
             "title": "Austehende Pong Ereignisse auf Interface {interface_id}"
         },
         "xmlrpc_server_receives_no_events": {
@@ -663,10 +663,10 @@
     },
     "options": {
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen. Weitere Details finden Sie im HA-Protokoll",
+            "cannot_connect": "Verbindung fehlgeschlagen: {invalid_items}. Weitere Details findest Du im HA-Protokoll",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "invalid_config": "Ung\u00fcltige Konfiguration: {invalid_items}",
-            "unknown": "Unerwarteter Fehler"
+            "invalid_config": "Ung\u00fcltiges Konfiguration: {invalid_items}",
+            "unknown": "Unerwarteter Fehler. Weitere Details findest Du im HA-Protokoll"
         },
         "step": {
             "advanced": {
@@ -688,7 +688,7 @@
                     "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix",
                     "program_markers": "Kommaseparierte Liste mit Markern für Programme zum Abrufen. Zum Zurückzusetzen muss der Wert auf ein Leerzeichen gesetzt werden.",
                     "sysvar_markers": "Kommaseparierte Liste mit Markern für Systemvariablen zum Abrufen. Zum Zurückzusetzen muss der Wert auf ein Leerzeichen gesetzt werden.",
-                    "un_ignore": "Schauen Sie in die Dokumentation für Informationen über UN-IGNORE"
+                    "un_ignore": "Schau in die Dokumentation für Informationen über UN-IGNORE"
                 },
                 "description": "Konfiguration der erweiterten Parameter"
             },
@@ -884,7 +884,7 @@
                     "name": "Kanal"
                 },
                 "device_address": {
-                    "description": "Geben Sie eine Homematic / HmIP Geräteadresse ein",
+                    "description": "Gebe eine Homematic / HmIP Geräteadresse ein",
                     "name": "Geräteadresse"
                 },
                 "device_id": {
@@ -994,7 +994,7 @@
             "description": "Stellt die Einschaltdauer für ein Licht ein. Muss von einem light.turn_on gefolgt werden",
             "fields": {
                 "on_time": {
-                    "description": "Einschaltdauer für ein Licht in Sekunden. Verwenden Sie 0, um die Einschaltdauer zurückzusetzen",
+                    "description": "Einschaltdauer für ein Licht in Sekunden. Verwende 0, um die Einschaltdauer zurückzusetzen",
                     "name": "Einschaltdauer"
                 }
             },
@@ -1234,7 +1234,7 @@
             "description": "Stellt die Einschaltdauer eines Schalters ein. Muss von einem switch.turn_on gefolgt werden",
             "fields": {
                 "on_time": {
-                    "description": "Einschaltdauer für einen Schalter in Sekunden. Verwenden Sie 0, um die Einschaltdauer zurückzusetzen",
+                    "description": "Einschaltdauer für einen Schalter in Sekunden. Verwende 0, um die Einschaltdauer zurückzusetzen",
                     "name": "Einschaltdauer"
                 }
             },
@@ -1272,7 +1272,7 @@
             "description": "Stellt die Einschaltdauer eines Ventils ein. Muss von einem valve.open gefolgt werden",
             "fields": {
                 "on_time": {
-                    "description": "Einschaltdauer für ein Ventil in Sekunden. Verwenden Sie 0, um die Einschaltdauer zurückzusetzen",
+                    "description": "Einschaltdauer für ein Ventil in Sekunden. Verwende 0, um die Einschaltdauer zurückzusetzen",
                     "name": "Einschaltdauer"
                 }
             },

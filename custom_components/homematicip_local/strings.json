@@ -1,10 +1,10 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Failed to connect. Check the HA log for further details",
+            "cannot_connect": "Failed to connect: {invalid_items}. Check the HA log for further details",
             "invalid_auth": "Invalid authentication",
             "invalid_config": "Invalid config: {invalid_items}",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error. Check the HA log for further details"
         },
         "flow_title": "{name}/{host}",
         "step": {
@@ -659,10 +659,10 @@
     },
     "options": {
         "error": {
-            "cannot_connect": "Failed to connect. Check the HA log for further details",
+            "cannot_connect": "Failed to connect: {invalid_items}. Check the HA log for further details",
             "invalid_auth": "Invalid authentication",
             "invalid_config": "Invalid config: {invalid_items}",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error. Check the HA log for further details"
         },
         "step": {
             "advanced": {

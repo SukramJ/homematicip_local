@@ -10,6 +10,9 @@
     - Add them to unignore if you are able to handle the warnings.
   - Fix device has_sub_devices
   - Fix magic method issue with log_context in xml_rpc client
+  - Improve error message if service is not available
+  - Re-/Store last manual temperature of climate entity
+- Improve config_flow error messages
 - Remove deprecation warning (The deprecated argument hass was passed to verify_domain_control) of Home Assistant 2025.10.0 for Homematic(IP local)
 
 # Version 1.87.0 (2025-09-24)
