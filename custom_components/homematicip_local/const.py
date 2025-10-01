@@ -56,8 +56,6 @@ EVENT_NAME: Final = "name"
 EVENT_TITLE: Final = "title"
 EVENT_UNAVAILABLE: Final = "unavailable"
 
-ATTR_ON_TIME: Final = "on_time"
-
 
 class HmipLocalServices(StrEnum):
     """Enum with services."""

@@ -28,8 +28,6 @@ from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity
 
-ATTR_ON_TIME: Final = "on_time"
-
 ATTR_COLOR: Final = "color"
 ATTR_CHANNEL_COLOR: Final = "channel_color"
 ATTR_CHANNEL_BRIGHTNESS: Final = "channel_brightness"

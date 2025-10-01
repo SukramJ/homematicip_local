@@ -7,17 +7,14 @@ from typing import Any, Final
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import CustomDpIpIrrigationValve
-import voluptuous as vol
 
 from homeassistant.components.valve import ValveEntity, ValveEntityFeature
 from homeassistant.const import STATE_CLOSED, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
-from .const import HmipLocalServices
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity
 
@@ -60,15 +57,6 @@ async def async_setup_entry(
         data_points=control_unit.get_new_data_points(
             data_point_type=CustomDpIpIrrigationValve,
         )
-    )
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        HmipLocalServices.VALVE_SET_ON_TIME,
-        {
-            vol.Required(ATTR_ON_TIME): vol.All(vol.Coerce(int), vol.Range(min=-1, max=8580000)),
-        },
-        "async_set_on_time",
     )
 
 
