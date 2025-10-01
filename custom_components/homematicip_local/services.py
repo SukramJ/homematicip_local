@@ -13,6 +13,8 @@ from aiohomematic.support import get_device_address, to_bool
 import aiohomematic.validator as haval
 import voluptuous as vol
 
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
@@ -20,9 +22,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.service import async_register_admin_service, verify_domain_control
+from homeassistant.helpers.service import (
+    async_register_admin_service,
+    async_register_platform_entity_service,
+    verify_domain_control,
+)
 
-from .const import DOMAIN, HmipLocalServices
+from .const import ATTR_ON_TIME, DOMAIN, HmipLocalServices
 from .control_unit import ControlUnit
 from .support import get_device_address_at_interface_from_identifiers
 
@@ -219,6 +225,14 @@ SCHEMA_UPDATE_DEVICE_FIRMWARE_DATA = vol.Schema(
     }
 )
 
+############################## Platform specific schema ##############################
+
+SCHEMA_SET_ON_TIME = vol.Schema(
+    {
+        vol.Required(ATTR_ON_TIME): vol.All(vol.Coerce(int), vol.Range(min=-1, max=8580000)),
+    }
+)
+
 
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Create the aiohomematic services."""
@@ -404,6 +418,26 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         service=HmipLocalServices.UPDATE_DEVICE_FIRMWARE_DATA,
         service_func=async_call_hmip_local_service,
         schema=SCHEMA_UPDATE_DEVICE_FIRMWARE_DATA,
+    )
+
+    ############################## Platform specific registrations ##############################
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.LIGHT_SET_ON_TIME,
+        entity_domain=LIGHT_DOMAIN,
+        schema=SCHEMA_SET_ON_TIME,
+        func="async_set_on_time",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.SWITCH_SET_ON_TIME,
+        entity_domain=SWITCH_DOMAIN,
+        schema=SCHEMA_SET_ON_TIME,
+        func="async_set_on_time",
     )
 
 
