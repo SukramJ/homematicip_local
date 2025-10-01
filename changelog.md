@@ -14,6 +14,7 @@
   - Re-/Store last manual temperature of climate entity
 - Improve config_flow error messages
 - Remove deprecation warning (The deprecated argument hass was passed to verify_domain_control) of Home Assistant 2025.10.0 for Homematic(IP local)
+- Use of improved API for registering platform entity services from HA 
 
 # Version 1.87.0 (2025-09-24)
 

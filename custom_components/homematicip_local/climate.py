@@ -21,7 +21,6 @@ from aiohomematic.model.custom import (
     ScheduleProfile,
     ScheduleWeekday,
 )
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
@@ -39,35 +38,18 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfTemperature
-from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse, callback
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
-from .const import HmipLocalServices
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericEntity, AioHomematicGenericRestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_AWAY_END: Final = "end"
-ATTR_AWAY_HOURS: Final = "hours"
-ATTR_AWAY_START: Final = "start"
-ATTR_AWAY_TEMPERATURE: Final = "away_temperature"
-ATTR_BASE_TEMPERATURE: Final = "base_temperature"
 ATTR_OPTIMUM_START_STOP: Final = "optimum_start_stop"
-ATTR_PROFILE: Final = "profile"
-ATTR_PROFILE_DATA: Final = "profile_data"
-ATTR_SIMPLE_PROFILE_DATA: Final = "simple_profile_data"
-ATTR_SIMPLE_WEEKDAY_LIST: Final = "simple_weekday_list"
-ATTR_SOURCE_ENTITY_ID: Final = "source_entity_id"
-ATTR_SOURCE_PROFILE: Final = "source_profile"
-ATTR_TARGET_PROFILE: Final = "target_profile"
 ATTR_TEMPERATURE_OFFSET: Final = "temperature_offset"
-ATTR_WEEKDAY: Final = "weekday"
-ATTR_WEEKDAY_DATA: Final = "weekday_data"
 
 SUPPORTED_HA_PRESET_MODES: Final = [
     PRESET_AWAY,
@@ -125,109 +107,6 @@ async def async_setup_entry(
     )
 
     async_add_climate(data_points=control_unit.get_new_data_points(data_point_type=BaseCustomDpClimate))
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        name=HmipLocalServices.ENABLE_AWAY_MODE_BY_CALENDAR,
-        schema={
-            vol.Optional(ATTR_AWAY_START): cv.datetime,
-            vol.Required(ATTR_AWAY_END): cv.datetime,
-            vol.Required(ATTR_AWAY_TEMPERATURE, default=18.0): vol.All(vol.Coerce(float), vol.Range(min=5.0, max=30.5)),
-        },
-        func="async_enable_away_mode_by_calendar",
-    )
-    platform.async_register_entity_service(
-        name=HmipLocalServices.ENABLE_AWAY_MODE_BY_DURATION,
-        schema={
-            vol.Required(ATTR_AWAY_HOURS): cv.positive_int,
-            vol.Required(ATTR_AWAY_TEMPERATURE, default=18.0): vol.All(vol.Coerce(float), vol.Range(min=5.0, max=30.5)),
-        },
-        func="async_enable_away_mode_by_duration",
-    )
-    platform.async_register_entity_service(
-        name=HmipLocalServices.DISABLE_AWAY_MODE,
-        schema={},
-        func="async_disable_away_mode",
-    )
-
-    platform.async_register_entity_service(
-        name=HmipLocalServices.COPY_SCHEDULE,
-        schema={
-            vol.Required(ATTR_SOURCE_ENTITY_ID): cv.string,
-        },
-        func="async_copy_schedule",
-    )
-
-    platform.async_register_entity_service(
-        name=HmipLocalServices.COPY_SCHEDULE_PROFILE,
-        schema={
-            vol.Optional(ATTR_SOURCE_ENTITY_ID): cv.string,
-            vol.Required(ATTR_SOURCE_PROFILE): cv.string,
-            vol.Required(ATTR_TARGET_PROFILE): cv.string,
-        },
-        supports_response=SupportsResponse.OPTIONAL,
-        func="async_copy_schedule_profile",
-    )
-
-    platform.async_register_entity_service(
-        name=HmipLocalServices.GET_SCHEDULE_PROFILE,
-        schema={
-            vol.Required(ATTR_PROFILE): cv.string,
-        },
-        supports_response=SupportsResponse.OPTIONAL,
-        func="async_get_schedule_profile",
-    )
-
-    platform.async_register_entity_service(
-        name=HmipLocalServices.GET_SCHEDULE_PROFILE_WEEKDAY,
-        schema={
-            vol.Required(ATTR_PROFILE): cv.string,
-            vol.Required(ATTR_WEEKDAY): cv.string,
-        },
-        supports_response=SupportsResponse.OPTIONAL,
-        func="async_get_schedule_profile_weekday",
-    )
-
-    platform.async_register_entity_service(
-        name=HmipLocalServices.SET_SCHEDULE_PROFILE,
-        schema={
-            vol.Required(ATTR_PROFILE): cv.string,
-            vol.Required(ATTR_PROFILE_DATA): dict,
-        },
-        func="async_set_schedule_profile",
-    )
-
-    platform.async_register_entity_service(
-        name=HmipLocalServices.SET_SCHEDULE_PROFILE_WEEKDAY,
-        schema={
-            vol.Required(ATTR_PROFILE): cv.string,
-            vol.Required(ATTR_WEEKDAY): cv.string,
-            vol.Required(ATTR_WEEKDAY_DATA): dict,
-        },
-        func="async_set_schedule_profile_weekday",
-    )
-
-    platform.async_register_entity_service(
-        name=HmipLocalServices.SET_SCHEDULE_SIMPLE_PROFILE,
-        schema={
-            vol.Required(ATTR_PROFILE): cv.string,
-            vol.Required(ATTR_BASE_TEMPERATURE): cv.positive_float,
-            vol.Required(ATTR_SIMPLE_PROFILE_DATA): dict,
-        },
-        func="async_set_schedule_simple_profile",
-    )
-
-    platform.async_register_entity_service(
-        name=HmipLocalServices.SET_SCHEDULE_SIMPLE_PROFILE_WEEKDAY,
-        schema={
-            vol.Required(ATTR_PROFILE): cv.string,
-            vol.Required(ATTR_WEEKDAY): cv.string,
-            vol.Required(ATTR_BASE_TEMPERATURE): cv.positive_float,
-            vol.Required(ATTR_SIMPLE_WEEKDAY_LIST): list,
-        },
-        func="async_set_schedule_simple_profile_weekday",
-    )
 
 
 class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate], ClimateEntity):

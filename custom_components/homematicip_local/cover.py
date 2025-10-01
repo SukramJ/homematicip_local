@@ -8,7 +8,6 @@ from typing import Any, Final, TypeVar
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import CustomDpBlind, CustomDpCover, CustomDpGarage, CustomDpIpBlind
 from aiohomematic.model.data_point import CallParameterCollector
-import voluptuous as vol
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -19,16 +18,12 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import STATE_CLOSED, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
-from .const import HmipLocalServices
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity
-from .services import CONF_WAIT_FOR_CALLBACK
 
 ATTR_CHANNEL_POSITION: Final = "channel_position"
 ATTR_CHANNEL_TILT_POSITION: Final = "channel_tilt_position"
@@ -102,18 +97,6 @@ async def async_setup_entry(
     )
 
     async_add_cover(data_points=control_unit.get_new_data_points(data_point_type=CustomDpCover | CustomDpGarage))
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        HmipLocalServices.SET_COVER_COMBINED_POSITION,
-        {
-            vol.Required(ATTR_POSITION): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
-            vol.Optional(ATTR_TILT_POSITION): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
-            vol.Optional(CONF_WAIT_FOR_CALLBACK): cv.positive_int,
-        },
-        "async_set_cover_combined_position",
-    )
 
 
 class AioHomematicBaseCover(AioHomematicGenericRestoreEntity[HmGenericCover], CoverEntity):

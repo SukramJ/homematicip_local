@@ -13,6 +13,12 @@ from aiohomematic.support import get_device_address, to_bool
 import aiohomematic.validator as haval
 import voluptuous as vol
 
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION, DOMAIN as COVER_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.siren import ATTR_DURATION, ATTR_TONE, DOMAIN as SIREN_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
@@ -20,7 +26,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.service import async_register_admin_service, verify_domain_control
+from homeassistant.helpers.service import (
+    async_register_admin_service,
+    async_register_platform_entity_service,
+    verify_domain_control,
+)
 
 from .const import DOMAIN, HmipLocalServices
 from .control_unit import ControlUnit
@@ -30,6 +40,23 @@ if TYPE_CHECKING:
     from . import HomematicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_AWAY_END: Final = "end"
+ATTR_AWAY_HOURS: Final = "hours"
+ATTR_AWAY_START: Final = "start"
+ATTR_AWAY_TEMPERATURE: Final = "away_temperature"
+ATTR_BASE_TEMPERATURE: Final = "base_temperature"
+ATTR_LIGHT: Final = "light"
+ATTR_ON_TIME: Final = "on_time"
+ATTR_PROFILE: Final = "profile"
+ATTR_PROFILE_DATA: Final = "profile_data"
+ATTR_SIMPLE_PROFILE_DATA: Final = "simple_profile_data"
+ATTR_SIMPLE_WEEKDAY_LIST: Final = "simple_weekday_list"
+ATTR_SOURCE_ENTITY_ID: Final = "source_entity_id"
+ATTR_SOURCE_PROFILE: Final = "source_profile"
+ATTR_TARGET_PROFILE: Final = "target_profile"
+ATTR_WEEKDAY: Final = "weekday"
+ATTR_WEEKDAY_DATA: Final = "weekday_data"
 
 CONF_ADDRESS: Final = "address"
 CONF_CHANNEL: Final = "channel"
@@ -404,6 +431,196 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         service=HmipLocalServices.UPDATE_DEVICE_FIRMWARE_DATA,
         service_func=async_call_hmip_local_service,
         schema=SCHEMA_UPDATE_DEVICE_FIRMWARE_DATA,
+    )
+
+    ############################## Platform specific registrations ##############################
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.ENABLE_AWAY_MODE_BY_CALENDAR,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            vol.Optional(ATTR_AWAY_START): cv.datetime,
+            vol.Required(ATTR_AWAY_END): cv.datetime,
+            vol.Required(ATTR_AWAY_TEMPERATURE, default=18.0): vol.All(vol.Coerce(float), vol.Range(min=5.0, max=30.5)),
+        },
+        func="async_enable_away_mode_by_calendar",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.ENABLE_AWAY_MODE_BY_DURATION,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            vol.Required(ATTR_AWAY_HOURS): cv.positive_int,
+            vol.Required(ATTR_AWAY_TEMPERATURE, default=18.0): vol.All(vol.Coerce(float), vol.Range(min=5.0, max=30.5)),
+        },
+        func="async_enable_away_mode_by_duration",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.DISABLE_AWAY_MODE,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={},
+        func="async_disable_away_mode",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.COPY_SCHEDULE,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            vol.Required(ATTR_SOURCE_ENTITY_ID): cv.string,
+        },
+        func="async_copy_schedule",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.COPY_SCHEDULE_PROFILE,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            vol.Optional(ATTR_SOURCE_ENTITY_ID): cv.string,
+            vol.Required(ATTR_SOURCE_PROFILE): cv.string,
+            vol.Required(ATTR_TARGET_PROFILE): cv.string,
+        },
+        func="async_copy_schedule_profile",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.GET_SCHEDULE_PROFILE,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            vol.Required(ATTR_PROFILE): cv.string,
+        },
+        func="async_get_schedule_profile",
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.GET_SCHEDULE_PROFILE_WEEKDAY,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            vol.Required(ATTR_PROFILE): cv.string,
+            vol.Required(ATTR_WEEKDAY): cv.string,
+        },
+        func="async_get_schedule_profile_weekday",
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.SET_SCHEDULE_PROFILE,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            vol.Required(ATTR_PROFILE): cv.string,
+            vol.Required(ATTR_PROFILE_DATA): dict,
+        },
+        func="async_set_schedule_profile",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.SET_SCHEDULE_PROFILE_WEEKDAY,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            vol.Required(ATTR_PROFILE): cv.string,
+            vol.Required(ATTR_WEEKDAY): cv.string,
+            vol.Required(ATTR_WEEKDAY_DATA): dict,
+        },
+        func="async_set_schedule_profile_weekday",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.SET_SCHEDULE_SIMPLE_PROFILE,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            vol.Required(ATTR_PROFILE): cv.string,
+            vol.Required(ATTR_BASE_TEMPERATURE): cv.positive_float,
+            vol.Required(ATTR_SIMPLE_PROFILE_DATA): dict,
+        },
+        func="async_set_schedule_simple_profile",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.SET_SCHEDULE_SIMPLE_PROFILE_WEEKDAY,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            vol.Required(ATTR_PROFILE): cv.string,
+            vol.Required(ATTR_WEEKDAY): cv.string,
+            vol.Required(ATTR_BASE_TEMPERATURE): cv.positive_float,
+            vol.Required(ATTR_SIMPLE_WEEKDAY_LIST): list,
+        },
+        func="async_set_schedule_simple_profile_weekday",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.SET_COVER_COMBINED_POSITION,
+        entity_domain=COVER_DOMAIN,
+        schema={
+            vol.Required(ATTR_POSITION): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+            vol.Optional(ATTR_TILT_POSITION): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+            vol.Optional(CONF_WAIT_FOR_CALLBACK): cv.positive_int,
+        },
+        func="async_set_cover_combined_position",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.LIGHT_SET_ON_TIME,
+        entity_domain=LIGHT_DOMAIN,
+        schema={vol.Required(ATTR_ON_TIME): vol.All(vol.Coerce(int), vol.Range(min=-1, max=8580000))},
+        func="async_set_on_time",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.TURN_ON_SIREN,
+        entity_domain=SIREN_DOMAIN,
+        schema={
+            vol.Optional(ATTR_TONE): cv.string,
+            vol.Optional(ATTR_LIGHT): cv.string,
+            vol.Optional(ATTR_DURATION): cv.positive_int,
+        },
+        func="async_turn_on",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.SWITCH_SET_ON_TIME,
+        entity_domain=SWITCH_DOMAIN,
+        schema={vol.Required(ATTR_ON_TIME): vol.All(vol.Coerce(int), vol.Range(min=-1, max=8580000))},
+        func="async_set_on_time",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.VALVE_SET_ON_TIME,
+        entity_domain=VALVE_DOMAIN,
+        schema={vol.Required(ATTR_ON_TIME): vol.All(vol.Coerce(int), vol.Range(min=-1, max=8580000))},
+        func="async_set_on_time",
     )
 
 
