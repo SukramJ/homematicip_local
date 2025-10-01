@@ -19,7 +19,8 @@
                     "sub_devices_enabled": "enable sub devices",
                     "sysvar_markers": "system variable markers",
                     "sysvar_scan_enabled": "enable system variable scan",
-                    "sysvar_scan_interval": "Sysvar/Program scan interval"
+                    "sysvar_scan_interval": "Sysvar/Program scan interval",
+                    "use_group_channel_for_cover_state": "Use group channel for cover state"
                 },
                 "data_description": {
                     "mqtt_enabled": "Enable MQTT to support Callbacks for CCU-Jack and CUxD",
@@ -677,7 +678,8 @@
                     "sysvar_markers": "system variable markers",
                     "sysvar_scan_enabled": "enable system variable scan",
                     "sysvar_scan_interval": "Sysvar/Program scan interval",
-                    "un_ignore": "UN-IGNORE Parameters"
+                    "un_ignore": "UN-IGNORE Parameters",
+                    "use_group_channel_for_cover_state": "Use group channel for cover state"
                 },
                 "data_description": {
                     "mqtt_enabled": "Enable MQTT to support Callbacks for CCU-Jack and CUxD",

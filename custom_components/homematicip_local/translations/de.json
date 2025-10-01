@@ -19,7 +19,8 @@
                     "sub_devices_enabled": "Unter Geräte aktivieren",
                     "sysvar_markers": "Systemvariablen Marken",
                     "sysvar_scan_enabled": "Systemvariablen Scan aktivieren",
-                    "sysvar_scan_interval": "Sysvar/Program Scan Interval"
+                    "sysvar_scan_interval": "Sysvar/Program Scan Interval",
+                    "use_group_channel_for_cover_state": "Verwende Gruppenkanal für Cover Status"
                 },
                 "data_description": {
                     "mqtt_enabled": "Aktiviere MQTT, um Callbacks für CCU-Jack und CUxD zu nutzen",
@@ -681,7 +682,8 @@
                     "sysvar_markers": "Systemvariablen Marken",
                     "sysvar_scan_enabled": "Systemvariablen Scan aktivieren",
                     "sysvar_scan_interval": "Sysvar/Program Scan Interval",
-                    "un_ignore": "UN-IGNORE Parameter"
+                    "un_ignore": "UN-IGNORE Parameter",
+                    "use_group_channel_for_cover_state": "Verwende Gruppenkanal für Cover Status"
                 },
                 "data_description": {
                     "mqtt_enabled": "Aktiviere MQTT, um Callbacks für CCU-Jack und CUxD zu nutzen",

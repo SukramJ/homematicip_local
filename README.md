@@ -317,6 +317,13 @@ enable_sub_devices:
     When disabling this obsolete devices must be deleted manually.
   type: bool
   default: false
+use_group_channel_for_cover_state:
+  description:
+    Option for cover entities that the current default behaviour can be disabled:
+      - The default behaviour is, that the primary cover entity of a group uses the level of the state channel and no its own level to display a correct level.
+      - Only HM experts should disable this option, that like to control all three writeable channels of a cover group. 
+  type: bool
+  default: true
 ```
 
 
