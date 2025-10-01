@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Create issues in the AIO Homematic Repository
-    url: https://github.com/sukramj/aiohomematic/issues/new/choose
+    url: https://github.com/sukramj/aiohomematic/issues
     about: Please create issues in the AIO Homematic Repository.
