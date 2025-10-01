@@ -3,28 +3,23 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Final
+from typing import Any
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import BaseCustomDpSiren, SirenOnArgs
-import voluptuous as vol
 
 from homeassistant.components.siren import ATTR_DURATION, ATTR_TONE, SirenEntity, SirenEntityFeature
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
-from .const import HmipLocalServices
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity
+from .services import ATTR_LIGHT
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_LIGHT: Final = "light"
 
 
 async def async_setup_entry(
@@ -48,17 +43,6 @@ async def async_setup_entry(
             for data_point in data_points
         ]:
             async_add_entities(entities)
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        HmipLocalServices.TURN_ON_SIREN,
-        {
-            vol.Optional(ATTR_TONE): cv.string,
-            vol.Optional(ATTR_LIGHT): cv.string,
-            vol.Optional(ATTR_DURATION): cv.positive_int,
-        },
-        "async_turn_on",
-    )
 
     entry.async_on_unload(
         func=async_dispatcher_connect(

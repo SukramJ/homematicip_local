@@ -14,7 +14,9 @@ import aiohomematic.validator as haval
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION, DOMAIN as COVER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.siren import ATTR_DURATION, ATTR_TONE, DOMAIN as SIREN_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -39,13 +41,13 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ON_TIME: Final = "on_time"
 ATTR_AWAY_END: Final = "end"
 ATTR_AWAY_HOURS: Final = "hours"
 ATTR_AWAY_START: Final = "start"
 ATTR_AWAY_TEMPERATURE: Final = "away_temperature"
 ATTR_BASE_TEMPERATURE: Final = "base_temperature"
-
+ATTR_LIGHT: Final = "light"
+ATTR_ON_TIME: Final = "on_time"
 ATTR_PROFILE: Final = "profile"
 ATTR_PROFILE_DATA: Final = "profile_data"
 ATTR_SIMPLE_PROFILE_DATA: Final = "simple_profile_data"
@@ -53,7 +55,6 @@ ATTR_SIMPLE_WEEKDAY_LIST: Final = "simple_weekday_list"
 ATTR_SOURCE_ENTITY_ID: Final = "source_entity_id"
 ATTR_SOURCE_PROFILE: Final = "source_profile"
 ATTR_TARGET_PROFILE: Final = "target_profile"
-
 ATTR_WEEKDAY: Final = "weekday"
 ATTR_WEEKDAY_DATA: Final = "weekday_data"
 
@@ -580,10 +581,36 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async_register_platform_entity_service(
         hass=hass,
         service_domain=DOMAIN,
+        service_name=HmipLocalServices.SET_COVER_COMBINED_POSITION,
+        entity_domain=COVER_DOMAIN,
+        schema={
+            vol.Required(ATTR_POSITION): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+            vol.Optional(ATTR_TILT_POSITION): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+            vol.Optional(CONF_WAIT_FOR_CALLBACK): cv.positive_int,
+        },
+        func="async_set_cover_combined_position",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
         service_name=HmipLocalServices.LIGHT_SET_ON_TIME,
         entity_domain=LIGHT_DOMAIN,
         schema=SCHEMA_SET_ON_TIME,
         func="async_set_on_time",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.TURN_ON_SIREN,
+        entity_domain=SIREN_DOMAIN,
+        schema={
+            vol.Optional(ATTR_TONE): cv.string,
+            vol.Optional(ATTR_LIGHT): cv.string,
+            vol.Optional(ATTR_DURATION): cv.positive_int,
+        },
+        func="async_turn_on",
     )
 
     async_register_platform_entity_service(

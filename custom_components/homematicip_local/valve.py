@@ -19,7 +19,6 @@ from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
-ATTR_ON_TIME: Final = "on_time"
 ATTR_CHANNEL_STATE: Final = "channel_state"
 
 
