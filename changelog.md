@@ -2,6 +2,10 @@
 
 # This release requires HA 2025.10.0 or later.
 
+## Info 
+
+There is no longer any need to register Homematic(IP) Local for OpenCCU as a custom repository in HACS, as it is now registered directly with HACS. Existing HACS configurations will be migrated automatically (by HACS), so no further action is required.
+
 ## What's Changed
 - Bump aiohomematic to 2025.10.0
   - Add CuXD parameters CMD_RETL and CMD_RETS to ignore list, to avoid warnings when reading the value without an appropriate configuration.
