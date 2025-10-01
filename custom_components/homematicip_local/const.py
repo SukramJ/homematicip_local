@@ -44,6 +44,7 @@ CONF_SYSVAR_MARKERS: Final = "sysvar_markers"
 CONF_SYS_SCAN_INTERVAL: Final = "sysvar_scan_interval"
 CONF_TLS: Final = "tls"
 CONF_UN_IGNORES: Final = "un_ignore"
+CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: Final = "use_group_channel_for_cover_state"
 CONF_VERIFY_TLS: Final = "verify_tls"
 
 EVENT_DEVICE_ID: Final = "device_id"

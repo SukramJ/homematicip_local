@@ -15,6 +15,7 @@ from aiohomematic.const import (
     DEFAULT_SYSVAR_MARKERS,
     DEFAULT_TLS,
     DEFAULT_UN_IGNORES,
+    DEFAULT_USE_GROUP_CHANNEL_FOR_COVER_STATE,
     DescriptionMarker,
     Interface,
     SystemInformation,
@@ -60,6 +61,7 @@ from .const import (
     CONF_SYSVAR_MARKERS,
     CONF_TLS,
     CONF_UN_IGNORES,
+    CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE,
     CONF_VERIFY_TLS,
     DEFAULT_ENABLE_MQTT,
     DEFAULT_ENABLE_SUB_DEVICES,
@@ -289,6 +291,12 @@ def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -
             vol.Optional(
                 CONF_ENABLE_SUB_DEVICES,
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_ENABLE_SUB_DEVICES, DEFAULT_ENABLE_SUB_DEVICES),
+            ): BOOLEAN_SELECTOR,
+            vol.Optional(
+                CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(
+                    CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE, DEFAULT_USE_GROUP_CHANNEL_FOR_COVER_STATE
+                ),
             ): BOOLEAN_SELECTOR,
         }
     )
@@ -584,6 +592,9 @@ def _update_advanced_input(data: ConfigType, advanced_input: ConfigType) -> None
     data[CONF_ADVANCED_CONFIG][CONF_ENABLE_MQTT] = advanced_input[CONF_ENABLE_MQTT]
     data[CONF_ADVANCED_CONFIG][CONF_MQTT_PREFIX] = advanced_input[CONF_MQTT_PREFIX]
     data[CONF_ADVANCED_CONFIG][CONF_ENABLE_SUB_DEVICES] = advanced_input[CONF_ENABLE_SUB_DEVICES]
+    data[CONF_ADVANCED_CONFIG][CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE] = advanced_input[
+        CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE
+    ]
 
     if advanced_input.get(CONF_UN_IGNORES):
         data[CONF_ADVANCED_CONFIG][CONF_UN_IGNORES] = advanced_input[CONF_UN_IGNORES]

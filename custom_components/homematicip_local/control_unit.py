@@ -21,6 +21,7 @@ from aiohomematic.const import (
     DEFAULT_SYS_SCAN_INTERVAL,
     DEFAULT_SYSVAR_MARKERS,
     DEFAULT_UN_IGNORES,
+    DEFAULT_USE_GROUP_CHANNEL_FOR_COVER_STATE,
     INTERFACES_REQUIRING_PERIODIC_REFRESH,
     IP_ANY_V4,
     PORT_ANY,
@@ -66,6 +67,7 @@ from .const import (
     CONF_SYSVAR_MARKERS,
     CONF_TLS,
     CONF_UN_IGNORES,
+    CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE,
     CONF_VERIFY_TLS,
     DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK,
     DEFAULT_ENABLE_MQTT,
@@ -571,6 +573,9 @@ class ControlConfig:
             sysvar_markers if (sysvar_markers := ac.get(CONF_SYSVAR_MARKERS)) else DEFAULT_SYSVAR_MARKERS
         )
         self._un_ignore: Final[frozenset[str]] = frozenset(ac.get(CONF_UN_IGNORES, DEFAULT_UN_IGNORES))
+        self._use_group_channel_for_cover_state: Final[bool] = ac.get(
+            CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE, DEFAULT_USE_GROUP_CHANNEL_FOR_COVER_STATE
+        )
 
     @property
     def hass(self) -> HomeAssistant:
@@ -682,6 +687,7 @@ class ControlConfig:
             sys_scan_interval=self._sys_scan_interval,
             tls=self._tls,
             un_ignore_list=self._un_ignore,
+            use_group_channel_for_cover_state=self._use_group_channel_for_cover_state,
             username=self._username,
             verify_tls=self._verify_tls,
         ).create_central()

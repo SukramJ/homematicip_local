@@ -1,3 +1,11 @@
+# Version 1.88.1 (2025-10-01)
+
+- Bump aiohomematic to 2025.10.1
+  - Add option to cover entities that the current default behaviour can be disabled:
+      - The default behaviour is, that the primary cover entity of a group uses the level of the state channel and no its own level to display a correct level.
+      - Only HM experts should disable this option, that like to control all three writeable channels of a cover group. 
+  - Add option to config_flow for cover entities
+
 # Version 1.88.0 (2025-10-01)
 
 # This release requires HA 2025.10.0 or later.
