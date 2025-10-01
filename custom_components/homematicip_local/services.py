@@ -617,7 +617,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async_register_platform_entity_service(
         hass=hass,
         service_domain=DOMAIN,
-        service_name=HmipLocalServices.SWITCH_SET_ON_TIME,
+        service_name=HmipLocalServices.VALVE_SET_ON_TIME,
         entity_domain=VALVE_DOMAIN,
         schema={vol.Required(ATTR_ON_TIME): vol.All(vol.Coerce(int), vol.Range(min=-1, max=8580000))},
         func="async_set_on_time",
