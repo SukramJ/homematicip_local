@@ -246,14 +246,6 @@ SCHEMA_UPDATE_DEVICE_FIRMWARE_DATA = vol.Schema(
     }
 )
 
-############################## Platform specific schema ##############################
-
-SCHEMA_SET_ON_TIME = vol.Schema(
-    {
-        vol.Required(ATTR_ON_TIME): vol.All(vol.Coerce(int), vol.Range(min=-1, max=8580000)),
-    }
-)
-
 
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Create the aiohomematic services."""
@@ -596,7 +588,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         service_domain=DOMAIN,
         service_name=HmipLocalServices.LIGHT_SET_ON_TIME,
         entity_domain=LIGHT_DOMAIN,
-        schema=SCHEMA_SET_ON_TIME,
+        schema={vol.Required(ATTR_ON_TIME): vol.All(vol.Coerce(int), vol.Range(min=-1, max=8580000))},
         func="async_set_on_time",
     )
 
@@ -618,7 +610,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         service_domain=DOMAIN,
         service_name=HmipLocalServices.SWITCH_SET_ON_TIME,
         entity_domain=SWITCH_DOMAIN,
-        schema=SCHEMA_SET_ON_TIME,
+        schema={vol.Required(ATTR_ON_TIME): vol.All(vol.Coerce(int), vol.Range(min=-1, max=8580000))},
         func="async_set_on_time",
     )
 
@@ -627,7 +619,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         service_domain=DOMAIN,
         service_name=HmipLocalServices.SWITCH_SET_ON_TIME,
         entity_domain=VALVE_DOMAIN,
-        schema=SCHEMA_SET_ON_TIME,
+        schema={vol.Required(ATTR_ON_TIME): vol.All(vol.Coerce(int), vol.Range(min=-1, max=8580000))},
         func="async_set_on_time",
     )
 
