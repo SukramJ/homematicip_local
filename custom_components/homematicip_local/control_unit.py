@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Set as AbstractSet
 from copy import deepcopy
 import logging
 from types import UnionType
@@ -39,6 +39,7 @@ from aiohomematic.const import (
 )
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.data_point import CallbackDataPoint
+from aiohomematic.model.event import GenericEvent
 from aiohomematic.support import check_config
 
 from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
@@ -181,7 +182,6 @@ class ControlUnit(BaseControlUnit):
         self._unregister_callbacks.append(
             self._central.register_backend_system_callback(cb=self._async_backend_system_callback)
         )
-
         self._unregister_callbacks.append(self._central.register_homematic_callback(cb=self._async_homematic_callback))
         self._async_add_central_to_device_registry()
         await super().start_central()
@@ -249,7 +249,13 @@ class ControlUnit(BaseControlUnit):
             )
 
     @callback
-    def _async_backend_system_callback(self, system_event: BackendSystemEvent, **kwargs: Any) -> None:
+    def _async_backend_system_callback(
+        self,
+        system_event: BackendSystemEvent,
+        new_data_points: Mapping[DataPointCategory, AbstractSet[CallbackDataPoint]] | None = None,
+        new_channel_events: list[tuple[GenericEvent, ...]] | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Execute the callback for system based events."""
         _LOGGER.debug(
             "callback_system_event: Received system event %s for event for %s",
@@ -260,28 +266,31 @@ class ControlUnit(BaseControlUnit):
         # Handle event of new device creation in Homematic(IP) Local for OpenCCU.
         if system_event == BackendSystemEvent.DEVICES_CREATED:
             self._async_add_virtual_remotes_to_device_registry()
-            for platform, data_points in kwargs["new_data_points"].items():
-                if data_points and len(data_points) > 0:
+            if new_data_points:
+                for platform, data_points in new_data_points.items():
+                    if data_points and len(data_points) > 0:
+                        async_dispatcher_send(
+                            self._hass,
+                            signal_new_data_point(entry_id=self._entry_id, platform=platform),
+                            data_points,
+                        )
+            if new_channel_events:
+                for channel_events in new_channel_events:
                     async_dispatcher_send(
                         self._hass,
-                        signal_new_data_point(entry_id=self._entry_id, platform=platform),
-                        data_points,
+                        signal_new_data_point(entry_id=self._entry_id, platform=DataPointCategory.EVENT),
+                        channel_events,
                     )
-            for channel_events in kwargs["new_channel_events"]:
-                async_dispatcher_send(
-                    self._hass,
-                    signal_new_data_point(entry_id=self._entry_id, platform=DataPointCategory.EVENT),
-                    channel_events,
-                )
         elif system_event == BackendSystemEvent.HUB_REFRESHED:
             # Handle event of new hub entity creation in Homematic(IP) Local for OpenCCU.
-            for platform, hub_data_points in kwargs["new_hub_data_points"].items():
-                if hub_data_points and len(hub_data_points) > 0:
-                    async_dispatcher_send(
-                        self._hass,
-                        signal_new_data_point(entry_id=self._entry_id, platform=platform),
-                        hub_data_points,
-                    )
+            if new_data_points:
+                for platform, hub_data_points in new_data_points.items():
+                    if hub_data_points and len(hub_data_points) > 0:
+                        async_dispatcher_send(
+                            self._hass,
+                            signal_new_data_point(entry_id=self._entry_id, platform=platform),
+                            hub_data_points,
+                        )
             return
         return
 
@@ -334,6 +343,29 @@ class ControlUnit(BaseControlUnit):
                         learn_more_url=LEARN_MORE_URL_PONG_MISMATCH,
                         severity=IssueSeverity.WARNING,
                         translation_key="pending_pong_mismatch",
+                        translation_placeholders={
+                            CONF_INSTANCE_NAME: self._instance_name,
+                            EventKey.INTERFACE_ID: interface_id,
+                        },
+                    )
+            elif interface_event_type == InterfaceEventType.UNKNOWN_PONG:
+                if not self._enable_system_notifications:
+                    _LOGGER.debug("SYSTEM NOTIFICATION disabled for UNKNOWN_PONG")
+                    return
+                if data[EventKey.PONG_MISMATCH_COUNT] == 0:
+                    async_delete_issue(
+                        hass=self._hass,
+                        domain=DOMAIN,
+                        issue_id=issue_id,
+                    )
+                else:
+                    async_create_issue(
+                        hass=self._hass,
+                        domain=DOMAIN,
+                        issue_id=issue_id,
+                        is_fixable=False,
+                        severity=IssueSeverity.WARNING,
+                        translation_key="unknown_pong_mismatch",
                         translation_placeholders={
                             CONF_INSTANCE_NAME: self._instance_name,
                             EventKey.INTERFACE_ID: interface_id,

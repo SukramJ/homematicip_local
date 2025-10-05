@@ -273,7 +273,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
             )
 
     @callback
-    def _async_data_point_updated(self, *args: Any, **kwargs: Any) -> None:
+    def _async_data_point_updated(self, **kwargs: Any) -> None:
         """Handle device state changes."""
         # Don't update disabled entities
         update_type = "updated" if self._data_point.refreshed_at == self._data_point.modified_at else "refreshed"
@@ -300,7 +300,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
                 unregister()
 
     @callback
-    def _async_device_removed(self, *args: Any, **kwargs: Any) -> None:
+    def _async_device_removed(self) -> None:
         """Handle hm device removal."""
         self.hass.async_create_task(self.async_remove(force_remove=True))
 
@@ -461,7 +461,7 @@ class AioHomematicGenericHubEntity(Entity):
             )
 
     @callback
-    def _async_hub_device_removed(self, *args: Any, **kwargs: Any) -> None:
+    def _async_hub_device_removed(self) -> None:
         """Handle hm sysvar entity removal."""
         self.hass.async_create_task(self.async_remove(force_remove=True))
 

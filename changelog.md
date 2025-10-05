@@ -1,3 +1,9 @@
+# Version 1.88.2 (2025-10-05)
+
+- Bump aiohomematic to 2025.10.2
+  - API cleanup: ensure that kw arguments are passed to the underlying function
+- Add unknown_pong_mismatch notification
+
 # Version 1.88.1 (2025-10-01)
 
 - Bump aiohomematic to 2025.10.1
