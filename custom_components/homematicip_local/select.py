@@ -103,7 +103,7 @@ class AioHomematicSelect(AioHomematicGenericRestoreEntity[DpSelect], SelectEntit
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
-        await self._data_point.send_value(option.upper())
+        await self._data_point.send_value(value=option.upper())
 
 
 class AioHomematicSysvarSelect(AioHomematicGenericSysvarEntity[SysvarDpSelect], SelectEntity):
@@ -123,4 +123,4 @@ class AioHomematicSysvarSelect(AioHomematicGenericSysvarEntity[SysvarDpSelect], 
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
-        await self._data_point.send_variable(option)
+        await self._data_point.send_variable(value=option)

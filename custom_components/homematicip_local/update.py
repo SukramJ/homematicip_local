@@ -149,7 +149,7 @@ class AioHomematicUpdate(UpdateEntity):
                 unregister()
 
     @callback
-    def _async_device_removed(self, *args: Any, **kwargs: Any) -> None:
+    def _async_device_removed(self) -> None:
         """Handle hm device removal."""
         self.hass.async_create_task(self.async_remove(force_remove=True))
 

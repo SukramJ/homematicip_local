@@ -92,4 +92,4 @@ async def async_call_action_from_config(
                     if not isinstance(dp, DpAction | DpButton):
                         continue
                     if dp.parameter == action_type.upper() and dp.channel.no == action_subtype:
-                        await dp.send_value(True)
+                        await dp.send_value(value=True)

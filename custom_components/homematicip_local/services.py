@@ -823,7 +823,7 @@ async def _async_service_set_device_value(hass: HomeAssistant, service: ServiceC
         elif value_type == "double":
             value = float(value)
         elif value_type == "boolean":
-            value = to_bool(value)
+            value = to_bool(value=value)
         elif value_type == "dateTime.iso8601":
             value = datetime.strptime(value, "%Y%m%dT%H:%M:%S")
         else:

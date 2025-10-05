@@ -92,9 +92,9 @@ class Factory:
             start_direct=True,
         ).create_central()
 
-        central.register_backend_system_callback(self.system_event_mock)
-        central.register_backend_parameter_callback(self.entity_event_mock)
-        central.register_homematic_callback(self.ha_event_mock)
+        central.register_backend_system_callback(cb=self.system_event_mock)
+        central.register_backend_parameter_callback(cb=self.entity_event_mock)
+        central.register_homematic_callback(cb=self.ha_event_mock)
 
         client = ClientLocal(
             client_config=_ClientConfig(

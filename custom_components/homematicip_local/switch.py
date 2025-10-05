@@ -150,11 +150,11 @@ class AioHomematicSysvarSwitch(AioHomematicGenericSysvarEntity[SysvarDpSwitch], 
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self._data_point.send_variable(True)
+        await self._data_point.send_variable(value=True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self._data_point.send_variable(False)
+        await self._data_point.send_variable(value=False)
 
 
 class AioHomematicProgramSwitch(AioHomematicGenericProgramEntity[ProgramDpSwitch], SwitchEntity):

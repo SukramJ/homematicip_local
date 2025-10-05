@@ -119,7 +119,7 @@ class AioHomematicNumber(AioHomematicGenericEntity[BaseDpNumber], RestoreNumber)
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await self._data_point.send_value(value / self._multiplier)
+        await self._data_point.send_value(value=value / self._multiplier)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -174,4 +174,4 @@ class AioHomematicSysvarNumber(AioHomematicGenericSysvarEntity[SysvarDpNumber], 
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await self._data_point.send_variable(value)
+        await self._data_point.send_variable(value=value)
