@@ -558,6 +558,7 @@ class ControlConfig:
 
     def __init__(
         self,
+        *,
         hass: HomeAssistant,
         entry_id: str,
         data: Mapping[str, Any],
