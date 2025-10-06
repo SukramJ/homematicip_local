@@ -1,6 +1,7 @@
-# Version 1.88.2 (2025-10-05)
+# Version 1.88.2 (2025-10-06)
 
-- Bump aiohomematic to 2025.10.2
+- Bump aiohomematic to 2025.10.3
+  - Add Keyword-only method linter (mypy-style)
   - API cleanup: ensure that kw arguments are passed to the underlying function
 - Add unknown_pong_mismatch notification
 
