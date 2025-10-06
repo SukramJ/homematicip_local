@@ -35,6 +35,7 @@ from aiohomematic.const import (
     InterfaceEventType,
     Manufacturer,
     Parameter,
+    SourceOfDeviceCreation,
     SystemInformation,
 )
 from aiohomematic.exceptions import BaseHomematicException
@@ -254,6 +255,7 @@ class ControlUnit(BaseControlUnit):
         system_event: BackendSystemEvent,
         new_data_points: Mapping[DataPointCategory, AbstractSet[CallbackDataPoint]] | None = None,
         new_channel_events: list[tuple[GenericEvent, ...]] | None = None,
+        source: SourceOfDeviceCreation | None = None,
         **kwargs: Any,
     ) -> None:
         """Execute the callback for system based events."""
@@ -265,6 +267,8 @@ class ControlUnit(BaseControlUnit):
 
         # Handle event of new device creation in Homematic(IP) Local for OpenCCU.
         if system_event == BackendSystemEvent.DEVICES_CREATED:
+            if source and source == SourceOfDeviceCreation.NEW:
+                return
             self._async_add_virtual_remotes_to_device_registry()
             if new_data_points:
                 for platform, data_points in new_data_points.items():
@@ -292,6 +296,8 @@ class ControlUnit(BaseControlUnit):
                             hub_data_points,
                         )
             return
+        elif system_event == BackendSystemEvent.NEW_DEVICES:
+            pass
         return
 
     @callback

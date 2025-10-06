@@ -1,12 +1,16 @@
 # Version 1.88.2 (2025-10-06)
 
-- Bump aiohomematic to 2025.10.3
-  - Add Keyword-only method linter (mypy-style)
+## What's Changed
+- Bump aiohomematic to 2025.10.4
   - API cleanup: ensure that kw arguments are passed to the underlying function
+  - Add Keyword-only method linter (mypy-style)
+  - Add option to delay new device creation
+  - Add source of device creation to callback
 - Add unknown_pong_mismatch notification
 
 # Version 1.88.1 (2025-10-01)
 
+## What's Changed
 - Bump aiohomematic to 2025.10.1
   - Add option to cover entities that the current default behaviour can be disabled:
       - The default behaviour is, that the primary cover entity of a group uses the level of the state channel and no its own level to display a correct level.
