@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Set as AbstractSet
 import contextlib
 from copy import deepcopy
+from functools import partial
 import logging
 from types import UnionType
 from typing import Any, Final, TypeVar, cast
@@ -315,6 +316,9 @@ class ControlUnit(BaseControlUnit):
                 address = dd["ADDRESS"]
                 issue_id = f"devices_delayed-{interface_id or 'unknown'}-{address}"
 
+                if not interface_id or not address:
+                    continue
+
                 async def _fix_callback(_interface_id: str, _address: str) -> None:
                     """Trigger manual add of the delayed device on the central."""
                     if not interface_id:
@@ -323,7 +327,7 @@ class ControlUnit(BaseControlUnit):
                         await self._central.add_new_device_manually(interface_id=_interface_id, address=_address)
                         return
 
-                REPAIR_CALLBACKS[issue_id] = _fix_callback
+                REPAIR_CALLBACKS[issue_id] = partial(_fix_callback, _interface_id=interface_id, _address=address)
 
                 async_create_issue(
                     hass=self._hass,
