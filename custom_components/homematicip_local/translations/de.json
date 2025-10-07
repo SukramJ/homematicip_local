@@ -645,6 +645,19 @@
         }
     },
     "issues": {
+        "devices_delayed": {
+            "title": "Gerät verzögert auf {interface_id}",
+            "description": "Das Gerät **{addresses}** auf Schnittstelle **{interface_id}** wurde beim Start verzögert erkannt.\n\nDu kannst den Hinzufügeprozess jetzt manuell anstoßen.",
+            "fix_flow": {
+                "step": {
+                    "init": {
+                        "title": "Verzögertes Gerät manuell hinzufügen",
+                        "description": "Dies stößt das manuelle Hinzufügen des Geräts **{address}** auf Schnittstelle **{interface_id}** an.\n\nBestätige, um fortzufahren."
+                    }
+                },
+                "success": "Gerät {address} wurde manuell auf {interface_id} hinzugefügt."
+            }
+        },
         "fetch_data": {
             "description": "Daten können mit einem Rega-Skript nicht abgerufen werden.\n\nDies weist auf ein Problem mit Ihrer CCU hin.\n\nDurch die Verwendung eines Fallbacks kommt es zu einem erhöhten DutyCycle beim Integrationsstart für die Schnittstelle {interface_id}",
             "title": "Fehler beim Abrufen der Anfangsdaten"

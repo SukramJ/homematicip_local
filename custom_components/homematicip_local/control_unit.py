@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Set as AbstractSet
+import contextlib
 from copy import deepcopy
 import logging
 from types import UnionType
@@ -15,6 +16,7 @@ from aiohomematic.const import (
     CALLBACK_TYPE,
     CONF_PASSWORD,
     CONF_USERNAME,
+    DEFAULT_DELAY_NEW_DEVICE_CREATION,
     DEFAULT_ENABLE_PROGRAM_SCAN,
     DEFAULT_ENABLE_SYSVAR_SCAN,
     DEFAULT_PROGRAM_MARKERS,
@@ -29,6 +31,7 @@ from aiohomematic.const import (
     CentralUnitState,
     DataPointCategory,
     DescriptionMarker,
+    DeviceDescription,
     EventKey,
     EventType,
     Interface,
@@ -45,6 +48,8 @@ from aiohomematic.support import check_config
 
 from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+
+# --- Repairs/fix flow support ---
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -91,6 +96,7 @@ from .const import (
     LEARN_MORE_URL_XMLRPC_SERVER_RECEIVES_NO_EVENTS,
 )
 from .mqtt import MQTTConsumer
+from .repairs import REPAIR_CALLBACKS
 from .support import (
     CLICK_EVENT_SCHEMA,
     DEVICE_AVAILABILITY_EVENT_SCHEMA,
@@ -101,6 +107,7 @@ from .support import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
 _DATA_POINT_T = TypeVar("_DATA_POINT_T", bound=CallbackDataPoint)
 
 
@@ -253,8 +260,10 @@ class ControlUnit(BaseControlUnit):
     def _async_backend_system_callback(
         self,
         system_event: BackendSystemEvent,
+        interface_id: str | None = None,
         new_data_points: Mapping[DataPointCategory, AbstractSet[CallbackDataPoint]] | None = None,
         new_channel_events: list[tuple[GenericEvent, ...]] | None = None,
+        new_device_descriptions: tuple[DeviceDescription, ...] | None = None,
         source: SourceOfDeviceCreation | None = None,
         **kwargs: Any,
     ) -> None:
@@ -285,7 +294,8 @@ class ControlUnit(BaseControlUnit):
                         signal_new_data_point(entry_id=self._entry_id, platform=DataPointCategory.EVENT),
                         channel_events,
                     )
-        elif system_event == BackendSystemEvent.HUB_REFRESHED:
+            return
+        if system_event == BackendSystemEvent.HUB_REFRESHED:
             # Handle event of new hub entity creation in Homematic(IP) Local for OpenCCU.
             if new_data_points:
                 for platform, hub_data_points in new_data_points.items():
@@ -296,8 +306,40 @@ class ControlUnit(BaseControlUnit):
                             hub_data_points,
                         )
             return
-        elif system_event == BackendSystemEvent.NEW_DEVICES:
-            pass
+        if system_event == BackendSystemEvent.DEVICES_DELAYED and new_device_descriptions:
+            if not self._enable_system_notifications:
+                _LOGGER.debug("SYSTEM NOTIFICATION disabled for DEVICES_DELAYED")
+                return
+
+            for dd in new_device_descriptions:
+                address = dd["ADDRESS"]
+                issue_id = f"devices_delayed-{interface_id or 'unknown'}-{address}"
+
+                async def _fix_callback(_interface_id: str, _address: str) -> None:
+                    """Trigger manual add of the delayed device on the central."""
+                    if not interface_id:
+                        return
+                    with contextlib.suppress(Exception):
+                        await self._central.add_new_device_manually(interface_id=_interface_id, address=_address)
+                        return
+
+                REPAIR_CALLBACKS[issue_id] = _fix_callback
+
+                async_create_issue(
+                    hass=self._hass,
+                    domain=DOMAIN,
+                    issue_id=issue_id,
+                    is_fixable=True,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="devices_delayed",
+                    translation_placeholders={
+                        CONF_INSTANCE_NAME: self._instance_name,
+                        EventKey.INTERFACE_ID: interface_id or "",
+                        "addresses": address,
+                        "count": "1",
+                    },
+                )
+            return
         return
 
     @callback
@@ -569,8 +611,9 @@ class ControlConfig:
         entry_id: str,
         data: Mapping[str, Any],
         default_port: int = PORT_ANY,
-        start_direct: bool = False,
+        delay_new_device_creation: bool = DEFAULT_DELAY_NEW_DEVICE_CREATION,
         enable_device_firmware_check: bool = DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK,
+        start_direct: bool = False,
     ) -> None:
         """Create the required config for the ControlUnit."""
         self._hass: Final = hass
@@ -579,22 +622,23 @@ class ControlConfig:
         self._default_callback_port: Final = default_port
         self._start_direct: Final = start_direct
         self._enable_device_firmware_check: Final = enable_device_firmware_check
+        self._delay_new_device_creation: Final = delay_new_device_creation
 
         # central
-        self._instance_name: Final[str] = _cleanup_instance_name(instance_name=data[CONF_INSTANCE_NAME])
-        self._host: Final[str] = data[CONF_HOST]
-        self._username: Final[str] = data[CONF_USERNAME]
-        self._password: Final[str] = data[CONF_PASSWORD]
-        self._tls: Final[bool] = data[CONF_TLS]
-        self._verify_tls: Final[bool] = data[CONF_VERIFY_TLS]
-        self._callback_host: Final[str | None] = data.get(CONF_CALLBACK_HOST)
-        self._callback_port: Final[int | None] = data.get(CONF_CALLBACK_PORT)
-        self._json_port: Final[int | None] = data.get(CONF_JSON_PORT)
+        self._instance_name: Final[str] = _cleanup_instance_name(instance_name=self._data[CONF_INSTANCE_NAME])
+        self._host: Final[str] = self._data[CONF_HOST]
+        self._username: Final[str] = self._data[CONF_USERNAME]
+        self._password: Final[str] = self._data[CONF_PASSWORD]
+        self._tls: Final[bool] = self._data[CONF_TLS]
+        self._verify_tls: Final[bool] = self._data[CONF_VERIFY_TLS]
+        self._callback_host: Final[str | None] = self._data.get(CONF_CALLBACK_HOST)
+        self._callback_port: Final[int | None] = self._data.get(CONF_CALLBACK_PORT)
+        self._json_port: Final[int | None] = self._data.get(CONF_JSON_PORT)
 
         # interface_config
-        self._interface_config = data.get(CONF_INTERFACE, {})
+        self._interface_config = self._data.get(CONF_INTERFACE, {})
         # advanced_config
-        ac = data.get(CONF_ADVANCED_CONFIG, {})
+        ac = self._data.get(CONF_ADVANCED_CONFIG, {})
         self._enable_mqtt: Final[bool] = ac.get(CONF_ENABLE_MQTT, DEFAULT_ENABLE_MQTT)
         self._enable_program_scan: Final[bool] = ac.get(CONF_ENABLE_PROGRAM_SCAN, DEFAULT_ENABLE_PROGRAM_SCAN)
         self._enable_sub_devices: Final[bool] = ac.get(CONF_ENABLE_SUB_DEVICES, DEFAULT_ENABLE_SUB_DEVICES)
@@ -705,6 +749,7 @@ class ControlConfig:
             callback_port=self._callback_port if self._callback_port != PORT_ANY else None,
             central_id=central_id,
             client_session=aiohttp_client.async_get_clientsession(self._hass),
+            delay_new_device_creation=self._delay_new_device_creation,
             enable_device_firmware_check=DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK,
             enable_program_scan=self._enable_program_scan,
             enable_sysvar_scan=self._enable_sysvar_scan,
