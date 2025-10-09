@@ -10,6 +10,7 @@
         "step": {
             "advanced": {
                 "data": {
+                    "delay_new_device_creation": "Delay new device creation",
                     "enable_system_notifications": "Enable system notifications",
                     "listen_on_all_ip": "listen on all ip",
                     "mqtt_enabled": "enable MQTT",
@@ -23,6 +24,7 @@
                     "use_group_channel_for_cover_state": "Use group channel for cover state"
                 },
                 "data_description": {
+                    "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.",
                     "mqtt_enabled": "Enable MQTT to support Callbacks for CCU-Jack and CUxD",
                     "mqtt_prefix": "Define the mqtt prefix used for the CCU-Jack bridge",
                     "program_markers": "Comma separated list of markers for programs to enable fetching. To reset, the value must be set to a space.",
@@ -641,6 +643,18 @@
         }
     },
     "issues": {
+        "devices_delayed": {
+            "description": "The device creation of **{address}** was delayed on interface **{interface_id}**.\n\nYou can manually trigger the add process to include the device now.",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Manually add delayed device {address}",
+                        "description": "This will trigger the manual addition of device **{address}** on interface **{interface_id}**.\n\nConfirm to continue."
+                    }
+                }
+            },
+            "title": "Device creation of {address} delayed on {interface_id}"
+        },
         "fetch_data": {
             "description": "Unable to fetch data using a rega script.\n\nThis indicates an issue on your CCU.\n\nUsing fallback, that leeds to a higher DutyCycle during Integration startup for interface {interface_id}",
             "title": "Error fetching initial data"
@@ -672,6 +686,7 @@
         "step": {
             "advanced": {
                 "data": {
+                    "delay_new_device_creation": "Delay new device creation",
                     "enable_system_notifications": "Enable system notifications",
                     "listen_on_all_ip": "listen on all ip",
                     "mqtt_enabled": "enable MQTT",
@@ -686,6 +701,7 @@
                     "use_group_channel_for_cover_state": "Use group channel for cover state"
                 },
                 "data_description": {
+                    "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.",
                     "mqtt_enabled": "Enable MQTT to support Callbacks for CCU-Jack and CUxD",
                     "mqtt_prefix": "Define the mqtt prefix used for the CCU-Jack bridge",
                     "program_markers": "Comma separated list of markers for programs to enable fetching. To reset, the value must be set to a space.",

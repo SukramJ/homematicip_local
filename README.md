@@ -324,6 +324,14 @@ use_group_channel_for_cover_state:
       - Only HM experts should disable this option, that like to control all three writeable channels of a cover group. 
   type: bool
   default: true
+delay_new_device_creation:
+  description:
+    Option to delay the device creation until the device is completely configured in the CCU.
+    Instead of directly creating the device, a repair is created, so a user can decide when to create this device in HA.
+    By default devices are created immediately. That means that also the initial device name (serial number + model) is used for naming. 
+    This is only available for new devices that are taught in after the integration is configured initially.
+  type: bool
+  default: false
 ```
 
 
