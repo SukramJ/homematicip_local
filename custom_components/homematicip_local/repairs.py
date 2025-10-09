@@ -42,18 +42,19 @@ class _DevicesDelayedFixFlow(RepairsFlow):
             self._address = parts[2] or None
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:  # noqa: D401
-        if user_input is None:
-            # One-click confirm form.
-            return self.async_show_form(
-                step_id="confirm",
-                data_schema=vol.Schema({}),
-                description_placeholders={
-                    "issue_id": self._issue_id,
-                    "interface_id": self._interface_id or "",
-                    "address": self._address or "",
-                },
-            )
+        # Always show the confirm form first
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=vol.Schema({}),
+            description_placeholders={
+                "issue_id": self._issue_id,
+                "interface_id": self._interface_id or "",
+                "address": self._address or "",
+            },
+        )
 
+    async def async_step_confirm(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Handle the confirmation to trigger the manual device add and close the issue."""
         # Execute best-effort fix callback if present
         cb = REPAIR_CALLBACKS.pop(self._issue_id, None)
         if cb is not None:
@@ -63,9 +64,5 @@ class _DevicesDelayedFixFlow(RepairsFlow):
         # Close the issue
         async_delete_issue(hass=self.hass, domain=DOMAIN, issue_id=self._issue_id)
 
-        title = (
-            f"Device {self._address} manually added on {self._interface_id}"
-            if self._address and self._interface_id
-            else "Devices delayed — acknowledged"
-        )
-        return self.async_create_entry(title=title, data={})
+        # Let the frontend use the translation for success message
+        return self.async_create_entry(title="", data={})
