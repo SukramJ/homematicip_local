@@ -10,6 +10,7 @@
         "step": {
             "advanced": {
                 "data": {
+                    "delay_new_device_creation": "Erstellung neuer Geräte verzögern",
                     "enable_system_notifications": "Systembenachrichtigungen aktivieren",
                     "listen_on_all_ip": "Auf allen IP Adressen lauschen",
                     "mqtt_enabled": "MQTT aktivieren",
@@ -23,6 +24,7 @@
                     "use_group_channel_for_cover_state": "Verwende Gruppenkanal für Cover Status"
                 },
                 "data_description": {
+                    "delay_new_device_creation": "Die Erstellung neuer Geräte verzögern, bis diese in der CCU vollständig konfiguriert sind; stattdessen wird eine Reparatur erstellt, um das Gerät später hinzuzufügen.",
                     "mqtt_enabled": "Aktiviere MQTT, um Callbacks für CCU-Jack und CUxD zu nutzen",
                     "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix",
                     "program_markers": "Kommaseparierte Liste mit Markern für Programme zum Abrufen. Zum Zurückzusetzen muss der Wert auf ein Leerzeichen gesetzt werden.",
@@ -646,12 +648,12 @@
     },
     "issues": {
         "devices_delayed": {
-            "title": "Gerät verzögert auf {interface_id}",
-            "description": "Das Gerät **{addresses}** auf Schnittstelle **{interface_id}** wurde beim Start verzögert erkannt.\n\nDu kannst den Hinzufügeprozess jetzt manuell anstoßen.",
+            "title": "Geräterstellung von {address} verzögert auf {interface_id}",
+            "description": "Das Gerät **{address}** auf Schnittstelle **{interface_id}** wurde beim Start verzögert erkannt.\n\nDu kannst den Hinzufügeprozess jetzt manuell anstoßen.",
             "fix_flow": {
                 "step": {
                     "init": {
-                        "title": "Verzögertes Gerät manuell hinzufügen",
+                        "title": "Verzögertes Gerät {address} manuell hinzufügen",
                         "description": "Dies stößt das manuelle Hinzufügen des Geräts **{address}** auf Schnittstelle **{interface_id}** an.\n\nBestätige, um fortzufahren."
                     }
                 },
@@ -689,6 +691,7 @@
         "step": {
             "advanced": {
                 "data": {
+                    "delay_new_device_creation": "Erstellung neuer Geräte verzögern",
                     "enable_system_notifications": "Systembenachrichtigungen aktivieren",
                     "listen_on_all_ip": "Auf allen IP Adressen lauschen",
                     "mqtt_enabled": "MQTT aktivieren",
@@ -703,6 +706,7 @@
                     "use_group_channel_for_cover_state": "Verwende Gruppenkanal für Cover Status"
                 },
                 "data_description": {
+                    "delay_new_device_creation": "Die Erstellung neuer Geräte verzögern, bis diese in der CCU vollständig konfiguriert sind; stattdessen wird eine Reparatur erstellt, um das Gerät später hinzuzufügen.",
                     "mqtt_enabled": "Aktiviere MQTT, um Callbacks für CCU-Jack und CUxD zu nutzen",
                     "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix",
                     "program_markers": "Kommaseparierte Liste mit Markern für Programme zum Abrufen. Zum Zurückzusetzen muss der Wert auf ein Leerzeichen gesetzt werden.",

@@ -32,7 +32,6 @@ from aiohomematic.const import (
     CentralUnitState,
     DataPointCategory,
     DescriptionMarker,
-    DeviceDescription,
     EventKey,
     EventType,
     Interface,
@@ -47,7 +46,7 @@ from aiohomematic.model.data_point import CallbackDataPoint
 from aiohomematic.model.event import GenericEvent
 from aiohomematic.support import check_config
 
-from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PATH, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 
 # --- Repairs/fix flow support ---
@@ -60,6 +59,7 @@ from .const import (
     CONF_ADVANCED_CONFIG,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT,
+    CONF_DELAY_NEW_DEVICE_CREATION,
     CONF_ENABLE_MQTT,
     CONF_ENABLE_PROGRAM_SCAN,
     CONF_ENABLE_SUB_DEVICES,
@@ -67,6 +67,7 @@ from .const import (
     CONF_ENABLE_SYSVAR_SCAN,
     CONF_INSTANCE_NAME,
     CONF_INTERFACE,
+    CONF_INTERFACE_ID,
     CONF_JSON_PORT,
     CONF_LISTEN_ON_ALL_IP,
     CONF_MQTT_PREFIX,
@@ -120,6 +121,7 @@ class BaseControlUnit:
         self._hass: Final = control_config.hass
         self._entry_id: Final = control_config.entry_id
         self._instance_name: Final = control_config.instance_name
+        self._delay_new_device_creation: Final = control_config.delay_new_device_creation
         self._enable_mqtt: Final = control_config.enable_mqtt
         self._enable_sub_devices: Final = control_config.enable_sub_devices
         self._mqtt_prefix: Final = control_config.mqtt_prefix
@@ -262,9 +264,9 @@ class ControlUnit(BaseControlUnit):
         self,
         system_event: BackendSystemEvent,
         interface_id: str | None = None,
-        new_data_points: Mapping[DataPointCategory, AbstractSet[CallbackDataPoint]] | None = None,
+        new_addresses: tuple[str, ...] | None = None,
         new_channel_events: list[tuple[GenericEvent, ...]] | None = None,
-        new_device_descriptions: tuple[DeviceDescription, ...] | None = None,
+        new_data_points: Mapping[DataPointCategory, AbstractSet[CallbackDataPoint]] | None = None,
         source: SourceOfDeviceCreation | None = None,
         **kwargs: Any,
     ) -> None:
@@ -277,7 +279,7 @@ class ControlUnit(BaseControlUnit):
 
         # Handle event of new device creation in Homematic(IP) Local for OpenCCU.
         if system_event == BackendSystemEvent.DEVICES_CREATED:
-            if source and source == SourceOfDeviceCreation.NEW:
+            if self._delay_new_device_creation and source and source == SourceOfDeviceCreation.NEW:
                 return
             self._async_add_virtual_remotes_to_device_registry()
             if new_data_points:
@@ -307,13 +309,8 @@ class ControlUnit(BaseControlUnit):
                             hub_data_points,
                         )
             return
-        if system_event == BackendSystemEvent.DEVICES_DELAYED and new_device_descriptions:
-            if not self._enable_system_notifications:
-                _LOGGER.debug("SYSTEM NOTIFICATION disabled for DEVICES_DELAYED")
-                return
-
-            for dd in new_device_descriptions:
-                address = dd["ADDRESS"]
+        if system_event == BackendSystemEvent.DEVICES_DELAYED and new_addresses:
+            for address in new_addresses:
                 issue_id = f"devices_delayed-{interface_id or 'unknown'}-{address}"
 
                 if not interface_id or not address:
@@ -338,9 +335,8 @@ class ControlUnit(BaseControlUnit):
                     translation_key="devices_delayed",
                     translation_placeholders={
                         CONF_INSTANCE_NAME: self._instance_name,
-                        EventKey.INTERFACE_ID: interface_id or "",
-                        "addresses": address,
-                        "count": "1",
+                        CONF_INTERFACE_ID: interface_id,
+                        CONF_ADDRESS: address,
                     },
                 )
             return
@@ -615,21 +611,19 @@ class ControlConfig:
         entry_id: str,
         data: Mapping[str, Any],
         default_port: int = PORT_ANY,
-        delay_new_device_creation: bool = DEFAULT_DELAY_NEW_DEVICE_CREATION,
         enable_device_firmware_check: bool = DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK,
         start_direct: bool = False,
     ) -> None:
         """Create the required config for the ControlUnit."""
-        self._hass: Final = hass
-        self._entry_id: Final = entry_id
+        self.hass: Final = hass
+        self.entry_id: Final = entry_id
         self._data: Final = data
         self._default_callback_port: Final = default_port
         self._start_direct: Final = start_direct
         self._enable_device_firmware_check: Final = enable_device_firmware_check
-        self._delay_new_device_creation: Final = delay_new_device_creation
 
         # central
-        self._instance_name: Final[str] = _cleanup_instance_name(instance_name=self._data[CONF_INSTANCE_NAME])
+        self.instance_name: Final[str] = _cleanup_instance_name(instance_name=self._data[CONF_INSTANCE_NAME])
         self._host: Final[str] = self._data[CONF_HOST]
         self._username: Final[str] = self._data[CONF_USERNAME]
         self._password: Final[str] = self._data[CONF_PASSWORD]
@@ -643,15 +637,15 @@ class ControlConfig:
         self._interface_config = self._data.get(CONF_INTERFACE, {})
         # advanced_config
         ac = self._data.get(CONF_ADVANCED_CONFIG, {})
-        self._enable_mqtt: Final[bool] = ac.get(CONF_ENABLE_MQTT, DEFAULT_ENABLE_MQTT)
+        self.enable_mqtt: Final[bool] = ac.get(CONF_ENABLE_MQTT, DEFAULT_ENABLE_MQTT)
         self._enable_program_scan: Final[bool] = ac.get(CONF_ENABLE_PROGRAM_SCAN, DEFAULT_ENABLE_PROGRAM_SCAN)
-        self._enable_sub_devices: Final[bool] = ac.get(CONF_ENABLE_SUB_DEVICES, DEFAULT_ENABLE_SUB_DEVICES)
-        self._enable_system_notifications: Final[bool] = ac.get(
+        self.enable_sub_devices: Final[bool] = ac.get(CONF_ENABLE_SUB_DEVICES, DEFAULT_ENABLE_SUB_DEVICES)
+        self.enable_system_notifications: Final[bool] = ac.get(
             CONF_ENABLE_SYSTEM_NOTIFICATIONS, DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS
         )
         self._enable_sysvar_scan: Final[bool] = ac.get(CONF_ENABLE_SYSVAR_SCAN, DEFAULT_ENABLE_SYSVAR_SCAN)
         self._listen_on_all_ip: Final[bool] = ac.get(CONF_LISTEN_ON_ALL_IP, DEFAULT_LISTEN_ON_ALL_IP)
-        self._mqtt_prefix: Final[str] = ac.get(CONF_MQTT_PREFIX, DEFAULT_MQTT_PREFIX)
+        self.mqtt_prefix: Final[str] = ac.get(CONF_MQTT_PREFIX, DEFAULT_MQTT_PREFIX)
         self._program_markers: Final[tuple[DescriptionMarker | str, ...]] = (
             program_markers if (program_markers := ac.get(CONF_PROGRAM_MARKERS)) else DEFAULT_PROGRAM_MARKERS
         )
@@ -663,65 +657,33 @@ class ControlConfig:
         self._use_group_channel_for_cover_state: Final[bool] = ac.get(
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE, DEFAULT_USE_GROUP_CHANNEL_FOR_COVER_STATE
         )
-
-    @property
-    def hass(self) -> HomeAssistant:
-        """Return hass object."""
-        return self._hass
-
-    @property
-    def entry_id(self) -> str:
-        """Return the entry_id."""
-        return self._entry_id
-
-    @property
-    def enable_system_notifications(self) -> bool:
-        """Return the enable_system_notifications."""
-        return self._enable_system_notifications
-
-    @property
-    def enable_mqtt(self) -> bool:
-        """Return the enable_mqtt."""
-        return self._enable_mqtt
-
-    @property
-    def enable_sub_devices(self) -> bool:
-        """Return if sub devices are enabled."""
-        return self._enable_sub_devices
-
-    @property
-    def instance_name(self) -> str:
-        """Return the instance_name."""
-        return self._instance_name
-
-    @property
-    def mqtt_prefix(self) -> str:
-        """Return the mqtt_prefix."""
-        return self._mqtt_prefix
+        self.delay_new_device_creation: Final[bool] = ac.get(
+            CONF_DELAY_NEW_DEVICE_CREATION, DEFAULT_DELAY_NEW_DEVICE_CREATION
+        )
 
     def check_config(self) -> None:
         """Check config. Throws BaseHomematicException on failure."""
         if not self._check_instance_name_is_unique():
             raise InvalidConfig("Instance name must be unique.")
         if config_failures := check_config(
-            central_name=self._instance_name,
+            central_name=self.instance_name,
             host=self._host,
             username=self._username,
             password=self._password,
             callback_host=self._callback_host,
             callback_port=self._callback_port,
             json_port=self._json_port,
-            storage_folder=get_storage_folder(self._hass),
+            storage_folder=get_storage_folder(self.hass),
         ):
             failures = ", ".join(config_failures)
             raise InvalidConfig(failures)
 
     def _check_instance_name_is_unique(self) -> bool:
         """Check if instance_name is unique in HA."""
-        for entry in self._hass.config_entries.async_entries(domain=DOMAIN):
-            if entry.entry_id == self._entry_id or len(entry.data) == 0:
+        for entry in self.hass.config_entries.async_entries(domain=DOMAIN):
+            if entry.entry_id == self.entry_id or len(entry.data) == 0:
                 continue
-            if entry.data[CONF_INSTANCE_NAME] == self._instance_name:
+            if entry.data[CONF_INSTANCE_NAME] == self.instance_name:
                 return False
         return True
 
@@ -740,20 +702,20 @@ class ControlConfig:
             interface = self._interface_config[interface_name]
             interface_configs.add(
                 InterfaceConfig(
-                    central_name=self._instance_name,
+                    central_name=self.instance_name,
                     interface=Interface(interface_name),
                     port=interface.get(CONF_PORT),
                     remote_path=interface.get(CONF_PATH),
                 )
             )
         # use last 10 chars of entry_id for central_id uniqueness
-        central_id = self._entry_id[-10:]
+        central_id = self.entry_id[-10:]
         return CentralConfig(
             callback_host=self._callback_host if self._callback_host != IP_ANY_V4 else None,
             callback_port=self._callback_port if self._callback_port != PORT_ANY else None,
             central_id=central_id,
-            client_session=aiohttp_client.async_get_clientsession(self._hass),
-            delay_new_device_creation=self._delay_new_device_creation,
+            client_session=aiohttp_client.async_get_clientsession(self.hass),
+            delay_new_device_creation=self.delay_new_device_creation,
             enable_device_firmware_check=DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK,
             enable_program_scan=self._enable_program_scan,
             enable_sysvar_scan=self._enable_sysvar_scan,
@@ -762,15 +724,15 @@ class ControlConfig:
             host=self._host,
             interface_configs=interface_configs,
             interfaces_requiring_periodic_refresh=frozenset(
-                () if self._enable_mqtt else INTERFACES_REQUIRING_PERIODIC_REFRESH
+                () if self.enable_mqtt else INTERFACES_REQUIRING_PERIODIC_REFRESH
             ),
             json_port=self._json_port,
             max_read_workers=1,
-            name=self._instance_name,
+            name=self.instance_name,
             password=self._password,
             program_markers=self._program_markers,
             start_direct=self._start_direct,
-            storage_folder=get_storage_folder(self._hass),
+            storage_folder=get_storage_folder(self.hass),
             sysvar_markers=self._sysvar_markers,
             sys_scan_interval=self._sys_scan_interval,
             tls=self._tls,

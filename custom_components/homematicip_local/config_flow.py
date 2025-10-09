@@ -8,6 +8,7 @@ from typing import Any, Final, cast
 from urllib.parse import urlparse
 
 from aiohomematic.const import (
+    DEFAULT_DELAY_NEW_DEVICE_CREATION,
     DEFAULT_ENABLE_PROGRAM_SCAN,
     DEFAULT_ENABLE_SYSVAR_SCAN,
     DEFAULT_PROGRAM_MARKERS,
@@ -46,6 +47,7 @@ from .const import (
     CONF_ADVANCED_CONFIG,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT,
+    CONF_DELAY_NEW_DEVICE_CREATION,
     CONF_ENABLE_MQTT,
     CONF_ENABLE_PROGRAM_SCAN,
     CONF_ENABLE_SUB_DEVICES,
@@ -296,6 +298,12 @@ def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -
                 CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE,
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(
                     CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE, DEFAULT_USE_GROUP_CHANNEL_FOR_COVER_STATE
+                ),
+            ): BOOLEAN_SELECTOR,
+            vol.Optional(
+                CONF_DELAY_NEW_DEVICE_CREATION,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(
+                    CONF_DELAY_NEW_DEVICE_CREATION, DEFAULT_DELAY_NEW_DEVICE_CREATION
                 ),
             ): BOOLEAN_SELECTOR,
         }
@@ -595,6 +603,7 @@ def _update_advanced_input(data: ConfigType, advanced_input: ConfigType) -> None
     data[CONF_ADVANCED_CONFIG][CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE] = advanced_input[
         CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE
     ]
+    data[CONF_ADVANCED_CONFIG][CONF_DELAY_NEW_DEVICE_CREATION] = advanced_input[CONF_DELAY_NEW_DEVICE_CREATION]
 
     if advanced_input.get(CONF_UN_IGNORES):
         data[CONF_ADVANCED_CONFIG][CONF_UN_IGNORES] = advanced_input[CONF_UN_IGNORES]

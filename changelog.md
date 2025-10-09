@@ -7,6 +7,7 @@
   - Add option to delay new device creation
   - Add source of device creation to callback
 - Add unknown_pong_mismatch notification
+- Add option to config flow to delay new device creation
 
 # Version 1.88.1 (2025-10-01)
 
@@ -15,7 +16,7 @@
   - Add option to cover entities that the current default behaviour can be disabled:
       - The default behaviour is, that the primary cover entity of a group uses the level of the state channel and no its own level to display a correct level.
       - Only HM experts should disable this option, that like to control all three writeable channels of a cover group. 
-  - Add option to config_flow for cover entities
+  - Add option to config flow for cover entities
 
 # Version 1.88.0 (2025-10-01)
 

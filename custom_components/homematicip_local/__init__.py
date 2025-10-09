@@ -88,7 +88,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
         entry_id=entry.entry_id,
         data=entry.data,
         default_port=default_callback_port,
-        delay_new_device_creation=entry.pref_disable_new_entities,
     ).create_control_unit()
     entry.runtime_data = control
     await hass.config_entries.async_forward_entry_setups(entry, HMIP_LOCAL_PLATFORMS)
@@ -125,8 +124,8 @@ async def async_remove_config_entry_device(
     if (address_data := get_device_address_at_interface_from_identifiers(identifiers=device_entry.identifiers)) is None:
         return False
 
-    interface_id: str = address_data[0]
-    device_address: str = address_data[1]
+    device_address: str = address_data[0]
+    interface_id: str = address_data[1]
 
     if interface_id and device_address and (control_unit := entry.runtime_data):
         await control_unit.central.delete_device(interface_id=interface_id, device_address=device_address)
