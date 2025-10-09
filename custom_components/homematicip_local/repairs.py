@@ -45,7 +45,7 @@ class _DevicesDelayedFixFlow(RepairsFlow):
         if user_input is None:
             # One-click confirm form.
             return self.async_show_form(
-                step_id="init",
+                step_id="confirm",
                 data_schema=vol.Schema({}),
                 description_placeholders={
                     "issue_id": self._issue_id,

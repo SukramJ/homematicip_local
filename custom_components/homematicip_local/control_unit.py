@@ -311,7 +311,7 @@ class ControlUnit(BaseControlUnit):
             return
         if system_event == BackendSystemEvent.DEVICES_DELAYED and new_addresses:
             for address in new_addresses:
-                issue_id = f"devices_delayed-{interface_id or 'unknown'}-{address}"
+                issue_id = f"devices_delayed-{interface_id}-{address}"
 
                 if not interface_id or not address:
                     continue

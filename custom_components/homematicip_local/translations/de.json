@@ -652,7 +652,7 @@
             "description": "Das Gerät **{address}** auf Schnittstelle **{interface_id}** wurde beim Start verzögert erkannt.\n\nDu kannst den Hinzufügeprozess jetzt manuell anstoßen.",
             "fix_flow": {
                 "step": {
-                    "init": {
+                    "confirm": {
                         "title": "Verzögertes Gerät {address} manuell hinzufügen",
                         "description": "Dies stößt das manuelle Hinzufügen des Geräts **{address}** auf Schnittstelle **{interface_id}** an.\n\nBestätige, um fortzufahren."
                     }

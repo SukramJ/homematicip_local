@@ -648,7 +648,7 @@
             "description": "The device **{address}** on interface **{interface_id}** was delayed during initialization.\n\nYou can manually trigger the add process to include the device now.",
             "fix_flow": {
                 "step": {
-                    "init": {
+                    "confirm": {
                         "title": "Manually add delayed device {address}",
                         "description": "This will trigger the manual addition of device **{address}** on interface **{interface_id}**.\n\nConfirm to continue."
                     }
