@@ -311,12 +311,12 @@ class ControlUnit(BaseControlUnit):
             return
         if system_event == BackendSystemEvent.DEVICES_DELAYED and new_addresses:
             for address in new_addresses:
-                issue_id = f"devices_delayed-{interface_id}-{address}"
+                issue_id = f"devices_delayed|{interface_id}|{address}"
 
                 if not interface_id or not address:
                     continue
 
-                async def _fix_callback(_interface_id: str, _address: str) -> None:
+                async def _fix_callback(*, _interface_id: str, _address: str) -> None:
                     """Trigger manual add of the delayed device on the central."""
                     if not interface_id:
                         return

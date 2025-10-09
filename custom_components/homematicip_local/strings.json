@@ -644,15 +644,14 @@
     },
     "issues": {
         "devices_delayed": {
-            "description": "The device **{address}** on interface **{interface_id}** was delayed during initialization.\n\nYou can manually trigger the add process to include the device now.",
+            "description": "The device creation of **{address}** was delayed on interface **{interface_id}**.\n\nYou can manually trigger the add process to include the device now.",
             "fix_flow": {
                 "step": {
                     "confirm": {
                         "title": "Manually add delayed device {address}",
                         "description": "This will trigger the manual addition of device **{address}** on interface **{interface_id}**.\n\nConfirm to continue."
                     }
-                },
-                "success": "Device {address} was manually added on {interface_id}."
+                }
             },
             "title": "Device creation of {address} delayed on {interface_id}"
         },

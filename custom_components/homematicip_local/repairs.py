@@ -36,7 +36,7 @@ class _DevicesDelayedFixFlow(RepairsFlow):
         # Issue id format: devices_delayed-<interface_id>-<address>
         self._interface_id: str | None = None
         self._address: str | None = None
-        parts = issue_id.split("-", 2)
+        parts = issue_id.split("|", 2)
         if len(parts) >= 3:
             self._interface_id = parts[1] or None
             self._address = parts[2] or None

@@ -648,15 +648,14 @@
     },
     "issues": {
         "devices_delayed": {
-            "description": "Das Gerät **{address}** auf Schnittstelle **{interface_id}** wurde beim Start verzögert erkannt.\n\nDu kannst den Hinzufügeprozess jetzt manuell anstoßen.",
+            "description": "Die Geräterstellung von **{address}** auf Schnittstelle **{interface_id}** wurde verzögert.\n\nDu kannst den Hinzufügeprozess jetzt manuell anstoßen.",
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "title": "Verzögertes Gerät {address} manuell hinzufügen",
+                        "title": "Gerät {address} manuell hinzufügen",
                         "description": "Dies stößt das manuelle Hinzufügen des Geräts **{address}** auf Schnittstelle **{interface_id}** an.\n\nBestätige, um fortzufahren."
                     }
-                },
-                "success": "Gerät {address} wurde manuell auf {interface_id} hinzugefügt."
+                }
             },
             "title": "Geräterstellung von {address} verzögert auf {interface_id}"
         },
