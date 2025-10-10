@@ -1,4 +1,4 @@
-# Version 1.88.2 (2025-10-06)
+# Version 1.89.0 (2025-10-10)
 
 ## What's Changed
 - Bump aiohomematic to 2025.10.4
