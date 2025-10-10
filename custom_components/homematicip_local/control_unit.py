@@ -683,7 +683,7 @@ class ControlConfig:
         for entry in self.hass.config_entries.async_entries(domain=DOMAIN):
             if entry.entry_id == self.entry_id or len(entry.data) == 0:
                 continue
-            if entry.data[CONF_INSTANCE_NAME] == self.instance_name:
+            if hasattr(entry.data, CONF_INSTANCE_NAME) and entry.data[CONF_INSTANCE_NAME] == self.instance_name:
                 return False
         return True
 
