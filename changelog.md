@@ -1,11 +1,12 @@
-# Version 1.89.0 (2025-10-10)
+# Version 1.89.1 (2025-10-10)
 
 ## What's Changed
-- Bump aiohomematic to 2025.10.4
+- Bump aiohomematic to 2025.10.5
   - API cleanup: ensure that kw arguments are passed to the underlying function
   - Add Keyword-only method linter (mypy-style)
   - Add option to delay new device creation
   - Add source of device creation to callback
+  - Fix issue with non existing PARENT in device description
 - Add unknown_pong_mismatch notification
 - Add option to config flow to delay new device creation
 
