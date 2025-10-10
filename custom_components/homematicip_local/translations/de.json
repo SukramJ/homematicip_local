@@ -648,7 +648,6 @@
     },
     "issues": {
         "devices_delayed": {
-            "description": "Die Geräterstellung von **{address}** auf Schnittstelle **{interface_id}** wurde verzögert.\n\nDu kannst den Hinzufügeprozess jetzt manuell anstoßen.",
             "fix_flow": {
                 "step": {
                     "confirm": {

@@ -644,7 +644,6 @@
     },
     "issues": {
         "devices_delayed": {
-            "description": "The device creation of **{address}** was delayed on interface **{interface_id}**.\n\nYou can manually trigger the add process to include the device now.",
             "fix_flow": {
                 "step": {
                     "confirm": {
