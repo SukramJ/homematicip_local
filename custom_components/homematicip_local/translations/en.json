@@ -35,7 +35,7 @@
             "central": {
                 "data": {
                     "callback_host": "Callback Hostname/IP-Address",
-                    "callback_port": "Callback XML-RPC Port",
+                    "callback_port_xml_rpc": "Callback XML-RPC Port",
                     "host": "CCU Hostname/IP-Address",
                     "instance_name": "Integration instance name",
                     "json_port": "JSON-RPC Port",
@@ -46,7 +46,7 @@
                 },
                 "data_description": {
                     "callback_host": "To reset the callback host it must be set to one blank character",
-                    "callback_port": "To reset the callback port it must be set to 0",
+                    "callback_port_xml_rpc": "To reset the callback port it must be set to 0",
                     "instance_name": "Name of the HA instance.\n If you want to connect to the same CCU instance from multiple HA installations this instance_name must be unique on every HA instance",
                     "json_port": "To reset the JSON-RPC Port it must be set to 0",
                     "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-",
@@ -712,7 +712,7 @@
             "central": {
                 "data": {
                     "callback_host": "Callback Hostname/IP-Address",
-                    "callback_port": "Callback XML-RPC Port",
+                    "callback_port_xml_rpc": "Callback XML-RPC Port",
                     "host": "CCU Hostname/IP-Address",
                     "json_port": "JSON-RPC Port",
                     "password": "CCU Password",
@@ -722,7 +722,7 @@
                 },
                 "data_description": {
                     "callback_host": "To reset the callback host it must be set to one blank character",
-                    "callback_port": "To reset the callback port it must be set to 0",
+                    "callback_port_xml_rpc": "To reset the callback port it must be set to 0",
                     "json_port": "To reset the JSON-RPC Port it must be set to 0",
                     "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-",
                     "username": "Case sensitive. User must be in admin role"

@@ -1996,7 +1996,7 @@ Rounding support for Concentration of HmIP-SCTH230 will be re-added with HA 2023
 - Bump hahomematic to 1.0.5
   - Limit hub_state to ccu only
 - Remove deprecated light const
-- Remove defaults in OptionsFlow for not optional values (callback_ip, callback_port, json_port)
+- Remove defaults in OptionsFlow for not optional values (callback_ip, callback_port_xml_rpc, json_port)
 
 # Version 1.0.3 (2022-04-02)
 

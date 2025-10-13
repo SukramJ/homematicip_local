@@ -164,7 +164,7 @@ def control_config(hass: HomeAssistant, entry_data_v2) -> ControlConfig:
         hass=hass,
         entry_id=const.CONFIG_ENTRY_ID,
         data=entry_data_v2,
-        default_port=const.DEFAULT_CALLBACK_PORT,
+        default_callback_port_xml_rpc=const.DEFAULT_CALLBACK_PORT,
     )
 
 
