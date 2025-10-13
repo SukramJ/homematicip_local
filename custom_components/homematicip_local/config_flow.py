@@ -46,7 +46,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_ADVANCED_CONFIG,
     CONF_CALLBACK_HOST,
-    CONF_CALLBACK_PORT,
+    CONF_CALLBACK_PORT_XML_RPC,
     CONF_DELAY_NEW_DEVICE_CREATION,
     CONF_ENABLE_MQTT,
     CONF_ENABLE_PROGRAM_SCAN,
@@ -127,7 +127,9 @@ def get_domain_schema(data: ConfigType) -> Schema:
             vol.Required(CONF_TLS, default=data.get(CONF_TLS, DEFAULT_TLS)): BOOLEAN_SELECTOR,
             vol.Required(CONF_VERIFY_TLS, default=data.get(CONF_VERIFY_TLS, False)): BOOLEAN_SELECTOR,
             vol.Optional(CONF_CALLBACK_HOST, default=data.get(CONF_CALLBACK_HOST) or UNDEFINED): TEXT_SELECTOR,
-            vol.Optional(CONF_CALLBACK_PORT, default=data.get(CONF_CALLBACK_PORT) or UNDEFINED): PORT_SELECTOR_OPTIONAL,
+            vol.Optional(
+                CONF_CALLBACK_PORT_XML_RPC, default=data.get(CONF_CALLBACK_PORT_XML_RPC) or UNDEFINED
+            ): PORT_SELECTOR_OPTIONAL,
             vol.Optional(CONF_JSON_PORT, default=data.get(CONF_JSON_PORT) or UNDEFINED): PORT_SELECTOR_OPTIONAL,
         }
     )
@@ -326,7 +328,7 @@ async def _async_validate_config_and_get_system_information(
 class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the instance flow for Homematic(IP) Local for OpenCCU."""
 
-    VERSION = 9
+    VERSION = 10
     CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
@@ -547,8 +549,8 @@ def _get_ccu_data(data: ConfigType, user_input: ConfigType) -> ConfigType:
     }
     if (callback_host := user_input.get(CONF_CALLBACK_HOST)) and callback_host.strip() != "":
         ccu_data[CONF_CALLBACK_HOST] = callback_host
-    if callback_port := user_input.get(CONF_CALLBACK_PORT):
-        ccu_data[CONF_CALLBACK_PORT] = callback_port
+    if callback_port_xml_rpc := user_input.get(CONF_CALLBACK_PORT_XML_RPC):
+        ccu_data[CONF_CALLBACK_PORT_XML_RPC] = callback_port_xml_rpc
     if json_port := user_input.get(CONF_JSON_PORT):
         ccu_data[CONF_JSON_PORT] = json_port
 

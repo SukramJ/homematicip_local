@@ -132,7 +132,7 @@ Advanced setups might consider this:
 
 This integration starts a local XML-RPC server within HA, which automatically selects a free port or uses the optionally defined callback port.
 This means that the CCU must be able to start a new connection to the system running HA and to the port. So check the firewall of the system running HA (host/VM) to allow communication from the CCU. This Traffic (state updates) is always unencrypted.
-If running HA on docker it is recommended to use `network_mode: host`, or specify the callback_host and callback_port parameters (see [Configuration Variables](#configuration-variables)).
+If running HA on docker it is recommended to use `network_mode: host`, or specify the callback_host and callback_port_xml_rpc parameters (see [Configuration Variables](#configuration-variables)).
 
 ### Authentication
 
@@ -198,7 +198,7 @@ verify_tls:
 callback_host:
   description: Hostname or IP address for callback-connection (only required in special network conditions).
   type: string
-callback_port:
+callback_port_xml_rpc:
   description: Port for callback-connection (only required in special network conditions).
   type: integer
 json_port:
@@ -341,7 +341,7 @@ The JSON-RPC Port is used to fetch names and room information from the CCU. The 
 If you are using Homegear the names are fetched using metadata available via XML-RPC. Hence the JSON-RPC port is irrelevant for Homegear users.
 **To reset the JSON-RPC Port it must be set to 0.**
 
-### callback_host and callback_port
+### callback_host and callback_port_xml_rpc
 
 These two options are required for _special_ network environments. If for example Home Assistant is running within a Docker container and detects its own IP to be within the Docker network, the CCU won't be able to establish the connection to Home Assistant. In this case you have to specify which address and port the CCU should connect to. This may require forwarding connections on the Docker host machine to the relevant container.
 
@@ -843,7 +843,7 @@ If the integration does not work as expected, try the following before opening a
 - Review Home Assistant logs for entries related to this integration: homematicip_local and aiohomematic. Address any errors or warnings shown.
 - Verify required ports are open and reachable between HA and your hub (CCU/OpenCCU/Homegear). See Firewall and required ports above.
 - Ensure the CCU user has admin privileges and that your password only contains supported characters (A-Z, a-z, 0-9 and .!$():;#-).
-- When running HA in Docker, prefer network_mode: host. Otherwise, set callback_host and callback_port in the configuration and allow inbound connections from the CCU to that port.
+- When running HA in Docker, prefer network_mode: host. Otherwise, set callback_host and callback_port_xml_rpc in the configuration and allow inbound connections from the CCU to that port.
 - If you run multiple HA instances or connect to multiple CCUs, make instance_name unique per HA instance.
 - For persistent auto-discovery entries after setup, click Ignore or reconfigure the existing instance, then restart HA.
 - After updating CCU firmware or changing interfaces, restart Home Assistant and reload the integration.

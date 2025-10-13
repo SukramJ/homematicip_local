@@ -35,7 +35,7 @@
             "central": {
                 "data": {
                     "callback_host": "Callback Hostname/IP-Adresse",
-                    "callback_port": "Callback XML-RPC Port",
+                    "callback_port_xml_rpc": "Callback XML-RPC Port",
                     "host": "CCU Hostname/IP-Adresse",
                     "instance_name": "Instanzname der Integration",
                     "json_port": "JSON-RPC Port",
@@ -46,7 +46,7 @@
                 },
                 "data_description": {
                     "callback_host": "Um den Callback-Host zurückzusetzen, muss der Wert auf ein Leerzeichen gesetzt werden",
-                    "callback_port": "Um den Callback-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden",
+                    "callback_port_xml_rpc": "Um den Callback-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden",
                     "instance_name": "Name der HA-Instanz.\n Wenn von mehreren HA-Installationen aus eine Verbindung mit derselben CCU-Instanz herstellt werden soll, muss dieser Instanzname auf jeder HA-Instanz eindeutig sein",
                     "json_port": "Um den JSON-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden",
                     "password": "Groß-/Kleinschreibung beachten. Erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-",
@@ -716,7 +716,7 @@
             "central": {
                 "data": {
                     "callback_host": "Callback Hostname/IP-Adresse",
-                    "callback_port": "Callback XML-RPC Port",
+                    "callback_port_xml_rpc": "Callback XML-RPC Port",
                     "host": "CCU Hostname/IP-Adresse",
                     "json_port": "JSON-RPC Port",
                     "password": "CCU Passwort",
@@ -726,7 +726,7 @@
                 },
                 "data_description": {
                     "callback_host": "Um den Callback-Host zurückzusetzen, muss der Wert auf ein Leerzeichen gesetzt werden",
-                    "callback_port": "Um den Callback-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden",
+                    "callback_port_xml_rpc": "Um den Callback-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden",
                     "json_port": "Um den JSON-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden",
                     "password": "Groß-/Kleinschreibung beachten. Erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-",
                     "username": "Groß-/Kleinschreibung beachten. Benutzer muss die Administratorrolle haben"

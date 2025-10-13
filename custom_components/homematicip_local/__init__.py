@@ -22,6 +22,7 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     CONF_ADVANCED_CONFIG,
+    CONF_CALLBACK_PORT_XML_RPC,
     CONF_ENABLE_PROGRAM_SCAN,
     CONF_ENABLE_SYSTEM_NOTIFICATIONS,
     CONF_ENABLE_SYSVAR_SCAN,
@@ -87,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
         hass=hass,
         entry_id=entry.entry_id,
         data=entry.data,
-        default_port=default_callback_port_xml_rpc,
+        default_callback_port_xml_rpc=default_callback_port_xml_rpc,
     ).create_control_unit()
     entry.runtime_data = control
     await hass.config_entries.async_forward_entry_setups(entry, HMIP_LOCAL_PLATFORMS)
@@ -218,5 +219,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
         data = dict(entry.data)
         cleanup_cache_dirs(central_name=entry.data[CONF_INSTANCE_NAME], storage_folder=get_storage_folder(hass=hass))
         hass.config_entries.async_update_entry(entry, version=9, data=data)
+    if entry.version == 9:
+        data = dict(entry.data)
+        if callback_port_xml_rpc := data.get("callback_port"):
+            with contextlib.suppress(Exception):
+                del data["callback_port"]
+            data[CONF_CALLBACK_PORT_XML_RPC] = callback_port_xml_rpc
+        hass.config_entries.async_update_entry(entry, version=10, data=data)
     _LOGGER.info("Migration to version %s successful", entry.version)
     return True
