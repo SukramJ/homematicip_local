@@ -1,9 +1,10 @@
 # Version 1.90.0 (2025-10-13)
 
-- Bump aiohomematic to 2025.10.6
+- Bump aiohomematic to 2025.10.7
   - Add ELV-SH-PSMCI
   - Refactor rpc handling
-  
+- Add config flow migration for parameter renaming
+
 # Version 1.89.1 (2025-10-10)
 
 ## What's Changed
