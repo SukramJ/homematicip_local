@@ -86,7 +86,7 @@ class Factory:
             interface_configs={
                 interface_config,
             },
-            default_callback_port=54321,
+            default_callback_port_xml_rpc=54321,
             client_session=None,
             un_ignore_list=un_ignore_list,
             start_direct=True,
