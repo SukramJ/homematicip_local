@@ -20,12 +20,12 @@ from aiohomematic.const import (
     DEFAULT_DELAY_NEW_DEVICE_CREATION,
     DEFAULT_ENABLE_PROGRAM_SCAN,
     DEFAULT_ENABLE_SYSVAR_SCAN,
+    DEFAULT_INTERFACES_REQUIRING_PERIODIC_REFRESH,
     DEFAULT_PROGRAM_MARKERS,
     DEFAULT_SYS_SCAN_INTERVAL,
     DEFAULT_SYSVAR_MARKERS,
     DEFAULT_UN_IGNORES,
     DEFAULT_USE_GROUP_CHANNEL_FOR_COVER_STATE,
-    INTERFACES_REQUIRING_PERIODIC_REFRESH,
     IP_ANY_V4,
     PORT_ANY,
     BackendSystemEvent,
@@ -671,7 +671,7 @@ class ControlConfig:
             username=self._username,
             password=self._password,
             callback_host=self._callback_host,
-            callback_port=self._callback_port,
+            callback_port_xml_rpc=self._callback_port,
             json_port=self._json_port,
             storage_folder=get_storage_folder(self.hass),
         ):
@@ -712,7 +712,7 @@ class ControlConfig:
         central_id = self.entry_id[-10:]
         return CentralConfig(
             callback_host=self._callback_host if self._callback_host != IP_ANY_V4 else None,
-            callback_port=self._callback_port if self._callback_port != PORT_ANY else None,
+            callback_port_xml_rpc=self._callback_port if self._callback_port != PORT_ANY else None,
             central_id=central_id,
             client_session=aiohttp_client.async_get_clientsession(self.hass),
             delay_new_device_creation=self.delay_new_device_creation,
@@ -720,11 +720,11 @@ class ControlConfig:
             enable_program_scan=self._enable_program_scan,
             enable_sysvar_scan=self._enable_sysvar_scan,
             listen_ip_addr=IP_ANY_V4 if self._listen_on_all_ip else None,
-            default_callback_port=self._default_callback_port,
+            default_callback_port_xml_rpc=self._default_callback_port,
             host=self._host,
             interface_configs=interface_configs,
             interfaces_requiring_periodic_refresh=frozenset(
-                () if self.enable_mqtt else INTERFACES_REQUIRING_PERIODIC_REFRESH
+                () if self.enable_mqtt else DEFAULT_INTERFACES_REQUIRING_PERIODIC_REFRESH
             ),
             json_port=self._json_port,
             max_read_workers=1,

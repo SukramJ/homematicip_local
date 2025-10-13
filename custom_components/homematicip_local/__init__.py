@@ -45,7 +45,7 @@ HomematicConfigEntry: TypeAlias = ConfigEntry[ControlUnit]
 class HomematicData:
     """Common data for shared Homematic ip local data."""
 
-    default_callback_port: int | None = None
+    default_callback_port_xml_rpc: int | None = None
 
 
 HM_KEY: HassKey[HomematicData] = HassKey(DOMAIN)
@@ -79,15 +79,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
         return False
 
     hass.data.setdefault(HM_KEY, HomematicData())
-    if (default_callback_port := hass.data[HM_KEY].default_callback_port) is None:
-        default_callback_port = find_free_port()
-        hass.data[HM_KEY].default_callback_port = default_callback_port
+    if (default_callback_port_xml_rpc := hass.data[HM_KEY].default_callback_port_xml_rpc) is None:
+        default_callback_port_xml_rpc = find_free_port()
+        hass.data[HM_KEY].default_callback_port_xml_rpc = default_callback_port_xml_rpc
 
     control = ControlConfig(
         hass=hass,
         entry_id=entry.entry_id,
         data=entry.data,
-        default_port=default_callback_port,
+        default_port=default_callback_port_xml_rpc,
     ).create_control_unit()
     entry.runtime_data = control
     await hass.config_entries.async_forward_entry_setups(entry, HMIP_LOCAL_PLATFORMS)
