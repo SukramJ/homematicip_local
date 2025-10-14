@@ -337,6 +337,9 @@
             "dew_point": {
                 "name": "Taupunkt"
             },
+            "dew_point_spread": {
+                "name": "Taupunkt Spreizung"
+            },
             "direction": {
                 "name": "Richtung",
                 "state": {
@@ -366,6 +369,9 @@
             },
             "energy_counter_total": {
                 "name": "Energiezähler Gesamt"
+            },
+            "enthalpy": {
+                "name": "Enthalpie"
             },
             "error": {
                 "name": "Fehler"

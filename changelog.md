@@ -1,6 +1,7 @@
 # Version 1.90.0 (2025-10-13)
 
-- Bump aiohomematic to 2025.10.7
+- Bump aiohomematic to 2025.10.8
+  - Add dew point spread and enthalpy to calculated sensors
   - Add ELV-SH-PSMCI
   - Refactor rpc handling
 - Add config flow migration for parameter renaming

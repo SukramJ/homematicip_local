@@ -333,6 +333,9 @@
             "dew_point": {
                 "name": "Dew point"
             },
+            "dew_point_spread": {
+                "name": "Dew point spread"
+            },
             "direction": {
                 "name": "Direction",
                 "state": {
@@ -362,6 +365,9 @@
             },
             "energy_counter_total": {
                 "name": "Energy Counter Total"
+            },
+            "enthalpy": {
+                "name": "Enthalpy"
             },
             "error": {
                 "name": "Error"
