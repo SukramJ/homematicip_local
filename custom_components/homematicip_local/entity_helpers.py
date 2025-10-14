@@ -60,6 +60,8 @@ NUMBER_CONCENTRATION_CM3: Final = "1/cm\u00b3"  # HmIP-SFD
 # Use greek small letter mu "\u03bc" instead of micro sign "\u00B5" for micro unit prefix see HA #144853
 LENGTH_MICROMETER: Final = "\u03bcm"  # HmIP-SFD
 
+KILOJOULS_PERKILOGRAM: Final = "kJ/kg"
+
 
 class HmNameSource(StrEnum):
     """Enum to define the source of a translation."""
@@ -188,6 +190,13 @@ _SENSOR_DESCRIPTIONS_BY_PARAM: Mapping[str | tuple[str, ...], EntityDescription]
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="dew_point",
     ),
+    "DEW_POINT_SPREAD": HmSensorEntityDescription(
+        key="DEW_POINT_SPREAD",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     ("ACTIVITY_STATE", "DIRECTION"): HmSensorEntityDescription(
         key="DIRECTION",
         device_class=SensorDeviceClass.ENUM,
@@ -210,6 +219,13 @@ _SENSOR_DESCRIPTIONS_BY_PARAM: Mapping[str | tuple[str, ...], EntityDescription]
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "ENTHALPY": HmSensorEntityDescription(
+        key="ENTHALPY",
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=KILOJOULS_PERKILOGRAM,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:fire",
     ),
     "FILLING_LEVEL": HmSensorEntityDescription(
         key="FILLING_LEVEL",
