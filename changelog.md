@@ -1,6 +1,7 @@
 # Version 1.90.0 (2025-10-13)
 
-- Bump aiohomematic to 2025.10.8
+- Bump aiohomematic to 2025.10.9
+  - Add session recorder
   - Add dew point spread and enthalpy to calculated sensors
   - Add ELV-SH-PSMCI
   - Refactor rpc handling
@@ -546,7 +547,7 @@ There is no longer any need to register Homematic(IP) Local for OpenCCU as a cus
     - Cleanup ParamsetDescriptionCache
     - Make HEATING_COOLING visible for thermostats
     - Make load only relevant paramset descriptions configurable
-    - Refactor folder handling
+    - Refactor directory handling
     - Refactor get_parameters for unignore_candidates
     - Use only relevant IP for XmlRPC Server listening on
 - Add HEATING_COOLING translations

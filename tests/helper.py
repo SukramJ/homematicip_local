@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from aiohomematic import const as aiohomematic_const
 from aiohomematic.central import CentralConfig
-from aiohomematic.client import InterfaceConfig, _ClientConfig
+from aiohomematic.client import ClientConfig, InterfaceConfig
 from aiohomematic.model.custom import CustomDataPoint
 from aiohomematic.model.data_point import BaseParameterDataPoint
 from aiohomematic_support.client_local import ClientLocal, LocalRessources
@@ -82,7 +82,7 @@ class Factory:
             username=const.USERNAME,
             password=const.PASSWORD,
             central_id="test1234",
-            storage_folder="homematicip_local",
+            storage_directory="homematicip_local",
             interface_configs={
                 interface_config,
             },
@@ -97,7 +97,7 @@ class Factory:
         central.register_homematic_callback(cb=self.ha_event_mock)
 
         client = ClientLocal(
-            client_config=_ClientConfig(
+            client_config=ClientConfig(
                 central=central,
                 interface_config=interface_config,
             ),
@@ -109,7 +109,7 @@ class Factory:
         await client.init_client()
 
         patch("aiohomematic.central.CentralUnit._get_primary_client", return_value=client).start()
-        patch("aiohomematic.client._ClientConfig.create_client", return_value=client).start()
+        patch("aiohomematic.client.ClientConfig.create_client", return_value=client).start()
         patch(
             "aiohomematic_support.client_local.ClientLocal.get_all_system_variables",
             return_value=const.SYSVAR_DATA if add_sysvars else [],

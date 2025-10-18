@@ -21,7 +21,7 @@
 *.pyc
 *.tar.gz
 
-# Setuptools distribution folder.
+# Setuptools distribution directory.
 /dist/
 
 # Python egg metadata, regenerated from source files by setuptools.
