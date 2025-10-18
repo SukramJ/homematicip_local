@@ -10,7 +10,7 @@ import logging
 from types import UnionType
 from typing import Any, Final, TypeVar, cast
 
-from aiohomematic import __version__ as HAHM_VERSION
+from aiohomematic import __version__ as AIOHM_VERSION
 from aiohomematic.central import INTERFACE_EVENT_SCHEMA, CentralConfig, CentralUnit
 from aiohomematic.client import InterfaceConfig
 from aiohomematic.const import (
@@ -165,7 +165,7 @@ class BaseControlUnit:
         )
         try:
             await self._central.start()
-            _LOGGER.info("Started central unit for %s (%s)", self._instance_name, HAHM_VERSION)
+            _LOGGER.info("Started central unit for %s (%s)", self._instance_name, AIOHM_VERSION)
         except BaseHomematicException:
             _LOGGER.warning("START_CENTRAL: Failed to start central unit for %s", self._instance_name)
 
