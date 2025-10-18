@@ -1085,6 +1085,24 @@
             },
             "name": "Put paramset"
         },
+        "record_session": {
+            "description": "Record a session. Helpful for debugging",
+            "fields": {
+                "entry_id": {
+                    "description": "Name(s) of Homematic central to record the session",
+                    "name": "Central"
+                },
+                "on_time": {
+                    "description": "Duration of the session in seconds",
+                    "name": "On Time"
+                },
+                "randomize_output": {
+                    "description": "Replace device addresses in the session outputby random generated addresses",
+                    "name": "Randomize output"
+                }
+            },
+            "name": "Record session"
+        },
         "remove_central_links": {
             "description": "Remove links to the central to disable support key press events",
             "fields": {

@@ -10,7 +10,7 @@ import logging
 from types import UnionType
 from typing import Any, Final, TypeVar, cast
 
-from aiohomematic import __version__ as HAHM_VERSION
+from aiohomematic import __version__ as AIOHM_VERSION
 from aiohomematic.central import INTERFACE_EVENT_SCHEMA, CentralConfig, CentralUnit
 from aiohomematic.client import InterfaceConfig
 from aiohomematic.const import (
@@ -165,7 +165,7 @@ class BaseControlUnit:
         )
         try:
             await self._central.start()
-            _LOGGER.info("Started central unit for %s (%s)", self._instance_name, HAHM_VERSION)
+            _LOGGER.info("Started central unit for %s (%s)", self._instance_name, AIOHM_VERSION)
         except BaseHomematicException:
             _LOGGER.warning("START_CENTRAL: Failed to start central unit for %s", self._instance_name)
 
@@ -597,7 +597,7 @@ class ControlUnitTemp(BaseControlUnit):
 
     async def stop_central(self, *args: Any) -> None:
         """Stop the control unit."""
-        await self._central.clear_caches()
+        await self._central.clear_files()
         await super().stop_central(*args)
 
 
@@ -673,7 +673,7 @@ class ControlConfig:
             callback_host=self._callback_host,
             callback_port_xml_rpc=self._callback_port_xml_rpc,
             json_port=self._json_port,
-            storage_folder=get_storage_folder(self.hass),
+            storage_directory=get_storage_directory(self.hass),
         ):
             failures = ", ".join(config_failures)
             raise InvalidConfig(failures)
@@ -732,9 +732,10 @@ class ControlConfig:
             password=self._password,
             program_markers=self._program_markers,
             start_direct=self._start_direct,
-            storage_folder=get_storage_folder(self.hass),
-            sysvar_markers=self._sysvar_markers,
+            start_recorder_for_minutes=2 if _LOGGER.isEnabledFor(logging.DEBUG) else 0,
+            storage_directory=get_storage_directory(self.hass),
             sys_scan_interval=self._sys_scan_interval,
+            sysvar_markers=self._sysvar_markers,
             tls=self._tls,
             un_ignore_list=self._un_ignore,
             use_group_channel_for_cover_state=self._use_group_channel_for_cover_state,
@@ -769,13 +770,13 @@ async def validate_config_and_get_system_information(
     return None
 
 
-def get_storage_folder(hass: HomeAssistant) -> str:
+def get_storage_directory(hass: HomeAssistant) -> str:
     """Return the base path where to store files for this integration."""
     return f"{hass.config.config_dir}/{DOMAIN}"
 
 
 def _cleanup_instance_name(instance_name: str) -> str:
-    """Clean up instance name problematic characters for folders."""
+    """Clean up instance name problematic characters for directories."""
     for char in ("/", "\\"):
         instance_name = instance_name.replace(char, "")
     return instance_name

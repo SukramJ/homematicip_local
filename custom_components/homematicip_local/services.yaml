@@ -267,6 +267,26 @@ get_variable_value:
       selector:
         text:
 
+record_session:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: homematicip_local
+    on_time:
+      required: true
+      example: 20
+      selector:
+        number:
+          min: 1
+          max: 600
+    randomize_output:
+      required: true
+      default: true
+      selector:
+        boolean:
+
 remove_central_links:
   fields:
     entry_id:

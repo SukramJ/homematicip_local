@@ -819,7 +819,7 @@
             },
             "name": "Zeitplan kopieren"
         },
-                "create_central_links": {
+        "create_central_links": {
             "description": "Erstellt Verknüpfungen zur Zentrale, um Tastendruck-Ereignisse zu ermöglichen",
             "fields": {
                 "device_id": {
@@ -1082,6 +1082,24 @@
                 }
             },
             "name": "Parametersatz eines Gerätes oder Kanals schreiben"
+        },
+        "record_session": {
+            "description": "Zeichnet eine Sitzung auf. Hilfreich beim Debuggen",
+            "fields": {
+                "entry_id": {
+                    "description": "Name der Homematic Zentrale, für die aufgezeichnet werden soll",
+                    "name": "Central"
+                },
+                "on_time": {
+                    "description": "Dauer der Aufnahme in Sekunden",
+                    "name": "Aktivierungszeit"
+                },
+                "randomize_output": {
+                    "description": "Geräteadressen in der Sitzungsausgabe durch zufällig generierte ersetzen",
+                    "name": "Geräteadressen zufällig generieren"
+                }
+            },
+            "name": "Sitzung aufzeichnen"
         },
         "remove_central_links": {
             "description": "Entfernt Verknüpfungen zur Zentrale, um Tastendruck-Ereignisse zu deaktivieren",

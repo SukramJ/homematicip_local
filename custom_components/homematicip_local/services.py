@@ -66,9 +66,11 @@ CONF_DESCRIPTION: Final = "description"
 CONF_ENTRY_ID: Final = "entry_id"
 CONF_INTERFACE_ID: Final = "interface_id"
 CONF_NAME: Final = "name"
+CONF_ON_TIME: Final = "on_time"
 CONF_PARAMETER: Final = "parameter"
 CONF_PARAMSET: Final = "paramset"
 CONF_PARAMSET_KEY: Final = "paramset_key"
+CONF_RANDOMIZE_OUTPUT: Final = "randomize_output"
 CONF_RECEIVER_CHANNEL_ADDRESS: Final = "receiver_channel_address"
 CONF_RX_MODE: Final = "rx_mode"
 CONF_SENDER_CHANNEL_ADDRESS: Final = "sender_channel_address"
@@ -173,6 +175,14 @@ SCHEMA_GET_VARIABLE_VALUE = vol.Schema(
     {
         vol.Required(CONF_ENTRY_ID): cv.string,
         vol.Required(CONF_NAME): cv.string,
+    }
+)
+
+SCHEMA_RECORD_SESSION = vol.Schema(
+    {
+        vol.Required(CONF_ENTRY_ID): cv.string,
+        vol.Required(CONF_ON_TIME): cv.positive_int,
+        vol.Required(CONF_RANDOMIZE_OUTPUT): cv.boolean,
     }
 )
 
@@ -281,6 +291,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             await _async_service_put_link_paramset(hass=hass, service=service)
         elif service_name == HmipLocalServices.PUT_PARAMSET:
             await _async_service_put_paramset(hass=hass, service=service)
+        elif service_name == HmipLocalServices.RECORD_SESSION:
+            await _async_service_record_session(hass=hass, service=service)
         elif service_name == HmipLocalServices.REMOVE_CENTRAL_LINKS:
             await _async_service_remove_central_link(hass=hass, service=service)
         elif service_name == HmipLocalServices.REMOVE_LINK:
@@ -379,6 +391,14 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         service_func=async_call_hmip_local_service,
         schema=SCHEMA_GET_VARIABLE_VALUE,
         supports_response=SupportsResponse.OPTIONAL,
+    )
+
+    async_register_admin_service(
+        hass=hass,
+        domain=DOMAIN,
+        service=HmipLocalServices.RECORD_SESSION,
+        service_func=async_call_hmip_local_service,
+        schema=SCHEMA_RECORD_SESSION,
     )
 
     async_register_admin_service(
@@ -859,7 +879,7 @@ async def _async_service_clear_cache(hass: HomeAssistant, service: ServiceCall) 
     """Service to clear the cache."""
     entry_id = service.data[CONF_ENTRY_ID]
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
-        await control.central.clear_caches()
+        await control.central.clear_files()
 
 
 async def _async_service_fetch_system_variables(hass: HomeAssistant, service: ServiceCall) -> None:
@@ -917,6 +937,18 @@ async def _async_service_put_paramset(hass: HomeAssistant, service: ServiceCall)
             )
         except BaseHomematicException as bhexc:
             raise HomeAssistantError(bhexc) from bhexc
+
+
+async def _async_service_record_session(hass: HomeAssistant, service: ServiceCall) -> None:
+    """Service to clear the cache."""
+    entry_id = service.data[CONF_ENTRY_ID]
+    on_time = service.data[CONF_ON_TIME]
+    randomize_output = service.data[CONF_RANDOMIZE_OUTPUT]
+
+    if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
+        await control.central.recorder.activate(
+            on_time=on_time, auto_save=True, randomize_output=randomize_output, use_ts_in_filename=True
+        )
 
 
 async def _async_service_update_device_firmware_data(hass: HomeAssistant, service: ServiceCall) -> None:
