@@ -83,6 +83,7 @@ class HmipLocalServices(StrEnum):
     LIGHT_SET_ON_TIME = "light_set_on_time"
     PUT_LINK_PARAMSET = "put_link_paramset"
     PUT_PARAMSET = "put_paramset"
+    RECORD_SESSION = "record_session"
     REMOVE_CENTRAL_LINKS = "remove_central_links"
     REMOVE_LINK = "remove_link"
     SET_COVER_COMBINED_POSITION = "set_cover_combined_position"

@@ -505,6 +505,11 @@ __Disclaimer: Too much writing to the device MASTER paramset could kill your dev
 
 Call to `putParamset` for direct connections on the XML-RPC interface.
 
+### `homematicip_local.record_session`
+
+Records a session for a central unit for a given time. The output is stored in 'Your home-assistant config directory'/homematicip_local/session/
+This is useful for debugging. The output contains a maximum of 10 minutes of data.
+
 ### `homematicip_local.remove_central_links`
 
 Removes a central link from the backend. This is required to disable enable button-press events.
