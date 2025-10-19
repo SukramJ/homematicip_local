@@ -947,7 +947,7 @@ async def _async_service_record_session(hass: HomeAssistant, service: ServiceCal
 
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
         await control.central.recorder.activate(
-            on_time=on_time, auto_save=True, randomize_output=randomize_output, use_ts_in_filename=True
+            on_time=on_time, auto_save=True, randomize_output=randomize_output, use_ts_in_file_name=True
         )
 
 

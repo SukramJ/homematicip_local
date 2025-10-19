@@ -21,6 +21,7 @@ from aiohomematic.const import (
     DEFAULT_ENABLE_PROGRAM_SCAN,
     DEFAULT_ENABLE_SYSVAR_SCAN,
     DEFAULT_INTERFACES_REQUIRING_PERIODIC_REFRESH,
+    DEFAULT_OPTIONAL_SETTINGS,
     DEFAULT_PROGRAM_MARKERS,
     DEFAULT_SYS_SCAN_INTERVAL,
     DEFAULT_SYSVAR_MARKERS,
@@ -37,6 +38,7 @@ from aiohomematic.const import (
     Interface,
     InterfaceEventType,
     Manufacturer,
+    OptionalSettings,
     Parameter,
     SourceOfDeviceCreation,
     SystemInformation,
@@ -71,6 +73,7 @@ from .const import (
     CONF_JSON_PORT,
     CONF_LISTEN_ON_ALL_IP,
     CONF_MQTT_PREFIX,
+    CONF_OPTIONAL_SETTINGS,
     CONF_PROGRAM_MARKERS,
     CONF_SYS_SCAN_INTERVAL,
     CONF_SYSVAR_MARKERS,
@@ -646,6 +649,9 @@ class ControlConfig:
         self._enable_sysvar_scan: Final[bool] = ac.get(CONF_ENABLE_SYSVAR_SCAN, DEFAULT_ENABLE_SYSVAR_SCAN)
         self._listen_on_all_ip: Final[bool] = ac.get(CONF_LISTEN_ON_ALL_IP, DEFAULT_LISTEN_ON_ALL_IP)
         self.mqtt_prefix: Final[str] = ac.get(CONF_MQTT_PREFIX, DEFAULT_MQTT_PREFIX)
+        self._optional_settings: Final[tuple[OptionalSettings | str, ...]] = (
+            optional_settings if (optional_settings := ac.get(CONF_OPTIONAL_SETTINGS)) else DEFAULT_OPTIONAL_SETTINGS
+        )
         self._program_markers: Final[tuple[DescriptionMarker | str, ...]] = (
             program_markers if (program_markers := ac.get(CONF_PROGRAM_MARKERS)) else DEFAULT_PROGRAM_MARKERS
         )
@@ -729,10 +735,10 @@ class ControlConfig:
             json_port=self._json_port,
             max_read_workers=1,
             name=self.instance_name,
+            optional_settings=self._optional_settings,
             password=self._password,
             program_markers=self._program_markers,
             start_direct=self._start_direct,
-            start_recorder_for_minutes=2 if _LOGGER.isEnabledFor(logging.DEBUG) else 0,
             storage_directory=get_storage_directory(self.hass),
             sys_scan_interval=self._sys_scan_interval,
             sysvar_markers=self._sysvar_markers,

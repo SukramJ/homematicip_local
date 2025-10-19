@@ -15,6 +15,7 @@
                     "listen_on_all_ip": "listen on all ip",
                     "mqtt_enabled": "enable MQTT",
                     "mqtt_prefix": "MQTT Prefix",
+                    "optional_settings": "optional settings",
                     "program_markers": "program markers",
                     "program_scan_enabled": "enable program scan",
                     "sub_devices_enabled": "enable sub devices",
@@ -27,6 +28,7 @@
                     "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.",
                     "mqtt_enabled": "Enable MQTT to support Callbacks for CCU-Jack and CUxD",
                     "mqtt_prefix": "Define the mqtt prefix used for the CCU-Jack bridge",
+                    "optional_settings": "Enable optional settings. Used for analytics and debugging. Should not be used during normal operations.",
                     "program_markers": "Comma separated list of markers for programs to enable fetching. To reset, the value must be set to a space.",
                     "sysvar_markers": "Comma separated list of markers for system variables to enable fetching, To reset, the value must be set to a space."
                 },
@@ -696,6 +698,7 @@
                     "listen_on_all_ip": "listen on all ip",
                     "mqtt_enabled": "enable MQTT",
                     "mqtt_prefix": "MQTT Prefix",
+                    "optional_settings": "optional settings",
                     "program_markers": "program markers",
                     "program_scan_enabled": "enable program scan",
                     "sub_devices_enabled": "enable sub devices",
@@ -709,6 +712,7 @@
                     "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.",
                     "mqtt_enabled": "Enable MQTT to support Callbacks for CCU-Jack and CUxD",
                     "mqtt_prefix": "Define the mqtt prefix used for the CCU-Jack bridge",
+                    "optional_settings": "Enable optional settings. Used for analytics and debugging. Should not be used during normal operations.",
                     "program_markers": "Comma separated list of markers for programs to enable fetching. To reset, the value must be set to a space.",
                     "sysvar_markers": "Comma separated list of markers for system variables to enable fetching. To reset, the value must be set to a space.",
                     "un_ignore": "Check the documentation for information about UN-IGNORE"
