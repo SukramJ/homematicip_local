@@ -11,6 +11,7 @@ from aiohomematic.const import (
     DEFAULT_DELAY_NEW_DEVICE_CREATION,
     DEFAULT_ENABLE_PROGRAM_SCAN,
     DEFAULT_ENABLE_SYSVAR_SCAN,
+    DEFAULT_OPTIONAL_SETTINGS,
     DEFAULT_PROGRAM_MARKERS,
     DEFAULT_SYS_SCAN_INTERVAL,
     DEFAULT_SYSVAR_MARKERS,
@@ -19,6 +20,7 @@ from aiohomematic.const import (
     DEFAULT_USE_GROUP_CHANNEL_FOR_COVER_STATE,
     DescriptionMarker,
     Interface,
+    OptionalSettings,
     SystemInformation,
 )
 from aiohomematic.exceptions import AuthFailure, BaseHomematicException
@@ -58,6 +60,7 @@ from .const import (
     CONF_JSON_PORT,
     CONF_LISTEN_ON_ALL_IP,
     CONF_MQTT_PREFIX,
+    CONF_OPTIONAL_SETTINGS,
     CONF_PROGRAM_MARKERS,
     CONF_SYS_SCAN_INTERVAL,
     CONF_SYSVAR_MARKERS,
@@ -308,6 +311,17 @@ def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -
                     CONF_DELAY_NEW_DEVICE_CREATION, DEFAULT_DELAY_NEW_DEVICE_CREATION
                 ),
             ): BOOLEAN_SELECTOR,
+            vol.Optional(
+                CONF_OPTIONAL_SETTINGS,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_OPTIONAL_SETTINGS, DEFAULT_OPTIONAL_SETTINGS),
+            ): SelectSelector(
+                config=SelectSelectorConfig(
+                    mode=SelectSelectorMode.DROPDOWN,
+                    multiple=True,
+                    sort=True,
+                    options=[str(v) for v in OptionalSettings],
+                )
+            ),
         }
     )
     if not all_un_ignore_parameters:
@@ -606,6 +620,7 @@ def _update_advanced_input(data: ConfigType, advanced_input: ConfigType) -> None
         CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE
     ]
     data[CONF_ADVANCED_CONFIG][CONF_DELAY_NEW_DEVICE_CREATION] = advanced_input[CONF_DELAY_NEW_DEVICE_CREATION]
+    data[CONF_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] = advanced_input[CONF_OPTIONAL_SETTINGS]
 
     if advanced_input.get(CONF_UN_IGNORES):
         data[CONF_ADVANCED_CONFIG][CONF_UN_IGNORES] = advanced_input[CONF_UN_IGNORES]

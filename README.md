@@ -332,6 +332,10 @@ delay_new_device_creation:
     This is only available for new devices that are taught in after the integration is configured initially.
   type: bool
   default: false
+optional_settings:
+  description:
+    Option to enable optional settings. Used for analytics and debugging. Should not be used during normal operations.
+  type: select
 ```
 
 
