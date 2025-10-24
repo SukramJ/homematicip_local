@@ -1,0 +1,114 @@
+"""
+Tests for logbook module to achieve 100% coverage.
+
+This suite validates:
+- Event description is registered for the integration domain and device error event type.
+- Valid device error event produces the expected name/message for both error and resolved states.
+- Invalid event data yields an empty dict from the describe callback.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Any
+
+from aiohomematic.const import EventKey, EventType
+from custom_components.homematicip_local.const import (
+    DOMAIN as HMIP_DOMAIN,
+    EVENT_DEVICE_ID,
+    EVENT_ERROR,
+    EVENT_ERROR_VALUE,
+    EVENT_IDENTIFIER,
+    EVENT_MESSAGE,
+    EVENT_NAME,
+    EVENT_TITLE,
+)
+from custom_components.homematicip_local.logbook import async_describe_events
+from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
+from homeassistant.core import Event
+
+
+def _collect_describer() -> tuple[str, str, Callable[[Event], dict[str, str]]]:
+    """Collect the describer that async_describe_events registers with HA."""
+    captured: dict[str, Any] = {}
+
+    def register(domain: str, event_type: str, describer: Callable[[Event], dict[str, str]]) -> None:
+        captured["domain"] = domain
+        captured["event_type"] = event_type
+        captured["describer"] = describer
+
+    async_describe_events(None, register)
+    return captured["domain"], captured["event_type"], captured["describer"]
+
+
+def test_async_describe_events_registers_device_error_describer() -> None:
+    """It should register the device error event describer with correct domain and type."""
+    domain, event_type, _describer = _collect_describer()
+
+    assert domain == HMIP_DOMAIN
+    assert event_type == EventType.DEVICE_ERROR.value
+
+
+def test_describer_returns_expected_message_for_error_and_resolved() -> None:
+    """It should format message correctly for error occurred and resolved cases."""
+    domain, event_type, describer = _collect_describer()
+    assert domain == HMIP_DOMAIN and event_type == EventType.DEVICE_ERROR.value
+
+    # Error occurred
+    event = Event(
+        event_type,
+        data={
+            # Required base event schema fields
+            str(EventKey.ADDRESS): "ABC0001",
+            str(EventKey.CHANNEL_NO): 1,
+            str(EventKey.MODEL): "XYZ",
+            str(EventKey.INTERFACE_ID): "if1",
+            # Parameter specific
+            str(EventKey.PARAMETER): "low_bat",
+            # Extended device error schema
+            EVENT_NAME: "Kitchen Sensor",
+            EVENT_IDENTIFIER: "dev-1",
+            EVENT_TITLE: "Device Error",
+            EVENT_MESSAGE: "Something happened",
+            EVENT_DEVICE_ID: "device-123",
+            EVENT_ERROR_VALUE: 1,
+            EVENT_ERROR: True,
+        },
+    )
+    result = describer(event)
+    assert result[LOGBOOK_ENTRY_NAME] == "Kitchen Sensor"
+    assert result[LOGBOOK_ENTRY_MESSAGE] == "Low Bat 1 occurred"
+
+    # Error resolved
+    event = Event(
+        event_type,
+        data={
+            # Required base event schema fields
+            str(EventKey.ADDRESS): "ABC0001",
+            str(EventKey.CHANNEL_NO): 1,
+            str(EventKey.MODEL): "XYZ",
+            str(EventKey.INTERFACE_ID): "if1",
+            # Parameter specific
+            EventKey.PARAMETER: "low_bat",
+            # Extended device error schema
+            EVENT_NAME: "Kitchen Sensor",
+            EVENT_IDENTIFIER: "dev-1",
+            EVENT_TITLE: "Device Error",
+            EVENT_MESSAGE: "Something happened",
+            EVENT_DEVICE_ID: "device-123",
+            EVENT_ERROR_VALUE: 0,
+            EVENT_ERROR: False,
+        },
+    )
+    result = describer(event)
+    assert result[LOGBOOK_ENTRY_MESSAGE] == "Low Bat resolved"
+
+
+def test_describer_returns_empty_dict_for_invalid_payload() -> None:
+    """It should return an empty dict when event data does not validate against schema."""
+    _, event_type, describer = _collect_describer()
+
+    # Missing required name field makes the schema invalid
+    event = Event(event_type, data={EventKey.PARAMETER: "low_bat", EVENT_ERROR: True, EVENT_ERROR_VALUE: 1})
+
+    assert describer(event) == {}
