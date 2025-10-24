@@ -21,7 +21,6 @@ from aiohomematic.model.custom import (
     ScheduleProfile,
     ScheduleWeekday,
 )
-
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,

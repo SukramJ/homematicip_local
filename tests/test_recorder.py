@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from aiohomematic.const import DeviceFirmwareState, EventKey
 import pytest
 from pytest_homeassistant_custom_component.components.recorder.common import async_wait_recording_done
 
+from aiohomematic.const import DeviceFirmwareState, EventKey
 from custom_components.homematicip_local.const import EVENT_MODEL
 from custom_components.homematicip_local.generic_entity import (
     ATTR_ADDRESS,
@@ -155,7 +155,7 @@ async def no_test_sysvar_entity_un_recorded(
     entity_id = "binary_sensor.centraltest_sv_logic"
     entity_name = "CentralTest sv_logic"
 
-    hass, control = await factory_with_recorder.setup_environment({}, add_sysvars=True)
+    hass, control = await factory_with_recorder.setup_environment({})
     ha_state, data_point = helper.get_and_check_state(
         hass=hass, control=control, entity_id=entity_id, entity_name=entity_name
     )

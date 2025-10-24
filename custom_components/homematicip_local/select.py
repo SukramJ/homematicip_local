@@ -7,7 +7,6 @@ import logging
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.generic import DpSelect
 from aiohomematic.model.hub import SysvarDpSelect
-
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback

@@ -8,7 +8,6 @@ from typing import Any
 from aiohomematic.const import CALLBACK_TYPE, DATA_POINT_EVENTS, DataPointCategory, EventKey
 from aiohomematic.model.device import Channel, Device
 from aiohomematic.model.event import GenericEvent
-
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr

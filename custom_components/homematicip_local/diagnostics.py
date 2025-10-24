@@ -8,7 +8,6 @@ from typing import Any
 
 from aiohomematic.central import CentralUnit
 from aiohomematic.const import CONF_PASSWORD, CONF_USERNAME, DataPointCategory
-
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 

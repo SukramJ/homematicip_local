@@ -8,7 +8,6 @@ from typing import cast
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.generic import DpBinarySensor
 from aiohomematic.model.hub import SysvarDpBinarySensor
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback

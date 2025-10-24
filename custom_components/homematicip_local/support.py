@@ -7,14 +7,14 @@ import logging
 import re
 from typing import Any, TypeAlias, TypeVar, cast
 
+import voluptuous as vol
+
 from aiohomematic.const import IDENTIFIER_SEPARATOR, EventKey
 from aiohomematic.model.calculated import CalculatedDataPoint
 from aiohomematic.model.custom import CustomDataPoint
 from aiohomematic.model.data_point import EVENT_DATA_SCHEMA
 from aiohomematic.model.generic import GenericDataPoint
 from aiohomematic.model.hub import GenericProgramDataPoint, GenericSysvarDataPoint
-import voluptuous as vol
-
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError

@@ -5,11 +5,11 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import patch
 
-from aiohomematic.const import CONF_PASSWORD, CONF_USERNAME, Interface, SystemInformation
-from aiohomematic.exceptions import AuthFailure, NoConnectionException
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from aiohomematic.const import CONF_PASSWORD, CONF_USERNAME, Interface, SystemInformation
+from aiohomematic.exceptions import AuthFailure, NoConnectionException
 from custom_components.homematicip_local.config_flow import (
     CONF_BIDCOS_RF_PORT,
     CONF_ENABLE_BIDCOS_RF,

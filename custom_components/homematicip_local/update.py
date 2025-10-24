@@ -7,7 +7,6 @@ from typing import Any, Final
 
 from aiohomematic.const import CALLBACK_TYPE, DataPointCategory
 from aiohomematic.model.update import DpUpdate
-
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr

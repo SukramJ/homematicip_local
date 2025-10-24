@@ -23,6 +23,8 @@ lint.extend-ignore = [
 [lint.isort]
 known-first-party = [
     "homeassistant",
+    "aiohomematic",
+    "aiohomematic_test_support",
     "custom_components",
     "tests",
     "script",

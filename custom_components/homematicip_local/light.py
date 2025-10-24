@@ -7,7 +7,6 @@ from typing import Any, Final
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import CustomDpDimmer, CustomDpIpFixedColorLight, LightOffArgs, LightOnArgs
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,

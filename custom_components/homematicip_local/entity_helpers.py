@@ -16,7 +16,6 @@ from aiohomematic.model.custom import CustomDataPoint
 from aiohomematic.model.generic import GenericDataPoint
 from aiohomematic.model.hub import GenericHubDataPoint, GenericSysvarDataPoint
 from aiohomematic.support import element_matches_key
-
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntityDescription
 from homeassistant.components.button import ButtonEntityDescription
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityDescription

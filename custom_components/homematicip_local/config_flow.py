@@ -7,6 +7,9 @@ from pprint import pformat
 from typing import Any, Final, cast
 from urllib.parse import urlparse
 
+import voluptuous as vol
+from voluptuous.schema_builder import UNDEFINED, Schema
+
 from aiohomematic.const import (
     DEFAULT_DELAY_NEW_DEVICE_CREATION,
     DEFAULT_ENABLE_PROGRAM_SCAN,
@@ -24,9 +27,6 @@ from aiohomematic.const import (
     SystemInformation,
 )
 from aiohomematic.exceptions import AuthFailure, BaseHomematicException
-import voluptuous as vol
-from voluptuous.schema_builder import UNDEFINED, Schema
-
 from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PATH, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback

@@ -6,7 +6,6 @@ from enum import StrEnum
 from typing import Final
 
 from aiohomematic.const import CATEGORIES
-
 from homeassistant.const import Platform
 
 DOMAIN: Final = "homematicip_local"

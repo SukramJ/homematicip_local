@@ -8,7 +8,6 @@ from typing import Any
 from aiohomematic.const import DataPointCategory, SysvarType
 from aiohomematic.model.generic import BaseDpNumber
 from aiohomematic.model.hub import SysvarDpNumber
-
 from homeassistant.components.number import NumberEntity, NumberMode, RestoreNumber
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback

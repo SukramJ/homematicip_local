@@ -7,7 +7,6 @@ import logging
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.generic import DpButton
 from aiohomematic.model.hub import ProgramDpButton
-
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
