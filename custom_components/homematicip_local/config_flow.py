@@ -333,10 +333,9 @@ async def _async_validate_config_and_get_system_information(
     hass: HomeAssistant, data: ConfigType, entry_id: str
 ) -> SystemInformation | None:
     """Validate the user input allows us to connect."""
-    if control_config := ControlConfig(hass=hass, entry_id=entry_id, data=data):
-        control_config.check_config()
-        return await validate_config_and_get_system_information(control_config=control_config)
-    return None
+    control_config = ControlConfig(hass=hass, entry_id=entry_id, data=data)
+    control_config.check_config()
+    return await validate_config_and_get_system_information(control_config=control_config)
 
 
 class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -563,9 +562,9 @@ def _get_ccu_data(data: ConfigType, user_input: ConfigType) -> ConfigType:
     }
     if (callback_host := user_input.get(CONF_CALLBACK_HOST)) and callback_host.strip() != "":
         ccu_data[CONF_CALLBACK_HOST] = callback_host
-    if callback_port_xml_rpc := user_input.get(CONF_CALLBACK_PORT_XML_RPC):
+    if (callback_port_xml_rpc := user_input.get(CONF_CALLBACK_PORT_XML_RPC)) is not None:
         ccu_data[CONF_CALLBACK_PORT_XML_RPC] = callback_port_xml_rpc
-    if json_port := user_input.get(CONF_JSON_PORT):
+    if (json_port := user_input.get(CONF_JSON_PORT)) is not None:
         ccu_data[CONF_JSON_PORT] = json_port
 
     return ccu_data
