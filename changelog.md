@@ -13,7 +13,7 @@
 - Add 'optional settings' to config flow
 - Add action for session recorder
 - Add config flow migration for parameter renaming
-- Improve config_flow test coverage to 100%
+- Improve config_flow, device_action, device_trgger test coverage to >95%
 
 # Version 1.89.1 (2025-10-10)
 
