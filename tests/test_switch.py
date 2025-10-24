@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from typing import cast
 
-from aiohomematic.model.hub import SysvarDpSwitch
 import pytest
 
+from aiohomematic.model.hub import SysvarDpSwitch
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from tests import const, helper
+from tests.helper import Factory
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",
@@ -19,12 +20,12 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
-async def test_switch(factory: helper.Factory) -> None:
+async def test_switch(factory_homegear: Factory) -> None:
     """Test CeSwitch."""
     entity_id = "switch.hmip_bsm_vcu2128127"
     entity_name = "HmIP-BSM_VCU2128127"
 
-    hass, control = await factory.setup_environment(TEST_DEVICES)
+    hass, control = await factory_homegear.setup_environment(TEST_DEVICES)
     ha_state, data_point = helper.get_and_check_state(
         hass=hass, control=control, entity_id=entity_id, entity_name=entity_name
     )
@@ -50,12 +51,12 @@ async def test_switch(factory: helper.Factory) -> None:
 
 
 @pytest.mark.asyncio
-async def test_hmsysvarswitch(factory: helper.Factory) -> None:
+async def test_hmsysvarswitch(factory_ccu: Factory) -> None:
     """Test SysvarDpSwitch."""
     entity_id = "switch.centraltest_sv_alarm_ext"
     entity_name = "CentralTest SV alarm ext"
 
-    hass, control = await factory.setup_environment({}, add_sysvars=True)
+    hass, control = await factory_ccu.setup_environment({})
     ha_state, _ = helper.get_and_check_state(hass=hass, control=control, entity_id=entity_id, entity_name=entity_name)
     data_point: SysvarDpSwitch = cast(SysvarDpSwitch, helper.get_data_point(control=control, entity_id=entity_id))
     assert ha_state.state == STATE_OFF

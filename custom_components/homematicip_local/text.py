@@ -7,7 +7,6 @@ import logging
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.generic import DpText
 from aiohomematic.model.hub import SysvarDpText
-
 from homeassistant.components.text import TextEntity
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback

@@ -7,6 +7,9 @@ from pprint import pformat
 from typing import Any, Final, cast
 from urllib.parse import urlparse
 
+import voluptuous as vol
+from voluptuous.schema_builder import UNDEFINED, Schema
+
 from aiohomematic.const import (
     DEFAULT_DELAY_NEW_DEVICE_CREATION,
     DEFAULT_ENABLE_PROGRAM_SCAN,
@@ -24,9 +27,6 @@ from aiohomematic.const import (
     SystemInformation,
 )
 from aiohomematic.exceptions import AuthFailure, BaseHomematicException
-import voluptuous as vol
-from voluptuous.schema_builder import UNDEFINED, Schema
-
 from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PATH, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
@@ -333,10 +333,9 @@ async def _async_validate_config_and_get_system_information(
     hass: HomeAssistant, data: ConfigType, entry_id: str
 ) -> SystemInformation | None:
     """Validate the user input allows us to connect."""
-    if control_config := ControlConfig(hass=hass, entry_id=entry_id, data=data):
-        control_config.check_config()
-        return await validate_config_and_get_system_information(control_config=control_config)
-    return None
+    control_config = ControlConfig(hass=hass, entry_id=entry_id, data=data)
+    control_config.check_config()
+    return await validate_config_and_get_system_information(control_config=control_config)
 
 
 class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -563,9 +562,9 @@ def _get_ccu_data(data: ConfigType, user_input: ConfigType) -> ConfigType:
     }
     if (callback_host := user_input.get(CONF_CALLBACK_HOST)) and callback_host.strip() != "":
         ccu_data[CONF_CALLBACK_HOST] = callback_host
-    if callback_port_xml_rpc := user_input.get(CONF_CALLBACK_PORT_XML_RPC):
+    if (callback_port_xml_rpc := user_input.get(CONF_CALLBACK_PORT_XML_RPC)) is not None:
         ccu_data[CONF_CALLBACK_PORT_XML_RPC] = callback_port_xml_rpc
-    if json_port := user_input.get(CONF_JSON_PORT):
+    if (json_port := user_input.get(CONF_JSON_PORT)) is not None:
         ccu_data[CONF_JSON_PORT] = json_port
 
     return ccu_data

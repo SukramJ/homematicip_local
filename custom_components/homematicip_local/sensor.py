@@ -10,7 +10,6 @@ from typing import Any, cast
 from aiohomematic.const import DEFAULT_MULTIPLIER, DataPointCategory, ParameterType, SysvarType
 from aiohomematic.model.generic import DpSensor
 from aiohomematic.model.hub import SysvarDpSensor
-
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect

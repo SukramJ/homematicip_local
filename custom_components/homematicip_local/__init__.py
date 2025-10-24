@@ -7,12 +7,12 @@ from dataclasses import dataclass
 import logging
 from typing import TypeAlias
 
+from awesomeversion import AwesomeVersion
+
 from aiohomematic import __version__ as HAHM_VERSION
 from aiohomematic.const import DEFAULT_ENABLE_SYSVAR_SCAN, DEFAULT_SYS_SCAN_INTERVAL, DEFAULT_UN_IGNORES
 from aiohomematic.store import cleanup_files
 from aiohomematic.support import find_free_port
-from awesomeversion import AwesomeVersion
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, __version__ as HA_VERSION_STR
 from homeassistant.core import HomeAssistant, callback

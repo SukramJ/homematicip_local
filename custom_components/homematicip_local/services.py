@@ -6,13 +6,13 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Final, cast
 
+import voluptuous as vol
+
 from aiohomematic.const import ForcedDeviceAvailability, ParamsetKey
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.device import Device
 from aiohomematic.support import get_device_address, to_bool
 import aiohomematic.validator as haval
-import voluptuous as vol
-
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION, DOMAIN as COVER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN

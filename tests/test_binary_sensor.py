@@ -7,6 +7,7 @@ import pytest
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from tests import const, helper
+from tests.helper import Factory
 
 TEST_DEVICES: dict[str, str] = {
     "VCU5864966": "HmIP-SWDO-I.json",
@@ -17,14 +18,14 @@ TEST_DEVICES: dict[str, str] = {
 
 @pytest.mark.asyncio
 async def test_hmbinarysensor(
-    factory: helper.Factory,
+    factory_homegear: Factory,
 ) -> None:
     """Test HmBinarySensor."""
 
     entity_id = "binary_sensor.hmip_swdo_i_vcu5864966"
     entity_name = "HmIP-SWDO-I_VCU5864966"
 
-    hass, control = await factory.setup_environment(TEST_DEVICES)
+    hass, control = await factory_homegear.setup_environment(TEST_DEVICES)
     ha_state, data_point = helper.get_and_check_state(
         hass=hass, control=control, entity_id=entity_id, entity_name=entity_name
     )
@@ -52,13 +53,13 @@ async def test_hmbinarysensor(
 
 @pytest.mark.asyncio
 async def test_hmsysvarbinarysensor(
-    factory: helper.Factory,
+    factory_ccu: Factory,
 ) -> None:
     """Test SysvarDpBinarySensor."""
     entity_id = "binary_sensor.centraltest_sv_logic"
     entity_name = "CentralTest SV logic"
 
-    hass, control = await factory.setup_environment({}, add_sysvars=True)
+    hass, control = await factory_ccu.setup_environment({})
     ha_state, data_point = helper.get_and_check_state(
         hass=hass, control=control, entity_id=entity_id, entity_name=entity_name
     )

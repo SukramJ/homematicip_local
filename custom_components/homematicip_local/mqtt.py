@@ -7,7 +7,6 @@ from typing import Any, Final, cast
 
 from aiohomematic.central import CentralUnit
 from aiohomematic.const import SYSVAR_STATE_PATH_ROOT
-
 from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.mqtt.subscription import (
     EntitySubscription,

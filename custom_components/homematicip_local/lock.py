@@ -7,7 +7,6 @@ from typing import Any
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import BaseCustomDpLock, LockState
-
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiohomematic.const import Parameter
-from aiohomematic.model.generic import DpAction, DpButton
 import voluptuous as vol
 
+from aiohomematic.const import Parameter
+from aiohomematic.model.generic import DpAction, DpButton
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import device_registry as dr

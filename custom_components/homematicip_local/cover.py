@@ -8,7 +8,6 @@ from typing import Any, Final, TypeVar
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import CustomDpBlind, CustomDpCover, CustomDpGarage, CustomDpIpBlind
 from aiohomematic.model.data_point import CallParameterCollector
-
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,

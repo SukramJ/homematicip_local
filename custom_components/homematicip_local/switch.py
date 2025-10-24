@@ -9,7 +9,6 @@ from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import CustomDpSwitch
 from aiohomematic.model.generic import DpSwitch
 from aiohomematic.model.hub import ProgramDpSwitch, SysvarDpSwitch
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
