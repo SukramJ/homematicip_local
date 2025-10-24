@@ -16,6 +16,7 @@ from aiohomematic.model.custom import CustomDataPoint
 from aiohomematic.model.data_point import BaseParameterDataPoint
 from aiohomematic_test_support.factory import FactoryWithClient
 from aiohomematic_test_support.mock import SessionPlayer
+from custom_components.homematicip_local import HAHM_VERSION as _HAHM_VERSION
 from custom_components.homematicip_local.control_unit import ControlUnit
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -90,6 +91,11 @@ class Factory:
         patch(
             "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
             return_value=True,
+        ).start()
+        # Ensure version check in async_setup_entry passes by returning current package version
+        patch(
+            "custom_components.homematicip_local.get_aiohomematic_version",
+            return_value=_HAHM_VERSION,
         ).start()
 
         # Start integration in hass

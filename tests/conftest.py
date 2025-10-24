@@ -10,12 +10,7 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.plugins import enable_custom_integrations  # noqa: F401
 
-from aiohomematic_test_support.const import (
-    CCU_PASSWORD,
-    CCU_USERNAME,
-    FULL_SESSION_RANDOMIZED_CCU,
-    FULL_SESSION_RANDOMIZED_PYDEVCCU,
-)
+from aiohomematic_test_support.const import FULL_SESSION_RANDOMIZED_CCU, FULL_SESSION_RANDOMIZED_PYDEVCCU
 from aiohomematic_test_support.mock import SessionPlayer, get_session_player
 from custom_components.homematicip_local.const import DOMAIN as HMIP_DOMAIN
 from custom_components.homematicip_local.control_unit import ControlConfig, ControlUnit
@@ -49,8 +44,8 @@ def entry_data_v1() -> dict[str, Any]:
     return {
         "instance_name": const.INSTANCE_NAME,
         "host": const.HOST,
-        "username": CCU_USERNAME,
-        "password": CCU_PASSWORD,
+        "username": const.USERNAME,
+        "password": const.PASSWORD,
         "tls": False,
         "verify_tls": False,
         "sysvar_scan_enabled": False,
