@@ -13,8 +13,8 @@
   "requirements": ["aiohomematic==2025.10.20"],
   "ssdp": [
     {
-      "manufacturer": "EQ3",
-      "manufacturerURL": "http://www.homematic.com"
+      "manufacturer": "OpenCCU",
+      "manufacturerURL": "https://openccu.de"
     }
   ],
   "version": "1.90.0",
