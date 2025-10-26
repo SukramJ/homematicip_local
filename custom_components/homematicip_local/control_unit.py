@@ -11,7 +11,7 @@ from types import UnionType
 from typing import Any, Final, TypeVar, cast
 
 from aiohomematic import __version__ as AIOHM_VERSION
-from aiohomematic.central import INTERFACE_EVENT_SCHEMA, CentralConfig, CentralUnit
+from aiohomematic.central import INTERFACE_EVENT_SCHEMA, CentralConfig, CentralUnit, check_config
 from aiohomematic.client import InterfaceConfig
 from aiohomematic.const import (
     CALLBACK_TYPE,
@@ -46,7 +46,6 @@ from aiohomematic.const import (
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.data_point import CallbackDataPoint
 from aiohomematic.model.event import GenericEvent
-from aiohomematic.support import check_config
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PATH, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 

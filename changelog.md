@@ -1,19 +1,21 @@
-# Version 1.90.0 (2025-10-18)
+# Version 1.90.0 (2025-10-26)
 
 ## What's Changed
-- Bump aiohomematic to 2025.10.17
+- Bump aiohomematic to 2025.10.20
   - Add 'optional settings' config option
   - Add ELV-SH-PSMCI
   - Add dew point spread and enthalpy to calculated sensors
   - Add session recorder
   - Ensure custom_ids are only used for external registrations
+  - Improve call back alive check
   - Refactor rpc handling
-  - Refactor test setup
+  - Test support: Improve code/test coverage
   - Use enum for internal custom ids
 - Add 'optional settings' to config flow
 - Add action for session recorder
 - Add config flow migration for parameter renaming
-- Improve test coverage of core modules to >95%
+- Adopt changes in friendly name of upnp discovery to OpenCCU
+- Improve test coverage of core modules
 
 # Version 1.89.1 (2025-10-10)
 

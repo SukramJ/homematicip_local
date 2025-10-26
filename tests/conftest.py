@@ -117,11 +117,11 @@ def discovery_info() -> ssdp.SsdpServiceInfo:
         upnp={
             "deviceType": "urn:schemas-upnp-org:device:Basic:1",
             "presentationURL": None,
-            "friendlyName": f"HomeMatic Central - {const.INSTANCE_NAME}",
+            "friendlyName": f"OpenCCU - {const.INSTANCE_NAME}",
             "manufacturer": "EQ3",
             "manufacturerURL": "http://www.homematic.com",
-            "modelDescription": f"HomeMatic Central 3014F711A0001F{const.CONFIG_ENTRY_UNIQUE_ID}",
-            "modelName": "HomeMatic Central",
+            "modelDescription": f"OpenCCU 3014F711A0001F{const.CONFIG_ENTRY_UNIQUE_ID}",
+            "modelName": "OpenCCU",
             "UDN": f"uuid:upnp-BasicDevice-1_0-3014F711A0001F{const.CONFIG_ENTRY_UNIQUE_ID}",
             "UPC": const.CONFIG_ENTRY_UNIQUE_ID,
             "serviceList": {

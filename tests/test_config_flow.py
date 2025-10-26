@@ -649,8 +649,8 @@ def test_config_flow_helper() -> None:
 
     assert _get_instance_name(None) is None
     assert _get_instance_name("0123456789") == "0123456789"
-    assert _get_instance_name("HomeMatic Central - test") == "test"
-    assert _get_instance_name("HomeMatic Central 0123456789") == "0123456789"
+    assert _get_instance_name("OpenCCU - test") == "test"
+    assert _get_instance_name("OpenCCU 0123456789") == "0123456789"
     assert _get_serial(None) is None
     assert _get_serial("1234") is None
     assert _get_serial(f"9876543210{const.SERIAL}") == const.SERIAL
