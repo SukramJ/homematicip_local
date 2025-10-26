@@ -1,13 +1,13 @@
 # Version 1.90.0 (2025-10-26)
 
 ## What's Changed
-- Bump aiohomematic to 2025.10.20
+- Bump aiohomematic to 2025.10.21
   - Add 'optional settings' config option
   - Add ELV-SH-PSMCI
   - Add dew point spread and enthalpy to calculated sensors
+  - Add pong_mismatch_allowed to ping pong event
   - Add session recorder
   - Ensure custom_ids are only used for external registrations
-  - Improve call back alive check
   - Refactor rpc handling
   - Test support: Improve code/test coverage
   - Use enum for internal custom ids
