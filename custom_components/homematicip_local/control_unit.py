@@ -377,7 +377,7 @@ class ControlUnit(BaseControlUnit):
                 if not self._enable_system_notifications:
                     _LOGGER.debug("SYSTEM NOTIFICATION disabled for PENDING_PONG")
                     return
-                if data[EventKey.PONG_MISMATCH_ALLOWED]:
+                if data[EventKey.PONG_MISMATCH_ACCEPTABLE]:
                     async_delete_issue(
                         hass=self._hass,
                         domain=DOMAIN,
@@ -401,7 +401,7 @@ class ControlUnit(BaseControlUnit):
                 if not self._enable_system_notifications:
                     _LOGGER.debug("SYSTEM NOTIFICATION disabled for UNKNOWN_PONG")
                     return
-                if data[EventKey.PONG_MISMATCH_ALLOWED]:
+                if data[EventKey.PONG_MISMATCH_ACCEPTABLE]:
                     async_delete_issue(
                         hass=self._hass,
                         domain=DOMAIN,
