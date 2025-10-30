@@ -383,6 +383,7 @@ class ControlUnit(BaseControlUnit):
                         domain=DOMAIN,
                         issue_id=issue_id,
                     )
+                    _LOGGER.debug("PENDING_PONG: Removed issue for interface: %s", interface_id)
                 else:
                     async_create_issue(
                         hass=self._hass,
@@ -397,6 +398,7 @@ class ControlUnit(BaseControlUnit):
                             EventKey.INTERFACE_ID: interface_id,
                         },
                     )
+                    _LOGGER.debug("PENDING_PONG: Added issue for interface: %s", interface_id)
             elif interface_event_type == InterfaceEventType.UNKNOWN_PONG:
                 if not self._enable_system_notifications:
                     _LOGGER.debug("SYSTEM NOTIFICATION disabled for UNKNOWN_PONG")
@@ -407,6 +409,7 @@ class ControlUnit(BaseControlUnit):
                         domain=DOMAIN,
                         issue_id=issue_id,
                     )
+                    _LOGGER.debug("UNKNOWN_PONG: Removed issue for interface: %s", interface_id)
                 else:
                     async_create_issue(
                         hass=self._hass,
@@ -420,6 +423,7 @@ class ControlUnit(BaseControlUnit):
                             EventKey.INTERFACE_ID: interface_id,
                         },
                     )
+                    _LOGGER.debug("UNKNOWN_PONG: Added issue for interface: %s", interface_id)
             elif interface_event_type == InterfaceEventType.PROXY:
                 if data[EventKey.AVAILABLE]:
                     async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)

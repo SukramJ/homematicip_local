@@ -132,11 +132,11 @@ class AioHomematicUpdate(UpdateEntity):
         """Handle device state changes."""
         # Don't update disabled entities
         if self.enabled:
-            _LOGGER.debug("Update state changed event fired for %s", self.name)
+            _LOGGER.debug("Update state changed event emitted for %s", self.name)
             self.async_schedule_update_ha_state()
         else:
             _LOGGER.debug(
-                "Update state changed event for %s not fired. Entity is disabled",
+                "Update state changed event for %s not emitted. Entity is disabled",
                 self.name,
             )
 

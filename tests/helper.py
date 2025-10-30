@@ -26,8 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 EXCLUDE_METHODS_FROM_MOCKS: Final = [
     "default_category",
     "event",
-    "fire_device_removed_callback",
-    "fire_data_point_updated_callback",
+    "emit_device_removed_event",
+    "emit_data_point_updated_event",
     "get_event_data",
     "get_on_time_and_cleanup",
     "is_state_change",
