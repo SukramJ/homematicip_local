@@ -122,11 +122,11 @@ class AioHomematicEvent(EventEntity):
         # Don't update disabled entities
         if self.enabled:
             self._trigger_event(data_point.parameter.lower())
-            _LOGGER.debug("Device event fired %s", self.name)
+            _LOGGER.debug("Device event emitted %s", self.name)
             self.async_schedule_update_ha_state()
         else:
             _LOGGER.debug(
-                "Device event for %s not fired. Entity is disabled",
+                "Device event for %s not emitted. Entity is disabled",
                 self.name,
             )
 

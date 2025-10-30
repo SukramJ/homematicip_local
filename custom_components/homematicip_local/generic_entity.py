@@ -277,11 +277,11 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
         # Don't update disabled entities
         update_type = "updated" if self._data_point.refreshed_at == self._data_point.modified_at else "refreshed"
         if self.enabled:
-            _LOGGER.debug("Device %s event fired for %s", update_type, self._data_point.full_name)
+            _LOGGER.debug("Device %s event emitted for %s", update_type, self._data_point.full_name)
             self.async_schedule_update_ha_state()
         else:
             _LOGGER.debug(
-                "Device %s event for %s not fired. Entity is disabled",
+                "Device %s event for %s not emitted. Entity is disabled",
                 update_type,
                 self._data_point.full_name,
             )
@@ -451,11 +451,11 @@ class AioHomematicGenericHubEntity(Entity):
         """Handle sysvar entity state changes."""
         # Don't update disabled entities
         if self.enabled:
-            _LOGGER.debug("Sysvar changed event fired for %s", self.name)
+            _LOGGER.debug("Sysvar changed event emitted for %s", self.name)
             self.async_schedule_update_ha_state()
         else:
             _LOGGER.debug(
-                "Sysvar changed event for %s not fired. Sysvar entity is disabled",
+                "Sysvar changed event for %s not emitted. Sysvar entity is disabled",
                 self.name,
             )
 
