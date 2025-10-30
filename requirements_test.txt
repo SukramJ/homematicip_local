@@ -1,8 +1,8 @@
 -r requirements_test_pre_commit.txt
 
 async-upnp-client==0.45.0
-aiohomematic==2025.10.24
-aiohomematic-test-support==2025.10.24
+aiohomematic==2025.10.25
+aiohomematic-test-support==2025.10.25
 isal==1.8.0
 mypy-dev==1.14.0a7
 pre-commit==4.3.0
