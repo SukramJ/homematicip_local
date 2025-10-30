@@ -114,7 +114,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -
 
 async def async_remove_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:
     """Handle removal of an entry."""
-    await cleanup_files(central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass))
+    cleanup_files(central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass))
 
 
 async def async_remove_config_entry_device(
@@ -200,15 +200,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
         del_param(name=CONF_ENABLE_SYSTEM_NOTIFICATIONS)
         del_param(name=CONF_UN_IGNORES)
 
-        await cleanup_files(
-            central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass)
-        )
+        cleanup_files(central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass))
         hass.config_entries.async_update_entry(entry, version=5, data=data)
     if entry.version == 5:
         data = dict(entry.data)
-        await cleanup_files(
-            central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass)
-        )
+        cleanup_files(central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass))
         hass.config_entries.async_update_entry(entry, version=6, data=data)
     if entry.version == 6:
         data = dict(entry.data)
@@ -217,15 +213,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
         hass.config_entries.async_update_entry(entry, version=7, data=data)
     if entry.version == 7:
         data = dict(entry.data)
-        await cleanup_files(
-            central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass)
-        )
+        cleanup_files(central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass))
         hass.config_entries.async_update_entry(entry, version=8, data=data)
     if entry.version == 8:
         data = dict(entry.data)
-        await cleanup_files(
-            central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass)
-        )
+        cleanup_files(central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass))
         hass.config_entries.async_update_entry(entry, version=9, data=data)
     if entry.version == 9:
         data = dict(entry.data)
