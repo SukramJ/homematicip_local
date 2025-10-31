@@ -1,7 +1,7 @@
-# Version 1.90.0 (2025-10-30)
+# Version 1.90.0 (2025-11-01)
 
 ## What's Changed
-- Bump aiohomematic to 2025.10.26
+- Bump aiohomematic to 2025.11.0
   - Add 'optional settings' config option
   - Add ELV-SH-PSMCI
   - Add dew point spread and enthalpy to calculated sensors
@@ -13,6 +13,7 @@
   - Refactor rpc handling
   - Test support: Improve code/test coverage
   - Use enum for internal custom ids
+  - Use generic DP DpDummy instead of NoneTypeDataPoint replacement
 - Add 'optional settings' to config flow
 - Add action for session recorder
 - Add config flow migration for parameter renaming
