@@ -8,6 +8,7 @@
   - Add pong_mismatch_allowed to ping pong event
   - Add session recorder
   - Ensure custom_ids are only used for external registrations
+  - Fix issue after reconnect
   - Handle ping after ping success
   - Refactor PingPongCache
   - Refactor rpc handling
