@@ -1,7 +1,7 @@
 # Version 1.90.0 (2025-11-02)
 
 ## What's Changed
-- Bump aiohomematic to 2025.11.1
+- Bump aiohomematic to 2025.11.2
   - Add 'optional settings' config option
   - Add ELV-SH-PSMCI
   - Add dew point spread and enthalpy to calculated sensors
