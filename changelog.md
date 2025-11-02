@@ -1,10 +1,12 @@
-# Version 1.90.0 (2025-11-01)
+# Version 1.90.0 (2025-11-02)
 
 ## What's Changed
-- Bump aiohomematic to 2025.11.0
+- Bump aiohomematic to 2025.11.2
   - Add 'optional settings' config option
   - Add ELV-SH-PSMCI
   - Add dew point spread and enthalpy to calculated sensors
+  - Add link peer channel to channel
+  - Add link_peer channels to device
   - Add pong_mismatch_allowed to ping pong event
   - Add session recorder
   - Ensure custom_ids are only used for external registrations
