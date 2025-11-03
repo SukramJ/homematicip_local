@@ -1,10 +1,11 @@
 # Version 1.90.0 (2025-11-02)
 
 ## What's Changed
-- Bump aiohomematic to 2025.11.2
+- Bump aiohomematic to 2025.11.3
   - Add 'optional settings' config option
   - Add ELV-SH-PSMCI
   - Add dew point spread and enthalpy to calculated sensors
+  - Add fallback to climate.activity to use linked channels, if own dps don't exist
   - Add link peer channel to channel
   - Add link_peer channels to device
   - Add pong_mismatch_allowed to ping pong event
