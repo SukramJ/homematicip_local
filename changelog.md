@@ -1,7 +1,7 @@
-# Version 1.90.0 (2025-11-02)
+# Version 1.90.0 (2025-11-04)
 
 ## What's Changed
-- Bump aiohomematic to 2025.11.4
+- Bump aiohomematic to 2025.11.5
   - Add 'optional settings' config option
   - Add ELV-SH-PSMCI
   - Add dew point spread and enthalpy to calculated sensors
@@ -15,6 +15,7 @@
   - Handle ping after ping success
   - Refactor PingPongCache
   - Refactor rpc handling
+  - Remove link support for not linkable interfaces
   - Test support: Improve code/test coverage
   - Use enum for internal custom ids
   - Use generic DP DpDummy instead of NoneTypeDataPoint replacement
