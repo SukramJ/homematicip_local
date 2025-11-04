@@ -162,7 +162,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         """Return the hvac action."""
         if self._data_point.activity and self._data_point.activity in HM_TO_HA_ACTION:
             return HM_TO_HA_ACTION[self._data_point.activity]
-        return None
+        return HVACAction.OFF if self.hvac_mode == HVACMode.OFF else HVACAction.IDLE
 
     @property
     def hvac_mode(self) -> HVACMode | None:
