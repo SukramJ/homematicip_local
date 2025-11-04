@@ -23,6 +23,7 @@
 - Add action for session recorder
 - Add config flow migration for parameter renaming
 - Adopt changes in friendly name of upnp discovery to OpenCCU
+- Display hvac action as off if device is off, display idle if no value exists
 - Improve test coverage of core modules
 
 # Version 1.89.1 (2025-10-10)
