@@ -78,3 +78,8 @@ repos:
         language: script
         types: [python]
         files: ^(custom_components/homematicip_local)/.+\.py$
+      - id: check-translations
+        name: Check translations (strings.json, en.json, de.json)
+        entry: python3 script/check_translations.py --fix
+        language: system
+        files: ^custom_components/homematicip_local/(strings\.json|translations/(en|de)\.json)$
