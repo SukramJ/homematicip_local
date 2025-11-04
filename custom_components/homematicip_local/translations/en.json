@@ -104,6 +104,9 @@
             "blocked_temporary": {
                 "name": "Blocked temporary"
             },
+            "burst_limit_warning": {
+                "name": "Burst-Limit-Warnung"
+            },
             "current_passage_direction": {
                 "name": "Passage Direction"
             },
@@ -514,8 +517,8 @@
                 "name": "",
                 "state": {
                     "dry": "Dry",
-                    "wet": "Wet",
-                    "water": "Water"
+                    "water": "Water",
+                    "wet": "Wet"
                 }
             },
             "sec_win_error": {
@@ -655,8 +658,8 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "title": "Manually add delayed device {address}",
-                        "description": "This will trigger the manual addition of device **{address}** on interface **{interface_id}**.\n\nConfirm to continue."
+                        "description": "This will trigger the manual addition of device **{address}** on interface **{interface_id}**.\n\nConfirm to continue.",
+                        "title": "Manually add delayed device {address}"
                     }
                 }
             },
@@ -768,6 +771,14 @@
         "add_link": {
             "description": "Call to addLink for links in the RPC XML interface",
             "fields": {
+                "description": {
+                    "description": "Description of the Link, that will be displayed in the CCU",
+                    "name": "Description of the Link"
+                },
+                "name": {
+                    "description": "Name of the Link, that will be displayed in the CCU",
+                    "name": "Name of the Link"
+                },
                 "receiver_channel_address": {
                     "description": "Channel address of the associated receiver",
                     "name": "Receiver Channel Address"
@@ -775,14 +786,6 @@
                 "sender_channel_address": {
                     "description": "Channel address of the associated sender",
                     "name": "Sender Channel Address"
-                },
-                "name": {
-                    "description": "Name of the Link, that will be displayed in the CCU",
-                    "name": "Name of the Link"
-                },
-                "description": {
-                    "description": "Description of the Link, that will be displayed in the CCU",
-                    "name": "Description of the Link"
                 }
             },
             "name": "Add link"
