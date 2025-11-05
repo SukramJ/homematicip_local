@@ -18,6 +18,7 @@ from aiohomematic.model.custom import (
     ClimateActivity,
     ClimateMode,
     ClimateProfile,
+    CustomDpIpThermostat,
     ScheduleProfile,
     ScheduleWeekday,
 )
@@ -162,7 +163,12 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         """Return the hvac action."""
         if self._data_point.activity and self._data_point.activity in HM_TO_HA_ACTION:
             return HM_TO_HA_ACTION[self._data_point.activity]
-        return HVACAction.OFF if self.hvac_mode == HVACMode.OFF else HVACAction.IDLE
+        if isinstance(self._data_point, CustomDpIpThermostat) and (
+            getattr(self.data_point, "_peer_level_dp") is not None
+            or getattr(self.data_point, "_peer_state_dp") is not None
+        ):
+            return HVACAction.IDLE
+        return None
 
     @property
     def hvac_mode(self) -> HVACMode | None:
