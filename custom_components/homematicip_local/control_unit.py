@@ -344,7 +344,7 @@ class ControlUnit(BaseControlUnit):
         return
 
     @callback
-    def _async_homematic_callback(self, event_type: EventType, event_data: dict[str, Any]) -> None:
+    def _async_homematic_callback(self, event_type: EventType, event_data: dict[str, Any]) -> None:  # noqa: C901
         """Execute the callback used for device related events."""
         send_unknown_pong = False
         interface_id = event_data[EventKey.INTERFACE_ID]
