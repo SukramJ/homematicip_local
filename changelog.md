@@ -1,3 +1,11 @@
+# Version 1.90.1 (2025-11-05)
+
+## What's Changed
+- Bump aiohomematic to 2025.11.6
+  - Add post_init_data_point_fields
+  - Make ping pong handling more robust
+  - Move on_link_peer_changed and refresh_link_peer_activity_sources to BaseCustomDpClimate
+  - 
 # Version 1.90.0 (2025-11-04)
 
 ## What's Changed
