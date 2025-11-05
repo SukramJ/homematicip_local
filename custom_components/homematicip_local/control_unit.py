@@ -346,7 +346,7 @@ class ControlUnit(BaseControlUnit):
     @callback
     def _async_homematic_callback(self, event_type: EventType, event_data: dict[str, Any]) -> None:
         """Execute the callback used for device related events."""
-
+        send_unknown_pong = False
         interface_id = event_data[EventKey.INTERFACE_ID]
         if event_type == EventType.INTERFACE:
             interface_event_type = event_data[EventKey.TYPE]
@@ -411,18 +411,19 @@ class ControlUnit(BaseControlUnit):
                     )
                     _LOGGER.debug("UNKNOWN_PONG: Removed issue for interface: %s", interface_id)
                 else:
-                    async_create_issue(
-                        hass=self._hass,
-                        domain=DOMAIN,
-                        issue_id=issue_id,
-                        is_fixable=False,
-                        severity=IssueSeverity.WARNING,
-                        translation_key="unknown_pong_mismatch",
-                        translation_placeholders={
-                            CONF_INSTANCE_NAME: self._instance_name,
-                            EventKey.INTERFACE_ID: interface_id,
-                        },
-                    )
+                    if send_unknown_pong:
+                        async_create_issue(
+                            hass=self._hass,
+                            domain=DOMAIN,
+                            issue_id=issue_id,
+                            is_fixable=False,
+                            severity=IssueSeverity.WARNING,
+                            translation_key="unknown_pong_mismatch",
+                            translation_placeholders={
+                                CONF_INSTANCE_NAME: self._instance_name,
+                                EventKey.INTERFACE_ID: interface_id,
+                            },
+                        )
                     _LOGGER.debug("UNKNOWN_PONG: Added issue for interface: %s", interface_id)
             elif interface_event_type == InterfaceEventType.PROXY:
                 if data[EventKey.AVAILABLE]:
