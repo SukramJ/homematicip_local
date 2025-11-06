@@ -349,9 +349,28 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data: ConfigType = {}
         self.serial: str | None = None
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
-        """Handle the initial step."""
-        return await self.async_step_central(user_input=user_input)
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Get the options flow for this handler."""
+        return HomematicIPLocalOptionsFlowHandler(config_entry)
+
+    async def async_step_advanced(
+        self,
+        advanced_input: ConfigType | None = None,
+    ) -> ConfigFlowResult:
+        """Handle the advanced step."""
+        if advanced_input is None:
+            _LOGGER.debug("ConfigFlow.step_advanced, no user input")
+            return self.async_show_form(
+                step_id="advanced",
+                data_schema=get_advanced_schema(
+                    data=self.data,
+                    all_un_ignore_parameters=[],
+                ),
+            )
+        _update_advanced_input(data=self.data, advanced_input=advanced_input)
+        return await self._validate_and_finish_config_flow()
 
     async def async_step_central(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
         """Handle the initial step."""
@@ -382,22 +401,24 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_advanced(
-        self,
-        advanced_input: ConfigType | None = None,
-    ) -> ConfigFlowResult:
-        """Handle the advanced step."""
-        if advanced_input is None:
-            _LOGGER.debug("ConfigFlow.step_advanced, no user input")
-            return self.async_show_form(
-                step_id="advanced",
-                data_schema=get_advanced_schema(
-                    data=self.data,
-                    all_un_ignore_parameters=[],
-                ),
-            )
-        _update_advanced_input(data=self.data, advanced_input=advanced_input)
-        return await self._validate_and_finish_config_flow()
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> ConfigFlowResult:
+        """Handle a discovered Homematic CCU."""
+        _LOGGER.debug("Homematic(IP) Local for OpenCCU SSDP discovery %s", pformat(discovery_info))
+        instance_name = _get_instance_name(friendly_name=discovery_info.upnp.get("friendlyName")) or "OpenCCU"
+        serial = _get_serial(model_description=discovery_info.upnp.get("modelDescription"))
+
+        host = cast(str, urlparse(discovery_info.ssdp_location).hostname)
+        await self.async_set_unique_id(serial)
+
+        self._abort_if_unique_id_configured()
+
+        self.data = {CONF_INSTANCE_NAME: instance_name, CONF_HOST: host}
+        self.context["title_placeholders"] = {CONF_NAME: instance_name, CONF_HOST: host}
+        return await self.async_step_user()
+
+    async def async_step_user(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Handle the initial step."""
+        return await self.async_step_central(user_input=user_input)
 
     async def _validate_and_finish_config_flow(self) -> ConfigFlowResult:
         """Validate and finish the config flow."""
@@ -430,27 +451,6 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=description_placeholders,
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> ConfigFlowResult:
-        """Handle a discovered Homematic CCU."""
-        _LOGGER.debug("Homematic(IP) Local for OpenCCU SSDP discovery %s", pformat(discovery_info))
-        instance_name = _get_instance_name(friendly_name=discovery_info.upnp.get("friendlyName")) or "OpenCCU"
-        serial = _get_serial(model_description=discovery_info.upnp.get("modelDescription"))
-
-        host = cast(str, urlparse(discovery_info.ssdp_location).hostname)
-        await self.async_set_unique_id(serial)
-
-        self._abort_if_unique_id_configured()
-
-        self.data = {CONF_INSTANCE_NAME: instance_name, CONF_HOST: host}
-        self.context["title_placeholders"] = {CONF_NAME: instance_name, CONF_HOST: host}
-        return await self.async_step_user()
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return HomematicIPLocalOptionsFlowHandler(config_entry)
-
 
 class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
     """Handle Homematic(IP) Local for OpenCCU options."""
@@ -461,9 +461,22 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
         self._control_unit: ControlUnit = entry.runtime_data
         self.data: ConfigType = dict(self.entry.data.items())
 
-    async def async_step_init(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
-        """Manage the Homematic(IP) Local for OpenCCU options."""
-        return await self.async_step_central(user_input=user_input)
+    async def async_step_advanced(
+        self,
+        advanced_input: ConfigType | None = None,
+    ) -> ConfigFlowResult:
+        """Handle the advanced step."""
+        if advanced_input is None:
+            _LOGGER.debug("ConfigFlow.step_advanced, no user input")
+            return self.async_show_form(
+                step_id="advanced",
+                data_schema=get_advanced_schema(
+                    data=self.data,
+                    all_un_ignore_parameters=self._control_unit.central.get_un_ignore_candidates(include_master=True),
+                ),
+            )
+        _update_advanced_input(data=self.data, advanced_input=advanced_input)
+        return await self._validate_and_finish_options_flow()
 
     async def async_step_central(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
         """Manage the Homematic(IP) Local for OpenCCU devices options."""
@@ -475,6 +488,10 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
             step_id="central",
             data_schema=get_options_schema(data=self.data),
         )
+
+    async def async_step_init(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Manage the Homematic(IP) Local for OpenCCU options."""
+        return await self.async_step_central(user_input=user_input)
 
     async def async_step_interface(
         self,
@@ -496,23 +513,6 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
                 from_config_flow=False,
             ),
         )
-
-    async def async_step_advanced(
-        self,
-        advanced_input: ConfigType | None = None,
-    ) -> ConfigFlowResult:
-        """Handle the advanced step."""
-        if advanced_input is None:
-            _LOGGER.debug("ConfigFlow.step_advanced, no user input")
-            return self.async_show_form(
-                step_id="advanced",
-                data_schema=get_advanced_schema(
-                    data=self.data,
-                    all_un_ignore_parameters=self._control_unit.central.get_un_ignore_candidates(include_master=True),
-                ),
-            )
-        _update_advanced_input(data=self.data, advanced_input=advanced_input)
-        return await self._validate_and_finish_options_flow()
 
     async def _validate_and_finish_options_flow(self) -> ConfigFlowResult:
         """Validate and finish the options flow."""

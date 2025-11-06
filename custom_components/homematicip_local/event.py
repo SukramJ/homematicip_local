@@ -116,20 +116,6 @@ class AioHomematicEvent(EventEntity):
             )
             self._unregister_callbacks.append(event.register_device_removed_callback(cb=self._async_device_removed))
 
-    @callback
-    def _async_event_changed(self, data_point: GenericEvent, **kwargs: Any) -> None:
-        """Handle device state changes."""
-        # Don't update disabled entities
-        if self.enabled:
-            self._trigger_event(data_point.parameter.lower())
-            _LOGGER.debug("Device event emitted %s", self.name)
-            self.async_schedule_update_ha_state()
-        else:
-            _LOGGER.debug(
-                "Device event for %s not emitted. Entity is disabled",
-                self.name,
-            )
-
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
         # Remove callback from device.
@@ -151,3 +137,17 @@ class AioHomematicEvent(EventEntity):
             if device_id in device_registry.devices:
                 # This will also remove associated entities from entity registry.
                 device_registry.async_remove_device(device_id)
+
+    @callback
+    def _async_event_changed(self, data_point: GenericEvent, **kwargs: Any) -> None:
+        """Handle device state changes."""
+        # Don't update disabled entities
+        if self.enabled:
+            self._trigger_event(data_point.parameter.lower())
+            _LOGGER.debug("Device event emitted %s", self.name)
+            self.async_schedule_update_ha_state()
+        else:
+            _LOGGER.debug(
+                "Device event for %s not emitted. Entity is disabled",
+                self.name,
+            )

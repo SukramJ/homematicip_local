@@ -116,22 +116,35 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
             )
 
     @property
+    def _ha_device_name(self) -> str:
+        """Return the Homematic entity device name."""
+        hm_device = self._data_point.device
+        if not self._cu.enable_sub_devices:
+            return hm_device.name
+
+        if (
+            hm_device.has_sub_devices
+            and self._data_point.channel.is_in_multi_group
+            and (channel_group_master := self._data_point.channel.group_master)
+        ):
+            return (
+                f"{hm_device.name}-{channel_group_master.name}"
+                if channel_group_master.name.isnumeric()
+                else channel_group_master.name
+                if channel_group_master.name
+                else f"{hm_device.name}-{channel_group_master.group_no}"
+            )
+        return hm_device.name
+
+    @property
     def available(self) -> bool:
         """Return if data point is available."""
         return self._data_point.available
 
-    def _get_static_state_attributes(self) -> Mapping[str, Any]:
-        """Return the static attributes of the generic entity."""
-        attributes: dict[str, Any] = {
-            ATTR_INTERFACE_ID: self._data_point.device.interface_id,
-            ATTR_ADDRESS: self._data_point.channel.address,
-            ATTR_MODEL: self._data_point.device.model,
-        }
-        if isinstance(self._data_point, CalculatedDataPoint | GenericDataPoint):
-            attributes[ATTR_PARAMETER] = self._data_point.parameter
-            attributes[ATTR_FUNCTION] = self._data_point.function
-
-        return attributes
+    @property
+    def data_point(self) -> HmGenericDataPoint:
+        """Return the Homematic entity."""
+        return self._data_point
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -150,11 +163,6 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
             else:
                 attributes[ATTR_VALUE_STATE] = HmEntityState.NOT_VALID
         return attributes
-
-    @property
-    def data_point(self) -> HmGenericDataPoint:
-        """Return the Homematic entity."""
-        return self._data_point
 
     @property
     def name(self) -> str | UndefinedType | None:
@@ -199,46 +207,6 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
         return entity_name
 
     @property
-    def _ha_device_name(self) -> str:
-        """Return the Homematic entity device name."""
-        hm_device = self._data_point.device
-        if not self._cu.enable_sub_devices:
-            return hm_device.name
-
-        if (
-            hm_device.has_sub_devices
-            and self._data_point.channel.is_in_multi_group
-            and (channel_group_master := self._data_point.channel.group_master)
-        ):
-            return (
-                f"{hm_device.name}-{channel_group_master.name}"
-                if channel_group_master.name.isnumeric()
-                else channel_group_master.name
-                if channel_group_master.name
-                else f"{hm_device.name}-{channel_group_master.group_no}"
-            )
-        return hm_device.name
-
-    def _do_remove_name(self) -> bool:
-        """
-        Check if entity name part should be removed.
-
-        Here we use the HA translation support to identify if the translated name is ''
-        This is guarded against failure due to future HA api changes.
-        """
-        try:
-            if (
-                self._name_translation_key
-                and hasattr(self, "platform_data")
-                and hasattr(self.platform_data, "platform_translations")
-                and (name := self.platform_data.platform_translations.get(self._name_translation_key)) is not None
-            ):
-                return bool(name == "")
-        except Exception:  # pylint: disable=broad-exception-caught
-            return False
-        return False
-
-    @property
     def use_device_name(self) -> bool:
         """
         Return if this entity does not have its own name.
@@ -271,6 +239,18 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
                 self._data_point.full_name,
             )
 
+    async def async_update(self) -> None:
+        """Update entities."""
+        if isinstance(self._data_point, CalculatedDataPoint | CustomDataPoint | GenericDataPoint):
+            await self._data_point.load_data_point_value(call_source=CallSource.MANUAL_OR_SCHEDULED)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when hmip device will be removed from hass."""
+        # Remove callback from device.
+        for unregister in self._unregister_callbacks:
+            if unregister is not None:
+                unregister()
+
     @callback
     def _async_data_point_updated(self, **kwargs: Any) -> None:
         """Handle device state changes."""
@@ -286,18 +266,6 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
                 self._data_point.full_name,
             )
 
-    async def async_update(self) -> None:
-        """Update entities."""
-        if isinstance(self._data_point, CalculatedDataPoint | CustomDataPoint | GenericDataPoint):
-            await self._data_point.load_data_point_value(call_source=CallSource.MANUAL_OR_SCHEDULED)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when hmip device will be removed from hass."""
-        # Remove callback from device.
-        for unregister in self._unregister_callbacks:
-            if unregister is not None:
-                unregister()
-
     @callback
     def _async_device_removed(self) -> None:
         """Handle hm device removal."""
@@ -312,6 +280,38 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
             if device_id in device_registry.devices:
                 # This will also remove associated entities from entity registry.
                 device_registry.async_remove_device(device_id)
+
+    def _do_remove_name(self) -> bool:
+        """
+        Check if entity name part should be removed.
+
+        Here we use the HA translation support to identify if the translated name is ''
+        This is guarded against failure due to future HA api changes.
+        """
+        try:
+            if (
+                self._name_translation_key
+                and hasattr(self, "platform_data")
+                and hasattr(self.platform_data, "platform_translations")
+                and (name := self.platform_data.platform_translations.get(self._name_translation_key)) is not None
+            ):
+                return bool(name == "")
+        except Exception:  # pylint: disable=broad-exception-caught
+            return False
+        return False
+
+    def _get_static_state_attributes(self) -> Mapping[str, Any]:
+        """Return the static attributes of the generic entity."""
+        attributes: dict[str, Any] = {
+            ATTR_INTERFACE_ID: self._data_point.device.interface_id,
+            ATTR_ADDRESS: self._data_point.channel.address,
+            ATTR_MODEL: self._data_point.device.model,
+        }
+        if isinstance(self._data_point, CalculatedDataPoint | GenericDataPoint):
+            attributes[ATTR_PARAMETER] = self._data_point.parameter
+            attributes[ATTR_FUNCTION] = self._data_point.function
+
+        return attributes
 
 
 class AioHomematicGenericRestoreEntity(AioHomematicGenericEntity[HmGenericDataPoint], RestoreEntity):
@@ -380,15 +380,6 @@ class AioHomematicGenericHubEntity(Entity):
         self._unregister_callbacks: list[CALLBACK_TYPE] = []
         _LOGGER.debug("init sysvar: Setting up %s", self._data_point.name)
 
-    def _get_device_info(self) -> DeviceInfo | None:
-        """Return device specific attributes."""
-        if self._data_point.channel is None:
-            return self._cu.device_info
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._data_point.channel.device.identifier)},
-        )
-
     @property
     def available(self) -> bool:
         """Return if entity is available."""
@@ -447,6 +438,19 @@ class AioHomematicGenericHubEntity(Entity):
                 unregister()
 
     @callback
+    def _async_hub_device_removed(self) -> None:
+        """Handle hm sysvar entity removal."""
+        self.hass.async_create_task(self.async_remove(force_remove=True))
+
+        if not self.registry_entry:
+            return
+
+        if entity_id := self.registry_entry.entity_id:
+            entity_registry = er.async_get(self.hass)
+            if entity_id in entity_registry.entities:
+                entity_registry.async_remove(entity_id)
+
+    @callback
     def _async_hub_entity_updated(self, *args: Any, **kwargs: Any) -> None:
         """Handle sysvar entity state changes."""
         # Don't update disabled entities
@@ -459,18 +463,14 @@ class AioHomematicGenericHubEntity(Entity):
                 self.name,
             )
 
-    @callback
-    def _async_hub_device_removed(self) -> None:
-        """Handle hm sysvar entity removal."""
-        self.hass.async_create_task(self.async_remove(force_remove=True))
+    def _get_device_info(self) -> DeviceInfo | None:
+        """Return device specific attributes."""
+        if self._data_point.channel is None:
+            return self._cu.device_info
 
-        if not self.registry_entry:
-            return
-
-        if entity_id := self.registry_entry.entity_id:
-            entity_registry = er.async_get(self.hass)
-            if entity_id in entity_registry.entities:
-                entity_registry.async_remove(entity_id)
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._data_point.channel.device.identifier)},
+        )
 
 
 class AioHomematicGenericProgramEntity(AioHomematicGenericHubEntity, Generic[HmGenericProgramDataPoint]):

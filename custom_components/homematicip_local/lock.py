@@ -67,6 +67,11 @@ class AioHomematicLock(AioHomematicGenericRestoreEntity[BaseCustomDpLock], LockE
             self._attr_supported_features = LockEntityFeature.OPEN
 
     @property
+    def is_jammed(self) -> bool:
+        """Return true if lock is jammed."""
+        return self._data_point.is_jammed is True
+
+    @property
     def is_locked(self) -> bool | None:
         """Return true if lock is on."""
         if self._data_point.is_valid:
@@ -93,19 +98,14 @@ class AioHomematicLock(AioHomematicGenericRestoreEntity[BaseCustomDpLock], LockE
         """Return true if the lock is unlocking."""
         return self._data_point.is_unlocking
 
-    @property
-    def is_jammed(self) -> bool:
-        """Return true if lock is jammed."""
-        return self._data_point.is_jammed is True
-
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self._data_point.lock()
 
-    async def async_unlock(self, **kwargs: Any) -> None:
-        """Unlock the lock."""
-        await self._data_point.unlock()
-
     async def async_open(self, **kwargs: Any) -> None:
         """Open the lock."""
         await self._data_point.open()
+
+    async def async_unlock(self, **kwargs: Any) -> None:
+        """Unlock the lock."""
+        await self._data_point.unlock()

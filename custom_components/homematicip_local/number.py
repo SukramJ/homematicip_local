@@ -108,19 +108,6 @@ class AioHomematicNumber(AioHomematicGenericEntity[BaseDpNumber], RestoreNumber)
             self._attr_native_unit_of_measurement = data_point.unit
 
     @property
-    def native_value(self) -> float | None:
-        """Return the current value."""
-        if self._data_point.is_valid and self._data_point.value is not None:
-            return float(self._data_point.value * self._multiplier)
-        if self.is_restored:
-            return self._restored_native_value
-        return None
-
-    async def async_set_native_value(self, value: float) -> None:
-        """Update the current value."""
-        await self._data_point.send_value(value=value / self._multiplier)
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         attributes = super().extra_state_attributes
@@ -133,11 +120,24 @@ class AioHomematicNumber(AioHomematicGenericEntity[BaseDpNumber], RestoreNumber)
         """Return if the state is restored."""
         return not self._data_point.is_valid and self._restored_native_value is not None
 
+    @property
+    def native_value(self) -> float | None:
+        """Return the current value."""
+        if self._data_point.is_valid and self._data_point.value is not None:
+            return float(self._data_point.value * self._multiplier)
+        if self.is_restored:
+            return self._restored_native_value
+        return None
+
     async def async_added_to_hass(self) -> None:
         """Check, if state needs to be restored."""
         await super().async_added_to_hass()
         if not self._data_point.is_valid and (restored_sensor_data := await self.async_get_last_number_data()):
             self._restored_native_value = restored_sensor_data.native_value
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        await self._data_point.send_value(value=value / self._multiplier)
 
 
 class AioHomematicSysvarNumber(AioHomematicGenericSysvarEntity[SysvarDpNumber], NumberEntity):

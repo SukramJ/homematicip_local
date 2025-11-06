@@ -74,6 +74,15 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
     _attr_max_color_temp_kelvin = 6500  # 153 Mireds
 
     @property
+    def brightness(self) -> int | None:
+        """Return the brightness of this light between 0..255."""
+        if self._data_point.is_valid:
+            return self._data_point.brightness
+        if self.is_restored and self._restored_state:
+            return self._restored_state.attributes.get(ATTR_BRIGHTNESS)
+        return None
+
+    @property
     def color_mode(self) -> ColorMode | None:
         """Return the color mode of the light."""
         if self._data_point.is_valid:
@@ -87,6 +96,25 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
             return self._restored_state.attributes.get(ATTR_COLOR_MODE)
 
         return ColorMode.ONOFF
+
+    @property
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature in kelvin."""
+        if self._data_point.is_valid:
+            return self._data_point.color_temp_kelvin
+        if self.is_restored and self._restored_state:
+            return self._restored_state.attributes.get(ATTR_COLOR_TEMP_KELVIN)
+        return None
+
+    @property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        return self._data_point.effect
+
+    @property
+    def effect_list(self) -> list[str] | None:
+        """Return the list of supported effects."""
+        return list(self._data_point.effects) if self._data_point.effects else None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -104,6 +132,32 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
                 attributes[ATTR_CHANNEL_COLOR] = self._data_point.channel_color_name
 
         return attributes
+
+    @property
+    def hs_color(self) -> tuple[float, float] | None:
+        """Return the hue and saturation color value [float, float]."""
+        if self._data_point.is_valid:
+            return self._data_point.hs_color
+        if self.is_restored and self._restored_state:
+            return self._restored_state.attributes.get(ATTR_HS_COLOR)
+        return None
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if dimmer is on."""
+        if self._data_point.is_valid:
+            return self._data_point.is_on is True
+        if (
+            self.is_restored
+            and self._restored_state
+            and (restored_state := self._restored_state.state)
+            not in (
+                STATE_UNKNOWN,
+                STATE_UNAVAILABLE,
+            )
+        ):
+            return restored_state == STATE_ON
+        return None
 
     @property
     def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
@@ -129,59 +183,18 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
             supported_features |= LightEntityFeature.EFFECT
         return supported_features
 
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if dimmer is on."""
-        if self._data_point.is_valid:
-            return self._data_point.is_on is True
-        if (
-            self.is_restored
-            and self._restored_state
-            and (restored_state := self._restored_state.state)
-            not in (
-                STATE_UNKNOWN,
-                STATE_UNAVAILABLE,
-            )
-        ):
-            return restored_state == STATE_ON
-        return None
+    @callback
+    def async_set_on_time(self, on_time: float) -> None:
+        """Set the on time of the light."""
+        self._data_point.set_timer_on_time(on_time=on_time)
 
-    @property
-    def brightness(self) -> int | None:
-        """Return the brightness of this light between 0..255."""
-        if self._data_point.is_valid:
-            return self._data_point.brightness
-        if self.is_restored and self._restored_state:
-            return self._restored_state.attributes.get(ATTR_BRIGHTNESS)
-        return None
-
-    @property
-    def color_temp_kelvin(self) -> int | None:
-        """Return the color temperature in kelvin."""
-        if self._data_point.is_valid:
-            return self._data_point.color_temp_kelvin
-        if self.is_restored and self._restored_state:
-            return self._restored_state.attributes.get(ATTR_COLOR_TEMP_KELVIN)
-        return None
-
-    @property
-    def effect(self) -> str | None:
-        """Return the current effect."""
-        return self._data_point.effect
-
-    @property
-    def effect_list(self) -> list[str] | None:
-        """Return the list of supported effects."""
-        return list(self._data_point.effects) if self._data_point.effects else None
-
-    @property
-    def hs_color(self) -> tuple[float, float] | None:
-        """Return the hue and saturation color value [float, float]."""
-        if self._data_point.is_valid:
-            return self._data_point.hs_color
-        if self.is_restored and self._restored_state:
-            return self._restored_state.attributes.get(ATTR_HS_COLOR)
-        return None
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the light off."""
+        hm_kwargs = LightOffArgs()
+        # Use transition from kwargs, if not applicable use 0.
+        if ramp_time := kwargs.get(ATTR_TRANSITION, 0):
+            hm_kwargs["ramp_time"] = ramp_time
+        await self._data_point.turn_off(**hm_kwargs)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
@@ -203,16 +216,3 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
             hm_kwargs["effect"] = effect
 
         await self._data_point.turn_on(**hm_kwargs)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the light off."""
-        hm_kwargs = LightOffArgs()
-        # Use transition from kwargs, if not applicable use 0.
-        if ramp_time := kwargs.get(ATTR_TRANSITION, 0):
-            hm_kwargs["ramp_time"] = ramp_time
-        await self._data_point.turn_off(**hm_kwargs)
-
-    @callback
-    def async_set_on_time(self, on_time: float) -> None:
-        """Set the on time of the light."""
-        self._data_point.set_timer_on_time(on_time=on_time)

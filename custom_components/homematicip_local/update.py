@@ -89,14 +89,14 @@ class AioHomematicUpdate(UpdateEntity):
         return self._data_point.available
 
     @property
-    def installed_version(self) -> str | None:
-        """Version installed and in use."""
-        return self._data_point.firmware
-
-    @property
     def in_progress(self) -> bool | None:
         """Update installation progress."""
         return self._data_point.in_progress
+
+    @property
+    def installed_version(self) -> str | None:
+        """Version installed and in use."""
+        return self._data_point.firmware
 
     @property
     def latest_version(self) -> str | None:
@@ -107,14 +107,6 @@ class AioHomematicUpdate(UpdateEntity):
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
         return self._data_point.name
-
-    async def async_install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
-        """Install an update."""
-        await self._data_point.update_firmware(refresh_after_update_intervals=(10, 60))
-
-    async def async_update(self) -> None:
-        """Update entity."""
-        await self._data_point.refresh_firmware_data()
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
@@ -127,18 +119,13 @@ class AioHomematicUpdate(UpdateEntity):
             self._data_point.register_device_removed_callback(cb=self._async_device_removed)
         )
 
-    @callback
-    def _async_entity_changed(self, *args: Any, **kwargs: Any) -> None:
-        """Handle device state changes."""
-        # Don't update disabled entities
-        if self.enabled:
-            _LOGGER.debug("Update state changed event emitted for %s", self.name)
-            self.async_schedule_update_ha_state()
-        else:
-            _LOGGER.debug(
-                "Update state changed event for %s not emitted. Entity is disabled",
-                self.name,
-            )
+    async def async_install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
+        """Install an update."""
+        await self._data_point.update_firmware(refresh_after_update_intervals=(10, 60))
+
+    async def async_update(self) -> None:
+        """Update entity."""
+        await self._data_point.refresh_firmware_data()
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
@@ -161,3 +148,16 @@ class AioHomematicUpdate(UpdateEntity):
             if device_id in device_registry.devices:
                 # This will also remove associated entities from entity registry.
                 device_registry.async_remove_device(device_id)
+
+    @callback
+    def _async_entity_changed(self, *args: Any, **kwargs: Any) -> None:
+        """Handle device state changes."""
+        # Don't update disabled entities
+        if self.enabled:
+            _LOGGER.debug("Update state changed event emitted for %s", self.name)
+            self.async_schedule_update_ha_state()
+        else:
+            _LOGGER.debug(
+                "Update state changed event for %s not emitted. Entity is disabled",
+                self.name,
+            )

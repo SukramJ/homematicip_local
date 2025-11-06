@@ -132,12 +132,12 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         self._attr_target_temperature_step = data_point.target_temperature_step
 
     @property
-    def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
+    def current_humidity(self) -> int | None:
+        """Return the current humidity."""
         if self._data_point.is_valid:
-            return self._data_point.target_temperature
+            return self._data_point.current_humidity
         if self.is_restored and self._restored_state:
-            return self._restored_state.attributes.get(ATTR_TEMPERATURE)
+            return self._restored_state.attributes.get(ATTR_CURRENT_HUMIDITY)
         return None
 
     @property
@@ -150,13 +150,20 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         return None
 
     @property
-    def current_humidity(self) -> int | None:
-        """Return the current humidity."""
-        if self._data_point.is_valid:
-            return self._data_point.current_humidity
-        if self.is_restored and self._restored_state:
-            return self._restored_state.attributes.get(ATTR_CURRENT_HUMIDITY)
-        return None
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the climate entity."""
+        attributes = super().extra_state_attributes
+        if (
+            hasattr(self._data_point, "temperature_offset")
+            and (temperature_offset := self._data_point.temperature_offset) is not None
+        ):
+            attributes[ATTR_TEMPERATURE_OFFSET] = temperature_offset
+        if (
+            hasattr(self._data_point, "optimum_start_stop")
+            and (optimum_start_stop := self._data_point.optimum_start_stop) is not None
+        ):
+            attributes[ATTR_OPTIMUM_START_STOP] = optimum_start_stop
+        return attributes
 
     @property
     def hvac_action(self) -> HVACAction | None:
@@ -195,14 +202,14 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         return [HM_TO_HA_HVAC_MODE[mode] for mode in self._data_point.modes if mode in HM_TO_HA_HVAC_MODE]
 
     @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature."""
-        return self._data_point.min_temp
-
-    @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._data_point.max_temp
+
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        return self._data_point.min_temp
 
     @property
     def preset_mode(self) -> str | None:
@@ -239,62 +246,13 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         return supported_features
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the climate entity."""
-        attributes = super().extra_state_attributes
-        if (
-            hasattr(self._data_point, "temperature_offset")
-            and (temperature_offset := self._data_point.temperature_offset) is not None
-        ):
-            attributes[ATTR_TEMPERATURE_OFFSET] = temperature_offset
-        if (
-            hasattr(self._data_point, "optimum_start_stop")
-            and (optimum_start_stop := self._data_point.optimum_start_stop) is not None
-        ):
-            attributes[ATTR_OPTIMUM_START_STOP] = optimum_start_stop
-        return attributes
-
-    async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-        await self._data_point.set_temperature(temperature=temperature)
-
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set new target hvac mode."""
-        if hvac_mode not in HA_TO_HM_HVAC_MODE:
-            _LOGGER.warning("Hvac mode %s is not supported by integration", hvac_mode)
-            return
-        await self._data_point.set_mode(mode=HA_TO_HM_HVAC_MODE[hvac_mode])
-
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set new preset mode."""
-        if preset_mode not in self.preset_modes:
-            _LOGGER.warning(
-                "Preset mode %s is not supported in hvac_mode %s",
-                preset_mode,
-                self.hvac_mode,
-            )
-            return
-        await self._data_point.set_profile(profile=ClimateProfile(preset_mode))
-
-    async def async_enable_away_mode_by_calendar(
-        self,
-        end: datetime,
-        away_temperature: float,
-        start: datetime | None = None,
-    ) -> None:
-        """Enable the away mode by calendar on thermostat."""
-        start = start or datetime.now() - timedelta(minutes=10)
-        await self._data_point.enable_away_mode_by_calendar(start=start, end=end, away_temperature=away_temperature)
-
-    async def async_enable_away_mode_by_duration(self, hours: int, away_temperature: float) -> None:
-        """Enable the away mode by duration on thermostat."""
-        await self._data_point.enable_away_mode_by_duration(hours=hours, away_temperature=away_temperature)
-
-    async def async_disable_away_mode(self) -> None:
-        """Disable the away mode on thermostat."""
-        await self._data_point.disable_away_mode()
+    def target_temperature(self) -> float | None:
+        """Return the temperature we try to reach."""
+        if self._data_point.is_valid:
+            return self._data_point.target_temperature
+        if self.is_restored and self._restored_state:
+            return self._restored_state.attributes.get(ATTR_TEMPERATURE)
+        return None
 
     async def async_copy_schedule(self, source_entity_id: str) -> None:
         """Copy a schedule from this entity to another."""
@@ -322,6 +280,24 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         else:
             await self._data_point.copy_schedule_profile(source_profile=source_profile, target_profile=target_profile)
 
+    async def async_disable_away_mode(self) -> None:
+        """Disable the away mode on thermostat."""
+        await self._data_point.disable_away_mode()
+
+    async def async_enable_away_mode_by_calendar(
+        self,
+        end: datetime,
+        away_temperature: float,
+        start: datetime | None = None,
+    ) -> None:
+        """Enable the away mode by calendar on thermostat."""
+        start = start or datetime.now() - timedelta(minutes=10)
+        await self._data_point.enable_away_mode_by_calendar(start=start, end=end, away_temperature=away_temperature)
+
+    async def async_enable_away_mode_by_duration(self, hours: int, away_temperature: float) -> None:
+        """Enable the away mode by duration on thermostat."""
+        await self._data_point.enable_away_mode_by_duration(hours=hours, away_temperature=away_temperature)
+
     async def async_get_schedule_profile(self, profile: ScheduleProfile) -> ServiceResponse:
         """Return the schedule profile."""
         return cast(ServiceResponse, await self._data_point.get_schedule_profile(profile=profile))
@@ -334,11 +310,36 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             ServiceResponse, await self._data_point.get_schedule_profile_weekday(profile=profile, weekday=weekday)
         )
 
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        if hvac_mode not in HA_TO_HM_HVAC_MODE:
+            _LOGGER.warning("Hvac mode %s is not supported by integration", hvac_mode)
+            return
+        await self._data_point.set_mode(mode=HA_TO_HM_HVAC_MODE[hvac_mode])
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        if preset_mode not in self.preset_modes:
+            _LOGGER.warning(
+                "Preset mode %s is not supported in hvac_mode %s",
+                preset_mode,
+                self.hvac_mode,
+            )
+            return
+        await self._data_point.set_profile(profile=ClimateProfile(preset_mode))
+
     async def async_set_schedule_profile(self, profile: ScheduleProfile, profile_data: PROFILE_DICT) -> None:
         """Set the schedule profile."""
         for p_key, p_value in profile_data.items():
             profile_data[p_key] = {int(key): value for key, value in p_value.items()}
         await self._data_point.set_schedule_profile(profile=profile, profile_data=profile_data)
+
+    async def async_set_schedule_profile_weekday(
+        self, profile: ScheduleProfile, weekday: ScheduleWeekday, weekday_data: WEEKDAY_DICT
+    ) -> None:
+        """Set the schedule profile weekday."""
+        weekday_data = {int(key): value for key, value in weekday_data.items()}
+        await self._data_point.set_schedule_profile_weekday(profile=profile, weekday=weekday, weekday_data=weekday_data)
 
     async def async_set_schedule_simple_profile(
         self, profile: ScheduleProfile, base_temperature: float, simple_profile_data: SIMPLE_PROFILE_DICT
@@ -349,13 +350,6 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             base_temperature=base_temperature,
             simple_profile_data=simple_profile_data,
         )
-
-    async def async_set_schedule_profile_weekday(
-        self, profile: ScheduleProfile, weekday: ScheduleWeekday, weekday_data: WEEKDAY_DICT
-    ) -> None:
-        """Set the schedule profile weekday."""
-        weekday_data = {int(key): value for key, value in weekday_data.items()}
-        await self._data_point.set_schedule_profile_weekday(profile=profile, weekday=weekday, weekday_data=weekday_data)
 
     async def async_set_schedule_simple_profile_weekday(
         self,
@@ -371,3 +365,9 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             base_temperature=base_temperature,
             simple_weekday_list=simple_weekday_list,
         )
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+        await self._data_point.set_temperature(temperature=temperature)

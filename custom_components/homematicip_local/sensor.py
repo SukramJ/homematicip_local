@@ -109,6 +109,20 @@ class AioHomematicSensor(AioHomematicGenericEntity[DpSensor], RestoreSensor):
             self._attr_options = [item.lower() for item in data_point.values] if data_point.values else None
 
     @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the generic entity."""
+        attributes = super().extra_state_attributes
+        if self.is_restored:
+            attributes[ATTR_VALUE_STATE] = HmEntityState.RESTORED
+
+        return attributes
+
+    @property
+    def is_restored(self) -> bool:
+        """Return if the state is restored."""
+        return not self._data_point.is_valid and self._restored_native_value is not None
+
+    @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the native value of the entity."""
         if self._data_point.is_valid:
@@ -131,20 +145,6 @@ class AioHomematicSensor(AioHomematicGenericEntity[DpSensor], RestoreSensor):
         if self.is_restored:
             return cast(StateType | date | datetime | Decimal, self._restored_native_value)
         return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the generic entity."""
-        attributes = super().extra_state_attributes
-        if self.is_restored:
-            attributes[ATTR_VALUE_STATE] = HmEntityState.RESTORED
-
-        return attributes
-
-    @property
-    def is_restored(self) -> bool:
-        """Return if the state is restored."""
-        return not self._data_point.is_valid and self._restored_native_value is not None
 
     async def async_added_to_hass(self) -> None:
         """Check, if state needs to be restored."""

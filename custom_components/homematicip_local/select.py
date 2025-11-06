@@ -77,13 +77,6 @@ class AioHomematicSelect(AioHomematicGenericRestoreEntity[DpSelect], SelectEntit
     """Representation of the HomematicIP select entity."""
 
     @property
-    def options(self) -> list[str]:
-        """Return the options."""
-        if options := self._data_point.values:
-            return [option.lower() for option in options]
-        return []
-
-    @property
     def current_option(self) -> str | None:
         """Return the currently selected option."""
         if self._data_point.is_valid:
@@ -100,6 +93,13 @@ class AioHomematicSelect(AioHomematicGenericRestoreEntity[DpSelect], SelectEntit
             return restored_state
         return None
 
+    @property
+    def options(self) -> list[str]:
+        """Return the options."""
+        if options := self._data_point.values:
+            return [option.lower() for option in options]
+        return []
+
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         await self._data_point.send_value(value=option.upper())
@@ -109,16 +109,16 @@ class AioHomematicSysvarSelect(AioHomematicGenericSysvarEntity[SysvarDpSelect], 
     """Representation of the HomematicIP hub select entity."""
 
     @property
+    def current_option(self) -> str | None:
+        """Return the currently selected option."""
+        return self._data_point.value
+
+    @property
     def options(self) -> list[str]:
         """Return the options."""
         if options := self._data_point.values:
             return list(options)
         return []
-
-    @property
-    def current_option(self) -> str | None:
-        """Return the currently selected option."""
-        return self._data_point.value
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""

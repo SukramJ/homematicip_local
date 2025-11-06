@@ -41,18 +41,6 @@ class _DevicesDelayedFixFlow(RepairsFlow):
             self._interface_id = parts[1] or None
             self._address = parts[2] or None
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:  # noqa: D401
-        # Always show the confirm form first
-        return self.async_show_form(
-            step_id="confirm",
-            data_schema=vol.Schema({}),
-            description_placeholders={
-                "issue_id": self._issue_id,
-                "interface_id": self._interface_id or "",
-                "address": self._address or "",
-            },
-        )
-
     async def async_step_confirm(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle the confirmation to trigger the manual device add and close the issue."""
         # Execute best-effort fix callback if present
@@ -66,3 +54,15 @@ class _DevicesDelayedFixFlow(RepairsFlow):
 
         # Let the frontend use the translation for success message
         return self.async_create_entry(title="", data={})
+
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:  # noqa: D401
+        # Always show the confirm form first
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=vol.Schema({}),
+            description_placeholders={
+                "issue_id": self._issue_id,
+                "interface_id": self._interface_id or "",
+                "address": self._address or "",
+            },
+        )
