@@ -211,6 +211,15 @@
             }
         }, 
         "button": {
+            "press": {
+                "name": "Key Press"
+            }, 
+            "press_long": {
+                "name": "Key Press Long"
+            }, 
+            "press_short": {
+                "name": "Key Press Short"
+            }, 
             "reset_motion": {
                 "name": "Reset Motion"
             }, 
