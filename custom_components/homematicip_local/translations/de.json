@@ -211,6 +211,15 @@
             }
         }, 
         "button": {
+            "press": {
+                "name": "Tastendruck"
+            }, 
+            "press_long": {
+                "name": "Tastendruck lang"
+            }, 
+            "press_short": {
+                "name": "Tastendruck lang"
+            }, 
             "reset_motion": {
                 "name": "Bewegung zurücksetzen"
             }, 

@@ -1,3 +1,9 @@
+# Version 1.90.3 (2025-11-06)
+
+## What's Changed
+- Add translation for press events
+- Fix naming of untranslated entities
+
 # Version 1.90.2 (2025-11-05)
 
 ## What's Changed
