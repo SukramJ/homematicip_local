@@ -183,8 +183,9 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
             translated_name = super().name
             if self._do_remove_name():
                 translated_name = ""
-            if isinstance(translated_name, str):
-                entity_name = entity_name.replace(self._data_point.parameter.replace("_", " ").title(), translated_name)
+            if isinstance(translated_name, str) and translated_name != entity_name:
+                param = self._data_point.parameter.replace("_", " ").title()
+                entity_name = entity_name.replace(param, translated_name)
 
         if isinstance(self._data_point, CustomDataPoint) and entity_name:
             if entity_name.startswith(device_name):
