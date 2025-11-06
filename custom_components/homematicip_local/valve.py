@@ -98,13 +98,13 @@ class AioHomematicValve(AioHomematicGenericRestoreEntity[CustomDpIpIrrigationVal
         """Return the list of supported features."""
         return ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
 
-    async def async_open_valve(self) -> None:
-        """Open the valve."""
-        await self._data_point.open()
-
     async def async_close_valve(self) -> None:
         """Close the valve."""
         await self._data_point.close()
+
+    async def async_open_valve(self) -> None:
+        """Open the valve."""
+        await self._data_point.open()
 
     async def async_set_on_time(self, on_time: float) -> None:
         """Set the on time of the light."""

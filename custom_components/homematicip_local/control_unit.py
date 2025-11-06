@@ -189,6 +189,70 @@ class ControlUnit(BaseControlUnit):
         super().__init__(control_config=control_config)
         self._mqtt_consumer: MQTTConsumer | None = None
 
+    def ensure_via_device_exists(self, identifier: str, suggested_area: str | None, via_device: str) -> None:
+        """Create a via device for a device."""
+        device_registry = dr.async_get(self._hass)
+
+        if device_registry.async_get_device(identifiers={(DOMAIN, via_device)}) is not None:
+            return
+
+        if via_device != self.central.name:
+            device_registry.async_get_or_create(
+                config_entry_id=self._entry_id,
+                identifiers={
+                    (
+                        DOMAIN,
+                        via_device,
+                    )
+                },
+                suggested_area=suggested_area,
+                via_device=(DOMAIN, self.central.name),
+            )
+
+        device_registry.async_get_or_create(
+            config_entry_id=self._entry_id,
+            identifiers={
+                (
+                    DOMAIN,
+                    identifier,
+                )
+            },
+            suggested_area=suggested_area,
+            via_device=(DOMAIN, via_device),
+        )
+
+    def get_new_data_points(
+        self,
+        data_point_type: type[_DATA_POINT_T] | UnionType,
+    ) -> tuple[_DATA_POINT_T, ...]:
+        """Return all data points by type."""
+        category = (
+            data_point_type.__args__[0].default_category()
+            if isinstance(data_point_type, UnionType)
+            else data_point_type.default_category()
+        )
+        return cast(
+            tuple[_DATA_POINT_T, ...],
+            self.central.get_data_points(
+                category=category,
+                exclude_no_create=True,
+                registered=False,
+            ),
+        )
+
+    def get_new_hub_data_points(
+        self,
+        data_point_type: type[_DATA_POINT_T],
+    ) -> tuple[_DATA_POINT_T, ...]:
+        """Return all data points by type."""
+        return cast(
+            tuple[_DATA_POINT_T, ...],
+            self.central.get_hub_data_points(
+                category=data_point_type.default_category(),
+                registered=False,
+            ),
+        )
+
     async def start_central(self) -> None:
         """Start the central unit."""
         self._unregister_callbacks.append(
@@ -342,6 +406,21 @@ class ControlUnit(BaseControlUnit):
                 )
             return
         return
+
+    @callback
+    def _async_get_device_entry(self, device_address: str) -> DeviceEntry | None:
+        """Return the device of the ha device."""
+        if (hm_device := self._central.get_device(address=device_address)) is None:
+            return None
+        device_registry = dr.async_get(self._hass)
+        return device_registry.async_get_device(
+            identifiers={
+                (
+                    DOMAIN,
+                    hm_device.identifier,
+                )
+            }
+        )
 
     @callback
     def _async_homematic_callback(self, event_type: EventType, event_data: dict[str, Any]) -> None:  # noqa: C901
@@ -518,85 +597,6 @@ class ControlUnit(BaseControlUnit):
                         event_data=event_data,
                     )
 
-    @callback
-    def _async_get_device_entry(self, device_address: str) -> DeviceEntry | None:
-        """Return the device of the ha device."""
-        if (hm_device := self._central.get_device(address=device_address)) is None:
-            return None
-        device_registry = dr.async_get(self._hass)
-        return device_registry.async_get_device(
-            identifiers={
-                (
-                    DOMAIN,
-                    hm_device.identifier,
-                )
-            }
-        )
-
-    def ensure_via_device_exists(self, identifier: str, suggested_area: str | None, via_device: str) -> None:
-        """Create a via device for a device."""
-        device_registry = dr.async_get(self._hass)
-
-        if device_registry.async_get_device(identifiers={(DOMAIN, via_device)}) is not None:
-            return
-
-        if via_device != self.central.name:
-            device_registry.async_get_or_create(
-                config_entry_id=self._entry_id,
-                identifiers={
-                    (
-                        DOMAIN,
-                        via_device,
-                    )
-                },
-                suggested_area=suggested_area,
-                via_device=(DOMAIN, self.central.name),
-            )
-
-        device_registry.async_get_or_create(
-            config_entry_id=self._entry_id,
-            identifiers={
-                (
-                    DOMAIN,
-                    identifier,
-                )
-            },
-            suggested_area=suggested_area,
-            via_device=(DOMAIN, via_device),
-        )
-
-    def get_new_data_points(
-        self,
-        data_point_type: type[_DATA_POINT_T] | UnionType,
-    ) -> tuple[_DATA_POINT_T, ...]:
-        """Return all data points by type."""
-        category = (
-            data_point_type.__args__[0].default_category()
-            if isinstance(data_point_type, UnionType)
-            else data_point_type.default_category()
-        )
-        return cast(
-            tuple[_DATA_POINT_T, ...],
-            self.central.get_data_points(
-                category=category,
-                exclude_no_create=True,
-                registered=False,
-            ),
-        )
-
-    def get_new_hub_data_points(
-        self,
-        data_point_type: type[_DATA_POINT_T],
-    ) -> tuple[_DATA_POINT_T, ...]:
-        """Return all data points by type."""
-        return cast(
-            tuple[_DATA_POINT_T, ...],
-            self.central.get_hub_data_points(
-                category=data_point_type.default_category(),
-                registered=False,
-            ),
-        )
-
 
 class ControlUnitTemp(BaseControlUnit):
     """Central unit to control a central unit for temporary usage."""
@@ -670,6 +670,18 @@ class ControlConfig:
             CONF_DELAY_NEW_DEVICE_CREATION, DEFAULT_DELAY_NEW_DEVICE_CREATION
         )
 
+    @property
+    def _temporary_config(self) -> ControlConfig:
+        """Return a config for validation."""
+        temporary_data: dict[str, Any] = deepcopy(dict(self._data))
+        temporary_data[CONF_INSTANCE_NAME] = "temporary_instance"
+        return ControlConfig(
+            hass=self.hass,
+            entry_id="hmip_local_temporary",
+            data=temporary_data,
+            start_direct=True,
+        )
+
     def check_config(self) -> None:
         """Check config. Throws BaseHomematicException on failure."""
         if not self._check_instance_name_is_unique():
@@ -686,23 +698,6 @@ class ControlConfig:
         ):
             failures = ", ".join(config_failures)
             raise InvalidConfig(failures)
-
-    def _check_instance_name_is_unique(self) -> bool:
-        """Check if instance_name is unique in HA."""
-        for entry in self.hass.config_entries.async_entries(domain=DOMAIN):
-            if entry.entry_id == self.entry_id or len(entry.data) == 0:
-                continue
-            if hasattr(entry.data, CONF_INSTANCE_NAME) and entry.data[CONF_INSTANCE_NAME] == self.instance_name:
-                return False
-        return True
-
-    def create_control_unit(self) -> ControlUnit:
-        """Identify the used client."""
-        return ControlUnit(self)
-
-    def create_control_unit_temp(self) -> ControlUnitTemp:
-        """Identify the used client."""
-        return ControlUnitTemp(self._temporary_config)
 
     def create_central(self) -> CentralUnit:
         """Create the central unit for ccu callbacks."""
@@ -752,17 +747,22 @@ class ControlConfig:
             verify_tls=self._verify_tls,
         ).create_central()
 
-    @property
-    def _temporary_config(self) -> ControlConfig:
-        """Return a config for validation."""
-        temporary_data: dict[str, Any] = deepcopy(dict(self._data))
-        temporary_data[CONF_INSTANCE_NAME] = "temporary_instance"
-        return ControlConfig(
-            hass=self.hass,
-            entry_id="hmip_local_temporary",
-            data=temporary_data,
-            start_direct=True,
-        )
+    def create_control_unit(self) -> ControlUnit:
+        """Identify the used client."""
+        return ControlUnit(self)
+
+    def create_control_unit_temp(self) -> ControlUnitTemp:
+        """Identify the used client."""
+        return ControlUnitTemp(self._temporary_config)
+
+    def _check_instance_name_is_unique(self) -> bool:
+        """Check if instance_name is unique in HA."""
+        for entry in self.hass.config_entries.async_entries(domain=DOMAIN):
+            if entry.entry_id == self.entry_id or len(entry.data) == 0:
+                continue
+            if hasattr(entry.data, CONF_INSTANCE_NAME) and entry.data[CONF_INSTANCE_NAME] == self.instance_name:
+                return False
+        return True
 
 
 def signal_new_data_point(entry_id: str, platform: DataPointCategory) -> str:

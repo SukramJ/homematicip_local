@@ -45,6 +45,27 @@ class MQTTConsumer:
         if self._sub_state:
             async_unsubscribe_topics(self._hass, self._sub_state)
 
+    def _get_topics(self) -> dict[str, dict[str, Any]]:
+        """Return the topics for the central."""
+        topics: dict[str, dict[str, Any]] = {}
+        for state_path in self._central.get_data_point_path():
+            topics[state_path.replace("/", "_")] = {
+                "topic": f"{self._mqtt_prefix}{state_path}",
+                "msg_callback": lambda msg: self._on_device_mqtt_msg_receive(msg=msg),
+                "qos": 0,
+            }
+        topics["sysvar_topics"] = {
+            "topic": f"{self._mqtt_prefix}{SYSVAR_STATE_PATH_ROOT}/+",
+            "msg_callback": lambda msg: self._on_sysvar_mqtt_msg_receive(msg=msg),
+            "qos": 0,
+        }
+
+        return topics
+
+    def _mqtt_is_configured(self) -> bool:
+        """Check if mqtt is configured."""
+        return self._hass.data.get("mqtt") is not None
+
     @callback
     def _on_device_mqtt_msg_receive(self, msg: ReceiveMessage) -> None:
         """Do something on message receive."""
@@ -62,24 +83,3 @@ class MQTTConsumer:
         payload_dict = json_loads(msg.payload)
         if (payload_value := cast(dict, payload_dict).get("v")) is not None:
             self._central.sysvar_data_point_path_event(state_path=state_path, value=payload_value)
-
-    def _mqtt_is_configured(self) -> bool:
-        """Check if mqtt is configured."""
-        return self._hass.data.get("mqtt") is not None
-
-    def _get_topics(self) -> dict[str, dict[str, Any]]:
-        """Return the topics for the central."""
-        topics: dict[str, dict[str, Any]] = {}
-        for state_path in self._central.get_data_point_path():
-            topics[state_path.replace("/", "_")] = {
-                "topic": f"{self._mqtt_prefix}{state_path}",
-                "msg_callback": lambda msg: self._on_device_mqtt_msg_receive(msg=msg),
-                "qos": 0,
-            }
-        topics["sysvar_topics"] = {
-            "topic": f"{self._mqtt_prefix}{SYSVAR_STATE_PATH_ROOT}/+",
-            "msg_callback": lambda msg: self._on_sysvar_mqtt_msg_receive(msg=msg),
-            "qos": 0,
-        }
-
-        return topics

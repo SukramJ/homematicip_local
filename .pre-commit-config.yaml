@@ -1,4 +1,12 @@
 repos:
+  - repo: local
+    hooks:
+      - id: sort-class-members
+        name: sort-class-members
+        entry: script/run-in-env.sh python script/sort_class_members.py
+        language: script
+        types_or: [python]
+        files: ^(custom_components/homematicip_local|tests)/.+\.py$
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.14.3
     hooks:

@@ -75,6 +75,16 @@ class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], Sir
             self._attr_supported_features |= SirenEntityFeature.DURATION
 
     @property
+    def available_lights(self) -> list[int | str] | dict[int, str] | None:
+        """Return a list of available lights."""
+        return self._data_point.available_lights  # type: ignore[return-value]
+
+    @property
+    def available_tones(self) -> list[int | str] | dict[int, str] | None:
+        """Return a list of available tones."""
+        return self._data_point.available_tones  # type: ignore[return-value]
+
+    @property
     def is_on(self) -> bool | None:
         """Return true if siren is on."""
         if self._data_point.is_valid:
@@ -91,15 +101,9 @@ class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], Sir
             return restored_state == STATE_ON
         return None
 
-    @property
-    def available_tones(self) -> list[int | str] | dict[int, str] | None:
-        """Return a list of available tones."""
-        return self._data_point.available_tones  # type: ignore[return-value]
-
-    @property
-    def available_lights(self) -> list[int | str] | dict[int, str] | None:
-        """Return a list of available lights."""
-        return self._data_point.available_lights  # type: ignore[return-value]
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+        await self._data_point.turn_off()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -111,7 +115,3 @@ class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], Sir
         if duration := kwargs.get(ATTR_DURATION):
             hm_kwargs["duration"] = duration
         await self._data_point.turn_on(**hm_kwargs)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        await self._data_point.turn_off()
