@@ -5,8 +5,9 @@ from __future__ import annotations
 import logging
 from typing import Any, Final
 
-from aiohomematic.const import CALLBACK_TYPE, DataPointCategory
+from aiohomematic.const import DataPointCategory
 from aiohomematic.model.update import DpUpdate
+from aiohomematic.types import UnregisterCallback
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -80,7 +81,7 @@ class AioHomematicUpdate(UpdateEntity):
             identifiers={(DOMAIN, data_point.device.identifier)},
         )
         self._attr_extra_state_attributes = {ATTR_FIRMWARE_UPDATE_STATE: data_point.device.firmware_update_state}
-        self._unregister_callbacks: list[CALLBACK_TYPE] = []
+        self._unregister_callbacks: list[UnregisterCallback] = []
         _LOGGER.debug("init: Setting up %s", data_point.full_name)
 
     @property

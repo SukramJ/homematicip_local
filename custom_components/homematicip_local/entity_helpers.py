@@ -872,6 +872,14 @@ _BUTTON_DESCRIPTIONS_BY_PARAM: Mapping[str | tuple[str, ...], EntityDescription]
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
+    "PRESS_LONG": HmButtonEntityDescription(
+        key="PRESS_LONG",
+        entity_registry_enabled_default=False,
+    ),
+    "PRESS_SHORT": HmButtonEntityDescription(
+        key="PRESS_SHORT",
+        entity_registry_enabled_default=False,
+    ),
 }
 
 _COVER_DESCRIPTIONS_BY_DEVICE: Mapping[str | tuple[str, ...], EntityDescription] = {

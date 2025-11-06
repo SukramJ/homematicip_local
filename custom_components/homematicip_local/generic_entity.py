@@ -6,12 +6,13 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final, Generic
 
-from aiohomematic.const import CALLBACK_TYPE, CallSource
+from aiohomematic.const import CallSource
 from aiohomematic.model.calculated import CalculatedDataPoint
 from aiohomematic.model.custom import CustomDataPoint
 from aiohomematic.model.data_point import CallbackDataPoint
 from aiohomematic.model.generic import GenericDataPoint
 from aiohomematic.model.hub import GenericHubDataPoint, GenericProgramDataPoint, GenericSysvarDataPoint
+from aiohomematic.types import UnregisterCallback
 from homeassistant.core import State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -98,7 +99,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
         )
 
         self._static_state_attributes = self._get_static_state_attributes()
-        self._unregister_callbacks: list[CALLBACK_TYPE] = []
+        self._unregister_callbacks: list[UnregisterCallback] = []
 
         _LOGGER.debug("init: Setting up %s", data_point.full_name)
         if (
@@ -378,7 +379,7 @@ class AioHomematicGenericHubEntity(Entity):
                 self._attr_name = data_point.name
 
         self._attr_device_info = self._get_device_info()
-        self._unregister_callbacks: list[CALLBACK_TYPE] = []
+        self._unregister_callbacks: list[UnregisterCallback] = []
         _LOGGER.debug("init sysvar: Setting up %s", self._data_point.name)
 
     @property

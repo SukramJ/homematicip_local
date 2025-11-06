@@ -80,7 +80,8 @@ class AioHomematicSelect(AioHomematicGenericRestoreEntity[DpSelect], SelectEntit
     def current_option(self) -> str | None:
         """Return the currently selected option."""
         if self._data_point.is_valid:
-            return self._data_point.value.lower() if self._data_point.value is not None else None
+            value = self._data_point.value
+            return value.lower() if isinstance(value, str) else str(value)
         if (
             self.is_restored
             and self._restored_state
