@@ -45,7 +45,7 @@ from aiohomematic.const import (
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.data_point import CallbackDataPoint
 from aiohomematic.model.event import GenericEvent
-from aiohomematic.types import UnregisterCallback
+from aiohomematic.type_aliases import UnregisterCallback
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PATH, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 

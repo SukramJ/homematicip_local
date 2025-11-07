@@ -12,7 +12,7 @@ from aiohomematic.model.custom import CustomDataPoint
 from aiohomematic.model.data_point import CallbackDataPoint
 from aiohomematic.model.generic import GenericDataPoint
 from aiohomematic.model.hub import GenericHubDataPoint, GenericProgramDataPoint, GenericSysvarDataPoint
-from aiohomematic.types import UnregisterCallback
+from aiohomematic.type_aliases import UnregisterCallback
 from homeassistant.core import State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
