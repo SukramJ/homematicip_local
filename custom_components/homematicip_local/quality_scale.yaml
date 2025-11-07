@@ -1,0 +1,77 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: done
+  entity-unique-id:
+    status: done
+  has-entity-name: done
+  runtime-data:
+    status: done
+  test-before-configure: done
+  test-before-setup:
+    status: done
+  unique-config-entry: done
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable:
+    status: done
+  action-exceptions: done
+  reauthentication-flow: done
+  parallel-updates: done
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters: done
+
+  # Gold
+  entity-translations:
+    status: done
+  entity-device-class:
+    status: done
+  devices:
+    status: done
+  entity-category:
+    status: done
+  entity-disabled-by-default:
+    status: done
+  discovery:
+    status: done
+  stale-devices:
+    status: done
+  diagnostics: done
+  exception-translations: done
+  icon-translations:
+    status: done
+  reconfiguration-flow: done
+  dynamic-devices:
+    status: done
+  discovery-update-info:
+    status: done
+  repair-issues:
+    status: done
+  docs-use-cases: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting: done
+  docs-examples: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: done
+  strict-typing:
+    status: done

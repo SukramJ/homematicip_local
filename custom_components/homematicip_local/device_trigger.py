@@ -9,14 +9,13 @@ from aiohomematic.model.event import ClickEvent
 from aiohomematic.type_aliases import UnregisterCallback
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
-from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_ID, CONF_DOMAIN, CONF_EVENT_DATA, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
-from .const import CONF_EVENT_TYPE, CONF_INTERFACE_ID, CONF_SUBTYPE
+from .const import CONF_EVENT_TYPE, CONF_INTERFACE_ID, CONF_SUBTYPE, DOMAIN
 from .control_unit import ControlUnit
 from .support import cleanup_click_event_data, get_device_address_at_interface_from_identifiers
 
@@ -84,9 +83,9 @@ async def async_attach_trigger(
     }
 
     event_config = {
-        event_trigger.CONF_PLATFORM: "event",
+        CONF_PLATFORM: "event",
         event_trigger.CONF_EVENT_TYPE: config[CONF_EVENT_TYPE],
-        event_trigger.CONF_EVENT_DATA: _event_data,
+        CONF_EVENT_DATA: _event_data,
     }
 
     event_config = event_trigger.TRIGGER_SCHEMA(event_config)

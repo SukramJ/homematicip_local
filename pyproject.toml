@@ -514,3 +514,40 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "@overload",
 ]
+
+[tool.mypy]
+python_version = "3.13" # Target Python version used for type checking
+show_error_codes = true  # Include error codes in messages
+follow_imports = "normal"  # Follow imports normally (type-check imported modules as needed)
+local_partial_types = true  # Allow partial type inference for local variables (e.g., None placeholders)
+strict_equality = true  # Enforce precise equality checks (no implicit coercions)
+no_implicit_optional = true  # Require explicit Optional[...] (no implicit None in unions)
+warn_incomplete_stub = true  # Warn about incomplete type stubs (.pyi)
+warn_redundant_casts = true  # Flag unnecessary type casts
+warn_unused_configs = true  # Warn about unused [mypy-*] config sections or options
+warn_unused_ignores = true  # Warn when a `# type: ignore` is unnecessary
+# Exclude generated or non-source directories
+exclude = "(?x)(^build/|^dist/|^htmlcov/|^.*\\.egg-info/|^venv/|^script/)"
+# Turn on specific extra checks
+enable_error_code = [
+    "ignore-without-code",
+    "redundant-self",
+    "truthy-iterable",
+]
+# Silence noisy/third-party related errors
+disable_error_code = [
+    "annotation-unchecked",
+    "import-not-found",
+    "import-untyped",
+]
+
+extra_checks = false # Keep default (avoids experimental extra checks)
+check_untyped_defs = true # Type-check function bodies even without annotations
+disallow_incomplete_defs = true # Require full type annotations for function signatures
+disallow_subclassing_any = true # Forbid subclassing values of type Any
+disallow_untyped_calls = true  # Disallow calling functions without type annotations
+disallow_untyped_decorators = true  # Disallow applying untyped decorators to functions
+disallow_untyped_defs = true  # Disallow defining functions without type annotations
+warn_return_any = true  # Warn when returning values of type Any
+warn_unreachable = true  # Warn about code paths that are statically unreachable
+
