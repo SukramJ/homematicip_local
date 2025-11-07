@@ -57,7 +57,7 @@ async def async_setup_entry(
     entry.async_on_unload(
         func=async_dispatcher_connect(
             hass=hass,
-            signal=signal_new_data_point(entry.entry_id, DataPointCategory.HUB_BINARY_SENSOR),
+            signal=signal_new_data_point(entry_id=entry.entry_id, platform=DataPointCategory.HUB_BINARY_SENSOR),
             target=async_add_hub_binary_sensor,
         )
     )
