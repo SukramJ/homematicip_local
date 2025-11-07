@@ -7,6 +7,7 @@
   - Use Protocol for callback with parameters
 - Add translation for press events
 - Fix naming of untranslated entities
+- Switch mypy to strict
 
 # Version 1.90.2 (2025-11-05)
 
