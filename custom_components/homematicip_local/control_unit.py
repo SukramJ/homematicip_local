@@ -423,15 +423,16 @@ class ControlUnit(BaseControlUnit):
         )
 
     @callback
-    def _async_homematic_callback(self, event_type: EventType, event_data: dict[str, Any]) -> None:  # noqa: C901
+    def _async_homematic_callback(self, event_type: EventType, event_data: dict[EventKey, Any]) -> None:  # noqa: C901
         """Execute the callback used for device related events."""
-        send_unknown_pong = False
-        interface_id = event_data[EventKey.INTERFACE_ID]
+        event_data_ha: dict[EventKey | str, Any] = cast(dict[EventKey | str, Any], event_data)
+        send_unknown_pong = True
+        interface_id = event_data_ha[EventKey.INTERFACE_ID]
         if event_type == EventType.INTERFACE:
-            interface_event_type = event_data[EventKey.TYPE]
+            interface_event_type = event_data_ha[EventKey.TYPE]
             issue_id = f"{interface_event_type}-{interface_id}"
-            event_data = cast(dict[str, Any], INTERFACE_EVENT_SCHEMA(event_data))
-            data = event_data[EventKey.DATA]
+            event_data_ha = cast(dict[EventKey | str, Any], INTERFACE_EVENT_SCHEMA(event_data_ha))
+            data = event_data_ha[EventKey.DATA]
             if interface_event_type == InterfaceEventType.CALLBACK:
                 if not self._enable_system_notifications:
                     _LOGGER.debug("SYSTEM NOTIFICATION disabled for CALLBACK")
@@ -532,24 +533,24 @@ class ControlUnit(BaseControlUnit):
                     },
                 )
         else:
-            device_address = event_data[EventKey.ADDRESS]
+            device_address = event_data_ha[EventKey.ADDRESS]
             name: str | None = None
             if device_entry := self._async_get_device_entry(device_address=device_address):
                 name = device_entry.name_by_user or device_entry.name
-                event_data.update({EVENT_DEVICE_ID: device_entry.id, EVENT_NAME: name})
+                event_data_ha.update({EVENT_DEVICE_ID: device_entry.id, EVENT_NAME: name})
             if event_type in (EventType.IMPULSE, EventType.KEYPRESS):
-                event_data = cleanup_click_event_data(event_data=event_data)
-                if is_valid_event(event_data=event_data, schema=CLICK_EVENT_SCHEMA):
+                event_data_ha = cleanup_click_event_data(event_data=event_data_ha)
+                if is_valid_event(event_data=event_data_ha, schema=CLICK_EVENT_SCHEMA):
                     self._hass.bus.fire(
                         event_type=event_type.value,
-                        event_data=event_data,
+                        event_data=event_data_ha,
                     )
             elif event_type == EventType.DEVICE_AVAILABILITY:
-                parameter = event_data[EventKey.PARAMETER]
-                unavailable = event_data[EventKey.VALUE]
+                parameter = event_data_ha[EventKey.PARAMETER]
+                unavailable = event_data_ha[EventKey.VALUE]
                 if parameter in (Parameter.STICKY_UN_REACH, Parameter.UN_REACH):
                     title = f"{DOMAIN.upper()} Device not reachable"
-                    event_data.update(
+                    event_data_ha.update(
                         {
                             EVENT_IDENTIFIER: f"{device_address}_DEVICE_AVAILABILITY",
                             EVENT_TITLE: title,
@@ -558,21 +559,21 @@ class ControlUnit(BaseControlUnit):
                         }
                     )
                     if is_valid_event(
-                        event_data=event_data,
+                        event_data=event_data_ha,
                         schema=DEVICE_AVAILABILITY_EVENT_SCHEMA,
                     ):
                         self._hass.bus.fire(
                             event_type=event_type.value,
-                            event_data=event_data,
+                            event_data=event_data_ha,
                         )
             elif event_type == EventType.DEVICE_ERROR:
-                error_parameter = event_data[EventKey.PARAMETER]
+                error_parameter = event_data_ha[EventKey.PARAMETER]
                 if error_parameter in FILTER_ERROR_EVENT_PARAMETERS:
                     return
                 error_parameter_display = error_parameter.replace("_", " ").title()
                 title = f"{DOMAIN.upper()} Device Error"
                 error_message: str = ""
-                error_value = event_data[EventKey.VALUE]
+                error_value = event_data_ha[EventKey.VALUE]
                 display_error: bool = False
                 if isinstance(error_value, bool):
                     display_error = error_value
@@ -582,7 +583,7 @@ class ControlUnit(BaseControlUnit):
                     error_message = (
                         f"{name}/{device_address} on interface {interface_id}: {error_parameter_display} {error_value}"
                     )
-                event_data.update(
+                event_data_ha.update(
                     {
                         EVENT_IDENTIFIER: f"{device_address}_{error_parameter}",
                         EVENT_TITLE: title,
@@ -591,10 +592,10 @@ class ControlUnit(BaseControlUnit):
                         EVENT_ERROR: display_error,
                     }
                 )
-                if is_valid_event(event_data=event_data, schema=DEVICE_ERROR_EVENT_SCHEMA):
+                if is_valid_event(event_data=event_data_ha, schema=DEVICE_ERROR_EVENT_SCHEMA):
                     self._hass.bus.fire(
                         event_type=event_type.value,
-                        event_data=event_data,
+                        event_data=event_data_ha,
                     )
 
 

@@ -1,7 +1,7 @@
 # Version 1.91.0 (2025-11-07)
 
 ## What's Changed
-- Bump aiohomematic to 2025.11.8
+- Bump aiohomematic to 2025.11.9
   - Remove need for empty parentheses for bind_collector
   - Switch mypy to strict
   - Use Protocol for callback with parameters
