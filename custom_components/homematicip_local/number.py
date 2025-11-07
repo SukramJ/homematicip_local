@@ -32,7 +32,7 @@ async def async_setup_entry(
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
-    def async_add_number(data_points: tuple[BaseDpNumber, ...]) -> None:
+    def async_add_number(data_points: tuple[BaseDpNumber[float | int | None], ...]) -> None:
         """Add number from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_NUMBER: Adding %i data points", len(data_points))
 
@@ -76,7 +76,7 @@ async def async_setup_entry(
     async_add_hub_number(data_points=control_unit.get_new_hub_data_points(data_point_type=SysvarDpNumber))
 
 
-class AioHomematicNumber(AioHomematicGenericEntity[BaseDpNumber], RestoreNumber):
+class AioHomematicNumber(AioHomematicGenericEntity[BaseDpNumber[Any]], RestoreNumber):
     """Representation of the HomematicIP number entity."""
 
     entity_description: HmNumberEntityDescription
@@ -87,7 +87,7 @@ class AioHomematicNumber(AioHomematicGenericEntity[BaseDpNumber], RestoreNumber)
     def __init__(
         self,
         control_unit: ControlUnit,
-        data_point: BaseDpNumber,
+        data_point: BaseDpNumber[Any],
     ) -> None:
         """Initialize the number entity."""
         super().__init__(

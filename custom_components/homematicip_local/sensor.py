@@ -34,7 +34,7 @@ async def async_setup_entry(
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
-    def async_add_sensor(data_points: tuple[DpSensor, ...]) -> None:
+    def async_add_sensor(data_points: tuple[DpSensor[Any], ...]) -> None:
         """Add sensor from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_SENSOR: Adding %i data points", len(data_points))
 
@@ -77,7 +77,7 @@ async def async_setup_entry(
     async_add_hub_sensor(data_points=control_unit.get_new_hub_data_points(data_point_type=SysvarDpSensor))
 
 
-class AioHomematicSensor(AioHomematicGenericEntity[DpSensor], RestoreSensor):
+class AioHomematicSensor(AioHomematicGenericEntity[DpSensor[Any]], RestoreSensor):
     """Representation of the HomematicIP sensor entity."""
 
     entity_description: HmSensorEntityDescription
@@ -86,7 +86,7 @@ class AioHomematicSensor(AioHomematicGenericEntity[DpSensor], RestoreSensor):
     def __init__(
         self,
         control_unit: ControlUnit,
-        data_point: DpSensor,
+        data_point: DpSensor[Any],
     ) -> None:
         """Initialize the sensor entity."""
         super().__init__(

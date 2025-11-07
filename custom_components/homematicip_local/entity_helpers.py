@@ -8,12 +8,12 @@ import dataclasses
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
-from typing import Final
+from typing import Any, Final
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.calculated import CalculatedDataPoint
 from aiohomematic.model.custom import CustomDataPoint
-from aiohomematic.model.generic import GenericDataPoint
+from aiohomematic.model.generic import GenericDataPoint, GenericDataPointAny
 from aiohomematic.model.hub import GenericHubDataPoint, GenericSysvarDataPoint
 from aiohomematic.support import element_matches_key
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntityDescription
@@ -1117,7 +1117,7 @@ def _find_entity_description(
 
 
 def _get_entity_description_by_model_and_param(
-    data_point: CalculatedDataPoint | GenericDataPoint,
+    data_point: CalculatedDataPoint[Any] | GenericDataPointAny,
 ) -> EntityDescription | None:
     """Get entity_description by model and parameter."""
     if platform_device_and_param_descriptions := _ENTITY_DESCRIPTION_BY_DEVICE_AND_PARAM.get(  # noqa: E501
@@ -1135,7 +1135,7 @@ def _get_entity_description_by_model_and_param(
 
 
 def _get_entity_description_by_param(
-    data_point: CalculatedDataPoint | GenericDataPoint,
+    data_point: CalculatedDataPoint[Any] | GenericDataPointAny,
 ) -> EntityDescription | None:
     """Get entity_description by model and parameter."""
     if platform_param_descriptions := _ENTITY_DESCRIPTION_BY_PARAM.get(data_point.category):

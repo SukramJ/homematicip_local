@@ -19,7 +19,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 # Per-issue fix callbacks for repairs UI
-REPAIR_CALLBACKS: dict[str, Callable] = {}
+REPAIR_CALLBACKS: dict[str, Callable[..., Any]] = {}
 
 
 async def async_create_fix_flow(hass: HomeAssistant, issue_id: str, data: dict[str, Any]) -> RepairsFlow:
