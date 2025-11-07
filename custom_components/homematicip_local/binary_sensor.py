@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.generic import DpBinarySensor
@@ -82,7 +81,7 @@ class AioHomematicBinarySensor(AioHomematicGenericRestoreEntity[DpBinarySensor],
             and (restored_state := self._restored_state.state) not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
             return restored_state == STATE_ON
-        return cast(bool | None, self._data_point.default)
+        return self._data_point.default
 
 
 class AioHomematicSysvarBinarySensor(AioHomematicGenericSysvarEntity[SysvarDpBinarySensor], BinarySensorEntity):

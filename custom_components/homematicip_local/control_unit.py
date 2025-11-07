@@ -14,7 +14,6 @@ from aiohomematic import __version__ as AIOHM_VERSION
 from aiohomematic.central import INTERFACE_EVENT_SCHEMA, CentralConfig, CentralUnit, check_config
 from aiohomematic.client import InterfaceConfig
 from aiohomematic.const import (
-    CALLBACK_TYPE,
     CONF_PASSWORD,
     CONF_USERNAME,
     DEFAULT_DELAY_NEW_DEVICE_CREATION,
@@ -46,6 +45,7 @@ from aiohomematic.const import (
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.data_point import CallbackDataPoint
 from aiohomematic.model.event import GenericEvent
+from aiohomematic.type_aliases import UnregisterCallback
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PATH, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 
@@ -141,7 +141,7 @@ class BaseControlUnit:
             serial_number=self._central.system_information.serial,
             sw_version=self._central.version,
         )
-        self._unregister_callbacks: Final[list[CALLBACK_TYPE]] = []
+        self._unregister_callbacks: Final[list[UnregisterCallback]] = []
 
     @property
     def central(self) -> CentralUnit:

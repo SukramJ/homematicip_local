@@ -1,6 +1,10 @@
-# Version 1.90.3 (2025-11-06)
+# Version 1.91.0 (2025-11-07)
 
 ## What's Changed
+- Bump aiohomematic to 2025.11.8
+  - Remove need for empty parentheses for bind_collector
+  - Switch mypy to strict
+  - Use Protocol for callback with parameters
 - Add translation for press events
 - Fix naming of untranslated entities
 

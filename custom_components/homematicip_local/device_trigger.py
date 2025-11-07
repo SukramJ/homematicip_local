@@ -6,10 +6,11 @@ import voluptuous as vol
 
 from aiohomematic.const import CLICK_EVENTS, DataPointUsage
 from aiohomematic.model.event import ClickEvent
+from aiohomematic.type_aliases import UnregisterCallback
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
@@ -73,7 +74,7 @@ async def async_attach_trigger(
     config: ConfigType,
     action: TriggerActionType,
     trigger_info: TriggerInfo,
-) -> CALLBACK_TYPE:
+) -> UnregisterCallback:
     """Listen for state changes based on configuration."""
     _event_data = {
         CONF_INTERFACE_ID: config[CONF_INTERFACE_ID],

@@ -5,9 +5,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aiohomematic.const import CALLBACK_TYPE, DATA_POINT_EVENTS, DataPointCategory, EventKey
+from aiohomematic.const import DATA_POINT_EVENTS, DataPointCategory, EventKey
 from aiohomematic.model.device import Channel, Device
 from aiohomematic.model.event import GenericEvent
+from aiohomematic.type_aliases import UnregisterCallback
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -90,7 +91,7 @@ class AioHomematicEvent(EventEntity):
             EventKey.ADDRESS: self._hm_channel.address,
             EVENT_MODEL: self._hm_device.model,
         }
-        self._unregister_callbacks: list[CALLBACK_TYPE] = []
+        self._unregister_callbacks: list[UnregisterCallback] = []
         _LOGGER.debug(
             "init: Setting up %s %s",
             self._hm_device.name,
