@@ -44,7 +44,7 @@ async def async_setup_entry(
     def async_add_cover(data_points: tuple[HmGenericCover, ...]) -> None:
         """Add cover from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_COVER: Adding %i data points", len(data_points))
-        entities: list[AioHomematicBaseCover] = []
+        entities: list[AioHomematicBaseCover[Any]] = []
 
         for data_point in data_points:
             if isinstance(data_point, CustomDpIpBlind):

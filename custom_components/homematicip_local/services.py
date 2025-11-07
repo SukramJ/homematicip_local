@@ -13,12 +13,13 @@ from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.device import Device
 from aiohomematic.support import get_device_address, to_bool
 import aiohomematic.validator as haval
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION, DOMAIN as COVER_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.siren import ATTR_DURATION, ATTR_TONE, DOMAIN as SIREN_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
+from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
+from homeassistant.components.cover.const import DOMAIN as COVER_DOMAIN
+from homeassistant.components.light.const import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.siren.const import ATTR_DURATION, ATTR_TONE, DOMAIN as SIREN_DOMAIN
+from homeassistant.components.switch.const import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.valve.const import DOMAIN as VALVE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback

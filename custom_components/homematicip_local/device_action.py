@@ -14,8 +14,7 @@ from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN
-from .const import CONF_SUBTYPE
+from .const import CONF_SUBTYPE, DOMAIN
 from .control_unit import ControlUnit
 from .support import get_device_address_at_interface_from_identifiers
 

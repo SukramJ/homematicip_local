@@ -72,7 +72,7 @@ class MQTTConsumer:
         _LOGGER.debug("Device MQTT Message received: %s", msg.payload)
         state_path = msg.topic[len(self._mqtt_prefix) :] if msg.topic.startswith(self._mqtt_prefix) else msg.topic
         payload_dict = json_loads(msg.payload)
-        if (payload_value := cast(dict, payload_dict).get("v")) is not None:
+        if (payload_value := cast(dict[str, Any], payload_dict).get("v")) is not None:
             self._central.data_point_path_event(state_path=state_path, value=payload_value)
 
     @callback
@@ -81,5 +81,5 @@ class MQTTConsumer:
         _LOGGER.debug("Sysvar MQTT Message received: %s", msg.payload)
         state_path = msg.topic[len(self._mqtt_prefix) :] if msg.topic.startswith(self._mqtt_prefix) else msg.topic
         payload_dict = json_loads(msg.payload)
-        if (payload_value := cast(dict, payload_dict).get("v")) is not None:
+        if (payload_value := cast(dict[str, Any], payload_dict).get("v")) is not None:
             self._central.sysvar_data_point_path_event(state_path=state_path, value=payload_value)

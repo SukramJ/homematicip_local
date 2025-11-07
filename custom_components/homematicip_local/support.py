@@ -13,7 +13,7 @@ from aiohomematic.const import IDENTIFIER_SEPARATOR, EventKey
 from aiohomematic.model.calculated import CalculatedDataPoint
 from aiohomematic.model.custom import CustomDataPoint
 from aiohomematic.model.data_point import EVENT_DATA_SCHEMA
-from aiohomematic.model.generic import GenericDataPoint
+from aiohomematic.model.generic import GenericDataPointAny
 from aiohomematic.model.hub import GenericProgramDataPoint, GenericSysvarDataPoint
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
@@ -33,7 +33,7 @@ from .const import (
 )
 
 # Union for entity types used as base class for data points
-HmBaseDataPoint: TypeAlias = CalculatedDataPoint | CustomDataPoint | GenericDataPoint
+HmBaseDataPoint: TypeAlias = CalculatedDataPoint[Any] | CustomDataPoint | GenericDataPointAny
 # Generic base type used for data points in Homematic(IP) Local for OpenCCU
 HmGenericDataPoint = TypeVar("HmGenericDataPoint", bound=HmBaseDataPoint)
 # Generic base type used for sysvar data points in Homematic(IP) Local for OpenCCU

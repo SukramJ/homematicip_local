@@ -14,10 +14,9 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    ColorMode,
     LightEntity,
-    LightEntityFeature,
 )
+from homeassistant.components.light.const import ColorMode, LightEntityFeature
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect

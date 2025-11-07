@@ -7,7 +7,8 @@ from typing import Any
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import BaseCustomDpSiren, SirenOnArgs
-from homeassistant.components.siren import ATTR_DURATION, ATTR_TONE, SirenEntity, SirenEntityFeature
+from homeassistant.components.siren import SirenEntity
+from homeassistant.components.siren.const import ATTR_DURATION, ATTR_TONE, SirenEntityFeature
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
