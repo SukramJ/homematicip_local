@@ -732,6 +732,7 @@ class ControlConfig:
                 () if self.enable_mqtt else DEFAULT_INTERFACES_REQUIRING_PERIODIC_REFRESH
             ),
             json_port=self._json_port,
+            locale=self.hass.config.language,
             max_read_workers=1,
             name=self.instance_name,
             optional_settings=self._optional_settings,
