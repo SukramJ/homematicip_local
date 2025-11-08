@@ -29,13 +29,13 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: Homemat
     return diag
 
 
-def get_devices_per_type_stats(central: CentralUnit) -> tuple[str, ...]:
+def get_devices_per_type_stats(*, central: CentralUnit) -> tuple[str, ...]:
     """Return the central statistics for devices by type."""
     return tuple(sorted({d.model for d in central.devices}))
 
 
 def get_data_points_by_platform_stats(
-    central: CentralUnit, registered: bool | None = None
+    *, central: CentralUnit, registered: bool | None = None
 ) -> Mapping[DataPointCategory, int]:
     """Return the central statistics for data points by platform."""
     _data_points_by_platform: dict[DataPointCategory, int] = {}

@@ -117,7 +117,7 @@ _DATA_POINT_T = TypeVar("_DATA_POINT_T", bound=CallbackDataPoint)
 class BaseControlUnit:
     """Base central point to control a central unit."""
 
-    def __init__(self, control_config: ControlConfig) -> None:
+    def __init__(self, *, control_config: ControlConfig) -> None:
         """Init the control unit."""
         self._hass: Final = control_config.hass
         self._entry_id: Final = control_config.entry_id
@@ -184,7 +184,7 @@ class BaseControlUnit:
 class ControlUnit(BaseControlUnit):
     """Unit to control a central unit."""
 
-    def __init__(self, control_config: ControlConfig) -> None:
+    def __init__(self, *, control_config: ControlConfig) -> None:
         """Init the control unit."""
         super().__init__(control_config=control_config)
         self._mqtt_consumer: MQTTConsumer | None = None
@@ -223,6 +223,7 @@ class ControlUnit(BaseControlUnit):
 
     def get_new_data_points(
         self,
+        *,
         data_point_type: type[_DATA_POINT_T] | UnionType,
     ) -> tuple[_DATA_POINT_T, ...]:
         """Return all data points by type."""
@@ -242,6 +243,7 @@ class ControlUnit(BaseControlUnit):
 
     def get_new_hub_data_points(
         self,
+        *,
         data_point_type: type[_DATA_POINT_T],
     ) -> tuple[_DATA_POINT_T, ...]:
         """Return all data points by type."""
@@ -327,6 +329,7 @@ class ControlUnit(BaseControlUnit):
     @callback
     def _async_backend_system_callback(
         self,
+        *,
         system_event: BackendSystemEvent,
         interface_id: str | None = None,
         new_addresses: tuple[str, ...] | None = None,
@@ -408,7 +411,7 @@ class ControlUnit(BaseControlUnit):
         return
 
     @callback
-    def _async_get_device_entry(self, device_address: str) -> DeviceEntry | None:
+    def _async_get_device_entry(self, *, device_address: str) -> DeviceEntry | None:
         """Return the device of the ha device."""
         if (hm_device := self._central.get_device(address=device_address)) is None:
             return None
@@ -423,7 +426,7 @@ class ControlUnit(BaseControlUnit):
         )
 
     @callback
-    def _async_homematic_callback(self, event_type: EventType, event_data: dict[EventKey, Any]) -> None:  # noqa: C901
+    def _async_homematic_callback(self, *, event_type: EventType, event_data: dict[EventKey, Any]) -> None:  # noqa: C901
         """Execute the callback used for device related events."""
         event_data_ha: dict[EventKey | str, Any] = cast(dict[EventKey | str, Any], event_data)
         send_unknown_pong = True
@@ -695,7 +698,7 @@ class ControlConfig:
             callback_host=self._callback_host,
             callback_port_xml_rpc=self._callback_port_xml_rpc,
             json_port=self._json_port,
-            storage_directory=get_storage_directory(self.hass),
+            storage_directory=get_storage_directory(hass=self.hass),
         ):
             failures = ", ".join(config_failures)
             raise InvalidConfig(failures)
@@ -739,7 +742,7 @@ class ControlConfig:
             password=self._password,
             program_markers=self._program_markers,
             start_direct=self._start_direct,
-            storage_directory=get_storage_directory(self.hass),
+            storage_directory=get_storage_directory(hass=self.hass),
             sys_scan_interval=self._sys_scan_interval,
             sysvar_markers=self._sysvar_markers,
             tls=self._tls,
@@ -751,11 +754,11 @@ class ControlConfig:
 
     def create_control_unit(self) -> ControlUnit:
         """Identify the used client."""
-        return ControlUnit(self)
+        return ControlUnit(control_config=self)
 
     def create_control_unit_temp(self) -> ControlUnitTemp:
         """Identify the used client."""
-        return ControlUnitTemp(self._temporary_config)
+        return ControlUnitTemp(control_config=self._temporary_config)
 
     def _check_instance_name_is_unique(self) -> bool:
         """Check if instance_name is unique in HA."""
@@ -767,12 +770,13 @@ class ControlConfig:
         return True
 
 
-def signal_new_data_point(entry_id: str, platform: DataPointCategory) -> str:
+def signal_new_data_point(*, entry_id: str, platform: DataPointCategory) -> str:
     """Gateway specific event to signal new device."""
     return f"{DOMAIN}-new-data-point-{entry_id}-{platform.value}"
 
 
 async def validate_config_and_get_system_information(
+    *,
     control_config: ControlConfig,
 ) -> SystemInformation | None:
     """Validate the control configuration."""
@@ -781,12 +785,12 @@ async def validate_config_and_get_system_information(
     return None
 
 
-def get_storage_directory(hass: HomeAssistant) -> str:
+def get_storage_directory(*, hass: HomeAssistant) -> str:
     """Return the base path where to store files for this integration."""
     return f"{hass.config.config_dir}/{DOMAIN}"
 
 
-def _cleanup_instance_name(instance_name: str) -> str:
+def _cleanup_instance_name(*, instance_name: str) -> str:
     """Clean up instance name problematic characters for directories."""
     for char in ("/", "\\"):
         instance_name = instance_name.replace(char, "")

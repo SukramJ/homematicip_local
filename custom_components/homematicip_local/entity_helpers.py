@@ -1011,7 +1011,7 @@ _ENTITY_DESCRIPTION_CACHE_MAX_SIZE: Final[int] = 512
 _ENTITY_DESCRIPTION_CACHE: OrderedDict[str, EntityDescription | None] = OrderedDict()
 
 
-def _cache_get(signature: str) -> EntityDescription | None | UndefinedType:
+def _cache_get(*, signature: str) -> EntityDescription | None | UndefinedType:
     """
     Return cached value if present; move key to end to mark as recently used.
 
@@ -1027,7 +1027,7 @@ def _cache_get(signature: str) -> EntityDescription | None | UndefinedType:
         return UNDEFINED
 
 
-def _cache_set(signature: str, value: EntityDescription | None) -> None:
+def _cache_set(*, signature: str, value: EntityDescription | None) -> None:
     """Insert into LRU cache and enforce max size."""
     if signature in _ENTITY_DESCRIPTION_CACHE:
         _ENTITY_DESCRIPTION_CACHE.move_to_end(signature)
@@ -1037,6 +1037,7 @@ def _cache_set(signature: str, value: EntityDescription | None) -> None:
 
 
 def get_entity_description(
+    *,
     data_point: HmGenericDataPoint | CustomDataPoint | GenericHubDataPoint,
 ) -> EntityDescription | None:
     """Get the entity_description."""
@@ -1063,6 +1064,7 @@ def get_entity_description(
 
 
 def get_name_and_translation_key(
+    *,
     data_point: HmGenericDataPoint | CustomDataPoint | GenericHubDataPoint,
     entity_desc: EntityDescription,
 ) -> tuple[str | UndefinedType | None, str | None]:
@@ -1084,6 +1086,7 @@ def get_name_and_translation_key(
 
 
 def _find_entity_description(
+    *,
     data_point: HmGenericDataPoint | GenericHubDataPoint | CustomDataPoint,
 ) -> EntityDescription | None:
     """Find the entity_description for platform."""
@@ -1117,6 +1120,7 @@ def _find_entity_description(
 
 
 def _get_entity_description_by_model_and_param(
+    *,
     data_point: CalculatedDataPoint[Any] | GenericDataPointAny,
 ) -> EntityDescription | None:
     """Get entity_description by model and parameter."""
@@ -1135,6 +1139,7 @@ def _get_entity_description_by_model_and_param(
 
 
 def _get_entity_description_by_param(
+    *,
     data_point: CalculatedDataPoint[Any] | GenericDataPointAny,
 ) -> EntityDescription | None:
     """Get entity_description by model and parameter."""
@@ -1146,6 +1151,7 @@ def _get_entity_description_by_param(
 
 
 def _get_entity_description_by_postfix(
+    *,
     data_point: CustomDataPoint,
 ) -> EntityDescription | None:
     """Get entity_description by model and parameter."""
@@ -1157,6 +1163,7 @@ def _get_entity_description_by_postfix(
 
 
 def _get_entity_description_by_model(
+    *,
     data_point: HmGenericDataPoint,
 ) -> EntityDescription | None:
     """Get entity_description by model."""
@@ -1171,6 +1178,7 @@ def _get_entity_description_by_model(
 
 
 def _get_entity_description_by_var_name(
+    *,
     data_point: GenericSysvarDataPoint,
 ) -> EntityDescription | None:
     """Get entity_description by var name."""
@@ -1181,7 +1189,7 @@ def _get_entity_description_by_var_name(
     return None
 
 
-def _param_in_list(keys: str | tuple[str, ...], name: str, do_wildcard_compare: bool = False) -> bool:
+def _param_in_list(*, keys: str | tuple[str, ...], name: str, do_wildcard_compare: bool = False) -> bool:
     """Return if parameter is in set."""
     name_l = name.lower()
 

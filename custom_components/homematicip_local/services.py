@@ -654,7 +654,7 @@ async def async_unload_services(hass: HomeAssistant) -> None:
         hass.services.async_remove(domain=DOMAIN, service=hmip_local_service)
 
 
-async def _async_service_add_link(hass: HomeAssistant, service: ServiceCall) -> None:
+async def _async_service_add_link(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to call the addLink method for link creation on a Homematic(IP) Local for OpenCCU connection."""
     sender_channel_address = service.data[CONF_SENDER_CHANNEL_ADDRESS]
     receiver_channel_address = service.data[CONF_RECEIVER_CHANNEL_ADDRESS]
@@ -674,7 +674,7 @@ async def _async_service_add_link(hass: HomeAssistant, service: ServiceCall) -> 
         _LOGGER.debug("Called add_link")
 
 
-async def _async_service_create_central_link(hass: HomeAssistant, service: ServiceCall) -> None:
+async def _async_service_create_central_link(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to create central links for Homematic(IP) Local for OpenCCU devices."""
     try:
         if (entry_id := service.data.get(CONF_ENTRY_ID)) is not None and (
@@ -688,7 +688,7 @@ async def _async_service_create_central_link(hass: HomeAssistant, service: Servi
     _LOGGER.debug("Called create_central_links")
 
 
-async def _async_service_remove_central_link(hass: HomeAssistant, service: ServiceCall) -> None:
+async def _async_service_remove_central_link(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to remove central links for Homematic(IP) Local for OpenCCU devices."""
     try:
         if (entry_id := service.data.get(CONF_ENTRY_ID)) is not None and (
@@ -702,7 +702,7 @@ async def _async_service_remove_central_link(hass: HomeAssistant, service: Servi
     _LOGGER.debug("Called remove_central_links")
 
 
-async def _async_service_remove_link(hass: HomeAssistant, service: ServiceCall) -> None:
+async def _async_service_remove_link(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to call the removeLink method for link removal on a Homematic(IP) Local for OpenCCU connection."""
     sender_channel_address = service.data[CONF_SENDER_CHANNEL_ADDRESS]
     receiver_channel_address = service.data[CONF_RECEIVER_CHANNEL_ADDRESS]
@@ -718,7 +718,7 @@ async def _async_service_remove_link(hass: HomeAssistant, service: ServiceCall) 
         _LOGGER.debug("Called remove_link")
 
 
-async def _async_service_export_device_definition(hass: HomeAssistant, service: ServiceCall) -> None:
+async def _async_service_export_device_definition(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to call setValue method for Homematic(IP) Local for OpenCCU devices."""
     if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
         try:
@@ -733,7 +733,7 @@ async def _async_service_export_device_definition(hass: HomeAssistant, service: 
         )
 
 
-async def _async_service_force_device_availability(hass: HomeAssistant, service: ServiceCall) -> None:
+async def _async_service_force_device_availability(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to force device availability on a Homematic(IP) Local for OpenCCU devices."""
     if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
         hm_device.set_forced_availability(forced_availability=ForcedDeviceAvailability.FORCE_TRUE)
@@ -744,7 +744,7 @@ async def _async_service_force_device_availability(hass: HomeAssistant, service:
         )
 
 
-async def _async_service_get_device_value(hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
+async def _async_service_get_device_value(*, hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
     """Service to call getValue method for Homematic(IP) Local for OpenCCU devices."""
     channel_no = service.data[CONF_CHANNEL]
     parameter = service.data[CONF_PARAMETER]
@@ -764,7 +764,7 @@ async def _async_service_get_device_value(hass: HomeAssistant, service: ServiceC
     return None
 
 
-async def _async_service_get_link_peers(hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
+async def _async_service_get_link_peers(*, hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
     """Service to call the getLinkPeers method on a Homematic(IP) Local for OpenCCU connection."""
     channel_no = service.data.get(CONF_CHANNEL)
 
@@ -777,7 +777,7 @@ async def _async_service_get_link_peers(hass: HomeAssistant, service: ServiceCal
     return None
 
 
-async def _async_service_get_link_paramset(hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
+async def _async_service_get_link_paramset(*, hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
     """Service to call the getParamset method for links on a Homematic(IP) Local for OpenCCU connection."""
     sender_channel_address = service.data[CONF_SENDER_CHANNEL_ADDRESS]
     receiver_channel_address = service.data[CONF_RECEIVER_CHANNEL_ADDRESS]
@@ -795,7 +795,7 @@ async def _async_service_get_link_paramset(hass: HomeAssistant, service: Service
     return None
 
 
-async def _async_service_get_paramset(hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
+async def _async_service_get_paramset(*, hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
     """Service to call the getParamset method on a Homematic(IP) Local for OpenCCU connection."""
     channel_no = service.data.get(CONF_CHANNEL)
     paramset_key = ParamsetKey(service.data[CONF_PARAMSET_KEY])
@@ -814,7 +814,7 @@ async def _async_service_get_paramset(hass: HomeAssistant, service: ServiceCall)
     return None
 
 
-async def _async_service_get_variable_value(hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
+async def _async_service_get_variable_value(*, hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
     """Service to call read value from Homematic(IP) Local for OpenCCU system variable."""
     entry_id = service.data[CONF_ENTRY_ID]
     name = service.data[CONF_NAME]
@@ -828,7 +828,7 @@ async def _async_service_get_variable_value(hass: HomeAssistant, service: Servic
     return None
 
 
-async def _async_service_set_device_value(hass: HomeAssistant, service: ServiceCall) -> None:
+async def _async_service_set_device_value(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to call setValue method for Homematic(IP) Local for OpenCCU devices."""
     channel_no = service.data[CONF_CHANNEL]
     parameter = service.data[CONF_PARAMETER]
@@ -866,7 +866,7 @@ async def _async_service_set_device_value(hass: HomeAssistant, service: ServiceC
             raise HomeAssistantError(bhexc) from bhexc
 
 
-async def _async_service_set_variable_value(hass: HomeAssistant, service: ServiceCall) -> None:
+async def _async_service_set_variable_value(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to call setValue method for Homematic(IP) Local for OpenCCU system variable."""
     entry_id = service.data[CONF_ENTRY_ID]
     name = service.data[CONF_NAME]
@@ -876,14 +876,14 @@ async def _async_service_set_variable_value(hass: HomeAssistant, service: Servic
         await control.central.set_system_variable(legacy_name=name, value=value)
 
 
-async def _async_service_clear_cache(hass: HomeAssistant, service: ServiceCall) -> None:
+async def _async_service_clear_cache(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to clear the cache."""
     entry_id = service.data[CONF_ENTRY_ID]
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
         await control.central.clear_files()
 
 
-async def _async_service_fetch_system_variables(hass: HomeAssistant, service: ServiceCall) -> None:
+async def _async_service_fetch_system_variables(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to fetch system variables from backend."""
     entry_id = service.data[CONF_ENTRY_ID]
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
@@ -891,7 +891,7 @@ async def _async_service_fetch_system_variables(hass: HomeAssistant, service: Se
         await control.central.fetch_sysvar_data(scheduled=False)
 
 
-async def _async_service_put_link_paramset(hass: HomeAssistant, service: ServiceCall) -> None:
+async def _async_service_put_link_paramset(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to call the putParamset method for link manipulation on a Homematic(IP) Local for OpenCCU connection."""
     sender_channel_address = service.data[CONF_SENDER_CHANNEL_ADDRESS]
     receiver_channel_address = service.data[CONF_RECEIVER_CHANNEL_ADDRESS]
@@ -914,7 +914,7 @@ async def _async_service_put_link_paramset(hass: HomeAssistant, service: Service
             raise HomeAssistantError(bhexc) from bhexc
 
 
-async def _async_service_put_paramset(hass: HomeAssistant, service: ServiceCall) -> None:
+async def _async_service_put_paramset(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to call the putParamset method on a Homematic(IP) Local for OpenCCU connection."""
     channel_no = service.data.get(CONF_CHANNEL)
     paramset_key = ParamsetKey(service.data[CONF_PARAMSET_KEY])
@@ -940,7 +940,7 @@ async def _async_service_put_paramset(hass: HomeAssistant, service: ServiceCall)
             raise HomeAssistantError(bhexc) from bhexc
 
 
-async def _async_service_record_session(hass: HomeAssistant, service: ServiceCall) -> None:
+async def _async_service_record_session(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to clear the cache."""
     entry_id = service.data[CONF_ENTRY_ID]
     on_time = service.data[CONF_ON_TIME]
@@ -952,7 +952,7 @@ async def _async_service_record_session(hass: HomeAssistant, service: ServiceCal
         )
 
 
-async def _async_service_update_device_firmware_data(hass: HomeAssistant, service: ServiceCall) -> None:
+async def _async_service_update_device_firmware_data(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to clear the cache."""
     entry_id = service.data[CONF_ENTRY_ID]
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
@@ -960,7 +960,7 @@ async def _async_service_update_device_firmware_data(hass: HomeAssistant, servic
 
 
 @callback
-def _async_get_control_unit(hass: HomeAssistant, entry_id: str) -> ControlUnit | None:
+def _async_get_control_unit(*, hass: HomeAssistant, entry_id: str) -> ControlUnit | None:
     """Get ControlUnit by entry_id."""
     entry: HomematicConfigEntry | None = hass.config_entries.async_get_entry(entry_id=entry_id)
     if entry and (control_unit := entry.runtime_data):
@@ -971,7 +971,7 @@ def _async_get_control_unit(hass: HomeAssistant, entry_id: str) -> ControlUnit |
 
 
 @callback
-def _async_get_hm_device_by_service_data(hass: HomeAssistant, service: ServiceCall) -> Device | None:
+def _async_get_hm_device_by_service_data(*, hass: HomeAssistant, service: ServiceCall) -> Device | None:
     """Service to force device availability on a Homematic(IP) Local for OpenCCU devices."""
     hm_device: Device | None = None
     message = "No device found"
@@ -1007,13 +1007,13 @@ def _async_get_hm_device_by_service_data(hass: HomeAssistant, service: ServiceCa
 
 
 @callback
-def async_get_config_entries(hass: HomeAssistant) -> list[HomematicConfigEntry]:
+def async_get_config_entries(*, hass: HomeAssistant) -> list[HomematicConfigEntry]:
     """Get config entries for HomematicIP local."""
     return hass.config_entries.async_entries(domain=DOMAIN, include_ignore=False, include_disabled=False)
 
 
 @callback
-def async_get_loaded_config_entries(hass: HomeAssistant) -> list[HomematicConfigEntry]:
+def async_get_loaded_config_entries(*, hass: HomeAssistant) -> list[HomematicConfigEntry]:
     """Get config entries for HomematicIP local."""
     return [
         entry
@@ -1023,13 +1023,13 @@ def async_get_loaded_config_entries(hass: HomeAssistant) -> list[HomematicConfig
 
 
 @callback
-def _async_get_control_units(hass: HomeAssistant) -> list[ControlUnit]:
+def _async_get_control_units(*, hass: HomeAssistant) -> list[ControlUnit]:
     """Get control units for HomematicIP local."""
     return [entry.runtime_data for entry in async_get_config_entries(hass=hass)]
 
 
 @callback
-def _async_get_hm_device_by_address(hass: HomeAssistant, device_address: str) -> Device | None:
+def _async_get_hm_device_by_address(*, hass: HomeAssistant, device_address: str) -> Device | None:
     """Return the Homematic device."""
     for control_unit in _async_get_control_units(hass=hass):
         if hm_device := control_unit.central.get_device(address=device_address):
@@ -1038,7 +1038,7 @@ def _async_get_hm_device_by_address(hass: HomeAssistant, device_address: str) ->
 
 
 @callback
-def _async_get_cu_by_interface_id(hass: HomeAssistant, interface_id: str) -> ControlUnit | None:
+def _async_get_cu_by_interface_id(*, hass: HomeAssistant, interface_id: str) -> ControlUnit | None:
     """Get ControlUnit by interface_id."""
     for control_unit in _async_get_control_units(hass=hass):
         if control_unit.central.has_client(interface_id=interface_id):
@@ -1047,7 +1047,7 @@ def _async_get_cu_by_interface_id(hass: HomeAssistant, interface_id: str) -> Con
 
 
 @callback
-def _asnyc_get_hm_device_by_id(hass: HomeAssistant, device_id: str) -> Device | None:
+def _asnyc_get_hm_device_by_id(*, hass: HomeAssistant, device_id: str) -> Device | None:
     """Return the Homematic device."""
     device_entry: DeviceEntry | None = dr.async_get(hass).async_get(device_id)
     if not device_entry:
