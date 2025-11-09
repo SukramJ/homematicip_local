@@ -1,7 +1,8 @@
-# Version 1.91.0 (2025-11-07)
+# Version 1.91.0 (2025-11-09)
 
 ## What's Changed
-- Bump aiohomematic to 2025.11.10
+- Bump aiohomematic to 2025.11.11
+  - Add translations for log messages with level >= INFO or translation exclusions
   - Remove need for empty parentheses for bind_collector
   - Switch mypy to strict
   - Use Protocol for callback with parameters
