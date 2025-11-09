@@ -5,7 +5,9 @@ on:
   schedule:
     - cron: "0 11 * * *"
   workflow_dispatch:
-
+permissions:
+  issues: write
+  pull-requests: write
 jobs:
   lock:
     if: github.repository_owner == 'SukramJ'
