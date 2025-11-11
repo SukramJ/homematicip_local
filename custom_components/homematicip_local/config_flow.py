@@ -48,6 +48,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_ADVANCED_CONFIG,
     CONF_CALLBACK_HOST,
+    CONF_CALLBACK_PORT_BIN_RPC,
     CONF_CALLBACK_PORT_XML_RPC,
     CONF_DELAY_NEW_DEVICE_CREATION,
     CONF_ENABLE_MQTT,
@@ -82,6 +83,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_BIDCOS_RF_PORT: Final = "bidcos_rf_port"
 CONF_BIDCOS_WIRED_PORT: Final = "bidcos_wired_port"
+CONF_CUXD_PORT: Final = "cuxd_port"
 CONF_ENABLE_BIDCOS_RF: Final = "bidcos_rf_enabled"
 CONF_ENABLE_BIDCOS_WIRED: Final = "bidcos_wired_enabled"
 CONF_ENABLE_CCU_JACK: Final = "ccu_jack_enabled"
@@ -96,6 +98,7 @@ IF_BIDCOS_RF_PORT: Final = 2001
 IF_BIDCOS_RF_TLS_PORT: Final = 42001
 IF_BIDCOS_WIRED_PORT: Final = 2000
 IF_BIDCOS_WIRED_TLS_PORT: Final = 42000
+IF_CUXD_PORT: Final = 8701
 IF_HMIP_RF_PORT: Final = 2010
 IF_HMIP_RF_TLS_PORT: Final = 42010
 IF_VIRTUAL_DEVICES_PORT: Final = 9292
@@ -130,6 +133,9 @@ def get_domain_schema(data: ConfigType) -> Schema:
             vol.Required(CONF_TLS, default=data.get(CONF_TLS, DEFAULT_TLS)): BOOLEAN_SELECTOR,
             vol.Required(CONF_VERIFY_TLS, default=data.get(CONF_VERIFY_TLS, False)): BOOLEAN_SELECTOR,
             vol.Optional(CONF_CALLBACK_HOST, default=data.get(CONF_CALLBACK_HOST) or UNDEFINED): TEXT_SELECTOR,
+            vol.Optional(
+                CONF_CALLBACK_PORT_BIN_RPC, default=data.get(CONF_CALLBACK_PORT_BIN_RPC) or UNDEFINED
+            ): PORT_SELECTOR_OPTIONAL,
             vol.Optional(
                 CONF_CALLBACK_PORT_XML_RPC, default=data.get(CONF_CALLBACK_PORT_XML_RPC) or UNDEFINED
             ): PORT_SELECTOR_OPTIONAL,
@@ -199,6 +205,11 @@ def get_interface_schema(use_tls: bool, data: ConfigType, from_config_flow: bool
     enable_ccu_jack = Interface.CCU_JACK in interfaces
     # CUxD
     enable_cuxd = Interface.CUXD in interfaces
+    cuxd_port = (
+        custom_port
+        if (enable_cuxd and (custom_port := interfaces[Interface.CUXD][CONF_PORT]) not in (IF_CUXD_PORT,))
+        else IF_CUXD_PORT
+    )
 
     advanced_config = bool(data.get(CONF_ADVANCED_CONFIG))
     interface_schema = vol.Schema(
@@ -214,6 +225,7 @@ def get_interface_schema(use_tls: bool, data: ConfigType, from_config_flow: bool
             vol.Required(CONF_BIDCOS_WIRED_PORT, default=bidcos_wired_port): PORT_SELECTOR,
             vol.Required(CONF_ENABLE_CCU_JACK, default=enable_ccu_jack): BOOLEAN_SELECTOR,
             vol.Required(CONF_ENABLE_CUXD, default=enable_cuxd): BOOLEAN_SELECTOR,
+            vol.Required(CONF_CUXD_PORT, default=cuxd_port): PORT_SELECTOR,
             vol.Required(CONF_ADVANCED_CONFIG, default=advanced_config): BOOLEAN_SELECTOR,
         }
     )
@@ -341,7 +353,7 @@ async def _async_validate_config_and_get_system_information(
 class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the instance flow for Homematic(IP) Local for OpenCCU."""
 
-    VERSION = 10
+    VERSION = 11
     CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
@@ -562,7 +574,9 @@ def _get_ccu_data(data: ConfigType, user_input: ConfigType) -> ConfigType:
     }
     if (callback_host := user_input.get(CONF_CALLBACK_HOST)) and callback_host.strip() != "":
         ccu_data[CONF_CALLBACK_HOST] = callback_host
-    if (callback_port_xml_rpc := user_input.get(CONF_CALLBACK_PORT_XML_RPC)) is not None:
+    if callback_port_bin_rpc := user_input.get(CONF_CALLBACK_PORT_BIN_RPC):
+        ccu_data[CONF_CALLBACK_PORT_BIN_RPC] = callback_port_bin_rpc
+    if callback_port_xml_rpc := user_input.get(CONF_CALLBACK_PORT_XML_RPC):
         ccu_data[CONF_CALLBACK_PORT_XML_RPC] = callback_port_xml_rpc
     if (json_port := user_input.get(CONF_JSON_PORT)) is not None:
         ccu_data[CONF_JSON_PORT] = json_port
@@ -595,7 +609,9 @@ def _update_interface_input(data: ConfigType, interface_input: ConfigType) -> No
     if interface_input[CONF_ENABLE_CCU_JACK] is True:
         data[CONF_INTERFACE][Interface.CCU_JACK] = {}
     if interface_input[CONF_ENABLE_CUXD] is True:
-        data[CONF_INTERFACE][Interface.CUXD] = {}
+        data[CONF_INTERFACE][Interface.CUXD] = {
+            CONF_PORT: interface_input[CONF_CUXD_PORT],
+        }
     if interface_input[CONF_ADVANCED_CONFIG] is False:
         data[CONF_ADVANCED_CONFIG] = {}
 

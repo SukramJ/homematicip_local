@@ -1,1344 +1,1308 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen: {invalid_items}. Weitere Details findest Du im HA-Protokoll", 
-            "invalid_auth": "Ungültige Authentifizierung", 
-            "invalid_config": "Ungültiges Konfiguration: {invalid_items}", 
+            "cannot_connect": "Verbindung fehlgeschlagen: {invalid_items}. Weitere Details findest Du im HA-Protokoll",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_config": "Ung\u00fcltiges Konfiguration: {invalid_items}",
             "unknown": "Unerwarteter Fehler. Weitere Details findest Du im HA-Protokoll"
-        }, 
-        "flow_title": "{name}/{host}", 
+        },
+        "flow_title": "{name}/{host}",
         "step": {
             "advanced": {
                 "data": {
-                    "delay_new_device_creation": "Erstellung neuer Geräte verzögern", 
-                    "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
-                    "listen_on_all_ip": "Auf allen IP Adressen lauschen", 
-                    "mqtt_enabled": "MQTT aktivieren", 
-                    "mqtt_prefix": "MQTT Prefix", 
-                    "optional_settings": "Optionale Einstellungen", 
-                    "program_markers": "Programm Marken", 
-                    "program_scan_enabled": "Programm Scan aktivieren", 
-                    "sub_devices_enabled": "Unter Geräte aktivieren", 
-                    "sysvar_markers": "Systemvariablen Marken", 
-                    "sysvar_scan_enabled": "Systemvariablen Scan aktivieren", 
-                    "sysvar_scan_interval": "Sysvar/Program Scan Interval", 
+                    "delay_new_device_creation": "Erstellung neuer Geräte verzögern",
+                    "enable_system_notifications": "Systembenachrichtigungen aktivieren",
+                    "listen_on_all_ip": "Auf allen IP Adressen lauschen",
+                    "mqtt_enabled": "MQTT aktivieren",
+                    "mqtt_prefix": "MQTT Prefix",
+                    "program_markers": "Programm Marken",
+                    "program_scan_enabled": "Programm Scan aktivieren",
+                    "sub_devices_enabled": "Unter Geräte aktivieren",
+                    "sysvar_markers": "Systemvariablen Marken",
+                    "sysvar_scan_enabled": "Systemvariablen Scan aktivieren",
+                    "sysvar_scan_interval": "Sysvar/Program Scan Interval",
                     "use_group_channel_for_cover_state": "Verwende Gruppenkanal für Cover Status"
-                }, 
+                },
                 "data_description": {
-                    "delay_new_device_creation": "Die Erstellung neuer Geräte verzögern, bis diese in der CCU vollständig konfiguriert sind; stattdessen wird eine Reparatur erstellt, um das Gerät später hinzuzufügen.", 
-                    "mqtt_enabled": "Aktiviere MQTT, um Callbacks für CCU-Jack und CUxD zu nutzen", 
-                    "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix", 
-                    "optional_settings": "Aktiviere optionalen Konfigurationsmodus. Nur für Debugging und Analysezwecke. Nicht für normale Betriebsbedingungen verwenden.", 
-                    "program_markers": "Kommaseparierte Liste mit Markern für Programme zum Abrufen. Zum Zurückzusetzen muss der Wert auf ein Leerzeichen gesetzt werden.", 
+                    "delay_new_device_creation": "Die Erstellung neuer Geräte verzögern, bis diese in der CCU vollständig konfiguriert sind; stattdessen wird eine Reparatur erstellt, um das Gerät später hinzuzufügen.",
+                    "mqtt_enabled": "Aktiviere MQTT, um Callbacks für CCU-Jack und CUxD zu nutzen",
+                    "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix",
+                    "program_markers": "Kommaseparierte Liste mit Markern für Programme zum Abrufen. Zum Zurückzusetzen muss der Wert auf ein Leerzeichen gesetzt werden.",
                     "sysvar_markers": "Kommaseparierte Liste mit Markern für Systemvariablen zum Abrufen. Zum Zurückzusetzen muss der Wert auf ein Leerzeichen gesetzt werden."
-                }, 
+                },
                 "description": "Konfiguration der erweiterten Parameter"
-            }, 
+            },
             "central": {
                 "data": {
-                    "callback_host": "Callback Hostname/IP-Adresse", 
-                    "callback_port_xml_rpc": "Callback XML-RPC Port", 
-                    "host": "CCU Hostname/IP-Adresse", 
-                    "instance_name": "Instanzname der Integration", 
-                    "json_port": "JSON-RPC Port", 
-                    "password": "CCU Passwort", 
-                    "tls": "verwende TLS", 
-                    "username": "CCU Benutzername", 
+                    "callback_host": "Callback Hostname/IP-Adresse",
+                    "callback_port_bin_rpc": "Callback BIN-RPC Port",
+                    "callback_port_xml_rpc": "Callback XML-RPC Port",
+                    "host": "CCU Hostname/IP-Adresse",
+                    "instance_name": "Instanzname der Integration",
+                    "json_port": "JSON-RPC Port",
+                    "password": "CCU Passwort",
+                    "tls": "verwende TLS",
+                    "username": "CCU Benutzername",
                     "verify_tls": "TLS Verbindung überprüfen"
-                }, 
+                },
                 "data_description": {
-                    "callback_host": "Um den Callback-Host zurückzusetzen, muss der Wert auf ein Leerzeichen gesetzt werden", 
-                    "callback_port_xml_rpc": "Um den Callback-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden", 
-                    "instance_name": "Name der HA-Instanz.\n Wenn von mehreren HA-Installationen aus eine Verbindung mit derselben CCU-Instanz herstellt werden soll, muss dieser Instanzname auf jeder HA-Instanz eindeutig sein", 
-                    "json_port": "Um den JSON-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden", 
-                    "password": "Groß-/Kleinschreibung beachten. Erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
+                    "callback_host": "Um den Callback-Host zurückzusetzen, muss der Wert auf ein Leerzeichen gesetzt werden",
+                    "callback_port_bin_rpc": "Um den Callback-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden",
+                    "callback_port_xml_rpc": "Um den Callback-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden",
+                    "instance_name": "Name der HA-Instanz.\n Wenn von mehreren HA-Installationen aus eine Verbindung mit derselben CCU-Instanz herstellt werden soll, muss dieser Instanzname auf jeder HA-Instanz eindeutig sein",
+                    "json_port": "Um den JSON-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden",
+                    "password": "Groß-/Kleinschreibung beachten. Erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-",
                     "username": "Groß-/Kleinschreibung beachten. Benutzer muss die Administratorrolle haben"
-                }, 
+                },
                 "description": "Bitte Pflichtfelder ausfüllen"
-            }, 
+            },
             "interface": {
-                "data": {
-                    "bidcos_rf_enabled": "Homematic (Bidcos-RF) aktivieren", 
-                    "bidcos_rf_port": "HM-RF Port", 
-                    "bidcos_wired_enabled": "Homematic-Wired (BidCos-Wired) aktivieren", 
-                    "bidcos_wired_port": "BidCos-Wired Port", 
-                    "ccu_jack_enabled": "CCU-Jack aktivieren", 
-                    "cuxd_enabled": "CUxD aktivieren", 
-                    "hmip_rf_enabled": "Homematic IP aktivieren", 
-                    "hmip_rf_port": "HmIP-RF Port", 
-                    "virtual_devices_enabled": "Heizgruppen aktivieren", 
-                    "virtual_devices_path": "Gruppen Pfad", 
+                   "data": {
+                    "advanced_config": "erweiterte Konfiguration",
+                    "bidcos_rf_enabled": "Homematic (Bidcos-RF) aktivieren",
+                    "bidcos_rf_port": "HM-RF Port",
+                    "bidcos_wired_enabled": "Homematic-Wired (BidCos-Wired) aktivieren",
+                    "bidcos_wired_port": "BidCos-Wired Port",
+                    "ccu_jack_enabled": "CCU-Jack aktivieren",
+                    "cuxd_enabled": "CUxD aktivieren",
+                    "cuxd_port": "CUxD Port",
+                    "hmip_rf_enabled": "Homematic IP aktivieren",
+                    "hmip_rf_port": "HmIP-RF Port",
+                    "virtual_devices_enabled": "Heizgruppen aktivieren",
+                    "virtual_devices_path": "Gruppen Pfad",
                     "virtual_devices_port": "Gruppen Port"
-                }, 
+                },
                 "description": "Neu-Konfiguration der CCU Schnittstellen"
             }
         }
-    }, 
+    },
     "device_automation": {
         "action_type": {
-            "press_long": "Langer Tastendruck auf Taster \"{subtype}\"", 
+            "press_long": "Langer Tastendruck auf Taster \"{subtype}\"",
             "press_short": "Kurzer Tastendruck auf Taster \"{subtype}\""
-        }, 
+        },
         "trigger_type": {
-            "press": "Taste \"{subtype}\" wurde gedrückt", 
-            "press_cont": "Taste \"{subtype}\" wird dauerhaft gedrückt", 
-            "press_lock": "Sperrtaste \"{subtype}\" wurde gedrückt", 
-            "press_long": "Taste \"{subtype}\" wurde lange gedrückt", 
-            "press_long_release": "Taste \"{subtype}\" wurde nach langem Tastendruck los gelassen", 
-            "press_long_start": "Taste \"{subtype}\" hat langem Tastendruck gestartet", 
-            "press_short": "Taster \"{subtype}\" wurde gedrückt", 
+            "press": "Taste \"{subtype}\" wurde gedrückt",
+            "press_cont": "Taste \"{subtype}\" wird dauerhaft gedrückt",
+            "press_lock": "Sperrtaste \"{subtype}\" wurde gedrückt",
+            "press_long": "Taste \"{subtype}\" wurde lange gedrückt",
+            "press_long_release": "Taste \"{subtype}\" wurde nach langem Tastendruck los gelassen",
+            "press_long_start": "Taste \"{subtype}\" hat langem Tastendruck gestartet",
+            "press_short": "Taster \"{subtype}\" wurde gedrückt",
             "press_unlock": "Entsperrtaste \"{subtype}\" wurde gedrückt"
         }
-    }, 
+    },
     "entity": {
         "binary_sensor": {
             "acoustic_alarm_active": {
                 "name": "Akustischer Alarm aktiv"
-            }, 
+            },
             "alarmstate": {
                 "name": "Alarmzustand"
-            }, 
+            },
             "blocked_permanent": {
                 "name": "Dauerhaft gesperrt"
-            }, 
+            },
             "blocked_temporary": {
                 "name": "Vorübergehend gesperrt"
-            }, 
+            },
             "burst_limit_warning": {
                 "name": "Burst-Limit-Warnung"
-            }, 
+            },
             "current_passage_direction": {
                 "name": "Durchgangsrichtung"
-            }, 
+            },
             "dew_point_alarm": {
                 "name": "Taupunktalarm"
-            }, 
+            },
             "duty_cycle": {
                 "name": "Duty Cycle"
-            }, 
+            },
             "dutycycle": {
                 "name": "Duty Cycle"
-            }, 
+            },
             "emergency_operation": {
                 "name": "Notfallbetrieb"
-            }, 
+            },
             "error_jammed": {
                 "name": "Blockiert"
-            }, 
+            },
             "heater_state": {
                 "name": "Heizungszustand"
-            }, 
+            },
             "humidity_alarm": {
                 "name": "Feuchtigkeitsalarm"
-            }, 
+            },
             "last_passage_direction": {
                 "name": "Letzte Durchgangsrichtung"
-            }, 
+            },
             "low_bat": {
                 "name": "Batterie"
-            }, 
+            },
             "lowbat": {
                 "name": "Batterie"
-            }, 
+            },
             "lowbat_sensor": {
                 "name": "Batterie"
-            }, 
+            },
             "moisture_detected": {
                 "name": "Feuchtigkeit erkannt"
-            }, 
+            },
             "motion": {
                 "name": "Bewegung"
-            }, 
+            },
             "optical_alarm_active": {
                 "name": "Optischer Alarm aktiv"
-            }, 
+            },
             "power_mains_failure": {
                 "name": "Stromnetzausfall"
-            }, 
+            },
             "presence": {
                 "name": "Anwesenheit"
-            }, 
+            },
             "presence_detection_state": {
                 "name": "Anwesenheit"
-            }, 
+            },
             "process": {
                 "name": "Arbeitet"
-            }, 
+            },
             "raining": {
                 "name": "Regen"
-            }, 
+            },
             "sabotage": {
                 "name": "Sabotage"
-            }, 
+            },
             "sabotage_sticky": {
                 "name": "Sabotage festgesetzt"
-            }, 
+            },
             "state": {
                 "name": ""
-            }, 
+            },
             "user_authorization_01": {
                 "name": "Benutzerautorisierung 1"
-            }, 
+            },
             "user_authorization_02": {
                 "name": "Benutzerautorisierung 2"
-            }, 
+            },
             "user_authorization_03": {
                 "name": "Benutzerautorisierung 3"
-            }, 
+            },
             "user_authorization_04": {
                 "name": "Benutzerautorisierung 4"
-            }, 
+            },
             "user_authorization_05": {
                 "name": "Benutzerautorisierung 5"
-            }, 
+            },
             "user_authorization_06": {
                 "name": "Benutzerautorisierung 6"
-            }, 
+            },
             "user_authorization_07": {
                 "name": "Benutzerautorisierung 7"
-            }, 
+            },
             "user_authorization_08": {
                 "name": "Benutzerautorisierung 8"
-            }, 
+            },
             "waterlevel_detected": {
                 "name": "Wasserstand erkannt"
-            }, 
+            },
             "window_state": {
                 "name": "Fensterzustand"
-            }, 
+            },
             "working": {
                 "name": "Arbeitet"
             }
-        }, 
+        },
         "button": {
-            "press": {
-                "name": "Tastendruck"
-            }, 
-            "press_long": {
-                "name": "Tastendruck lang"
-            }, 
-            "press_short": {
-                "name": "Tastendruck kurz"
-            }, 
             "reset_motion": {
                 "name": "Bewegung zurücksetzen"
-            }, 
+            },
             "reset_presence": {
                 "name": "Anwesenheit zurücksetzen"
             }
-        }, 
+        },
         "climate": {
             "hmip_climate": {
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
-                            "week_program_1": "WP 1", 
-                            "week_program_2": "WP 2", 
-                            "week_program_3": "WP 3", 
-                            "week_program_4": "WP 4", 
-                            "week_program_5": "WP 5", 
+                            "week_program_1": "WP 1",
+                            "week_program_2": "WP 2",
+                            "week_program_3": "WP 3",
+                            "week_program_4": "WP 4",
+                            "week_program_5": "WP 5",
                             "week_program_6": "WP 6"
                         }
                     }
                 }
             }
-        }, 
+        },
         "event": {
             "homematic_keypress": {
                 "state_attributes": {
                     "event_type": {
                         "state": {
-                            "press": "Gedrückt", 
-                            "press_cont": "Dauerhaft gedrückt", 
-                            "press_lock": "Sperrtaste gedrückt", 
-                            "press_long": "Lange gedrückt", 
-                            "press_long_release": "Nach langem Tastendruck los gelassen", 
-                            "press_long_start": "Langer Tastendruck gestartet", 
-                            "press_short": "Kurz gedrückt", 
+                            "press": "Gedrückt",
+                            "press_cont": "Dauerhaft gedrückt",
+                            "press_lock": "Sperrtaste gedrückt",
+                            "press_long": "Lange gedrückt",
+                            "press_long_release": "Nach langem Tastendruck los gelassen",
+                            "press_long_start": "Langer Tastendruck gestartet",
+                            "press_short": "Kurz gedrückt",
                             "press_unlock": "Entsperrtaste gedrückt"
                         }
                     }
                 }
             }
-        }, 
+        },
         "lock": {
             "button_lock": {
                 "name": "Bediensperre"
             }
-        }, 
+        },
         "number": {
             "frequency": {
                 "name": "Frequenz"
-            }, 
+            },
             "level": {
                 "name": "Level"
-            }, 
+            },
             "level_2": {
                 "name": "Level 2"
-            }, 
+            },
             "pipe_level": {
                 "name": "Ventilöffnung"
-            }, 
+            },
             "temperature_offset": {
                 "name": "Temperaturverschiebung"
             }
-        }, 
+        },
         "select": {
             "heating_cooling": {
-                "name": "Betriebsmodus", 
+                "name": "Betriebsmodus",
                 "state": {
-                    "cooling": "Kühlung", 
+                    "cooling": "Kühlung",
                     "heating": "Heizung"
                 }
-            }, 
+            },
             "temperature_offset": {
                 "name": "Temperaturverschiebung"
             }
-        }, 
+        },
         "sensor": {
             "activity_state": {
                 "name": "Aktivitätszustand"
-            }, 
+            },
             "actual_humidity": {
                 "name": "Luftfeuchtigkeit"
-            }, 
+            },
             "actual_temperature": {
                 "name": "Temperatur"
-            }, 
+            },
             "air_pressure": {
                 "name": "Luftdruck"
-            }, 
+            },
             "alarm_messages": {
                 "name": "Alarmmeldungen"
-            }, 
+            },
             "apparent_temperature": {
                 "name": "Gefühlte Temperatur"
-            }, 
+            },
             "average_illumination": {
                 "name": "Durchschnittliche Beleuchtungsstärke"
-            }, 
+            },
             "battery_state": {
                 "name": "Batteriezustand"
-            }, 
+            },
             "brightness": {
                 "name": "Helligkeit"
-            }, 
+            },
             "carrier_sense_level": {
                 "name": "Carrier Sense Level"
-            }, 
+            },
             "color": {
                 "name": "Farbe"
-            }, 
+            },
             "concentration": {
                 "name": "Konzentration"
-            }, 
+            },
             "cover_level": {
                 "name": "Position"
-            }, 
+            },
             "cover_tilt": {
                 "name": "Lamellenposition"
-            }, 
+            },
             "current": {
                 "name": "Strom"
-            }, 
+            },
             "current_illumination": {
                 "name": "Beleuchtungsstärke"
-            }, 
+            },
             "dew_point": {
                 "name": "Taupunkt"
-            }, 
-            "dew_point_spread": {
-                "name": "Taupunkt Spreizung"
-            }, 
+            },
             "direction": {
-                "name": "Richtung", 
+                "name": "Richtung",
                 "state": {
-                    "down": "Runter", 
-                    "none": "", 
-                    "undefined": "Nicht definiert", 
+                    "down": "Runter",
+                    "none": "",
+                    "undefined": "Nicht definiert",
                     "up": "Hoch"
                 }
-            }, 
+            },
             "door_state": {
-                "name": "Türzustand", 
+                "name": "Türzustand",
                 "state": {
-                    "closed": "Geschlossen", 
-                    "open": "Offen", 
-                    "position_unknown": "Position unbekannt", 
+                    "closed": "Geschlossen",
+                    "open": "Offen",
+                    "position_unknown": "Position unbekannt",
                     "ventilation_position": "Belüftung"
                 }
-            }, 
+            },
             "duty_cycle_level": {
                 "name": "Duty Cycle Level"
-            }, 
+            },
             "energy_counter": {
                 "name": "Energiezähler"
-            }, 
+            },
             "energy_counter_feed_in_total": {
                 "name": "Energiezähler Einspeisung Gesamt"
-            }, 
+            },
             "energy_counter_total": {
                 "name": "Energiezähler Gesamt"
-            }, 
-            "enthalpy": {
-                "name": "Enthalpie"
-            }, 
+            },
             "error": {
                 "name": "Fehler"
-            }, 
+            },
             "filling_level": {
                 "name": "Füllstand"
-            }, 
+            },
             "frequency": {
                 "name": "Frequenz"
-            }, 
+            },
             "frost_point": {
                 "name": "Frostpunkt"
-            }, 
-            "gas_energy_counter": {
-                "name": "Gas-Energiezähler"
-            }, 
+            },
             "gas_flow": {
                 "name": "Gas-Fluss"
-            }, 
+            },
+            "gas_energy_counter": {
+                "name": "Gas-Energiezähler"
+            },
             "gas_power": {
                 "name": "Gas-Leistung"
-            }, 
+            },
             "gas_volume": {
                 "name": "Gas-Volumen"
-            }, 
+            },
             "highest_illumination": {
                 "name": "Höchste Beleuchtungsstärke"
-            }, 
+            },
             "humidity": {
                 "name": "Luftfeuchtigkeit"
-            }, 
+            },
             "iec_energy_counter": {
                 "name": "IEC Energiezähler"
-            }, 
+            },
             "iec_power": {
                 "name": "IEC Leistung"
-            }, 
+            },
             "illumination": {
                 "name": "Beleuchtungsstärke"
-            }, 
+            },
             "ip_address": {
                 "name": "IP Adresse"
-            }, 
+            },
             "level": {
                 "name": "Level"
-            }, 
+            },
             "level_2": {
                 "name": "Level 2"
-            }, 
+            },
             "light_level": {
                 "name": "Helligkeit"
-            }, 
+            },
             "lock_state": {
-                "name": "Schliesszustand", 
+                "name": "Schliesszustand",
                 "state": {
-                    "locked": "Verriegelt", 
-                    "unknown": "Unbekannt", 
+                    "locked": "Verriegelt",
+                    "unknown": "Unbekannt",
                     "unlocked": "Unverriegelt"
                 }
-            }, 
+            },
             "lowest_illumination": {
                 "name": "Niedrigste Beleuchtungsstärke"
-            }, 
+            },
             "lux": {
                 "name": "Lux"
-            }, 
+            },
             "mass_concentration_pm_1": {
                 "name": "Masse-Konzentration PM 1"
-            }, 
+            },
             "mass_concentration_pm_10": {
                 "name": "Masse-Konzentration PM 10"
-            }, 
+            },
             "mass_concentration_pm_10_24h_average": {
                 "name": "Masse-Konzentration PM 10 24h Durchschnitt"
-            }, 
+            },
             "mass_concentration_pm_1_24h_average": {
                 "name": "Masse-Konzentration PM 1 24h Durchschnitt"
-            }, 
+            },
             "mass_concentration_pm_2_5": {
                 "name": "Masse-Konzentration PM 2.5"
-            }, 
+            },
             "mass_concentration_pm_2_5_24h_average": {
                 "name": "Masse-Konzentration PM 2.5 24h Durchschnitt"
-            }, 
+            },
             "number_concentration_pm_1": {
                 "name": "Numerische Konzentration PM 1"
-            }, 
+            },
             "number_concentration_pm_10": {
                 "name": "Numerische Konzentration PM 10"
-            }, 
+            },
             "number_concentration_pm_2_5": {
                 "name": "Numerische Konzentration PM 2.5"
-            }, 
+            },
             "operating_voltage": {
                 "name": "Betriebsspannung"
-            }, 
+            },
             "operating_voltage_level": {
                 "name": "Betriebsspannungspegel"
-            }, 
+            },
             "passage_counter_value": {
                 "name": "Durchgangszählerwert"
-            }, 
+            },
             "pipe_level": {
                 "name": "Ventil-Öffnungsgrad"
-            }, 
+            },
             "power": {
                 "name": "Leistung"
-            }, 
+            },
             "rain_counter_today": {
                 "name": "Regenzähler Heute"
-            }, 
+            },
             "rain_counter_total": {
                 "name": "Regenzähler Gesamt"
-            }, 
+            },
             "rain_counter_yesterday": {
                 "name": "Regenzähler Gestern"
-            }, 
+            },
             "rssi_device": {
                 "name": "RSSI Device"
-            }, 
+            },
             "rssi_peer": {
                 "name": "RSSI Peer"
-            }, 
+            },
             "sec_direction": {
-                "name": "Richtung", 
+                "name": "Richtung",
                 "state": {
-                    "down": "Öffnend", 
-                    "none": "", 
-                    "undefined": "Nicht definiert", 
+                    "down": "Öffnend",
+                    "none": "",
+                    "undefined": "Nicht definiert",
                     "up": "Schließend"
                 }
-            }, 
+            },
             "sec_key_error": {
-                "name": "Fehler", 
+                "name": "Fehler",
                 "state": {
-                    "clutch_failure": "Einkuppeln fehlgeschlagen", 
-                    "motor_aborted": "Motorlauf abgebrochen", 
+                    "clutch_failure": "Einkuppeln fehlgeschlagen",
+                    "motor_aborted": "Motorlauf abgebrochen",
                     "no_error": "Kein Fehler"
                 }
-            }, 
+            },
             "sec_wds_state": {
-                "name": "", 
+                "name": "",
                 "state": {
-                    "dry": "Trocken", 
-                    "water": "Wasser", 
-                    "wet": "Feucht"
+                    "dry": "Trocken",
+                    "wet": "Feucht",
+                    "water": "Wasser"
                 }
-            }, 
+            },
             "sec_win_error": {
-                "name": "Fehler", 
+                "name": "Fehler",
                 "state": {
-                    "motor_tilt_error": "Fehler Kippantrieb", 
-                    "motor_turn_error": "Fehler Drehantrieb", 
+                    "motor_tilt_error": "Fehler Kippantrieb",
+                    "motor_turn_error": "Fehler Drehantrieb",
                     "no_error": "Kein Fehler"
                 }
-            }, 
+            },
             "sec_win_status": {
-                "name": "", 
+                "name": "",
                 "state": {
-                    "charge": "Ladend", 
-                    "discharge": "Versorgung durch Akku", 
-                    "state_unknown": "Zustand unbekannt", 
+                    "charge": "Ladend",
+                    "discharge": "Versorgung durch Akku",
+                    "state_unknown": "Zustand unbekannt",
                     "trickle_charge": "Erhaltungsladung"
                 }
-            }, 
+            },
             "service_messages": {
                 "name": "Servicemeldungen"
-            }, 
+            },
             "smoke_detector_alarm_status": {
-                "name": "Rauchmelder-Alarmstatus", 
+                "name": "Rauchmelder-Alarmstatus",
                 "state": {
-                    "idle_off": "Untätig", 
-                    "intrusion_alarm": "Einbruch-Alarm", 
-                    "primary_alarm": "Primär-Alarm", 
+                    "idle_off": "Untätig",
+                    "intrusion_alarm": "Einbruch-Alarm",
+                    "primary_alarm": "Primär-Alarm",
                     "secondary_alarm": "Sekundär-Alarm"
                 }
-            }, 
+            },
             "state": {
                 "name": ""
-            }, 
+            },
             "status": {
                 "name": ""
-            }, 
+            },
             "sunshine_counter_today": {
                 "name": "Sonnenscheinzähler Heute"
-            }, 
+            },
             "sunshine_counter_total": {
                 "name": "Sonnenscheinzähler Gesamt"
-            }, 
+            },
             "sunshine_counter_yesterday": {
                 "name": "Sonnenscheinzähler Gestern"
-            }, 
+            },
             "sunshine_duration": {
                 "name": "Sonnenscheindauer"
-            }, 
+            },
             "taupunkt": {
                 "name": "Taupunkt"
-            }, 
+            },
             "temperature": {
                 "name": "Temperatur"
-            }, 
+            },
             "time_of_operation": {
                 "name": "Betriebszeit"
-            }, 
+            },
             "tri_state": {
-                "name": "", 
+                "name": "",
                 "state": {
-                    "closed": "Geschlossen", 
-                    "open": "Offen", 
+                    "closed": "Geschlossen",
+                    "open": "Offen",
                     "tilted": "Gekippt"
                 }
-            }, 
+            },
             "typical_particle_size": {
                 "name": "Tyische Partikelgröße"
-            }, 
+            },
             "value": {
                 "name": "Wert"
-            }, 
+            },
             "valve_state": {
                 "name": "Ventilzustand"
-            }, 
+            },
             "vapor_concentration": {
                 "name": "Dampfkonzentration"
-            }, 
+            },
             "voltage": {
                 "name": "Spannung"
-            }, 
+            },
             "water_flow": {
                 "name": "Wasser Durchfluss"
-            }, 
+            },
             "water_volume": {
                 "name": "Wassermenge"
-            }, 
+            },
             "water_volume_since_open": {
                 "name": "Wassermenge seit Öffnung"
-            }, 
+            },
             "wind_dir": {
                 "name": "Windrichtung"
-            }, 
+            },
             "wind_dir_range": {
                 "name": "Windrichtungsbereich"
-            }, 
+            },
             "wind_direction": {
                 "name": "Windrichtung"
-            }, 
+            },
             "wind_direction_range": {
                 "name": "Windrichtungsbereich"
-            }, 
+            },
             "wind_speed": {
                 "name": "Windgeschwindigkeit"
-            }, 
+            },
             "wkp_code_state": {
-                "name": "Code Status", 
+                "name": "Code Status",
                 "state": {
-                    "idle": "Leerlauf", 
-                    "known_code_id_received": "Bekannte Code-ID erhalten", 
+                    "idle": "Leerlauf",
+                    "known_code_id_received": "Bekannte Code-ID erhalten",
                     "unknown_code_detected": "Unbekannter Code erkannt"
                 }
             }
-        }, 
+        },
         "switch": {
             "inhibit": {
                 "name": "Sperre"
-            }, 
+            },
             "motion_detection_active": {
                 "name": "Bewegungserkennung aktiv"
-            }, 
+            },
             "presence_detection_active": {
                 "name": "Anwesenheitserkennung aktiv"
-            }, 
+            },
             "state": {
                 "name": ""
             }
-        }, 
+        },
         "valve": {
             "irrigation_valve": {
                 "name": "Bewässerungsventil"
             }
         }
-    }, 
+    },
     "issues": {
         "devices_delayed": {
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Dies stößt das manuelle Hinzufügen des Geräts **{address}** auf Schnittstelle **{interface_id}** an.\n\nBestätige, um fortzufahren.", 
-                        "title": "Gerät {address} manuell hinzufügen"
+                        "title": "Gerät {address} manuell hinzufügen",
+                        "description": "Dies stößt das manuelle Hinzufügen des Geräts **{address}** auf Schnittstelle **{interface_id}** an.\n\nBestätige, um fortzufahren."
                     }
                 }
-            }, 
+            },
             "title": "Geräterstellung von {address} verzögert auf {interface_id}"
-        }, 
+        },
         "fetch_data": {
-            "description": "Daten können mit einem Rega-Skript nicht abgerufen werden.\n\nDies weist auf ein Problem mit Ihrer CCU hin.\n\nDurch die Verwendung eines Fallbacks kommt es zu einem erhöhten DutyCycle beim Integrationsstart für die Schnittstelle {interface_id}", 
+            "description": "Daten können mit einem Rega-Skript nicht abgerufen werden.\n\nDies weist auf ein Problem mit Ihrer CCU hin.\n\nDurch die Verwendung eines Fallbacks kommt es zu einem erhöhten DutyCycle beim Integrationsstart für die Schnittstelle {interface_id}",
             "title": "Fehler beim Abrufen der Anfangsdaten"
-        }, 
+        },
         "interface_not_reachable": {
-            "description": "Keine Verbindung zu Schnittstelle {interface_id}.\n\nDiese Integration versucht eine automatische Wiederverbindung.\n\nWeitere Informationen findest Du in den Protokolldateien von Home Assistant", 
+            "description": "Keine Verbindung zu Schnittstelle {interface_id}.\n\nDiese Integration versucht eine automatische Wiederverbindung.\n\nWeitere Informationen findest Du in den Protokolldateien von Home Assistant",
             "title": "Interface {interface_id} nicht erreichbar"
-        }, 
+        },
         "pending_pong_mismatch": {
-            "description": "Es besteht eine Differenz zwischen gesendeten Ping-Ereignissen und empfangenen Pong-Ereignissen für die HA-Instanz {instance_name}.\n\nMögliche Gründe:\n - Du führst mehrere Instanzen von HA mit demselben Instanznamen aus, der für diese Integration konfiguriert ist. Füge eine Instanz erneut hinzu! Andernfalls empfängt diese HA-Instanz keine Aktualisierungsereignisse von Ihrer CCU.\n - Etwas hängt in der CCU oder wurde nicht bereinigt, also versuche einen CCU Neustart.\n - Ihr Setup ist falsch konfiguriert und HA kann keine Ereignisse von der CCU empfangen", 
+            "description": "Es besteht eine Differenz zwischen gesendeten Ping-Ereignissen und empfangenen Pong-Ereignissen für die HA-Instanz {instance_name}.\n\nMögliche Gründe:\n - Du führst mehrere Instanzen von HA mit demselben Instanznamen aus, der für diese Integration konfiguriert ist. Füge eine Instanz erneut hinzu! Andernfalls empfängt diese HA-Instanz keine Aktualisierungsereignisse von Ihrer CCU.\n - Etwas hängt in der CCU oder wurde nicht bereinigt, also versuche einen CCU Neustart.\n - Ihr Setup ist falsch konfiguriert und HA kann keine Ereignisse von der CCU empfangen",
             "title": "Austehende Pong Ereignisse auf Interface {interface_id}"
-        }, 
+        },
         "unknown_pong_mismatch": {
-            "description": "Es wurden unbekannte Pong-Ereignisse für die HA-Instanz {instance_name} festgestellt.\n\nMögliche Gründe:\n - Du führst mehrere Instanzen von HA mit demselben Instanznamen aus, der für diese Integration konfiguriert ist. Füge eine Instanz erneut hinzu! Andernfalls empfängt diese HA-Instanz keine Aktualisierungsereignisse von Ihrer CCU.\n - Etwas hängt in der CCU oder wurde nicht bereinigt, also versuche einen CCU Neustart.\n - Ihr Setup ist falsch konfiguriert und HA kann keine Ereignisse von der CCU empfangen", 
+            "description": "Es wurden unbekannte Pong-Ereignisse für die HA-Instanz {instance_name} festgestellt.\n\nMögliche Gründe:\n - Du führst mehrere Instanzen von HA mit demselben Instanznamen aus, der für diese Integration konfiguriert ist. Füge eine Instanz erneut hinzu! Andernfalls empfängt diese HA-Instanz keine Aktualisierungsereignisse von Ihrer CCU.\n - Etwas hängt in der CCU oder wurde nicht bereinigt, also versuche einen CCU Neustart.\n - Ihr Setup ist falsch konfiguriert und HA kann keine Ereignisse von der CCU empfangen",
             "title": "Unbekannte Pong-Ereignisse auf Interface {interface_id}"
-        }, 
+        },
         "xmlrpc_server_receives_no_events": {
-            "description": "Callback für {interface_id} hat keine Ereignisse in den letzten {seconds_since_last_event}s empfangen.\n\nDiese Integration versucht eine automatische Wiederverbindung", 
+            "description": "Callback für {interface_id} hat keine Ereignisse in den letzten {seconds_since_last_event}s empfangen.\n\nDiese Integration versucht eine automatische Wiederverbindung",
             "title": "XmlRPC-Server empfängt keine Ereignisse"
         }
-    }, 
+    },
     "options": {
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen: {invalid_items}. Weitere Details findest Du im HA-Protokoll", 
-            "invalid_auth": "Ungültige Authentifizierung", 
-            "invalid_config": "Ungültiges Konfiguration: {invalid_items}", 
+            "cannot_connect": "Verbindung fehlgeschlagen: {invalid_items}. Weitere Details findest Du im HA-Protokoll",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_config": "Ung\u00fcltiges Konfiguration: {invalid_items}",
             "unknown": "Unerwarteter Fehler. Weitere Details findest Du im HA-Protokoll"
-        }, 
+        },
         "step": {
             "advanced": {
                 "data": {
-                    "delay_new_device_creation": "Erstellung neuer Geräte verzögern", 
-                    "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
-                    "listen_on_all_ip": "Auf allen IP Adressen lauschen", 
-                    "mqtt_enabled": "MQTT aktivieren", 
-                    "mqtt_prefix": "MQTT Prefix", 
-                    "optional_settings": "Optionale Einstellungen", 
-                    "program_markers": "Programm Marken", 
-                    "program_scan_enabled": "Programm Scan aktivieren", 
-                    "sub_devices_enabled": "Unter Geräte aktivieren", 
-                    "sysvar_markers": "Systemvariablen Marken", 
-                    "sysvar_scan_enabled": "Systemvariablen Scan aktivieren", 
-                    "sysvar_scan_interval": "Sysvar/Program Scan Interval", 
-                    "un_ignore": "UN-IGNORE Parameter", 
+                    "delay_new_device_creation": "Erstellung neuer Geräte verzögern",
+                    "enable_system_notifications": "Systembenachrichtigungen aktivieren",
+                    "listen_on_all_ip": "Auf allen IP Adressen lauschen",
+                    "mqtt_enabled": "MQTT aktivieren",
+                    "mqtt_prefix": "MQTT Prefix",
+                    "program_markers": "Programm Marken",
+                    "program_scan_enabled": "Programm Scan aktivieren",
+                    "sub_devices_enabled": "Unter Geräte aktivieren",
+                    "sysvar_markers": "Systemvariablen Marken",
+                    "sysvar_scan_enabled": "Systemvariablen Scan aktivieren",
+                    "sysvar_scan_interval": "Sysvar/Program Scan Interval",
+                    "un_ignore": "UN-IGNORE Parameter",
                     "use_group_channel_for_cover_state": "Verwende Gruppenkanal für Cover Status"
-                }, 
+                },
                 "data_description": {
-                    "delay_new_device_creation": "Die Erstellung neuer Geräte verzögern, bis diese in der CCU vollständig konfiguriert sind; stattdessen wird eine Reparatur erstellt, um das Gerät später hinzuzufügen.", 
-                    "mqtt_enabled": "Aktiviere MQTT, um Callbacks für CCU-Jack und CUxD zu nutzen", 
-                    "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix", 
-                    "optional_settings": "Aktiviere optionalen Konfigurationsmodus. Nur für Debugging und Analysezwecke. Nicht für normale Betriebsbedingungen verwenden.", 
-                    "program_markers": "Kommaseparierte Liste mit Markern für Programme zum Abrufen. Zum Zurückzusetzen muss der Wert auf ein Leerzeichen gesetzt werden.", 
-                    "sysvar_markers": "Kommaseparierte Liste mit Markern für Systemvariablen zum Abrufen. Zum Zurückzusetzen muss der Wert auf ein Leerzeichen gesetzt werden.", 
+                    "delay_new_device_creation": "Die Erstellung neuer Geräte verzögern, bis diese in der CCU vollständig konfiguriert sind; stattdessen wird eine Reparatur erstellt, um das Gerät später hinzuzufügen.",
+                    "mqtt_enabled": "Aktiviere MQTT, um Callbacks für CCU-Jack und CUxD zu nutzen",
+                    "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix",
+                    "program_markers": "Kommaseparierte Liste mit Markern für Programme zum Abrufen. Zum Zurückzusetzen muss der Wert auf ein Leerzeichen gesetzt werden.",
+                    "sysvar_markers": "Kommaseparierte Liste mit Markern für Systemvariablen zum Abrufen. Zum Zurückzusetzen muss der Wert auf ein Leerzeichen gesetzt werden.",
                     "un_ignore": "Schau in die Dokumentation für Informationen über UN-IGNORE"
-                }, 
+                },
                 "description": "Konfiguration der erweiterten Parameter"
-            }, 
+            },
             "central": {
                 "data": {
-                    "callback_host": "Callback Hostname/IP-Adresse", 
-                    "callback_port_xml_rpc": "Callback XML-RPC Port", 
-                    "host": "CCU Hostname/IP-Adresse", 
-                    "json_port": "JSON-RPC Port", 
-                    "password": "CCU Passwort", 
-                    "tls": "verwende TLS", 
-                    "username": "CCU Benutzername", 
+                    "callback_host": "Callback Hostname/IP-Adresse",
+                    "callback_port_bin_rpc": "Callback BIN-RPC Port",
+                    "callback_port_xml_rpc": "Callback XML-RPC Port",
+                    "host": "CCU Hostname/IP-Adresse",
+                    "json_port": "JSON-RPC Port",
+                    "password": "CCU Passwort",
+                    "tls": "verwende TLS",
+                    "username": "CCU Benutzername",
                     "verify_tls": "TLS Verbindung überprüfen"
-                }, 
+                },
                 "data_description": {
-                    "callback_host": "Um den Callback-Host zurückzusetzen, muss der Wert auf ein Leerzeichen gesetzt werden", 
-                    "callback_port_xml_rpc": "Um den Callback-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden", 
-                    "json_port": "Um den JSON-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden", 
-                    "password": "Groß-/Kleinschreibung beachten. Erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
+                    "callback_host": "Um den Callback-Host zurückzusetzen, muss der Wert auf ein Leerzeichen gesetzt werden",
+                    "callback_port_bin_rpc": "Um den Callback-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden",
+                    "callback_port_xml_rpc": "Um den Callback-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden",
+                    "json_port": "Um den JSON-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden",
+                    "password": "Groß-/Kleinschreibung beachten. Erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-",
                     "username": "Groß-/Kleinschreibung beachten. Benutzer muss die Administratorrolle haben"
-                }, 
+                },
                 "description": "Neu-Konfiguration der CCU"
-            }, 
+            },
             "interface": {
                 "data": {
-                    "advanced_config": "erweiterte Konfiguration", 
-                    "bidcos_rf_enabled": "Homematic (Bidcos-RF) aktivieren", 
-                    "bidcos_rf_port": "HM-RF Port", 
-                    "bidcos_wired_enabled": "Homematic-Wired (BidCos-Wired) aktivieren", 
-                    "bidcos_wired_port": "BidCos-Wired Port", 
-                    "ccu_jack_enabled": "CCU-Jack aktivieren", 
-                    "cuxd_enabled": "CUxD aktivieren", 
-                    "hmip_rf_enabled": "Homematic IP aktivieren", 
-                    "hmip_rf_port": "HmIP-RF Port", 
-                    "mqtt_enabled": "MQTT aktivieren", 
-                    "mqtt_prefix": "MQTT Prefix", 
-                    "virtual_devices_enabled": "Heizgruppen aktivieren", 
-                    "virtual_devices_path": "Gruppen Pfad", 
+                    "advanced_config": "erweiterte Konfiguration",
+                    "bidcos_rf_enabled": "Homematic (Bidcos-RF) aktivieren",
+                    "bidcos_rf_port": "HM-RF Port",
+                    "bidcos_wired_enabled": "Homematic-Wired (BidCos-Wired) aktivieren",
+                    "bidcos_wired_port": "BidCos-Wired Port",
+                    "ccu_jack_enabled": "CCU-Jack aktivieren",
+                    "cuxd_enabled": "CUxD aktivieren",
+                    "cuxd_port": "CUxD Port",
+                    "hmip_rf_enabled": "Homematic IP aktivieren",
+                    "hmip_rf_port": "HmIP-RF Port",
+                    "virtual_devices_enabled": "Heizgruppen aktivieren",
+                    "virtual_devices_path": "Gruppen Pfad",
                     "virtual_devices_port": "Gruppen Port"
-                }, 
-                "data_description": {
-                    "mqtt_enabled": "Aktiviere MQTT, um Callbacks für CCU-Jack und CUxD zu nutzen", 
-                    "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix"
-                }, 
+                },
                 "description": "Neu-Konfiguration der CCU Schnittstellen"
             }
         }
-    }, 
+    },
     "services": {
         "add_link": {
-            "description": "Erzeugt eine Direktverknüpfung über die XML-RPC-Schnittstelle", 
+            "description": "Erzeugt eine Direktverknüpfung über die XML-RPC-Schnittstelle",
             "fields": {
-                "description": {
-                    "description": "Beschreibung der Direktverknüpfung, der in der CCU angezeigt wird", 
-                    "name": "Beschreibung der Direktverknüpfung"
-                }, 
-                "name": {
-                    "description": "Name der Direktverknüpfung, der in der CCU angezeigt wird", 
-                    "name": "Name der Direktverknüpfung"
-                }, 
                 "receiver_channel_address": {
-                    "description": "Kanaladresse des verknüpften Empfängers", 
+                    "description": "Kanaladresse des verknüpften Empfängers",
                     "name": "Empfänger Kanaladresse"
-                }, 
+                },
                 "sender_channel_address": {
-                    "description": "Kanaladresse des verknüpften Senders", 
+                    "description": "Kanaladresse des verknüpften Senders",
                     "name": "Sender Kanaladresse"
+                },
+                "name": {
+                    "description": "Name der Direktverknüpfung, der in der CCU angezeigt wird",
+                    "name": "Name der Direktverknüpfung"
+                },
+                "description": {
+                    "description": "Beschreibung der Direktverknüpfung, der in der CCU angezeigt wird",
+                    "name": "Beschreibung der Direktverknüpfung"
                 }
-            }, 
+            },
             "name": "Eine Direktverknüpfung erstellen"
-        }, 
+        },
         "clear_cache": {
-            "description": "Löscht den Cache. Benötigt einen Neustart", 
+            "description": "Löscht den Cache. Benötigt einen Neustart",
             "fields": {
                 "entry_id": {
-                    "description": "Name der Homematic Zentrale, deren Cache gelöscht werden soll", 
+                    "description": "Name der Homematic Zentrale, deren Cache gelöscht werden soll",
                     "name": "Zentrale"
                 }
-            }, 
+            },
             "name": "Lösche den Cache"
-        }, 
+        },
         "copy_schedule": {
-            "description": "Kopiert einen Zeitplan zu einem anderen Gerät", 
+            "description": "Kopiert einen Zeitplan zu einem anderen Gerät",
             "fields": {
                 "source_entity_id": {
-                    "description": "Klimaentität, von der der Zeitplan kopiert werden soll", 
+                    "description": "Klimaentität, von der der Zeitplan kopiert werden soll",
                     "name": "Quellentität"
                 }
-            }, 
+            },
             "name": "Zeitplan kopieren"
-        }, 
+        },
         "copy_schedule_profile": {
-            "description": "Kopiert einen Zeitplan auf ein anderes Gerät", 
+            "description": "Kopiert einen Zeitplan auf ein anderes Gerät",
             "fields": {
                 "source_entity_id": {
-                    "description": "Klimaentität, von der der Zeitplan kopiert werden soll", 
+                    "description": "Klimaentität, von der der Zeitplan kopiert werden soll",
                     "name": "Quellentität"
-                }, 
+                },
                 "source_profile": {
-                    "description": "Quellprofil zum Kopieren", 
+                    "description": "Quellprofil zum Kopieren",
                     "name": "Quellprofil"
-                }, 
+                },
                 "target_profile": {
-                    "description": "Zielprofil zum Kopieren", 
+                    "description": "Zielprofil zum Kopieren",
                     "name": "Zielprofil"
                 }
-            }, 
+            },
             "name": "Zeitplan kopieren"
-        }, 
-        "create_central_links": {
-            "description": "Erstellt Verknüpfungen zur Zentrale, um Tastendruck-Ereignisse zu ermöglichen", 
+        },
+                "create_central_links": {
+            "description": "Erstellt Verknüpfungen zur Zentrale, um Tastendruck-Ereignisse zu ermöglichen",
             "fields": {
                 "device_id": {
-                    "description": "Wähle ein Gerät", 
+                    "description": "Wähle ein Gerät",
                     "name": "Gerät"
-                }, 
+                },
                 "entry_id": {
-                    "description": "Name der Homematic Zentrale", 
+                    "description": "Name der Homematic Zentrale",
                     "name": "Zentrale"
                 }
-            }, 
+            },
             "name": "Erstellt Zentralenverknüpfungen"
-        }, 
+        },
         "disable_away_mode": {
-            "description": "Deaktiviert den Klima-Abwesenheitsmodus", 
+            "description": "Deaktiviert den Klima-Abwesenheitsmodus",
             "name": "Deaktiviert den Klima-Abwesenheitsmodus"
-        }, 
+        },
         "enable_away_mode_by_calendar": {
-            "description": "Aktiviert den Klima-Abwesenheitsmodus per Kalender", 
+            "description": "Aktiviert den Klima-Abwesenheitsmodus per Kalender",
             "fields": {
                 "away_temperature": {
-                    "description": "Die Temperatur für den Abwesenheitsmodus", 
+                    "description": "Die Temperatur für den Abwesenheitsmodus",
                     "name": "Solltemperatur"
-                }, 
+                },
                 "end": {
-                    "description": "Der Zeitpunkt, zu dem der Abwesenheitsmodus automatisch deaktiviert werden soll", 
+                    "description": "Der Zeitpunkt, zu dem der Abwesenheitsmodus automatisch deaktiviert werden soll",
                     "name": "Endzeit"
-                }, 
+                },
                 "start": {
-                    "description": "Der Zeitpunkt, zu dem der Abwesenheitsmodus automatisch aktiviert werden soll", 
+                    "description": "Der Zeitpunkt, zu dem der Abwesenheitsmodus automatisch aktiviert werden soll",
                     "name": "Startzeit"
                 }
-            }, 
+            },
             "name": "Aktiviert den Klima-Abwesenheitsmodus per Kalender"
-        }, 
+        },
         "enable_away_mode_by_duration": {
-            "description": "Aktiviert den Klima-Abwesenheitsmodus nach Dauer", 
+            "description": "Aktiviert den Klima-Abwesenheitsmodus nach Dauer",
             "fields": {
                 "away_temperature": {
-                    "description": "Die Temperatur für den Abwesenheitsmodus", 
+                    "description": "Die Temperatur für den Abwesenheitsmodus",
                     "name": "Solltemperatur"
-                }, 
+                },
                 "hours": {
-                    "description": "Die Anzahl der Stunden nach dem der Abwesenheitsmodus automatisch deaktiviert wird", 
+                    "description": "Die Anzahl der Stunden nach dem der Abwesenheitsmodus automatisch deaktiviert wird",
                     "name": "Stunde"
                 }
-            }, 
+            },
             "name": "Aktiviert den Klima-Abwesenheitsmodus nach Dauer"
-        }, 
+        },
         "export_device_definition": {
-            "description": "Exportiert die Beschreibungen eines Gerätes nach 'Dein Home-Assistant Konfigurationsverzeichnis'/homematicip_local/export*", 
+            "description": "Exportiert die Beschreibungen eines Gerätes nach 'Dein Home-Assistant Konfigurationsverzeichnis'/homematicip_local/export*",
             "fields": {
                 "device_id": {
-                    "description": "Wähle ein Gerät", 
+                    "description": "Wähle ein Gerät",
                     "name": "Gerät"
                 }
-            }, 
+            },
             "name": "Exportiere Geräte-Beschreibungen"
-        }, 
+        },
         "fetch_system_variables": {
-            "description": "Ruft die Systemvariablen von einer Zentrale ab", 
+            "description": "Ruft die Systemvariablen von einer Zentrale ab",
             "fields": {
                 "entry_id": {
-                    "description": "Name der Homematic-Zentrale, von der Systemvariablen abgerufen werden sollen", 
+                    "description": "Name der Homematic-Zentrale, von der Systemvariablen abgerufen werden sollen",
                     "name": "Zentrale"
                 }
-            }, 
+            },
             "name": "Rufe alle Systemvariablen ab"
-        }, 
+        },
         "force_device_availability": {
-            "description": "Erzwingt die Verfügbarkeit eines Geräts. Dadurch wird der tatsächliche Status überschrieben", 
+            "description": "Erzwingt die Verfügbarkeit eines Geräts. Dadurch wird der tatsächliche Status überschrieben",
             "fields": {
                 "device_address": {
-                    "description": "Gib die Geräteadresse ein", 
+                    "description": "Gib die Geräteadresse ein",
                     "name": "Geräteadresse"
-                }, 
+                },
                 "device_id": {
-                    "description": "Wähle ein Gerät", 
+                    "description": "Wähle ein Gerät",
                     "name": "Gerät"
                 }
-            }, 
+            },
             "name": "Geräteverfügbarkeit erzwingen"
-        }, 
+        },
         "get_device_value": {
-            "description": "Liest den Wert eines Geräte-Parameters über die XML-RPC-Schnittstelle", 
+            "description": "Liest den Wert eines Geräte-Parameters über die XML-RPC-Schnittstelle",
             "fields": {
                 "channel": {
-                    "description": "Kanalnummer zum Abruf des Parameters", 
+                    "description": "Kanalnummer zum Abruf des Parameters",
                     "name": "Kanal"
-                }, 
+                },
                 "device_address": {
-                    "description": "Gebe eine Homematic / HmIP Geräteadresse ein", 
+                    "description": "Gebe eine Homematic / HmIP Geräteadresse ein",
                     "name": "Geräteadresse"
-                }, 
+                },
                 "device_id": {
-                    "description": "Wähle ein Gerät", 
+                    "description": "Wähle ein Gerät",
                     "name": "Gerät"
-                }, 
+                },
                 "parameter": {
-                    "description": "Abzurufender Parameter, z. B. STATE", 
+                    "description": "Abzurufender Parameter, z. B. STATE",
                     "name": "Parameter"
                 }
-            }, 
+            },
             "name": "Wert eines Geräte-Parameters lesen"
-        }, 
+        },
         "get_link_paramset": {
-            "description": "Liest den Parametersatz einer Direktverknüpfung über die XML-RPC-Schnittstelle", 
+            "description": "Liest den Parametersatz einer Direktverknüpfung über die XML-RPC-Schnittstelle",
             "fields": {
                 "receiver_channel_address": {
-                    "description": "Kanaladresse des verknüpften Empfängers", 
+                    "description": "Kanaladresse des verknüpften Empfängers",
                     "name": "Empfänger Kanaladresse"
-                }, 
+                },
                 "sender_channel_address": {
-                    "description": "Kanaladresse des verknüpften Senders", 
+                    "description": "Kanaladresse des verknüpften Senders",
                     "name": "Sender Kanaladresse"
                 }
-            }, 
+            },
             "name": "Parametersatz einer Direktverknüpfung lesen"
-        }, 
+        },
         "get_link_peers": {
-            "description": "Liest alle Partner einer Direktverknüpfung über die XML-RPC-Schnittstelle", 
+            "description": "Liest alle Partner einer Direktverknüpfung über die XML-RPC-Schnittstelle",
             "fields": {
                 "channel": {
-                    "description": "Kanal zum Abruf der Direktverküpfungspartner", 
+                    "description": "Kanal zum Abruf der Direktverküpfungspartner",
                     "name": "Kanal"
-                }, 
+                },
                 "device_address": {
-                    "description": "Gib die Geräteadresse ein", 
+                    "description": "Gib die Geräteadresse ein",
                     "name": "Geräteadresse"
-                }, 
+                },
                 "device_id": {
-                    "description": "Wähle ein Gerät", 
+                    "description": "Wähle ein Gerät",
                     "name": "Gerät"
                 }
-            }, 
+            },
             "name": "Partner einer Direktverknüpfung lesen"
-        }, 
+        },
         "get_paramset": {
-            "description": "Liest den gesamten Parametersatz von einem Gerät oder Kanal über die XML-RPC-Schnittstelle", 
+            "description": "Liest den gesamten Parametersatz von einem Gerät oder Kanal über die XML-RPC-Schnittstelle",
             "fields": {
                 "channel": {
-                    "description": "Kanal zum Abruf des Parametersatzes", 
+                    "description": "Kanal zum Abruf des Parametersatzes",
                     "name": "Kanal"
-                }, 
+                },
                 "device_address": {
-                    "description": "Gib die Geräteadresse ein", 
+                    "description": "Gib die Geräteadresse ein",
                     "name": "Geräteadresse"
-                }, 
+                },
                 "device_id": {
-                    "description": "Wähle ein Gerät", 
+                    "description": "Wähle ein Gerät",
                     "name": "Gerät"
-                }, 
+                },
                 "paramset_key": {
-                    "description": "Der verwendetet Parametersatz", 
+                    "description": "Der verwendetet Parametersatz",
                     "name": "Parametersatz-Schlüssel"
                 }
-            }, 
+            },
             "name": "Parametersatz von einem Gerät oder Kanal lesen"
-        }, 
+        },
         "get_schedule_profile": {
-            "description": "Aufruf um einen Zeitplan von einem Thermostat abzurufen", 
+            "description": "Aufruf um einen Zeitplan von einem Thermostat abzurufen",
             "fields": {
                 "profile": {
-                    "description": "Wähle ein Profil", 
+                    "description": "Wähle ein Profil",
                     "name": "Profil"
                 }
-            }, 
+            },
             "name": "Zeitplan abrufen"
-        }, 
+        },
         "get_schedule_profile_weekday": {
-            "description": "Aufruf um einen Zeitplan von einem Thermostat abzurufen", 
+            "description": "Aufruf um einen Zeitplan von einem Thermostat abzurufen",
             "fields": {
                 "profile": {
-                    "description": "Wähle ein Profil", 
+                    "description": "Wähle ein Profil",
                     "name": "Profil"
-                }, 
+                },
                 "weekday": {
-                    "description": "Wähle einen Wochentag", 
+                    "description": "Wähle einen Wochentag",
                     "name": "Wochentag"
                 }
-            }, 
+            },
             "name": "Zeitplan abrufen"
-        }, 
+        },
         "get_variable_value": {
-            "description": "Wert einer Homematic Systemvariable lesen", 
+            "description": "Wert einer Homematic Systemvariable lesen",
             "fields": {
                 "entry_id": {
-                    "description": "Name der Homematic-Zentrale, um den Wert zu lesen", 
+                    "description": "Name der Homematic-Zentrale, um den Wert zu lesen",
                     "name": "Zentrale"
-                }, 
+                },
                 "name": {
-                    "description": "Name der zu lesenden Systemvariable", 
+                    "description": "Name der zu lesenden Systemvariable",
                     "name": "Name"
                 }
-            }, 
+            },
             "name": "Wert eines Systemvariable lesen"
-        }, 
+        },
         "light_set_on_time": {
-            "description": "Stellt die Einschaltdauer für ein Licht ein. Muss von einem light.turn_on gefolgt werden", 
+            "description": "Stellt die Einschaltdauer für ein Licht ein. Muss von einem light.turn_on gefolgt werden",
             "fields": {
                 "on_time": {
-                    "description": "Einschaltdauer für ein Licht in Sekunden. Verwende 0, um die Einschaltdauer zurückzusetzen", 
+                    "description": "Einschaltdauer für ein Licht in Sekunden. Verwende 0, um die Einschaltdauer zurückzusetzen",
                     "name": "Einschaltdauer"
                 }
-            }, 
+            },
             "name": "Stellt die Einschaltdauer eines Lichts ein"
-        }, 
+        },
         "put_link_paramset": {
-            "description": "Schreibt einen Parametersatz einer Direktverknüpfung über die XML-RPC-Schnittstelle", 
+            "description": "Schreibt einen Parametersatz einer Direktverknüpfung über die XML-RPC-Schnittstelle",
             "fields": {
                 "paramset": {
-                    "description": "Ein Paramset-Wörterbuch", 
+                    "description": "Ein Paramset-Wörterbuch",
                     "name": "Parametersatz"
-                }, 
+                },
                 "receiver_channel_address": {
-                    "description": "Kanaladresse des verknüpften Empfängers", 
+                    "description": "Kanaladresse des verknüpften Empfängers",
                     "name": "Empfänger Kanaladresse"
-                }, 
+                },
                 "rx_mode": {
-                    "description": "Der verwendete Empfangsmodus", 
+                    "description": "Der verwendete Empfangsmodus",
                     "name": "RX Modus"
-                }, 
+                },
                 "sender_channel_address": {
-                    "description": "Kanaladresse des verknüpften Senders", 
+                    "description": "Kanaladresse des verknüpften Senders",
                     "name": "Sender Kanaladresse"
                 }
-            }, 
+            },
             "name": "Parametersatz einer Direktverknüpfung schreiben"
-        }, 
+        },
         "put_paramset": {
-            "description": "Schreibt einen Parametersatz auf ein Gerät oder Kanal über die XML-RPC-Schnittstelle", 
+            "description": "Schreibt einen Parametersatz auf ein Gerät oder Kanal über die XML-RPC-Schnittstelle",
             "fields": {
                 "channel": {
-                    "description": "Kanal des Parametersatzes", 
+                    "description": "Kanal des Parametersatzes",
                     "name": "Kanal"
-                }, 
+                },
                 "device_address": {
-                    "description": "Gib die Geräteadresse ein", 
+                    "description": "Gib die Geräteadresse ein",
                     "name": "Geräteadresse"
-                }, 
+                },
                 "device_id": {
-                    "description": "Wähle ein Gerät", 
+                    "description": "Wähle ein Gerät",
                     "name": "Gerät"
-                }, 
+                },
                 "paramset": {
-                    "description": "Ein Paramset-Wörterbuch", 
+                    "description": "Ein Paramset-Wörterbuch",
                     "name": "Parametersatz"
-                }, 
+                },
                 "paramset_key": {
-                    "description": "Der verwendete Parametersatz", 
+                    "description": "Der verwendete Parametersatz",
                     "name": "Parametersatzschlüssel"
-                }, 
+                },
                 "rx_mode": {
-                    "description": "Der verwendete Empfangsmodus", 
+                    "description": "Der verwendete Empfangsmodus",
                     "name": "RX Modus"
-                }, 
+                },
                 "wait_for_callback": {
-                    "description": "Warte auf die Rückmeldung des Serviceaufrufs", 
+                    "description": "Warte auf die Rückmeldung des Serviceaufrufs",
                     "name": "Warte auf die Rückmeldung"
                 }
-            }, 
+            },
             "name": "Parametersatz eines Gerätes oder Kanals schreiben"
-        }, 
-        "record_session": {
-            "description": "Zeichnet eine Sitzung auf. Hilfreich beim Debuggen", 
-            "fields": {
-                "entry_id": {
-                    "description": "Name der Homematic Zentrale, für die aufgezeichnet werden soll", 
-                    "name": "Central"
-                }, 
-                "on_time": {
-                    "description": "Dauer der Aufnahme in Sekunden", 
-                    "name": "Aktivierungszeit"
-                }, 
-                "randomize_output": {
-                    "description": "Geräteadressen in der Sitzungsausgabe durch zufällig generierte ersetzen", 
-                    "name": "Geräteadressen zufällig generieren"
-                }
-            }, 
-            "name": "Sitzung aufzeichnen"
-        }, 
+        },
         "remove_central_links": {
-            "description": "Entfernt Verknüpfungen zur Zentrale, um Tastendruck-Ereignisse zu deaktivieren", 
+            "description": "Entfernt Verknüpfungen zur Zentrale, um Tastendruck-Ereignisse zu deaktivieren",
             "fields": {
                 "device_id": {
-                    "description": "Wähle ein Gerät", 
+                    "description": "Wähle ein Gerät",
                     "name": "Gerät"
-                }, 
+                },
                 "entry_id": {
-                    "description": "Name der Homematic Zentrale", 
+                    "description": "Name der Homematic Zentrale",
                     "name": "Zentrale"
                 }
-            }, 
+            },
             "name": "Entfernt Zentralenverknüpfungen"
-        }, 
+        },
         "remove_link": {
-            "description": "Entfernt eine Direktverknüpfung über die XML-RPC-Schnittstelle", 
+            "description": "Entfernt eine Direktverknüpfung über die XML-RPC-Schnittstelle",
             "fields": {
                 "receiver_channel_address": {
-                    "description": "Kanaladresse des verknüpften Empfängers", 
+                    "description": "Kanaladresse des verknüpften Empfängers",
                     "name": "Empfänger Kanaladresse"
-                }, 
+                },
                 "sender_channel_address": {
-                    "description": "Kanaladresse des verknüpften Senders", 
+                    "description": "Kanaladresse des verknüpften Senders",
                     "name": "Sender Kanaladresse"
                 }
-            }, 
+            },
             "name": "Eine Direktverknüpfung entfernen"
-        }, 
+        },
         "set_cover_combined_position": {
-            "description": "Bewegt eine Jalousie in eine bestimmte Position und Neigungsposition", 
+            "description": "Bewegt eine Jalousie in eine bestimmte Position und Neigungsposition",
             "fields": {
                 "position": {
-                    "description": "Position der Jalousie", 
+                    "description": "Position der Jalousie",
                     "name": "Position"
-                }, 
+                },
                 "tilt_position": {
-                    "description": "Neigungsposition der Jalousie", 
+                    "description": "Neigungsposition der Jalousie",
                     "name": "Neigungsposition"
-                }, 
+                },
                 "wait_for_callback": {
-                    "description": "Warte auf die Rückmeldung des Serviceaufrufs", 
+                    "description": "Warte auf die Rückmeldung des Serviceaufrufs",
                     "name": "Warte auf die Rückmeldung"
                 }
-            }, 
+            },
             "name": "Stellt die kombinierte Position der Jalousie ein"
-        }, 
+        },
         "set_device_value": {
-            "description": "Schreibt den Wert eines Geräteparameters über die XML-RPC-Schnittstelle", 
+            "description": "Schreibt den Wert eines Geräteparameters über die XML-RPC-Schnittstelle",
             "fields": {
                 "channel": {
-                    "description": "Kanal des Parameters", 
+                    "description": "Kanal des Parameters",
                     "name": "Kanal"
-                }, 
+                },
                 "device_address": {
-                    "description": "Gib die Geräteadresse ein", 
+                    "description": "Gib die Geräteadresse ein",
                     "name": "Geräteadresse"
-                }, 
+                },
                 "device_id": {
-                    "description": "Wähle ein Gerät", 
+                    "description": "Wähle ein Gerät",
                     "name": "Gerät"
-                }, 
+                },
                 "parameter": {
-                    "description": "Zu sendender Parameter, z. B. STATE", 
+                    "description": "Zu sendender Parameter, z. B. STATE",
                     "name": "Parameter"
-                }, 
+                },
                 "rx_mode": {
-                    "description": "Der verwendete Empfangsmodus", 
+                    "description": "Der verwendete Empfangsmodus",
                     "name": "RX mode"
-                }, 
+                },
                 "value": {
-                    "description": "Neuer Wert", 
+                    "description": "Neuer Wert",
                     "name": "Wert"
-                }, 
+                },
                 "value_type": {
-                    "description": "Typ des neuen Wertes", 
+                    "description": "Typ des neuen Wertes",
                     "name": "Werttyp"
-                }, 
+                },
                 "wait_for_callback": {
-                    "description": "Warte auf die Rückmeldung des Serviceaufrufs", 
+                    "description": "Warte auf die Rückmeldung des Serviceaufrufs",
                     "name": "Warte auf die Rückmeldung"
                 }
-            }, 
+            },
             "name": "Wert eines Geräteparameters schreiben"
-        }, 
+        },
         "set_schedule_profile": {
-            "description": "Speichert einen Zeitplan auf einem Thermostat", 
+            "description": "Speichert einen Zeitplan auf einem Thermostat",
             "fields": {
                 "profile": {
-                    "description": "Wähle ein Profil", 
+                    "description": "Wähle ein Profil",
                     "name": "Profil"
-                }, 
+                },
                 "profile_data": {
-                    "description": "Daten für ein Profil", 
+                    "description": "Daten für ein Profil",
                     "name": "Profildaten"
                 }
-            }, 
+            },
             "name": "Zeitplan speichern"
-        }, 
+        },
         "set_schedule_profile_weekday": {
-            "description": "Speichert einen Zeitplan auf einem Thermostat", 
+            "description": "Speichert einen Zeitplan auf einem Thermostat",
             "fields": {
                 "profile": {
-                    "description": "Wähle ein Profil", 
+                    "description": "Wähle ein Profil",
                     "name": "Profil"
-                }, 
+                },
                 "weekday": {
-                    "description": "Wähle einen Wochentag", 
+                    "description": "Wähle einen Wochentag",
                     "name": "Wochentag"
-                }, 
+                },
                 "weekday_data": {
-                    "description": "Daten für ein Profil zu einem Wochentag", 
+                    "description": "Daten für ein Profil zu einem Wochentag",
                     "name": "Wochentag Profildaten"
                 }
-            }, 
+            },
             "name": "Zeitplan speichern"
-        }, 
+        },
         "set_schedule_simple_profile": {
-            "description": "Speichert einen Zeitplan auf einem Thermostat", 
+            "description": "Speichert einen Zeitplan auf einem Thermostat",
             "fields": {
                 "base_temperature": {
-                    "description": "Wähle die Basistemperatur", 
+                    "description": "Wähle die Basistemperatur",
                     "name": "Basistemperatur"
-                }, 
+                },
                 "profile": {
-                    "description": "Wähle ein Profil", 
+                    "description": "Wähle ein Profil",
                     "name": "Profil"
-                }, 
+                },
                 "simple_profile_data": {
-                    "description": "Daten für ein Profil", 
+                    "description": "Daten für ein Profil",
                     "name": "Profildaten"
                 }
-            }, 
+            },
             "name": "Einfachen Zeitplan speichern"
-        }, 
+        },
         "set_schedule_simple_profile_weekday": {
-            "description": "Speichert einen Zeitplan auf einem Thermostat", 
+            "description": "Speichert einen Zeitplan auf einem Thermostat",
             "fields": {
                 "base_temperature": {
-                    "description": "Wähle die Basistemperatur", 
+                    "description": "Wähle die Basistemperatur",
                     "name": "Basistemperatur"
-                }, 
+                },
                 "profile": {
-                    "description": "Wähle ein Profil", 
+                    "description": "Wähle ein Profil",
                     "name": "Profil"
-                }, 
+                },
                 "simple_weekday_list": {
-                    "description": "Daten für ein Profil zu einem Wochentag", 
+                    "description": "Daten für ein Profil zu einem Wochentag",
                     "name": "Wochentag Profildaten"
-                }, 
+                },
                 "weekday": {
-                    "description": "Wähle einen Wochentag", 
+                    "description": "Wähle einen Wochentag",
                     "name": "Wochentag"
                 }
-            }, 
+            },
             "name": "Einfachen Wochentag speichern"
-        }, 
+        },
         "set_variable_value": {
-            "description": "Schreibt einen Wert in eine Homematic Systemvariable", 
+            "description": "Schreibt einen Wert in eine Homematic Systemvariable",
             "fields": {
                 "entry_id": {
-                    "description": "Name der Homematic-Zentrale, um den Wert zu schreiben", 
+                    "description": "Name der Homematic-Zentrale, um den Wert zu schreiben",
                     "name": "Zentrale"
-                }, 
+                },
                 "name": {
-                    "description": "Name der zu beschreibenden Systemvariable", 
+                    "description": "Name der zu beschreibenden Systemvariable",
                     "name": "Name"
-                }, 
+                },
                 "value": {
-                    "description": "Der neue Wert", 
+                    "description": "Der neue Wert",
                     "name": "Wert"
                 }
-            }, 
+            },
             "name": "Wert einer Systemvariable schreiben"
-        }, 
+        },
         "switch_set_on_time": {
-            "description": "Stellt die Einschaltdauer eines Schalters ein. Muss von einem switch.turn_on gefolgt werden", 
+            "description": "Stellt die Einschaltdauer eines Schalters ein. Muss von einem switch.turn_on gefolgt werden",
             "fields": {
                 "on_time": {
-                    "description": "Einschaltdauer für einen Schalter in Sekunden. Verwende 0, um die Einschaltdauer zurückzusetzen", 
+                    "description": "Einschaltdauer für einen Schalter in Sekunden. Verwende 0, um die Einschaltdauer zurückzusetzen",
                     "name": "Einschaltdauer"
                 }
-            }, 
+            },
             "name": "Stellt die Einschaltdauer eines Schalters ein"
-        }, 
+        },
         "turn_on_siren": {
-            "description": "Schaltet die Sirene ein", 
+            "description": "Schaltet die Sirene ein",
             "fields": {
                 "duration": {
-                    "description": "Die Dauer in Sekunden, die die Sirene eingeschaltet wird", 
+                    "description": "Die Dauer in Sekunden, die die Sirene eingeschaltet wird",
                     "name": "Dauer"
-                }, 
+                },
                 "light": {
-                    "description": "Das Licht, das beim Einschalten der Sirene ausgestrahlt wird", 
+                    "description": "Das Licht, das beim Einschalten der Sirene ausgestrahlt wird",
                     "name": "Licht"
-                }, 
+                },
                 "tone": {
-                    "description": "Der Ton, der beim Einschalten der Sirene ausgegeben wird", 
+                    "description": "Der Ton, der beim Einschalten der Sirene ausgegeben wird",
                     "name": "Ton"
                 }
-            }, 
+            },
             "name": "Sirene einschalten"
-        }, 
+        },
         "update_device_firmware_data": {
-            "description": "Geräte-Firmware-Daten für alle Homematic Geräte aktualisieren", 
+            "description": "Geräte-Firmware-Daten für alle Homematic Geräte aktualisieren",
             "fields": {
                 "entry_id": {
-                    "description": "Name der Homematic-Zentrale, für die die Geräte-Firmware-Daten aktualisiert werden sollen", 
+                    "description": "Name der Homematic-Zentrale, für die die Geräte-Firmware-Daten aktualisiert werden sollen",
                     "name": "Zentrale"
                 }
-            }, 
+            },
             "name": "Aktualisiert die Firmware-Daten des Geräts"
-        }, 
+        },
         "valve_set_on_time": {
-            "description": "Stellt die Einschaltdauer eines Ventils ein. Muss von einem valve.open gefolgt werden", 
+            "description": "Stellt die Einschaltdauer eines Ventils ein. Muss von einem valve.open gefolgt werden",
             "fields": {
                 "on_time": {
-                    "description": "Einschaltdauer für ein Ventil in Sekunden. Verwende 0, um die Einschaltdauer zurückzusetzen", 
+                    "description": "Einschaltdauer für ein Ventil in Sekunden. Verwende 0, um die Einschaltdauer zurückzusetzen",
                     "name": "Einschaltdauer"
                 }
-            }, 
+            },
             "name": "Stellt die Einschaltdauer eines Ventils ein"
         }
     }

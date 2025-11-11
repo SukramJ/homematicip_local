@@ -58,6 +58,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from .const import (
     CONF_ADVANCED_CONFIG,
     CONF_CALLBACK_HOST,
+    CONF_CALLBACK_PORT_BIN_RPC,
     CONF_CALLBACK_PORT_XML_RPC,
     CONF_DELAY_NEW_DEVICE_CREATION,
     CONF_ENABLE_MQTT,
@@ -620,6 +621,7 @@ class ControlConfig:
         hass: HomeAssistant,
         entry_id: str,
         data: Mapping[str, Any],
+        default_callback_port_bin_rpc: int = PORT_ANY,
         default_callback_port_xml_rpc: int = PORT_ANY,
         enable_device_firmware_check: bool = DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK,
         start_direct: bool = False,
@@ -628,6 +630,7 @@ class ControlConfig:
         self.hass: Final = hass
         self.entry_id: Final = entry_id
         self._data: Final = data
+        self._default_callback_port_bin_rpc: Final = default_callback_port_bin_rpc
         self._default_callback_port_xml_rpc: Final = default_callback_port_xml_rpc
         self._start_direct: Final = start_direct
         self._enable_device_firmware_check: Final = enable_device_firmware_check
@@ -640,6 +643,7 @@ class ControlConfig:
         self._tls: Final[bool] = self._data[CONF_TLS]
         self._verify_tls: Final[bool] = self._data[CONF_VERIFY_TLS]
         self._callback_host: Final[str | None] = self._data.get(CONF_CALLBACK_HOST)
+        self._callback_port_bin_rpc: Final[int | None] = self._data.get(CONF_CALLBACK_PORT_BIN_RPC)
         self._callback_port_xml_rpc: Final[int | None] = self._data.get(CONF_CALLBACK_PORT_XML_RPC)
         self._json_port: Final[int | None] = self._data.get(CONF_JSON_PORT)
 
@@ -696,6 +700,7 @@ class ControlConfig:
             username=self._username,
             password=self._password,
             callback_host=self._callback_host,
+            callback_port_bin_rpc=self._callback_port_bin_rpc,
             callback_port_xml_rpc=self._callback_port_xml_rpc,
             json_port=self._json_port,
             storage_directory=get_storage_directory(hass=self.hass),
@@ -720,6 +725,7 @@ class ControlConfig:
         central_id = self.entry_id[-10:]
         return CentralConfig(
             callback_host=self._callback_host if self._callback_host != IP_ANY_V4 else None,
+            callback_port_bin_rpc=self._callback_port_bin_rpc if self._callback_port_bin_rpc != PORT_ANY else None,
             callback_port_xml_rpc=self._callback_port_xml_rpc if self._callback_port_xml_rpc != PORT_ANY else None,
             central_id=central_id,
             client_session=aiohttp_client.async_get_clientsession(self.hass),
@@ -728,6 +734,7 @@ class ControlConfig:
             enable_program_scan=self._enable_program_scan,
             enable_sysvar_scan=self._enable_sysvar_scan,
             listen_ip_addr=IP_ANY_V4 if self._listen_on_all_ip else None,
+            default_callback_port_bin_rpc=self._default_callback_port_bin_rpc,
             default_callback_port_xml_rpc=self._default_callback_port_xml_rpc,
             host=self._host,
             interface_configs=interface_configs,

@@ -24,6 +24,7 @@ LEARN_MORE_URL_PONG_MISMATCH: Final = "https://github.com/sukramj/homematicip_lo
 
 CONF_ADVANCED_CONFIG: Final = "advanced_config"
 CONF_CALLBACK_HOST: Final = "callback_host"
+CONF_CALLBACK_PORT_BIN_RPC: Final = "callback_port_bin_rpc"
 CONF_CALLBACK_PORT_XML_RPC: Final = "callback_port_xml_rpc"
 CONF_DELAY_NEW_DEVICE_CREATION: Final = "delay_new_device_creation"
 CONF_ENABLE_MQTT: Final = "mqtt_enabled"

@@ -7,6 +7,9 @@ from dataclasses import dataclass
 import logging
 from typing import TypeAlias
 
+from aiohomematic import __version__ as HAHM_VERSION
+from aiohomematic.const import DEFAULT_ENABLE_SYSVAR_SCAN, DEFAULT_SYS_SCAN_INTERVAL, DEFAULT_UN_IGNORES, Interface
+from aiohomematic.support import find_free_port
 from awesomeversion import AwesomeVersion
 
 from aiohomematic import __version__ as HAHM_VERSION
@@ -20,6 +23,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import async_migrate_entries
 from homeassistant.util.hass_dict import HassKey
 
+from .config_flow import CONF_PORT, IF_CUXD_PORT
 from .const import (
     CONF_ADVANCED_CONFIG,
     CONF_CALLBACK_PORT_XML_RPC,
@@ -27,6 +31,7 @@ from .const import (
     CONF_ENABLE_SYSTEM_NOTIFICATIONS,
     CONF_ENABLE_SYSVAR_SCAN,
     CONF_INSTANCE_NAME,
+    CONF_INTERFACE,
     CONF_SYS_SCAN_INTERVAL,
     CONF_UN_IGNORES,
     DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS,
@@ -47,6 +52,7 @@ class HomematicData:
     """Common data for shared Homematic ip local data."""
 
     default_callback_port_xml_rpc: int | None = None
+    default_callback_port_bin_rpc: int | None = None
 
 
 HM_KEY: HassKey[HomematicData] = HassKey(DOMAIN)
@@ -80,6 +86,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
         return False
 
     hass.data.setdefault(HM_KEY, HomematicData())
+
+    if (default_callback_port_bin_rpc := hass.data[HM_KEY].default_callback_port_bin_rpc) is None:
+        default_callback_port_bin_rpc = find_free_port()
+        hass.data[HM_KEY].default_callback_port_bin_rpc = default_callback_port_bin_rpc
     if (default_callback_port_xml_rpc := hass.data[HM_KEY].default_callback_port_xml_rpc) is None:
         default_callback_port_xml_rpc = find_free_port()
         hass.data[HM_KEY].default_callback_port_xml_rpc = default_callback_port_xml_rpc
@@ -88,6 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
         hass=hass,
         entry_id=entry.entry_id,
         data=entry.data,
+        default_callback_port_bin_rpc=default_callback_port_bin_rpc,
         default_callback_port_xml_rpc=default_callback_port_xml_rpc,
     ).create_control_unit()
     entry.runtime_data = control
@@ -226,5 +237,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
                 del data["callback_port"]
             data[CONF_CALLBACK_PORT_XML_RPC] = callback_port_xml_rpc
         hass.config_entries.async_update_entry(entry, version=10, data=data)
+    if entry.version == 10:
+        data = dict(entry.data)
+        if (interface := data.get(CONF_INTERFACE)) and (interface.get(Interface.CUXD) is not None):
+            interface[Interface.CUXD][CONF_PORT] = IF_CUXD_PORT
+        hass.config_entries.async_update_entry(entry, version=11, data=data)
     _LOGGER.info("Migration to version %s successful", entry.version)
     return True
