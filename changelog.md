@@ -1,7 +1,7 @@
 # Version 1.91.0 (2025-11-13)
 
 ## What's Changed
-- Bump aiohomematic to 2025.11.14
+- Bump aiohomematic to 2025.11.15
   - Add climate schedule cache
   - Add input converter to climate scheduler setter
   - Add translations for log messages with level >= INFO or translation exclusions
