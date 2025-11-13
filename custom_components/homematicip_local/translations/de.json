@@ -820,22 +820,22 @@
             "name": "Zeitplan kopieren"
         }, 
         "copy_schedule_profile": {
-            "description": "Kopiert einen Zeitplan auf ein anderes Gerät", 
+            "description": "Kopiert ein Zeitplan-Profil", 
             "fields": {
                 "source_entity_id": {
-                    "description": "Klimaentität, von der der Zeitplan kopiert werden soll", 
-                    "name": "Quellentität"
+                    "description": "Quell-Entität zum Kopieren (optional)", 
+                    "name": "Quell-Entität"
                 }, 
                 "source_profile": {
-                    "description": "Quellprofil zum Kopieren", 
-                    "name": "Quellprofil"
+                    "description": "Quell-Profil", 
+                    "name": "Quell-Profil"
                 }, 
                 "target_profile": {
-                    "description": "Zielprofil zum Kopieren", 
-                    "name": "Zielprofil"
+                    "description": "Ziel-Profil", 
+                    "name": "Ziel-Profil"
                 }
             }, 
-            "name": "Zeitplan kopieren"
+            "name": "Zeitplan-Profil kopieren"
         }, 
         "create_central_links": {
             "description": "Erstellt Verknüpfungen zur Zentrale, um Tastendruck-Ereignisse zu ermöglichen", 
@@ -998,28 +998,28 @@
             "name": "Parametersatz von einem Gerät oder Kanal lesen"
         }, 
         "get_schedule_profile": {
-            "description": "Aufruf um einen Zeitplan von einem Thermostat abzurufen", 
+            "description": "Lädt ein Zeitplan-Profil von einer Zeitplan-Entität", 
             "fields": {
                 "profile": {
-                    "description": "Wähle ein Profil", 
+                    "description": "Wählen Sie ein Profil zum Laden", 
                     "name": "Profil"
                 }
             }, 
-            "name": "Zeitplan abrufen"
+            "name": "Zeitplan-Profil abrufen"
         }, 
         "get_schedule_profile_weekday": {
-            "description": "Aufruf um einen Zeitplan von einem Thermostat abzurufen", 
+            "description": "Lädt einen Wochentag eines Zeitplan-Profils", 
             "fields": {
                 "profile": {
-                    "description": "Wähle ein Profil", 
+                    "description": "Wählen Sie ein Profil", 
                     "name": "Profil"
                 }, 
                 "weekday": {
-                    "description": "Wähle einen Wochentag", 
+                    "description": "Wählen Sie einen Wochentag", 
                     "name": "Wochentag"
                 }
             }, 
-            "name": "Zeitplan abrufen"
+            "name": "Zeitplan-Profil Wochentag abrufen"
         }, 
         "get_variable_value": {
             "description": "Wert einer Homematic Systemvariable lesen", 
@@ -1203,37 +1203,47 @@
             }, 
             "name": "Wert eines Geräteparameters schreiben"
         }, 
-        "set_schedule_profile": {
-            "description": "Speichert einen Zeitplan auf einem Thermostat", 
+        "set_schedule_active_profile": {
+            "description": "Aktiviert ein Profil für eine Zeitplan-Entität", 
             "fields": {
                 "profile": {
-                    "description": "Wähle ein Profil", 
+                    "description": "Wählen Sie ein Profil zum Aktivieren", 
+                    "name": "Profil"
+                }
+            }, 
+            "name": "Aktives Zeitplan-Profil setzen"
+        }, 
+        "set_schedule_profile": {
+            "description": "Setzt ein Zeitplan-Profil auf einer Zeitplan-Entität", 
+            "fields": {
+                "profile": {
+                    "description": "Wählen Sie ein Profil", 
                     "name": "Profil"
                 }, 
                 "profile_data": {
-                    "description": "Daten für ein Profil", 
-                    "name": "Profildaten"
+                    "description": "Profil-Daten für alle Wochentage", 
+                    "name": "Profil-Daten"
                 }
             }, 
-            "name": "Zeitplan speichern"
+            "name": "Zeitplan-Profil setzen"
         }, 
         "set_schedule_profile_weekday": {
-            "description": "Speichert einen Zeitplan auf einem Thermostat", 
+            "description": "Setzt einen Wochentag eines Zeitplan-Profils", 
             "fields": {
                 "profile": {
-                    "description": "Wähle ein Profil", 
+                    "description": "Wählen Sie ein Profil", 
                     "name": "Profil"
                 }, 
                 "weekday": {
-                    "description": "Wähle einen Wochentag", 
+                    "description": "Wählen Sie einen Wochentag", 
                     "name": "Wochentag"
                 }, 
                 "weekday_data": {
-                    "description": "Daten für ein Profil zu einem Wochentag", 
-                    "name": "Wochentag Profildaten"
+                    "description": "Zeitplan-Daten für den Wochentag", 
+                    "name": "Wochentag-Daten"
                 }
             }, 
-            "name": "Zeitplan speichern"
+            "name": "Zeitplan-Profil Wochentag setzen"
         }, 
         "set_schedule_simple_profile": {
             "description": "Speichert einen Zeitplan auf einem Thermostat", 

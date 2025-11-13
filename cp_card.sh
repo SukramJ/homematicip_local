@@ -1,0 +1,2 @@
+cp ../homematicip_local_climate_scheduler_card/homematicip-local-climate-scheduler-card.js config/www/community/homematicip_local_climate_scheduler_card/
+rm  config/www/community/homematicip_local_climate_scheduler_card/homematicip-local-climate-scheduler-card.js.gz

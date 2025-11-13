@@ -1203,6 +1203,16 @@
             }, 
             "name": "Set device value"
         }, 
+        "set_schedule_active_profile": {
+            "description": "Set the active schedule profile on a climate device", 
+            "fields": {
+                "profile": {
+                    "description": "Select a profile to activate (P1-P6)", 
+                    "name": "Profile"
+                }
+            }, 
+            "name": "Set active schedule profile"
+        }, 
         "set_schedule_profile": {
             "description": "Call to store a schedule on a climate device", 
             "fields": {
