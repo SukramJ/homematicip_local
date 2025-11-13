@@ -92,6 +92,7 @@ class HmipLocalServices(StrEnum):
     SET_SCHEDULE_PROFILE_WEEKDAY = "set_schedule_profile_weekday"
     SET_SCHEDULE_SIMPLE_PROFILE = "set_schedule_simple_profile"
     SET_SCHEDULE_SIMPLE_PROFILE_WEEKDAY = "set_schedule_simple_profile_weekday"
+    SET_SCHEDULE_ACTIVE_PROFILE = "set_schedule_active_profile"
     SET_VARIABLE_VALUE = "set_variable_value"
     SWITCH_SET_ON_TIME = "switch_set_on_time"
     TURN_ON_SIREN = "turn_on_siren"

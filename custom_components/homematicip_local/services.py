@@ -567,6 +567,17 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async_register_platform_entity_service(
         hass=hass,
         service_domain=DOMAIN,
+        service_name=HmipLocalServices.SET_SCHEDULE_ACTIVE_PROFILE,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            vol.Required(ATTR_PROFILE): cv.string,
+        },
+        func="async_set_active_profile",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
         service_name=HmipLocalServices.SET_SCHEDULE_SIMPLE_PROFILE,
         entity_domain=CLIMATE_DOMAIN,
         schema={

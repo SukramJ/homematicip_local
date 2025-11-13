@@ -1,12 +1,15 @@
 # Version 1.91.0 (2025-11-09)
 
 ## What's Changed
-- Bump aiohomematic to 2025.11.11
+- Bump aiohomematic to 2025.11.13
+  - Add climate schedule cache
   - Add translations for log messages with level >= INFO or translation exclusions
   - Remove need for empty parentheses for bind_collector
   - Switch mypy to strict
+  - Use schedule cache for climate get/set schedule operations
   - Use Protocol for callback with parameters
 - Add translation for press events
+- Add scheduler attributes to climate entities with schedule support
 - Fix naming of untranslated entities
 - Switch mypy to strict
 

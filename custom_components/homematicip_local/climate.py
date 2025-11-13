@@ -49,6 +49,9 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_OPTIMUM_START_STOP: Final = "optimum_start_stop"
 ATTR_TEMPERATURE_OFFSET: Final = "temperature_offset"
+ATTR_ACTIVE_PROFILE: Final = "active_profile"
+ATTR_AVAILABLE_PROFILES: Final = "available_profiles"
+ATTR_SCHEDULE_DATA: Final = "schedule_data"
 
 SUPPORTED_HA_PRESET_MODES: Final = [
     PRESET_AWAY,
@@ -114,7 +117,9 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
     _attr_translation_key = "hmip_climate"
     _enable_turn_on_off_backwards_compatibility: bool = False
     __no_recored_attributes = AioHomematicGenericEntity.NO_RECORDED_ATTRIBUTES
-    __no_recored_attributes.update({ATTR_OPTIMUM_START_STOP, ATTR_TEMPERATURE_OFFSET})
+    __no_recored_attributes.update(
+        {ATTR_AVAILABLE_PROFILES, ATTR_OPTIMUM_START_STOP, ATTR_SCHEDULE_DATA, ATTR_TEMPERATURE_OFFSET}
+    )
     _unrecorded_attributes = frozenset(__no_recored_attributes)
 
     def __init__(
@@ -129,6 +134,8 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         )
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_target_temperature_step = data_point.target_temperature_step
+        # Schedule attributes (only for entities that support schedules)
+        self._current_profile: ScheduleProfile = ScheduleProfile.P1
 
     @property
     def current_humidity(self) -> int | None:
@@ -162,6 +169,16 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             and (optimum_start_stop := self._data_point.optimum_start_stop) is not None
         ):
             attributes[ATTR_OPTIMUM_START_STOP] = optimum_start_stop
+
+        # Add schedule attributes if this entity supports schedules
+        if self._data_point.supports_schedule:
+            attributes[ATTR_ACTIVE_PROFILE] = self._current_profile.value
+            attributes[ATTR_AVAILABLE_PROFILES] = [
+                profile.value for profile in self._data_point.available_schedule_profiles
+            ]
+            # Add current profile data
+            attributes[ATTR_SCHEDULE_DATA] = self._data_point.schedule.get(self._current_profile)
+
         return attributes
 
     @property
@@ -297,17 +314,63 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         """Enable the away mode by duration on thermostat."""
         await self._data_point.enable_away_mode_by_duration(hours=hours, away_temperature=away_temperature)
 
-    async def async_get_schedule_profile(self, profile: ScheduleProfile) -> ServiceResponse:
-        """Return the schedule profile."""
-        return cast(ServiceResponse, await self._data_point.get_schedule_profile(profile=profile))
+    async def async_get_schedule_profile(self, profile: str | ScheduleProfile) -> ServiceResponse:
+        """Get a schedule profile."""
+        try:
+            schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
+            if profile_data := await self._data_point.get_schedule_profile(profile=schedule_profile):
+                return cast(ServiceResponse, profile_data)
+        except Exception as err:
+            _LOGGER.error(
+                "Failed to get schedule profile %s for %s: %s",
+                profile,
+                self._data_point.custom_id,
+                err,
+            )
+        return None
 
     async def async_get_schedule_profile_weekday(
-        self, profile: ScheduleProfile, weekday: ScheduleWeekday
+        self, profile: str | ScheduleProfile, weekday: str | ScheduleWeekday
     ) -> ServiceResponse:
-        """Return the schedule profile weekday."""
-        return cast(
-            ServiceResponse, await self._data_point.get_schedule_profile_weekday(profile=profile, weekday=weekday)
-        )
+        """Get a schedule profile weekday."""
+        try:
+            schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
+            schedule_weekday = weekday if isinstance(weekday, ScheduleWeekday) else ScheduleWeekday(weekday)
+            if weekday_data := await self._data_point.get_schedule_profile_weekday(
+                profile=schedule_profile, weekday=schedule_weekday
+            ):
+                return cast(ServiceResponse, weekday_data)
+        except Exception as err:
+            _LOGGER.error(
+                "Failed to get schedule profile weekday %s/%s for %s: %s",
+                profile,
+                weekday,
+                self._data_point.custom_id,
+                err,
+            )
+        return None
+
+    async def async_set_active_profile(self, profile: str | ScheduleProfile) -> None:
+        """Set the active profile."""
+        try:
+            schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
+            profile_key = schedule_profile.value
+            self._current_profile = schedule_profile
+
+            self.async_write_ha_state()
+
+            _LOGGER.debug(
+                "Set active profile %s for %s",
+                profile_key,
+                self._data_point.custom_id,
+            )
+        except Exception as err:
+            _LOGGER.error(
+                "Failed to set active profile %s for %s: %s",
+                profile,
+                self._data_point.custom_id,
+                err,
+            )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -327,18 +390,62 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             return
         await self._data_point.set_profile(profile=ClimateProfile(preset_mode))
 
-    async def async_set_schedule_profile(self, profile: ScheduleProfile, profile_data: PROFILE_DICT) -> None:
-        """Set the schedule profile."""
-        for p_key, p_value in profile_data.items():
-            profile_data[p_key] = {int(key): value for key, value in p_value.items()}
-        await self._data_point.set_schedule_profile(profile=profile, profile_data=profile_data)
+    async def async_set_schedule_profile(self, profile: str | ScheduleProfile, profile_data: PROFILE_DICT) -> None:
+        """Set a schedule profile."""
+        try:
+            schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
+            # Convert string keys to ScheduleWeekday if needed
+            converted_data = {}
+            for weekday_key, weekday_value in profile_data.items():
+                if isinstance(weekday_key, str):
+                    weekday_key = ScheduleWeekday(weekday_key)
+                converted_data[weekday_key] = weekday_value
+
+            await self._data_point.set_schedule_profile(profile=schedule_profile, profile_data=converted_data)
+
+            _LOGGER.debug(
+                "Set schedule profile %s for %s",
+                schedule_profile.value,
+                self._data_point.custom_id,
+            )
+        except Exception as err:
+            _LOGGER.error(
+                "Failed to set schedule profile %s for %s: %s",
+                profile,
+                self._data_point.custom_id,
+                err,
+            )
 
     async def async_set_schedule_profile_weekday(
-        self, profile: ScheduleProfile, weekday: ScheduleWeekday, weekday_data: WEEKDAY_DICT
+        self, profile: str | ScheduleProfile, weekday: str | ScheduleWeekday, weekday_data: WEEKDAY_DICT
     ) -> None:
-        """Set the schedule profile weekday."""
-        weekday_data = {int(key): value for key, value in weekday_data.items()}
-        await self._data_point.set_schedule_profile_weekday(profile=profile, weekday=weekday, weekday_data=weekday_data)
+        """Set a schedule profile weekday."""
+        try:
+            schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
+            schedule_weekday = weekday if isinstance(weekday, ScheduleWeekday) else ScheduleWeekday(weekday)
+
+            wdd = {int(no): data for no, data in weekday_data.items()}
+
+            await self._data_point.set_schedule_profile_weekday(
+                profile=schedule_profile,
+                weekday=schedule_weekday,
+                weekday_data=wdd,
+            )
+
+            _LOGGER.debug(
+                "Set schedule profile weekday %s/%s for %s",
+                schedule_profile.value,
+                weekday,
+                self._data_point.custom_id,
+            )
+        except Exception as err:
+            _LOGGER.error(
+                "Failed to set schedule profile weekday %s/%s for %s: %s",
+                profile,
+                weekday,
+                self._data_point.custom_id,
+                err,
+            )
 
     async def async_set_schedule_simple_profile(
         self, profile: ScheduleProfile, base_temperature: float, simple_profile_data: SIMPLE_PROFILE_DICT

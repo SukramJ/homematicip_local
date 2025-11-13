@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:developers.home-assistant.io)",
+      "Bash(python -m pytest:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm install)",
+      "Bash(python -m py_compile:*)",
+      "Bash(git add:*)",
+      "Bash(python3:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
