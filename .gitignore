@@ -35,3 +35,4 @@
 /.idea/*
 .coverage
 /config
+/custom_components/hacs/
