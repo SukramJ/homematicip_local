@@ -424,12 +424,10 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
             schedule_weekday = weekday if isinstance(weekday, ScheduleWeekday) else ScheduleWeekday(weekday)
 
-            wdd = {int(no): data for no, data in weekday_data.items()}
-
             await self._data_point.set_schedule_profile_weekday(
                 profile=schedule_profile,
                 weekday=schedule_weekday,
-                weekday_data=wdd,
+                weekday_data=weekday_data,
             )
 
             _LOGGER.debug(
