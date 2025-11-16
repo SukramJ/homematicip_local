@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final, Generic
 
-from aiohomematic.const import CallSource
+from aiohomematic.const import CallSource, DataPointUsage
 from aiohomematic.model.calculated import CalculatedDataPoint
 from aiohomematic.model.custom import CustomDataPoint
 from aiohomematic.model.data_point import CallbackDataPoint
@@ -33,6 +33,7 @@ ATTR_INTERFACE_ID: Final = "interface_id"
 ATTR_MODEL: Final = "model"
 ATTR_NAME: Final = "name"
 ATTR_PARAMETER: Final = "parameter"
+ATTR_SCHEDULE_DATA: Final = "schedule_data"
 ATTR_VALUE_STATE: Final = "value_state"
 
 
@@ -48,6 +49,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
         ATTR_INTERFACE_ID,
         ATTR_MODEL,
         ATTR_PARAMETER,
+        ATTR_SCHEDULE_DATA,
         ATTR_VALUE_STATE,
     }
 
@@ -163,6 +165,13 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
                 )
             else:
                 attributes[ATTR_VALUE_STATE] = HmEntityState.NOT_VALID
+        if (
+            isinstance(self._data_point, CustomDataPoint)
+            and self._data_point.supports_schedule
+            and self._data_point.usage == DataPointUsage.CDP_PRIMARY
+            and (schedule := self._data_point.schedule) is not None
+        ):
+            attributes[ATTR_SCHEDULE_DATA] = schedule
         return attributes
 
     @property

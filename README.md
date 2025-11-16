@@ -427,13 +427,30 @@ Creates a central link from a device to the backend. This is required for rf-dev
 
 __Disclaimer: Too much writing to the device MASTER paramset could kill your device's storage.__
 
-Copy the schedule of a climate device to another device
+Copies the complete schedule (all profiles P1-P6, all weekdays) from one climate device to another device.
+
+**Requirements:**
+- Both devices must support schedules
+- Both devices must support the same number of profiles
+- Target device will receive an exact copy of the source device's schedule
+
+**Use case:** Quickly replicate a working schedule configuration across multiple identical thermostats.
 
 ### `homematicip_local.copy_schedule_profile`
 
 __Disclaimer: Too much writing to the device MASTER paramset could kill your device's storage.__
 
-Copy the schedule profile of a climate device to another/the same device
+Copies a single schedule profile from one climate device to another device or to a different profile on the same device.
+
+**Use cases:**
+- Copy P1 from Device A to P2 on Device A (create a variant schedule on the same device)
+- Copy P1 from Device A to P1 on Device B (replicate to another device)
+- Copy P3 from Device A to P1 on Device B (use a different profile slot on target)
+
+**Requirements:**
+- Both devices must support schedules
+- Cannot copy a profile to itself on the same device (e.g., P1→P1 on same device)
+- Target device will receive all weekdays from the source profile
 
 ### `homematicip_local.disable_away_mode`
 
@@ -491,11 +508,49 @@ Returns a paramset
 
 ### `homematicip_local.get_schedule_profile`
 
-Returns the schedule of a climate profile.
+Returns the schedule of a climate profile (e.g., P1, P2, etc.).
+
+**Return format:** The returned data contains all weekdays for the specified profile. Redundant 24:00 slots are automatically filtered out, so you typically receive only the meaningful time slots (usually 3-7 slots instead of 13).
+
+**Example structure:**
+```yaml
+MONDAY:
+  1:
+    ENDTIME: "06:00"
+    TEMPERATURE: 18.0
+  2:
+    ENDTIME: "22:00"
+    TEMPERATURE: 21.0
+  3:
+    ENDTIME: "24:00"
+    TEMPERATURE: 18.0
+TUESDAY:
+  ...
+```
 
 ### `homematicip_local.get_schedule_profile_weekday`
 
-Returns the schedule of a climate profile for a certain weekday.
+Returns the schedule of a climate profile for a specific weekday.
+
+**Return format:** The returned data is filtered to show only meaningful slots. Redundant 24:00 slots at the end are removed automatically. Each slot defines a temperature period that ends at the specified ENDTIME.
+
+**Example structure:**
+```yaml
+1:
+  ENDTIME: "06:00"
+  TEMPERATURE: 18.0
+2:
+  ENDTIME: "08:00"
+  TEMPERATURE: 21.0
+3:
+  ENDTIME: "24:00"
+  TEMPERATURE: 18.0
+```
+
+**Understanding slots:**
+- Slot 1 means: From 00:00 until 06:00, maintain 18.0°C
+- Slot 2 means: From 06:00 until 08:00, maintain 21.0°C
+- Slot 3 means: From 08:00 until 24:00, maintain 18.0°C
 
 ### `homematicip_local.put_paramset`
 
@@ -537,44 +592,116 @@ Set a device parameter via the XML-RPC interface. Preferred when using the UI. W
 
 __Disclaimer: Too much writing to the device could kill your device's storage.__
 
-Sends the schedule of a climate profile to a device.
+Sends a complete schedule for a climate profile (all weekdays) to a device.
 
-Relevant rules for modifying a schedule:
-- All rules of `homematicip_local.set_schedule_profile_weekday` are relevant
-- The required data structure can be retrieved with `homematicip_local.get_schedule_profile`
+**Input data format:** The data structure matches what you get from `get_schedule_profile`. You can provide partial data (fewer than 13 slots per weekday), and the system will automatically:
+- Sort slots chronologically by ENDTIME
+- Fill missing slots up to 13 with 24:00 entries
+- Validate temperature ranges and time sequences
+
+**Requirements:**
+- Temperature values must be within the device's supported range (typically 4.5°C - 30.5°C)
+- ENDTIME values must use "HH:MM" format (e.g., "06:00", "24:00")
+- Each slot's ENDTIME must be equal to or later than the previous slot
+
+**Important:** The required data structure can be retrieved with `get_schedule_profile`, modified as needed, and sent back.
 
 ### `homematicip_local.set_schedule_profile_weekday`
 
 __Disclaimer: Too much writing to the device could kill your device's storage.__
 
-Sends the schedule of a climate profile for a certain weekday to a device.
-See the [sample](#sample-for-set_schedule_profile_weekday) below
+Sends the schedule for a single weekday of a climate profile to a device.
+See the [sample](#sample-for-set_schedule_profile_weekday) below.
 
-Remarks:
+**Remarks:**
 - Not all devices support schedules. This is currently only supported by this integration for HmIP devices.
-- Not all devices support six profiles.
-- There is currently no matching UI component or entity component in HA.
+- Not all devices support six profiles (P1-P6).
+- There is currently no matching UI component in Home Assistant.
 
-Relevant rules for modifying a schedule:
-- The content of `weekday_data` looks identically to the [sample](#sample-for-set_schedule_profile_weekday) below. Only the values should be changed.
-- All slots (1-13) must be included.
-- The temperature must be in the defined temperature range of the device.
-- The slot is defined by the end time. The start time is the end time of the previous slot or 0.
-- The time of a slot must be equal or higher then the previous slot, and must be in a range between 0 and 1440. If you have retrieved a schedule with `homematicip_local.get_schedule_profile_weekday` this might not be the case, but must be fixed before sending.
+**Input data format:** You can provide the schedule in two ways:
+
+1. **Partial format** (recommended): Provide only the meaningful slots. The system will automatically fill missing slots to reach exactly 13 slots.
+   ```yaml
+   weekday_data:
+     1:
+       ENDTIME: "06:00"
+       TEMPERATURE: 18
+     2:
+       ENDTIME: "22:00"
+       TEMPERATURE: 21
+     3:
+       ENDTIME: "24:00"
+       TEMPERATURE: 18
+   ```
+
+2. **Full format**: Provide all 13 slots explicitly (as shown in the [sample](#sample-for-set_schedule_profile_weekday) below).
+
+**Automatic processing:**
+- String keys are converted to integers (both `"1"` and `1` work)
+- Slots are sorted chronologically by ENDTIME
+- Missing slots are filled with 24:00 entries using the last slot's temperature
+- Data is validated for temperature ranges and time sequences
+
+**Requirements:**
+- Temperature must be in the device's defined range (typically 4.5°C - 30.5°C)
+- ENDTIME format must be "HH:MM" (e.g., "06:00", "24:00")
+- Each ENDTIME must be equal to or later than the previous slot's ENDTIME
+
+**Note:** When you retrieve a schedule with `get_schedule_profile_weekday`, you receive filtered data (fewer slots). You can use this data directly with `set_schedule_profile_weekday` - the system will automatically normalize it to 13 slots.
 
 ### `homematicip_local.set_schedule_simple_profile`
 
 __Disclaimer: Too much writing to the device could kill your device's storage.__
 
-Sends the schedule of a climate profile to a device.
-This is a simplified version of `homematicip_local.set_schedule_profile` 
+Sends a complete schedule for a climate profile to a device using a **simplified format**.
+
+**Why use this?** The simple format is easier to write and understand - you only specify the temperature periods you care about, without worrying about 13 slots or filling gaps.
+
+**How it works:**
+- You specify only the active heating/cooling periods with STARTTIME, ENDTIME, and TEMPERATURE
+- The system automatically fills gaps with `base_temperature`
+- All time periods outside your specified slots use `base_temperature`
+- The system converts everything to the required 13-slot format automatically
+
+**Example:** See [sample](#sample-for-set_schedule_simple_profile) below for the full data structure.
 
 ### `homematicip_local.set_schedule_simple_profile_weekday`
 
 __Disclaimer: Too much writing to the device could kill your device's storage.__
 
-Sends the schedule of a climate profile for a certain weekday to a device.
-This is a simplified version of `homematicip_local.set_schedule_profile_weekday` 
+Sends the schedule for a single weekday of a climate profile using a **simplified format**.
+
+**Why use this?** Instead of managing 13 slots, you only define the specific temperature periods you need.
+
+**How it works:**
+1. You provide a list of temperature periods with STARTTIME, ENDTIME, and TEMPERATURE
+2. You specify a `base_temperature` for all times not covered by your periods
+3. The system automatically:
+   - Sorts your periods chronologically
+   - Fills gaps between periods with `base_temperature`
+   - Converts to the required 13-slot format
+   - Validates all ranges and sequences
+
+**Example:**
+```yaml
+base_temperature: 18.0
+simple_weekday_list:
+  - STARTTIME: "06:00"
+    ENDTIME: "08:00"
+    TEMPERATURE: 21.0
+  - STARTTIME: "17:00"
+    ENDTIME: "22:00"
+    TEMPERATURE: 21.0
+```
+
+This creates:
+- 00:00-06:00: 18.0°C (base_temperature)
+- 06:00-08:00: 21.0°C (your first period)
+- 08:00-17:00: 18.0°C (base_temperature fills gap)
+- 17:00-22:00: 21.0°C (your second period)
+- 22:00-24:00: 18.0°C (base_temperature)
+
+See the [sample](#sample-for-set_schedule_profile_weekday) below for a complete example. 
 
 ### `homematicip_local.get_variable_value`
 
@@ -919,7 +1046,8 @@ data:
 ```
 
 ### Sample for set_schedule_profile_weekday
-Send a climate profile for a certain weekday to the device:
+
+Send a climate schedule for Monday using the **full 13-slot format**:
 
 ```yaml
 ---
@@ -930,6 +1058,7 @@ data:
   profile: P3
   weekday: MONDAY
   weekday_data:
+    # You can use either string keys ("1") or integer keys (1)
     "1":
       ENDTIME: "05:00"
       TEMPERATURE: 16
@@ -951,6 +1080,7 @@ data:
     "7":
       ENDTIME: "24:00"
       TEMPERATURE: 16
+    # Slots 8-13 are filled with 24:00 (unused slots)
     "8":
       ENDTIME: "24:00"
       TEMPERATURE: 16
@@ -971,8 +1101,46 @@ data:
       TEMPERATURE: 16
 ```
 
+**Alternative: Partial format** (recommended, easier to write):
+```yaml
+---
+action: homematicip_local.set_schedule_profile_weekday
+target:
+  entity_id: climate.heizkorperthermostat_db
+data:
+  profile: P3
+  weekday: MONDAY
+  weekday_data:
+    # Only specify meaningful slots - system fills the rest automatically
+    1:
+      ENDTIME: "05:00"
+      TEMPERATURE: 16
+    2:
+      ENDTIME: "06:00"
+      TEMPERATURE: 17
+    3:
+      ENDTIME: "09:00"
+      TEMPERATURE: 16
+    4:
+      ENDTIME: "15:00"
+      TEMPERATURE: 17
+    5:
+      ENDTIME: "19:00"
+      TEMPERATURE: 16
+    6:
+      ENDTIME: "22:00"
+      TEMPERATURE: 22
+    7:
+      ENDTIME: "24:00"
+      TEMPERATURE: 16
+    # Slots 8-13 are automatically filled with ENDTIME: "24:00" and TEMPERATURE: 16
+```
+
 ### Sample for set_schedule_simple_profile
-Send a simple climate profile to the device:
+
+Send a simple climate profile (all weekdays) to the device:
+
+**What this does:** Sets profile P1 with a base temperature of 4.5°C. For each weekday, three heating periods are defined. All other times use the base temperature.
 
 ```yaml
 ---
@@ -980,33 +1148,41 @@ action: homematicip_local.set_schedule_simple_profile
 target:
   entity_id: climate.heizkorperthermostat_db
 data:
-  base_temperature: 4.5
+  base_temperature: 4.5  # Temperature for all times not covered by periods below
   profile: P1
   simple_profile_data:
     MONDAY:
+      # Morning warm-up: 05:00-06:00 at 17°C
       - TEMPERATURE: 17
         STARTTIME: "05:00"
         ENDTIME: "06:00"
-      - TEMPERATURE: 22
-        STARTTIME: "19:00"
-        ENDTIME: "22:00"
+      # Daytime: 09:00-15:00 at 17°C
       - TEMPERATURE: 17
         STARTTIME: "09:00"
         ENDTIME: "15:00"
+      # Evening: 19:00-22:00 at 22°C
+      - TEMPERATURE: 22
+        STARTTIME: "19:00"
+        ENDTIME: "22:00"
+      # All other times (00:00-05:00, 06:00-09:00, 15:00-19:00, 22:00-24:00) use base_temperature 4.5°C
     TUESDAY:
       - TEMPERATURE: 17
         STARTTIME: "05:00"
         ENDTIME: "06:00"
-      - TEMPERATURE: 22
-        STARTTIME: "19:00"
-        ENDTIME: "22:00"
       - TEMPERATURE: 17
         STARTTIME: "09:00"
         ENDTIME: "15:00"
+      - TEMPERATURE: 22
+        STARTTIME: "19:00"
+        ENDTIME: "22:00"
+    # Add other weekdays as needed (WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY)
 ```
 
-### Sample for set_schedule_profile_weekday
-Send a climate profile for a certain weekday to the device:
+### Sample for set_schedule_simple_profile_weekday
+
+Send a simple climate schedule for Monday only:
+
+**What this does:** Sets Monday's schedule for profile P3. Three heating periods are defined. The base temperature (16°C) is used for all other times.
 
 ```yaml
 ---
@@ -1016,18 +1192,27 @@ target:
 data:
   profile: P3
   weekday: MONDAY
-  base_temperature: 16
+  base_temperature: 16  # Temperature for all times not covered by periods below
   simple_weekday_list:
+    # Morning warm-up: 05:00-06:00 at 17°C
     - TEMPERATURE: 17
       STARTTIME: "05:00"
       ENDTIME: "06:00"
-    - TEMPERATURE: 22
-      STARTTIME: "19:00"
-      ENDTIME: "22:00"
+    # Daytime: 09:00-15:00 at 17°C
     - TEMPERATURE: 17
       STARTTIME: "09:00"
       ENDTIME: "15:00"
+    # Evening: 19:00-22:00 at 22°C
+    - TEMPERATURE: 22
+      STARTTIME: "19:00"
+      ENDTIME: "22:00"
+    # All other times (00:00-05:00, 06:00-09:00, 15:00-19:00, 22:00-24:00) use base_temperature 16°C
 ```
+
+**Result:** The system converts this to 13 slots:
+- Slot 1-5: Times from 00:00 to 05:00, 06:00 to 09:00, 15:00 to 19:00, and 22:00 to 24:00 use 16°C
+- Slots for your defined periods use 17°C and 22°C
+- All slots sorted chronologically and filled to exactly 13 slots
 
 ### Sample for put_paramset
 Set the week program of a wall thermostat:

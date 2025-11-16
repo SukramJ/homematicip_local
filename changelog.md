@@ -1,11 +1,15 @@
-# Version 1.91.0 (2025-11-13)
+# Version 1.91.0 (2025-11-16)
 
 ## What's Changed
-- Bump aiohomematic to 2025.11.15
+- Bump aiohomematic to 2025.11.16
   - Add climate schedule cache
   - Add input converter to climate scheduler setter
+  - Add schedule support to custom data point
   - Add translations for log messages with level >= INFO or translation exclusions
+  - Improve the test coverage of week_profile
+  - Optimize climate get/set_schedule
   - Remove need for empty parentheses for bind_collector
+  - Return filtered climate schedule data on get_schedule / Accept filtered data in climate set_schedule
   - Switch mypy to strict
   - Use Protocol for callback with parameters
   - Use schedule cache for climate get/set schedule operations
