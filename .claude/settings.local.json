@@ -8,7 +8,8 @@
       "Bash(npm install)",
       "Bash(python -m py_compile:*)",
       "Bash(git add:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []

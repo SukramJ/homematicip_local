@@ -36,3 +36,4 @@
 .coverage
 /config
 /custom_components/hacs/
+/.claude
