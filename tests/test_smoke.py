@@ -11,6 +11,9 @@ from __future__ import annotations
 from custom_components.homematicip_local.const import DOMAIN
 
 
-def test_domain_constant() -> None:
-    """Ensure the integration exposes the expected DOMAIN string."""
-    assert DOMAIN == "homematicip_local"
+class TestSmokeTests:
+    """Smoke tests for basic integration functionality."""
+
+    def test_domain_constant(self) -> None:
+        """Ensure the integration exposes the expected DOMAIN string."""
+        assert DOMAIN == "homematicip_local"

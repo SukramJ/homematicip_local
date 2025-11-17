@@ -32,149 +32,153 @@ TEST_DEVICES: dict[str, str] = {
 # pylint: disable=protected-access
 
 
-@pytest.mark.asyncio
-async def no_test_generic_entity_un_recorded(
-    factory_with_recorder: helper.Factory,
-) -> None:
-    """Test HmBinarySensor."""
+class TestRecorder:
+    """Tests for recorder exclusion of attributes."""
 
-    entity_id = "binary_sensor.hmip_swdo_i_vcu5864966"
-    entity_name = "HmIP-SWDO-I_VCU5864966 "
+    @pytest.mark.asyncio
+    async def no_test_event_entity_un_recorded(
+        self,
+        factory_with_recorder: helper.Factory,
+    ) -> None:
+        """Test HmBinarySensor."""
 
-    hass, control = await factory_with_recorder.setup_environment(TEST_DEVICES)
-    ha_state, data_point = helper.get_and_check_state(
-        hass=hass, control=control, entity_id=entity_id, entity_name=entity_name
-    )
+        entity_id = "event.hmip_bsm_vcu2128127_ch1"
+        entity_name = "HmIP-BSM_VCU2128127 ch1"
 
-    assert ha_state.state == STATE_OFF
-    assert ha_state.attributes[ATTR_ADDRESS] == "VCU5864966:1"
-    assert ha_state.attributes[ATTR_FUNCTION] is None
-    assert ha_state.attributes[ATTR_INTERFACE_ID] == "CentralTest-BidCos-RF"
-    assert ha_state.attributes[ATTR_MODEL] == "HmIP-SWDO-I"
-    assert ha_state.attributes[ATTR_PARAMETER] == "STATE"
-    assert ha_state.attributes[ATTR_VALUE_STATE] == HmEntityState.UNCERTAIN
-    await async_wait_recording_done(hass)
+        hass, control = await factory_with_recorder.setup_environment(TEST_DEVICES)
+        ha_state, data_point = helper.get_and_check_state(
+            hass=hass, control=control, entity_id=entity_id, entity_name=entity_name
+        )
+        assert ha_state.state == STATE_UNKNOWN
+        assert ha_state.attributes[EventKey.ADDRESS] == "VCU2128127:1"
+        assert ha_state.attributes[EventKey.INTERFACE_ID] == "CentralTest-BidCos-RF"
+        assert ha_state.attributes[EVENT_MODEL] == "HmIP-BSM"
+        await async_wait_recording_done(hass)
 
-    states = await hass.async_add_executor_job(
-        get_significant_states,
-        hass,
-        dt_util.now(),
-        None,
-        hass.states.async_entity_ids(),
-    )
-    assert len(states) == 12
-    assert states.get(entity_id)
-    for entity_states in states.values():
-        for state in entity_states:
-            if state.entity_id == entity_id:
-                assert ATTR_ADDRESS not in state.attributes
-                assert ATTR_FUNCTION not in state.attributes
-                assert ATTR_INTERFACE_ID not in state.attributes
-                assert ATTR_MODEL not in state.attributes
-                assert ATTR_PARAMETER not in state.attributes
-                assert ATTR_VALUE_STATE not in state.attributes
-                break
+        states = await hass.async_add_executor_job(
+            get_significant_states,
+            hass,
+            dt_util.now(),
+            None,
+            hass.states.async_entity_ids(),
+        )
+        assert len(states) == 12
+        assert states.get(entity_id)
+        for entity_states in states.values():
+            for state in entity_states:
+                if state.entity_id == entity_id:
+                    assert EventKey.ADDRESS not in state.attributes
+                    assert EventKey.INTERFACE_ID not in state.attributes
+                    assert EVENT_MODEL not in state.attributes
+                    break
 
+    @pytest.mark.asyncio
+    async def no_test_generic_entity_un_recorded(
+        self,
+        factory_with_recorder: helper.Factory,
+    ) -> None:
+        """Test HmBinarySensor."""
 
-@pytest.mark.asyncio
-async def no_test_event_entity_un_recorded(
-    factory_with_recorder: helper.Factory,
-) -> None:
-    """Test HmBinarySensor."""
+        entity_id = "binary_sensor.hmip_swdo_i_vcu5864966"
+        entity_name = "HmIP-SWDO-I_VCU5864966 "
 
-    entity_id = "event.hmip_bsm_vcu2128127_ch1"
-    entity_name = "HmIP-BSM_VCU2128127 ch1"
+        hass, control = await factory_with_recorder.setup_environment(TEST_DEVICES)
+        ha_state, data_point = helper.get_and_check_state(
+            hass=hass, control=control, entity_id=entity_id, entity_name=entity_name
+        )
 
-    hass, control = await factory_with_recorder.setup_environment(TEST_DEVICES)
-    ha_state, data_point = helper.get_and_check_state(
-        hass=hass, control=control, entity_id=entity_id, entity_name=entity_name
-    )
-    assert ha_state.state == STATE_UNKNOWN
-    assert ha_state.attributes[EventKey.ADDRESS] == "VCU2128127:1"
-    assert ha_state.attributes[EventKey.INTERFACE_ID] == "CentralTest-BidCos-RF"
-    assert ha_state.attributes[EVENT_MODEL] == "HmIP-BSM"
-    await async_wait_recording_done(hass)
+        assert ha_state.state == STATE_OFF
+        assert ha_state.attributes[ATTR_ADDRESS] == "VCU5864966:1"
+        assert ha_state.attributes[ATTR_FUNCTION] is None
+        assert ha_state.attributes[ATTR_INTERFACE_ID] == "CentralTest-BidCos-RF"
+        assert ha_state.attributes[ATTR_MODEL] == "HmIP-SWDO-I"
+        assert ha_state.attributes[ATTR_PARAMETER] == "STATE"
+        assert ha_state.attributes[ATTR_VALUE_STATE] == HmEntityState.UNCERTAIN
+        await async_wait_recording_done(hass)
 
-    states = await hass.async_add_executor_job(
-        get_significant_states,
-        hass,
-        dt_util.now(),
-        None,
-        hass.states.async_entity_ids(),
-    )
-    assert len(states) == 12
-    assert states.get(entity_id)
-    for entity_states in states.values():
-        for state in entity_states:
-            if state.entity_id == entity_id:
-                assert EventKey.ADDRESS not in state.attributes
-                assert EventKey.INTERFACE_ID not in state.attributes
-                assert EVENT_MODEL not in state.attributes
-                break
+        states = await hass.async_add_executor_job(
+            get_significant_states,
+            hass,
+            dt_util.now(),
+            None,
+            hass.states.async_entity_ids(),
+        )
+        assert len(states) == 12
+        assert states.get(entity_id)
+        for entity_states in states.values():
+            for state in entity_states:
+                if state.entity_id == entity_id:
+                    assert ATTR_ADDRESS not in state.attributes
+                    assert ATTR_FUNCTION not in state.attributes
+                    assert ATTR_INTERFACE_ID not in state.attributes
+                    assert ATTR_MODEL not in state.attributes
+                    assert ATTR_PARAMETER not in state.attributes
+                    assert ATTR_VALUE_STATE not in state.attributes
+                    break
 
+    @pytest.mark.asyncio
+    async def no_test_sysvar_entity_un_recorded(
+        self,
+        factory_with_recorder: helper.Factory,
+    ) -> None:
+        """Test HmBinarySensor."""
+        entity_id = "binary_sensor.centraltest_sv_logic"
+        entity_name = "CentralTest sv_logic"
 
-@pytest.mark.asyncio
-async def no_test_update_entity_un_recorded(
-    factory_with_recorder: helper.Factory,
-) -> None:
-    """Test HmBinarySensor."""
+        hass, control = await factory_with_recorder.setup_environment({})
+        ha_state, data_point = helper.get_and_check_state(
+            hass=hass, control=control, entity_id=entity_id, entity_name=entity_name
+        )
 
-    entity_id = "update.hmip_swdo_i_vcu5864966_update"
-    entity_name = "HmIP-SWDO-I_VCU5864966 Update"
+        assert ha_state.state == STATE_OFF
+        assert ha_state.attributes[ATTR_NAME] == "sv_logic"
+        await async_wait_recording_done(hass)
 
-    hass, control = await factory_with_recorder.setup_environment(TEST_DEVICES)
-    ha_state, data_point = helper.get_and_check_state(
-        hass=hass, control=control, entity_id=entity_id, entity_name=entity_name
-    )
+        states = await hass.async_add_executor_job(
+            get_significant_states,
+            hass,
+            dt_util.now(),
+            None,
+            hass.states.async_entity_ids(),
+        )
+        assert len(states) == 12
+        assert states.get(entity_id)
+        for entity_states in states.values():
+            for state in entity_states:
+                if state.entity_id == entity_id:
+                    assert ATTR_NAME not in state.attributes
+                    break
 
-    assert ha_state.state == STATE_OFF
-    assert ha_state.attributes[ATTR_FIRMWARE_UPDATE_STATE] == DeviceFirmwareState.UP_TO_DATE
-    await async_wait_recording_done(hass)
+    @pytest.mark.asyncio
+    async def no_test_update_entity_un_recorded(
+        self,
+        factory_with_recorder: helper.Factory,
+    ) -> None:
+        """Test HmBinarySensor."""
 
-    states = await hass.async_add_executor_job(
-        get_significant_states,
-        hass,
-        dt_util.now(),
-        None,
-        hass.states.async_entity_ids(),
-    )
-    assert len(states) == 12
-    assert states.get(entity_id)
-    for entity_states in states.values():
-        for state in entity_states:
-            if state.entity_id == entity_id:
-                assert ATTR_FIRMWARE_UPDATE_STATE not in state.attributes
-                break
+        entity_id = "update.hmip_swdo_i_vcu5864966_update"
+        entity_name = "HmIP-SWDO-I_VCU5864966 Update"
 
+        hass, control = await factory_with_recorder.setup_environment(TEST_DEVICES)
+        ha_state, data_point = helper.get_and_check_state(
+            hass=hass, control=control, entity_id=entity_id, entity_name=entity_name
+        )
 
-@pytest.mark.asyncio
-async def no_test_sysvar_entity_un_recorded(
-    factory_with_recorder: helper.Factory,
-) -> None:
-    """Test HmBinarySensor."""
-    entity_id = "binary_sensor.centraltest_sv_logic"
-    entity_name = "CentralTest sv_logic"
+        assert ha_state.state == STATE_OFF
+        assert ha_state.attributes[ATTR_FIRMWARE_UPDATE_STATE] == DeviceFirmwareState.UP_TO_DATE
+        await async_wait_recording_done(hass)
 
-    hass, control = await factory_with_recorder.setup_environment({})
-    ha_state, data_point = helper.get_and_check_state(
-        hass=hass, control=control, entity_id=entity_id, entity_name=entity_name
-    )
-
-    assert ha_state.state == STATE_OFF
-    assert ha_state.attributes[ATTR_NAME] == "sv_logic"
-    await async_wait_recording_done(hass)
-
-    states = await hass.async_add_executor_job(
-        get_significant_states,
-        hass,
-        dt_util.now(),
-        None,
-        hass.states.async_entity_ids(),
-    )
-    assert len(states) == 12
-    assert states.get(entity_id)
-    for entity_states in states.values():
-        for state in entity_states:
-            if state.entity_id == entity_id:
-                assert ATTR_NAME not in state.attributes
-                break
+        states = await hass.async_add_executor_job(
+            get_significant_states,
+            hass,
+            dt_util.now(),
+            None,
+            hass.states.async_entity_ids(),
+        )
+        assert len(states) == 12
+        assert states.get(entity_id)
+        for entity_states in states.values():
+            for state in entity_states:
+                if state.entity_id == entity_id:
+                    assert ATTR_FIRMWARE_UPDATE_STATE not in state.attributes
+                    break
