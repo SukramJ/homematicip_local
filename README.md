@@ -528,7 +528,7 @@ TUESDAY:
   ...
 ```
 
-### `homematicip_local.get_schedule_profile_weekday`
+### `homematicip_local.get_schedule_weekday`
 
 Returns the schedule of a climate profile for a specific weekday.
 
@@ -606,12 +606,12 @@ Sends a complete schedule for a climate profile (all weekdays) to a device.
 
 **Important:** The required data structure can be retrieved with `get_schedule_profile`, modified as needed, and sent back.
 
-### `homematicip_local.set_schedule_profile_weekday`
+### `homematicip_local.set_schedule_weekday`
 
 __Disclaimer: Too much writing to the device could kill your device's storage.__
 
 Sends the schedule for a single weekday of a climate profile to a device.
-See the [sample](#sample-for-set_schedule_profile_weekday) below.
+See the [sample](#sample-for-set_schedule_weekday) below.
 
 **Remarks:**
 - Not all devices support schedules. This is currently only supported by this integration for HmIP devices.
@@ -634,7 +634,7 @@ See the [sample](#sample-for-set_schedule_profile_weekday) below.
        TEMPERATURE: 18
    ```
 
-2. **Full format**: Provide all 13 slots explicitly (as shown in the [sample](#sample-for-set_schedule_profile_weekday) below).
+2. **Full format**: Provide all 13 slots explicitly (as shown in the [sample](#sample-for-set_schedule_weekday) below).
 
 **Automatic processing:**
 - String keys are converted to integers (both `"1"` and `1` work)
@@ -647,7 +647,7 @@ See the [sample](#sample-for-set_schedule_profile_weekday) below.
 - ENDTIME format must be "HH:MM" (e.g., "06:00", "24:00")
 - Each ENDTIME must be equal to or later than the previous slot's ENDTIME
 
-**Note:** When you retrieve a schedule with `get_schedule_profile_weekday`, you receive filtered data (fewer slots). You can use this data directly with `set_schedule_profile_weekday` - the system will automatically normalize it to 13 slots.
+**Note:** When you retrieve a schedule with `get_schedule_weekday`, you receive filtered data (fewer slots). You can use this data directly with `set_schedule_weekday` - the system will automatically normalize it to 13 slots.
 
 ### `homematicip_local.set_schedule_simple_profile`
 
@@ -665,7 +665,7 @@ Sends a complete schedule for a climate profile to a device using a **simplified
 
 **Example:** See [sample](#sample-for-set_schedule_simple_profile) below for the full data structure.
 
-### `homematicip_local.set_schedule_simple_profile_weekday`
+### `homematicip_local.set_schedule_simple_weekday`
 
 __Disclaimer: Too much writing to the device could kill your device's storage.__
 
@@ -701,7 +701,7 @@ This creates:
 - 17:00-22:00: 21.0°C (your second period)
 - 22:00-24:00: 18.0°C (base_temperature)
 
-See the [sample](#sample-for-set_schedule_profile_weekday) below for a complete example. 
+See the [sample](#sample-for-set_schedule_weekday) below for a complete example. 
 
 ### `homematicip_local.get_variable_value`
 
@@ -1045,13 +1045,13 @@ data:
   value_type: double
 ```
 
-### Sample for set_schedule_profile_weekday
+### Sample for set_schedule_weekday
 
 Send a climate schedule for Monday using the **full 13-slot format**:
 
 ```yaml
 ---
-action: homematicip_local.set_schedule_profile_weekday
+action: homematicip_local.set_schedule_weekday
 target:
   entity_id: climate.heizkorperthermostat_db
 data:
@@ -1104,7 +1104,7 @@ data:
 **Alternative: Partial format** (recommended, easier to write):
 ```yaml
 ---
-action: homematicip_local.set_schedule_profile_weekday
+action: homematicip_local.set_schedule_weekday
 target:
   entity_id: climate.heizkorperthermostat_db
 data:
@@ -1178,7 +1178,7 @@ data:
     # Add other weekdays as needed (WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY)
 ```
 
-### Sample for set_schedule_simple_profile_weekday
+### Sample for set_schedule_simple_weekday
 
 Send a simple climate schedule for Monday only:
 
@@ -1186,7 +1186,7 @@ Send a simple climate schedule for Monday only:
 
 ```yaml
 ---
-action: homematicip_local.set_schedule_simple_profile_weekday
+action: homematicip_local.set_schedule_simple_weekday
 target:
   entity_id: climate.heizkorperthermostat_db
 data:
