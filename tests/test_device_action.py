@@ -105,7 +105,9 @@ class TestAsyncGetActions:
 
         # Prepare entry and device with identifiers
         entry = MockConfigEntry(domain=HMIP_DOMAIN, data={})
-        device_entry = _add_device_with_identifiers(hass, device_reg, entry, address="ABC0001", interface_id=INTERFACE_ID)
+        device_entry = _add_device_with_identifiers(
+            hass, device_reg, entry, address="ABC0001", interface_id=INTERFACE_ID
+        )
 
         # 2) No runtime_data with proper client (has_client False) -> []
         entry.runtime_data = _make_runtime_data(has_client=False, hm_device=None)
@@ -178,7 +180,9 @@ class TestAsyncCallActionFromConfig:
 
         # Prepare entry/device
         entry = MockConfigEntry(domain=HMIP_DOMAIN, data={})
-        device_entry = _add_device_with_identifiers(hass, device_reg, entry, address="ABC0002", interface_id=INTERFACE_ID)
+        device_entry = _add_device_with_identifiers(
+            hass, device_reg, entry, address="ABC0002", interface_id=INTERFACE_ID
+        )
 
         # 2) has_client False -> no call
         entry.runtime_data = _make_runtime_data(has_client=False, hm_device=None)

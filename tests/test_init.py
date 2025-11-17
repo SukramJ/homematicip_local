@@ -113,6 +113,7 @@ class TestUnloadEntry:
         assert await hass.config_entries.async_unload(mock_loaded_config_entry.entry_id) is True
         assert mock_loaded_config_entry.state == ConfigEntryState.NOT_LOADED
         await hass.async_block_till_done()
+
     # assert HMIP_DOMAIN not in hass.data
     # retry possible?
     # assert await hass.config_entries.async_unload(mock_loaded_config_entry.entry_id) is False

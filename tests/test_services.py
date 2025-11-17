@@ -60,7 +60,9 @@ class TestAsyncSetupServices:
             registered_entity.append((service_name, schema))
 
         monkeypatch.setattr(hm_services, "async_register_admin_service", fake_register_admin_service)
-        monkeypatch.setattr(hm_services, "async_register_platform_entity_service", fake_register_platform_entity_service)
+        monkeypatch.setattr(
+            hm_services, "async_register_platform_entity_service", fake_register_platform_entity_service
+        )
 
         # Patch every private handler used by the dispatcher to simple async mocks
         monkeypatch.setattr(hm_services, "_async_service_add_link", AsyncMock())
@@ -127,13 +129,19 @@ class TestAsyncSetupServices:
         assert await dispatcher(
             _ServiceCall(
                 service=hm_services.HmipLocalServices.GET_DEVICE_VALUE,
-                data={hm_services.CONF_DEVICE_ID: "dev", hm_services.CONF_CHANNEL: 1, hm_services.CONF_PARAMETER: "STATE"},
+                data={
+                    hm_services.CONF_DEVICE_ID: "dev",
+                    hm_services.CONF_CHANNEL: 1,
+                    hm_services.CONF_PARAMETER: "STATE",
+                },
                 hass=hass,
             )
         ) == {"ok": True}
         assert await dispatcher(
             _ServiceCall(
-                service=hm_services.HmipLocalServices.GET_LINK_PEERS, data={hm_services.CONF_DEVICE_ID: "dev"}, hass=hass
+                service=hm_services.HmipLocalServices.GET_LINK_PEERS,
+                data={hm_services.CONF_DEVICE_ID: "dev"},
+                hass=hass,
             )
         ) == ["peer"]
         assert await dispatcher(
@@ -193,7 +201,9 @@ class TestAsyncSetupServices:
         )
         await dispatcher(
             _ServiceCall(
-                service=hm_services.HmipLocalServices.RECORD_SESSION, data={hm_services.CONF_DEVICE_ID: "dev"}, hass=hass
+                service=hm_services.HmipLocalServices.RECORD_SESSION,
+                data={hm_services.CONF_DEVICE_ID: "dev"},
+                hass=hass,
             )
         )
         await dispatcher(_ServiceCall(service=hm_services.HmipLocalServices.REMOVE_CENTRAL_LINKS, data={}, hass=hass))
@@ -239,9 +249,9 @@ class TestAsyncSetupServices:
         assert await hm_services._async_service_get_device_value(
             hass, _ServiceCall(service="get_device_value", data={"channel": 1, "parameter": "STATE"})
         ) == {"ok": True}  # type: ignore[arg-type]
-        assert await hm_services._async_service_get_link_peers(hass, _ServiceCall(service="get_link_peers", data={})) == [
-            "peer"
-        ]  # type: ignore[arg-type]
+        assert await hm_services._async_service_get_link_peers(
+            hass, _ServiceCall(service="get_link_peers", data={})
+        ) == ["peer"]  # type: ignore[arg-type]
         assert await hm_services._async_service_get_link_paramset(
             hass, _ServiceCall(service="get_link_paramset", data={})
         ) == {"k": "v"}  # type: ignore[arg-type]
@@ -249,7 +259,9 @@ class TestAsyncSetupServices:
             "p": 1
         }  # type: ignore[arg-type]
         assert (
-            await hm_services._async_service_get_variable_value(hass, _ServiceCall(service="get_variable_value", data={}))
+            await hm_services._async_service_get_variable_value(
+                hass, _ServiceCall(service="get_variable_value", data={})
+            )
             == 123
         )  # type: ignore[arg-type]
 

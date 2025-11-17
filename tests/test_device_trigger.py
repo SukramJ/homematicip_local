@@ -115,7 +115,9 @@ class TestAsyncGetTriggers:
         assert triggers == []
 
         # 3) Proper identifiers but has_client False -> []
-        device_entry = _add_device_with_identifiers(hass, device_reg, entry, address="ABC0002", interface_id=INTERFACE_ID)
+        device_entry = _add_device_with_identifiers(
+            hass, device_reg, entry, address="ABC0002", interface_id=INTERFACE_ID
+        )
         entry.runtime_data = _make_runtime_data(has_client=False, hm_device=None)
         triggers = await dt.async_get_triggers(hass, device_id=device_entry.id)
         assert triggers == []
@@ -153,7 +155,9 @@ class TestAsyncGetTriggers:
             EventKey.CHANNEL_NO: 1,
             EventKey.VALUE: True,
         }
-        hm_device.generic_events = [MyClickEvent(usage=MyDataPointUsage.NO_CREATE, event_type="evt", event_data=ev_data)]
+        hm_device.generic_events = [
+            MyClickEvent(usage=MyDataPointUsage.NO_CREATE, event_type="evt", event_data=ev_data)
+        ]
         triggers = await dt.async_get_triggers(hass, device_id=device_entry.id)
         assert triggers == []
 

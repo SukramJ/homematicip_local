@@ -63,7 +63,9 @@ class TestSysvarDpSwitch:
         entity_name = "CentralTest SV alarm ext"
 
         hass, control = await factory_ccu.setup_environment({})
-        ha_state, _ = helper.get_and_check_state(hass=hass, control=control, entity_id=entity_id, entity_name=entity_name)
+        ha_state, _ = helper.get_and_check_state(
+            hass=hass, control=control, entity_id=entity_id, entity_name=entity_name
+        )
         data_point: SysvarDpSwitch = cast(SysvarDpSwitch, helper.get_data_point(control=control, entity_id=entity_id))
         assert ha_state.state == STATE_OFF
 

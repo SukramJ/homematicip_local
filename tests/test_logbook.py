@@ -55,6 +55,15 @@ class TestAsyncDescribeEvents:
 class TestDescriber:
     """Tests for event describer callback."""
 
+    def test_returns_empty_dict_for_invalid_payload(self) -> None:
+        """It should return an empty dict when event data does not validate against schema."""
+        _, event_type, describer = _collect_describer()
+
+        # Missing required name field makes the schema invalid
+        event = Event(event_type, data={EventKey.PARAMETER: "low_bat", EVENT_ERROR: True, EVENT_ERROR_VALUE: 1})
+
+        assert describer(event) == {}
+
     def test_returns_expected_message_for_error_and_resolved(self) -> None:
         """It should format message correctly for error occurred and resolved cases."""
         domain, event_type, describer = _collect_describer()
@@ -108,12 +117,3 @@ class TestDescriber:
         )
         result = describer(event)
         assert result[LOGBOOK_ENTRY_MESSAGE] == "Low Bat resolved"
-
-    def test_returns_empty_dict_for_invalid_payload(self) -> None:
-        """It should return an empty dict when event data does not validate against schema."""
-        _, event_type, describer = _collect_describer()
-
-        # Missing required name field makes the schema invalid
-        event = Event(event_type, data={EventKey.PARAMETER: "low_bat", EVENT_ERROR: True, EVENT_ERROR_VALUE: 1})
-
-        assert describer(event) == {}

@@ -282,21 +282,6 @@ class TestOptionsFlowForm:
         assert interface.get(Interface.VIRTUAL_DEVICES) is None
         assert interface.get(Interface.BIDCOS_WIRED) is None
 
-    async def test_options_form_no_hmip_other_bidcos_port(
-        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
-    ) -> None:
-        """Test we get the form."""
-        interface_data = {CONF_ENABLE_HMIP_RF: False, CONF_BIDCOS_RF_PORT: 5555}
-        data = await async_check_options_form(
-            hass, mock_config_entry=mock_config_entry_v2, interface_data=interface_data
-        )
-        interface = data["interface"]
-        assert interface.get(Interface.HMIP_RF) is None
-        if_bidcos_rf = interface[Interface.BIDCOS_RF]
-        assert if_bidcos_rf[CONF_PORT] == 5555
-        assert interface.get(Interface.VIRTUAL_DEVICES) is None
-        assert interface.get(Interface.BIDCOS_WIRED) is None
-
     async def test_options_form_all_interfaces_enabled(
         self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
     ) -> None:
@@ -312,9 +297,66 @@ class TestOptionsFlowForm:
         assert interface[Interface.BIDCOS_WIRED][CONF_PORT] == 2000
         assert interface[Interface.VIRTUAL_DEVICES][CONF_PORT] == 9292
 
+    async def test_options_form_no_hmip_other_bidcos_port(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """Test we get the form."""
+        interface_data = {CONF_ENABLE_HMIP_RF: False, CONF_BIDCOS_RF_PORT: 5555}
+        data = await async_check_options_form(
+            hass, mock_config_entry=mock_config_entry_v2, interface_data=interface_data
+        )
+        interface = data["interface"]
+        assert interface.get(Interface.HMIP_RF) is None
+        if_bidcos_rf = interface[Interface.BIDCOS_RF]
+        assert if_bidcos_rf[CONF_PORT] == 5555
+        assert interface.get(Interface.VIRTUAL_DEVICES) is None
+        assert interface.get(Interface.BIDCOS_WIRED) is None
+
 
 class TestConfigFlowErrorHandling:
     """Tests for configuration flow error handling."""
+
+    async def test_form_cannot_connect(self, hass: HomeAssistant) -> None:
+        """Test we handle cannot connect error."""
+        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] is None
+
+        with (
+            patch(
+                "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+                side_effect=NoConnectionException("no host"),
+            ),
+            patch(
+                "custom_components.homematicip_local.async_setup_entry",
+                return_value=True,
+            ),
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_INSTANCE_NAME: const.INSTANCE_NAME,
+                    CONF_HOST: const.HOST,
+                    CONF_USERNAME: const.USERNAME,
+                    CONF_PASSWORD: const.PASSWORD,
+                },
+            )
+            await hass.async_block_till_done()
+
+            assert result2["type"] == FlowResultType.FORM
+            assert result2["handler"] == HMIP_DOMAIN
+            assert result2["step_id"] == "interface"
+
+            next(flow for flow in hass.config_entries.flow.async_progress() if flow["flow_id"] == result["flow_id"])
+
+            result3 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {},
+            )
+            await hass.async_block_till_done()
+
+        assert result3["type"] == FlowResultType.FORM
+        assert result3["errors"] == {"base": "cannot_connect"}
 
     async def test_form_invalid_auth(self, hass: HomeAssistant) -> None:
         """Test we handle invalid auth."""
@@ -400,9 +442,17 @@ class TestConfigFlowErrorHandling:
         assert result3["type"] == FlowResultType.FORM
         assert result3["errors"] == {"base": "invalid_config"}
 
-    async def test_form_cannot_connect(self, hass: HomeAssistant) -> None:
+
+class TestOptionsFlowErrorHandling:
+    """Tests for options flow error handling."""
+
+    async def test_options_form_cannot_connect(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
         """Test we handle cannot connect error."""
-        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        mock_config_entry_v2.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
+
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] is None
 
@@ -416,24 +466,19 @@ class TestConfigFlowErrorHandling:
                 return_value=True,
             ),
         ):
-            result2 = await hass.config_entries.flow.async_configure(
+            result2 = await hass.config_entries.options.async_configure(
                 result["flow_id"],
-                {
-                    CONF_INSTANCE_NAME: const.INSTANCE_NAME,
-                    CONF_HOST: const.HOST,
-                    CONF_USERNAME: const.USERNAME,
-                    CONF_PASSWORD: const.PASSWORD,
-                },
+                {},
             )
             await hass.async_block_till_done()
 
             assert result2["type"] == FlowResultType.FORM
-            assert result2["handler"] == HMIP_DOMAIN
+            assert result2["handler"] == const.CONFIG_ENTRY_ID
             assert result2["step_id"] == "interface"
 
-            next(flow for flow in hass.config_entries.flow.async_progress() if flow["flow_id"] == result["flow_id"])
+            next(flow for flow in hass.config_entries.options.async_progress() if flow["flow_id"] == result["flow_id"])
 
-            result3 = await hass.config_entries.flow.async_configure(
+            result3 = await hass.config_entries.options.async_configure(
                 result["flow_id"],
                 {},
             )
@@ -441,10 +486,6 @@ class TestConfigFlowErrorHandling:
 
         assert result3["type"] == FlowResultType.FORM
         assert result3["errors"] == {"base": "cannot_connect"}
-
-
-class TestOptionsFlowErrorHandling:
-    """Tests for options flow error handling."""
 
     async def test_options_form_invalid_auth(self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry) -> None:
         """Test we handle invalid auth."""
@@ -531,47 +572,6 @@ class TestOptionsFlowErrorHandling:
 
         assert result3["type"] == FlowResultType.FORM
         assert result3["errors"] == {"base": "invalid_config"}
-
-    async def test_options_form_cannot_connect(
-        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
-    ) -> None:
-        """Test we handle cannot connect error."""
-        mock_config_entry_v2.add_to_hass(hass)
-        result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
-
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] is None
-
-        with (
-            patch(
-                "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
-                side_effect=NoConnectionException("no host"),
-            ),
-            patch(
-                "custom_components.homematicip_local.async_setup_entry",
-                return_value=True,
-            ),
-        ):
-            result2 = await hass.config_entries.options.async_configure(
-                result["flow_id"],
-                {},
-            )
-            await hass.async_block_till_done()
-
-            assert result2["type"] == FlowResultType.FORM
-            assert result2["handler"] == const.CONFIG_ENTRY_ID
-            assert result2["step_id"] == "interface"
-
-            next(flow for flow in hass.config_entries.options.async_progress() if flow["flow_id"] == result["flow_id"])
-
-            result3 = await hass.config_entries.options.async_configure(
-                result["flow_id"],
-                {},
-            )
-            await hass.async_block_till_done()
-
-        assert result3["type"] == FlowResultType.FORM
-        assert result3["errors"] == {"base": "cannot_connect"}
 
 
 class TestDiscoveryFlow:
@@ -660,17 +660,6 @@ class TestDiscoveryFlow:
 class TestConfigFlowHelpers:
     """Tests for configuration flow helper functions."""
 
-    def test_config_flow_helper(self) -> None:
-        """Test the config flow helper."""
-
-        assert _get_instance_name(None) is None
-        assert _get_instance_name("0123456789") == "0123456789"
-        assert _get_instance_name("OpenCCU - test") == "test"
-        assert _get_instance_name("OpenCCU 0123456789") == "0123456789"
-        assert _get_serial(None) is None
-        assert _get_serial("1234") is None
-        assert _get_serial(f"9876543210{const.SERIAL}") == const.SERIAL
-
     async def test_async_validate_config_and_get_system_information(self, hass: HomeAssistant, entry_data_v5) -> None:
         """Test backend validation."""
         with patch(
@@ -693,11 +682,16 @@ class TestConfigFlowHelpers:
             await _async_validate_config_and_get_system_information(hass=hass, data=entry_data_v5, entry_id="test")
         assert exc
 
-    def test_get_interface_schema_from_config_flow_removes_advanced(self) -> None:
-        """Ensure get_interface_schema removes advanced flag when from_config_flow=True."""
-        data = {CONF_TLS: False, CONF_INTERFACE: {}}
-        schema = get_interface_schema(use_tls=False, data=data, from_config_flow=True)
-        assert CONF_ADVANCED_CONFIG not in schema.schema
+    def test_config_flow_helper(self) -> None:
+        """Test the config flow helper."""
+
+        assert _get_instance_name(None) is None
+        assert _get_instance_name("0123456789") == "0123456789"
+        assert _get_instance_name("OpenCCU - test") == "test"
+        assert _get_instance_name("OpenCCU 0123456789") == "0123456789"
+        assert _get_serial(None) is None
+        assert _get_serial("1234") is None
+        assert _get_serial(f"9876543210{const.SERIAL}") == const.SERIAL
 
     def test_get_advanced_schema_with_and_without_un_ignores(self) -> None:
         """Ensure advanced schema handles UN_IGNORES presence based on candidates list."""
@@ -737,41 +731,31 @@ class TestConfigFlowHelpers:
         assert data[CONF_CALLBACK_PORT_XML_RPC] == 0
         assert data[CONF_JSON_PORT] == 12345
 
-    def test_update_interface_input_all_paths(self) -> None:
-        """Verify interface flags update and advanced reset behavior."""
-        data: dict[str, Any] = {CONST_ADVANCED_CONFIG: {"dummy": True}}
-        interface_input = {
-            # all toggles enabled
-            CONF_ENABLE_HMIP_RF: True,
-            CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
-            CONF_ENABLE_BIDCOS_RF: True,
-            CONF_BIDCOS_RF_PORT: IF_BIDCOS_RF_PORT,
-            CONF_ENABLE_VIRTUAL_DEVICES: True,
-            CONF_VIRTUAL_DEVICES_PORT: IF_VIRTUAL_DEVICES_PORT,
-            CONF_VIRTUAL_DEVICES_PATH: IF_VIRTUAL_DEVICES_PATH,
-            CONF_ENABLE_BIDCOS_WIRED: True,
-            CONF_BIDCOS_WIRED_PORT: IF_BIDCOS_WIRED_PORT,
-            CONF_ENABLE_CCU_JACK: True,
-            CONF_ENABLE_CUXD: True,
-            # explicit advanced choice should not reset when True is omitted, but False resets
-            CONF_ADVANCED_CONFIG: False,
+    def test_get_ccu_data_sets_callback_host(self) -> None:
+        """Confirm non-empty callback host is kept in _get_ccu_data."""
+        base: dict[str, Any] = {CONF_INTERFACE: {}, CONST_ADVANCED_CONFIG: {}}
+        user_input = {
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_TLS: False,
+            CONF_VERIFY_TLS: False,
+            CONF_CALLBACK_HOST: "5.6.7.8",
         }
-        _update_interface_input(data=data, interface_input=interface_input)
-        # Verify all interfaces created
-        assert data[CONF_INTERFACE]["HmIP-RF"][CONF_PORT] == IF_HMIP_RF_PORT
-        assert data[CONF_INTERFACE]["BidCos-RF"][CONF_PORT] == IF_BIDCOS_RF_PORT
-        assert data[CONF_INTERFACE]["VirtualDevices"][CONF_PORT] == IF_VIRTUAL_DEVICES_PORT
-        assert data[CONF_INTERFACE]["VirtualDevices"][CONF_PATH] == IF_VIRTUAL_DEVICES_PATH
-        assert data[CONF_INTERFACE]["BidCos-Wired"][CONF_PORT] == IF_BIDCOS_WIRED_PORT
-        assert "CCU-Jack" in data[CONF_INTERFACE]
-        assert "CUxD" in data[CONF_INTERFACE]
-        # advanced config reset when user disabled it
-        assert data[CONST_ADVANCED_CONFIG] == {}
+        data = _get_ccu_data(data=base, user_input=user_input)
+        assert data[CONF_CALLBACK_HOST] == "5.6.7.8"
 
-        # Verify graceful handling when interface_input is empty
-        before = dict(data)
-        _update_interface_input(data=data, interface_input={})
-        assert data == before
+    def test_get_interface_schema_from_config_flow_removes_advanced(self) -> None:
+        """Ensure get_interface_schema removes advanced flag when from_config_flow=True."""
+        data = {CONF_TLS: False, CONF_INTERFACE: {}}
+        schema = get_interface_schema(use_tls=False, data=data, from_config_flow=True)
+        assert CONF_ADVANCED_CONFIG not in schema.schema
+
+    def test_update_advanced_input_empty_dict_noop(self) -> None:
+        """Ensure empty advanced_input causes no changes (early return)."""
+        data: dict[str, Any] = {CONST_ADVANCED_CONFIG: {}}
+        _update_advanced_input(data=data, advanced_input={})
+        assert data == {CONST_ADVANCED_CONFIG: {}}
 
     def test_update_advanced_input_with_un_ignores(self) -> None:
         """Ensure _update_advanced_input copies all fields including optional UN_IGNORES."""
@@ -809,25 +793,41 @@ class TestConfigFlowHelpers:
         assert data[CONST_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] == adv_input_for_helper[CONF_OPTIONAL_SETTINGS]
         assert data[CONST_ADVANCED_CONFIG][CONF_UN_IGNORES] == ["A", "B"]
 
-    def test_get_ccu_data_sets_callback_host(self) -> None:
-        """Confirm non-empty callback host is kept in _get_ccu_data."""
-        base: dict[str, Any] = {CONF_INTERFACE: {}, CONST_ADVANCED_CONFIG: {}}
-        user_input = {
-            CONF_HOST: "1.2.3.4",
-            CONF_USERNAME: "user",
-            CONF_PASSWORD: "pass",
-            CONF_TLS: False,
-            CONF_VERIFY_TLS: False,
-            CONF_CALLBACK_HOST: "5.6.7.8",
+    def test_update_interface_input_all_paths(self) -> None:
+        """Verify interface flags update and advanced reset behavior."""
+        data: dict[str, Any] = {CONST_ADVANCED_CONFIG: {"dummy": True}}
+        interface_input = {
+            # all toggles enabled
+            CONF_ENABLE_HMIP_RF: True,
+            CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
+            CONF_ENABLE_BIDCOS_RF: True,
+            CONF_BIDCOS_RF_PORT: IF_BIDCOS_RF_PORT,
+            CONF_ENABLE_VIRTUAL_DEVICES: True,
+            CONF_VIRTUAL_DEVICES_PORT: IF_VIRTUAL_DEVICES_PORT,
+            CONF_VIRTUAL_DEVICES_PATH: IF_VIRTUAL_DEVICES_PATH,
+            CONF_ENABLE_BIDCOS_WIRED: True,
+            CONF_BIDCOS_WIRED_PORT: IF_BIDCOS_WIRED_PORT,
+            CONF_ENABLE_CCU_JACK: True,
+            CONF_ENABLE_CUXD: True,
+            # explicit advanced choice should not reset when True is omitted, but False resets
+            CONF_ADVANCED_CONFIG: False,
         }
-        data = _get_ccu_data(data=base, user_input=user_input)
-        assert data[CONF_CALLBACK_HOST] == "5.6.7.8"
+        _update_interface_input(data=data, interface_input=interface_input)
+        # Verify all interfaces created
+        assert data[CONF_INTERFACE]["HmIP-RF"][CONF_PORT] == IF_HMIP_RF_PORT
+        assert data[CONF_INTERFACE]["BidCos-RF"][CONF_PORT] == IF_BIDCOS_RF_PORT
+        assert data[CONF_INTERFACE]["VirtualDevices"][CONF_PORT] == IF_VIRTUAL_DEVICES_PORT
+        assert data[CONF_INTERFACE]["VirtualDevices"][CONF_PATH] == IF_VIRTUAL_DEVICES_PATH
+        assert data[CONF_INTERFACE]["BidCos-Wired"][CONF_PORT] == IF_BIDCOS_WIRED_PORT
+        assert "CCU-Jack" in data[CONF_INTERFACE]
+        assert "CUxD" in data[CONF_INTERFACE]
+        # advanced config reset when user disabled it
+        assert data[CONST_ADVANCED_CONFIG] == {}
 
-    def test_update_advanced_input_empty_dict_noop(self) -> None:
-        """Ensure empty advanced_input causes no changes (early return)."""
-        data: dict[str, Any] = {CONST_ADVANCED_CONFIG: {}}
-        _update_advanced_input(data=data, advanced_input={})
-        assert data == {CONST_ADVANCED_CONFIG: {}}
+        # Verify graceful handling when interface_input is empty
+        before = dict(data)
+        _update_interface_input(data=data, interface_input={})
+        assert data == before
 
 
 class TestAdvancedConfigurationFlow:

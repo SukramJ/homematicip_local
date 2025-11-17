@@ -39,6 +39,17 @@ def _msg(topic: str, payload: str):
 class TestMQTTConsumer:
     """Tests for MQTTConsumer class."""
 
+    def test_device_message_handler_calls_central(self, hass) -> None:
+        """Device message handler should pass v field to central.data_point_path_event."""
+        hass.data["mqtt"] = SimpleNamespace()
+        central = _CentralStub()
+        consumer = MQTTConsumer(hass=hass, central=central, mqtt_prefix="prefix")
+
+        topic = "prefix/devices/INTF/ADDR:1/VALUES/STATE"
+        consumer._on_device_mqtt_msg_receive(_msg(topic, payload='{"v": true}'))  # pylint: disable=protected-access
+
+        central.data_point_path_event.assert_called_once_with(state_path="devices/INTF/ADDR:1/VALUES/STATE", value=True)
+
     @pytest.mark.asyncio
     async def test_subscribe_and_unsubscribe_when_mqtt_available(self, hass, monkeypatch) -> None:
         """It should subscribe and then unsubscribe when MQTT is configured in hass.data."""
@@ -80,17 +91,6 @@ class TestMQTTConsumer:
 
         await consumer.subscribe()  # no-op
         consumer.unsubscribe()  # no-op
-
-    def test_device_message_handler_calls_central(self, hass) -> None:
-        """Device message handler should pass v field to central.data_point_path_event."""
-        hass.data["mqtt"] = SimpleNamespace()
-        central = _CentralStub()
-        consumer = MQTTConsumer(hass=hass, central=central, mqtt_prefix="prefix")
-
-        topic = "prefix/devices/INTF/ADDR:1/VALUES/STATE"
-        consumer._on_device_mqtt_msg_receive(_msg(topic, payload='{"v": true}'))  # pylint: disable=protected-access
-
-        central.data_point_path_event.assert_called_once_with(state_path="devices/INTF/ADDR:1/VALUES/STATE", value=True)
 
     def test_sysvar_message_handler_calls_central(self, hass) -> None:
         """Sysvar message handler should pass v field to central.sysvar_data_point_path_event."""
