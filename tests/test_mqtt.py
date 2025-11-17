@@ -36,69 +36,69 @@ def _msg(topic: str, payload: str):
     return SimpleNamespace(topic=topic, payload=payload.encode())
 
 
-@pytest.mark.asyncio
-async def test_subscribe_and_unsubscribe_when_mqtt_available(hass, monkeypatch) -> None:
-    """It should subscribe and then unsubscribe when MQTT is configured in hass.data."""
-    # Provide dummy mqtt marker so _mqtt_is_configured returns True
-    hass.data["mqtt"] = SimpleNamespace(client=object())
+class TestMQTTConsumer:
+    """Tests for MQTTConsumer class."""
 
-    central = _CentralStub()
-    consumer = MQTTConsumer(hass=hass, central=central, mqtt_prefix="hm")
+    @pytest.mark.asyncio
+    async def test_subscribe_and_unsubscribe_when_mqtt_available(self, hass, monkeypatch) -> None:
+        """It should subscribe and then unsubscribe when MQTT is configured in hass.data."""
+        # Provide dummy mqtt marker so _mqtt_is_configured returns True
+        hass.data["mqtt"] = SimpleNamespace(client=object())
 
-    # Patch MQTT subscribe/unsubscribe helpers to no-ops so we don't require a real client
-    from custom_components.homematicip_local import mqtt as hm_mqtt
+        central = _CentralStub()
+        consumer = MQTTConsumer(hass=hass, central=central, mqtt_prefix="hm")
 
-    def _noop(*args, **kwargs):
-        return None
+        # Patch MQTT subscribe/unsubscribe helpers to no-ops so we don't require a real client
+        from custom_components.homematicip_local import mqtt as hm_mqtt
 
-    async def _async_noop(*args, **kwargs):  # noqa: ANN001, ANN002
-        return None
+        def _noop(*args, **kwargs):
+            return None
 
-    # Patch the symbols used by our module (not the HA module) so calls no-op
-    monkeypatch.setattr(hm_mqtt, "async_subscribe_topics", _async_noop)
-    monkeypatch.setattr(hm_mqtt, "async_unsubscribe_topics", _noop)
-    # Provide a minimal mqtt client marker with .connected used by HA utils when reached
-    hass.data["mqtt"] = SimpleNamespace(client=SimpleNamespace(connected=True))
+        async def _async_noop(*args, **kwargs):  # noqa: ANN001, ANN002
+            return None
 
-    # Call subscribe: this will build topics and call into MQTT helpers. We don't assert
-    # the helper internals here, just ensure no exceptions and that a sub_state is created.
-    await consumer.subscribe()
-    assert consumer._sub_state is not None  # pylint: disable=protected-access
+        # Patch the symbols used by our module (not the HA module) so calls no-op
+        monkeypatch.setattr(hm_mqtt, "async_subscribe_topics", _async_noop)
+        monkeypatch.setattr(hm_mqtt, "async_unsubscribe_topics", _noop)
+        # Provide a minimal mqtt client marker with .connected used by HA utils when reached
+        hass.data["mqtt"] = SimpleNamespace(client=SimpleNamespace(connected=True))
 
-    # Unsubscribe should call into MQTT unsubscribe helper when sub_state exists.
-    consumer.unsubscribe()
+        # Call subscribe: this will build topics and call into MQTT helpers. We don't assert
+        # the helper internals here, just ensure no exceptions and that a sub_state is created.
+        await consumer.subscribe()
+        assert consumer._sub_state is not None  # pylint: disable=protected-access
 
+        # Unsubscribe should call into MQTT unsubscribe helper when sub_state exists.
+        consumer.unsubscribe()
 
-@pytest.mark.asyncio
-async def test_subscribe_noop_when_mqtt_not_available(hass) -> None:
-    """If MQTT not set in hass.data, subscribe/unsubscribe should no-op without error."""
-    hass.data.pop("mqtt", None)
-    central = _CentralStub()
-    consumer = MQTTConsumer(hass=hass, central=central, mqtt_prefix="")
+    @pytest.mark.asyncio
+    async def test_subscribe_noop_when_mqtt_not_available(self, hass) -> None:
+        """If MQTT not set in hass.data, subscribe/unsubscribe should no-op without error."""
+        hass.data.pop("mqtt", None)
+        central = _CentralStub()
+        consumer = MQTTConsumer(hass=hass, central=central, mqtt_prefix="")
 
-    await consumer.subscribe()  # no-op
-    consumer.unsubscribe()  # no-op
+        await consumer.subscribe()  # no-op
+        consumer.unsubscribe()  # no-op
 
+    def test_device_message_handler_calls_central(self, hass) -> None:
+        """Device message handler should pass v field to central.data_point_path_event."""
+        hass.data["mqtt"] = SimpleNamespace()
+        central = _CentralStub()
+        consumer = MQTTConsumer(hass=hass, central=central, mqtt_prefix="prefix")
 
-def test_device_message_handler_calls_central(hass) -> None:
-    """Device message handler should pass v field to central.data_point_path_event."""
-    hass.data["mqtt"] = SimpleNamespace()
-    central = _CentralStub()
-    consumer = MQTTConsumer(hass=hass, central=central, mqtt_prefix="prefix")
+        topic = "prefix/devices/INTF/ADDR:1/VALUES/STATE"
+        consumer._on_device_mqtt_msg_receive(_msg(topic, payload='{"v": true}'))  # pylint: disable=protected-access
 
-    topic = "prefix/devices/INTF/ADDR:1/VALUES/STATE"
-    consumer._on_device_mqtt_msg_receive(_msg(topic, payload='{"v": true}'))  # pylint: disable=protected-access
+        central.data_point_path_event.assert_called_once_with(state_path="devices/INTF/ADDR:1/VALUES/STATE", value=True)
 
-    central.data_point_path_event.assert_called_once_with(state_path="devices/INTF/ADDR:1/VALUES/STATE", value=True)
+    def test_sysvar_message_handler_calls_central(self, hass) -> None:
+        """Sysvar message handler should pass v field to central.sysvar_data_point_path_event."""
+        hass.data["mqtt"] = SimpleNamespace()
+        central = _CentralStub()
+        consumer = MQTTConsumer(hass=hass, central=central, mqtt_prefix="")
 
+        topic = "sysvar/state/INTF/NAME"
+        consumer._on_sysvar_mqtt_msg_receive(_msg(topic, payload='{"v": 42}'))  # pylint: disable=protected-access
 
-def test_sysvar_message_handler_calls_central(hass) -> None:
-    """Sysvar message handler should pass v field to central.sysvar_data_point_path_event."""
-    hass.data["mqtt"] = SimpleNamespace()
-    central = _CentralStub()
-    consumer = MQTTConsumer(hass=hass, central=central, mqtt_prefix="")
-
-    topic = "sysvar/state/INTF/NAME"
-    consumer._on_sysvar_mqtt_msg_receive(_msg(topic, payload='{"v": 42}'))  # pylint: disable=protected-access
-
-    central.sysvar_data_point_path_event.assert_called_once_with(state_path="sysvar/state/INTF/NAME", value=42)
+        central.sysvar_data_point_path_event.assert_called_once_with(state_path="sysvar/state/INTF/NAME", value=42)
