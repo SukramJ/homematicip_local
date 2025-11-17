@@ -222,7 +222,7 @@ get_schedule_profile:
             - "P5"
             - "P6"
 
-get_schedule_profile_weekday:
+get_schedule_weekday:
   target:
     entity:
       domain: climate
@@ -336,7 +336,7 @@ set_schedule_profile:
       selector:
         object:
 
-set_schedule_profile_weekday:
+set_schedule_weekday:
   target:
     entity:
       domain: climate
@@ -404,7 +404,7 @@ set_schedule_simple_profile:
       selector:
         object:
 
-set_schedule_simple_profile_weekday:
+set_schedule_simple_weekday:
   target:
     entity:
       domain: climate

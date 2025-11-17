@@ -10,7 +10,7 @@ from typing import Any, Final, cast
 from aiohomematic.const import (
     CLIMATE_PROFILE_DICT,
     CLIMATE_SIMPLE_PROFILE_DICT,
-    CLIMATE_SIMPLE_WEEKDAY_LIST,
+    CLIMATE_SIMPLE_WEEKDAY_DATA,
     CLIMATE_WEEKDAY_DICT,
     DataPointCategory,
     ScheduleProfile,
@@ -53,6 +53,7 @@ ATTR_OPTIMUM_START_STOP: Final = "optimum_start_stop"
 ATTR_TEMPERATURE_OFFSET: Final = "temperature_offset"
 ATTR_ACTIVE_PROFILE: Final = "active_profile"
 ATTR_AVAILABLE_PROFILES: Final = "available_profiles"
+ATTR_SIMPLE_SCHEDULE_DATA: Final = "simple_schedule_data"
 
 SUPPORTED_HA_PRESET_MODES: Final = [
     PRESET_AWAY,
@@ -118,7 +119,9 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
     _attr_translation_key = "hmip_climate"
     _enable_turn_on_off_backwards_compatibility: bool = False
     __no_recored_attributes = AioHomematicGenericEntity.NO_RECORDED_ATTRIBUTES
-    __no_recored_attributes.update({ATTR_AVAILABLE_PROFILES, ATTR_OPTIMUM_START_STOP, ATTR_TEMPERATURE_OFFSET})
+    __no_recored_attributes.update(
+        {ATTR_AVAILABLE_PROFILES, ATTR_OPTIMUM_START_STOP, ATTR_TEMPERATURE_OFFSET, ATTR_SIMPLE_SCHEDULE_DATA}
+    )
     _unrecorded_attributes = frozenset(__no_recored_attributes)
 
     def __init__(
@@ -177,6 +180,8 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             ]
             if schedule_data := self._data_point.schedule.get(self._current_profile):
                 attributes[ATTR_SCHEDULE_DATA] = schedule_data
+            if simple_schedule_data := self._data_point.simple_schedule.get(self._current_profile):
+                attributes[ATTR_SIMPLE_SCHEDULE_DATA] = simple_schedule_data
 
         return attributes
 
@@ -328,14 +333,14 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             )
         return None
 
-    async def async_get_schedule_profile_weekday(
+    async def async_get_schedule_weekday(
         self, profile: str | ScheduleProfile, weekday: str | WeekdayStr
     ) -> ServiceResponse:
         """Get a schedule profile weekday."""
         try:
             schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
             schedule_weekday = weekday if isinstance(weekday, WeekdayStr) else WeekdayStr(weekday)
-            if weekday_data := await self._data_point.get_schedule_profile_weekday(
+            if weekday_data := await self._data_point.get_schedule_weekday(
                 profile=schedule_profile, weekday=schedule_weekday
             ):
                 return cast(ServiceResponse, weekday_data)
@@ -417,7 +422,29 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
                 err,
             )
 
-    async def async_set_schedule_profile_weekday(
+    async def async_set_schedule_simple_profile(
+        self, profile: ScheduleProfile, simple_profile_data: CLIMATE_SIMPLE_PROFILE_DICT
+    ) -> None:
+        """Set the schedule simple profile."""
+        await self._data_point.set_simple_schedule_profile(
+            profile=profile,
+            simple_profile_data=simple_profile_data,
+        )
+
+    async def async_set_schedule_simple_weekday(
+        self,
+        profile: ScheduleProfile,
+        weekday: WeekdayStr,
+        simple_weekday_data: CLIMATE_SIMPLE_WEEKDAY_DATA,
+    ) -> None:
+        """Set the schedule simple profile weekday."""
+        await self._data_point.set_simple_schedule_weekday(
+            profile=profile,
+            weekday=weekday,
+            simple_weekday_data=simple_weekday_data,
+        )
+
+    async def async_set_schedule_weekday(
         self, profile: str | ScheduleProfile, weekday: str | WeekdayStr, weekday_data: CLIMATE_WEEKDAY_DICT
     ) -> None:
         """Set a schedule profile weekday."""
@@ -445,31 +472,6 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
                 self._data_point.custom_id,
                 err,
             )
-
-    async def async_set_schedule_simple_profile(
-        self, profile: ScheduleProfile, base_temperature: float, simple_profile_data: CLIMATE_SIMPLE_PROFILE_DICT
-    ) -> None:
-        """Set the schedule simple profile."""
-        await self._data_point.set_simple_schedule_profile(
-            profile=profile,
-            base_temperature=base_temperature,
-            simple_profile_data=simple_profile_data,
-        )
-
-    async def async_set_schedule_simple_profile_weekday(
-        self,
-        profile: ScheduleProfile,
-        weekday: WeekdayStr,
-        base_temperature: float,
-        simple_weekday_list: CLIMATE_SIMPLE_WEEKDAY_LIST,
-    ) -> None:
-        """Set the schedule simple profile weekday."""
-        await self._data_point.set_simple_schedule_weekday(
-            profile=profile,
-            weekday=weekday,
-            base_temperature=base_temperature,
-            simple_weekday_data=simple_weekday_list,
-        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

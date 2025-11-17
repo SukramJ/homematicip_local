@@ -529,13 +529,13 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async_register_platform_entity_service(
         hass=hass,
         service_domain=DOMAIN,
-        service_name=HmipLocalServices.GET_SCHEDULE_PROFILE_WEEKDAY,
+        service_name=HmipLocalServices.GET_SCHEDULE_WEEKDAY,
         entity_domain=CLIMATE_DOMAIN,
         schema={
             vol.Required(ATTR_PROFILE): cv.string,
             vol.Required(ATTR_WEEKDAY): cv.string,
         },
-        func="async_get_schedule_profile_weekday",
+        func="async_get_schedule_weekday",
         supports_response=SupportsResponse.OPTIONAL,
     )
 
@@ -554,14 +554,14 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async_register_platform_entity_service(
         hass=hass,
         service_domain=DOMAIN,
-        service_name=HmipLocalServices.SET_SCHEDULE_PROFILE_WEEKDAY,
+        service_name=HmipLocalServices.SET_SCHEDULE_WEEKDAY,
         entity_domain=CLIMATE_DOMAIN,
         schema={
             vol.Required(ATTR_PROFILE): cv.string,
             vol.Required(ATTR_WEEKDAY): cv.string,
             vol.Required(ATTR_WEEKDAY_DATA): dict,
         },
-        func="async_set_schedule_profile_weekday",
+        func="async_set_schedule_weekday",
     )
 
     async_register_platform_entity_service(
@@ -591,7 +591,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async_register_platform_entity_service(
         hass=hass,
         service_domain=DOMAIN,
-        service_name=HmipLocalServices.SET_SCHEDULE_SIMPLE_PROFILE_WEEKDAY,
+        service_name=HmipLocalServices.SET_SCHEDULE_SIMPLE_WEEKDAY,
         entity_domain=CLIMATE_DOMAIN,
         schema={
             vol.Required(ATTR_PROFILE): cv.string,
@@ -599,7 +599,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             vol.Required(ATTR_BASE_TEMPERATURE): cv.positive_float,
             vol.Required(ATTR_SIMPLE_WEEKDAY_LIST): list,
         },
-        func="async_set_schedule_simple_profile_weekday",
+        func="async_set_schedule_simple_weekday",
     )
 
     async_register_platform_entity_service(

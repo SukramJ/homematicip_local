@@ -1007,7 +1007,7 @@
             }, 
             "name": "Get schedule profile"
         }, 
-        "get_schedule_profile_weekday": {
+        "get_schedule_weekday": {
             "description": "Call to get a schedule of a climate device", 
             "fields": {
                 "profile": {
@@ -1227,7 +1227,7 @@
             }, 
             "name": "Set schedule profile"
         }, 
-        "set_schedule_profile_weekday": {
+        "set_schedule_weekday": {
             "description": "Call to store a schedule on a climate device", 
             "fields": {
                 "profile": {
@@ -1263,7 +1263,7 @@
             }, 
             "name": "Set simple schedule profile"
         }, 
-        "set_schedule_simple_profile_weekday": {
+        "set_schedule_simple_weekday": {
             "description": "Call to store a schedule on a climate device", 
             "fields": {
                 "base_temperature": {

@@ -1007,7 +1007,7 @@
             }, 
             "name": "Zeitplan-Profil abrufen"
         }, 
-        "get_schedule_profile_weekday": {
+        "get_schedule_weekday": {
             "description": "Lädt einen Wochentag eines Zeitplan-Profils", 
             "fields": {
                 "profile": {
@@ -1227,24 +1227,6 @@
             }, 
             "name": "Zeitplan-Profil setzen"
         }, 
-        "set_schedule_profile_weekday": {
-            "description": "Setzt einen Wochentag eines Zeitplan-Profils", 
-            "fields": {
-                "profile": {
-                    "description": "Wählen Sie ein Profil", 
-                    "name": "Profil"
-                }, 
-                "weekday": {
-                    "description": "Wählen Sie einen Wochentag", 
-                    "name": "Wochentag"
-                }, 
-                "weekday_data": {
-                    "description": "Zeitplan-Daten für den Wochentag", 
-                    "name": "Wochentag-Daten"
-                }
-            }, 
-            "name": "Zeitplan-Profil Wochentag setzen"
-        }, 
         "set_schedule_simple_profile": {
             "description": "Speichert einen Zeitplan auf einem Thermostat", 
             "fields": {
@@ -1263,7 +1245,7 @@
             }, 
             "name": "Einfachen Zeitplan speichern"
         }, 
-        "set_schedule_simple_profile_weekday": {
+        "set_schedule_simple_weekday": {
             "description": "Speichert einen Zeitplan auf einem Thermostat", 
             "fields": {
                 "base_temperature": {
@@ -1284,6 +1266,24 @@
                 }
             }, 
             "name": "Einfachen Wochentag speichern"
+        }, 
+        "set_schedule_weekday": {
+            "description": "Setzt einen Wochentag eines Zeitplan-Profils", 
+            "fields": {
+                "profile": {
+                    "description": "Wählen Sie ein Profil", 
+                    "name": "Profil"
+                }, 
+                "weekday": {
+                    "description": "Wählen Sie einen Wochentag", 
+                    "name": "Wochentag"
+                }, 
+                "weekday_data": {
+                    "description": "Zeitplan-Daten für den Wochentag", 
+                    "name": "Wochentag-Daten"
+                }
+            }, 
+            "name": "Zeitplan-Profil Wochentag setzen"
         }, 
         "set_variable_value": {
             "description": "Schreibt einen Wert in eine Homematic Systemvariable", 
