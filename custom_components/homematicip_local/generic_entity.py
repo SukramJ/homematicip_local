@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, Final, Generic
+from typing import Any, Final, Generic, cast
 
 from aiohomematic.central.event_bus import DataPointUpdatedEvent
 from aiohomematic.const import CallSource, DataPointUsage
@@ -231,12 +231,14 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
         """Register callbacks and load initial data."""
         if isinstance(self._data_point, CallbackDataPoint):
             # Subscribe to data point updates via EventBus
+            data_point = cast(GenericDataPoint[Any, Any], self._data_point)
+
             def on_datapoint_update(event: DataPointUpdatedEvent) -> None:
                 """Handle data point update events."""
                 # Filter for this specific data point
                 if (
-                    event.dpk.channel_address == self._data_point.channel.address
-                    and event.dpk.parameter == self._data_point.parameter
+                    event.dpk.channel_address == data_point.channel.address
+                    and event.dpk.parameter == data_point.parameter
                 ):
                     self._async_data_point_updated()
 
