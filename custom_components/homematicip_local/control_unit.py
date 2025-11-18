@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Set as AbstractSet
+from collections.abc import Mapping
 import contextlib
 from copy import deepcopy
 from functools import partial
@@ -12,6 +12,7 @@ from typing import Any, Final, TypeVar, cast
 
 from aiohomematic import __version__ as AIOHM_VERSION
 from aiohomematic.central import INTERFACE_EVENT_SCHEMA, CentralConfig, CentralUnit, check_config
+from aiohomematic.central.event_bus import BackendSystemEventData, HomematicEvent
 from aiohomematic.client import InterfaceConfig
 from aiohomematic.const import (
     CONF_PASSWORD,
@@ -44,7 +45,6 @@ from aiohomematic.const import (
 )
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.data_point import CallbackDataPoint
-from aiohomematic.model.event import GenericEvent
 from aiohomematic.type_aliases import UnregisterCallback
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PATH, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
@@ -257,10 +257,19 @@ class ControlUnit(BaseControlUnit):
 
     async def start_central(self) -> None:
         """Start the central unit."""
+        # Subscribe to EventBus events
         self._unregister_callbacks.append(
-            self._central.register_backend_system_callback(cb=self._async_backend_system_callback)
+            self._central.event_bus.subscribe(
+                event_type=BackendSystemEventData,
+                handler=self._on_system_event,
+            )
         )
-        self._unregister_callbacks.append(self._central.register_homematic_callback(cb=self._async_homematic_callback))
+        self._unregister_callbacks.append(
+            self._central.event_bus.subscribe(
+                event_type=HomematicEvent,
+                handler=self._on_homematic_event,
+            )
+        )
         self._async_add_central_to_device_registry()
         await super().start_central()
         if self._enable_mqtt:
@@ -327,90 +336,6 @@ class ControlUnit(BaseControlUnit):
             )
 
     @callback
-    def _async_backend_system_callback(
-        self,
-        *,
-        system_event: BackendSystemEvent,
-        interface_id: str | None = None,
-        new_addresses: tuple[str, ...] | None = None,
-        new_channel_events: list[tuple[GenericEvent, ...]] | None = None,
-        new_data_points: Mapping[DataPointCategory, AbstractSet[CallbackDataPoint]] | None = None,
-        source: SourceOfDeviceCreation | None = None,
-        **kwargs: Any,
-    ) -> None:
-        """Execute the callback for system based events."""
-        _LOGGER.debug(
-            "callback_system_event: Received system event %s for event for %s",
-            system_event,
-            self._instance_name,
-        )
-
-        # Handle event of new device creation in Homematic(IP) Local for OpenCCU.
-        if system_event == BackendSystemEvent.DEVICES_CREATED:
-            if self._delay_new_device_creation and source and source == SourceOfDeviceCreation.NEW:
-                return
-            self._async_add_virtual_remotes_to_device_registry()
-            if new_data_points:
-                for platform, data_points in new_data_points.items():
-                    if data_points and len(data_points) > 0:
-                        async_dispatcher_send(
-                            self._hass,
-                            signal_new_data_point(entry_id=self._entry_id, platform=platform),
-                            data_points,
-                        )
-            if new_channel_events:
-                for channel_events in new_channel_events:
-                    async_dispatcher_send(
-                        self._hass,
-                        signal_new_data_point(entry_id=self._entry_id, platform=DataPointCategory.EVENT),
-                        channel_events,
-                    )
-            return
-        if system_event == BackendSystemEvent.HUB_REFRESHED:
-            # Handle event of new hub entity creation in Homematic(IP) Local for OpenCCU.
-            if new_data_points:
-                for platform, hub_data_points in new_data_points.items():
-                    if hub_data_points and len(hub_data_points) > 0:
-                        async_dispatcher_send(
-                            self._hass,
-                            signal_new_data_point(entry_id=self._entry_id, platform=platform),
-                            hub_data_points,
-                        )
-            return
-        if system_event == BackendSystemEvent.DEVICES_DELAYED and new_addresses:
-            for address in new_addresses:
-                issue_id = f"devices_delayed|{interface_id}|{address}"
-
-                if not interface_id or not address:
-                    continue
-
-                async def _fix_callback(*, _interface_id: str, _address: str) -> None:
-                    """Trigger manual add of the delayed device on the central."""
-                    if not interface_id:
-                        return
-                    with contextlib.suppress(Exception):
-                        await self._central.add_new_device_manually(interface_id=_interface_id, address=_address)
-                        return
-
-                REPAIR_CALLBACKS[issue_id] = partial(_fix_callback, _interface_id=interface_id, _address=address)
-
-                async_create_issue(
-                    hass=self._hass,
-                    domain=DOMAIN,
-                    issue_id=issue_id,
-                    is_fixable=True,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="devices_delayed",
-                    translation_placeholders={
-                        CONF_INSTANCE_NAME: self._instance_name,
-                        CONF_INTERFACE_ID: interface_id,
-                        CONF_ADDRESS: address,
-                    },
-                )
-            return
-        return
-
-    @callback
     def _async_get_device_entry(self, *, device_address: str) -> DeviceEntry | None:
         """Return the device of the ha device."""
         if (hm_device := self._central.get_device(address=device_address)) is None:
@@ -425,10 +350,10 @@ class ControlUnit(BaseControlUnit):
             }
         )
 
-    @callback
-    def _async_homematic_callback(self, *, event_type: EventType, event_data: dict[EventKey, Any]) -> None:  # noqa: C901
+    async def _on_homematic_event(self, event: HomematicEvent) -> None:  # noqa: C901
         """Execute the callback used for device related events."""
-        event_data_ha: dict[EventKey | str, Any] = cast(dict[EventKey | str, Any], event_data)
+        event_type = event.event_type
+        event_data_ha: dict[EventKey | str, Any] = cast(dict[EventKey | str, Any], event.event_data)
         send_unknown_pong = True
         interface_id = event_data_ha[EventKey.INTERFACE_ID]
         if event_type == EventType.INTERFACE:
@@ -600,6 +525,87 @@ class ControlUnit(BaseControlUnit):
                         event_type=event_type.value,
                         event_data=event_data_ha,
                     )
+
+    async def _on_system_event(self, event: BackendSystemEventData) -> None:
+        """Handle backend system events."""
+        _LOGGER.debug(
+            "callback_system_event: Received system event %s for event for %s",
+            event.system_event,
+            self._instance_name,
+        )
+
+        system_event = event.system_event
+        data = event.data
+        interface_id = data.get("interface_id")
+        new_addresses = data.get("new_addresses")
+        new_channel_events = data.get("new_channel_events")
+        new_data_points = data.get("new_data_points")
+        source = data.get("source")
+
+        # Handle event of new device creation in Homematic(IP) Local for OpenCCU.
+        if system_event == BackendSystemEvent.DEVICES_CREATED:
+            if self._delay_new_device_creation and source and source == SourceOfDeviceCreation.NEW:
+                return
+            self._async_add_virtual_remotes_to_device_registry()
+            if new_data_points:
+                for platform, data_points in new_data_points.items():
+                    if data_points and len(data_points) > 0:
+                        async_dispatcher_send(
+                            self._hass,
+                            signal_new_data_point(entry_id=self._entry_id, platform=platform),
+                            data_points,
+                        )
+            if new_channel_events:
+                for channel_events in new_channel_events:
+                    async_dispatcher_send(
+                        self._hass,
+                        signal_new_data_point(entry_id=self._entry_id, platform=DataPointCategory.EVENT),
+                        channel_events,
+                    )
+            return
+        if system_event == BackendSystemEvent.HUB_REFRESHED:
+            # Handle event of new hub entity creation in Homematic(IP) Local for OpenCCU.
+            if new_data_points:
+                for platform, hub_data_points in new_data_points.items():
+                    if hub_data_points and len(hub_data_points) > 0:
+                        async_dispatcher_send(
+                            self._hass,
+                            signal_new_data_point(entry_id=self._entry_id, platform=platform),
+                            hub_data_points,
+                        )
+            return
+        if system_event == BackendSystemEvent.DEVICES_DELAYED and new_addresses:
+            for address in new_addresses:
+                issue_id = f"devices_delayed|{interface_id}|{address}"
+
+                if not interface_id or not address:
+                    continue
+
+                async def _fix_callback(*, _interface_id: str, _address: str) -> None:
+                    """Trigger manual add of the delayed device on the central."""
+                    if not interface_id:
+                        return
+                    with contextlib.suppress(Exception):
+                        await self._central.add_new_device_manually(interface_id=_interface_id, address=_address)
+                        return
+
+                REPAIR_CALLBACKS[issue_id] = partial(_fix_callback, _interface_id=interface_id, _address=address)
+
+                async_create_issue(
+                    hass=self._hass,
+                    domain=DOMAIN,
+                    issue_id=issue_id,
+                    is_fixable=True,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="devices_delayed",
+                    translation_placeholders={
+                        CONF_INSTANCE_NAME: self._instance_name,
+                        CONF_INTERFACE_ID: interface_id,
+                        CONF_ADDRESS: address,
+                    },
+                )
+            return
+        return
 
 
 class ControlUnitTemp(BaseControlUnit):

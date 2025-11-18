@@ -6,6 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final, Generic
 
+from aiohomematic.central.event_bus import DataPointUpdatedEvent
 from aiohomematic.const import CallSource, DataPointUsage
 from aiohomematic.model.calculated import CalculatedDataPoint
 from aiohomematic.model.custom import CustomDataPoint
@@ -229,9 +230,20 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
         if isinstance(self._data_point, CallbackDataPoint):
+            # Subscribe to data point updates via EventBus
+            def on_datapoint_update(event: DataPointUpdatedEvent) -> None:
+                """Handle data point update events."""
+                # Filter for this specific data point
+                if (
+                    event.dpk.channel_address == self._data_point.channel.address
+                    and event.dpk.parameter == self._data_point.parameter
+                ):
+                    self._async_data_point_updated()
+
             self._unregister_callbacks.append(
-                self._data_point.register_data_point_updated_callback(
-                    cb=self._async_data_point_updated, custom_id=self.entity_id
+                self._cu.central.event_bus.subscribe(
+                    event_type=DataPointUpdatedEvent,
+                    handler=on_datapoint_update,
                 )
             )
             self._unregister_callbacks.append(
@@ -263,7 +275,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
                 unregister()
 
     @callback
-    def _async_data_point_updated(self, **kwargs: Any) -> None:
+    def _async_data_point_updated(self) -> None:
         """Handle device state changes."""
         # Don't update disabled entities
         update_type = "updated" if self._data_point.refreshed_at == self._data_point.modified_at else "refreshed"
