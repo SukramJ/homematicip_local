@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from aiohomematic.central.event_bus import DataPointUpdatedEvent
 from aiohomematic.const import DATA_POINT_EVENTS, DataPointCategory, EventKey
 from aiohomematic.model.device import Channel, Device
 from aiohomematic.model.event import GenericEvent
@@ -111,23 +111,10 @@ class AioHomematicEvent(EventEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
 
-        # Subscribe to data point updates via EventBus for all events
-        def on_datapoint_update(event: DataPointUpdatedEvent) -> None:
-            """Handle data point update events."""
-            # Filter for this specific event's data points
-            for hm_event in self._hm_channel_events:
-                if event.dpk.channel_address == hm_event.channel.address and event.dpk.parameter == hm_event.parameter:
-                    self._async_event_changed(hm_event)
-                    break
-
-        self._unregister_callbacks.append(
-            self._cu.central.event_bus.subscribe(
-                event_type=DataPointUpdatedEvent,
-                handler=on_datapoint_update,
-            )
-        )
-
         for event in self._hm_channel_events:
+            self._unregister_callbacks.append(
+                event.register_data_point_updated_callback(cb=self._async_event_changed, custom_id=self.entity_id)
+            )
             self._unregister_callbacks.append(event.register_device_removed_callback(cb=self._async_device_removed))
 
     async def async_will_remove_from_hass(self) -> None:
@@ -153,7 +140,7 @@ class AioHomematicEvent(EventEntity):
                 device_registry.async_remove_device(device_id)
 
     @callback
-    def _async_event_changed(self, data_point: GenericEvent) -> None:
+    def _async_event_changed(self, data_point: GenericEvent, **kwargs: Any) -> None:
         """Handle device state changes."""
         # Don't update disabled entities
         if self.enabled:
