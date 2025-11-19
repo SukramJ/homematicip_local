@@ -48,7 +48,7 @@ class MQTTConsumer:
     def _get_topics(self) -> dict[str, dict[str, Any]]:
         """Return the topics for the central."""
         topics: dict[str, dict[str, Any]] = {}
-        for state_path in self._central.get_data_point_path():
+        for state_path in self._central.get_data_point_path():  # type: ignore[attr-defined] #TODO
             topics[state_path.replace("/", "_")] = {
                 "topic": f"{self._mqtt_prefix}{state_path}",
                 "msg_callback": lambda msg: self._on_device_mqtt_msg_receive(msg=msg),
@@ -73,7 +73,7 @@ class MQTTConsumer:
         state_path = msg.topic[len(self._mqtt_prefix) :] if msg.topic.startswith(self._mqtt_prefix) else msg.topic
         payload_dict = json_loads(msg.payload)
         if (payload_value := cast(dict[str, Any], payload_dict).get("v")) is not None:
-            self._central.data_point_path_event(state_path=state_path, value=payload_value)
+            self._central.data_point_path_event(state_path=state_path, value=payload_value)  # type: ignore[attr-defined] #TODO
 
     @callback
     def _on_sysvar_mqtt_msg_receive(self, msg: ReceiveMessage) -> None:
@@ -82,4 +82,4 @@ class MQTTConsumer:
         state_path = msg.topic[len(self._mqtt_prefix) :] if msg.topic.startswith(self._mqtt_prefix) else msg.topic
         payload_dict = json_loads(msg.payload)
         if (payload_value := cast(dict[str, Any], payload_dict).get("v")) is not None:
-            self._central.sysvar_data_point_path_event(state_path=state_path, value=payload_value)
+            self._central.sysvar_data_point_path_event(state_path=state_path, value=payload_value)  # type: ignore[attr-defined] #TODO
