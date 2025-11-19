@@ -12,6 +12,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from aiohomematic.central.event_bus import BackendParameterEvent, BackendSystemEventData, HomematicEvent
 from aiohomematic.model.custom import CustomDataPoint
 from aiohomematic.model.data_point import BaseParameterDataPoint
 from aiohomematic_test_support.factory import FactoryWithClient
@@ -73,12 +74,11 @@ class Factory:
             un_ignore_list=un_ignore_list,
         ).get_default_central(start=False)
 
-        # NOTE: Event subscriptions for testing are handled by aiohomematic test support
-        # We don't need to manually subscribe to events for tests to work
-        # central.event_bus.subscribe(event_type=BackendSystemEventData, handler=self.system_event_mock)
-        # central.event_bus.subscribe(event_type=BackendParameterEvent, handler=self.entity_event_mock)
-        # central.event_bus.subscribe(event_type=HomematicEvent, handler=self.ha_event_mock)
+        central.event_bus.subscribe(event_type=BackendSystemEventData, handler=self.system_event_mock)
+        central.event_bus.subscribe(event_type=BackendParameterEvent, handler=self.entity_event_mock)
+        central.event_bus.subscribe(event_type=HomematicEvent, handler=self.ha_event_mock)
         await central.start()
+        await central.hub_coordinator.init_hub()
 
         patch("custom_components.homematicip_local.find_free_port", return_value=8765).start()
         patch(
