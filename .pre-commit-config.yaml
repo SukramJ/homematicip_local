@@ -26,7 +26,7 @@ repos:
         exclude_types: [csv, json]
         exclude: ^tests/fixtures/|.github/ISSUE_TEMPLATE/bug_report_de.yml
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.8.6
+    rev: 1.9.1
     hooks:
       - id: bandit
         args:

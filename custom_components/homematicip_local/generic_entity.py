@@ -6,6 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final, Generic
 
+from aiohomematic.central.event_bus import DataPointUpdatedCallbackEvent
 from aiohomematic.const import CallSource, DataPointUsage
 from aiohomematic.model.calculated import CalculatedDataPoint
 from aiohomematic.model.custom import CustomDataPoint
@@ -74,7 +75,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
 
         hm_device = data_point.device
         identifier = hm_device.identifier
-        via_device = hm_device.central.name
+        via_device = hm_device.central_info.name
         suggested_area = hm_device.room
 
         if control_unit.enable_sub_devices and hm_device.has_sub_devices and data_point.channel.is_in_multi_group:
@@ -229,9 +230,25 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
         if isinstance(self._data_point, CallbackDataPoint):
+            # Register the callback custom_id with the data point
+            # This tells the data point to emit DataPointUpdatedCallbackEvent for this entity
             self._unregister_callbacks.append(
                 self._data_point.register_data_point_updated_callback(
                     cb=self._async_data_point_updated, custom_id=self.entity_id
+                )
+            )
+
+            # Subscribe to DataPointUpdatedCallbackEvent on the EventBus for this entity's custom_id
+            def _on_data_point_updated_callback_event(event: DataPointUpdatedCallbackEvent) -> None:
+                """Handle data point updated callback event."""
+                if event.custom_id == self.entity_id:
+                    # Extract the original callback arguments from the event and invoke the callback
+                    self._async_data_point_updated(**event.kwargs)
+
+            self._unregister_callbacks.append(
+                self._cu.central.event_bus.subscribe(
+                    event_type=DataPointUpdatedCallbackEvent,
+                    handler=_on_data_point_updated_callback_event,
                 )
             )
             self._unregister_callbacks.append(
