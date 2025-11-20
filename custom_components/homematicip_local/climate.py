@@ -278,7 +278,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         """Copy a schedule from this entity to another."""
         if source_climate_data_point := cast(
             BaseCustomDpClimate,
-            self._data_point.device.central.get_data_point_by_custom_id(custom_id=source_entity_id),
+            self._data_point.device.data_point_provider.get_data_point_by_custom_id(custom_id=source_entity_id),
         ):
             await source_climate_data_point.copy_schedule(target_climate_data_point=self._data_point)
 
@@ -289,7 +289,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         if source_entity_id and (
             source_climate_data_point := cast(
                 BaseCustomDpClimate,
-                self._data_point.device.central.get_data_point_by_custom_id(custom_id=source_entity_id),
+                self._data_point.device.data_point_provider.get_data_point_by_custom_id(custom_id=source_entity_id),
             )
         ):
             await source_climate_data_point.copy_schedule_profile(

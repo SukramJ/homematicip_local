@@ -1,18 +1,25 @@
 # Version 1.91.0 (2025-11-16)
 
 ## What's Changed
-- Bump aiohomematic to 2025.11.19
+- Bump aiohomematic to 2025.11.22
   - Add base_temperature to CLIMATE_SIMPLE_WEEKDAY_DATA
   - Add climate schedule cache
   - Add input converter to climate scheduler setter
   - Add more simple services and converters to week profile
   - Add schedule support to custom data point
   - Add translations for log messages with level >= INFO or translation exclusions
+  - De-couple from central unit
+  - Extract coordinators from central unit
+  - Extract device registry from central
+  - Extract scheduler from central
   - Filter entries in validate_and_convert_weekday_to_simple
   - Improve the test coverage of week_profile
+  - Improve typing in protocols/interfaces
   - Optimize climate get/set_schedule
+  - Refactor event handling to event bus
   - Refactor simple schedule
   - Remove need for empty parentheses for bind_collector
+  - Rename writeable to writable
   - Return filtered climate schedule data on get_schedule / Accept filtered data in climate set_schedule
   - Switch mypy to strict
   - Use Protocol for callback with parameters
@@ -20,6 +27,7 @@
 - Add translation for press events
 - Add scheduler attributes to climate entities with schedule support
 - Fix naming of untranslated entities
+- Follow backend changes
 - Rename actions:
   - get_schedule_profile_weekday -> get_schedule_weekday
   - set_schedule_profile_weekday -> set_schedule_weekday
