@@ -20,14 +20,27 @@ class _CentralStub:
     """Very small central stub exposing only methods used by MQTTConsumer."""
 
     def __init__(self) -> None:
-        self.data_point_path_event = MagicMock()
-        self.sysvar_data_point_path_event = MagicMock()
         self._paths = [
             "devices/INTF/ADDR:1/VALUES/STATE",
             "devices/INTF/ADDR:2/VALUES/LEVEL",
         ]
+        # Mock data point with event method and device.client.supports_rpc_callback = False
+        self._mock_dp = MagicMock()
+        self._mock_dp.event = MagicMock()
+        self._mock_dp.device.client.supports_rpc_callback = False
 
-    def get_data_point_path(self) -> list[str]:
+        # Mock sysvar data point with event method
+        self._mock_sv = MagicMock()
+        self._mock_sv.event = MagicMock()
+
+        # Mock hub_coordinator
+        self.hub_coordinator = MagicMock()
+        self.hub_coordinator.get_sysvar_data_point = MagicMock(return_value=self._mock_sv)
+
+    def get_generic_data_point(self, state_path: str):  # noqa: ARG002
+        return self._mock_dp
+
+    def get_state_paths(self, rpc_callback_supported: bool = True) -> list[str]:  # noqa: ARG002
         return list(self._paths)
 
 
@@ -48,7 +61,11 @@ class TestMQTTConsumer:
         topic = "prefix/devices/INTF/ADDR:1/VALUES/STATE"
         consumer._on_device_mqtt_msg_receive(_msg(topic, payload='{"v": true}'))  # pylint: disable=protected-access
 
-        central.data_point_path_event.assert_called_once_with(state_path="devices/INTF/ADDR:1/VALUES/STATE", value=True)
+        # Verify that the data point's event method was called with correct arguments
+        central._mock_dp.event.assert_called_once()
+        call_kwargs = central._mock_dp.event.call_args.kwargs
+        assert call_kwargs["value"] is True
+        assert "received_at" in call_kwargs
 
     @pytest.mark.asyncio
     async def test_subscribe_and_unsubscribe_when_mqtt_available(self, hass, monkeypatch) -> None:
@@ -101,4 +118,8 @@ class TestMQTTConsumer:
         topic = "sysvar/state/INTF/NAME"
         consumer._on_sysvar_mqtt_msg_receive(_msg(topic, payload='{"v": 42}'))  # pylint: disable=protected-access
 
-        central.sysvar_data_point_path_event.assert_called_once_with(state_path="sysvar/state/INTF/NAME", value=42)
+        # Verify that the sysvar data point's event method was called with correct arguments
+        central._mock_sv.event.assert_called_once()
+        call_kwargs = central._mock_sv.event.call_args.kwargs
+        assert call_kwargs["value"] == 42
+        assert "received_at" in call_kwargs

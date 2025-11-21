@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 from typing import Any, Final, cast
 
@@ -48,7 +49,7 @@ class MQTTConsumer:
     def _get_topics(self) -> dict[str, dict[str, Any]]:
         """Return the topics for the central."""
         topics: dict[str, dict[str, Any]] = {}
-        for state_path in self._central.get_data_point_path():  # type: ignore[attr-defined] #TODO
+        for state_path in self._central.get_state_paths(rpc_callback_supported=False):
             topics[state_path.replace("/", "_")] = {
                 "topic": f"{self._mqtt_prefix}{state_path}",
                 "msg_callback": lambda msg: self._on_device_mqtt_msg_receive(msg=msg),
@@ -72,8 +73,15 @@ class MQTTConsumer:
         _LOGGER.debug("Device MQTT Message received: %s", msg.payload)
         state_path = msg.topic[len(self._mqtt_prefix) :] if msg.topic.startswith(self._mqtt_prefix) else msg.topic
         payload_dict = json_loads(msg.payload)
-        if (payload_value := cast(dict[str, Any], payload_dict).get("v")) is not None:
-            self._central.data_point_path_event(state_path=state_path, value=payload_value)  # type: ignore[attr-defined] #TODO
+        if (
+            (payload_value := cast(dict[str, Any], payload_dict).get("v")) is not None
+            and (dp := self._central.get_generic_data_point(state_path=state_path))
+            and not dp.device.client.supports_rpc_callback
+        ):
+            self._hass.async_create_task(
+                target=dp.event(value=payload_value, received_at=datetime.now()),
+                name="hmip_mqtt_event",
+            )
 
     @callback
     def _on_sysvar_mqtt_msg_receive(self, msg: ReceiveMessage) -> None:
@@ -81,5 +89,10 @@ class MQTTConsumer:
         _LOGGER.debug("Sysvar MQTT Message received: %s", msg.payload)
         state_path = msg.topic[len(self._mqtt_prefix) :] if msg.topic.startswith(self._mqtt_prefix) else msg.topic
         payload_dict = json_loads(msg.payload)
-        if (payload_value := cast(dict[str, Any], payload_dict).get("v")) is not None:
-            self._central.sysvar_data_point_path_event(state_path=state_path, value=payload_value)  # type: ignore[attr-defined] #TODO
+        if (payload_value := cast(dict[str, Any], payload_dict).get("v")) is not None and (
+            sv := self._central.hub_coordinator.get_sysvar_data_point(state_path=state_path)
+        ):
+            self._hass.async_create_task(
+                target=sv.event(value=payload_value, received_at=datetime.now()),
+                name="hmip_mqtt_event",
+            )

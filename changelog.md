@@ -1,13 +1,14 @@
-# Version 1.91.0 (2025-11-16)
+# Version 1.91.0 (2025-11-21)
 
 ## What's Changed
-- Bump aiohomematic to 2025.11.22
+- Bump aiohomematic to 2025.11.23
   - Add base_temperature to CLIMATE_SIMPLE_WEEKDAY_DATA
   - Add climate schedule cache
   - Add input converter to climate scheduler setter
   - Add more simple services and converters to week profile
   - Add schedule support to custom data point
   - Add translations for log messages with level >= INFO or translation exclusions
+  - Clean up event bus implementation and remove legacy code
   - De-couple from central unit
   - Extract coordinators from central unit
   - Extract device registry from central
