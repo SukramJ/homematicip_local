@@ -6,14 +6,13 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final, Generic
 
-from aiohomematic.central.event_bus import DataPointUpdatedCallbackEvent
 from aiohomematic.const import CallSource, DataPointUsage
 from aiohomematic.model.calculated import CalculatedDataPoint
 from aiohomematic.model.custom import CustomDataPoint
 from aiohomematic.model.data_point import CallbackDataPoint
 from aiohomematic.model.generic import GenericDataPoint
 from aiohomematic.model.hub import GenericHubDataPoint, GenericProgramDataPoint, GenericSysvarDataPoint
-from aiohomematic.type_aliases import UnregisterCallback
+from aiohomematic.type_aliases import UnsubscribeHandler
 from homeassistant.core import State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -102,7 +101,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
         )
 
         self._static_state_attributes = self._get_static_state_attributes()
-        self._unregister_callbacks: list[UnregisterCallback] = []
+        self._unsubscribe_handlers: list[UnsubscribeHandler] = []
 
         _LOGGER.debug("init: Setting up %s", data_point.full_name)
         if (
@@ -230,29 +229,13 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
         if isinstance(self._data_point, CallbackDataPoint):
-            # Register the callback custom_id with the data point
-            # This tells the data point to emit DataPointUpdatedCallbackEvent for this entity
-            self._unregister_callbacks.append(
-                self._data_point.register_data_point_updated_callback(
-                    cb=self._async_data_point_updated, custom_id=self.entity_id
+            self._unsubscribe_handlers.append(
+                self._data_point.subscribe_to_data_point_updated(
+                    handler=self._async_data_point_updated, custom_id=self.entity_id
                 )
             )
-
-            # Subscribe to DataPointUpdatedCallbackEvent on the EventBus for this entity's custom_id
-            def _on_data_point_updated_callback_event(event: DataPointUpdatedCallbackEvent) -> None:
-                """Handle data point updated callback event."""
-                if event.custom_id == self.entity_id:
-                    # Extract the original callback arguments from the event and invoke the callback
-                    self._async_data_point_updated(**event.kwargs)
-
-            self._unregister_callbacks.append(
-                self._cu.central.event_bus.subscribe(
-                    event_type=DataPointUpdatedCallbackEvent,
-                    handler=_on_data_point_updated_callback_event,
-                )
-            )
-            self._unregister_callbacks.append(
-                self._data_point.register_device_removed_callback(cb=self._async_device_removed)
+            self._unsubscribe_handlers.append(
+                self._data_point.subscribe_to_device_removed(handler=self._async_device_removed)
             )
         # Init value of entity.
         if isinstance(self._data_point, CalculatedDataPoint | CustomDataPoint | GenericDataPoint):
@@ -275,7 +258,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
         # Remove callback from device.
-        for unregister in self._unregister_callbacks:
+        for unregister in self._unsubscribe_handlers:
             if unregister is not None:
                 unregister()
 
@@ -405,7 +388,7 @@ class AioHomematicGenericHubEntity(Entity):
                 self._attr_name = data_point.name
 
         self._attr_device_info = self._get_device_info()
-        self._unregister_callbacks: list[UnregisterCallback] = []
+        self._unsubscribe_handlers: list[UnsubscribeHandler] = []
         _LOGGER.debug("init sysvar: Setting up %s", self._data_point.name)
 
     @property
@@ -448,20 +431,20 @@ class AioHomematicGenericHubEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
         if isinstance(self._data_point, CallbackDataPoint):
-            self._unregister_callbacks.append(
-                self._data_point.register_data_point_updated_callback(
-                    cb=self._async_hub_entity_updated,
+            self._unsubscribe_handlers.append(
+                self._data_point.subscribe_to_data_point_updated(
+                    handler=self._async_hub_entity_updated,
                     custom_id=self.entity_id,
                 )
             )
-            self._unregister_callbacks.append(
-                self._data_point.register_device_removed_callback(cb=self._async_hub_device_removed)
+            self._unsubscribe_handlers.append(
+                self._data_point.subscribe_to_device_removed(handler=self._async_hub_device_removed)
             )
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip sysvar entity will be removed from hass."""
         # Remove callbacks.
-        for unregister in self._unregister_callbacks:
+        for unregister in self._unsubscribe_handlers:
             if unregister is not None:
                 unregister()
 
