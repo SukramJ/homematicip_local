@@ -168,242 +168,393 @@ Known cases are in combination with the rf-module `HM-MOD-RPI-PCB`.
 
 ### Configuration Variables
 
-#### Central
+The integration uses a multi-step configuration flow that guides you through all necessary settings. This section explains each configuration option in detail.
 
-```yaml
-instance_name:
-  description: Name of the HA instance. Allowed characters are a-z and 0-9.
-    If you want to connect to the same CCU instance from multiple HA installations (or to multiple CCUs) this instance_name must be unique on every HA instance.
-  type: string
-host:
-  description: Hostname or IP address of your hub.
-  type: string
-username:
-  description: Case sensitive. Username of a user in admin-role on your hub.
-  type: string
-password:
-  description: Case sensitive. Password of the admin-user on your hub.
-  type: string
-tls:
-  description:
-    Enable TLS encryption. This will change the default for json_port from 80 to 443.
-    TLS must be enabled, if http to https forwarding is enabled in the CCU.
-    Traffic from CCU to HA (state updates) is always unencrypted.
-  type: boolean
-  default: false
-verify_tls:
-  description: Enable TLS verification.
-  type: boolean
-  default: false
-callback_host:
-  description: Hostname or IP address for callback-connection (only required in special network conditions).
-  type: string
-callback_port_xml_rpc:
-  description: Port for callback-connection (only required in special network conditions).
-  type: integer
-json_port:
-  description: Port used the access the JSON-RPC API.
-  type: integer
+---
+
+## Step 1: CCU Connection Settings
+
+These are the basic settings required to connect Home Assistant to your Homematic hub.
+
+### Required Settings
+
+| Setting | Description | Example | Notes |
+|---------|-------------|---------|-------|
+| **Instance Name** | Unique identifier for this integration instance | `homematic_ccu3` | Use lowercase letters and numbers only (a-z, 0-9). Must be unique if connecting multiple HA instances to the same CCU or connecting to multiple CCUs. |
+| **Host** | Hostname or IP address of your CCU | `192.168.1.50` or `ccu3.local` | Make sure your CCU has a static IP or use a hostname that doesn't change. |
+| **Username** | Admin username on your CCU | `Admin` | **Case sensitive!** User must have administrator privileges. |
+| **Password** | Password for the admin user | `MySecurePass123` | **Case sensitive!** Only use allowed characters: `A-Z`, `a-z`, `0-9`, and `.!$():;#-` |
+
+### Security & Network Settings
+
+| Setting | Default | When to Use |
+|---------|---------|-------------|
+| **Use TLS** | `false` | Enable if your CCU uses HTTPS. Changes JSON-RPC port from 80 to 443. **Note:** State updates from CCU to HA are always unencrypted. |
+| **Verify TLS** | `false` | Enable to verify TLS certificates. Only enable if your CCU has a valid SSL certificate. |
+
+### Advanced Connection Settings (Optional)
+
+These settings are only needed in special network scenarios:
+
+| Setting | Purpose | When to Use | How to Reset |
+|---------|---------|-------------|--------------|
+| **Callback Host** | IP/hostname that CCU uses to reach HA | Required if HA runs in Docker with custom networking, or if HA's auto-detected IP is unreachable from the CCU | Set to one blank space character |
+| **Callback Port (XML-RPC)** | Port that CCU uses to send state updates | Required in Docker setups where port forwarding is needed | Set to `0` |
+| **JSON-RPC Port** | Port for fetching device names and room info | Only if you changed the CCU's JSON-RPC port from default (80/443) | Set to `0` |
+
+#### Docker Users: Network Setup
+
+If running Home Assistant in Docker:
+- **Recommended:** Use `network_mode: host` in your Docker configuration
+- **Alternative:** If you can't use host networking:
+  1. Set **Callback Host** to your Docker host's IP address
+  2. Set **Callback Port** to a port you forward to the HA container
+  3. Configure port forwarding on your Docker host
+
+---
+
+## Step 2: Interface Selection
+
+Select which device types you want to integrate. Enable only the interfaces your CCU actually uses.
+
+### Common Interface Configurations
+
+#### HomematicIP Only (Most Modern Setups)
+```
+✓ HomematicIP (HmIP-RF)     Port: 2010 (or 42010 with TLS)
+✗ Homematic (BidCos-RF)
+✗ Homematic Wired
+✗ Heating Groups
+✗ CUxD
+✗ CCU-Jack
 ```
 
-#### Interface
-
-This page always displays the default values, also when reconfiguring the integration.
-
-```yaml
-hmip_rf_enabled:
-  description: Enable support for HomematicIP (wireless and wired) devices.
-  type: boolean
-  default: false
-hmip_rf_port:
-  description: Port for HomematicIP (wireless and wired).
-  type: integer
-  default: 2010
-bidcos_rf_enabled:
-  description: Enable support for BidCos (Homematic wireless) devices.
-  type: boolean
-  default: false
-bidcos_rf_port:
-  description: Port for BidCos (Homematic wireless).
-  type: integer
-  default: 2001
-virtual_devices_enabled:
-  description: Enable support for heating groups.
-  type: boolean
-  default: false
-virtual_devices_port:
-  description: Port for heating groups.
-  type: integer
-  default: 9292
-virtual_devices_path:
-  description: Path for heating groups
-  type: string
-  default: /groups
-hs485d_enabled:
-  description: Enable support for Homematic wired devices.
-  type: boolean
-  default: false
-hs485d_port:
-  description: Port for Homematic wired.
-  type: integer
-  default: 2000
-cuxd_enabled:
-  description: Enable support for CUxD devices.
-  type: boolean
-  default: false
-ccujack_enabled:
-  description: Enable support for CCU-Jack devices.
-  type: boolean
-  default: false
+#### Mixed Homematic & HomematicIP
+```
+✓ HomematicIP (HmIP-RF)     Port: 2010 (or 42010 with TLS)
+✓ Homematic (BidCos-RF)     Port: 2001 (or 42001 with TLS)
+✗ Homematic Wired
+✓ Heating Groups            Port: 9292, Path: /groups
+✗ CUxD
+✗ CCU-Jack
 ```
 
-#### Advanced (optional)
+### Detailed Interface Options
 
-```yaml
-program_markers:
-  description: Comma separated list of markers for system variables to enable fetching. This means that not all programs are retrieved except the internal ones.
-  type: select
-program_scan_enabled:
-  description: Enable program scanning.
-  type: boolean
-  default: true
-sysvar_markers:
-  description: Comma separated list of markers for system variables to enable fetching. This means that not all system variables are retrieved except the internal ones.
-  type: select
-sysvar_scan_enabled:
-  description: Enable system program scanning.
-  type: boolean
-  default: true
-sysvar_scan_interval:
-  description:
-    Interval in seconds between system variable/program scans. The minimum value is 5.
-    Intervals of less than 15s are not recommended, and put a lot of strain on slow backend systems in particular.
-    Instead, a higher interval with an on-demand call from the `homematicip_local.fetch_system_variables` action is recommended.
-  type: integer
-  default: 30
-enable_system_notifications:
-  description:
-    Control if system notification should be displayed. Affects CALLBACK and PINGPONG notifications.
-    It's not recommended to disable this option, because this would hide problems on your system.
-    A better option is to solve the communication problems in your environment.
-  type: integer
-  default: true
-listen_on_all_ip:
-  description:
-    By default the XMLRPC server only listens to the ip address, that is used for the communication to the CCU, because, for security reasons, it's better to only listen on needed ports.
-    This works for most of the installations, but in rare cases, when double virtualization is used (Docker on Windows/Mac), this doesn't work.
-    In those cases it is necessary, that the XMLRPC server listens an all ('0.0.0.0') ip addresses.
-    If you have multiple instances running ensure that all are configured equally.
-  type: bool
-  default: false
-mqtt_enabled:
-  description:
-    Enable support for MQTT to receive events for CUxD and CCU-Jack devices. This also enables events for system variables with 'MQTT' in the description.
-  type: bool
-  default: false
-mqtt_prefix:
-  description:
-    Required, if CCU-Jack uses and MQTT-Bridge
-  type: string
-  default: '' 
-un_ignore:
-  # Only visible when reconfiguring the integration
-  description: Add additional datapoints/parameters to your instance. See Unignore device parameters
-  type: select
-enable_sub_devices:
-  description: 
-    Creates additional HA (sub) devices for Homematic devices with multiple channels like HmIP-DRSI4 and HmIP-DRDI3.
-    Enabling this has effect on automations that use devices, which must be updated.
-    When disabling this obsolete devices must be deleted manually.
-  type: bool
-  default: false
-use_group_channel_for_cover_state:
-  description:
-    Option for cover entities that the current default behaviour can be disabled:
-      - The default behaviour is, that the primary cover entity of a group uses the level of the state channel and no its own level to display a correct level.
-      - Only HM experts should disable this option, that like to control all three writeable channels of a cover group. 
-  type: bool
-  default: true
-delay_new_device_creation:
-  description:
-    Option to delay the device creation until the device is completely configured in the CCU.
-    Instead of directly creating the device, a repair is created, so a user can decide when to create this device in HA.
-    By default devices are created immediately. That means that also the initial device name (serial number + model) is used for naming. 
-    This is only available for new devices that are taught in after the integration is configured initially.
-  type: bool
-  default: false
-optional_settings:
-  description:
-    Option to enable optional settings. Used for analytics and debugging. Should not be used during normal operations.
-  type: select
-```
+| Interface | Enable If You Have... | Default Port | TLS Port |
+|-----------|----------------------|--------------|----------|
+| **HomematicIP (HmIP-RF)** | HomematicIP wireless or wired devices | 2010 | 42010 |
+| **Homematic (BidCos-RF)** | Classic Homematic wireless devices | 2001 | 42001 |
+| **Homematic Wired (BidCos-Wired)** | Classic Homematic wired devices | 2000 | 42000 |
+| **Heating Groups (Virtual Devices)** | Thermostat groups configured in CCU | 9292 | 49292 |
+| **CUxD** | CUxD add-on installed | - | - |
+| **CCU-Jack** | CCU-Jack software installed | - | - |
 
+**Important Notes:**
+- Only enable interfaces you actually use - disabled interfaces save resources
+- CUxD and CCU-Jack require additional setup (see [CUxD, CCU-Jack and MQTT support](#cuxd-ccu-jack-and-mqtt-support))
+- Port numbers are automatically adjusted when TLS is enabled
+- Custom ports can be specified if you changed defaults in your CCU
 
-### JSON-RPC Port
+---
 
-The JSON-RPC Port is used to fetch names and room information from the CCU. The default value is `80`. But if you enable TLS the port `443` will be used. You only have to enter a custom value here if you have set up the JSON-RPC API to be available on a different port.  
-If you are using Homegear the names are fetched using metadata available via XML-RPC. Hence the JSON-RPC port is irrelevant for Homegear users.
-**To reset the JSON-RPC Port it must be set to 0.**
+## Step 3: Advanced Options (Optional)
 
-### callback_host and callback_port_xml_rpc
+After configuring interfaces, you can choose to configure advanced options or finish setup immediately. Most users can skip this step.
 
-These two options are required for _special_ network environments. If for example Home Assistant is running within a Docker container and detects its own IP to be within the Docker network, the CCU won't be able to establish the connection to Home Assistant. In this case you have to specify which address and port the CCU should connect to. This may require forwarding connections on the Docker host machine to the relevant container.
+### System Variables & Programs
 
-**To reset the callback host it must be set to one blank character.**
-**To reset the callback port it must be set to 0.**
+Control how CCU system variables and programs are imported into Home Assistant.
 
-## System variables
+| Setting | Default | Description | Recommendation |
+|---------|---------|-------------|----------------|
+| **Enable System Variable Scan** | `true` | Fetch system variables from CCU | Keep enabled unless you don't use system variables |
+| **System Variable Markers** | All | Filter which variables to import (HAHM, MQTT, HX, INTERNAL) | Use markers to import only needed variables |
+| **Enable Program Scan** | `true` | Fetch programs from CCU | Keep enabled unless you don't use programs |
+| **Program Markers** | All except INTERNAL | Filter which programs to import | Use markers to import only needed programs |
+| **Scan Interval** | 30 seconds | How often to poll for variable/program changes | Use 30-60s. For values under 15s, use on-demand fetching instead. |
 
-System variables are fetched every 30 seconds from backend (CCU/Homegear) and belong to a device of type CCU. You could also click on action on the integration's overview in HA.
+**About Markers:**
+Markers are keywords in the description field of system variables/programs in the CCU:
+- **HAHM** - Extended mode: Creates writable entities (switch, select, number, text) instead of read-only sensors
+- **MQTT** - For CCU-Jack MQTT support: Enables push updates for variables
+- **HX** - Custom marker for your own filtering
+- **INTERNAL** - CCU's internal checkbox: Includes CCU-internal variables/programs
 
-System variables are initially created as **[deactivated](https://github.com/sukramj/homematicip_local#deactivated-entities)** entity.
+### Communication & Networking
 
-The types of system variables in the CCU are:
+| Setting | Default | When to Change |
+|---------|---------|----------------|
+| **System Notifications** | `true` | Shows warnings about CALLBACK and PINGPONG issues. **Don't disable** - fix network issues instead. |
+| **Listen on All IPs** | `false` | Enable only for Docker-on-Mac/Windows with double virtualization issues. Security risk if enabled unnecessarily. |
 
-- _character string_ (Zeichenkette)
-- _list of values_ (Werteliste)
-- _number_ (Zahl)
-- _logic value_ (Logikwert)
-- _alert_ (Alarm)
+### MQTT Integration (For CUxD and CCU-Jack)
 
-System variables have a description that can be added in the CCU's UI.
-If you add the marker `HAHM` (before 1.76.0 it was `hahm`) to the description extended features for this system variable can be used in HA.
-This `HAHM` marker is used to control the entity creation in HA.
-Switching system variables from DEFAULT -> EXTENDED or EXTENDED -> DEFAULT requires a restart of HA or a reload of the integration.
+| Setting | Default | Description |
+|---------|---------|-------------|
+| **Enable MQTT** | `false` | Enable to receive events from CUxD and CCU-Jack devices via MQTT |
+| **MQTT Prefix** | _(empty)_ | Set if using MQTT Bridge (RemotePrefix in CCU-Jack config) |
 
-When using Homegear system variables are handled like the DEFAULT.
+**Prerequisites for MQTT:**
+- HA must be connected to an MQTT broker
+- CCU-Jack installed OR MQTT Bridge configured
+- See [CUxD, CCU-Jack and MQTT support](#cuxd-ccu-jack-and-mqtt-support) for setup guide
 
-### This is how entities are created from system variables:
+### Device Behavior
 
-- DEFAULT: system variables that do **not** have the **marker** `HAHM` in description:
-  - _character string_, _list of values_, _number_ --> `sensor` entity
-  - _alert_, _logic value_ --> `binary_sensor` entity
-- EXTENDED: system variables that do have the **marker** `HAHM` in description:
-  - _list of values_ --> `select` entity
-  - _number_ --> `number` entity
-  - _alarm_, _logic value_ —> `switch` entity
-  - _character string_ —> `text` entity
+| Setting | Default | Description | Impact |
+|---------|---------|-------------|--------|
+| **Enable Sub-Devices** | `false` | Creates separate HA devices for each channel on multi-channel Homematic devices (e.g., HmIP-DRSI4, HmIP-DRDI3) | Affects device-based automations - update automations when changing |
+| **Use Group Channel for Cover State** | `true` | Cover groups display level from state channel instead of own level | Only disable if you need to control all three channels separately (experts only) |
+| **Delay New Device Creation** | `false` | New devices create a repair notification instead of immediate entity creation | Useful to avoid auto-created names like "VCU1234567:1" - wait until properly named in CCU |
 
-Using `select`, `number`, `switch` and `text` results in the following advantages:
+### Expert Options
 
-- System variables can be changed directly in the UI without additional logic.
-- The general actions for `select`, `number`, `switch` and `text` can be used.
-- The action `homematicip_local.set_variable_value` can, but no longer has to, be used to write system variables.
-- Use of device based automations (actions) is possible.
+| Setting | Default | Description |
+|---------|---------|-------------|
+| **Unignore Parameters** | _(empty)_ | Add normally filtered device parameters as entities | See [Unignore device parameters](#unignore-device-parameters). Use at your own risk. |
+| **Optional Settings** | _(empty)_ | Enable debug/analytics features | **Don't use in production** - for development only |
 
-### Filtering system variables and programs
+---
 
-By default all system variables (incl. internals) and all program (excl. internals) are loaded and created as deactivated entity.
-To get a more customizable result it's possible to select markers in the advanced dialog of the configuration.
+## Quick Setup Guide
 
-These are the predefined markers that can be used for filtering:
+### Typical HomematicIP Setup (Recommended for Beginners)
 
-- HAHM : This marker is already used. A `HAHM` (upper case) must be added to the description to enable extended variables. This marker is now also used for filtering.
-- INTERNAL : system variables and programs can be marked as internal with a checkbox. There is no need something to the description.
-- MQTT: This is already used by CCU-Jack. Here an `MQTT` (upper case) must be added to the description.
-- HX : For all other cases you could add `HX` (upper case) to the description, if none of the above cases match.
+**Step 1 - CCU Connection:**
+- Instance Name: `ccu3`
+- Host: `192.168.1.50`
+- Username: `Admin`
+- Password: Your CCU admin password
+- Use TLS: `false` (unless your CCU requires HTTPS)
+- Verify TLS: `false`
 
-These marked system variables and programs are created as activated in HA. The positive side effect is that activated entities can automatically be deleted by the integration.
+**Step 2 - Interfaces:**
+- Enable: HomematicIP (HmIP-RF) only
+- Use default port: 2010
+
+**Step 3 - Advanced:**
+- Click "Complete Setup" to skip advanced options
+
+**Result:** All HomematicIP devices will be discovered and added to Home Assistant.
+
+---
+
+### Advanced Setup with Multiple Device Types
+
+**Step 1 - CCU Connection:**
+- Instance Name: `home_ccu` (unique if you have multiple CCUs)
+- Host: Your CCU IP/hostname
+- Credentials: Admin username and password
+- TLS: Enable if your CCU uses HTTPS
+
+**Step 2 - Interfaces:**
+- Enable: HomematicIP, Homematic (BidCos-RF), and Heating Groups
+- Use default ports (automatically adjusted for TLS)
+
+**Step 3 - Advanced Options:**
+- System Variable Markers: Select `HAHM` for writable variables
+- Scan Interval: `30` seconds
+- Enable MQTT: `true` (if using CUxD or CCU-Jack)
+- All other settings: Keep defaults
+
+---
+
+## Reconfiguring the Integration
+
+You can update your CCU connection settings without removing and re-adding the integration:
+
+1. Go to **Settings** → **Devices & Services**
+2. Find **Homematic(IP) Local for OpenCCU**
+3. Click the **three-dot menu** → **Reconfigure**
+4. Update your settings (host, username, password, TLS, etc.)
+5. The integration will validate and reload with new settings
+
+**What you can reconfigure:**
+- Host/IP address (if CCU moved to different IP)
+- Username and password
+- TLS settings
+- Callback settings
+- JSON-RPC port
+
+**Note:** To change interfaces or advanced options, use the **Configure** option instead of Reconfigure.
+
+## System Variables & Programs
+
+System variables and programs from your CCU are automatically imported into Home Assistant as entities. This allows you to read and control CCU logic directly from HA.
+
+### Key Facts
+
+- **Update Frequency:** Polled every 30 seconds (configurable in advanced settings)
+- **Initial State:** Created as **disabled** entities - you must enable them manually in HA
+- **On-Demand Updates:** Use the `homematicip_local.fetch_system_variables` action for immediate updates
+- **Device Location:** All variables/programs appear under a device named after your CCU instance
+
+---
+
+## Understanding System Variables
+
+CCU system variables can be one of five types:
+
+| CCU Type (German) | CCU Type (English) | Default HA Entity | Extended HA Entity (with HAHM) |
+|-------------------|-------------------|-------------------|-------------------------------|
+| Zeichenkette | Character String | `sensor` (read-only) | `text` (editable) |
+| Werteliste | List of Values | `sensor` (read-only) | `select` (editable dropdown) |
+| Zahl | Number | `sensor` (read-only) | `number` (editable slider) |
+| Logikwert | Logic Value | `binary_sensor` (read-only) | `switch` (togglable) |
+| Alarm | Alert | `binary_sensor` (read-only) | `switch` (togglable) |
+
+---
+
+## Two Modes: DEFAULT vs EXTENDED
+
+### DEFAULT Mode (Read-Only)
+
+System variables **without** the `HAHM` marker in their description are created as read-only sensors.
+
+**Example:** A CCU variable named "Temperature_Living_Room" without marker
+- ✅ You can read the value in HA
+- ❌ You cannot change it from HA's UI (must use action or CCU)
+
+**Created as:**
+- Text/List/Number → `sensor.temperature_living_room`
+- Logic/Alert → `binary_sensor.temperature_living_room`
+
+---
+
+### EXTENDED Mode (Writable) ⭐ Recommended
+
+System variables **with** the `HAHM` marker in their CCU description become fully controllable in HA.
+
+**How to enable:**
+1. In CCU, edit your system variable
+2. In the "Description" field, add `HAHM` (uppercase)
+3. Save in CCU
+4. Reload the integration in HA (or restart HA)
+
+**Example:** A CCU variable "Vacation_Mode" with description "HAHM Holiday switch"
+- ✅ You can read the value in HA
+- ✅ You can toggle it directly from HA's UI
+- ✅ Works with standard HA actions (switch.turn_on, switch.turn_off)
+- ✅ Works in device-based automations
+
+**Created as:**
+- Text → `text.vacation_mode` (editable text field)
+- List → `select.vacation_mode` (dropdown with predefined values)
+- Number → `number.vacation_mode` (slider with min/max)
+- Logic/Alert → `switch.vacation_mode` (toggle switch)
+
+**Why use EXTENDED mode?**
+- Control system variables directly in HA's UI without writing automations
+- Use standard HA actions instead of `homematicip_local.set_variable_value`
+- Enable/disable device-based automation triggers
+- Cleaner integration with HA dashboards
+
+---
+
+## Filtering: Import Only What You Need
+
+By default, the integration imports **all** system variables and programs, which can create hundreds of disabled entities. Use **markers** to filter and auto-enable only the ones you need.
+
+### How Filtering Works
+
+**Without Markers (Default Behavior):**
+- All variables/programs imported as **disabled** entities
+- You must manually enable each one you want to use
+- Disabled entities remain in HA until manually deleted
+
+**With Markers (Recommended):**
+- Only marked variables/programs are imported as **enabled** entities
+- Unmarked items are not created at all
+- When you remove a marker from CCU, HA automatically deletes the entity
+
+### Available Markers
+
+Configure these in **Advanced Options → System Variable Markers / Program Markers**:
+
+| Marker | Where to Add | Purpose | Auto-Enabled? |
+|--------|--------------|---------|---------------|
+| **HAHM** | Description field | Creates writable entities (select, number, switch, text) | ✅ Yes |
+| **MQTT** | Description field | Enables real-time MQTT updates (requires CCU-Jack) | ✅ Yes |
+| **HX** | Description field | Generic custom marker for your own filtering | ✅ Yes |
+| **INTERNAL** | Checkbox in CCU | Marks CCU-internal variables/programs | ✅ Yes |
+
+### Example: Smart Filtering Setup
+
+**Goal:** Import only vacation mode, heating controls, and alarm status.
+
+**Step 1 - In CCU, edit system variables:**
+- "Vacation_Mode" → Description: `HAHM Vacation control`
+- "Heating_Setpoint_Living" → Description: `HAHM HX Living room temp`
+- "Alarm_Active" → Description: `HAHM Alarm system`
+- (All other variables: no marker)
+
+**Step 2 - In HA, configure integration:**
+- Advanced Options → System Variable Markers: Select `HAHM` and `HX`
+
+**Result:**
+- ✅ Only 3 variables imported (all enabled automatically)
+- ✅ All writable (because of HAHM)
+- ❌ All other CCU variables ignored
+
+---
+
+## CCU Programs
+
+CCU programs work the same as system variables:
+
+- **Without markers:** All programs (except INTERNAL) imported as disabled `button` entities
+- **With markers:** Only marked programs imported as enabled `button` entities
+- **Trigger:** Click the button in HA to execute the CCU program
+
+**Tip:** Use the `HAHM` marker on programs you frequently trigger from HA.
+
+---
+
+## Quick Start Guide
+
+### For Beginners (Simple Setup)
+
+**Goal:** Use all system variables without filtering
+
+1. Configure integration (no marker selection needed)
+2. All variables appear as disabled entities
+3. Go to **Settings → Devices & Services → Entities**
+4. Filter by "disabled"
+5. Enable the variables you want to use
+
+**Result:** Read-only sensors (use `homematicip_local.set_variable_value` to write)
+
+---
+
+### For Power Users (Filtered + Writable)
+
+**Goal:** Import only needed variables, make them writable
+
+**In CCU:**
+1. Edit each important system variable
+2. Add `HAHM` to the description field
+3. Save
+
+**In HA:**
+1. Reconfigure integration → Advanced Options
+2. System Variable Markers: Select `HAHM`
+3. System Variable Scan: Enabled
+4. Save and reload
+
+**Result:**
+- Only HAHM-marked variables imported
+- All imported variables are writable (switch/select/number/text)
+- Auto-enabled (no manual activation needed)
+
+---
+
+## Important Notes
+
+- **Homegear Users:** System variables are always handled in DEFAULT mode (read-only)
+- **Changing Modes:** Adding/removing `HAHM` requires HA restart or integration reload to take effect
+- **Entity Deletion:** Entities with markers are auto-deleted when marker is removed; unmarked entities must be deleted manually
+- **Case Sensitive:** Markers must be uppercase (`HAHM`, not `hahm`)
 
 ## Actions
 
@@ -771,124 +922,172 @@ A sample usage is shown in the blueprint [Show device errors](https://github.com
 
 The `ERROR*` parameters are evaluated for this event type in the backend.
 
-## Additional information
+## Additional Information
 
-### How can a device be removed from Home Assistant
+This section covers common questions, best practices, and important concepts for working with the integration.
 
-Go to the devices page of the integration and select a device. Click the three-dot menu at the button and press Delete.
-This will only delete the device from Home Assistant and not from the CCU.
+---
 
-### What is the meaning of `Error fetching initial data` / `Fehler beim Abrufen der Anfangsdaten`?
+## Understanding Entity States & Updates
 
-This integration uses a [REGA script](https://github.com/sukramj/aiohomematic/blob/devel/aiohomematic/rega_scripts/fetch_all_device_data.fn) to fetch as much data in a single call as possible, to avoid multiple request to get the required initial data.
-In rare cases the output of the script can be invalid, so a further processing is not possible, and the fallback solution is to fetch all required data with individual calls, that cause a higher duty cycle during the start phase of the integration.
+### How State Updates Work
 
-This problem can be analysed by executing the [REGA script](https://github.com/sukramj/aiohomematic/blob/devel/aiohomematic/rega_scripts/fetch_all_device_data.fn) in the CCU. The parameter ##interface## (line 17) must be replaced with the interface mention from the poped-up issue. The expected result is a valid json. 
-Search (search for GET_ALL_DEVICE_DATA) within the issue tracker and discussion forum for related items.
+The integration uses a **push-based** system, not polling:
 
-Please don't create an issue, because this is not an issue with the integration. 
-Use an existing discussion or start a new one, and attach the result of the executed REGA script.
+1. **Initial Load:** When HA starts or reconnects, all device states are fetched from CCU
+2. **Ongoing Updates:** CCU sends state changes to HA via XML-RPC events (push)
+3. **Exception:** System variables are polled every 30 seconds (configurable)
 
-### What is the meaning of `XmlRPC-Server received no events` / `XmlRPC-Server empfängt keine Ereignisse`?
+**Important:** After a CCU restart, the CCU itself doesn't know device states until devices report in. Battery devices may take hours to update.
 
-This integration does not fetch new updates from the backend, it **receives** state changes and new values for devices from the backend by the XmlRPC server.
+### The `value_state` Attribute
 
-Therefore the integration additionally checks for the CCU, if this mechanism works:
+Every entity has a `value_state` attribute indicating how reliable the current value is:
 
-Regardless of regular device updates, HA checks the availability of the CCU with a `PING` every **15 seconds**, and expects a `PONG` event as a response on the XMLRPC server.
-This persistent notification is only displayed in HA if the received PONG events and the device updates are missing for **10 minutes**, but it also disappears again as soon as events are received again.
+| State | Meaning | When It Occurs | Trust Level |
+|-------|---------|----------------|-------------|
+| **`valid`** | Value loaded from CCU or received via event | Normal operation | ✅ Fully reliable |
+| **`not valid`** | No value available | Device never reported | ❌ Unknown state |
+| **`restored`** | Value restored from last HA session | After HA restart | ⚠️ May be outdated |
+| **`uncertain`** | CCU restarted, no update received yet | After CCU restart | ⚠️ Possibly outdated |
 
-So the message means there is a problem in the communication from the backend to HA that was **identified** by the integration but not **caused**.
+**Recommendation:** For critical automations, check `value_state == "valid"` to ensure current data.
 
-### What is the meaning of `Pending Pong mismatch on interface` / `Austehende Pong Ereignisse auf Interface`?
+### Optimized Backend Calls
 
-Only relevant for CCU.
+The integration minimizes unnecessary CCU communication:
 
-As mentioned above, we send a PING event every 15s to check the connection and expect a corresponding PONG event from the backend.
+- **Single-parameter entities** (switch, sensor): Only sends changes if value differs
+- **Multi-parameter entities** (climate, cover, light): Sends if any parameter changed
+- **Not optimized:** Locks, sirens, system variables, and certain actions always send commands
 
-If everything is OK the number of send PINGs matches the number of received PONGs.
+---
 
-If we receive less PONGs that means that there is another HA Instance with the same instance name, that has been started after this instance, that receives all events, which also includes value update of devices.
-Also a communication or CCU problem could be the cause for this.
+## Managing Devices & Entities
 
-If we receive more PONGs that means that there is another HA Instance with the same instance name, that has been started before this instance, so this instance also receives events from the other instance.
+### Removing Devices
 
-Solution:
-Check if there are multiple instances of this integration running with the same instance name, and re-add the integration on one HA instance with a different instance name.
+**To remove a device from Home Assistant:**
 
-### Noteworthy about entity states
+1. Go to **Settings** → **Devices & Services** → **Homematic(IP) Local**
+2. Click on the device
+3. Click the **three-dot menu** → **Delete**
 
-The integration fetches the states of all devices on initially startup and on reconnect from the backend (CCU/Homegear).
-Afterwards, the state updates will be sent by the CCU as events to HA. We don't fetch states, except for system variables, after initial startup.
+**Important:** This only removes the device from HA, not from your CCU.
 
-After a restart of the backend (esp. CCU), the backend has initially no state information about its devices. Some devices are actively polled for updates, but many devices, esp. battery driven devices, cannot be polled, so the backend needs to wait for periodic update send by the device.
-This could take seconds, minutes and in rare cases hours.
+### Renaming Devices After CCU Changes
 
-That's why the last state of an entity will be recovered after a HA restart.
-If you want to know how assured the displayed value is, there is an attribute `value_state` at each entity with the following values:
+If you renamed a device/channel in the CCU and want the change reflected in HA:
 
-- `valid` the value was either loaded from the CCU or received via an event
-- `not valid` there is no value. The state of the entity is `unknown`.
-- `restored` the value has been restored from the last saved state after an HA restart
-- `uncertain` the value could not be updated from the CCU after restarting the CCU, and no events were received either.
+| Method | Steps | Entity ID | Name | When to Use |
+|--------|-------|-----------|------|-------------|
+| **1. Manual rename in HA** | Rename in HA entity settings | Unchanged | Changed | Quick fix, but not synced with CCU |
+| **2. Reload integration** | Settings → Integrations → Reload | Unchanged | Updated from CCU | Keep entity_id, update name |
+| **3. Delete & recreate** | Delete device in HA → Reload integration | New (based on new name) | Updated from CCU | Want entity_id to match new name |
+| **4. Reinstall integration** | Remove & re-add integration | All new | All updated | Fresh start (lose customizations) |
 
-If you want to be sure that the state of the entity is as consistent as possible, you should also check the `value_state` attribute for `valid`.
+**Recommendation:** Use method 2 for most cases.
 
-### Sending state changes to backend
+### CCU Rooms → HA Areas
 
-We try to avoid backend calls if value/state doesn't change:
+**How room assignments work:**
 
-- If an entity (e.g. `switch`) has only **one** parameter that represents its state, then a call to the backend will be made,
-  if the parameter value sent is not identical to the current state.
-- If an entity (e.g. `cover`, `climate`, `light`) has **multiple** parameters that represent its state, then a call to the backend will be made,
-  if one of these parameter values sent is not identical to its current state.
-- Not covered by this approach:
-  - platforms: lock and siren.
-  - actions: `stop_cover`, `stop_cover_tilt`, `enable_away_mode_*`, `disable_away_mode`, `set_on_time_value`
-  - system variables
+| CCU Room Configuration | HA Area Assignment | Example |
+|----------------------|-------------------|---------|
+| Single room assigned to all channels | ✅ Assigned | Device in "Living Room" → Area: "Living Room" |
+| Same room assigned to multiple channels | ✅ Assigned | All channels in "Kitchen" → Area: "Kitchen" |
+| Different rooms per channel | ❌ Not assigned | Ch1: "Kitchen", Ch2: "Bedroom" → Area: (none) |
+| No rooms assigned | ❌ Not assigned | No CCU rooms → Area: (none) |
 
-### Rename of device/channel in CCU not reflected in Home Assistant
+**Limitation:** HA allows one area per device; CCU allows multiple rooms per channel.
 
-Option 1: Just rename entity_id and name in HA
+---
 
-Option 2: Reload the Integration or restart HA, that will reload the names from CCU . This will show the the new entity name, if not changed manually in HA. The entity_id will not change.
+## Working with Device Parameters
 
-Option 3: Delete the device in HA (device details). This deletes the device from all caches, and from entity/device_registry. A reload on the integration, or a restart of HA will recreate the device and entities. The new name will be reflected also in the entity_id.
+### Deactivated vs Disabled Entities
 
-Option 4: Delete and reinstall the Integration. That will recreate all devices and entities with new names (Should only be used on freshly installs systems)
+**Many entities are created but initially disabled** to avoid cluttering your HA instance. To use them:
 
-### How rooms of the CCU are assigned to areas in HA
+1. Go to **Settings** → **Devices & Services** → **Entities**
+2. Filter by "Disabled"
+3. Click the entity → **Enable**
 
-It is possible to assign multiple rooms to a channel in the CCU, but HA only allows one area per device.
-Areas are assigned in HA when a single room is assigned to a Homematic device or multiple channels are only assigned to the same room.
-If a device's channels are assigned to multiple rooms or nothing is set, the area in HA remains empty
+**Common disabled entities:**
+- RSSI (signal strength) sensors
+- Advanced diagnostic parameters
+- Rarely used device features
 
-### Unignore device parameters
+### Unignoring Parameters
 
-Not all parameters of a Homematic or HomematicIP device are created as entity. These parameters are filtered out to provide a better user experience for the majority of the users. If you need more parameters as entities have a look at [this](https://github.com/sukramj/aiohomematic/blob/devel/docs/unignore.md) description. Starting with version 1.65.0 this can be configured in the reconfiguration flow under advanced options. You use this at your own risk!!!
+Some parameters are completely filtered out (not created at all). To add them:
 
-BUT remember: Some parameters are already created as entities, but are **[deactivated](https://github.com/sukramj/homematicip_local#deactivated-entities)**.
+1. **Check first:** The parameter might exist as a disabled entity (see above)
+2. **If truly missing:** Configure in **Advanced Options** → **Unignore Parameters**
+3. See [detailed documentation](https://github.com/sukramj/aiohomematic/blob/devel/docs/unignore.md)
 
-### Devices with buttons
+**⚠️ Warning:** Use at your own risk - these parameters are filtered for good reasons.
 
-Devices with buttons (e.g. HM-Sen-MDIR-WM55 and other remote controls) may not be fully visible in the UI. This is intended, as buttons don't have a persistent state. An example: The HM-Sen-MDIR-WM55 motion detector will expose entities for motion detection and brightness (among other entities), but none for the two internal buttons. To use these buttons within automations, you can select the device as the trigger-type, and then select the specific trigger (_Button "1" pressed_ etc.).
+### Special Case: HmIP-eTRV LEVEL Parameter
 
-### Fixing RSSI values
+The thermostat valve `LEVEL` parameter is intentionally created as a **sensor** (read-only), not a **number** entity:
 
-See this [explanation](https://github.com/sukramj/aiohomematic/blob/devel/docs/rssi_fix.md) how the RSSI values are fixed.
+**Why?** The valve's internal control immediately overrides any manual position change, making manual control useless.
 
-### Changing the default platform for some parameters
+**If you still need it:** Use the unignore feature to add `LEVEL` as a number entity.
 
-#### HmIP-eTRv\* / LEVEL, number to sensor entity
+---
 
-The `LEVEL` parameter of the HmIP-eTRV can be written, i.e. this parameter is created as a **number** entity and the valve can be moved to any position.
-However, this **manual position** is reversed shortly thereafter by the device's internal control logic, causing the valve to return to its original position almost immediately. Since the internal control logic of the device can neither be bypassed nor deactivated, manual control of the valve opening degree is not useful. The `LEVEL` parameter is therefore created as a sensor, and thus also supports long-term statistics.
+## Button Devices & Events
 
-If you need the `LEVEL` parameter as number entity, then this can be done by using the [unignore](https://github.com/sukramj/homematicip_local#unignore-device-parameters) feature by adding LEVEL to the file.
+### Why Buttons Don't Show Entities
 
-### Pressing buttons via automation
+Devices with physical buttons (remotes, motion detectors with buttons) don't create button entities because:
+- Buttons don't have persistent state (pressed vs not pressed)
+- Events are the proper way to handle button presses in HA
 
-It is possible to press buttons of devices from Home Assistant. A common usecase is to press a virtual button of your CCU, which on the CCU is configured to perform a specific action. For this you can use the `homematicip_local.set_device_value` action. In YAML-mode the action call to press button `3` on a CCU could look like this:
+**Example:** HM-Sen-MDIR-WM55 motion detector
+- ✅ Shows: Motion sensor, brightness sensor
+- ❌ Doesn't show: Two internal buttons
+
+### Using Buttons in Automations
+
+**Correct approach:**
+1. Create an automation
+2. Trigger type: **Device**
+3. Select your button device
+4. Select specific trigger: "Button 1 pressed", "Button 2 long pressed", etc.
+
+**Alternative:** Use the `homematic.keypress` event (advanced users)
+
+### Enabling Button Events
+
+For HomematicIP devices (WRC2, WRC6, SPDR, KRC4, HM-PBI-4-FM), button events require activation:
+
+**Option A - Easiest (Action):**
+```yaml
+action: homematicip_local.create_central_links
+target:
+  device_id: YOUR_DEVICE_ID
+```
+
+**Option B - OpenCCU Users:**
+1. Go to CCU → Settings → Devices
+2. Click "+" next to your remote control
+3. Click the button channel
+4. Press "activate"
+
+**Option C - CCU Program (Classic Method):**
+1. CCU → Programs and connections → New program
+2. Add condition: Device selection → Select button channel
+3. Choose press type (short/long)
+4. Save program (can be set inactive after first trigger)
+
+**To disable events:** Use `homematicip_local.remove_central_links`
+
+### Triggering CCU Buttons from HA
+
+**Use case:** Press a virtual CCU button to trigger a CCU program
 
 ```yaml
 action: homematicip_local.set_device_value
@@ -900,78 +1099,231 @@ data:
   channel: 3
 ```
 
-### Events for Homematic(IP) devices
+---
 
-To receive button-press events for Homematic(IP) devices like WRC2 / WRC6 (wall switch) or SPDR (passage sensor) or the KRC4 (key ring remote control) or HM-PBI-4-FM (radio button interface) you have to several options:
+## Troubleshooting Common Issues
 
-#### Option A:
-Use the action [create_central_links](https://github.com/sukramj/homematicip_local?tab=readme-ov-file#homeassistantcreate_central_links).
-A one time execution is required to activate the events.
-To deactivate the events the action [remove_central_links](https://github.com/sukramj/homematicip_local?tab=readme-ov-file#homeassistantremove_central_links) can be used.
+### "Error fetching initial data"
 
-#### Option B:
-With OpenCCU no program is needed for buttons. Events can directly activated/deactivated within ->Settings->Devices. Click the "+" of e.g. a remote control then click directly the "button-channel". Press "activate". There is no direct feedback but a action message should appear.
+**What it means:** The integration couldn't process the CCU's initial data response.
 
-#### Option C:
-Create a program in the CCU:
+**Why it happens:** The CCU's REGA script returned invalid data (rare).
 
-1. In the menu of your CCU's admin panel go to `Programs and connections` > `Programs & CCU connection`
-2. Go to `New` in the footer menu
-3. Click the plus icon below `Condition: If...` and press the button `Device selection`
-4. Select one of the device's channels you need (1-2 / 1-6 for WRC2 / WRC6 and 2-3 for SPDR)
-5. Select short or long key press
-6. Repeat Steps 3 - 5 to add all needed channels (the logic AND / OR is irrelevant)
-7. Save the program with the `OK` button
-8. Trigger the program by pressing the button as configured in step 5. Your device might indicate success via a green LED or similar. When you select the device in `Status and control` > `Devices` on the CCU, the `Last Modified` field should no longer be empty
-9. When your channels are working now, you can set the program to "inactive". Don't delete the program!
+**Impact:** Integration falls back to individual requests (slower startup, higher CCU load).
 
-Hint: To deactivate the event for one channel, remove that channel from the program
+**This is NOT a bug in the integration.** It's a CCU data issue.
 
+**How to diagnose:**
+1. Get the [REGA script](https://github.com/sukramj/aiohomematic/blob/devel/aiohomematic/rega_scripts/fetch_all_device_data.fn)
+2. Replace `##interface##` (line 17) with the interface from the error message
+3. Run in CCU web interface
+4. Check if output is valid JSON
+5. Search discussions for "GET_ALL_DEVICE_DATA"
 
-## Updating a device firmware
+**What to do:** Post in [Discussions](https://github.com/sukramj/aiohomematic/discussions) with script output.
 
-Homematic offers the possibility to update the device firmware. To do this, the firmware file must be uploaded in the CCU. The firmware is then transferred to the devices, which can take several hours or days per device. Update can then be clicked in the CCU and the device will update and reboot.
+---
 
-To simplify this process, this integration offers update entities per device.
+### "XmlRPC-Server received no events"
 
-Initially, the firmware file must be uploaded via the CCU. A query of available firmware information from eq3 does not take place. All firmware information used is provided by the local CCU.
+**What it means:** HA isn't receiving state updates from CCU for 10+ minutes.
 
-Since the CCU does not send any events for firmware updates, the current status of firmware updates is requested via regular queries. Since device updates are usually very rare and the transmission takes a long time, the query is only made every **6 hours**.
+**How the check works:**
+- HA sends PING to CCU every 15 seconds
+- Expects PONG response via XML-RPC server
+- Alert triggers after 10 minutes of missing PONGs/updates
 
-If devices whose firmware is currently being transferred were discovered via the update, their statuses are then queried **every hour**.
+**This is a network communication problem, not an integration bug.**
 
-As soon as the firmware has been successfully transferred to the device, it can be updated on the device by clicking on `install`. This information can be delayed up to **1 hour** in HA.
+**Common causes:**
+1. Firewall blocking CCU → HA connection
+2. Docker networking issues (callback_host not configured)
+3. CCU overloaded or unresponsive
+4. Network issues between CCU and HA
 
-Depending on whether an update command can be transmitted immediately or with a delay, either the updated firmware version is displayed after a short delay, or `in process`/`installing` is displayed again because a command transmission is being waited for. This state is now updated every **5 minutes** until the installation is finished.
+**How to fix:**
+1. Check firewall rules (allow CCU → HA on callback port)
+2. Docker users: Set `callback_host` and `callback_port_xml_rpc`
+3. Verify CCU is responsive
+4. Check HA logs for connection errors
 
-If shorter update cycles are desired, these can be triggered by the action `homeassistant.update_device_firmware_data`, but this might have a negative impact on your CCU!
+---
 
-## CUxD, CCU-Jack and MQTT support
+### "Pending Pong mismatch"
 
-CUxD is not natively supported due to a missing Python library for BinRPC.
-The implemented solution for CuXD utilises the JSON-RPC-API (with 15s polling) and an optional setup with MQTT (no polling needed!).
+**What it means:** Number of sent PINGs doesn't match received PONGs.
 
-To enable the optional MQTT support the following requirements must be fulfilled:
-- Requires CCU-Jack installed on CCU.
-- Requires HA connected to CCU-Jack's MQTT Broker, and MQTT enabled in this integration. In this case no mqtt prefix must be configured in this integration.
-- Alternative MQTT setup:
-  Requires HA to be connected to an MQTT-Broker (other than CCU-Jack's) and CCU-Jack to use a MQTT-Bridge. Here the mqtt prefix (RemotePrefix) must be potentially configured in the integration.
+**Scenario 1: Fewer PONGs received**
+- **Cause:** Another HA instance with same `instance_name` started after this one
+- **Effect:** That instance receives all events (including device updates)
+- **Alternative cause:** CCU or network communication problem
 
-Besides from receiving events for CUxD and CCU-Jack devices, the MQTT support also enables push events for CCU system variables, if they are correctly setup for CCU-Jack support. This requires `MQTT` as additional marker in the description.
+**Scenario 2: More PONGs received**
+- **Cause:** Another HA instance with same `instance_name` started before this one
+- **Effect:** This instance receives events from both
 
-Important:
-- Please read the [MQTT integration documentation](https://www.home-assistant.io/integrations/mqtt/) to set up MQTT in Home Assistant.
-- Please read the [CCU-Jack documentation](https://github.com/mdzio/ccu-jack/wiki) on how to set up CCU-Jack and an optional [MQTT Bridge](https://github.com/mdzio/ccu-jack/wiki/MQTT-Bridge).
-- Please use an MQTT explorer to ensure there are subscribable topics and that events arrive as expected before opening an issue for this integration.
+**Solution:** Ensure each HA instance has a unique `instance_name` when connecting to the same CCU.
 
-## CUxD and CCU-Jack device support
+---
 
-CUxD and CCU-Jack use Homematic (IP) device and paramset descriptions to be compatible with the CCU.
-This fact is also used by this integration to integrate CUxD and CCU-Jack. The integration is basically done for the original devices connected to BidCos-RF/-Wired) and HmIP-(Wired), and only their functionality and behaviour is relevant.
+## Technical Details
 
-If the implementation for CUxD or CCU-Jack differs, no further adjustments will be made in this integration!!!
-In order to adapt the device to your own needs, HA offers extensive options via templates and customization that can be used for this purpose.
-Deviating behavior is acceptable for these devices and does not constitute a fault.
+### RSSI Signal Strength
+
+See [detailed explanation](https://github.com/sukramj/aiohomematic/blob/devel/docs/rssi_fix.md) of how RSSI values are calculated and fixed.
+
+## Updating Device Firmware
+
+This integration provides **update entities** for each device, allowing you to manage firmware updates from Home Assistant.
+
+### How Firmware Updates Work
+
+**The Process:**
+
+1. **Upload firmware** to CCU (via CCU web interface)
+2. **CCU transfers firmware** to device (can take hours or days)
+3. **Install firmware** via HA update entity
+
+**Important:** Firmware files come from your CCU, not from eQ-3 servers. Upload firmware to CCU first.
+
+### Update Check Schedule
+
+The integration polls CCU for firmware information on these schedules:
+
+| Scenario | Check Frequency | Reason |
+|----------|----------------|---------|
+| **Normal operation** | Every 6 hours | Firmware updates are rare |
+| **Transfer in progress** | Every hour | Monitor active transfers |
+| **Installation in progress** | Every 5 minutes | Quick feedback during install |
+
+### Using Firmware Updates in HA
+
+**Step 1: Upload firmware to CCU**
+- Use CCU web interface → Settings → System Control → Firmware Update
+- Upload .eq3 firmware file
+
+**Step 2: Wait for transfer**
+- CCU transfers firmware to device (background process)
+- Can take hours or days depending on device type
+
+**Step 3: Install from HA**
+1. Go to **Settings** → **Devices & Services**
+2. Find your device
+3. Click the **Update** entity
+4. Click **Install**
+
+**Status meanings:**
+- **Update available:** Firmware transferred, ready to install
+- **Installing:** Update command sent to device
+- **In process:** Waiting for device to accept command
+- **Up to date:** Device running latest firmware
+
+### Update Latency
+
+- **Firmware availability status:** Can be delayed up to **1 hour** in HA
+- **Installation status:** Updates every **5 minutes** during install
+
+### On-Demand Update Check
+
+Force immediate firmware status check:
+
+```yaml
+action: homeassistant.update_device_firmware_data
+```
+
+**⚠️ Warning:** Frequent manual checks may impact CCU performance!
+
+## CUxD, CCU-Jack & MQTT Support
+
+CUxD and CCU-Jack devices require special integration because they don't use the standard XML-RPC protocol.
+
+### Communication Methods
+
+| Device Type | Default Method | MQTT Method (Optional) |
+|-------------|---------------|----------------------|
+| **CUxD** | JSON-RPC polling (every 15s) | MQTT push events (no polling) |
+| **CCU-Jack** | JSON-RPC polling (every 15s) | MQTT push events (no polling) |
+| **System Variables (with MQTT marker)** | Polling (every 30s) | MQTT push events (instant) |
+
+**Why MQTT is better:** Real-time updates instead of polling, less CCU load.
+
+---
+
+## Setting Up MQTT Support
+
+MQTT enables instant push updates for CUxD, CCU-Jack devices, and marked system variables.
+
+### Prerequisites
+
+✅ **Required:**
+1. CCU-Jack installed on your CCU
+2. HA connected to an MQTT broker
+3. MQTT integration configured in HA
+
+📚 **Documentation:**
+- [HA MQTT Integration Guide](https://www.home-assistant.io/integrations/mqtt/)
+- [CCU-Jack Documentation](https://github.com/mdzio/ccu-jack/wiki)
+- [CCU-Jack MQTT Bridge](https://github.com/mdzio/ccu-jack/wiki/MQTT-Bridge)
+
+### Setup Option 1: Direct Connection (Recommended)
+
+**Use CCU-Jack's built-in MQTT broker:**
+
+1. **Configure CCU-Jack** to enable MQTT broker
+2. **Connect HA** to CCU-Jack's MQTT broker
+3. **Enable MQTT in integration:**
+   - Advanced Options → Enable MQTT: `true`
+   - MQTT Prefix: _(leave empty)_
+
+### Setup Option 2: MQTT Bridge
+
+**Use external MQTT broker with CCU-Jack bridge:**
+
+1. **Configure CCU-Jack** to use MQTT Bridge with RemotePrefix
+2. **Connect HA** to your external MQTT broker
+3. **Enable MQTT in integration:**
+   - Advanced Options → Enable MQTT: `true`
+   - MQTT Prefix: `<your RemotePrefix from CCU-Jack>`
+
+### Enabling System Variable MQTT Updates
+
+To get instant updates for CCU system variables via MQTT:
+
+1. **In CCU:** Edit system variable
+2. **Add marker** to description: `MQTT`
+3. **In HA:** Enable MQTT in integration advanced options
+
+**Example:** Variable "Heating_Mode" with description `MQTT HAHM Temperature control`
+- ✅ Receives instant MQTT updates
+- ✅ Writable (because of HAHM marker)
+
+### Troubleshooting MQTT
+
+**Before opening an issue:**
+1. Use an MQTT explorer tool (MQTT Explorer, mosquitto_sub)
+2. Verify CCU-Jack is publishing messages
+3. Check topics match expected format
+4. Confirm HA's MQTT integration receives messages
+
+---
+
+## CUxD & CCU-Jack Device Compatibility
+
+**How it works:**
+- CUxD and CCU-Jack emulate Homematic device descriptions
+- Integration treats them like standard Homematic devices
+- Behavior may differ from original hardware
+
+**Important Limitations:**
+- This integration targets **original Homematic hardware** behavior
+- CUxD/CCU-Jack differences are **not considered bugs**
+- Use HA templates/customizations to adapt behavior if needed
+
+**Support Policy:**
+- ✅ Supported: Standard device emulation
+- ❌ Not supported: CUxD/CCU-Jack specific features or quirks
+
+If CUxD or CCU-Jack behaves differently than expected, adapt using HA's templating features rather than requesting integration changes.
 
 ## Troubleshooting
 
