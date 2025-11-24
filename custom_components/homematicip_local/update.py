@@ -7,7 +7,7 @@ from typing import Any, Final
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.update import DpUpdate
-from aiohomematic.type_aliases import UnregisterCallback
+from aiohomematic.type_aliases import UnsubscribeHandler
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -81,7 +81,7 @@ class AioHomematicUpdate(UpdateEntity):
             identifiers={(DOMAIN, data_point.device.identifier)},
         )
         self._attr_extra_state_attributes = {ATTR_FIRMWARE_UPDATE_STATE: data_point.device.firmware_update_state}
-        self._unregister_callbacks: list[UnregisterCallback] = []
+        self._unsubscribe_handlers: list[UnsubscribeHandler] = []
         _LOGGER.debug("init: Setting up %s", data_point.full_name)
 
     @property
@@ -111,13 +111,13 @@ class AioHomematicUpdate(UpdateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
-        self._unregister_callbacks.append(
-            self._data_point.register_data_point_updated_callback(
-                cb=self._async_entity_changed, custom_id=self.entity_id
+        self._unsubscribe_handlers.append(
+            self._data_point.subscribe_to_data_point_updated(
+                handler=self._async_entity_changed, custom_id=self.entity_id
             )
         )
-        self._unregister_callbacks.append(
-            self._data_point.register_device_removed_callback(cb=self._async_device_removed)
+        self._unsubscribe_handlers.append(
+            self._data_point.subscribe_to_device_removed(handler=self._async_device_removed)
         )
 
     async def async_install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
@@ -131,7 +131,7 @@ class AioHomematicUpdate(UpdateEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
         # Remove callback from device.
-        for unregister in self._unregister_callbacks:
+        for unregister in self._unsubscribe_handlers:
             if unregister is not None:
                 unregister()
 

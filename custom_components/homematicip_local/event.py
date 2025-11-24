@@ -8,7 +8,7 @@ from typing import Any
 from aiohomematic.const import DATA_POINT_EVENTS, DataPointCategory, EventKey
 from aiohomematic.model.device import Channel, Device
 from aiohomematic.model.event import GenericEvent
-from aiohomematic.type_aliases import UnregisterCallback
+from aiohomematic.type_aliases import UnsubscribeHandler
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -91,7 +91,7 @@ class AioHomematicEvent(EventEntity):
             EventKey.ADDRESS: self._hm_channel.address,
             EVENT_MODEL: self._hm_device.model,
         }
-        self._unregister_callbacks: list[UnregisterCallback] = []
+        self._unsubscribe_handlers: list[UnsubscribeHandler] = []
         _LOGGER.debug(
             "init: Setting up %s %s",
             self._hm_device.name,
@@ -112,15 +112,15 @@ class AioHomematicEvent(EventEntity):
         """Register callbacks and load initial data."""
 
         for event in self._hm_channel_events:
-            self._unregister_callbacks.append(
-                event.register_data_point_updated_callback(cb=self._async_event_changed, custom_id=self.entity_id)
+            self._unsubscribe_handlers.append(
+                event.subscribe_to_data_point_updated(handler=self._async_event_changed, custom_id=self.entity_id)
             )
-            self._unregister_callbacks.append(event.register_device_removed_callback(cb=self._async_device_removed))
+            self._unsubscribe_handlers.append(event.subscribe_to_device_removed(handler=self._async_device_removed))
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
         # Remove callback from device.
-        for unregister in self._unregister_callbacks:
+        for unregister in self._unsubscribe_handlers:
             if unregister is not None:
                 unregister()
 

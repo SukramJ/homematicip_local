@@ -45,7 +45,7 @@ from aiohomematic.const import (
 )
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.data_point import CallbackDataPoint
-from aiohomematic.type_aliases import UnregisterCallback
+from aiohomematic.type_aliases import UnsubscribeHandler
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PATH, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 
@@ -141,7 +141,7 @@ class BaseControlUnit:
             serial_number=self._central.system_information.serial,
             sw_version=self._central.version,
         )
-        self._unregister_callbacks: Final[list[UnregisterCallback]] = []
+        self._unsubscribe_handlers: Final[list[UnsubscribeHandler]] = []
 
     @property
     def central(self) -> CentralUnit:
@@ -258,13 +258,13 @@ class ControlUnit(BaseControlUnit):
     async def start_central(self) -> None:
         """Start the central unit."""
         # Subscribe to EventBus events
-        self._unregister_callbacks.append(
+        self._unsubscribe_handlers.append(
             self._central.event_bus.subscribe(
                 event_type=BackendSystemEventData,
                 handler=self._on_system_event,
             )
         )
-        self._unregister_callbacks.append(
+        self._unsubscribe_handlers.append(
             self._central.event_bus.subscribe(
                 event_type=HomematicEvent,
                 handler=self._on_homematic_event,
@@ -281,7 +281,7 @@ class ControlUnit(BaseControlUnit):
         if self._mqtt_consumer:
             self._mqtt_consumer.unsubscribe()
 
-        for unregister in self._unregister_callbacks:
+        for unregister in self._unsubscribe_handlers:
             if unregister is not None:
                 unregister()
 
