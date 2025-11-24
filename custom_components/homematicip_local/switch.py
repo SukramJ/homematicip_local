@@ -110,7 +110,7 @@ class AioHomematicSwitch(AioHomematicGenericRestoreEntity[CustomDpSwitch | DpSwi
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         if self._data_point.is_valid:
-            return self._data_point.value is True
+            return bool(self._data_point.value)
         if (
             self.is_restored
             and self._restored_state
@@ -145,7 +145,7 @@ class AioHomematicSysvarSwitch(AioHomematicGenericSysvarEntity[SysvarDpSwitch], 
     @property
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        return self._data_point.value is True
+        return bool(self._data_point.value)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""

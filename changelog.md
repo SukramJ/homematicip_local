@@ -1,7 +1,7 @@
 # Version 1.91.0 (2025-11-21)
 
 ## What's Changed
-- Bump aiohomematic to 2025.11.23
+- Bump aiohomematic to 2025.11.24
   - Add base_temperature to CLIMATE_SIMPLE_WEEKDAY_DATA
   - Add climate schedule cache
   - Add input converter to climate scheduler setter
@@ -34,6 +34,7 @@
   - set_schedule_profile_weekday -> set_schedule_weekday
   - set_schedule_simple_profile_weekday -> set_schedule_simple_weekday
 - Switch mypy to strict
+- Update documentation
 
 # Version 1.90.2 (2025-11-05)
 

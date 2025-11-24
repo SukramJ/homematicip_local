@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import cast
 
 import pytest
@@ -38,6 +39,9 @@ class TestCeSwitch:
             interface_id=const.INTERFACE_ID, channel_address="VCU2128127:4", parameter="STATE", value=1
         )
         await hass.async_block_till_done()
+        # Give time for state machine to process the state update
+        await asyncio.sleep(0.1)
+        await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == STATE_ON
         assert data_point.turn_on.call_count == 0
         await hass.services.async_call("switch", "turn_on", {"entity_id": entity_id}, blocking=True)
@@ -46,6 +50,9 @@ class TestCeSwitch:
         await control.central.data_point_event(
             interface_id=const.INTERFACE_ID, channel_address="VCU2128127:4", parameter="STATE", value=0
         )
+        await hass.async_block_till_done()
+        # Give time for state machine to process the state update
+        await asyncio.sleep(0.1)
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == STATE_OFF
         assert data_point.turn_off.call_count == 0
