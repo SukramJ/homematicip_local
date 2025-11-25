@@ -40,17 +40,20 @@ class TestHmBinarySensor:
             interface_id=const.INTERFACE_ID, channel_address="VCU5864966:1", parameter="STATE", value=1
         )
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == STATE_ON
 
         await control.central.data_point_event(
             interface_id=const.INTERFACE_ID, channel_address="VCU5864966:1", parameter="STATE", value=0
         )
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == STATE_OFF
 
         await control.central.data_point_event(
             interface_id=const.INTERFACE_ID, channel_address="VCU5864966:1", parameter="STATE", value=None
         )
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == STATE_OFF
 

@@ -68,9 +68,9 @@ class Factory:
             un_ignore_list=un_ignore_list,
         ).get_default_central(start=False)
 
-        central.event_bus.subscribe(event_type=BackendSystemEventData, handler=self.system_event_mock)
-        central.event_bus.subscribe(event_type=BackendParameterEvent, handler=self.entity_event_mock)
-        central.event_bus.subscribe(event_type=HomematicEvent, handler=self.ha_event_mock)
+        central.event_bus.subscribe(event_type=BackendSystemEventData, event_key=None, handler=self.system_event_mock)
+        central.event_bus.subscribe(event_type=BackendParameterEvent, event_key=None, handler=self.entity_event_mock)
+        central.event_bus.subscribe(event_type=HomematicEvent, event_key=None, handler=self.ha_event_mock)
         await central.start()
         await central.hub_coordinator.init_hub()
 
