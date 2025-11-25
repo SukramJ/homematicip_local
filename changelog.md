@@ -1,7 +1,7 @@
-# Version 1.91.0 (2025-11-21)
+# Version 1.91.0 (2025-11-25)
 
 ## What's Changed
-- Bump aiohomematic to 2025.11.25
+- Bump aiohomematic to 2025.11.26
   - Add base_temperature to CLIMATE_SIMPLE_WEEKDAY_DATA
   - Add climate schedule cache
   - Add input converter to climate scheduler setter

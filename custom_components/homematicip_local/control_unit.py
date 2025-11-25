@@ -261,12 +261,14 @@ class ControlUnit(BaseControlUnit):
         self._unsubscribe_handlers.append(
             self._central.event_bus.subscribe(
                 event_type=BackendSystemEventData,
+                event_key=None,
                 handler=self._on_system_event,
             )
         )
         self._unsubscribe_handlers.append(
             self._central.event_bus.subscribe(
                 event_type=HomematicEvent,
+                event_key=None,
                 handler=self._on_homematic_event,
             )
         )

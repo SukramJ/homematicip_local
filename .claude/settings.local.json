@@ -11,7 +11,10 @@
       "Bash(python3:*)",
       "Bash(npm test:*)",
       "Bash(mypy:*)",
-      "Bash(pytest:*)"
+      "Bash(pytest:*)",
+      "Bash(pip show:*)",
+      "Bash(git stash:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
