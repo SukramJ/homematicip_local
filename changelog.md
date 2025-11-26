@@ -1,14 +1,17 @@
 # Version 1.91.0 (2025-11-25)
 
 ## What's Changed
-- Bump aiohomematic to 2025.11.26
+- Bump aiohomematic to 2025.11.30
+  - Add backend detection
   - Add base_temperature to CLIMATE_SIMPLE_WEEKDAY_DATA
   - Add climate schedule cache
   - Add input converter to climate scheduler setter
   - Add more simple services and converters to week profile
   - Add schedule support to custom data point
   - Add translations for log messages with level >= INFO or translation exclusions
+  - Avoid potential memory leaks
   - Clean up event bus implementation and remove legacy code
+  - Clear in-memory caches on stop
   - De-couple from central unit
   - Extract coordinators from central unit
   - Extract device registry from central
@@ -23,8 +26,10 @@
   - Rename writeable to writable
   - Return filtered climate schedule data on get_schedule / Accept filtered data in climate set_schedule
   - Switch mypy to strict
+  - Use CentralConnectionState in AioJsonRpcAioHttpClient
   - Use Protocol for callback with parameters
   - Use schedule cache for climate get/set schedule operations
+- Add backend detection
 - Add translation for press events
 - Add scheduler attributes to climate entities with schedule support
 - Fix naming of untranslated entities

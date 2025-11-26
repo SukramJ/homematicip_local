@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from pprint import pformat
 from typing import Any, Final, cast
@@ -10,6 +11,7 @@ from urllib.parse import urlparse
 import voluptuous as vol
 from voluptuous.schema_builder import UNDEFINED, Schema
 
+from aiohomematic.backend_detection import BackendDetectionResult, DetectionConfig, detect_backend
 from aiohomematic.const import (
     DEFAULT_DELAY_NEW_DEVICE_CREATION,
     DEFAULT_ENABLE_PROGRAM_SCAN,
@@ -26,7 +28,7 @@ from aiohomematic.const import (
     OptionalSettings,
     SystemInformation,
 )
-from aiohomematic.exceptions import AuthFailure, BaseHomematicException
+from aiohomematic.exceptions import AuthFailure, BaseHomematicException, NoConnectionException, ValidationException
 from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PATH, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
@@ -338,6 +340,20 @@ async def _async_validate_config_and_get_system_information(
     return await validate_config_and_get_system_information(control_config=control_config)
 
 
+async def _async_detect_backend(
+    host: str,
+    username: str,
+    password: str,
+) -> BackendDetectionResult | None:
+    """Detect backend type and available interfaces."""
+    config = DetectionConfig(
+        host=host,
+        username=username,
+        password=password,
+    )
+    return await detect_backend(config=config)
+
+
 class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the instance flow for Homematic(IP) Local for OpenCCU."""
 
@@ -348,6 +364,10 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         """Init the ConfigFlow."""
         self.data: ConfigType = {}
         self.serial: str | None = None
+        self._detection_result: BackendDetectionResult | None = None
+        self._detection_task: asyncio.Task[None] | None = None
+        self._detection_error: str | None = None
+        self._detection_error_detail: str | None = None
 
     @staticmethod
     @callback
@@ -376,16 +396,61 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is not None:
             self.data = _get_ccu_data(self.data, user_input=user_input)
-            return await self.async_step_interface()
+            # Start detection task and show progress
+            if not self._detection_task:
+                self._detection_task = self.hass.async_create_task(
+                    self._async_run_detection(), "homematicip_local_detect_backend"
+                )
+            return await self.async_step_detect()
 
         return self.async_show_form(step_id="central", data_schema=get_domain_schema(data=self.data))
+
+    async def async_step_central_error(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Handle return to central step with validation error."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+
+        if self._detection_error:
+            errors["base"] = self._detection_error
+            # Always set invalid_items placeholder to avoid showing literal {invalid_items} in message
+            description_placeholders["invalid_items"] = self._detection_error_detail or self.data.get(CONF_HOST, "")
+
+        # Reset detection error state
+        self._detection_error = None
+        self._detection_error_detail = None
+
+        return self.async_show_form(
+            step_id="central",
+            data_schema=get_domain_schema(data=self.data),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_detect(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Handle the backend detection step."""
+        if self._detection_task and not self._detection_task.done():
+            return self.async_show_progress(
+                step_id="detect",
+                progress_action="detect_backend",
+                progress_task=self._detection_task,
+            )
+
+        # Check for errors during detection - show them in central step
+        if self._detection_error:
+            self._detection_task = None
+            return self.async_show_progress_done(next_step_id="central_error")
+
+        # Detection complete (or was never started), proceed to interface step
+        return self.async_show_progress_done(next_step_id="interface")
 
     async def async_step_interface(
         self,
         interface_input: ConfigType | None = None,
     ) -> ConfigFlowResult:
         """Handle the interface step."""
-        if interface_input is not None:
+        # Only process interface_input if it actually contains interface fields
+        # (not if it's leftover user_input from previous steps)
+        if interface_input is not None and CONF_ENABLE_HMIP_RF in interface_input:
             _update_interface_input(data=self.data, interface_input=interface_input)
             if interface_input.get(CONF_ADVANCED_CONFIG):
                 return await self.async_step_advanced()
@@ -420,6 +485,86 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         return await self.async_step_central(user_input=user_input)
 
+    def _apply_detected_interfaces(self) -> None:
+        """Apply detected interfaces to config data."""
+        if not self._detection_result:
+            return
+
+        # Use TLS setting from data (already computed from detection result)
+        use_tls = self.data.get(CONF_TLS, False)
+        interfaces: dict[Interface, dict[str, Any]] = {}
+
+        for interface in self._detection_result.available_interfaces:
+            if interface == Interface.HMIP_RF:
+                interfaces[Interface.HMIP_RF] = {
+                    CONF_PORT: IF_HMIP_RF_TLS_PORT if use_tls else IF_HMIP_RF_PORT,
+                }
+            elif interface == Interface.BIDCOS_RF:
+                interfaces[Interface.BIDCOS_RF] = {
+                    CONF_PORT: IF_BIDCOS_RF_TLS_PORT if use_tls else IF_BIDCOS_RF_PORT,
+                }
+            elif interface == Interface.BIDCOS_WIRED:
+                interfaces[Interface.BIDCOS_WIRED] = {
+                    CONF_PORT: IF_BIDCOS_WIRED_TLS_PORT if use_tls else IF_BIDCOS_WIRED_PORT,
+                }
+            elif interface == Interface.VIRTUAL_DEVICES:
+                interfaces[Interface.VIRTUAL_DEVICES] = {
+                    CONF_PORT: IF_VIRTUAL_DEVICES_TLS_PORT if use_tls else IF_VIRTUAL_DEVICES_PORT,
+                }
+
+        self.data[CONF_INTERFACE] = interfaces
+
+    async def _async_run_detection(self) -> None:
+        """Run backend detection as background task."""
+        try:
+            self._detection_result = await _async_detect_backend(
+                host=self.data[CONF_HOST],
+                username=self.data[CONF_USERNAME],
+                password=self.data[CONF_PASSWORD],
+            )
+        except AuthFailure:
+            _LOGGER.warning("Backend detection failed: invalid authentication")
+            self._detection_error = "invalid_auth"
+            self._detection_error_detail = self.data[CONF_HOST]
+            return
+        except ValidationException as ve:
+            _LOGGER.warning("Backend detection failed: invalid configuration - %s", ve)
+            self._detection_error = "invalid_config"
+            self._detection_error_detail = str(ve)
+            return
+        except NoConnectionException as ex:
+            _LOGGER.warning("Backend detection failed: connection error - %s", ex)
+            self._detection_error = "cannot_connect"
+            self._detection_error_detail = str(ex) if str(ex) else self.data[CONF_HOST]
+            return
+        except BaseHomematicException as ex:
+            _LOGGER.warning("Backend detection failed: %s - %s", type(ex).__name__, ex)
+            self._detection_error = "cannot_connect"
+            self._detection_error_detail = str(ex) if str(ex) else self.data[CONF_HOST]
+            return
+
+        if self._detection_result:
+            # Enable TLS if detected via connection or if HTTPS redirect is enabled on CCU
+            use_tls = self._detection_result.tls or self._detection_result.https_redirect_enabled is True
+            _LOGGER.debug(
+                "Backend detection successful: backend=%s, interfaces=%s, tls=%s, auth_enabled=%s, https_redirect=%s, use_tls=%s",
+                self._detection_result.backend,
+                self._detection_result.available_interfaces,
+                self._detection_result.tls,
+                self._detection_result.auth_enabled,
+                self._detection_result.https_redirect_enabled,
+                use_tls,
+            )
+            # Update TLS setting based on detection
+            self.data[CONF_TLS] = use_tls
+            # Pre-populate interfaces based on detection
+            self._apply_detected_interfaces()
+        else:
+            # No backend found - could be connection, auth, or config issue
+            _LOGGER.warning("Backend detection failed: no backend found at host %s", self.data[CONF_HOST])
+            self._detection_error = "detection_failed"
+            self._detection_error_detail = self.data[CONF_HOST]
+
     async def _validate_and_finish_config_flow(self) -> ConfigFlowResult:
         """Validate and finish the config flow."""
 
@@ -435,6 +580,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
         except AuthFailure:
             errors["base"] = "invalid_auth"
+            description_placeholders["invalid_items"] = self.data[CONF_HOST]
         except InvalidConfig as ic:
             errors["base"] = "invalid_config"
             description_placeholders["invalid_items"] = ic.args[0]
@@ -526,6 +672,7 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
             )
         except AuthFailure:
             errors["base"] = "invalid_auth"
+            description_placeholders["invalid_items"] = self.data[CONF_HOST]
         except InvalidConfig as ic:
             errors["base"] = "invalid_config"
             description_placeholders["invalid_items"] = ic.args[0]

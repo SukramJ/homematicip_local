@@ -78,7 +78,7 @@ class MQTTConsumer:
             and (dp := self._central.get_generic_data_point(state_path=state_path))
             and not dp.device.client.supports_rpc_callback
         ):
-            self._hass.async_create_task(
+            self._hass.create_task(
                 target=dp.event(value=payload_value, received_at=datetime.now()),
                 name="hmip_mqtt_event",
             )
@@ -92,7 +92,7 @@ class MQTTConsumer:
         if (payload_value := cast(dict[str, Any], payload_dict).get("v")) is not None and (
             sv := self._central.hub_coordinator.get_sysvar_data_point(state_path=state_path)
         ):
-            self._hass.async_create_task(
+            self._hass.create_task(
                 target=sv.event(value=payload_value, received_at=datetime.now()),
                 name="hmip_mqtt_event",
             )

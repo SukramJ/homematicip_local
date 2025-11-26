@@ -1,12 +1,16 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Failed to connect: {invalid_items}. Check the HA log for further details", 
-            "invalid_auth": "Invalid authentication", 
-            "invalid_config": "Invalid config: {invalid_items}", 
-            "unknown": "Unexpected error. Check the HA log for further details"
+            "cannot_connect": "Cannot connect to CCU at {invalid_items}. Please verify: 1) The hostname/IP address is correct, 2) The CCU is powered on and reachable, 3) No firewall is blocking the connection.", 
+            "detection_failed": "Cannot connect to CCU at {invalid_items}. Please verify: 1) The hostname/IP address is correct, 2) The CCU is powered on and reachable, 3) Username and password are correct (case-sensitive), 4) The user has admin privileges on the CCU, 5) No firewall is blocking the connection.", 
+            "invalid_auth": "Authentication failed for CCU at {invalid_items}. Please verify: 1) Username and password are correct (case-sensitive), 2) The user has admin privileges on the CCU, 3) Password only contains allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
+            "invalid_config": "Invalid configuration: {invalid_items}. Please check the entered values and try again.", 
+            "unknown": "An unexpected error occurred. Please check the Home Assistant logs for more details."
         }, 
         "flow_title": "{name}/{host}", 
+        "progress": {
+            "detect_backend": "Detecting backend type and available interfaces..."
+        }, 
         "step": {
             "advanced": {
                 "data": {
@@ -55,6 +59,10 @@
                     "username": "Case sensitive. User must be in admin role"
                 }, 
                 "description": "Please fill the required fields"
+            }, 
+            "detect": {
+                "description": "Detecting backend type and available interfaces...", 
+                "title": "Detecting Backend"
             }, 
             "interface": {
                 "data": {
@@ -697,10 +705,10 @@
     }, 
     "options": {
         "error": {
-            "cannot_connect": "Failed to connect: {invalid_items}. Check the HA log for further details", 
-            "invalid_auth": "Invalid authentication", 
-            "invalid_config": "Invalid config: {invalid_items}", 
-            "unknown": "Unexpected error. Check the HA log for further details"
+            "cannot_connect": "Cannot connect to CCU at {invalid_items}. Please verify: 1) The hostname/IP address is correct, 2) The CCU is powered on and reachable, 3) No firewall is blocking the connection.", 
+            "invalid_auth": "Authentication failed for CCU at {invalid_items}. Please verify: 1) Username and password are correct (case-sensitive), 2) The user has admin privileges on the CCU, 3) Password only contains allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
+            "invalid_config": "Invalid configuration: {invalid_items}. Please check the entered values and try again.", 
+            "unknown": "An unexpected error occurred. Please check the Home Assistant logs for more details."
         }, 
         "step": {
             "advanced": {
