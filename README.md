@@ -50,6 +50,7 @@ To connect locally to your Homematic Home Control Unit (HmIP-HCU1), please use t
   - [Required Settings](#required-settings)
   - [Security & Network Settings](#security--network-settings)
   - [Advanced Connection Settings (Optional)](#advanced-connection-settings-optional)
+- [Automatic Backend Detection](#automatic-backend-detection)
 - [Step 2: Interface Selection](#step-2-interface-selection)
   - [Common Interface Configurations](#common-interface-configurations)
   - [Detailed Interface Options](#detailed-interface-options)
@@ -248,9 +249,26 @@ If running Home Assistant in Docker:
 
 ---
 
+## Automatic Backend Detection
+
+After entering your CCU connection settings, the integration automatically detects your setup:
+
+| Detection | Description |
+|-----------|-------------|
+| **Backend Type** | Identifies whether you're using CCU2, CCU3, OpenCCU, Debmatic, or Homegear |
+| **Available Interfaces** | Discovers which interfaces (HmIP-RF, BidCos-RF, etc.) are available on your CCU |
+| **TLS Configuration** | Detects if your CCU is configured for encrypted connections |
+| **HTTPS Redirect** | Checks if your CCU redirects HTTP to HTTPS |
+
+This detection runs automatically and shows a progress indicator. The detected information pre-configures the interface selection in Step 2, making setup easier and reducing configuration errors.
+
+> **Note:** If detection fails (e.g., wrong credentials or network issues), you'll be returned to Step 1 with an error message explaining the problem.
+
+---
+
 ## Step 2: Interface Selection
 
-Select which device types you want to integrate. Enable only the interfaces your CCU actually uses.
+Select which device types you want to integrate. The available interfaces are pre-selected based on the automatic backend detection. Enable only the interfaces your CCU actually uses.
 
 ### Common Interface Configurations
 
