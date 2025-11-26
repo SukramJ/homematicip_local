@@ -186,7 +186,7 @@ def _get_retry_hint(error_type: str) -> str:
     return hints.get(error_type, "check_settings")
 
 
-def get_interface_schema(use_tls: bool, data: ConfigType, from_config_flow: bool) -> Schema:
+def get_interface_schema(use_tls: bool, data: ConfigType) -> Schema:
     """Return the interface schema with or without tls ports."""
     interfaces = data.get(CONF_INTERFACE, {})
     # HmIP-RF
@@ -241,8 +241,7 @@ def get_interface_schema(use_tls: bool, data: ConfigType, from_config_flow: bool
     # CUxD
     enable_cuxd = Interface.CUXD in interfaces
 
-    advanced_config = bool(data.get(CONF_ADVANCED_CONFIG))
-    interface_schema = vol.Schema(
+    return vol.Schema(
         {
             vol.Required(CONF_ENABLE_HMIP_RF, default=enable_hmip_rf): BOOLEAN_SELECTOR,
             vol.Required(CONF_HMIP_RF_PORT, default=hmip_port): PORT_SELECTOR,
@@ -255,12 +254,8 @@ def get_interface_schema(use_tls: bool, data: ConfigType, from_config_flow: bool
             vol.Required(CONF_BIDCOS_WIRED_PORT, default=bidcos_wired_port): PORT_SELECTOR,
             vol.Required(CONF_ENABLE_CCU_JACK, default=enable_ccu_jack): BOOLEAN_SELECTOR,
             vol.Required(CONF_ENABLE_CUXD, default=enable_cuxd): BOOLEAN_SELECTOR,
-            vol.Required(CONF_ADVANCED_CONFIG, default=advanced_config): BOOLEAN_SELECTOR,
         }
     )
-    if from_config_flow:
-        del interface_schema.schema[CONF_ADVANCED_CONFIG]
-    return interface_schema
 
 
 def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -> Schema:
@@ -587,8 +582,6 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         # (not if it's leftover user_input from previous steps)
         if interface_input is not None and CONF_ENABLE_HMIP_RF in interface_input:
             _update_interface_input(data=self.data, interface_input=interface_input)
-            if interface_input.get(CONF_ADVANCED_CONFIG):
-                return await self.async_step_advanced()
             return await self.async_step_finish_or_configure()
 
         _LOGGER.debug("ConfigFlow.step_interface, no user input")
@@ -607,7 +600,6 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=get_interface_schema(
                 use_tls=self.data[CONF_TLS],
                 data=self.data,
-                from_config_flow=True,
             ),
             description_placeholders=placeholders,
         )
@@ -803,23 +795,6 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
         self._control_unit: ControlUnit = entry.runtime_data
         self.data: ConfigType = dict(self.entry.data.items())
 
-    async def async_step_advanced(
-        self,
-        advanced_input: ConfigType | None = None,
-    ) -> ConfigFlowResult:
-        """Handle the advanced step (legacy)."""
-        if advanced_input is None:
-            _LOGGER.debug("ConfigFlow.step_advanced, no user input")
-            return self.async_show_form(
-                step_id="advanced",
-                data_schema=get_advanced_schema(
-                    data=self.data,
-                    all_un_ignore_parameters=self._control_unit.central.get_un_ignore_candidates(include_master=True),
-                ),
-            )
-        _update_advanced_input(data=self.data, advanced_input=advanced_input)
-        return await self._validate_and_finish_options_flow()
-
     async def async_step_advanced_settings(self, advanced_input: ConfigType | None = None) -> ConfigFlowResult:
         """Handle advanced settings (MQTT, device options, etc.)."""
         if advanced_input is not None:
@@ -832,17 +807,6 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
                 data=self.data,
                 all_un_ignore_parameters=self._control_unit.central.get_un_ignore_candidates(include_master=True),
             ),
-        )
-
-    async def async_step_central(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
-        """Manage the Homematic(IP) Local for OpenCCU devices options (legacy)."""
-        if user_input is not None:
-            self.data = _get_ccu_data(self.data, user_input=user_input)
-            return await self.async_step_interface()
-
-        return self.async_show_form(
-            step_id="central",
-            data_schema=get_options_schema(data=self.data),
         )
 
     async def async_step_connection(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
@@ -887,27 +851,6 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
             menu_options=["connection", "interfaces", "programs_sysvars", "advanced_settings"],
         )
 
-    async def async_step_interface(
-        self,
-        interface_input: ConfigType | None = None,
-    ) -> ConfigFlowResult:
-        """Handle the interface step (legacy)."""
-        if interface_input is not None:
-            _update_interface_input(data=self.data, interface_input=interface_input)
-            if interface_input.get(CONF_ADVANCED_CONFIG):
-                return await self.async_step_advanced()
-            return await self._validate_and_finish_options_flow()
-
-        _LOGGER.debug("ConfigFlow.step_interface, no user input")
-        return self.async_show_form(
-            step_id="interface",
-            data_schema=get_interface_schema(
-                use_tls=self.data[CONF_TLS],
-                data=self.data,
-                from_config_flow=False,
-            ),
-        )
-
     async def async_step_interfaces(self, interface_input: ConfigType | None = None) -> ConfigFlowResult:
         """Handle interface configuration."""
         if interface_input is not None:
@@ -919,7 +862,6 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
             data_schema=get_interface_schema(
                 use_tls=self.data[CONF_TLS],
                 data=self.data,
-                from_config_flow=False,
             ),
         )
 
@@ -1066,8 +1008,6 @@ def _update_interface_input(data: ConfigType, interface_input: ConfigType) -> No
         data[CONF_INTERFACE][Interface.CCU_JACK] = {}
     if interface_input[CONF_ENABLE_CUXD] is True:
         data[CONF_INTERFACE][Interface.CUXD] = {}
-    if interface_input[CONF_ADVANCED_CONFIG] is False:
-        data[CONF_ADVANCED_CONFIG] = {}
 
 
 def _update_advanced_input(data: ConfigType, advanced_input: ConfigType) -> None:

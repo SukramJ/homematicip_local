@@ -1087,10 +1087,10 @@ class TestConfigFlowHelpers:
         data = _get_ccu_data(data=base, user_input=user_input)
         assert data[CONF_CALLBACK_HOST] == "5.6.7.8"
 
-    def test_get_interface_schema_from_config_flow_removes_advanced(self) -> None:
-        """Ensure get_interface_schema removes advanced flag when from_config_flow=True."""
+    def test_get_interface_schema_no_advanced_config(self) -> None:
+        """Ensure get_interface_schema does not include advanced_config checkbox."""
         data = {CONF_TLS: False, CONF_INTERFACE: {}}
-        schema = get_interface_schema(use_tls=False, data=data, from_config_flow=True)
+        schema = get_interface_schema(use_tls=False, data=data)
         assert CONF_ADVANCED_CONFIG not in schema.schema
 
     def test_update_advanced_input_empty_dict_noop(self) -> None:
@@ -1136,7 +1136,7 @@ class TestConfigFlowHelpers:
         assert data[CONST_ADVANCED_CONFIG][CONF_UN_IGNORES] == ["A", "B"]
 
     def test_update_interface_input_all_paths(self) -> None:
-        """Verify interface flags update and advanced reset behavior."""
+        """Verify interface flags update correctly."""
         data: dict[str, Any] = {CONST_ADVANCED_CONFIG: {"dummy": True}}
         interface_input = {
             # all toggles enabled
@@ -1151,8 +1151,6 @@ class TestConfigFlowHelpers:
             CONF_BIDCOS_WIRED_PORT: IF_BIDCOS_WIRED_PORT,
             CONF_ENABLE_CCU_JACK: True,
             CONF_ENABLE_CUXD: True,
-            # explicit advanced choice should not reset when True is omitted, but False resets
-            CONF_ADVANCED_CONFIG: False,
         }
         _update_interface_input(data=data, interface_input=interface_input)
         # Verify all interfaces created
@@ -1163,8 +1161,8 @@ class TestConfigFlowHelpers:
         assert data[CONF_INTERFACE]["BidCos-Wired"][CONF_PORT] == IF_BIDCOS_WIRED_PORT
         assert "CCU-Jack" in data[CONF_INTERFACE]
         assert "CUxD" in data[CONF_INTERFACE]
-        # advanced config reset when user disabled it
-        assert data[CONST_ADVANCED_CONFIG] == {}
+        # advanced config is preserved (not reset by interface step)
+        assert data[CONST_ADVANCED_CONFIG] == {"dummy": True}
 
         # Verify graceful handling when interface_input is empty
         before = dict(data)
@@ -1221,7 +1219,7 @@ class TestAdvancedConfigurationFlow:
         assert result2["type"] == FlowResultType.FORM
         assert result2["step_id"] == "interface"
 
-        # Go to advanced via interface step
+        # Submit interface step - goes to menu
         interface_input = {
             CONF_ENABLE_HMIP_RF: False,
             CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
@@ -1234,11 +1232,17 @@ class TestAdvancedConfigurationFlow:
             CONF_BIDCOS_WIRED_PORT: IF_BIDCOS_WIRED_PORT,
             CONF_ENABLE_CCU_JACK: False,
             CONF_ENABLE_CUXD: False,
-            CONF_ADVANCED_CONFIG: True,
         }
         result3 = await hass.config_entries.flow.async_configure(result["flow_id"], interface_input)
-        assert result3["type"] == FlowResultType.FORM
-        assert result3["step_id"] == "advanced"
+        assert result3["type"] == FlowResultType.MENU
+        assert result3["step_id"] == "finish_or_configure"
+
+        # Select "configure_advanced" from menu to go to advanced step
+        result3a = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "configure_advanced"}
+        )
+        assert result3a["type"] == FlowResultType.FORM
+        assert result3a["step_id"] == "advanced"
 
         # Submit advanced step and finish
         advanced_input = {

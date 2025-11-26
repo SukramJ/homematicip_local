@@ -746,36 +746,6 @@
             "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Home Assistant Protokolle für weitere Details."
         }, 
         "step": {
-            "advanced": {
-                "data": {
-                    "delay_new_device_creation": "Erstellung neuer Geräte verzögern", 
-                    "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
-                    "listen_on_all_ip": "Auf allen Netzwerkschnittstellen lauschen", 
-                    "mqtt_enabled": "MQTT aktivieren", 
-                    "mqtt_prefix": "MQTT-Präfix", 
-                    "optional_settings": "Debug- & Analyseeinstellungen", 
-                    "program_markers": "Programm-Marker", 
-                    "program_scan_enabled": "Programm-Scan aktivieren", 
-                    "sub_devices_enabled": "Untergeräte-Entitäten erstellen", 
-                    "sysvar_markers": "Systemvariablen-Marker", 
-                    "sysvar_scan_enabled": "Systemvariablen-Scan aktivieren", 
-                    "sysvar_scan_interval": "Sysvar/Programm Scan-Intervall", 
-                    "un_ignore": "UN-IGNORE Parameter", 
-                    "use_group_channel_for_cover_state": "Gruppenkanal für Cover-Status verwenden"
-                }, 
-                "data_description": {
-                    "delay_new_device_creation": "Die Erstellung neuer Geräte verzögern, bis diese in der CCU vollständig konfiguriert sind; stattdessen wird eine Reparatur erstellt.", 
-                    "listen_on_all_ip": "Aktivieren, wenn Home Assistant in Docker oder einer VM läuft. Erforderlich wenn die IP von HA sich von der Host-IP unterscheidet.", 
-                    "mqtt_enabled": "MQTT aktivieren um Callbacks für CCU-Jack und CUxD zu nutzen", 
-                    "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix", 
-                    "optional_settings": "Optionale Einstellungen aktivieren. Nur für Debugging und Analysezwecke.", 
-                    "program_markers": "Kommaseparierte Liste mit Markern für Programme zum Abrufen. Zum Zurücksetzen muss der Wert auf ein Leerzeichen gesetzt werden.", 
-                    "sub_devices_enabled": "Erstellt separate Entitäten für jeden Kanal von Mehrkanal-Geräten (z.B. jede Taste einer Fernbedienung).", 
-                    "sysvar_markers": "Kommaseparierte Liste mit Markern für Systemvariablen zum Abrufen. Zum Zurücksetzen muss der Wert auf ein Leerzeichen gesetzt werden.", 
-                    "un_ignore": "Schau in die Dokumentation für Informationen über UN-IGNORE"
-                }, 
-                "description": "Konfiguration der erweiterten Parameter"
-            }, 
             "advanced_settings": {
                 "data": {
                     "delay_new_device_creation": "Erstellung neuer Geräte verzögern", 
@@ -799,27 +769,6 @@
                 }, 
                 "description": "Erweiterte Einstellungen inkl. MQTT und Geräteoptionen konfigurieren", 
                 "title": "Erweiterte Einstellungen"
-            }, 
-            "central": {
-                "data": {
-                    "callback_host": "Callback Hostname/IP-Adresse", 
-                    "callback_port_xml_rpc": "Callback XML-RPC Port", 
-                    "host": "CCU Hostname/IP-Adresse", 
-                    "json_port": "JSON-RPC Port", 
-                    "password": "CCU Passwort", 
-                    "tls": "TLS verwenden (verschlüsselte Verbindung)", 
-                    "username": "CCU Benutzername", 
-                    "verify_tls": "TLS-Zertifikat überprüfen"
-                }, 
-                "data_description": {
-                    "callback_host": "Um den Callback-Host zurückzusetzen, muss der Wert auf ein Leerzeichen gesetzt werden", 
-                    "callback_port_xml_rpc": "Um den Callback-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden", 
-                    "json_port": "Um den JSON-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden", 
-                    "password": "Groß-/Kleinschreibung beachten. Erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
-                    "username": "Groß-/Kleinschreibung beachten. Benutzer muss die Administratorrolle haben", 
-                    "verify_tls": "Das TLS-Zertifikat der CCU überprüfen. Bei selbstsignierten Zertifikaten deaktivieren."
-                }, 
-                "description": "CCU-Verbindung neu konfigurieren"
             }, 
             "connection": {
                 "data": {
@@ -852,29 +801,6 @@
                     "programs_sysvars": "Programme & Systemvariablen"
                 }, 
                 "title": "Integration konfigurieren"
-            }, 
-            "interface": {
-                "data": {
-                    "advanced_config": "Erweiterte Konfiguration", 
-                    "bidcos_rf_enabled": "Homematic (Bidcos-RF) aktivieren", 
-                    "bidcos_rf_port": "HM-RF Port", 
-                    "bidcos_wired_enabled": "Homematic-Wired (BidCos-Wired) aktivieren", 
-                    "bidcos_wired_port": "BidCos-Wired Port", 
-                    "ccu_jack_enabled": "CCU-Jack aktivieren", 
-                    "cuxd_enabled": "CUxD aktivieren", 
-                    "hmip_rf_enabled": "Homematic IP aktivieren", 
-                    "hmip_rf_port": "HmIP-RF Port", 
-                    "mqtt_enabled": "MQTT aktivieren", 
-                    "mqtt_prefix": "MQTT-Präfix", 
-                    "virtual_devices_enabled": "Heizgruppen aktivieren", 
-                    "virtual_devices_path": "Gruppen-Pfad", 
-                    "virtual_devices_port": "Gruppen-Port"
-                }, 
-                "data_description": {
-                    "mqtt_enabled": "MQTT aktivieren um Callbacks für CCU-Jack und CUxD zu nutzen", 
-                    "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix"
-                }, 
-                "description": "CCU-Schnittstellen neu konfigurieren"
             }, 
             "interfaces": {
                 "data": {
