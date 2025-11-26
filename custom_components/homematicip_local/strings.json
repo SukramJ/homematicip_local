@@ -746,36 +746,6 @@
             "unknown": "An unexpected error occurred. Please check the Home Assistant logs for more details."
         }, 
         "step": {
-            "advanced": {
-                "data": {
-                    "delay_new_device_creation": "Delay new device creation", 
-                    "enable_system_notifications": "Enable system notifications", 
-                    "listen_on_all_ip": "Listen on all network interfaces", 
-                    "mqtt_enabled": "Enable MQTT", 
-                    "mqtt_prefix": "MQTT prefix", 
-                    "optional_settings": "Debug & analytics settings", 
-                    "program_markers": "Program markers", 
-                    "program_scan_enabled": "Enable program scan", 
-                    "sub_devices_enabled": "Create sub-device entities", 
-                    "sysvar_markers": "System variable markers", 
-                    "sysvar_scan_enabled": "Enable system variable scan", 
-                    "sysvar_scan_interval": "Sysvar/Program scan interval", 
-                    "un_ignore": "UN-IGNORE parameters", 
-                    "use_group_channel_for_cover_state": "Use group channel for cover state"
-                }, 
-                "data_description": {
-                    "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.", 
-                    "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
-                    "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
-                    "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge", 
-                    "optional_settings": "Enable optional settings. Used for analytics and debugging. Should not be used during normal operations.", 
-                    "program_markers": "Comma separated list of markers for programs to enable fetching. To reset, the value must be set to a space.", 
-                    "sub_devices_enabled": "Creates separate entities for each channel of multi-channel devices (e.g., each button of a remote).", 
-                    "sysvar_markers": "Comma separated list of markers for system variables to enable fetching. To reset, the value must be set to a space.", 
-                    "un_ignore": "Check the documentation for information about UN-IGNORE"
-                }, 
-                "description": "Configure the advanced parameters"
-            }, 
             "advanced_settings": {
                 "data": {
                     "delay_new_device_creation": "Delay new device creation", 
@@ -799,27 +769,6 @@
                 }, 
                 "description": "Configure advanced settings including MQTT and device options", 
                 "title": "Advanced settings"
-            }, 
-            "central": {
-                "data": {
-                    "callback_host": "Callback hostname/IP address", 
-                    "callback_port_xml_rpc": "Callback XML-RPC port", 
-                    "host": "CCU hostname/IP address", 
-                    "json_port": "JSON-RPC port", 
-                    "password": "CCU password", 
-                    "tls": "Use TLS (encrypted connection)", 
-                    "username": "CCU username", 
-                    "verify_tls": "Verify TLS certificate"
-                }, 
-                "data_description": {
-                    "callback_host": "To reset the callback host it must be set to one blank character", 
-                    "callback_port_xml_rpc": "To reset the callback port it must be set to 0", 
-                    "json_port": "To reset the JSON-RPC port it must be set to 0", 
-                    "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
-                    "username": "Case sensitive. User must have administrator role", 
-                    "verify_tls": "Verify the CCU's TLS certificate. Disable for self-signed certificates."
-                }, 
-                "description": "Re-configure the CCU connection"
             }, 
             "connection": {
                 "data": {
@@ -852,29 +801,6 @@
                     "programs_sysvars": "Programs & system variables"
                 }, 
                 "title": "Configure integration"
-            }, 
-            "interface": {
-                "data": {
-                    "advanced_config": "Advanced configuration", 
-                    "bidcos_rf_enabled": "Enable Homematic (Bidcos-RF)", 
-                    "bidcos_rf_port": "HM-RF port", 
-                    "bidcos_wired_enabled": "Enable BidCos-Wired (HM-Wired)", 
-                    "bidcos_wired_port": "BidCos-Wired port", 
-                    "ccu_jack_enabled": "Enable CCU-Jack", 
-                    "cuxd_enabled": "Enable CUxD", 
-                    "hmip_rf_enabled": "Enable Homematic IP", 
-                    "hmip_rf_port": "HmIP-RF port", 
-                    "mqtt_enabled": "Enable MQTT", 
-                    "mqtt_prefix": "MQTT prefix", 
-                    "virtual_devices_enabled": "Enable groups (heating groups)", 
-                    "virtual_devices_path": "Groups path", 
-                    "virtual_devices_port": "Groups port"
-                }, 
-                "data_description": {
-                    "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
-                    "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge"
-                }, 
-                "description": "Re-configure the interfaces to CCU"
             }, 
             "interfaces": {
                 "data": {

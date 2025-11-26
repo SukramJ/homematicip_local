@@ -1,1425 +1,1351 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Entry with the serial {serial} is already configured",
-            "reconfigure_failed": "Could not find the configuration entry to reconfigure",
+            "already_configured": "Entry with the serial {serial} is already configured", 
+            "reconfigure_failed": "Could not find the configuration entry to reconfigure", 
             "reconfigure_successful": "Connection settings updated successfully"
-        },
+        }, 
         "error": {
-            "cannot_connect": "Cannot connect to CCU [{invalid_items}]. Please verify: 1) The hostname/IP address is correct, 2) The CCU is powered on and reachable, 3) No firewall is blocking the connection.",
-            "detection_failed": "Cannot connect to CCU [{invalid_items}]. Please verify: 1) The hostname/IP address is correct, 2) The CCU is powered on and reachable, 3) Username and password are correct (case-sensitive), 4) The user has admin privileges on the CCU, 5) No firewall is blocking the connection.",
-            "invalid_auth": "Authentication failed for CCU [{invalid_items}]. Please verify: 1) Username and password are correct (case-sensitive), 2) The user has admin privileges on the CCU, 3) Password only contains allowed characters: A-Z, a-z, 0-9 and .!$():;#-",
-            "invalid_config": "Invalid configuration: [{invalid_items}]. Please check the entered values and try again.",
+            "cannot_connect": "Cannot connect to CCU [{invalid_items}]. Please verify: 1) The hostname/IP address is correct, 2) The CCU is powered on and reachable, 3) No firewall is blocking the connection.", 
+            "detection_failed": "Cannot connect to CCU [{invalid_items}]. Please verify: 1) The hostname/IP address is correct, 2) The CCU is powered on and reachable, 3) Username and password are correct (case-sensitive), 4) The user has admin privileges on the CCU, 5) No firewall is blocking the connection.", 
+            "invalid_auth": "Authentication failed for CCU [{invalid_items}]. Please verify: 1) Username and password are correct (case-sensitive), 2) The user has admin privileges on the CCU, 3) Password only contains allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
+            "invalid_config": "Invalid configuration: [{invalid_items}]. Please check the entered values and try again.", 
             "unknown": "An unexpected error occurred. Please check the Home Assistant logs for more details."
-        },
-        "flow_title": "{name}/{host}",
+        }, 
+        "flow_title": "{name}/{host}", 
         "progress": {
             "detect_backend": "Detecting backend type and available interfaces..."
-        },
+        }, 
         "step": {
             "advanced": {
                 "data": {
-                    "delay_new_device_creation": "Delay new device creation",
-                    "enable_system_notifications": "Enable system notifications",
-                    "listen_on_all_ip": "Listen on all network interfaces",
-                    "mqtt_enabled": "Enable MQTT",
-                    "mqtt_prefix": "MQTT prefix",
-                    "optional_settings": "Debug & analytics settings",
-                    "program_markers": "Program markers",
-                    "program_scan_enabled": "Enable program scan",
-                    "sub_devices_enabled": "Create sub-device entities",
-                    "sysvar_markers": "System variable markers",
-                    "sysvar_scan_enabled": "Enable system variable scan",
-                    "sysvar_scan_interval": "Sysvar/Program scan interval",
+                    "delay_new_device_creation": "Delay new device creation", 
+                    "enable_system_notifications": "Enable system notifications", 
+                    "listen_on_all_ip": "Listen on all network interfaces", 
+                    "mqtt_enabled": "Enable MQTT", 
+                    "mqtt_prefix": "MQTT prefix", 
+                    "optional_settings": "Debug & analytics settings", 
+                    "program_markers": "Program markers", 
+                    "program_scan_enabled": "Enable program scan", 
+                    "sub_devices_enabled": "Create sub-device entities", 
+                    "sysvar_markers": "System variable markers", 
+                    "sysvar_scan_enabled": "Enable system variable scan", 
+                    "sysvar_scan_interval": "Sysvar/Program scan interval", 
                     "use_group_channel_for_cover_state": "Use group channel for cover state"
-                },
+                }, 
                 "data_description": {
-                    "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.",
-                    "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.",
-                    "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD",
-                    "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge",
-                    "optional_settings": "Enable optional settings. Used for analytics and debugging. Should not be used during normal operations.",
-                    "program_markers": "Comma separated list of markers for programs to enable fetching. To reset, the value must be set to a space.",
-                    "sub_devices_enabled": "Creates separate entities for each channel of multi-channel devices (e.g., each button of a remote).",
+                    "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.", 
+                    "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
+                    "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
+                    "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge", 
+                    "optional_settings": "Enable optional settings. Used for analytics and debugging. Should not be used during normal operations.", 
+                    "program_markers": "Comma separated list of markers for programs to enable fetching. To reset, the value must be set to a space.", 
+                    "sub_devices_enabled": "Creates separate entities for each channel of multi-channel devices (e.g., each button of a remote).", 
                     "sysvar_markers": "Comma separated list of markers for system variables to enable fetching, To reset, the value must be set to a space."
-                },
-                "description": "Step {step_current} of {step_total}: Configure advanced parameters",
+                }, 
+                "description": "Step {step_current} of {step_total}: Configure advanced parameters", 
                 "title": "Advanced settings"
-            },
+            }, 
             "central": {
                 "data": {
-                    "callback_host": "Callback hostname/IP address",
-                    "callback_port_xml_rpc": "Callback XML-RPC port",
-                    "host": "CCU hostname/IP address",
-                    "instance_name": "Integration instance name",
-                    "json_port": "JSON-RPC port",
-                    "password": "CCU password",
-                    "tls": "Use TLS (encrypted connection)",
-                    "username": "CCU username",
+                    "callback_host": "Callback hostname/IP address", 
+                    "callback_port_xml_rpc": "Callback XML-RPC port", 
+                    "host": "CCU hostname/IP address", 
+                    "instance_name": "Integration instance name", 
+                    "json_port": "JSON-RPC port", 
+                    "password": "CCU password", 
+                    "tls": "Use TLS (encrypted connection)", 
+                    "username": "CCU username", 
                     "verify_tls": "Verify TLS certificate"
-                },
+                }, 
                 "data_description": {
-                    "callback_host": "To reset the callback host it must be set to one blank character",
-                    "callback_port_xml_rpc": "To reset the callback port it must be set to 0",
-                    "instance_name": "Name of the HA instance.\n If you want to connect to the same CCU instance from multiple HA installations this instance_name must be unique on every HA instance",
-                    "json_port": "To reset the JSON-RPC port it must be set to 0",
-                    "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-",
-                    "username": "Case sensitive. User must have administrator role",
+                    "callback_host": "To reset the callback host it must be set to one blank character", 
+                    "callback_port_xml_rpc": "To reset the callback port it must be set to 0", 
+                    "instance_name": "Name of the HA instance.\n If you want to connect to the same CCU instance from multiple HA installations this instance_name must be unique on every HA instance", 
+                    "json_port": "To reset the JSON-RPC port it must be set to 0", 
+                    "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
+                    "username": "Case sensitive. User must have administrator role", 
                     "verify_tls": "Verify the CCU's TLS certificate. Disable for self-signed certificates."
-                },
-                "description": "Step {step_current} of {step_total}: Configure CCU connection",
+                }, 
+                "description": "Step {step_current} of {step_total}: Configure CCU connection", 
                 "title": "CCU connection"
-            },
+            }, 
             "detect": {
-                "description": "Detecting backend type and available interfaces...",
+                "description": "Detecting backend type and available interfaces...", 
                 "title": "Backend detection"
-            },
+            }, 
             "finish_or_configure": {
-                "description": "Setup is ready. Choose an option:",
+                "description": "Setup is ready. Choose an option:", 
                 "menu_options": {
-                    "configure_advanced": "Configure advanced options",
+                    "configure_advanced": "Configure advanced options", 
                     "finish_setup": "Finish setup"
-                },
+                }, 
                 "title": "Finish or configure"
-            },
+            }, 
             "interface": {
                 "data": {
-                    "bidcos_rf_enabled": "Enable Homematic (Bidcos-RF)",
-                    "bidcos_rf_port": "HM-RF port",
-                    "bidcos_wired_enabled": "Enable BidCos-Wired (HM-Wired)",
-                    "bidcos_wired_port": "BidCos-Wired port",
-                    "ccu_jack_enabled": "Enable CCU-Jack",
-                    "cuxd_enabled": "Enable CUxD",
-                    "hmip_rf_enabled": "Enable Homematic IP",
-                    "hmip_rf_port": "HmIP-RF port",
-                    "virtual_devices_enabled": "Enable groups (heating groups)",
-                    "virtual_devices_path": "Groups path",
+                    "bidcos_rf_enabled": "Enable Homematic (Bidcos-RF)", 
+                    "bidcos_rf_port": "HM-RF port", 
+                    "bidcos_wired_enabled": "Enable BidCos-Wired (HM-Wired)", 
+                    "bidcos_wired_port": "BidCos-Wired port", 
+                    "ccu_jack_enabled": "Enable CCU-Jack", 
+                    "cuxd_enabled": "Enable CUxD", 
+                    "hmip_rf_enabled": "Enable Homematic IP", 
+                    "hmip_rf_port": "HmIP-RF port", 
+                    "virtual_devices_enabled": "Enable groups (heating groups)", 
+                    "virtual_devices_path": "Groups path", 
                     "virtual_devices_port": "Groups port"
-                },
-                "description": "Step {step_current} of {step_total}: Configure interfaces. Detected: {detected_interfaces}",
+                }, 
+                "description": "Step {step_current} of {step_total}: Configure interfaces. Detected: {detected_interfaces}", 
                 "title": "Interface selection"
-            },
+            }, 
             "reconfigure": {
                 "data": {
-                    "host": "CCU hostname/IP address",
-                    "password": "CCU password",
-                    "tls": "Use TLS (encrypted connection)",
-                    "username": "CCU username",
+                    "host": "CCU hostname/IP address", 
+                    "password": "CCU password", 
+                    "tls": "Use TLS (encrypted connection)", 
+                    "username": "CCU username", 
                     "verify_tls": "Verify TLS certificate"
-                },
+                }, 
                 "data_description": {
-                    "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-",
-                    "username": "Case sensitive. User must have administrator role",
+                    "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
+                    "username": "Case sensitive. User must have administrator role", 
                     "verify_tls": "Verify the CCU's TLS certificate. Disable for self-signed certificates."
-                },
-                "description": "Update the connection settings for your CCU",
+                }, 
+                "description": "Update the connection settings for your CCU", 
                 "title": "Reconfigure connection"
             }
         }
-    },
+    }, 
     "device_automation": {
         "action_type": {
-            "press_long": "Long press Button \"{subtype}\"",
+            "press_long": "Long press Button \"{subtype}\"", 
             "press_short": "Short press Button \"{subtype}\""
-        },
+        }, 
         "trigger_type": {
-            "press": "Button \"{subtype}\" pressed",
-            "press_cont": "Button \"{subtype}\" continuously pressed",
-            "press_lock": "Lock button \"{subtype}\" pressed",
-            "press_long": "Button \"{subtype}\" long pressed",
-            "press_long_release": "Button \"{subtype}\" long press released",
-            "press_long_start": "Button \"{subtype}\" started long press",
-            "press_short": "Button \"{subtype}\" pressed",
+            "press": "Button \"{subtype}\" pressed", 
+            "press_cont": "Button \"{subtype}\" continuously pressed", 
+            "press_lock": "Lock button \"{subtype}\" pressed", 
+            "press_long": "Button \"{subtype}\" long pressed", 
+            "press_long_release": "Button \"{subtype}\" long press released", 
+            "press_long_start": "Button \"{subtype}\" started long press", 
+            "press_short": "Button \"{subtype}\" pressed", 
             "press_unlock": "Unlock button \"{subtype}\" pressed"
         }
-    },
+    }, 
     "entity": {
         "binary_sensor": {
             "acoustic_alarm_active": {
                 "name": "Acoustic Alarm Active"
-            },
+            }, 
             "alarmstate": {
                 "name": "Alarmstate"
-            },
+            }, 
             "blocked_permanent": {
                 "name": "Blocked permanent"
-            },
+            }, 
             "blocked_temporary": {
                 "name": "Blocked temporary"
-            },
+            }, 
             "burst_limit_warning": {
                 "name": "Burst-Limit-Warnung"
-            },
+            }, 
             "current_passage_direction": {
                 "name": "Passage Direction"
-            },
+            }, 
             "dew_point_alarm": {
                 "name": "Dew Point Alarm"
-            },
+            }, 
             "duty_cycle": {
                 "name": "Duty Cycle"
-            },
+            }, 
             "dutycycle": {
                 "name": "Duty Cycle"
-            },
+            }, 
             "emergency_operation": {
                 "name": "Emergency Operation"
-            },
+            }, 
             "error_jammed": {
                 "name": "Error Jammed"
-            },
+            }, 
             "heater_state": {
                 "name": "Heater State"
-            },
+            }, 
             "humidity_alarm": {
                 "name": "Humidity Alarm"
-            },
+            }, 
             "last_passage_direction": {
                 "name": "Last Passage Direction"
-            },
+            }, 
             "low_bat": {
                 "name": "Battery"
-            },
+            }, 
             "lowbat": {
                 "name": "Battery"
-            },
+            }, 
             "lowbat_sensor": {
                 "name": "Battery"
-            },
+            }, 
             "moisture_detected": {
                 "name": "Moisture Detected"
-            },
+            }, 
             "motion": {
                 "name": "Motion"
-            },
+            }, 
             "optical_alarm_active": {
                 "name": "Optical Alarm Active"
-            },
+            }, 
             "power_mains_failure": {
                 "name": "Power Mains Failure"
-            },
+            }, 
             "presence": {
                 "name": "Presence"
-            },
+            }, 
             "presence_detection_state": {
                 "name": "Presence Detection State"
-            },
+            }, 
             "process": {
                 "name": "Process"
-            },
+            }, 
             "raining": {
                 "name": "Raining"
-            },
+            }, 
             "sabotage": {
                 "name": "Sabotage"
-            },
+            }, 
             "sabotage_sticky": {
                 "name": "Sabotage sticky"
-            },
+            }, 
             "state": {
                 "name": ""
-            },
+            }, 
             "user_authorization_01": {
                 "name": "User authorization 1"
-            },
+            }, 
             "user_authorization_02": {
                 "name": "User authorization 2"
-            },
+            }, 
             "user_authorization_03": {
                 "name": "User authorization 3"
-            },
+            }, 
             "user_authorization_04": {
                 "name": "User authorization 4"
-            },
+            }, 
             "user_authorization_05": {
                 "name": "User authorization 5"
-            },
+            }, 
             "user_authorization_06": {
                 "name": "User authorization 6"
-            },
+            }, 
             "user_authorization_07": {
                 "name": "User authorization 7"
-            },
+            }, 
             "user_authorization_08": {
                 "name": "User authorization 8"
-            },
+            }, 
             "waterlevel_detected": {
                 "name": "Waterlevel Detected"
-            },
+            }, 
             "window_state": {
                 "name": "Window State"
-            },
+            }, 
             "working": {
                 "name": "Working"
             }
-        },
+        }, 
         "button": {
             "press": {
                 "name": "Key Press"
-            },
+            }, 
             "press_long": {
                 "name": "Key Press Long"
-            },
+            }, 
             "press_short": {
                 "name": "Key Press Short"
-            },
+            }, 
             "reset_motion": {
                 "name": "Reset Motion"
-            },
+            }, 
             "reset_presence": {
                 "name": "Reset Presence"
             }
-        },
+        }, 
         "climate": {
             "hmip_climate": {
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
-                            "week_program_1": "WP 1",
-                            "week_program_2": "WP 2",
-                            "week_program_3": "WP 3",
-                            "week_program_4": "WP 4",
-                            "week_program_5": "WP 5",
+                            "week_program_1": "WP 1", 
+                            "week_program_2": "WP 2", 
+                            "week_program_3": "WP 3", 
+                            "week_program_4": "WP 4", 
+                            "week_program_5": "WP 5", 
                             "week_program_6": "WP 6"
                         }
                     }
                 }
             }
-        },
+        }, 
         "event": {
             "homematic_keypress": {
                 "state_attributes": {
                     "event_type": {
                         "state": {
-                            "press": "Pressed",
-                            "press_cont": "Continuously pressed",
-                            "press_lock": "Lock pressed",
-                            "press_long": "Long pressed",
-                            "press_long_release": "Long press released",
-                            "press_long_start": "Long press started",
-                            "press_short": "Short pressed",
+                            "press": "Pressed", 
+                            "press_cont": "Continuously pressed", 
+                            "press_lock": "Lock pressed", 
+                            "press_long": "Long pressed", 
+                            "press_long_release": "Long press released", 
+                            "press_long_start": "Long press started", 
+                            "press_short": "Short pressed", 
                             "press_unlock": "Unlock pressed"
                         }
                     }
                 }
             }
-        },
+        }, 
         "lock": {
             "button_lock": {
                 "name": "Button Lock"
             }
-        },
+        }, 
         "number": {
             "frequency": {
                 "name": "Frequency"
-            },
+            }, 
             "level": {
                 "name": "Level"
-            },
+            }, 
             "level_2": {
                 "name": "Level 2"
-            },
+            }, 
             "pipe_level": {
                 "name": "valve opening"
-            },
+            }, 
             "temperature_offset": {
                 "name": "temperature offset"
             }
-        },
+        }, 
         "select": {
             "heating_cooling": {
-                "name": "Operating mode",
+                "name": "Operating mode", 
                 "state": {
-                    "cooling": "cooling",
+                    "cooling": "cooling", 
                     "heating": "heating"
                 }
-            },
+            }, 
             "temperature_offset": {
                 "name": "temperature offset"
             }
-        },
+        }, 
         "sensor": {
             "activity_state": {
                 "name": "Activity State"
-            },
+            }, 
             "actual_humidity": {
                 "name": "Humidity"
-            },
+            }, 
             "actual_temperature": {
                 "name": "Temperature"
-            },
+            }, 
             "air_pressure": {
                 "name": "Air Pressure"
-            },
+            }, 
             "alarm_messages": {
                 "name": "AlarmMessages"
-            },
+            }, 
             "apparent_temperature": {
                 "name": "Apparent Temperature"
-            },
+            }, 
             "average_illumination": {
                 "name": "Average Illumination"
-            },
+            }, 
             "battery_state": {
                 "name": "Battery State"
-            },
+            }, 
             "brightness": {
                 "name": "Brightness"
-            },
+            }, 
             "carrier_sense_level": {
                 "name": "Carrier Sense Level"
-            },
+            }, 
             "color": {
                 "name": "Color"
-            },
+            }, 
             "concentration": {
                 "name": "Concentration"
-            },
+            }, 
             "cover_level": {
                 "name": "Position"
-            },
+            }, 
             "cover_tilt": {
                 "name": "Slat level"
-            },
+            }, 
             "current": {
                 "name": "Current"
-            },
+            }, 
             "current_illumination": {
                 "name": "Illumination"
-            },
+            }, 
             "dew_point": {
                 "name": "Dew point"
-            },
+            }, 
             "dew_point_spread": {
                 "name": "Dew point spread"
-            },
+            }, 
             "direction": {
-                "name": "Direction",
+                "name": "Direction", 
                 "state": {
-                    "down": "Down",
-                    "none": "",
-                    "undefined": "Undefined",
+                    "down": "Down", 
+                    "none": "", 
+                    "undefined": "Undefined", 
                     "up": "Up"
                 }
-            },
+            }, 
             "door_state": {
-                "name": "Door State",
+                "name": "Door State", 
                 "state": {
-                    "closed": "Closed",
-                    "open": "Open",
-                    "position_unknown": "Position unknown",
+                    "closed": "Closed", 
+                    "open": "Open", 
+                    "position_unknown": "Position unknown", 
                     "ventilation_position": "Ventilation position"
                 }
-            },
+            }, 
             "duty_cycle_level": {
                 "name": "Duty Cycle Level"
-            },
+            }, 
             "energy_counter": {
                 "name": "Energy Counter"
-            },
+            }, 
             "energy_counter_feed_in_total": {
                 "name": "Energy Counter feed in Total"
-            },
+            }, 
             "energy_counter_total": {
                 "name": "Energy Counter Total"
-            },
+            }, 
             "enthalpy": {
                 "name": "Enthalpy"
-            },
+            }, 
             "error": {
                 "name": "Error"
-            },
+            }, 
             "filling_level": {
                 "name": "Filling Level"
-            },
+            }, 
             "frequency": {
                 "name": "Frequency"
-            },
+            }, 
             "frost_point": {
                 "name": "Frost point"
-            },
+            }, 
             "gas_energy_counter": {
                 "name": "Gas Energy Counter"
-            },
+            }, 
             "gas_flow": {
                 "name": "Gas Flow"
-            },
+            }, 
             "gas_power": {
                 "name": "Gas Power"
-            },
+            }, 
             "gas_volume": {
                 "name": "Gas Volume"
-            },
+            }, 
             "highest_illumination": {
                 "name": "Highest Illumination"
-            },
+            }, 
             "humidity": {
                 "name": "Humidity"
-            },
+            }, 
             "iec_energy_counter": {
                 "name": "IEC Energy Counter"
-            },
+            }, 
             "iec_power": {
                 "name": "IEC Power"
-            },
+            }, 
             "illumination": {
                 "name": "Illumination"
-            },
+            }, 
             "ip_address": {
                 "name": "IP Address"
-            },
+            }, 
             "level": {
                 "name": "Level"
-            },
+            }, 
             "level_2": {
                 "name": "Level 2"
-            },
+            }, 
             "light_level": {
                 "name": "Brighness"
-            },
+            }, 
             "lock_state": {
-                "name": "Lock State",
+                "name": "Lock State", 
                 "state": {
-                    "locked": "Locked",
-                    "unknown": "Unknown",
+                    "locked": "Locked", 
+                    "unknown": "Unknown", 
                     "unlocked": "Unlocked"
                 }
-            },
+            }, 
             "lowest_illumination": {
                 "name": "Lowest Illumination"
-            },
+            }, 
             "lux": {
                 "name": "Lux"
-            },
+            }, 
             "mass_concentration_pm_1": {
                 "name": "Mass Concentration PM 1"
-            },
+            }, 
             "mass_concentration_pm_10": {
                 "name": "Mass Concentration PM 10"
-            },
+            }, 
             "mass_concentration_pm_10_24h_average": {
                 "name": "Mass Concentration PM 10 24h Average"
-            },
+            }, 
             "mass_concentration_pm_1_24h_average": {
                 "name": "Mass Concentration PM 1 24h Average"
-            },
+            }, 
             "mass_concentration_pm_2_5": {
                 "name": "Mass Concentration PM 2.5"
-            },
+            }, 
             "mass_concentration_pm_2_5_24h_average": {
                 "name": "Mass Concentration PM 2.5 24h Average"
-            },
+            }, 
             "number_concentration_pm_1": {
                 "name": "Number Concentration PM 1"
-            },
+            }, 
             "number_concentration_pm_10": {
                 "name": "Number Concentration PM 10"
-            },
+            }, 
             "number_concentration_pm_2_5": {
                 "name": "Number Concentration PM 2.5"
-            },
+            }, 
             "operating_voltage": {
                 "name": "Operating Voltage"
-            },
+            }, 
             "operating_voltage_level": {
                 "name": "Operating Voltage Level"
-            },
+            }, 
             "passage_counter_value": {
                 "name": "Passage Counter Value"
-            },
+            }, 
             "pipe_level": {
                 "name": "Valve opening degree"
-            },
+            }, 
             "power": {
                 "name": "Power"
-            },
+            }, 
             "rain_counter_today": {
                 "name": "Rain Counter Today"
-            },
+            }, 
             "rain_counter_total": {
                 "name": "Rain Counter Total"
-            },
+            }, 
             "rain_counter_yesterday": {
                 "name": "Rain Counter Yesterday"
-            },
+            }, 
             "rssi_device": {
                 "name": "RSSI Device"
-            },
+            }, 
             "rssi_peer": {
                 "name": "RSSI Peer"
-            },
+            }, 
             "sec_direction": {
-                "name": "Direction",
+                "name": "Direction", 
                 "state": {
-                    "down": "Opening",
-                    "none": "",
-                    "undefined": "Undefined",
+                    "down": "Opening", 
+                    "none": "", 
+                    "undefined": "Undefined", 
                     "up": "Closing"
                 }
-            },
+            }, 
             "sec_key_error": {
-                "name": "Error",
+                "name": "Error", 
                 "state": {
-                    "clutch_failure": "Clutch failure",
-                    "motor_aborted": "Motor aborted",
+                    "clutch_failure": "Clutch failure", 
+                    "motor_aborted": "Motor aborted", 
                     "no_error": "No error"
                 }
-            },
+            }, 
             "sec_wds_state": {
-                "name": "",
+                "name": "", 
                 "state": {
-                    "dry": "Dry",
-                    "water": "Water",
+                    "dry": "Dry", 
+                    "water": "Water", 
                     "wet": "Wet"
                 }
-            },
+            }, 
             "sec_win_error": {
-                "name": "Error",
+                "name": "Error", 
                 "state": {
-                    "motor_tilt_error": "Motor tilt error",
-                    "motor_turn_error": "Motor turn error",
+                    "motor_tilt_error": "Motor tilt error", 
+                    "motor_turn_error": "Motor turn error", 
                     "no_error": "No error"
                 }
-            },
+            }, 
             "sec_win_status": {
-                "name": "",
+                "name": "", 
                 "state": {
-                    "charge": "Charge",
-                    "discharge": "Discharge",
-                    "state_unknown": "State unknown",
+                    "charge": "Charge", 
+                    "discharge": "Discharge", 
+                    "state_unknown": "State unknown", 
                     "trickle_charge": "Trickle charge"
                 }
-            },
+            }, 
             "service_messages": {
                 "name": "ServiceMessages"
-            },
+            }, 
             "smoke_detector_alarm_status": {
-                "name": "Smoke Detector Alarm Status",
+                "name": "Smoke Detector Alarm Status", 
                 "state": {
-                    "idle_off": "Idle off",
-                    "intrusion_alarm": "Intrusion alarm",
-                    "primary_alarm": "Primary alarm",
+                    "idle_off": "Idle off", 
+                    "intrusion_alarm": "Intrusion alarm", 
+                    "primary_alarm": "Primary alarm", 
                     "secondary_alarm": "Secondary alarm"
                 }
-            },
+            }, 
             "state": {
                 "name": ""
-            },
+            }, 
             "status": {
                 "name": ""
-            },
+            }, 
             "sunshine_counter_today": {
                 "name": "Sunshine Counter Today"
-            },
+            }, 
             "sunshine_counter_total": {
                 "name": "Sunshine Counter Total"
-            },
+            }, 
             "sunshine_counter_yesterday": {
                 "name": "Sunshine Counter Yesterday"
-            },
+            }, 
             "sunshine_duration": {
                 "name": "Sunshine Duration"
-            },
+            }, 
             "taupunkt": {
                 "name": "dew point"
-            },
+            }, 
             "temperature": {
                 "name": "Temperature"
-            },
+            }, 
             "time_of_operation": {
                 "name": "Time of Operation"
-            },
+            }, 
             "tri_state": {
-                "name": "",
+                "name": "", 
                 "state": {
-                    "closed": "Closed",
-                    "open": "Open",
+                    "closed": "Closed", 
+                    "open": "Open", 
                     "tilted": "Tilted"
                 }
-            },
+            }, 
             "typical_particle_size": {
                 "name": "Typical Particle Size"
-            },
+            }, 
             "value": {
                 "name": "Value"
-            },
+            }, 
             "valve_state": {
                 "name": "Valve State"
-            },
+            }, 
             "vapor_concentration": {
                 "name": "Vapor Concentration"
-            },
+            }, 
             "voltage": {
                 "name": "Voltage"
-            },
+            }, 
             "water_flow": {
                 "name": "Water Flow"
-            },
+            }, 
             "water_volume": {
                 "name": "Water Volume"
-            },
+            }, 
             "water_volume_since_open": {
                 "name": "Water Volume since open"
-            },
+            }, 
             "wind_dir": {
                 "name": "Wind Dir"
-            },
+            }, 
             "wind_dir_range": {
                 "name": "Wind Dir Range"
-            },
+            }, 
             "wind_direction": {
                 "name": "Wind Direction"
-            },
+            }, 
             "wind_direction_range": {
                 "name": "Wind Direction Range"
-            },
+            }, 
             "wind_speed": {
                 "name": "Wind Speed"
-            },
+            }, 
             "wkp_code_state": {
-                "name": "Code Status",
+                "name": "Code Status", 
                 "state": {
-                    "idle": "idle",
-                    "known_code_id_received": "known code id received",
+                    "idle": "idle", 
+                    "known_code_id_received": "known code id received", 
                     "unknown_code_detected": "unknown code detected"
                 }
             }
-        },
+        }, 
         "switch": {
             "inhibit": {
                 "name": "Inhibit"
-            },
+            }, 
             "motion_detection_active": {
                 "name": "Motion Detection Active"
-            },
+            }, 
             "presence_detection_active": {
                 "name": "Presence Detection Active"
-            },
+            }, 
             "state": {
                 "name": ""
             }
-        },
+        }, 
         "valve": {
             "irrigation_valve": {
                 "name": "Irrigation Valve"
             }
         }
-    },
+    }, 
     "issues": {
         "devices_delayed": {
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "This will trigger the manual addition of device **{address}** on interface **{interface_id}**.\n\nConfirm to continue.",
+                        "description": "This will trigger the manual addition of device **{address}** on interface **{interface_id}**.\n\nConfirm to continue.", 
                         "title": "Manually add delayed device {address}"
                     }
                 }
-            },
+            }, 
             "title": "Device creation of {address} delayed on {interface_id}"
-        },
+        }, 
         "fetch_data": {
-            "description": "Unable to fetch data using a rega script.\n\nThis indicates an issue on your CCU.\n\nUsing fallback, that leeds to a higher DutyCycle during Integration startup for interface {interface_id}",
+            "description": "Unable to fetch data using a rega script.\n\nThis indicates an issue on your CCU.\n\nUsing fallback, that leeds to a higher DutyCycle during Integration startup for interface {interface_id}", 
             "title": "Error fetching initial data"
-        },
+        }, 
         "interface_not_reachable": {
-            "description": "No connection to interface {interface_id}.\n\nThis Integration tries an automatic reconnect.\n\nCheck the Home Assistant log files for more details",
+            "description": "No connection to interface {interface_id}.\n\nThis Integration tries an automatic reconnect.\n\nCheck the Home Assistant log files for more details", 
             "title": "Interface {interface_id} not reachable"
-        },
+        }, 
         "pending_pong_mismatch": {
-            "description": "There is a mismatch between send ping events and received pong events for HA instance {instance_name}.\n\nPossible reasons:\n - You are running multiple instances of HA with the same instance name configured for this integration. Re-add one instance! Otherwise this HA instance will not receive update events from your CCU.\n - Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a restart.\n - Your setup is misconfigured and HA is not able to receive events from the CCU",
+            "description": "There is a mismatch between send ping events and received pong events for HA instance {instance_name}.\n\nPossible reasons:\n - You are running multiple instances of HA with the same instance name configured for this integration. Re-add one instance! Otherwise this HA instance will not receive update events from your CCU.\n - Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a restart.\n - Your setup is misconfigured and HA is not able to receive events from the CCU", 
             "title": "Pending Pong mismatch on interface {interface_id}"
-        },
+        }, 
         "unknown_pong_mismatch": {
-            "description": "There are unknown pong events observed for HA instance {instance_name}.\n\nPossible reasons:\n - You are running multiple instances of HA with the same instance name configured for this integration. Re-add one instance! Otherwise this HA instance will not receive update events from your CCU.\n - Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a restart.\n - Your setup is misconfigured and HA is not able to receive events from the CCU",
+            "description": "There are unknown pong events observed for HA instance {instance_name}.\n\nPossible reasons:\n - You are running multiple instances of HA with the same instance name configured for this integration. Re-add one instance! Otherwise this HA instance will not receive update events from your CCU.\n - Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a restart.\n - Your setup is misconfigured and HA is not able to receive events from the CCU", 
             "title": "Unknown Pong mismatch on interface {interface_id}"
-        },
+        }, 
         "xmlrpc_server_receives_no_events": {
-            "description": "Callback for {interface_id} has not received events for {seconds_since_last_event}s.\n\nThis Integration tries an automatic reconnect",
+            "description": "Callback for {interface_id} has not received events for {seconds_since_last_event}s.\n\nThis Integration tries an automatic reconnect", 
             "title": "XmlRPC-Server received no events"
         }
-    },
+    }, 
     "options": {
         "error": {
-            "cannot_connect": "Cannot connect to CCU [{invalid_items}]. Please verify: 1) The hostname/IP address is correct, 2) The CCU is powered on and reachable, 3) No firewall is blocking the connection.",
-            "invalid_auth": "Authentication failed for CCU [{invalid_items}]. Please verify: 1) Username and password are correct (case-sensitive), 2) The user has admin privileges on the CCU, 3) Password only contains allowed characters: A-Z, a-z, 0-9 and .!$():;#-",
-            "invalid_config": "Invalid configuration: [{invalid_items}]. Please check the entered values and try again.",
+            "cannot_connect": "Cannot connect to CCU [{invalid_items}]. Please verify: 1) The hostname/IP address is correct, 2) The CCU is powered on and reachable, 3) No firewall is blocking the connection.", 
+            "invalid_auth": "Authentication failed for CCU [{invalid_items}]. Please verify: 1) Username and password are correct (case-sensitive), 2) The user has admin privileges on the CCU, 3) Password only contains allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
+            "invalid_config": "Invalid configuration: [{invalid_items}]. Please check the entered values and try again.", 
             "unknown": "An unexpected error occurred. Please check the Home Assistant logs for more details."
-        },
+        }, 
         "step": {
-            "init": {
-                "description": "What would you like to configure?",
-                "menu_options": {
-                    "connection": "Connection settings",
-                    "interfaces": "Interface configuration",
-                    "programs_sysvars": "Programs & system variables",
-                    "advanced_settings": "Advanced settings"
-                },
-                "title": "Configure integration"
-            },
-            "connection": {
-                "data": {
-                    "callback_host": "Callback hostname/IP address",
-                    "callback_port_xml_rpc": "Callback XML-RPC port",
-                    "host": "CCU hostname/IP address",
-                    "json_port": "JSON-RPC port",
-                    "password": "CCU password",
-                    "tls": "Use TLS (encrypted connection)",
-                    "username": "CCU username",
-                    "verify_tls": "Verify TLS certificate"
-                },
-                "data_description": {
-                    "callback_host": "To reset the callback host it must be set to one blank character",
-                    "callback_port_xml_rpc": "To reset the callback port it must be set to 0",
-                    "json_port": "To reset the JSON-RPC port it must be set to 0",
-                    "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-",
-                    "username": "Case sensitive. User must have administrator role",
-                    "verify_tls": "Verify the CCU's TLS certificate. Disable for self-signed certificates."
-                },
-                "description": "Configure connection settings to your CCU",
-                "title": "Connection settings"
-            },
-            "interfaces": {
-                "data": {
-                    "bidcos_rf_enabled": "Enable Homematic (Bidcos-RF)",
-                    "bidcos_rf_port": "HM-RF port",
-                    "bidcos_wired_enabled": "Enable BidCos-Wired (HM-Wired)",
-                    "bidcos_wired_port": "BidCos-Wired port",
-                    "ccu_jack_enabled": "Enable CCU-Jack",
-                    "cuxd_enabled": "Enable CUxD",
-                    "hmip_rf_enabled": "Enable Homematic IP",
-                    "hmip_rf_port": "HmIP-RF port",
-                    "virtual_devices_enabled": "Enable groups (heating groups)",
-                    "virtual_devices_path": "Groups path",
-                    "virtual_devices_port": "Groups port"
-                },
-                "description": "Configure which interfaces to use",
-                "title": "Interface configuration"
-            },
-            "programs_sysvars": {
-                "data": {
-                    "program_markers": "Program markers",
-                    "program_scan_enabled": "Enable program scan",
-                    "sysvar_markers": "System variable markers",
-                    "sysvar_scan_enabled": "Enable system variable scan",
-                    "sysvar_scan_interval": "Scan interval (seconds)"
-                },
-                "data_description": {
-                    "program_markers": "Comma separated list of markers for programs to enable fetching. To reset, set to a space.",
-                    "program_scan_enabled": "Enable scanning and fetching of CCU programs",
-                    "sysvar_markers": "Comma separated list of markers for system variables to enable fetching. To reset, set to a space.",
-                    "sysvar_scan_enabled": "Enable scanning and fetching of CCU system variables",
-                    "sysvar_scan_interval": "Interval in seconds between scans for programs and system variables"
-                },
-                "description": "Configure program and system variable scanning",
-                "title": "Programs & system variables"
-            },
             "advanced_settings": {
                 "data": {
-                    "delay_new_device_creation": "Delay new device creation",
-                    "enable_system_notifications": "Enable system notifications",
-                    "listen_on_all_ip": "Listen on all network interfaces",
-                    "mqtt_enabled": "Enable MQTT",
-                    "mqtt_prefix": "MQTT prefix",
-                    "optional_settings": "Debug & analytics settings",
-                    "sub_devices_enabled": "Create sub-device entities",
-                    "un_ignore": "UN-IGNORE parameters",
+                    "delay_new_device_creation": "Delay new device creation", 
+                    "enable_system_notifications": "Enable system notifications", 
+                    "listen_on_all_ip": "Listen on all network interfaces", 
+                    "mqtt_enabled": "Enable MQTT", 
+                    "mqtt_prefix": "MQTT prefix", 
+                    "optional_settings": "Debug & analytics settings", 
+                    "sub_devices_enabled": "Create sub-device entities", 
+                    "un_ignore": "UN-IGNORE parameters", 
                     "use_group_channel_for_cover_state": "Use group channel for cover state"
-                },
+                }, 
                 "data_description": {
-                    "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.",
-                    "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.",
-                    "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD",
-                    "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge",
-                    "optional_settings": "Enable optional settings. Used for analytics and debugging. Should not be used during normal operations.",
-                    "sub_devices_enabled": "Creates separate entities for each channel of multi-channel devices (e.g., each button of a remote).",
+                    "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.", 
+                    "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
+                    "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
+                    "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge", 
+                    "optional_settings": "Enable optional settings. Used for analytics and debugging. Should not be used during normal operations.", 
+                    "sub_devices_enabled": "Creates separate entities for each channel of multi-channel devices (e.g., each button of a remote).", 
                     "un_ignore": "Check the documentation for information about UN-IGNORE"
-                },
-                "description": "Configure advanced settings including MQTT and device options",
+                }, 
+                "description": "Configure advanced settings including MQTT and device options", 
                 "title": "Advanced settings"
-            },
-            "advanced": {
+            }, 
+            "connection": {
                 "data": {
-                    "delay_new_device_creation": "Delay new device creation",
-                    "enable_system_notifications": "Enable system notifications",
-                    "listen_on_all_ip": "Listen on all network interfaces",
-                    "mqtt_enabled": "Enable MQTT",
-                    "mqtt_prefix": "MQTT prefix",
-                    "optional_settings": "Debug & analytics settings",
-                    "program_markers": "Program markers",
-                    "program_scan_enabled": "Enable program scan",
-                    "sub_devices_enabled": "Create sub-device entities",
-                    "sysvar_markers": "System variable markers",
-                    "sysvar_scan_enabled": "Enable system variable scan",
-                    "sysvar_scan_interval": "Sysvar/Program scan interval",
-                    "un_ignore": "UN-IGNORE parameters",
-                    "use_group_channel_for_cover_state": "Use group channel for cover state"
-                },
-                "data_description": {
-                    "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.",
-                    "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.",
-                    "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD",
-                    "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge",
-                    "optional_settings": "Enable optional settings. Used for analytics and debugging. Should not be used during normal operations.",
-                    "program_markers": "Comma separated list of markers for programs to enable fetching. To reset, the value must be set to a space.",
-                    "sub_devices_enabled": "Creates separate entities for each channel of multi-channel devices (e.g., each button of a remote).",
-                    "sysvar_markers": "Comma separated list of markers for system variables to enable fetching. To reset, the value must be set to a space.",
-                    "un_ignore": "Check the documentation for information about UN-IGNORE"
-                },
-                "description": "Configure the advanced parameters"
-            },
-            "central": {
-                "data": {
-                    "callback_host": "Callback hostname/IP address",
-                    "callback_port_xml_rpc": "Callback XML-RPC port",
-                    "host": "CCU hostname/IP address",
-                    "json_port": "JSON-RPC port",
-                    "password": "CCU password",
-                    "tls": "Use TLS (encrypted connection)",
-                    "username": "CCU username",
+                    "callback_host": "Callback hostname/IP address", 
+                    "callback_port_xml_rpc": "Callback XML-RPC port", 
+                    "host": "CCU hostname/IP address", 
+                    "json_port": "JSON-RPC port", 
+                    "password": "CCU password", 
+                    "tls": "Use TLS (encrypted connection)", 
+                    "username": "CCU username", 
                     "verify_tls": "Verify TLS certificate"
-                },
+                }, 
                 "data_description": {
-                    "callback_host": "To reset the callback host it must be set to one blank character",
-                    "callback_port_xml_rpc": "To reset the callback port it must be set to 0",
-                    "json_port": "To reset the JSON-RPC port it must be set to 0",
-                    "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-",
-                    "username": "Case sensitive. User must have administrator role",
+                    "callback_host": "To reset the callback host it must be set to one blank character", 
+                    "callback_port_xml_rpc": "To reset the callback port it must be set to 0", 
+                    "json_port": "To reset the JSON-RPC port it must be set to 0", 
+                    "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
+                    "username": "Case sensitive. User must have administrator role", 
                     "verify_tls": "Verify the CCU's TLS certificate. Disable for self-signed certificates."
-                },
-                "description": "Re-configure the CCU connection"
-            },
-            "interface": {
+                }, 
+                "description": "Configure connection settings to your CCU", 
+                "title": "Connection settings"
+            }, 
+            "init": {
+                "description": "What would you like to configure?", 
+                "menu_options": {
+                    "advanced_settings": "Advanced settings", 
+                    "connection": "Connection settings", 
+                    "interfaces": "Interface configuration", 
+                    "programs_sysvars": "Programs & system variables"
+                }, 
+                "title": "Configure integration"
+            }, 
+            "interfaces": {
                 "data": {
-                    "advanced_config": "Advanced configuration",
-                    "bidcos_rf_enabled": "Enable Homematic (Bidcos-RF)",
-                    "bidcos_rf_port": "HM-RF port",
-                    "bidcos_wired_enabled": "Enable BidCos-Wired (HM-Wired)",
-                    "bidcos_wired_port": "BidCos-Wired port",
-                    "ccu_jack_enabled": "Enable CCU-Jack",
-                    "cuxd_enabled": "Enable CUxD",
-                    "hmip_rf_enabled": "Enable Homematic IP",
-                    "hmip_rf_port": "HmIP-RF port",
-                    "mqtt_enabled": "Enable MQTT",
-                    "mqtt_prefix": "MQTT prefix",
-                    "virtual_devices_enabled": "Enable groups (heating groups)",
-                    "virtual_devices_path": "Groups path",
+                    "bidcos_rf_enabled": "Enable Homematic (Bidcos-RF)", 
+                    "bidcos_rf_port": "HM-RF port", 
+                    "bidcos_wired_enabled": "Enable BidCos-Wired (HM-Wired)", 
+                    "bidcos_wired_port": "BidCos-Wired port", 
+                    "ccu_jack_enabled": "Enable CCU-Jack", 
+                    "cuxd_enabled": "Enable CUxD", 
+                    "hmip_rf_enabled": "Enable Homematic IP", 
+                    "hmip_rf_port": "HmIP-RF port", 
+                    "virtual_devices_enabled": "Enable groups (heating groups)", 
+                    "virtual_devices_path": "Groups path", 
                     "virtual_devices_port": "Groups port"
-                },
+                }, 
+                "description": "Configure which interfaces to use", 
+                "title": "Interface configuration"
+            }, 
+            "programs_sysvars": {
+                "data": {
+                    "program_markers": "Program markers", 
+                    "program_scan_enabled": "Enable program scan", 
+                    "sysvar_markers": "System variable markers", 
+                    "sysvar_scan_enabled": "Enable system variable scan", 
+                    "sysvar_scan_interval": "Scan interval (seconds)"
+                }, 
                 "data_description": {
-                    "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD",
-                    "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge"
-                },
-                "description": "Re-configure the interfaces to CCU"
+                    "program_markers": "Comma separated list of markers for programs to enable fetching. To reset, set to a space.", 
+                    "program_scan_enabled": "Enable scanning and fetching of CCU programs", 
+                    "sysvar_markers": "Comma separated list of markers for system variables to enable fetching. To reset, set to a space.", 
+                    "sysvar_scan_enabled": "Enable scanning and fetching of CCU system variables", 
+                    "sysvar_scan_interval": "Interval in seconds between scans for programs and system variables"
+                }, 
+                "description": "Configure program and system variable scanning", 
+                "title": "Programs & system variables"
             }
         }
-    },
+    }, 
     "services": {
         "add_link": {
-            "description": "Call to addLink for links in the RPC XML interface",
+            "description": "Call to addLink for links in the RPC XML interface", 
             "fields": {
                 "description": {
-                    "description": "Description of the Link, that will be displayed in the CCU",
+                    "description": "Description of the Link, that will be displayed in the CCU", 
                     "name": "Description of the Link"
-                },
+                }, 
                 "name": {
-                    "description": "Name of the Link, that will be displayed in the CCU",
+                    "description": "Name of the Link, that will be displayed in the CCU", 
                     "name": "Name of the Link"
-                },
+                }, 
                 "receiver_channel_address": {
-                    "description": "Channel address of the associated receiver",
+                    "description": "Channel address of the associated receiver", 
                     "name": "Receiver Channel Address"
-                },
+                }, 
                 "sender_channel_address": {
-                    "description": "Channel address of the associated sender",
+                    "description": "Channel address of the associated sender", 
                     "name": "Sender Channel Address"
                 }
-            },
+            }, 
             "name": "Add link"
-        },
+        }, 
         "clear_cache": {
-            "description": "Clear the cache. Requires a restart",
+            "description": "Clear the cache. Requires a restart", 
             "fields": {
                 "entry_id": {
-                    "description": "Name(s) of Homematic central to clear the cache",
+                    "description": "Name(s) of Homematic central to clear the cache", 
                     "name": "Central"
                 }
-            },
+            }, 
             "name": "Clear the cache"
-        },
+        }, 
         "copy_schedule": {
-            "description": "Copy a schedule to another device",
+            "description": "Copy a schedule to another device", 
             "fields": {
                 "source_entity_id": {
-                    "description": "Climate entity to copy the schedule from",
+                    "description": "Climate entity to copy the schedule from", 
                     "name": "Source entity"
                 }
-            },
+            }, 
             "name": "Copy schedule"
-        },
+        }, 
         "copy_schedule_profile": {
-            "description": "Copy a schedule profile to another device",
+            "description": "Copy a schedule profile to another device", 
             "fields": {
                 "source_entity_id": {
-                    "description": "Climate entity to copy the schedule from",
+                    "description": "Climate entity to copy the schedule from", 
                     "name": "Source entity"
-                },
+                }, 
                 "source_profile": {
-                    "description": "Source profile to copy from",
+                    "description": "Source profile to copy from", 
                     "name": "Source profile"
-                },
+                }, 
                 "target_profile": {
-                    "description": "Target profile to copy to",
+                    "description": "Target profile to copy to", 
                     "name": "Target profile"
                 }
-            },
+            }, 
             "name": "Copy schedule profile"
-        },
+        }, 
         "create_central_links": {
-            "description": "Create links to the central to enable support key press events",
+            "description": "Create links to the central to enable support key press events", 
             "fields": {
                 "device_id": {
-                    "description": "Select a device",
+                    "description": "Select a device", 
                     "name": "Device"
-                },
+                }, 
                 "entry_id": {
-                    "description": "Name(s) of Homematic central",
+                    "description": "Name(s) of Homematic central", 
                     "name": "Central"
                 }
-            },
+            }, 
             "name": "Create central links"
-        },
+        }, 
         "disable_away_mode": {
-            "description": "Disable climate away mode",
+            "description": "Disable climate away mode", 
             "name": "Disable climate away mode"
-        },
+        }, 
         "enable_away_mode_by_calendar": {
-            "description": "Enable climate away mode by calendar",
+            "description": "Enable climate away mode by calendar", 
             "fields": {
                 "away_temperature": {
-                    "description": "The temperature for the away mode",
+                    "description": "The temperature for the away mode", 
                     "name": "Set point temperature"
-                },
+                }, 
                 "end": {
-                    "description": "The time when the away mode should automatically be disabled",
+                    "description": "The time when the away mode should automatically be disabled", 
                     "name": "End time"
-                },
+                }, 
                 "start": {
-                    "description": "The time when the away mode should automatically be enabled",
+                    "description": "The time when the away mode should automatically be enabled", 
                     "name": "Start time"
                 }
-            },
+            }, 
             "name": "Enable climate away mode by calendar"
-        },
+        }, 
         "enable_away_mode_by_duration": {
-            "description": "Enable climate away mode by duration",
+            "description": "Enable climate away mode by duration", 
             "fields": {
                 "away_temperature": {
-                    "description": "The temperature for the away mode",
+                    "description": "The temperature for the away mode", 
                     "name": "Set point temperature"
-                },
+                }, 
                 "hours": {
-                    "description": "The number of hours after the away mode should automatically be disabled",
+                    "description": "The number of hours after the away mode should automatically be disabled", 
                     "name": "Hours"
                 }
-            },
+            }, 
             "name": "Enable climate away mode by duration"
-        },
+        }, 
         "export_device_definition": {
-            "description": "Export a device definition to 'Your home-assistant config directory'/homematicip_local/export*",
+            "description": "Export a device definition to 'Your home-assistant config directory'/homematicip_local/export*", 
             "fields": {
                 "device_id": {
-                    "description": "Select a device",
+                    "description": "Select a device", 
                     "name": "Device"
                 }
-            },
+            }, 
             "name": "Export device definition"
-        },
+        }, 
         "fetch_system_variables": {
-            "description": "Fetch system variables from backend",
+            "description": "Fetch system variables from backend", 
             "fields": {
                 "entry_id": {
-                    "description": "Name(s) of Homematic central to fetch system variables from",
+                    "description": "Name(s) of Homematic central to fetch system variables from", 
                     "name": "Central"
                 }
-            },
+            }, 
             "name": "Fetch system variables"
-        },
+        }, 
         "force_device_availability": {
-            "description": "Force a device to be available, this will override the real state",
+            "description": "Force a device to be available, this will override the real state", 
             "fields": {
                 "device_address": {
-                    "description": "Enter a device address",
+                    "description": "Enter a device address", 
                     "name": "Device address"
-                },
+                }, 
                 "device_id": {
-                    "description": "Select a device",
+                    "description": "Select a device", 
                     "name": "Device"
                 }
-            },
+            }, 
             "name": "Force device availability"
-        },
+        }, 
         "get_device_value": {
-            "description": "Get a device value on RPC XML interface",
+            "description": "Get a device value on RPC XML interface", 
             "fields": {
                 "channel": {
-                    "description": "Channel for calling a parameter",
+                    "description": "Channel for calling a parameter", 
                     "name": "Channel"
-                },
+                }, 
                 "device_address": {
-                    "description": "Enter a device address",
+                    "description": "Enter a device address", 
                     "name": "Device address"
-                },
+                }, 
                 "device_id": {
-                    "description": "Select a device",
+                    "description": "Select a device", 
                     "name": "Device"
-                },
+                }, 
                 "parameter": {
-                    "description": "Parameter to get i.e STATE",
+                    "description": "Parameter to get i.e STATE", 
                     "name": "Parameter"
                 }
-            },
+            }, 
             "name": "Get device value"
-        },
+        }, 
         "get_link_paramset": {
-            "description": "Call to getParamset for links in the RPC XML interface",
+            "description": "Call to getParamset for links in the RPC XML interface", 
             "fields": {
                 "receiver_channel_address": {
-                    "description": "Channel address of the associated receiver",
+                    "description": "Channel address of the associated receiver", 
                     "name": "Receiver Channel Address"
-                },
+                }, 
                 "sender_channel_address": {
-                    "description": "Channel address of the associated sender",
+                    "description": "Channel address of the associated sender", 
                     "name": "Sender Channel Address"
                 }
-            },
+            }, 
             "name": "Get link paramset"
-        },
+        }, 
         "get_link_peers": {
-            "description": "Call to getLinkPeers in the RPC XML interface",
+            "description": "Call to getLinkPeers in the RPC XML interface", 
             "fields": {
                 "channel": {
-                    "description": "Channel for calling a paramset",
+                    "description": "Channel for calling a paramset", 
                     "name": "Channel"
-                },
+                }, 
                 "device_address": {
-                    "description": "Enter a device address",
+                    "description": "Enter a device address", 
                     "name": "Device address"
-                },
+                }, 
                 "device_id": {
-                    "description": "Select a device",
+                    "description": "Select a device", 
                     "name": "Device"
                 }
-            },
+            }, 
             "name": "Get link peers"
-        },
+        }, 
         "get_paramset": {
-            "description": "Call to getParamset in the RPC XML interface",
+            "description": "Call to getParamset in the RPC XML interface", 
             "fields": {
                 "channel": {
-                    "description": "Channel for calling a paramset",
+                    "description": "Channel for calling a paramset", 
                     "name": "Channel"
-                },
+                }, 
                 "device_address": {
-                    "description": "Enter a device address",
+                    "description": "Enter a device address", 
                     "name": "Device address"
-                },
+                }, 
                 "device_id": {
-                    "description": "Select a device",
+                    "description": "Select a device", 
                     "name": "Device"
-                },
+                }, 
                 "paramset_key": {
-                    "description": "The paramset_key argument to getParamset",
+                    "description": "The paramset_key argument to getParamset", 
                     "name": "Paramset key"
                 }
-            },
+            }, 
             "name": "Get paramset"
-        },
+        }, 
         "get_schedule_profile": {
-            "description": "Call to get a schedule of a climate device",
+            "description": "Call to get a schedule of a climate device", 
             "fields": {
                 "profile": {
-                    "description": "Select a profile",
+                    "description": "Select a profile", 
                     "name": "Profile"
                 }
-            },
+            }, 
             "name": "Get schedule profile"
-        },
+        }, 
         "get_schedule_weekday": {
-            "description": "Call to get a schedule of a climate device",
+            "description": "Call to get a schedule of a climate device", 
             "fields": {
                 "profile": {
-                    "description": "Select a profile",
+                    "description": "Select a profile", 
                     "name": "Profile"
-                },
+                }, 
                 "weekday": {
-                    "description": "Select a weekday",
+                    "description": "Select a weekday", 
                     "name": "Weekday"
                 }
-            },
+            }, 
             "name": "Get schedule profile weekday"
-        },
+        }, 
         "get_variable_value": {
-            "description": "Read a value of a variable",
+            "description": "Read a value of a variable", 
             "fields": {
                 "entry_id": {
-                    "description": "Name(s) of Homematic central to read",
+                    "description": "Name(s) of Homematic central to read", 
                     "name": "Central"
-                },
+                }, 
                 "name": {
-                    "description": "Name of the variable to read",
+                    "description": "Name of the variable to read", 
                     "name": "Name"
                 }
-            },
+            }, 
             "name": "Get variable value"
-        },
+        }, 
         "light_set_on_time": {
-            "description": "Set on time for a light entity. Must be followed by a light.turn_on",
+            "description": "Set on time for a light entity. Must be followed by a light.turn_on", 
             "fields": {
                 "on_time": {
-                    "description": "On time for a light in seconds. Use 0 to reset the on time",
+                    "description": "On time for a light in seconds. Use 0 to reset the on time", 
                     "name": "On Time"
                 }
-            },
+            }, 
             "name": "Set light on time"
-        },
+        }, 
         "put_link_paramset": {
-            "description": "Call to putParamset on the RPC XML interface",
+            "description": "Call to putParamset on the RPC XML interface", 
             "fields": {
                 "paramset": {
-                    "description": "A paramset dictionary",
+                    "description": "A paramset dictionary", 
                     "name": "Paramset"
-                },
+                }, 
                 "receiver_channel_address": {
-                    "description": "Channel address of the associated receiver",
+                    "description": "Channel address of the associated receiver", 
                     "name": "Receiver Channel Address"
-                },
+                }, 
                 "rx_mode": {
-                    "description": "The receive mode used",
+                    "description": "The receive mode used", 
                     "name": "RX mode"
-                },
+                }, 
                 "sender_channel_address": {
-                    "description": "Channel address of the associated sender",
+                    "description": "Channel address of the associated sender", 
                     "name": "Sender Channel Address"
                 }
-            },
+            }, 
             "name": "Put link paramset"
-        },
+        }, 
         "put_paramset": {
-            "description": "Call to putParamset on the RPC XML interface",
+            "description": "Call to putParamset on the RPC XML interface", 
             "fields": {
                 "channel": {
-                    "description": "Channel for calling a paramset",
+                    "description": "Channel for calling a paramset", 
                     "name": "Channel"
-                },
+                }, 
                 "device_address": {
-                    "description": "Enter a device address",
+                    "description": "Enter a device address", 
                     "name": "Device address"
-                },
+                }, 
                 "device_id": {
-                    "description": "Select a device",
+                    "description": "Select a device", 
                     "name": "Device"
-                },
+                }, 
                 "paramset": {
-                    "description": "A paramset dictionary",
+                    "description": "A paramset dictionary", 
                     "name": "Paramset"
-                },
+                }, 
                 "paramset_key": {
-                    "description": "The paramset_key argument",
+                    "description": "The paramset_key argument", 
                     "name": "Paramset key"
-                },
+                }, 
                 "rx_mode": {
-                    "description": "The receive mode used",
+                    "description": "The receive mode used", 
                     "name": "RX mode"
-                },
+                }, 
                 "wait_for_callback": {
-                    "description": "Wait for the callback of the service call",
+                    "description": "Wait for the callback of the service call", 
                     "name": "Wait for callback"
                 }
-            },
+            }, 
             "name": "Put paramset"
-        },
+        }, 
         "record_session": {
-            "description": "Record a session. Helpful for debugging",
+            "description": "Record a session. Helpful for debugging", 
             "fields": {
                 "entry_id": {
-                    "description": "Name(s) of Homematic central to record the session",
+                    "description": "Name(s) of Homematic central to record the session", 
                     "name": "Central"
-                },
+                }, 
                 "on_time": {
-                    "description": "Duration of the session in seconds",
+                    "description": "Duration of the session in seconds", 
                     "name": "On Time"
-                },
+                }, 
                 "randomize_output": {
-                    "description": "Replace device addresses in the session outputby random generated addresses",
+                    "description": "Replace device addresses in the session outputby random generated addresses", 
                     "name": "Randomize output"
                 }
-            },
+            }, 
             "name": "Record session"
-        },
+        }, 
         "remove_central_links": {
-            "description": "Remove links to the central to disable support key press events",
+            "description": "Remove links to the central to disable support key press events", 
             "fields": {
                 "device_id": {
-                    "description": "Select a device",
+                    "description": "Select a device", 
                     "name": "Device"
-                },
+                }, 
                 "entry_id": {
-                    "description": "Name(s) of Homematic central",
+                    "description": "Name(s) of Homematic central", 
                     "name": "Central"
                 }
-            },
+            }, 
             "name": "Remove central links"
-        },
+        }, 
         "remove_link": {
-            "description": "Call to removeLink for links in the RPC XML interface",
+            "description": "Call to removeLink for links in the RPC XML interface", 
             "fields": {
                 "receiver_channel_address": {
-                    "description": "Channel address of the associated receiver",
+                    "description": "Channel address of the associated receiver", 
                     "name": "Receiver Channel Address"
-                },
+                }, 
                 "sender_channel_address": {
-                    "description": "Channel address of the associated sender",
+                    "description": "Channel address of the associated sender", 
                     "name": "Sender Channel Address"
                 }
-            },
+            }, 
             "name": "Remove link"
-        },
+        }, 
         "set_cover_combined_position": {
-            "description": "Move a blind to a specific position and tilt position",
+            "description": "Move a blind to a specific position and tilt position", 
             "fields": {
                 "position": {
-                    "description": "Position of the cover",
+                    "description": "Position of the cover", 
                     "name": "Position"
-                },
+                }, 
                 "tilt_position": {
-                    "description": "Tilt position of the cover",
+                    "description": "Tilt position of the cover", 
                     "name": "Tilt position"
-                },
+                }, 
                 "wait_for_callback": {
-                    "description": "Wait for the callback of the service call",
+                    "description": "Wait for the callback of the service call", 
                     "name": "Wait for callback"
                 }
-            },
+            }, 
             "name": "Set cover combined position"
-        },
+        }, 
         "set_device_value": {
-            "description": "Set a device parameter via the XML-RPC interface",
+            "description": "Set a device parameter via the XML-RPC interface", 
             "fields": {
                 "channel": {
-                    "description": "Channel for calling a parameter",
+                    "description": "Channel for calling a parameter", 
                     "name": "Channel"
-                },
+                }, 
                 "device_address": {
-                    "description": "Enter a device address",
+                    "description": "Enter a device address", 
                     "name": "Device address"
-                },
+                }, 
                 "device_id": {
-                    "description": "Select a device",
+                    "description": "Select a device", 
                     "name": "Device"
-                },
+                }, 
                 "parameter": {
-                    "description": "Parameter to send i.e STATE",
+                    "description": "Parameter to send i.e STATE", 
                     "name": "Parameter"
-                },
+                }, 
                 "rx_mode": {
-                    "description": "The receive mode used",
+                    "description": "The receive mode used", 
                     "name": "RX mode"
-                },
+                }, 
                 "value": {
-                    "description": "New value",
+                    "description": "New value", 
                     "name": "Value"
-                },
+                }, 
                 "value_type": {
-                    "description": "Type for new value",
+                    "description": "Type for new value", 
                     "name": "Value type"
-                },
+                }, 
                 "wait_for_callback": {
-                    "description": "Wait for the callback of the service call",
+                    "description": "Wait for the callback of the service call", 
                     "name": "Wait for callback"
                 }
-            },
+            }, 
             "name": "Set device value"
-        },
+        }, 
         "set_schedule_active_profile": {
-            "description": "Set the active schedule profile on a climate device",
+            "description": "Set the active schedule profile on a climate device", 
             "fields": {
                 "profile": {
-                    "description": "Select a profile to activate (P1-P6)",
+                    "description": "Select a profile to activate (P1-P6)", 
                     "name": "Profile"
                 }
-            },
+            }, 
             "name": "Set active schedule profile"
-        },
+        }, 
         "set_schedule_profile": {
-            "description": "Call to store a schedule on a climate device",
+            "description": "Call to store a schedule on a climate device", 
             "fields": {
                 "profile": {
-                    "description": "Select a profile",
+                    "description": "Select a profile", 
                     "name": "Profile"
-                },
+                }, 
                 "profile_data": {
-                    "description": "Data for a profile",
+                    "description": "Data for a profile", 
                     "name": "Profile data"
                 }
-            },
+            }, 
             "name": "Set schedule profile"
-        },
+        }, 
         "set_schedule_simple_profile": {
-            "description": "Call to store a schedule on a climate device",
+            "description": "Call to store a schedule on a climate device", 
             "fields": {
                 "base_temperature": {
-                    "description": "Select a base temperature",
+                    "description": "Select a base temperature", 
                     "name": "Base temperature"
-                },
+                }, 
                 "profile": {
-                    "description": "Select a profile",
+                    "description": "Select a profile", 
                     "name": "Profile"
-                },
+                }, 
                 "simple_profile_data": {
-                    "description": "Data for a profile",
+                    "description": "Data for a profile", 
                     "name": "Profile data"
                 }
-            },
+            }, 
             "name": "Set simple schedule profile"
-        },
+        }, 
         "set_schedule_simple_weekday": {
-            "description": "Call to store a schedule on a climate device",
+            "description": "Call to store a schedule on a climate device", 
             "fields": {
                 "base_temperature": {
-                    "description": "Select a base temperature",
+                    "description": "Select a base temperature", 
                     "name": "Base temperature"
-                },
+                }, 
                 "profile": {
-                    "description": "Select a profile",
+                    "description": "Select a profile", 
                     "name": "Profile"
-                },
+                }, 
                 "simple_weekday_list": {
-                    "description": "Data for a weekday profile",
+                    "description": "Data for a weekday profile", 
                     "name": "Weekday profile data"
-                },
+                }, 
                 "weekday": {
-                    "description": "Select a weekday",
+                    "description": "Select a weekday", 
                     "name": "Weekday"
                 }
-            },
+            }, 
             "name": "Set simple schedule profile weekday"
-        },
+        }, 
         "set_schedule_weekday": {
-            "description": "Call to store a schedule on a climate device",
+            "description": "Call to store a schedule on a climate device", 
             "fields": {
                 "profile": {
-                    "description": "Select a profile",
+                    "description": "Select a profile", 
                     "name": "Profile"
-                },
+                }, 
                 "weekday": {
-                    "description": "Select a weekday",
+                    "description": "Select a weekday", 
                     "name": "Weekday"
-                },
+                }, 
                 "weekday_data": {
-                    "description": "Data for a weekday profile",
+                    "description": "Data for a weekday profile", 
                     "name": "Weekday profile data"
                 }
-            },
+            }, 
             "name": "Set schedule profile weekday"
         }, 
         "set_variable_value": {
