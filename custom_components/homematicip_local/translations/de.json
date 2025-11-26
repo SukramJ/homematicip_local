@@ -1,5 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Eintrag mit der Seriennummer {serial} ist bereits konfiguriert", 
+            "reconfigure_failed": "Der zu ändernde Konfigurationseintrag konnte nicht gefunden werden", 
+            "reconfigure_successful": "Verbindungseinstellungen wurden erfolgreich aktualisiert"
+        }, 
         "error": {
             "cannot_connect": "Verbindung zur CCU [{invalid_items}] nicht möglich. Bitte überprüfe: 1) Der Hostname/die IP-Adresse ist korrekt, 2) Die CCU ist eingeschaltet und erreichbar, 3) Keine Firewall blockiert die Verbindung.", 
             "detection_failed": "Verbindung zur CCU [{invalid_items}] nicht möglich. Bitte überprüfe: 1) Der Hostname/die IP-Adresse ist korrekt, 2) Die CCU ist eingeschaltet und erreichbar, 3) Benutzername und Passwort sind korrekt (Groß-/Kleinschreibung beachten), 4) Der Benutzer hat Admin-Rechte auf der CCU, 5) Keine Firewall blockiert die Verbindung.", 
@@ -16,27 +21,30 @@
                 "data": {
                     "delay_new_device_creation": "Erstellung neuer Geräte verzögern", 
                     "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
-                    "listen_on_all_ip": "Auf allen IP Adressen lauschen", 
+                    "listen_on_all_ip": "Auf allen Netzwerkschnittstellen lauschen", 
                     "mqtt_enabled": "MQTT aktivieren", 
-                    "mqtt_prefix": "MQTT Prefix", 
-                    "optional_settings": "Optionale Einstellungen", 
-                    "program_markers": "Programm Marken", 
-                    "program_scan_enabled": "Programm Scan aktivieren", 
-                    "sub_devices_enabled": "Unter Geräte aktivieren", 
-                    "sysvar_markers": "Systemvariablen Marken", 
-                    "sysvar_scan_enabled": "Systemvariablen Scan aktivieren", 
-                    "sysvar_scan_interval": "Sysvar/Program Scan Interval", 
-                    "use_group_channel_for_cover_state": "Verwende Gruppenkanal für Cover Status"
+                    "mqtt_prefix": "MQTT-Präfix", 
+                    "optional_settings": "Debug- & Analyseeinstellungen", 
+                    "program_markers": "Programm-Marker", 
+                    "program_scan_enabled": "Programm-Scan aktivieren", 
+                    "sub_devices_enabled": "Untergeräte-Entitäten erstellen", 
+                    "sysvar_markers": "Systemvariablen-Marker", 
+                    "sysvar_scan_enabled": "Systemvariablen-Scan aktivieren", 
+                    "sysvar_scan_interval": "Sysvar/Programm Scan-Intervall", 
+                    "use_group_channel_for_cover_state": "Gruppenkanal für Cover-Status verwenden"
                 }, 
                 "data_description": {
                     "delay_new_device_creation": "Die Erstellung neuer Geräte verzögern, bis diese in der CCU vollständig konfiguriert sind; stattdessen wird eine Reparatur erstellt, um das Gerät später hinzuzufügen.", 
-                    "mqtt_enabled": "Aktiviere MQTT, um Callbacks für CCU-Jack und CUxD zu nutzen", 
+                    "listen_on_all_ip": "Aktivieren, wenn Home Assistant in Docker oder einer VM läuft. Erforderlich wenn die IP von HA sich von der Host-IP unterscheidet.", 
+                    "mqtt_enabled": "MQTT aktivieren um Callbacks für CCU-Jack und CUxD zu nutzen", 
                     "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix", 
-                    "optional_settings": "Aktiviere optionalen Konfigurationsmodus. Nur für Debugging und Analysezwecke. Nicht für normale Betriebsbedingungen verwenden.", 
-                    "program_markers": "Kommaseparierte Liste mit Markern für Programme zum Abrufen. Zum Zurückzusetzen muss der Wert auf ein Leerzeichen gesetzt werden.", 
-                    "sysvar_markers": "Kommaseparierte Liste mit Markern für Systemvariablen zum Abrufen. Zum Zurückzusetzen muss der Wert auf ein Leerzeichen gesetzt werden."
+                    "optional_settings": "Optionale Einstellungen aktivieren. Nur für Debugging und Analysezwecke. Nicht für normale Betriebsbedingungen verwenden.", 
+                    "program_markers": "Kommaseparierte Liste mit Markern für Programme zum Abrufen. Zum Zurücksetzen muss der Wert auf ein Leerzeichen gesetzt werden.", 
+                    "sub_devices_enabled": "Erstellt separate Entitäten für jeden Kanal von Mehrkanal-Geräten (z.B. jede Taste einer Fernbedienung).", 
+                    "sysvar_markers": "Kommaseparierte Liste mit Markern für Systemvariablen zum Abrufen. Zum Zurücksetzen muss der Wert auf ein Leerzeichen gesetzt werden."
                 }, 
-                "description": "Konfiguration der erweiterten Parameter"
+                "description": "Schritt {step_current} von {step_total}: Erweiterte Parameter konfigurieren", 
+                "title": "Erweiterte Einstellungen"
             }, 
             "central": {
                 "data": {
@@ -46,9 +54,9 @@
                     "instance_name": "Instanzname der Integration", 
                     "json_port": "JSON-RPC Port", 
                     "password": "CCU Passwort", 
-                    "tls": "verwende TLS", 
+                    "tls": "TLS verwenden (verschlüsselte Verbindung)", 
                     "username": "CCU Benutzername", 
-                    "verify_tls": "TLS Verbindung überprüfen"
+                    "verify_tls": "TLS-Zertifikat überprüfen"
                 }, 
                 "data_description": {
                     "callback_host": "Um den Callback-Host zurückzusetzen, muss der Wert auf ein Leerzeichen gesetzt werden", 
@@ -56,13 +64,23 @@
                     "instance_name": "Name der HA-Instanz.\n Wenn von mehreren HA-Installationen aus eine Verbindung mit derselben CCU-Instanz herstellt werden soll, muss dieser Instanzname auf jeder HA-Instanz eindeutig sein", 
                     "json_port": "Um den JSON-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden", 
                     "password": "Groß-/Kleinschreibung beachten. Erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
-                    "username": "Groß-/Kleinschreibung beachten. Benutzer muss die Administratorrolle haben"
+                    "username": "Groß-/Kleinschreibung beachten. Benutzer muss die Administratorrolle haben", 
+                    "verify_tls": "Das TLS-Zertifikat der CCU überprüfen. Bei selbstsignierten Zertifikaten deaktivieren."
                 }, 
-                "description": "Bitte Pflichtfelder ausfüllen"
+                "description": "Schritt {step_current} von {step_total}: CCU-Verbindung konfigurieren", 
+                "title": "CCU-Verbindung"
             }, 
             "detect": {
                 "description": "Backend-Typ und verfügbare Schnittstellen werden erkannt...", 
-                "title": "Backend Erkennung"
+                "title": "Backend-Erkennung"
+            }, 
+            "finish_or_configure": {
+                "description": "Einrichtung ist bereit. Wähle eine Option:", 
+                "menu_options": {
+                    "configure_advanced": "Erweiterte Optionen konfigurieren", 
+                    "finish_setup": "Einrichtung abschließen"
+                }, 
+                "title": "Abschließen oder konfigurieren"
             }, 
             "interface": {
                 "data": {
@@ -75,10 +93,27 @@
                     "hmip_rf_enabled": "Homematic IP aktivieren", 
                     "hmip_rf_port": "HmIP-RF Port", 
                     "virtual_devices_enabled": "Heizgruppen aktivieren", 
-                    "virtual_devices_path": "Gruppen Pfad", 
-                    "virtual_devices_port": "Gruppen Port"
+                    "virtual_devices_path": "Gruppen-Pfad", 
+                    "virtual_devices_port": "Gruppen-Port"
                 }, 
-                "description": "Neu-Konfiguration der CCU Schnittstellen"
+                "description": "Schritt {step_current} von {step_total}: Schnittstellen konfigurieren. Erkannt: {detected_interfaces}", 
+                "title": "Schnittstellenauswahl"
+            }, 
+            "reconfigure": {
+                "data": {
+                    "host": "CCU Hostname/IP-Adresse", 
+                    "password": "CCU Passwort", 
+                    "tls": "TLS verwenden (verschlüsselte Verbindung)", 
+                    "username": "CCU Benutzername", 
+                    "verify_tls": "TLS-Zertifikat überprüfen"
+                }, 
+                "data_description": {
+                    "password": "Groß-/Kleinschreibung beachten. Erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
+                    "username": "Groß-/Kleinschreibung beachten. Benutzer muss die Administratorrolle haben", 
+                    "verify_tls": "Das TLS-Zertifikat der CCU überprüfen. Bei selbstsignierten Zertifikaten deaktivieren."
+                }, 
+                "description": "Verbindungseinstellungen für deine CCU aktualisieren", 
+                "title": "Verbindung neu konfigurieren"
             }
         }
     }, 
@@ -715,29 +750,55 @@
                 "data": {
                     "delay_new_device_creation": "Erstellung neuer Geräte verzögern", 
                     "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
-                    "listen_on_all_ip": "Auf allen IP Adressen lauschen", 
+                    "listen_on_all_ip": "Auf allen Netzwerkschnittstellen lauschen", 
                     "mqtt_enabled": "MQTT aktivieren", 
-                    "mqtt_prefix": "MQTT Prefix", 
-                    "optional_settings": "Optionale Einstellungen", 
-                    "program_markers": "Programm Marken", 
-                    "program_scan_enabled": "Programm Scan aktivieren", 
-                    "sub_devices_enabled": "Unter Geräte aktivieren", 
-                    "sysvar_markers": "Systemvariablen Marken", 
-                    "sysvar_scan_enabled": "Systemvariablen Scan aktivieren", 
-                    "sysvar_scan_interval": "Sysvar/Program Scan Interval", 
+                    "mqtt_prefix": "MQTT-Präfix", 
+                    "optional_settings": "Debug- & Analyseeinstellungen", 
+                    "program_markers": "Programm-Marker", 
+                    "program_scan_enabled": "Programm-Scan aktivieren", 
+                    "sub_devices_enabled": "Untergeräte-Entitäten erstellen", 
+                    "sysvar_markers": "Systemvariablen-Marker", 
+                    "sysvar_scan_enabled": "Systemvariablen-Scan aktivieren", 
+                    "sysvar_scan_interval": "Sysvar/Programm Scan-Intervall", 
                     "un_ignore": "UN-IGNORE Parameter", 
-                    "use_group_channel_for_cover_state": "Verwende Gruppenkanal für Cover Status"
+                    "use_group_channel_for_cover_state": "Gruppenkanal für Cover-Status verwenden"
                 }, 
                 "data_description": {
-                    "delay_new_device_creation": "Die Erstellung neuer Geräte verzögern, bis diese in der CCU vollständig konfiguriert sind; stattdessen wird eine Reparatur erstellt, um das Gerät später hinzuzufügen.", 
-                    "mqtt_enabled": "Aktiviere MQTT, um Callbacks für CCU-Jack und CUxD zu nutzen", 
+                    "delay_new_device_creation": "Die Erstellung neuer Geräte verzögern, bis diese in der CCU vollständig konfiguriert sind; stattdessen wird eine Reparatur erstellt.", 
+                    "listen_on_all_ip": "Aktivieren, wenn Home Assistant in Docker oder einer VM läuft. Erforderlich wenn die IP von HA sich von der Host-IP unterscheidet.", 
+                    "mqtt_enabled": "MQTT aktivieren um Callbacks für CCU-Jack und CUxD zu nutzen", 
                     "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix", 
-                    "optional_settings": "Aktiviere optionalen Konfigurationsmodus. Nur für Debugging und Analysezwecke. Nicht für normale Betriebsbedingungen verwenden.", 
-                    "program_markers": "Kommaseparierte Liste mit Markern für Programme zum Abrufen. Zum Zurückzusetzen muss der Wert auf ein Leerzeichen gesetzt werden.", 
-                    "sysvar_markers": "Kommaseparierte Liste mit Markern für Systemvariablen zum Abrufen. Zum Zurückzusetzen muss der Wert auf ein Leerzeichen gesetzt werden.", 
+                    "optional_settings": "Optionale Einstellungen aktivieren. Nur für Debugging und Analysezwecke.", 
+                    "program_markers": "Kommaseparierte Liste mit Markern für Programme zum Abrufen. Zum Zurücksetzen muss der Wert auf ein Leerzeichen gesetzt werden.", 
+                    "sub_devices_enabled": "Erstellt separate Entitäten für jeden Kanal von Mehrkanal-Geräten (z.B. jede Taste einer Fernbedienung).", 
+                    "sysvar_markers": "Kommaseparierte Liste mit Markern für Systemvariablen zum Abrufen. Zum Zurücksetzen muss der Wert auf ein Leerzeichen gesetzt werden.", 
                     "un_ignore": "Schau in die Dokumentation für Informationen über UN-IGNORE"
                 }, 
                 "description": "Konfiguration der erweiterten Parameter"
+            }, 
+            "advanced_settings": {
+                "data": {
+                    "delay_new_device_creation": "Erstellung neuer Geräte verzögern", 
+                    "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
+                    "listen_on_all_ip": "Auf allen Netzwerkschnittstellen lauschen", 
+                    "mqtt_enabled": "MQTT aktivieren", 
+                    "mqtt_prefix": "MQTT-Präfix", 
+                    "optional_settings": "Debug- & Analyseeinstellungen", 
+                    "sub_devices_enabled": "Untergeräte-Entitäten erstellen", 
+                    "un_ignore": "UN-IGNORE Parameter", 
+                    "use_group_channel_for_cover_state": "Gruppenkanal für Cover-Status verwenden"
+                }, 
+                "data_description": {
+                    "delay_new_device_creation": "Die Erstellung neuer Geräte verzögern, bis diese in der CCU vollständig konfiguriert sind; stattdessen wird eine Reparatur erstellt.", 
+                    "listen_on_all_ip": "Aktivieren, wenn Home Assistant in Docker oder einer VM läuft. Erforderlich wenn die IP von HA sich von der Host-IP unterscheidet.", 
+                    "mqtt_enabled": "MQTT aktivieren um Callbacks für CCU-Jack und CUxD zu nutzen", 
+                    "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix", 
+                    "optional_settings": "Optionale Einstellungen aktivieren. Nur für Debugging und Analysezwecke.", 
+                    "sub_devices_enabled": "Erstellt separate Entitäten für jeden Kanal von Mehrkanal-Geräten (z.B. jede Taste einer Fernbedienung).", 
+                    "un_ignore": "Schau in die Dokumentation für Informationen über UN-IGNORE"
+                }, 
+                "description": "Erweiterte Einstellungen inkl. MQTT und Geräteoptionen konfigurieren", 
+                "title": "Erweiterte Einstellungen"
             }, 
             "central": {
                 "data": {
@@ -746,22 +807,55 @@
                     "host": "CCU Hostname/IP-Adresse", 
                     "json_port": "JSON-RPC Port", 
                     "password": "CCU Passwort", 
-                    "tls": "verwende TLS", 
+                    "tls": "TLS verwenden (verschlüsselte Verbindung)", 
                     "username": "CCU Benutzername", 
-                    "verify_tls": "TLS Verbindung überprüfen"
+                    "verify_tls": "TLS-Zertifikat überprüfen"
                 }, 
                 "data_description": {
                     "callback_host": "Um den Callback-Host zurückzusetzen, muss der Wert auf ein Leerzeichen gesetzt werden", 
                     "callback_port_xml_rpc": "Um den Callback-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden", 
                     "json_port": "Um den JSON-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden", 
                     "password": "Groß-/Kleinschreibung beachten. Erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
-                    "username": "Groß-/Kleinschreibung beachten. Benutzer muss die Administratorrolle haben"
+                    "username": "Groß-/Kleinschreibung beachten. Benutzer muss die Administratorrolle haben", 
+                    "verify_tls": "Das TLS-Zertifikat der CCU überprüfen. Bei selbstsignierten Zertifikaten deaktivieren."
                 }, 
-                "description": "Neu-Konfiguration der CCU"
+                "description": "CCU-Verbindung neu konfigurieren"
+            }, 
+            "connection": {
+                "data": {
+                    "callback_host": "Callback Hostname/IP-Adresse", 
+                    "callback_port_xml_rpc": "Callback XML-RPC Port", 
+                    "host": "CCU Hostname/IP-Adresse", 
+                    "json_port": "JSON-RPC Port", 
+                    "password": "CCU Passwort", 
+                    "tls": "TLS verwenden (verschlüsselte Verbindung)", 
+                    "username": "CCU Benutzername", 
+                    "verify_tls": "TLS-Zertifikat überprüfen"
+                }, 
+                "data_description": {
+                    "callback_host": "Um den Callback-Host zurückzusetzen, muss der Wert auf ein Leerzeichen gesetzt werden", 
+                    "callback_port_xml_rpc": "Um den Callback-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden", 
+                    "json_port": "Um den JSON-Port zurückzusetzen, muss der Wert auf 0 gesetzt werden", 
+                    "password": "Groß-/Kleinschreibung beachten. Erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
+                    "username": "Groß-/Kleinschreibung beachten. Benutzer muss die Administratorrolle haben", 
+                    "verify_tls": "Das TLS-Zertifikat der CCU überprüfen. Bei selbstsignierten Zertifikaten deaktivieren."
+                }, 
+                "description": "Verbindungseinstellungen zur CCU konfigurieren", 
+                "title": "Verbindungseinstellungen"
+            }, 
+            "init": {
+                "description": "Was möchtest du konfigurieren?", 
+                "menu_options": {
+                    "advanced_settings": "Erweiterte Einstellungen", 
+                    "connection": "Verbindungseinstellungen", 
+                    "interfaces": "Schnittstellenkonfiguration", 
+                    "programs_sysvars": "Programme & Systemvariablen"
+                }, 
+                "title": "Integration konfigurieren"
             }, 
             "interface": {
                 "data": {
-                    "advanced_config": "erweiterte Konfiguration", 
+                    "advanced_config": "Erweiterte Konfiguration", 
                     "bidcos_rf_enabled": "Homematic (Bidcos-RF) aktivieren", 
                     "bidcos_rf_port": "HM-RF Port", 
                     "bidcos_wired_enabled": "Homematic-Wired (BidCos-Wired) aktivieren", 
@@ -771,16 +865,51 @@
                     "hmip_rf_enabled": "Homematic IP aktivieren", 
                     "hmip_rf_port": "HmIP-RF Port", 
                     "mqtt_enabled": "MQTT aktivieren", 
-                    "mqtt_prefix": "MQTT Prefix", 
+                    "mqtt_prefix": "MQTT-Präfix", 
                     "virtual_devices_enabled": "Heizgruppen aktivieren", 
-                    "virtual_devices_path": "Gruppen Pfad", 
-                    "virtual_devices_port": "Gruppen Port"
+                    "virtual_devices_path": "Gruppen-Pfad", 
+                    "virtual_devices_port": "Gruppen-Port"
                 }, 
                 "data_description": {
-                    "mqtt_enabled": "Aktiviere MQTT, um Callbacks für CCU-Jack und CUxD zu nutzen", 
+                    "mqtt_enabled": "MQTT aktivieren um Callbacks für CCU-Jack und CUxD zu nutzen", 
                     "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix"
                 }, 
-                "description": "Neu-Konfiguration der CCU Schnittstellen"
+                "description": "CCU-Schnittstellen neu konfigurieren"
+            }, 
+            "interfaces": {
+                "data": {
+                    "bidcos_rf_enabled": "Homematic (Bidcos-RF) aktivieren", 
+                    "bidcos_rf_port": "HM-RF Port", 
+                    "bidcos_wired_enabled": "Homematic-Wired (BidCos-Wired) aktivieren", 
+                    "bidcos_wired_port": "BidCos-Wired Port", 
+                    "ccu_jack_enabled": "CCU-Jack aktivieren", 
+                    "cuxd_enabled": "CUxD aktivieren", 
+                    "hmip_rf_enabled": "Homematic IP aktivieren", 
+                    "hmip_rf_port": "HmIP-RF Port", 
+                    "virtual_devices_enabled": "Heizgruppen aktivieren", 
+                    "virtual_devices_path": "Gruppen-Pfad", 
+                    "virtual_devices_port": "Gruppen-Port"
+                }, 
+                "description": "Zu verwendende Schnittstellen konfigurieren", 
+                "title": "Schnittstellenkonfiguration"
+            }, 
+            "programs_sysvars": {
+                "data": {
+                    "program_markers": "Programm-Marker", 
+                    "program_scan_enabled": "Programm-Scan aktivieren", 
+                    "sysvar_markers": "Systemvariablen-Marker", 
+                    "sysvar_scan_enabled": "Systemvariablen-Scan aktivieren", 
+                    "sysvar_scan_interval": "Scan-Intervall (Sekunden)"
+                }, 
+                "data_description": {
+                    "program_markers": "Kommaseparierte Liste mit Markern für Programme zum Abrufen. Zum Zurücksetzen auf Leerzeichen setzen.", 
+                    "program_scan_enabled": "Scannen und Abrufen von CCU-Programmen aktivieren", 
+                    "sysvar_markers": "Kommaseparierte Liste mit Markern für Systemvariablen zum Abrufen. Zum Zurücksetzen auf Leerzeichen setzen.", 
+                    "sysvar_scan_enabled": "Scannen und Abrufen von CCU-Systemvariablen aktivieren", 
+                    "sysvar_scan_interval": "Intervall in Sekunden zwischen Scans für Programme und Systemvariablen"
+                }, 
+                "description": "Programm- und Systemvariablen-Scanning konfigurieren", 
+                "title": "Programme & Systemvariablen"
             }
         }
     }, 

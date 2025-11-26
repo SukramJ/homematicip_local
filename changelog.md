@@ -34,6 +34,7 @@
 - Add scheduler attributes to climate entities with schedule support
 - Fix naming of untranslated entities
 - Follow backend changes
+- Improve config flow
 - Rename actions:
   - get_schedule_profile_weekday -> get_schedule_weekday
   - set_schedule_profile_weekday -> set_schedule_weekday
