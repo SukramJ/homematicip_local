@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from aiohomematic.const import CONF_PASSWORD, CONF_USERNAME, Interface, SystemInformation
-from aiohomematic.exceptions import AuthFailure, NoConnectionException
+from aiohomematic.backend_detection import BackendDetectionResult
+from aiohomematic.const import CONF_PASSWORD, CONF_USERNAME, Backend, Interface, SystemInformation
+from aiohomematic.exceptions import AuthFailure, NoConnectionException, ValidationException
 from custom_components.homematicip_local.config_flow import (
     CONF_ADVANCED_CONFIG,
     CONF_BIDCOS_RF_PORT,
@@ -73,11 +74,26 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests import const
 
 
+def _get_default_detection_result(tls: bool = False) -> BackendDetectionResult:
+    """Return a default detection result for tests."""
+    return BackendDetectionResult(
+        backend=Backend.CCU,
+        available_interfaces=(Interface.HMIP_RF, Interface.BIDCOS_RF),
+        detected_port=2010 if not tls else 42010,
+        tls=tls,
+        host=const.HOST,
+        version="3.0.0",
+        auth_enabled=True,
+        https_redirect_enabled=False,
+    )
+
+
 async def async_check_form(
     hass: HomeAssistant,
     central_data: dict[str, Any] | None = None,
     interface_data: dict[str, Any] | None = None,
     tls: bool = False,
+    detection_result: BackendDetectionResult | None = None,
 ) -> dict[str, Any]:
     """Test we get the form."""
     if central_data is None:
@@ -92,13 +108,21 @@ async def async_check_form(
     if interface_data is None:
         interface_data = {}
 
-    result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    # Use default detection result if none provided
+    if detection_result is None:
+        detection_result = _get_default_detection_result(tls=tls)
 
+    # Create patches that will last for the entire test
+    # Note: Must use AsyncMock for async functions
     with (
         patch(
+            "custom_components.homematicip_local.config_flow._async_detect_backend",
+            new_callable=AsyncMock,
+            return_value=detection_result,
+        ),
+        patch(
             "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            new_callable=AsyncMock,
             return_value=SystemInformation(
                 available_interfaces=[],
                 auth_enabled=False,
@@ -111,6 +135,10 @@ async def async_check_form(
             return_value=True,
         ),
     ):
+        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] is None
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -123,7 +151,18 @@ async def async_check_form(
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.FORM
+        # Handle progress step for backend detection (if detection takes time)
+        # Since mock returns immediately, progress may complete before we see SHOW_PROGRESS
+        # The first result might be SHOW_PROGRESS, SHOW_PROGRESS_DONE, or directly FORM
+        while result2["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+            await hass.async_block_till_done()
+            result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+            await hass.async_block_till_done()
+
+        # After progress is done, we should be at interface form
+        assert result2["type"] == FlowResultType.FORM, (
+            f"Expected FORM but got {result2['type']}, step={result2.get('step_id')}"
+        )
         assert result2["handler"] == HMIP_DOMAIN
         assert result2["step_id"] == "interface"
 
@@ -135,15 +174,15 @@ async def async_check_form(
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["handler"] == HMIP_DOMAIN
-    assert result3["title"] == const.INSTANCE_NAME
-    data = result3["data"]
-    assert data[CONF_INSTANCE_NAME] == const.INSTANCE_NAME
-    assert data[CONF_HOST] == const.HOST
-    assert data[CONF_USERNAME] == const.USERNAME
-    assert data[CONF_PASSWORD] == const.PASSWORD
-    return data
+        assert result3["type"] == FlowResultType.CREATE_ENTRY
+        assert result3["handler"] == HMIP_DOMAIN
+        assert result3["title"] == const.INSTANCE_NAME
+        data = result3["data"]
+        assert data[CONF_INSTANCE_NAME] == const.INSTANCE_NAME
+        assert data[CONF_HOST] == const.HOST
+        assert data[CONF_USERNAME] == const.USERNAME
+        assert data[CONF_PASSWORD] == const.PASSWORD
+        return data
 
 
 async def async_check_options_form(
@@ -206,8 +245,8 @@ class TestConfigFlowForm:
     """Tests for basic configuration flow form."""
 
     async def test_form(self, hass: HomeAssistant) -> None:
-        """Test we get the form."""
-        interface_data = {CONF_ENABLE_HMIP_RF: True}
+        """Test we get the form with only HmIP-RF enabled."""
+        interface_data = {CONF_ENABLE_HMIP_RF: True, CONF_ENABLE_BIDCOS_RF: False}
         data = await async_check_form(hass=hass, interface_data=interface_data)
         interface = data["interface"]
         assert interface[Interface.HMIP_RF][CONF_PORT] == 2010
@@ -215,9 +254,32 @@ class TestConfigFlowForm:
         assert interface.get(Interface.VIRTUAL_DEVICES) is None
         assert interface.get(Interface.BIDCOS_WIRED) is None
 
+    async def test_form_https_redirect_enables_tls(self, hass: HomeAssistant) -> None:
+        """Test that https_redirect_enabled=True enables TLS even when tls=False in detection."""
+        # Detection result with tls=False but https_redirect_enabled=True
+        detection_result = BackendDetectionResult(
+            backend=Backend.CCU,
+            available_interfaces=(Interface.HMIP_RF,),
+            detected_port=2010,  # Non-TLS port
+            tls=False,  # Connection was not TLS
+            host=const.HOST,
+            version="3.0.0",
+            auth_enabled=True,
+            https_redirect_enabled=True,  # But HTTPS redirect is enabled on CCU
+        )
+        interface_data = {CONF_ENABLE_HMIP_RF: True}
+        data = await async_check_form(
+            hass=hass, interface_data=interface_data, tls=False, detection_result=detection_result
+        )
+        # TLS should be enabled due to https_redirect_enabled=True
+        assert data[CONF_TLS] is True
+        # Interface port should be TLS port
+        interface = data[CONF_INTERFACE]
+        assert interface[Interface.HMIP_RF][CONF_PORT] == 42010
+
     async def test_form_no_hmip_other_bidcos_port(self, hass: HomeAssistant) -> None:
-        """Test we get the form."""
-        interface_data = {CONF_ENABLE_BIDCOS_RF: True, CONF_BIDCOS_RF_PORT: 5555}
+        """Test we get the form with only BidCos-RF enabled with custom port."""
+        interface_data = {CONF_ENABLE_HMIP_RF: False, CONF_ENABLE_BIDCOS_RF: True, CONF_BIDCOS_RF_PORT: 5555}
         data = await async_check_form(hass, interface_data=interface_data)
         interface = data["interface"]
         assert interface.get(Interface.HMIP_RF) is None
@@ -227,7 +289,7 @@ class TestConfigFlowForm:
         assert interface.get(Interface.BIDCOS_WIRED) is None
 
     async def test_form_only_hs485(self, hass: HomeAssistant) -> None:
-        """Test we get the form."""
+        """Test we get the form with only BidCos-Wired enabled."""
         interface_data = {
             CONF_ENABLE_HMIP_RF: False,
             CONF_ENABLE_BIDCOS_RF: False,
@@ -242,7 +304,7 @@ class TestConfigFlowForm:
         assert interface[Interface.BIDCOS_WIRED][CONF_PORT] == 2000
 
     async def test_form_only_virtual(self, hass: HomeAssistant) -> None:
-        """Test we get the form."""
+        """Test we get the form with only Virtual Devices enabled."""
         interface_data = {
             CONF_ENABLE_HMIP_RF: False,
             CONF_ENABLE_BIDCOS_RF: False,
@@ -257,8 +319,8 @@ class TestConfigFlowForm:
         assert interface[Interface.VIRTUAL_DEVICES][CONF_PORT] == 9292
 
     async def test_form_tls(self, hass: HomeAssistant) -> None:
-        """Test we get the form with tls."""
-        interface_data = {CONF_ENABLE_HMIP_RF: True}
+        """Test we get the form with tls and only HmIP-RF enabled."""
+        interface_data = {CONF_ENABLE_HMIP_RF: True, CONF_ENABLE_BIDCOS_RF: False}
         data = await async_check_form(hass=hass, interface_data=interface_data, tls=True)
         interface = data[CONF_INTERFACE]
         assert interface[Interface.HMIP_RF][CONF_PORT] == 42010
@@ -324,7 +386,13 @@ class TestConfigFlowErrorHandling:
 
         with (
             patch(
+                "custom_components.homematicip_local.config_flow._async_detect_backend",
+                new_callable=AsyncMock,
+                return_value=_get_default_detection_result(),
+            ),
+            patch(
                 "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+                new_callable=AsyncMock,
                 side_effect=NoConnectionException("no host"),
             ),
             patch(
@@ -343,6 +411,12 @@ class TestConfigFlowErrorHandling:
             )
             await hass.async_block_till_done()
 
+            # Handle progress step for backend detection (may complete immediately with mock)
+            while result2["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+                await hass.async_block_till_done()
+                result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+                await hass.async_block_till_done()
+
             assert result2["type"] == FlowResultType.FORM
             assert result2["handler"] == HMIP_DOMAIN
             assert result2["step_id"] == "interface"
@@ -358,15 +432,178 @@ class TestConfigFlowErrorHandling:
         assert result3["type"] == FlowResultType.FORM
         assert result3["errors"] == {"base": "cannot_connect"}
 
-    async def test_form_invalid_auth(self, hass: HomeAssistant) -> None:
-        """Test we handle invalid auth."""
+    async def test_form_detection_auth_failure(self, hass: HomeAssistant) -> None:
+        """Test we handle auth failure during backend detection."""
         result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] is None
 
         with (
             patch(
+                "custom_components.homematicip_local.config_flow._async_detect_backend",
+                new_callable=AsyncMock,
+                side_effect=AuthFailure("invalid credentials"),
+            ),
+            patch(
+                "custom_components.homematicip_local.async_setup_entry",
+                return_value=True,
+            ),
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_INSTANCE_NAME: const.INSTANCE_NAME,
+                    CONF_HOST: const.HOST,
+                    CONF_USERNAME: const.USERNAME,
+                    CONF_PASSWORD: const.PASSWORD,
+                },
+            )
+            await hass.async_block_till_done()
+
+            # Handle progress step for backend detection
+            while result2["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+                await hass.async_block_till_done()
+                result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+                await hass.async_block_till_done()
+
+        # Should return to central step with auth error
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["step_id"] == "central"
+        assert result2["errors"] == {"base": "invalid_auth"}
+        assert result2["description_placeholders"]["invalid_items"] == const.HOST
+
+    async def test_form_detection_no_backend_found(self, hass: HomeAssistant) -> None:
+        """Test we handle case when no backend is found (detection failed)."""
+        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] is None
+
+        with (
+            patch(
+                "custom_components.homematicip_local.config_flow._async_detect_backend",
+                new_callable=AsyncMock,
+                return_value=None,  # No backend found
+            ),
+            patch(
+                "custom_components.homematicip_local.async_setup_entry",
+                return_value=True,
+            ),
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_INSTANCE_NAME: const.INSTANCE_NAME,
+                    CONF_HOST: const.HOST,
+                    CONF_USERNAME: const.USERNAME,
+                    CONF_PASSWORD: const.PASSWORD,
+                },
+            )
+            await hass.async_block_till_done()
+
+            # Handle progress step for backend detection
+            while result2["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+                await hass.async_block_till_done()
+                result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+                await hass.async_block_till_done()
+
+        # Should return to central step with detection_failed error
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["step_id"] == "central"
+        assert result2["errors"] == {"base": "detection_failed"}
+
+    async def test_form_detection_no_connection(self, hass: HomeAssistant) -> None:
+        """Test we handle connection exception during backend detection."""
+        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] is None
+
+        with (
+            patch(
+                "custom_components.homematicip_local.config_flow._async_detect_backend",
+                new_callable=AsyncMock,
+                side_effect=NoConnectionException("Connection refused"),
+            ),
+            patch(
+                "custom_components.homematicip_local.async_setup_entry",
+                return_value=True,
+            ),
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_INSTANCE_NAME: const.INSTANCE_NAME,
+                    CONF_HOST: const.HOST,
+                    CONF_USERNAME: const.USERNAME,
+                    CONF_PASSWORD: const.PASSWORD,
+                },
+            )
+            await hass.async_block_till_done()
+
+            # Handle progress step for backend detection
+            while result2["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+                await hass.async_block_till_done()
+                result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+                await hass.async_block_till_done()
+
+        # Should return to central step with cannot_connect error
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["step_id"] == "central"
+        assert result2["errors"] == {"base": "cannot_connect"}
+
+    async def test_form_detection_validation_exception(self, hass: HomeAssistant) -> None:
+        """Test we handle validation exception during backend detection."""
+        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] is None
+
+        with (
+            patch(
+                "custom_components.homematicip_local.config_flow._async_detect_backend",
+                new_callable=AsyncMock,
+                side_effect=ValidationException("invalid host format"),
+            ),
+            patch(
+                "custom_components.homematicip_local.async_setup_entry",
+                return_value=True,
+            ),
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_INSTANCE_NAME: const.INSTANCE_NAME,
+                    CONF_HOST: const.HOST,
+                    CONF_USERNAME: const.USERNAME,
+                    CONF_PASSWORD: const.PASSWORD,
+                },
+            )
+            await hass.async_block_till_done()
+
+            # Handle progress step for backend detection
+            while result2["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+                await hass.async_block_till_done()
+                result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+                await hass.async_block_till_done()
+
+        # Should return to central step with invalid_config error
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["step_id"] == "central"
+        assert result2["errors"] == {"base": "invalid_config"}
+
+    async def test_form_invalid_auth(self, hass: HomeAssistant) -> None:
+        """Test we handle invalid auth during final validation."""
+        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] is None
+
+        with (
+            patch(
+                "custom_components.homematicip_local.config_flow._async_detect_backend",
+                new_callable=AsyncMock,
+                return_value=_get_default_detection_result(),
+            ),
+            patch(
                 "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+                new_callable=AsyncMock,
                 side_effect=AuthFailure("no pw"),
             ),
             patch(
@@ -385,6 +622,12 @@ class TestConfigFlowErrorHandling:
             )
             await hass.async_block_till_done()
 
+            # Handle progress step for backend detection (may complete immediately with mock)
+            while result2["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+                await hass.async_block_till_done()
+                result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+                await hass.async_block_till_done()
+
             assert result2["type"] == FlowResultType.FORM
             assert result2["handler"] == HMIP_DOMAIN
             assert result2["step_id"] == "interface"
@@ -401,14 +644,20 @@ class TestConfigFlowErrorHandling:
         assert result3["errors"] == {"base": "invalid_auth"}
 
     async def test_form_invalid_password(self, hass: HomeAssistant) -> None:
-        """Test we handle invalid auth."""
+        """Test we handle invalid config during final validation."""
         result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] is None
 
         with (
             patch(
+                "custom_components.homematicip_local.config_flow._async_detect_backend",
+                new_callable=AsyncMock,
+                return_value=_get_default_detection_result(),
+            ),
+            patch(
                 "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+                new_callable=AsyncMock,
                 side_effect=InvalidConfig("wrong char"),
             ),
             patch(
@@ -426,6 +675,12 @@ class TestConfigFlowErrorHandling:
                 },
             )
             await hass.async_block_till_done()
+
+            # Handle progress step for backend detection (may complete immediately with mock)
+            while result2["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+                await hass.async_block_till_done()
+                result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+                await hass.async_block_till_done()
 
             assert result2["type"] == FlowResultType.FORM
             assert result2["handler"] == HMIP_DOMAIN
@@ -599,7 +854,13 @@ class TestDiscoveryFlow:
 
         with (
             patch(
+                "custom_components.homematicip_local.config_flow._async_detect_backend",
+                new_callable=AsyncMock,
+                return_value=_get_default_detection_result(),
+            ),
+            patch(
                 "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+                new_callable=AsyncMock,
                 return_value=SystemInformation(
                     available_interfaces=[],
                     auth_enabled=False,
@@ -620,6 +881,13 @@ class TestDiscoveryFlow:
                 },
             )
             await hass.async_block_till_done()
+
+            # Handle progress step for backend detection (may complete immediately with mock)
+            while result2["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+                await hass.async_block_till_done()
+                result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+                await hass.async_block_till_done()
+
             assert result2["type"] == FlowResultType.FORM
             assert result2["handler"] == HMIP_DOMAIN
             assert result2["step_id"] == "interface"
@@ -840,13 +1108,21 @@ class TestAdvancedConfigurationFlow:
         result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
         assert result["type"] == FlowResultType.FORM
         # Submit central step
-        with patch(
-            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
-            return_value=SystemInformation(
-                available_interfaces=[],
-                auth_enabled=False,
-                https_redirect_enabled=False,
-                serial=const.SERIAL,
+        with (
+            patch(
+                "custom_components.homematicip_local.config_flow._async_detect_backend",
+                new_callable=AsyncMock,
+                return_value=_get_default_detection_result(),
+            ),
+            patch(
+                "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+                new_callable=AsyncMock,
+                return_value=SystemInformation(
+                    available_interfaces=[],
+                    auth_enabled=False,
+                    https_redirect_enabled=False,
+                    serial=const.SERIAL,
+                ),
             ),
         ):
             result2 = await hass.config_entries.flow.async_configure(
@@ -860,6 +1136,14 @@ class TestAdvancedConfigurationFlow:
                     CONF_VERIFY_TLS: False,
                 },
             )
+            await hass.async_block_till_done()
+
+            # Handle progress step for backend detection (may complete immediately with mock)
+            while result2["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+                await hass.async_block_till_done()
+                result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+                await hass.async_block_till_done()
+
         assert result2["type"] == FlowResultType.FORM
         assert result2["step_id"] == "interface"
 

@@ -14,7 +14,13 @@
       "Bash(pytest:*)",
       "Bash(pip show:*)",
       "Bash(git stash:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(python -m mypy:*)",
+      "Bash(timeout 30 python -m pytest:*)",
+      "Bash(pip install:*)",
+      "Bash(ruff check:*)",
+      "Bash(python -c:*)"
     ],
     "deny": [],
     "ask": []

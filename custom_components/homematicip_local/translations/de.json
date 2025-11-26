@@ -1,12 +1,16 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen: {invalid_items}. Weitere Details findest Du im HA-Protokoll", 
-            "invalid_auth": "Ungültige Authentifizierung", 
-            "invalid_config": "Ungültiges Konfiguration: {invalid_items}", 
-            "unknown": "Unerwarteter Fehler. Weitere Details findest Du im HA-Protokoll"
+            "cannot_connect": "Verbindung zur CCU [{invalid_items}] nicht möglich. Bitte überprüfe: 1) Der Hostname/die IP-Adresse ist korrekt, 2) Die CCU ist eingeschaltet und erreichbar, 3) Keine Firewall blockiert die Verbindung.", 
+            "detection_failed": "Verbindung zur CCU [{invalid_items}] nicht möglich. Bitte überprüfe: 1) Der Hostname/die IP-Adresse ist korrekt, 2) Die CCU ist eingeschaltet und erreichbar, 3) Benutzername und Passwort sind korrekt (Groß-/Kleinschreibung beachten), 4) Der Benutzer hat Admin-Rechte auf der CCU, 5) Keine Firewall blockiert die Verbindung.", 
+            "invalid_auth": "Authentifizierung bei CCU [{invalid_items}] fehlgeschlagen. Bitte überprüfe: 1) Benutzername und Passwort sind korrekt (Groß-/Kleinschreibung beachten), 2) Der Benutzer hat Admin-Rechte auf der CCU, 3) Das Passwort enthält nur erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
+            "invalid_config": "Ungültige Konfiguration: [{invalid_items}]. Bitte überprüfe die eingegebenen Werte und versuche es erneut.", 
+            "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Home Assistant Protokolle für weitere Details."
         }, 
         "flow_title": "{name}/{host}", 
+        "progress": {
+            "detect_backend": "Backend-Typ und verfügbare Schnittstellen werden erkannt..."
+        }, 
         "step": {
             "advanced": {
                 "data": {
@@ -55,6 +59,10 @@
                     "username": "Groß-/Kleinschreibung beachten. Benutzer muss die Administratorrolle haben"
                 }, 
                 "description": "Bitte Pflichtfelder ausfüllen"
+            }, 
+            "detect": {
+                "description": "Backend-Typ und verfügbare Schnittstellen werden erkannt...", 
+                "title": "Backend Erkennung"
             }, 
             "interface": {
                 "data": {
@@ -697,10 +705,10 @@
     }, 
     "options": {
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen: {invalid_items}. Weitere Details findest Du im HA-Protokoll", 
-            "invalid_auth": "Ungültige Authentifizierung", 
-            "invalid_config": "Ungültiges Konfiguration: {invalid_items}", 
-            "unknown": "Unerwarteter Fehler. Weitere Details findest Du im HA-Protokoll"
+            "cannot_connect": "Verbindung zur CCU [{invalid_items}] nicht möglich. Bitte überprüfe: 1) Der Hostname/die IP-Adresse ist korrekt, 2) Die CCU ist eingeschaltet und erreichbar, 3) Keine Firewall blockiert die Verbindung.", 
+            "invalid_auth": "Authentifizierung bei CCU [{invalid_items}] fehlgeschlagen. Bitte überprüfe: 1) Benutzername und Passwort sind korrekt (Groß-/Kleinschreibung beachten), 2) Der Benutzer hat Admin-Rechte auf der CCU, 3) Das Passwort enthält nur erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
+            "invalid_config": "Ungültige Konfiguration: [{invalid_items}]. Bitte überprüfe die eingegebenen Werte und versuche es erneut.", 
+            "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Home Assistant Protokolle für weitere Details."
         }, 
         "step": {
             "advanced": {
