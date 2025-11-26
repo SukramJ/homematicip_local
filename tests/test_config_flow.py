@@ -174,6 +174,16 @@ async def async_check_form(
         )
         await hass.async_block_till_done()
 
+        # Handle new menu step for finish_or_configure
+        if result3["type"] == FlowResultType.MENU:
+            assert result3["step_id"] == "finish_or_configure"
+            # Select finish_setup to complete the flow
+            result3 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {"next_step_id": "finish_setup"},
+            )
+            await hass.async_block_till_done()
+
         assert result3["type"] == FlowResultType.CREATE_ENTRY
         assert result3["handler"] == HMIP_DOMAIN
         assert result3["title"] == const.INSTANCE_NAME
@@ -199,8 +209,10 @@ async def async_check_options_form(
         interface_data = {}
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+
+    # Options flow now starts with a menu
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
 
     with (
         patch(
@@ -217,23 +229,42 @@ async def async_check_options_form(
             return_value=True,
         ),
     ):
-        result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            central_data,
-        )
-        await hass.async_block_till_done()
+        # If interface_data is provided, go to interfaces step
+        if interface_data:
+            result2 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {"next_step_id": "interfaces"},
+            )
+            await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["handler"] == const.CONFIG_ENTRY_ID
-        assert result2["step_id"] == "interface"
+            assert result2["type"] == FlowResultType.FORM
+            assert result2["handler"] == const.CONFIG_ENTRY_ID
+            assert result2["step_id"] == "interfaces"
 
-        next(flow for flow in hass.config_entries.options.async_progress() if flow["flow_id"] == result["flow_id"])
+            # Configure interfaces
+            result3 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                interface_data,
+            )
+            await hass.async_block_till_done()
+        else:
+            # Otherwise go to connection settings
+            result2 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {"next_step_id": "connection"},
+            )
+            await hass.async_block_till_done()
 
-        result3 = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            interface_data,
-        )
-        await hass.async_block_till_done()
+            assert result2["type"] == FlowResultType.FORM
+            assert result2["handler"] == const.CONFIG_ENTRY_ID
+            assert result2["step_id"] == "connection"
+
+            # Configure connection settings
+            result3 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                central_data,
+            )
+            await hass.async_block_till_done()
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["handler"] == const.CONFIG_ENTRY_ID
@@ -428,6 +459,15 @@ class TestConfigFlowErrorHandling:
                 {},
             )
             await hass.async_block_till_done()
+
+            # Handle new menu step for finish_or_configure
+            if result3["type"] == FlowResultType.MENU:
+                assert result3["step_id"] == "finish_or_configure"
+                result3 = await hass.config_entries.flow.async_configure(
+                    result["flow_id"],
+                    {"next_step_id": "finish_setup"},
+                )
+                await hass.async_block_till_done()
 
         assert result3["type"] == FlowResultType.FORM
         assert result3["errors"] == {"base": "cannot_connect"}
@@ -640,6 +680,15 @@ class TestConfigFlowErrorHandling:
             )
             await hass.async_block_till_done()
 
+            # Handle new menu step for finish_or_configure
+            if result3["type"] == FlowResultType.MENU:
+                assert result3["step_id"] == "finish_or_configure"
+                result3 = await hass.config_entries.flow.async_configure(
+                    result["flow_id"],
+                    {"next_step_id": "finish_setup"},
+                )
+                await hass.async_block_till_done()
+
         assert result3["type"] == FlowResultType.FORM
         assert result3["errors"] == {"base": "invalid_auth"}
 
@@ -694,6 +743,15 @@ class TestConfigFlowErrorHandling:
             )
             await hass.async_block_till_done()
 
+            # Handle new menu step for finish_or_configure
+            if result3["type"] == FlowResultType.MENU:
+                assert result3["step_id"] == "finish_or_configure"
+                result3 = await hass.config_entries.flow.async_configure(
+                    result["flow_id"],
+                    {"next_step_id": "finish_setup"},
+                )
+                await hass.async_block_till_done()
+
         assert result3["type"] == FlowResultType.FORM
         assert result3["errors"] == {"base": "invalid_config"}
 
@@ -708,8 +766,9 @@ class TestOptionsFlowErrorHandling:
         mock_config_entry_v2.add_to_hass(hass)
         result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
 
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] is None
+        # Options flow now starts with a menu
+        assert result["type"] == FlowResultType.MENU
+        assert result["step_id"] == "init"
 
         with (
             patch(
@@ -721,18 +780,18 @@ class TestOptionsFlowErrorHandling:
                 return_value=True,
             ),
         ):
+            # Select connection from menu
             result2 = await hass.config_entries.options.async_configure(
                 result["flow_id"],
-                {},
+                {"next_step_id": "connection"},
             )
             await hass.async_block_till_done()
 
             assert result2["type"] == FlowResultType.FORM
             assert result2["handler"] == const.CONFIG_ENTRY_ID
-            assert result2["step_id"] == "interface"
+            assert result2["step_id"] == "connection"
 
-            next(flow for flow in hass.config_entries.options.async_progress() if flow["flow_id"] == result["flow_id"])
-
+            # Submit connection form - should fail with cannot_connect
             result3 = await hass.config_entries.options.async_configure(
                 result["flow_id"],
                 {},
@@ -746,8 +805,10 @@ class TestOptionsFlowErrorHandling:
         """Test we handle invalid auth."""
         mock_config_entry_v2.add_to_hass(hass)
         result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] is None
+
+        # Options flow now starts with a menu
+        assert result["type"] == FlowResultType.MENU
+        assert result["step_id"] == "init"
 
         with (
             patch(
@@ -759,25 +820,25 @@ class TestOptionsFlowErrorHandling:
                 return_value=True,
             ),
         ):
+            # Select connection from menu
             result2 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {"next_step_id": "connection"},
+            )
+            await hass.async_block_till_done()
+
+            assert result2["type"] == FlowResultType.FORM
+            assert result2["handler"] == const.CONFIG_ENTRY_ID
+            assert result2["step_id"] == "connection"
+
+            # Submit connection form - should fail with invalid_auth
+            result3 = await hass.config_entries.options.async_configure(
                 result["flow_id"],
                 {
                     CONF_HOST: const.HOST,
                     CONF_USERNAME: const.USERNAME,
                     CONF_PASSWORD: const.PASSWORD,
                 },
-            )
-            await hass.async_block_till_done()
-
-            assert result2["type"] == FlowResultType.FORM
-            assert result2["handler"] == const.CONFIG_ENTRY_ID
-            assert result2["step_id"] == "interface"
-
-            next(flow for flow in hass.config_entries.options.async_progress() if flow["flow_id"] == result["flow_id"])
-
-            result3 = await hass.config_entries.options.async_configure(
-                result["flow_id"],
-                {},
             )
             await hass.async_block_till_done()
 
@@ -790,8 +851,10 @@ class TestOptionsFlowErrorHandling:
         """Test we handle invalid auth."""
         mock_config_entry_v2.add_to_hass(hass)
         result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] is None
+
+        # Options flow now starts with a menu
+        assert result["type"] == FlowResultType.MENU
+        assert result["step_id"] == "init"
 
         with (
             patch(
@@ -803,25 +866,25 @@ class TestOptionsFlowErrorHandling:
                 return_value=True,
             ),
         ):
+            # Select connection from menu
             result2 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {"next_step_id": "connection"},
+            )
+            await hass.async_block_till_done()
+
+            assert result2["type"] == FlowResultType.FORM
+            assert result2["handler"] == const.CONFIG_ENTRY_ID
+            assert result2["step_id"] == "connection"
+
+            # Submit connection form - should fail with invalid_config
+            result3 = await hass.config_entries.options.async_configure(
                 result["flow_id"],
                 {
                     CONF_HOST: const.HOST,
                     CONF_USERNAME: const.USERNAME,
                     CONF_PASSWORD: const.INVALID_PASSWORD,
                 },
-            )
-            await hass.async_block_till_done()
-
-            assert result2["type"] == FlowResultType.FORM
-            assert result2["handler"] == const.CONFIG_ENTRY_ID
-            assert result2["step_id"] == "interface"
-
-            next(flow for flow in hass.config_entries.options.async_progress() if flow["flow_id"] == result["flow_id"])
-
-            result3 = await hass.config_entries.options.async_configure(
-                result["flow_id"],
-                {},
             )
             await hass.async_block_till_done()
 
@@ -842,7 +905,9 @@ class TestDiscoveryFlow:
         )
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "central"
-        assert result["description_placeholders"] is None  # {"addon": "Mock Addon"}
+        # Now includes step indicators
+        assert result["description_placeholders"]["step_current"] == "1"
+        assert result["description_placeholders"]["step_total"] == "2"
 
         flows = hass.config_entries.flow.async_progress()
         assert len(flows) == 1
@@ -899,6 +964,15 @@ class TestDiscoveryFlow:
                 {},
             )
             await hass.async_block_till_done()
+
+            # Handle new menu step for finish_or_configure
+            if result3["type"] == FlowResultType.MENU:
+                assert result3["step_id"] == "finish_or_configure"
+                result3 = await hass.config_entries.flow.async_configure(
+                    result["flow_id"],
+                    {"next_step_id": "finish_setup"},
+                )
+                await hass.async_block_till_done()
 
         assert result3["type"] == FlowResultType.CREATE_ENTRY
         assert result3["handler"] == HMIP_DOMAIN
@@ -1227,46 +1301,20 @@ class TestAdvancedConfigurationFlow:
         entry.add_to_hass(hass)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "central"
+        # Options flow now starts with a menu
+        assert result["type"] == FlowResultType.MENU
+        assert result["step_id"] == "init"
 
+        # Select advanced_settings from menu to test the advanced path
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: const.HOST,
-                CONF_USERNAME: const.USERNAME,
-                CONF_PASSWORD: const.PASSWORD,
-                CONF_TLS: False,
-                CONF_VERIFY_TLS: False,
-            },
+            {"next_step_id": "advanced_settings"},
         )
         assert result2["type"] == FlowResultType.FORM
-        assert result2["step_id"] == "interface"
+        assert result2["step_id"] == "advanced_settings"
 
-        interface_input = {
-            CONF_ENABLE_HMIP_RF: False,
-            CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
-            CONF_ENABLE_BIDCOS_RF: False,
-            CONF_BIDCOS_RF_PORT: IF_BIDCOS_RF_PORT,
-            CONF_ENABLE_VIRTUAL_DEVICES: False,
-            CONF_VIRTUAL_DEVICES_PORT: IF_VIRTUAL_DEVICES_PORT,
-            CONF_VIRTUAL_DEVICES_PATH: IF_VIRTUAL_DEVICES_PATH,
-            CONF_ENABLE_BIDCOS_WIRED: False,
-            CONF_BIDCOS_WIRED_PORT: IF_BIDCOS_WIRED_PORT,
-            CONF_ENABLE_CCU_JACK: False,
-            CONF_ENABLE_CUXD: False,
-            CONF_ADVANCED_CONFIG: True,
-        }
-        result3 = await hass.config_entries.options.async_configure(result["flow_id"], interface_input)
-        assert result3["type"] == FlowResultType.FORM
-        assert result3["step_id"] == "advanced"
-
+        # advanced_settings step does NOT include program/sysvar fields (those are in programs_sysvars step)
         advanced_input = {
-            CONF_ENABLE_PROGRAM_SCAN: True,
-            CONF_PROGRAM_MARKERS: [],
-            CONF_ENABLE_SYSVAR_SCAN: True,
-            CONF_SYSVAR_MARKERS: [],
-            CONF_SYS_SCAN_INTERVAL: 30,
             CONF_ENABLE_SYSTEM_NOTIFICATIONS: True,
             CONF_LISTEN_ON_ALL_IP: False,
             CONST_ENABLE_MQTT: False,
@@ -1275,6 +1323,7 @@ class TestAdvancedConfigurationFlow:
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
             CONF_DELAY_NEW_DEVICE_CREATION: False,
             CONF_OPTIONAL_SETTINGS: [],
+            CONF_UN_IGNORES: [],  # UN-IGNORE field
         }
         with patch(
             "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
@@ -1285,6 +1334,6 @@ class TestAdvancedConfigurationFlow:
                 serial=const.SERIAL,
             ),
         ):
-            result4 = await hass.config_entries.options.async_configure(result["flow_id"], advanced_input)
+            result3 = await hass.config_entries.options.async_configure(result["flow_id"], advanced_input)
             await hass.async_block_till_done()
-        assert result4["type"] == FlowResultType.CREATE_ENTRY
+        assert result3["type"] == FlowResultType.CREATE_ENTRY

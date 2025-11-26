@@ -80,6 +80,13 @@ from .const import (
 from .control_unit import ControlConfig, ControlUnit, validate_config_and_get_system_information
 from .support import InvalidConfig
 
+# Step indicator constants
+STEP_CENTRAL: Final = "1"
+STEP_INTERFACE: Final = "2"
+STEP_ADVANCED: Final = "3"
+TOTAL_STEPS_BASIC: Final = "2"
+TOTAL_STEPS_ADVANCED: Final = "3"
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BIDCOS_RF_PORT: Final = "bidcos_rf_port"
@@ -145,6 +152,38 @@ def get_options_schema(data: ConfigType) -> Schema:
     options_schema = get_domain_schema(data=data)
     del options_schema.schema[CONF_INSTANCE_NAME]
     return options_schema
+
+
+def get_reconfigure_schema(data: ConfigType) -> Schema:
+    """Return the reconfigure schema with only connection settings."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_HOST, default=data.get(CONF_HOST)): TEXT_SELECTOR,
+            vol.Required(CONF_USERNAME, default=data.get(CONF_USERNAME)): TEXT_SELECTOR,
+            vol.Required(CONF_PASSWORD, default=data.get(CONF_PASSWORD)): PASSWORD_SELECTOR,
+            vol.Required(CONF_TLS, default=data.get(CONF_TLS, DEFAULT_TLS)): BOOLEAN_SELECTOR,
+            vol.Required(CONF_VERIFY_TLS, default=data.get(CONF_VERIFY_TLS, False)): BOOLEAN_SELECTOR,
+        }
+    )
+
+
+def _get_step_placeholders(step: str, total: str) -> dict[str, str]:
+    """Return description placeholders with step indicators."""
+    return {
+        "step_current": step,
+        "step_total": total,
+    }
+
+
+def _get_retry_hint(error_type: str) -> str:
+    """Return a retry hint based on the error type."""
+    hints = {
+        "invalid_auth": "verify_credentials",
+        "cannot_connect": "check_network",
+        "detection_failed": "check_ccu_settings",
+        "invalid_config": "check_config_values",
+    }
+    return hints.get(error_type, "check_settings")
 
 
 def get_interface_schema(use_tls: bool, data: ConfigType, from_config_flow: bool) -> Schema:
@@ -225,7 +264,7 @@ def get_interface_schema(use_tls: bool, data: ConfigType, from_config_flow: bool
 
 
 def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -> Schema:
-    """Return the advanced schema."""
+    """Return the advanced schema with all fields (for legacy advanced step)."""
     existing_parameters: list[str] = [
         p
         for p in data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_UN_IGNORES, DEFAULT_UN_IGNORES)
@@ -331,6 +370,79 @@ def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -
     return advanced_schema
 
 
+def get_advanced_settings_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -> Schema:
+    """Return the advanced settings schema without program/sysvar fields (for options flow menu)."""
+    existing_parameters: list[str] = [
+        p
+        for p in data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_UN_IGNORES, DEFAULT_UN_IGNORES)
+        if p in all_un_ignore_parameters
+    ]
+
+    advanced_settings_schema = vol.Schema(
+        {
+            vol.Required(
+                CONF_ENABLE_SYSTEM_NOTIFICATIONS,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(
+                    CONF_ENABLE_SYSTEM_NOTIFICATIONS, DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS
+                ),
+            ): BOOLEAN_SELECTOR,
+            vol.Required(
+                CONF_LISTEN_ON_ALL_IP,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_LISTEN_ON_ALL_IP, DEFAULT_LISTEN_ON_ALL_IP),
+            ): BOOLEAN_SELECTOR,
+            vol.Required(
+                CONF_ENABLE_MQTT,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_ENABLE_MQTT, DEFAULT_ENABLE_MQTT),
+            ): BOOLEAN_SELECTOR,
+            vol.Optional(
+                CONF_MQTT_PREFIX,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_MQTT_PREFIX, DEFAULT_MQTT_PREFIX),
+            ): TEXT_SELECTOR,
+            vol.Optional(
+                CONF_UN_IGNORES,
+                default=existing_parameters,
+            ): SelectSelector(
+                config=SelectSelectorConfig(
+                    mode=SelectSelectorMode.DROPDOWN,
+                    multiple=True,
+                    sort=False,
+                    options=all_un_ignore_parameters,
+                )
+            ),
+            vol.Optional(
+                CONF_ENABLE_SUB_DEVICES,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_ENABLE_SUB_DEVICES, DEFAULT_ENABLE_SUB_DEVICES),
+            ): BOOLEAN_SELECTOR,
+            vol.Optional(
+                CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(
+                    CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE, DEFAULT_USE_GROUP_CHANNEL_FOR_COVER_STATE
+                ),
+            ): BOOLEAN_SELECTOR,
+            vol.Optional(
+                CONF_DELAY_NEW_DEVICE_CREATION,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(
+                    CONF_DELAY_NEW_DEVICE_CREATION, DEFAULT_DELAY_NEW_DEVICE_CREATION
+                ),
+            ): BOOLEAN_SELECTOR,
+            vol.Optional(
+                CONF_OPTIONAL_SETTINGS,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_OPTIONAL_SETTINGS, DEFAULT_OPTIONAL_SETTINGS),
+            ): SelectSelector(
+                config=SelectSelectorConfig(
+                    mode=SelectSelectorMode.DROPDOWN,
+                    multiple=True,
+                    sort=True,
+                    options=[str(v) for v in OptionalSettings],
+                )
+            ),
+        }
+    )
+    if not all_un_ignore_parameters:
+        del advanced_settings_schema.schema[CONF_UN_IGNORES]
+    return advanced_settings_schema
+
+
 async def _async_validate_config_and_get_system_information(
     hass: HomeAssistant, data: ConfigType, entry_id: str
 ) -> SystemInformation | None:
@@ -388,6 +500,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=self.data,
                     all_un_ignore_parameters=[],
                 ),
+                description_placeholders=_get_step_placeholders(STEP_ADVANCED, TOTAL_STEPS_ADVANCED),
             )
         _update_advanced_input(data=self.data, advanced_input=advanced_input)
         return await self._validate_and_finish_config_flow()
@@ -403,17 +516,24 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             return await self.async_step_detect()
 
-        return self.async_show_form(step_id="central", data_schema=get_domain_schema(data=self.data))
+        return self.async_show_form(
+            step_id="central",
+            data_schema=get_domain_schema(data=self.data),
+            description_placeholders=_get_step_placeholders(STEP_CENTRAL, TOTAL_STEPS_BASIC),
+        )
 
     async def async_step_central_error(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
         """Handle return to central step with validation error."""
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
+        description_placeholders: dict[str, str] = _get_step_placeholders(STEP_CENTRAL, TOTAL_STEPS_BASIC)
 
         if self._detection_error:
             errors["base"] = self._detection_error
             # Always set invalid_items placeholder to avoid showing literal [{invalid_items}] in message
             description_placeholders["invalid_items"] = self._detection_error_detail or self.data.get(CONF_HOST, "")
+            # Add detailed error information
+            description_placeholders["error_detail"] = self._detection_error_detail or ""
+            description_placeholders["retry_hint"] = _get_retry_hint(self._detection_error)
 
         # Reset detection error state
         self._detection_error = None
@@ -425,6 +545,10 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=description_placeholders,
         )
+
+    async def async_step_configure_advanced(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Go to advanced configuration."""
+        return await self.async_step_advanced()
 
     async def async_step_detect(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
         """Handle the backend detection step."""
@@ -443,6 +567,17 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         # Detection complete (or was never started), proceed to interface step
         return self.async_show_progress_done(next_step_id="interface")
 
+    async def async_step_finish_or_configure(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Show menu to choose between finishing setup or configuring advanced options."""
+        return self.async_show_menu(
+            step_id="finish_or_configure",
+            menu_options=["finish_setup", "configure_advanced"],
+        )
+
+    async def async_step_finish_setup(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Finish the config flow without advanced settings."""
+        return await self._validate_and_finish_config_flow()
+
     async def async_step_interface(
         self,
         interface_input: ConfigType | None = None,
@@ -454,16 +589,77 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             _update_interface_input(data=self.data, interface_input=interface_input)
             if interface_input.get(CONF_ADVANCED_CONFIG):
                 return await self.async_step_advanced()
-            return await self._validate_and_finish_config_flow()
+            return await self.async_step_finish_or_configure()
 
         _LOGGER.debug("ConfigFlow.step_interface, no user input")
+        placeholders = _get_step_placeholders(STEP_INTERFACE, TOTAL_STEPS_BASIC)
+        # Add detection result info if available
+        if self._detection_result:
+            placeholders["detected_backend"] = self._detection_result.backend.value
+            placeholders["detected_interfaces"] = ", ".join(
+                i.value for i in self._detection_result.available_interfaces
+            )
+            placeholders["detected_tls"] = str(
+                self._detection_result.tls or self._detection_result.https_redirect_enabled
+            )
         return self.async_show_form(
             step_id="interface",
             data_schema=get_interface_schema(
                 use_tls=self.data[CONF_TLS],
                 data=self.data,
-                from_config_flow=False,
+                from_config_flow=True,
             ),
+            description_placeholders=placeholders,
+        )
+
+    async def async_step_reconfigure(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        if entry is None:
+            return self.async_abort(reason="reconfigure_failed")
+
+        if user_input is not None:
+            # Update only connection-related fields
+            updated_data = dict(entry.data)
+            updated_data[CONF_HOST] = user_input[CONF_HOST]
+            updated_data[CONF_USERNAME] = user_input[CONF_USERNAME]
+            updated_data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+            updated_data[CONF_TLS] = user_input[CONF_TLS]
+            updated_data[CONF_VERIFY_TLS] = user_input[CONF_VERIFY_TLS]
+
+            errors: dict[str, str] = {}
+            description_placeholders: dict[str, str] = {}
+
+            try:
+                await _async_validate_config_and_get_system_information(
+                    hass=self.hass, data=updated_data, entry_id=entry.entry_id
+                )
+            except AuthFailure:
+                errors["base"] = "invalid_auth"
+                description_placeholders["invalid_items"] = updated_data[CONF_HOST]
+            except InvalidConfig as ic:
+                errors["base"] = "invalid_config"
+                description_placeholders["invalid_items"] = ic.args[0]
+            except BaseHomematicException as bhe:
+                errors["base"] = "cannot_connect"
+                description_placeholders["invalid_items"] = bhe.args[0]
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data=updated_data,
+                    reason="reconfigure_successful",
+                )
+
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=get_reconfigure_schema(updated_data),
+                errors=errors,
+                description_placeholders=description_placeholders,
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=get_reconfigure_schema(dict(entry.data)),
         )
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> ConfigFlowResult:
@@ -611,7 +807,7 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
         self,
         advanced_input: ConfigType | None = None,
     ) -> ConfigFlowResult:
-        """Handle the advanced step."""
+        """Handle the advanced step (legacy)."""
         if advanced_input is None:
             _LOGGER.debug("ConfigFlow.step_advanced, no user input")
             return self.async_show_form(
@@ -624,8 +820,22 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
         _update_advanced_input(data=self.data, advanced_input=advanced_input)
         return await self._validate_and_finish_options_flow()
 
+    async def async_step_advanced_settings(self, advanced_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Handle advanced settings (MQTT, device options, etc.)."""
+        if advanced_input is not None:
+            _update_advanced_settings_input(data=self.data, advanced_input=advanced_input)
+            return await self._validate_and_finish_options_flow()
+
+        return self.async_show_form(
+            step_id="advanced_settings",
+            data_schema=get_advanced_settings_schema(
+                data=self.data,
+                all_un_ignore_parameters=self._control_unit.central.get_un_ignore_candidates(include_master=True),
+            ),
+        )
+
     async def async_step_central(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
-        """Manage the Homematic(IP) Local for OpenCCU devices options."""
+        """Manage the Homematic(IP) Local for OpenCCU devices options (legacy)."""
         if user_input is not None:
             self.data = _get_ccu_data(self.data, user_input=user_input)
             return await self.async_step_interface()
@@ -635,15 +845,53 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
             data_schema=get_options_schema(data=self.data),
         )
 
+    async def async_step_connection(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Handle connection settings (host, credentials)."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+
+        if user_input is not None:
+            self.data = _get_ccu_data(self.data, user_input=user_input)
+            try:
+                system_information = await _async_validate_config_and_get_system_information(
+                    hass=self.hass, data=self.data, entry_id=self.entry.entry_id
+                )
+                if system_information is not None:
+                    self.hass.config_entries.async_update_entry(
+                        entry=self.entry,
+                        unique_id=system_information.serial,
+                        data=self.data,
+                    )
+                return self.async_create_entry(title="", data={})
+            except AuthFailure:
+                errors["base"] = "invalid_auth"
+                description_placeholders["invalid_items"] = self.data[CONF_HOST]
+            except InvalidConfig as ic:
+                errors["base"] = "invalid_config"
+                description_placeholders["invalid_items"] = ic.args[0]
+            except BaseHomematicException as bhe:
+                errors["base"] = "cannot_connect"
+                description_placeholders["invalid_items"] = bhe.args[0]
+
+        return self.async_show_form(
+            step_id="connection",
+            data_schema=get_options_schema(data=self.data),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
     async def async_step_init(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
-        """Manage the Homematic(IP) Local for OpenCCU options."""
-        return await self.async_step_central(user_input=user_input)
+        """Show menu for options configuration."""
+        return self.async_show_menu(
+            step_id="init",
+            menu_options=["connection", "interfaces", "programs_sysvars", "advanced_settings"],
+        )
 
     async def async_step_interface(
         self,
         interface_input: ConfigType | None = None,
     ) -> ConfigFlowResult:
-        """Handle the interface step."""
+        """Handle the interface step (legacy)."""
         if interface_input is not None:
             _update_interface_input(data=self.data, interface_input=interface_input)
             if interface_input.get(CONF_ADVANCED_CONFIG):
@@ -657,6 +905,81 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
                 use_tls=self.data[CONF_TLS],
                 data=self.data,
                 from_config_flow=False,
+            ),
+        )
+
+    async def async_step_interfaces(self, interface_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Handle interface configuration."""
+        if interface_input is not None:
+            _update_interface_input(data=self.data, interface_input=interface_input)
+            return await self._validate_and_finish_options_flow()
+
+        return self.async_show_form(
+            step_id="interfaces",
+            data_schema=get_interface_schema(
+                use_tls=self.data[CONF_TLS],
+                data=self.data,
+                from_config_flow=False,
+            ),
+        )
+
+    async def async_step_programs_sysvars(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Handle programs and system variables configuration."""
+        if user_input is not None:
+            # Update only program/sysvar related settings
+            advanced_config = self.data.get(CONF_ADVANCED_CONFIG, {})
+            advanced_config[CONF_ENABLE_PROGRAM_SCAN] = user_input.get(
+                CONF_ENABLE_PROGRAM_SCAN, DEFAULT_ENABLE_PROGRAM_SCAN
+            )
+            advanced_config[CONF_PROGRAM_MARKERS] = user_input.get(CONF_PROGRAM_MARKERS, DEFAULT_PROGRAM_MARKERS)
+            advanced_config[CONF_ENABLE_SYSVAR_SCAN] = user_input.get(
+                CONF_ENABLE_SYSVAR_SCAN, DEFAULT_ENABLE_SYSVAR_SCAN
+            )
+            advanced_config[CONF_SYSVAR_MARKERS] = user_input.get(CONF_SYSVAR_MARKERS, DEFAULT_SYSVAR_MARKERS)
+            advanced_config[CONF_SYS_SCAN_INTERVAL] = user_input.get(CONF_SYS_SCAN_INTERVAL, DEFAULT_SYS_SCAN_INTERVAL)
+            self.data[CONF_ADVANCED_CONFIG] = advanced_config
+            return await self._validate_and_finish_options_flow()
+
+        advanced_config = self.data.get(CONF_ADVANCED_CONFIG, {})
+        return self.async_show_form(
+            step_id="programs_sysvars",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_ENABLE_PROGRAM_SCAN,
+                        default=advanced_config.get(CONF_ENABLE_PROGRAM_SCAN, DEFAULT_ENABLE_PROGRAM_SCAN),
+                    ): BOOLEAN_SELECTOR,
+                    vol.Optional(
+                        CONF_PROGRAM_MARKERS,
+                        default=advanced_config.get(CONF_PROGRAM_MARKERS, DEFAULT_PROGRAM_MARKERS),
+                    ): SelectSelector(
+                        config=SelectSelectorConfig(
+                            mode=SelectSelectorMode.DROPDOWN,
+                            multiple=True,
+                            sort=True,
+                            options=[str(v) for v in DescriptionMarker if v != DescriptionMarker.HAHM],
+                        )
+                    ),
+                    vol.Required(
+                        CONF_ENABLE_SYSVAR_SCAN,
+                        default=advanced_config.get(CONF_ENABLE_SYSVAR_SCAN, DEFAULT_ENABLE_SYSVAR_SCAN),
+                    ): BOOLEAN_SELECTOR,
+                    vol.Optional(
+                        CONF_SYSVAR_MARKERS,
+                        default=advanced_config.get(CONF_SYSVAR_MARKERS, DEFAULT_SYSVAR_MARKERS),
+                    ): SelectSelector(
+                        config=SelectSelectorConfig(
+                            mode=SelectSelectorMode.DROPDOWN,
+                            multiple=True,
+                            sort=True,
+                            options=[str(v) for v in DescriptionMarker],
+                        )
+                    ),
+                    vol.Required(
+                        CONF_SYS_SCAN_INTERVAL,
+                        default=advanced_config.get(CONF_SYS_SCAN_INTERVAL, DEFAULT_SYS_SCAN_INTERVAL),
+                    ): SCAN_INTERVAL_SELECTOR,
+                }
             ),
         )
 
@@ -748,6 +1071,7 @@ def _update_interface_input(data: ConfigType, interface_input: ConfigType) -> No
 
 
 def _update_advanced_input(data: ConfigType, advanced_input: ConfigType) -> None:
+    """Update data with advanced input (for legacy advanced step with all fields)."""
     if not advanced_input:
         return
 
@@ -757,6 +1081,36 @@ def _update_advanced_input(data: ConfigType, advanced_input: ConfigType) -> None
     data[CONF_ADVANCED_CONFIG][CONF_SYSVAR_MARKERS] = advanced_input[CONF_SYSVAR_MARKERS]
     data[CONF_ADVANCED_CONFIG][CONF_ENABLE_SYSVAR_SCAN] = advanced_input[CONF_ENABLE_SYSVAR_SCAN]
     data[CONF_ADVANCED_CONFIG][CONF_SYS_SCAN_INTERVAL] = advanced_input[CONF_SYS_SCAN_INTERVAL]
+    data[CONF_ADVANCED_CONFIG][CONF_ENABLE_SYSTEM_NOTIFICATIONS] = advanced_input[CONF_ENABLE_SYSTEM_NOTIFICATIONS]
+    data[CONF_ADVANCED_CONFIG][CONF_LISTEN_ON_ALL_IP] = advanced_input[CONF_LISTEN_ON_ALL_IP]
+    data[CONF_ADVANCED_CONFIG][CONF_ENABLE_MQTT] = advanced_input[CONF_ENABLE_MQTT]
+    data[CONF_ADVANCED_CONFIG][CONF_MQTT_PREFIX] = advanced_input[CONF_MQTT_PREFIX]
+    data[CONF_ADVANCED_CONFIG][CONF_ENABLE_SUB_DEVICES] = advanced_input[CONF_ENABLE_SUB_DEVICES]
+    data[CONF_ADVANCED_CONFIG][CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE] = advanced_input[
+        CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE
+    ]
+    data[CONF_ADVANCED_CONFIG][CONF_DELAY_NEW_DEVICE_CREATION] = advanced_input[CONF_DELAY_NEW_DEVICE_CREATION]
+    data[CONF_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] = advanced_input[CONF_OPTIONAL_SETTINGS]
+
+    if advanced_input.get(CONF_UN_IGNORES):
+        data[CONF_ADVANCED_CONFIG][CONF_UN_IGNORES] = advanced_input[CONF_UN_IGNORES]
+
+
+def _update_advanced_settings_input(data: ConfigType, advanced_input: ConfigType) -> None:
+    """Update data with advanced settings input (preserves program/sysvar settings)."""
+    if not advanced_input:
+        return
+
+    # Preserve existing program/sysvar settings (configured separately in programs_sysvars step)
+    existing_config = data.get(CONF_ADVANCED_CONFIG, {})
+    data[CONF_ADVANCED_CONFIG] = {
+        CONF_PROGRAM_MARKERS: existing_config.get(CONF_PROGRAM_MARKERS, DEFAULT_PROGRAM_MARKERS),
+        CONF_ENABLE_PROGRAM_SCAN: existing_config.get(CONF_ENABLE_PROGRAM_SCAN, DEFAULT_ENABLE_PROGRAM_SCAN),
+        CONF_SYSVAR_MARKERS: existing_config.get(CONF_SYSVAR_MARKERS, DEFAULT_SYSVAR_MARKERS),
+        CONF_ENABLE_SYSVAR_SCAN: existing_config.get(CONF_ENABLE_SYSVAR_SCAN, DEFAULT_ENABLE_SYSVAR_SCAN),
+        CONF_SYS_SCAN_INTERVAL: existing_config.get(CONF_SYS_SCAN_INTERVAL, DEFAULT_SYS_SCAN_INTERVAL),
+    }
+    # Update with new advanced settings input
     data[CONF_ADVANCED_CONFIG][CONF_ENABLE_SYSTEM_NOTIFICATIONS] = advanced_input[CONF_ENABLE_SYSTEM_NOTIFICATIONS]
     data[CONF_ADVANCED_CONFIG][CONF_LISTEN_ON_ALL_IP] = advanced_input[CONF_LISTEN_ON_ALL_IP]
     data[CONF_ADVANCED_CONFIG][CONF_ENABLE_MQTT] = advanced_input[CONF_ENABLE_MQTT]
