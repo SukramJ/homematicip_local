@@ -412,7 +412,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self._detection_error:
             errors["base"] = self._detection_error
-            # Always set invalid_items placeholder to avoid showing literal {invalid_items} in message
+            # Always set invalid_items placeholder to avoid showing literal [{invalid_items}] in message
             description_placeholders["invalid_items"] = self._detection_error_detail or self.data.get(CONF_HOST, "")
 
         # Reset detection error state

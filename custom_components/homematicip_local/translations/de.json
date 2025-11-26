@@ -1,10 +1,10 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Verbindung zur CCU unter {invalid_items} nicht möglich. Bitte überprüfe: 1) Der Hostname/die IP-Adresse ist korrekt, 2) Die CCU ist eingeschaltet und erreichbar, 3) Keine Firewall blockiert die Verbindung.", 
-            "detection_failed": "Verbindung zur CCU unter {invalid_items} nicht möglich. Bitte überprüfe: 1) Der Hostname/die IP-Adresse ist korrekt, 2) Die CCU ist eingeschaltet und erreichbar, 3) Benutzername und Passwort sind korrekt (Groß-/Kleinschreibung beachten), 4) Der Benutzer hat Admin-Rechte auf der CCU, 5) Keine Firewall blockiert die Verbindung.", 
-            "invalid_auth": "Authentifizierung bei CCU unter {invalid_items} fehlgeschlagen. Bitte überprüfe: 1) Benutzername und Passwort sind korrekt (Groß-/Kleinschreibung beachten), 2) Der Benutzer hat Admin-Rechte auf der CCU, 3) Das Passwort enthält nur erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
-            "invalid_config": "Ungültige Konfiguration: {invalid_items}. Bitte überprüfe die eingegebenen Werte und versuche es erneut.", 
+            "cannot_connect": "Verbindung zur CCU [{invalid_items}] nicht möglich. Bitte überprüfe: 1) Der Hostname/die IP-Adresse ist korrekt, 2) Die CCU ist eingeschaltet und erreichbar, 3) Keine Firewall blockiert die Verbindung.", 
+            "detection_failed": "Verbindung zur CCU [{invalid_items}] nicht möglich. Bitte überprüfe: 1) Der Hostname/die IP-Adresse ist korrekt, 2) Die CCU ist eingeschaltet und erreichbar, 3) Benutzername und Passwort sind korrekt (Groß-/Kleinschreibung beachten), 4) Der Benutzer hat Admin-Rechte auf der CCU, 5) Keine Firewall blockiert die Verbindung.", 
+            "invalid_auth": "Authentifizierung bei CCU [{invalid_items}] fehlgeschlagen. Bitte überprüfe: 1) Benutzername und Passwort sind korrekt (Groß-/Kleinschreibung beachten), 2) Der Benutzer hat Admin-Rechte auf der CCU, 3) Das Passwort enthält nur erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
+            "invalid_config": "Ungültige Konfiguration: [{invalid_items}]. Bitte überprüfe die eingegebenen Werte und versuche es erneut.", 
             "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Home Assistant Protokolle für weitere Details."
         }, 
         "flow_title": "{name}/{host}", 
@@ -705,9 +705,9 @@
     }, 
     "options": {
         "error": {
-            "cannot_connect": "Verbindung zur CCU unter {invalid_items} nicht möglich. Bitte überprüfe: 1) Der Hostname/die IP-Adresse ist korrekt, 2) Die CCU ist eingeschaltet und erreichbar, 3) Keine Firewall blockiert die Verbindung.", 
-            "invalid_auth": "Authentifizierung bei CCU unter {invalid_items} fehlgeschlagen. Bitte überprüfe: 1) Benutzername und Passwort sind korrekt (Groß-/Kleinschreibung beachten), 2) Der Benutzer hat Admin-Rechte auf der CCU, 3) Das Passwort enthält nur erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
-            "invalid_config": "Ungültige Konfiguration: {invalid_items}. Bitte überprüfe die eingegebenen Werte und versuche es erneut.", 
+            "cannot_connect": "Verbindung zur CCU [{invalid_items}] nicht möglich. Bitte überprüfe: 1) Der Hostname/die IP-Adresse ist korrekt, 2) Die CCU ist eingeschaltet und erreichbar, 3) Keine Firewall blockiert die Verbindung.", 
+            "invalid_auth": "Authentifizierung bei CCU [{invalid_items}] fehlgeschlagen. Bitte überprüfe: 1) Benutzername und Passwort sind korrekt (Groß-/Kleinschreibung beachten), 2) Der Benutzer hat Admin-Rechte auf der CCU, 3) Das Passwort enthält nur erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
+            "invalid_config": "Ungültige Konfiguration: [{invalid_items}]. Bitte überprüfe die eingegebenen Werte und versuche es erneut.", 
             "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Home Assistant Protokolle für weitere Details."
         }, 
         "step": {

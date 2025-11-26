@@ -327,7 +327,7 @@ Example structure for error messages:
 ```json
 {
   "error": {
-    "cannot_connect": "Failed to connect: {invalid_items}.\n\n{error_detail}\n\n{retry_hint}"
+    "cannot_connect": "Failed to connect: [{invalid_items}].\n\n{error_detail}\n\n{retry_hint}"
   }
 }
 ```
