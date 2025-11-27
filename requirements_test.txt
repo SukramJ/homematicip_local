@@ -5,8 +5,8 @@ aiohomematic==2025.11.30
 aiohomematic-test-support==2025.11.30
 isal==1.8.0
 mypy==1.18.2
-pre-commit==4.4.0
+pre-commit==4.5.0
 pur==7.3.3
 pylint==4.0.3
 pylint_strict_informational==0.1
-pytest-homeassistant-custom-component==0.13.296
+pytest-homeassistant-custom-component==0.13.297
