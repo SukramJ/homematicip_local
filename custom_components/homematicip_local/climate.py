@@ -11,6 +11,7 @@ from aiohomematic.const import (
     CLIMATE_PROFILE_DICT,
     CLIMATE_SIMPLE_PROFILE_DICT,
     CLIMATE_SIMPLE_WEEKDAY_DATA,
+    CLIMATE_SIMPLE_WEEKDAY_LIST,
     CLIMATE_WEEKDAY_DICT,
     DataPointCategory,
     ScheduleProfile,
@@ -435,9 +436,11 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         self,
         profile: ScheduleProfile,
         weekday: WeekdayStr,
-        simple_weekday_data: CLIMATE_SIMPLE_WEEKDAY_DATA,
+        base_temperature: float,
+        simple_weekday_list: CLIMATE_SIMPLE_WEEKDAY_LIST,
     ) -> None:
         """Set the schedule simple profile weekday."""
+        simple_weekday_data: CLIMATE_SIMPLE_WEEKDAY_DATA = (base_temperature, simple_weekday_list)
         await self._data_point.set_simple_schedule_weekday(
             profile=profile,
             weekday=weekday,
