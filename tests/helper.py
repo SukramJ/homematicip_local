@@ -13,8 +13,7 @@ from unittest.mock import MagicMock, Mock, patch
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from aiohomematic.central.event_bus import BackendParameterEvent, BackendSystemEventData, HomematicEvent
-from aiohomematic.model.custom import CustomDataPoint
-from aiohomematic.model.data_point import BaseParameterDataPoint
+from aiohomematic.interfaces import BaseParameterDataPointProtocol, CustomDataPointProtocol
 from aiohomematic_test_support.factory import FactoryWithClient
 from aiohomematic_test_support.mock import SessionPlayer
 from custom_components.homematicip_local import HAHM_VERSION as _HAHM_VERSION
@@ -145,10 +144,10 @@ def get_data_point_mock[DP](data_point: DP) -> DP:
                 if not fn.startswith("unitest.mock"):
                     patch(fn).start()
 
-        if isinstance(data_point, CustomDataPoint):
+        if isinstance(data_point, CustomDataPointProtocol):
             for g_entity in data_point._data_points.values():
                 g_entity._set_modified_at(modified_at=datetime.now())
-        elif isinstance(data_point, BaseParameterDataPoint):
+        elif isinstance(data_point, BaseParameterDataPointProtocol):
             data_point._set_modified_at(modified_at=datetime.now())
         if hasattr(data_point, "is_valid"):
             assert data_point.is_valid is True

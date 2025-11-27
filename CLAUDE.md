@@ -88,17 +88,17 @@ homematicip_local/
 ## Key Technologies & Dependencies
 
 ### Runtime Dependencies
-- **aiohomematic** (v2025.11.17) - Core async library for Homematic device communication
+- **aiohomematic** (v2025.12.1) - Core async library for Homematic device communication
 - **Home Assistant Core** - Minimum version: 2025.8.0+
 - **Python 3.13+** (target version for development)
 
 ### Development Dependencies
-- **pytest-homeassistant-custom-component** (0.13.296) - HA test framework
+- **pytest-homeassistant-custom-component** (0.13.297) - HA test framework
 - **mypy** (1.18.2) - Static type checker (strict mode)
 - **pylint** (4.0.3) - Code linting
 - **ruff** (0.14.5) - Fast Python linter and formatter
-- **pre-commit** (4.4.0) - Git hooks manager
-- **aiohomematic-test-support** (2025.11.17) - Mock test data
+- **pre-commit** (4.5.0) - Git hooks manager
+- **aiohomematic-test-support** (2025.12.1) - Mock test data
 - **async-upnp-client** (0.46.0) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
 
@@ -432,7 +432,7 @@ Events fired by the integration:
 1. **`manifest.json`**
    - Integration metadata
    - Version: 1.91.0
-   - Dependencies: aiohomematic==2025.11.17
+   - Dependencies: aiohomematic==2025.12.1
    - Integration type: hub
    - IoT class: local_push
 
@@ -784,7 +784,7 @@ entry.data = {
 - **Current Version:** 1.91.0
 - **Minimum HA Version:** 2025.8.0+
 - **Python Target:** 3.13+ (CI tests on 3.13, 3.14)
-- **aiohomematic Version:** 2025.11.17
+- **aiohomematic Version:** 2025.12.1
 
 ## External Resources
 

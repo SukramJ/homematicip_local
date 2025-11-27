@@ -103,7 +103,7 @@ class AioHomematicSysvarText(AioHomematicGenericSysvarEntity[SysvarDpText], Text
     @property
     def native_value(self) -> str | None:
         """Return the value reported by the text."""
-        return self._data_point.value
+        return self._data_point.value  # type: ignore[no-any-return]
 
     async def async_set_value(self, value: str) -> None:
         """Send the text."""
