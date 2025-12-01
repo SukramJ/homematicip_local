@@ -178,4 +178,4 @@ class AioHomematicSysvarSensor(AioHomematicGenericSysvarEntity[SysvarDpSensor], 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the native value of the entity."""
-        return self._data_point.value
+        return self._data_point.value  # type: ignore[no-any-return]

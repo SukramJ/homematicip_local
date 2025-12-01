@@ -10,11 +10,14 @@ from typing import Any, TypeAlias, TypeVar, cast
 import voluptuous as vol
 
 from aiohomematic.const import IDENTIFIER_SEPARATOR, EventKey
-from aiohomematic.model.calculated import CalculatedDataPoint
-from aiohomematic.model.custom import CustomDataPoint
+from aiohomematic.interfaces import (
+    CalculatedDataPointProtocol,
+    CustomDataPointProtocol,
+    GenericDataPointProtocol,
+    GenericProgramDataPointProtocol,
+    GenericSysvarDataPointProtocol,
+)
 from aiohomematic.model.data_point import EVENT_DATA_SCHEMA
-from aiohomematic.model.generic import GenericDataPointAny
-from aiohomematic.model.hub import GenericProgramDataPoint, GenericSysvarDataPoint
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -33,13 +36,13 @@ from .const import (
 )
 
 # Union for entity types used as base class for data points
-HmBaseDataPoint: TypeAlias = CalculatedDataPoint[Any] | CustomDataPoint | GenericDataPointAny
+HmBaseDataPointProtocol: TypeAlias = CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocol
 # Generic base type used for data points in Homematic(IP) Local for OpenCCU
-HmGenericDataPoint = TypeVar("HmGenericDataPoint", bound=HmBaseDataPoint)
+HmGenericDataPointProtocol = TypeVar("HmGenericDataPointProtocol", bound=HmBaseDataPointProtocol)
 # Generic base type used for sysvar data points in Homematic(IP) Local for OpenCCU
-HmGenericProgramDataPoint = TypeVar("HmGenericProgramDataPoint", bound=GenericProgramDataPoint)
+HmGenericProgramDataPointProtocol = TypeVar("HmGenericProgramDataPointProtocol", bound=GenericProgramDataPointProtocol)
 # Generic base type used for sysvar data points in Homematic(IP) Local for OpenCCU
-HmGenericSysvarDataPoint = TypeVar("HmGenericSysvarDataPoint", bound=GenericSysvarDataPoint)
+HmGenericSysvarDataPointProtocol = TypeVar("HmGenericSysvarDataPointProtocol", bound=GenericSysvarDataPointProtocol)
 
 BASE_EVENT_DATA_SCHEMA = EVENT_DATA_SCHEMA.extend(
     {

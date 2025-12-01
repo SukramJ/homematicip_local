@@ -8,13 +8,16 @@ import dataclasses
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
-from typing import Any, Final
+from typing import Final
 
 from aiohomematic.const import DataPointCategory
-from aiohomematic.model.calculated import CalculatedDataPoint
-from aiohomematic.model.custom import CustomDataPoint
-from aiohomematic.model.generic import GenericDataPoint, GenericDataPointAny
-from aiohomematic.model.hub import GenericHubDataPoint, GenericSysvarDataPoint
+from aiohomematic.interfaces import (
+    CalculatedDataPointProtocol,
+    CustomDataPointProtocol,
+    GenericDataPointProtocol,
+    GenericHubDataPointProtocol,
+    GenericSysvarDataPointProtocol,
+)
 from aiohomematic.support import element_matches_key
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntityDescription
 from homeassistant.components.button import ButtonEntityDescription
@@ -51,7 +54,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
-from .support import HmGenericDataPoint
+from .support import HmGenericDataPointProtocol
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1038,7 +1041,7 @@ def _cache_set(*, signature: str, value: EntityDescription | None) -> None:
 
 def get_entity_description(
     *,
-    data_point: HmGenericDataPoint | CustomDataPoint | GenericHubDataPoint,
+    data_point: HmGenericDataPointProtocol | CustomDataPointProtocol | GenericHubDataPointProtocol,
 ) -> EntityDescription | None:
     """Get the entity_description."""
     signature = data_point.signature  # _data_point_signature(data_point=data_point)
@@ -1065,7 +1068,7 @@ def get_entity_description(
 
 def get_name_and_translation_key(
     *,
-    data_point: HmGenericDataPoint | CustomDataPoint | GenericHubDataPoint,
+    data_point: HmGenericDataPointProtocol | CustomDataPointProtocol | GenericHubDataPointProtocol,
     entity_desc: EntityDescription,
 ) -> tuple[str | UndefinedType | None, str | None]:
     """Get the name and translation_key."""
@@ -1073,7 +1076,7 @@ def get_name_and_translation_key(
     if entity_desc.translation_key:
         return name, entity_desc.translation_key
 
-    if isinstance(data_point, (CalculatedDataPoint, GenericDataPoint)):
+    if isinstance(data_point, (CalculatedDataPointProtocol, GenericDataPointProtocol)):
         if isinstance(entity_desc, HmEntityDescription):
             if entity_desc.name_source == HmNameSource.ENTITY_NAME:
                 return name, name.lower()
@@ -1087,10 +1090,10 @@ def get_name_and_translation_key(
 
 def _find_entity_description(
     *,
-    data_point: HmGenericDataPoint | GenericHubDataPoint | CustomDataPoint,
+    data_point: HmGenericDataPointProtocol | GenericHubDataPointProtocol | CustomDataPointProtocol,
 ) -> EntityDescription | None:
     """Find the entity_description for platform."""
-    if isinstance(data_point, (CalculatedDataPoint, GenericDataPoint)):
+    if isinstance(data_point, (CalculatedDataPointProtocol, GenericDataPointProtocol)):
         if entity_desc := _get_entity_description_by_model_and_param(data_point=data_point):
             return entity_desc
 
@@ -1104,14 +1107,14 @@ def _find_entity_description(
         ):
             return entity_desc
 
-    if isinstance(data_point, CustomDataPoint):
+    if isinstance(data_point, CustomDataPointProtocol):
         if entity_desc := _get_entity_description_by_model(data_point=data_point):
             return entity_desc
 
         if entity_desc := _get_entity_description_by_postfix(data_point=data_point):
             return entity_desc
 
-    if isinstance(data_point, GenericSysvarDataPoint) and (
+    if isinstance(data_point, GenericSysvarDataPointProtocol) and (
         entity_desc := _get_entity_description_by_var_name(data_point=data_point)
     ):
         return entity_desc
@@ -1121,7 +1124,7 @@ def _find_entity_description(
 
 def _get_entity_description_by_model_and_param(
     *,
-    data_point: CalculatedDataPoint[Any] | GenericDataPointAny,
+    data_point: CalculatedDataPointProtocol | GenericDataPointProtocol,
 ) -> EntityDescription | None:
     """Get entity_description by model and parameter."""
     if platform_device_and_param_descriptions := _ENTITY_DESCRIPTION_BY_DEVICE_AND_PARAM.get(  # noqa: E501
@@ -1140,7 +1143,7 @@ def _get_entity_description_by_model_and_param(
 
 def _get_entity_description_by_param(
     *,
-    data_point: CalculatedDataPoint[Any] | GenericDataPointAny,
+    data_point: CalculatedDataPointProtocol | GenericDataPointProtocol,
 ) -> EntityDescription | None:
     """Get entity_description by model and parameter."""
     if platform_param_descriptions := _ENTITY_DESCRIPTION_BY_PARAM.get(data_point.category):
@@ -1152,7 +1155,7 @@ def _get_entity_description_by_param(
 
 def _get_entity_description_by_postfix(
     *,
-    data_point: CustomDataPoint,
+    data_point: CustomDataPointProtocol,
 ) -> EntityDescription | None:
     """Get entity_description by model and parameter."""
     if platform_postfix_descriptions := _ENTITY_DESCRIPTION_BY_POSTFIX.get(data_point.category):
@@ -1164,7 +1167,7 @@ def _get_entity_description_by_postfix(
 
 def _get_entity_description_by_model(
     *,
-    data_point: HmGenericDataPoint,
+    data_point: HmGenericDataPointProtocol,
 ) -> EntityDescription | None:
     """Get entity_description by model."""
     if platform_device_descriptions := _ENTITY_DESCRIPTION_BY_DEVICE.get(data_point.category):
@@ -1179,7 +1182,7 @@ def _get_entity_description_by_model(
 
 def _get_entity_description_by_var_name(
     *,
-    data_point: GenericSysvarDataPoint,
+    data_point: GenericSysvarDataPointProtocol,
 ) -> EntityDescription | None:
     """Get entity_description by var name."""
     if platform_var_name_descriptions := _ENTITY_DESCRIPTION_BY_VAR_NAME.get(data_point.category):

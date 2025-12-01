@@ -7,11 +7,16 @@ import logging
 from typing import Any, Final, Generic
 
 from aiohomematic.const import CallSource, DataPointUsage
-from aiohomematic.model.calculated import CalculatedDataPoint
-from aiohomematic.model.custom import CustomDataPoint
-from aiohomematic.model.data_point import CallbackDataPoint
-from aiohomematic.model.generic import GenericDataPoint
-from aiohomematic.model.hub import GenericHubDataPoint, GenericProgramDataPoint, GenericSysvarDataPoint
+from aiohomematic.interfaces import (
+    CalculatedDataPointProtocol,
+    CallbackDataPointProtocol,
+    CustomDataPointProtocol,
+    GenericDataPointProtocol,
+    GenericHubDataPointProtocol,
+    GenericProgramDataPointProtocol,
+    GenericSysvarDataPointProtocol,
+)
+from aiohomematic.model.hub.inbox import HmInboxSensor
 from aiohomematic.type_aliases import UnsubscribeHandler
 from homeassistant.core import State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -23,13 +28,19 @@ from homeassistant.helpers.typing import UndefinedType
 from .const import DOMAIN, HmEntityState
 from .control_unit import ControlUnit
 from .entity_helpers import get_entity_description
-from .support import HmGenericDataPoint, HmGenericProgramDataPoint, HmGenericSysvarDataPoint, get_data_point
+from .support import (
+    HmGenericDataPointProtocol,
+    HmGenericProgramDataPointProtocol,
+    HmGenericSysvarDataPointProtocol,
+    get_data_point,
+)
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_ADDRESS: Final = "address"
 ATTR_DESCRIPTION: Final = "description"
 ATTR_FUNCTION: Final = "function"
 ATTR_INTERFACE_ID: Final = "interface_id"
+ATTR_MESSAGES: Final = "messages"
 ATTR_MODEL: Final = "model"
 ATTR_NAME: Final = "name"
 ATTR_PARAMETER: Final = "parameter"
@@ -37,7 +48,7 @@ ATTR_SCHEDULE_DATA: Final = "schedule_data"
 ATTR_VALUE_STATE: Final = "value_state"
 
 
-class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
+class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
     """Representation of the HomematicIP generic entity."""
 
     _attr_has_entity_name = True
@@ -58,18 +69,18 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
     def __init__(
         self,
         control_unit: ControlUnit,
-        data_point: HmGenericDataPoint,
+        data_point: HmGenericDataPointProtocol,
     ) -> None:
         """Initialize the generic entity."""
         self._cu: ControlUnit = control_unit
-        self._data_point: HmGenericDataPoint = get_data_point(data_point=data_point)
+        self._data_point: HmGenericDataPointProtocol = get_data_point(data_point=data_point)
         self._attr_unique_id = f"{DOMAIN}_{data_point.unique_id}"
 
         if entity_description := get_entity_description(data_point=data_point):
             self.entity_description = entity_description
         else:
             self._attr_entity_registry_enabled_default = data_point.enabled_default
-            if isinstance(data_point, CalculatedDataPoint | GenericDataPoint):
+            if isinstance(data_point, CalculatedDataPointProtocol | GenericDataPointProtocol):
                 self._attr_translation_key = data_point.parameter.lower()
 
         hm_device = data_point.device
@@ -105,7 +116,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
 
         _LOGGER.debug("init: Setting up %s", data_point.full_name)
         if (
-            isinstance(data_point, CalculatedDataPoint | GenericDataPoint)
+            isinstance(data_point, CalculatedDataPointProtocol | GenericDataPointProtocol)
             and hasattr(self, "entity_description")
             and hasattr(self.entity_description, "native_unit_of_measurement")
             and data_point.unit is not None
@@ -145,7 +156,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
         return self._data_point.available
 
     @property
-    def data_point(self) -> HmGenericDataPoint:
+    def data_point(self) -> HmGenericDataPointProtocol:
         """Return the Homematic entity."""
         return self._data_point
 
@@ -157,8 +168,9 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
         attributes.update(self._data_point.additional_information)
 
         if (
-            isinstance(self._data_point, CalculatedDataPoint | GenericDataPoint) and self._data_point.is_readable
-        ) or isinstance(self._data_point, CustomDataPoint):
+            isinstance(self._data_point, CalculatedDataPointProtocol | GenericDataPointProtocol)
+            and self._data_point.is_readable
+        ) or isinstance(self._data_point, CustomDataPointProtocol):
             if self._data_point.is_valid:
                 attributes[ATTR_VALUE_STATE] = (
                     HmEntityState.UNCERTAIN if self._data_point.state_uncertain else HmEntityState.VALID
@@ -166,7 +178,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
             else:
                 attributes[ATTR_VALUE_STATE] = HmEntityState.NOT_VALID
         if (
-            isinstance(self._data_point, CustomDataPoint)
+            isinstance(self._data_point, CustomDataPointProtocol)
             and self._data_point.supports_schedule
             and self._data_point.usage == DataPointUsage.CDP_PRIMARY
             and (schedule := self._data_point.schedule) is not None
@@ -187,7 +199,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
         entity_name = self._data_point.name
         device_name = self._ha_device_name
 
-        if isinstance(self._data_point, CalculatedDataPoint | GenericDataPoint) and entity_name:
+        if isinstance(self._data_point, CalculatedDataPointProtocol | GenericDataPointProtocol) and entity_name:
             if self._cu.enable_sub_devices and self._data_point.channel.device.has_sub_devices:
                 entity_name = self._data_point.name_data.parameter_name or ""
             translated_name = super().name
@@ -197,7 +209,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
                 param = self._data_point.parameter.replace("_", " ").title()
                 entity_name = entity_name.replace(param, translated_name)
 
-        if isinstance(self._data_point, CustomDataPoint) and entity_name:
+        if isinstance(self._data_point, CustomDataPointProtocol) and entity_name:
             if entity_name.startswith(device_name):
                 entity_name = entity_name.replace(device_name, "").strip()
 
@@ -228,7 +240,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
-        if isinstance(self._data_point, CallbackDataPoint):
+        if isinstance(self._data_point, CallbackDataPointProtocol):
             self._unsubscribe_handlers.append(
                 self._data_point.subscribe_to_data_point_updated(
                     handler=self._async_data_point_updated, custom_id=self.entity_id
@@ -238,13 +250,15 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
                 self._data_point.subscribe_to_device_removed(handler=self._async_device_removed)
             )
         # Init value of entity.
-        if isinstance(self._data_point, CalculatedDataPoint | CustomDataPoint | GenericDataPoint):
+        if isinstance(
+            self._data_point, CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocol
+        ):
             await self._data_point.load_data_point_value(call_source=CallSource.HA_INIT)
         if (
-            isinstance(self._data_point, CalculatedDataPoint | GenericDataPoint)
+            isinstance(self._data_point, CalculatedDataPointProtocol | GenericDataPointProtocol)
             and not self._data_point.is_valid
             and self._data_point.is_readable
-        ) or (isinstance(self._data_point, CustomDataPoint) and not self._data_point.is_valid):
+        ) or (isinstance(self._data_point, CustomDataPointProtocol) and not self._data_point.is_valid):
             _LOGGER.debug(
                 "CCU did not provide initial value for %s. See README for more information",
                 self._data_point.full_name,
@@ -252,7 +266,9 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
 
     async def async_update(self) -> None:
         """Update entities."""
-        if isinstance(self._data_point, CalculatedDataPoint | CustomDataPoint | GenericDataPoint):
+        if isinstance(
+            self._data_point, CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocol
+        ):
             await self._data_point.load_data_point_value(call_source=CallSource.MANUAL_OR_SCHEDULED)
 
     async def async_will_remove_from_hass(self) -> None:
@@ -318,14 +334,14 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPoint]):
             ATTR_ADDRESS: self._data_point.channel.address,
             ATTR_MODEL: self._data_point.device.model,
         }
-        if isinstance(self._data_point, CalculatedDataPoint | GenericDataPoint):
+        if isinstance(self._data_point, CalculatedDataPointProtocol | GenericDataPointProtocol):
             attributes[ATTR_PARAMETER] = self._data_point.parameter
             attributes[ATTR_FUNCTION] = self._data_point.function
 
         return attributes
 
 
-class AioHomematicGenericRestoreEntity(AioHomematicGenericEntity[HmGenericDataPoint], RestoreEntity):
+class AioHomematicGenericRestoreEntity(AioHomematicGenericEntity[HmGenericDataPointProtocol], RestoreEntity):
     """Representation of the HomematicIP generic restore entity."""
 
     _restored_state: State | None = None
@@ -362,6 +378,7 @@ class AioHomematicGenericHubEntity(Entity):
 
     NO_RECORDED_ATTRIBUTES = {
         ATTR_DESCRIPTION,
+        ATTR_MESSAGES,
         ATTR_NAME,
         ATTR_VALUE_STATE,
     }
@@ -371,7 +388,7 @@ class AioHomematicGenericHubEntity(Entity):
     def __init__(
         self,
         control_unit: ControlUnit,
-        data_point: GenericHubDataPoint,
+        data_point: GenericHubDataPointProtocol,
     ) -> None:
         """Initialize the generic entity."""
         self._cu: ControlUnit = control_unit
@@ -382,7 +399,7 @@ class AioHomematicGenericHubEntity(Entity):
             self.entity_description = entity_description
         else:
             self._attr_entity_registry_enabled_default = data_point.enabled_default
-            if isinstance(data_point, GenericSysvarDataPoint):
+            if isinstance(data_point, GenericSysvarDataPointProtocol):
                 self._attr_translation_key = data_point.name.lower()
             else:
                 self._attr_name = data_point.name
@@ -413,11 +430,11 @@ class AioHomematicGenericHubEntity(Entity):
             entity_name = translated_name
 
         if not self._data_point.channel and entity_name and isinstance(entity_name, str):
-            if isinstance(self._data_point, GenericSysvarDataPoint) and not entity_name.lower().startswith(
+            if isinstance(self._data_point, GenericSysvarDataPointProtocol) and not entity_name.lower().startswith(
                 tuple({"v_", "sv_", "sv"})
             ):
                 entity_name = f"SV {entity_name}"
-            elif isinstance(self._data_point, GenericProgramDataPoint) and not entity_name.lower().startswith(
+            elif isinstance(self._data_point, GenericProgramDataPointProtocol) and not entity_name.lower().startswith(
                 tuple({"p_", "prg_"})
             ):
                 entity_name = f"P {entity_name}"
@@ -430,7 +447,7 @@ class AioHomematicGenericHubEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
-        if isinstance(self._data_point, CallbackDataPoint):
+        if isinstance(self._data_point, CallbackDataPointProtocol):
             self._unsubscribe_handlers.append(
                 self._data_point.subscribe_to_data_point_updated(
                     handler=self._async_hub_entity_updated,
@@ -484,20 +501,20 @@ class AioHomematicGenericHubEntity(Entity):
         )
 
 
-class AioHomematicGenericProgramEntity(AioHomematicGenericHubEntity, Generic[HmGenericProgramDataPoint]):
+class AioHomematicGenericProgramEntity(AioHomematicGenericHubEntity, Generic[HmGenericProgramDataPointProtocol]):
     """Representation of the HomematicIP generic sysvar entity."""
 
     def __init__(
         self,
         control_unit: ControlUnit,
-        data_point: GenericProgramDataPoint,
+        data_point: GenericProgramDataPointProtocol,
     ) -> None:
         """Initialize the generic entity."""
         super().__init__(
             control_unit=control_unit,
             data_point=data_point,
         )
-        self._data_point: GenericProgramDataPoint = data_point
+        self._data_point: GenericProgramDataPointProtocol = data_point
         self._static_state_attributes = {
             ATTR_NAME: self._data_point.name,
             ATTR_DESCRIPTION: self._data_point.description,
@@ -517,20 +534,20 @@ class AioHomematicGenericProgramEntity(AioHomematicGenericHubEntity, Generic[HmG
         return attributes
 
 
-class AioHomematicGenericSysvarEntity(AioHomematicGenericHubEntity, Generic[HmGenericSysvarDataPoint]):
+class AioHomematicGenericSysvarEntity(AioHomematicGenericHubEntity, Generic[HmGenericSysvarDataPointProtocol]):
     """Representation of the HomematicIP generic sysvar entity."""
 
     def __init__(
         self,
         control_unit: ControlUnit,
-        data_point: GenericSysvarDataPoint,
+        data_point: GenericSysvarDataPointProtocol,
     ) -> None:
         """Initialize the generic entity."""
         super().__init__(
             control_unit=control_unit,
             data_point=data_point,
         )
-        self._data_point: GenericSysvarDataPoint = data_point
+        self._data_point: GenericSysvarDataPointProtocol = data_point
         self._static_state_attributes = {
             ATTR_NAME: self._data_point.name,
             ATTR_DESCRIPTION: self._data_point.description,
@@ -547,4 +564,7 @@ class AioHomematicGenericSysvarEntity(AioHomematicGenericHubEntity, Generic[HmGe
             )
         else:
             attributes[ATTR_VALUE_STATE] = HmEntityState.NOT_VALID
+
+        if isinstance(self._data_point, HmInboxSensor):
+            attributes[ATTR_MESSAGES] = [m.name for m in self._data_point.messages]
         return attributes

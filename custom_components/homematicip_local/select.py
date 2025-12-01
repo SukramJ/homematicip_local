@@ -112,7 +112,7 @@ class AioHomematicSysvarSelect(AioHomematicGenericSysvarEntity[SysvarDpSelect], 
     @property
     def current_option(self) -> str | None:
         """Return the currently selected option."""
-        return self._data_point.value
+        return self._data_point.value  # type: ignore[no-any-return]
 
     @property
     def options(self) -> list[str]:

@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from aiohomematic.const import ForcedDeviceAvailability, ParamsetKey
 from aiohomematic.exceptions import BaseHomematicException
-from aiohomematic.model.device import Device
+from aiohomematic.interfaces import DeviceProtocol
 from aiohomematic.support import get_device_address, to_bool
 import aiohomematic.validator as haval
 from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
@@ -982,9 +982,9 @@ def _async_get_control_unit(*, hass: HomeAssistant, entry_id: str) -> ControlUni
 
 
 @callback
-def _async_get_hm_device_by_service_data(*, hass: HomeAssistant, service: ServiceCall) -> Device | None:
+def _async_get_hm_device_by_service_data(*, hass: HomeAssistant, service: ServiceCall) -> DeviceProtocol | None:
     """Service to force device availability on a Homematic(IP) Local for OpenCCU devices."""
-    hm_device: Device | None = None
+    hm_device: DeviceProtocol | None = None
     message = "No device found"
 
     if device_id := service.data.get(CONF_DEVICE_ID):
@@ -1040,7 +1040,7 @@ def _async_get_control_units(*, hass: HomeAssistant) -> list[ControlUnit]:
 
 
 @callback
-def _async_get_hm_device_by_address(*, hass: HomeAssistant, device_address: str) -> Device | None:
+def _async_get_hm_device_by_address(*, hass: HomeAssistant, device_address: str) -> DeviceProtocol | None:
     """Return the Homematic device."""
     for control_unit in _async_get_control_units(hass=hass):
         if hm_device := control_unit.central.get_device(address=device_address):
@@ -1058,7 +1058,7 @@ def _async_get_cu_by_interface_id(*, hass: HomeAssistant, interface_id: str) -> 
 
 
 @callback
-def _asnyc_get_hm_device_by_id(*, hass: HomeAssistant, device_id: str) -> Device | None:
+def _asnyc_get_hm_device_by_id(*, hass: HomeAssistant, device_id: str) -> DeviceProtocol | None:
     """Return the Homematic device."""
     device_entry: DeviceEntry | None = dr.async_get(hass).async_get(device_id)
     if not device_entry:
