@@ -1,7 +1,7 @@
 # Version 1.91.0 (2025-12-01)
 
 ## What's Changed
-- Bump aiohomematic to 2025.12.1
+- Bump aiohomematic to 2025.12.3
   - Feature
     - Add backend detection
     - Add translations for log messages with level >= INFO or translation exclusions
