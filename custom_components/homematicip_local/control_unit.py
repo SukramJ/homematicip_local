@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import contextlib
 from copy import deepcopy
 from functools import partial
 import logging
@@ -594,13 +593,15 @@ class ControlUnit(BaseControlUnit):
                 if not interface_id or not address:
                     continue
 
-                async def _fix_callback(*, _interface_id: str, _address: str) -> None:
-                    """Trigger manual add of the delayed device on the central."""
-                    if not interface_id:
+                async def _fix_callback(*, device_name: str, _interface_id: str, _address: str) -> None:
+                    """Rename, accept inbox device, and trigger manual add of the delayed device."""
+                    if not _interface_id:
                         return
-                    with contextlib.suppress(Exception):
-                        await self._central.add_new_device_manually(interface_id=_interface_id, address=_address)
-                        return
+
+                    # Trigger manual add of the device
+                    await self._central.add_new_device_manually(
+                        interface_id=_interface_id, address=_address, device_name=device_name
+                    )
 
                 REPAIR_CALLBACKS[issue_id] = partial(_fix_callback, _interface_id=interface_id, _address=address)
 

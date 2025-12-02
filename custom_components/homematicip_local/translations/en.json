@@ -712,9 +712,15 @@
         "devices_delayed": {
             "fix_flow": {
                 "step": {
-                    "confirm": {
-                        "description": "This will trigger the manual addition of device **{address}** on interface **{interface_id}**.\n\nConfirm to continue.",
-                        "title": "Manually add delayed device {address}"
+                    "set_name": {
+                        "data": {
+                            "device_name": "Device name"
+                        },
+                        "data_description": {
+                            "device_name": "Enter a name for the device. This will be used as the device name in the CCU and Home Assistant. Leave empty to keep the default name."
+                        },
+                        "description": "A new device with address **{address}** was detected on interface **{interface_id}**.\n\nEnter a name and confirm to add it to Home Assistant.",
+                        "title": "Add delayed device {address}"
                     }
                 }
             },
@@ -723,23 +729,6 @@
         "fetch_data": {
             "description": "Unable to fetch data using a rega script.\n\nThis indicates an issue on your CCU.\n\nUsing fallback, that leeds to a higher DutyCycle during Integration startup for interface {interface_id}",
             "title": "Error fetching initial data"
-        },
-        "inbox_device": {
-            "fix_flow": {
-                "step": {
-                    "set_name": {
-                        "data": {
-                            "device_name": "Device name"
-                        },
-                        "data_description": {
-                            "device_name": "Enter a name for the device. This will be used as the device name in the CCU and Home Assistant."
-                        },
-                        "description": "A new device **{device_type}** with address **{address}** was found in the CCU inbox.\n\nEnter a name and confirm to add it to the CCU.",
-                        "title": "Add inbox device {address}"
-                    }
-                }
-            },
-            "title": "New device {device_type} ({address}) in inbox for {instance_name}"
         },
         "interface_not_reachable": {
             "description": "No connection to interface {interface_id}.\n\nThis Integration tries an automatic reconnect.\n\nCheck the Home Assistant log files for more details",
