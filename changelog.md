@@ -36,6 +36,7 @@
   - Enhance CCU support
     - Show Update entity for system update status
 - Add backend detection
+- Add service for ccu backup
 - Add translation for press events
 - Add scheduler attributes to climate entities with schedule support
 - Fix naming of untranslated entities

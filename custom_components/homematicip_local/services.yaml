@@ -41,6 +41,14 @@ clear_cache:
         config_entry:
           integration: homematicip_local
 
+create_ccu_backup:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: homematicip_local
+
 copy_schedule:
   target:
     entity:

@@ -19,6 +19,7 @@
         "step": {
             "advanced": {
                 "data": {
+                    "backup_path": "Backup directory", 
                     "delay_new_device_creation": "Delay new device creation", 
                     "enable_system_notifications": "Enable system notifications", 
                     "listen_on_all_ip": "Listen on all network interfaces", 
@@ -34,6 +35,7 @@
                     "use_group_channel_for_cover_state": "Use group channel for cover state"
                 }, 
                 "data_description": {
+                    "backup_path": "Subdirectory name for CCU backups within the integration storage directory (default: backup).", 
                     "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.", 
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
                     "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
@@ -254,6 +256,9 @@
             }
         }, 
         "button": {
+            "create_backup": {
+                "name": "Create Backup"
+            }, 
             "press": {
                 "name": "Key Press"
             }, 
@@ -748,6 +753,7 @@
         "step": {
             "advanced_settings": {
                 "data": {
+                    "backup_path": "Backup directory", 
                     "delay_new_device_creation": "Delay new device creation", 
                     "enable_system_notifications": "Enable system notifications", 
                     "listen_on_all_ip": "Listen on all network interfaces", 
@@ -759,6 +765,7 @@
                     "use_group_channel_for_cover_state": "Use group channel for cover state"
                 }, 
                 "data_description": {
+                    "backup_path": "Subdirectory name for CCU backups within the integration storage directory (default: backup).", 
                     "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.", 
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
                     "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
@@ -899,6 +906,16 @@
                 }
             }, 
             "name": "Copy schedule profile"
+        }, 
+        "create_ccu_backup": {
+            "description": "Create and download a system backup from the CCU. Saves the backup file to the configured backup directory.", 
+            "fields": {
+                "entry_id": {
+                    "description": "Name(s) of Homematic central to create and download backup from", 
+                    "name": "Central"
+                }
+            }, 
+            "name": "Create CCU backup"
         }, 
         "create_central_links": {
             "description": "Create links to the central to enable support key press events", 

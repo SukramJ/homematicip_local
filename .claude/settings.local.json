@@ -20,7 +20,8 @@
       "Bash(timeout 30 python -m pytest:*)",
       "Bash(pip install:*)",
       "Bash(ruff check:*)",
-      "Bash(python -c:*)"
+      "Bash(python -c:*)",
+      "Bash(python script/check_translations.py:*)"
     ],
     "deny": [],
     "ask": []

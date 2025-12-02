@@ -49,6 +49,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ADVANCED_CONFIG,
+    CONF_BACKUP_PATH,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
     CONF_DELAY_NEW_DEVICE_CREATION,
@@ -70,6 +71,7 @@ from .const import (
     CONF_UN_IGNORES,
     CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE,
     CONF_VERIFY_TLS,
+    DEFAULT_BACKUP_PATH,
     DEFAULT_ENABLE_MQTT,
     DEFAULT_ENABLE_SUB_DEVICES,
     DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS,
@@ -358,6 +360,10 @@ def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -
                     options=[str(v) for v in OptionalSettings],
                 )
             ),
+            vol.Optional(
+                CONF_BACKUP_PATH,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_BACKUP_PATH, DEFAULT_BACKUP_PATH),
+            ): TEXT_SELECTOR,
         }
     )
     if not all_un_ignore_parameters:
@@ -431,6 +437,10 @@ def get_advanced_settings_schema(data: ConfigType, all_un_ignore_parameters: lis
                     options=[str(v) for v in OptionalSettings],
                 )
             ),
+            vol.Optional(
+                CONF_BACKUP_PATH,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_BACKUP_PATH, DEFAULT_BACKUP_PATH),
+            ): TEXT_SELECTOR,
         }
     )
     if not all_un_ignore_parameters:
@@ -1031,6 +1041,7 @@ def _update_advanced_input(data: ConfigType, advanced_input: ConfigType) -> None
     ]
     data[CONF_ADVANCED_CONFIG][CONF_DELAY_NEW_DEVICE_CREATION] = advanced_input[CONF_DELAY_NEW_DEVICE_CREATION]
     data[CONF_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] = advanced_input[CONF_OPTIONAL_SETTINGS]
+    data[CONF_ADVANCED_CONFIG][CONF_BACKUP_PATH] = advanced_input.get(CONF_BACKUP_PATH, DEFAULT_BACKUP_PATH)
 
     if advanced_input.get(CONF_UN_IGNORES):
         data[CONF_ADVANCED_CONFIG][CONF_UN_IGNORES] = advanced_input[CONF_UN_IGNORES]
@@ -1061,6 +1072,7 @@ def _update_advanced_settings_input(data: ConfigType, advanced_input: ConfigType
     ]
     data[CONF_ADVANCED_CONFIG][CONF_DELAY_NEW_DEVICE_CREATION] = advanced_input[CONF_DELAY_NEW_DEVICE_CREATION]
     data[CONF_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] = advanced_input[CONF_OPTIONAL_SETTINGS]
+    data[CONF_ADVANCED_CONFIG][CONF_BACKUP_PATH] = advanced_input.get(CONF_BACKUP_PATH, DEFAULT_BACKUP_PATH)
 
     if advanced_input.get(CONF_UN_IGNORES):
         data[CONF_ADVANCED_CONFIG][CONF_UN_IGNORES] = advanced_input[CONF_UN_IGNORES]

@@ -57,6 +57,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 
 from .const import (
     CONF_ADVANCED_CONFIG,
+    CONF_BACKUP_PATH,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
     CONF_DELAY_NEW_DEVICE_CREATION,
@@ -79,6 +80,7 @@ from .const import (
     CONF_UN_IGNORES,
     CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE,
     CONF_VERIFY_TLS,
+    DEFAULT_BACKUP_PATH,
     DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK,
     DEFAULT_ENABLE_MQTT,
     DEFAULT_ENABLE_SUB_DEVICES,
@@ -122,6 +124,7 @@ class BaseControlUnit:
         self._hass: Final = control_config.hass
         self._entry_id: Final = control_config.entry_id
         self._instance_name: Final = control_config.instance_name
+        self._backup_directory: Final = control_config.backup_directory
         self._delay_new_device_creation: Final = control_config.delay_new_device_creation
         self._enable_mqtt: Final = control_config.enable_mqtt
         self._enable_sub_devices: Final = control_config.enable_sub_devices
@@ -142,6 +145,11 @@ class BaseControlUnit:
             sw_version=self._central.version,
         )
         self._unsubscribe_handlers: Final[list[UnsubscribeHandler]] = []
+
+    @property
+    def backup_directory(self) -> str:
+        """Return the backup directory path."""
+        return self._backup_directory
 
     @property
     def central(self) -> CentralUnit:
@@ -681,6 +689,7 @@ class ControlConfig:
         self.delay_new_device_creation: Final[bool] = ac.get(
             CONF_DELAY_NEW_DEVICE_CREATION, DEFAULT_DELAY_NEW_DEVICE_CREATION
         )
+        self._backup_path: Final[str] = ac.get(CONF_BACKUP_PATH, DEFAULT_BACKUP_PATH)
 
     @property
     def _temporary_config(self) -> ControlConfig:
@@ -693,6 +702,11 @@ class ControlConfig:
             data=temporary_data,
             start_direct=True,
         )
+
+    @property
+    def backup_directory(self) -> str:
+        """Return the full path to the backup directory."""
+        return f"{get_storage_directory(hass=self.hass)}/{self._backup_path}"
 
     def check_config(self) -> None:
         """Check config. Throws BaseHomematicException on failure."""

@@ -19,6 +19,7 @@
         "step": {
             "advanced": {
                 "data": {
+                    "backup_path": "Backup-Verzeichnis", 
                     "delay_new_device_creation": "Erstellung neuer Geräte verzögern", 
                     "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
                     "listen_on_all_ip": "Auf allen Netzwerkschnittstellen lauschen", 
@@ -34,6 +35,7 @@
                     "use_group_channel_for_cover_state": "Gruppenkanal für Cover-Status verwenden"
                 }, 
                 "data_description": {
+                    "backup_path": "Unterverzeichnisname für CCU-Backups im Speicherverzeichnis der Integration (Standard: backup).", 
                     "delay_new_device_creation": "Die Erstellung neuer Geräte verzögern, bis diese in der CCU vollständig konfiguriert sind; stattdessen wird eine Reparatur erstellt, um das Gerät später hinzuzufügen.", 
                     "listen_on_all_ip": "Aktivieren, wenn Home Assistant in Docker oder einer VM läuft. Erforderlich wenn die IP von HA sich von der Host-IP unterscheidet.", 
                     "mqtt_enabled": "MQTT aktivieren um Callbacks für CCU-Jack und CUxD zu nutzen", 
@@ -254,6 +256,9 @@
             }
         }, 
         "button": {
+            "create_backup": {
+                "name": "Backup erstellen"
+            }, 
             "press": {
                 "name": "Tastendruck"
             }, 
@@ -748,6 +753,7 @@
         "step": {
             "advanced_settings": {
                 "data": {
+                    "backup_path": "Backup-Verzeichnis", 
                     "delay_new_device_creation": "Erstellung neuer Geräte verzögern", 
                     "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
                     "listen_on_all_ip": "Auf allen Netzwerkschnittstellen lauschen", 
@@ -759,6 +765,7 @@
                     "use_group_channel_for_cover_state": "Gruppenkanal für Cover-Status verwenden"
                 }, 
                 "data_description": {
+                    "backup_path": "Unterverzeichnisname für CCU-Backups im Speicherverzeichnis der Integration (Standard: backup).", 
                     "delay_new_device_creation": "Die Erstellung neuer Geräte verzögern, bis diese in der CCU vollständig konfiguriert sind; stattdessen wird eine Reparatur erstellt.", 
                     "listen_on_all_ip": "Aktivieren, wenn Home Assistant in Docker oder einer VM läuft. Erforderlich wenn die IP von HA sich von der Host-IP unterscheidet.", 
                     "mqtt_enabled": "MQTT aktivieren um Callbacks für CCU-Jack und CUxD zu nutzen", 
@@ -899,6 +906,16 @@
                 }
             }, 
             "name": "Zeitplan-Profil kopieren"
+        }, 
+        "create_ccu_backup": {
+            "description": "Erstellt und lädt ein System-Backup von der CCU herunter. Speichert die Backup-Datei im konfigurierten Backup-Verzeichnis.", 
+            "fields": {
+                "entry_id": {
+                    "description": "Name der Homematic Zentrale, auf der das Backup erstellt und heruntergeladen werden soll", 
+                    "name": "Zentrale"
+                }
+            }, 
+            "name": "CCU-Backup erstellen"
         }, 
         "create_central_links": {
             "description": "Erstellt Verknüpfungen zur Zentrale, um Tastendruck-Ereignisse zu ermöglichen", 
