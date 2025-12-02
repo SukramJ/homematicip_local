@@ -20,7 +20,6 @@
             "advanced": {
                 "data": {
                     "backup_path": "Backup directory", 
-                    "delay_new_device_creation": "Delay new device creation", 
                     "enable_system_notifications": "Enable system notifications", 
                     "listen_on_all_ip": "Listen on all network interfaces", 
                     "mqtt_enabled": "Enable MQTT", 
@@ -36,7 +35,6 @@
                 }, 
                 "data_description": {
                     "backup_path": "Subdirectory name for CCU backups within the integration storage directory (default: backup).", 
-                    "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.", 
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
                     "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
                     "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge", 
@@ -771,7 +769,6 @@
             "advanced_settings": {
                 "data": {
                     "backup_path": "Backup directory", 
-                    "delay_new_device_creation": "Delay new device creation", 
                     "enable_system_notifications": "Enable system notifications", 
                     "listen_on_all_ip": "Listen on all network interfaces", 
                     "mqtt_enabled": "Enable MQTT", 
@@ -783,7 +780,6 @@
                 }, 
                 "data_description": {
                     "backup_path": "Subdirectory name for CCU backups within the integration storage directory (default: backup).", 
-                    "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.", 
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
                     "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
                     "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge", 

@@ -17,7 +17,6 @@ from aiohomematic.client import InterfaceConfig
 from aiohomematic.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
-    DEFAULT_DELAY_NEW_DEVICE_CREATION,
     DEFAULT_ENABLE_PROGRAM_SCAN,
     DEFAULT_ENABLE_SYSVAR_SCAN,
     DEFAULT_INTERFACES_REQUIRING_PERIODIC_REFRESH,
@@ -60,7 +59,6 @@ from .const import (
     CONF_BACKUP_PATH,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
-    CONF_DELAY_NEW_DEVICE_CREATION,
     CONF_ENABLE_MQTT,
     CONF_ENABLE_PROGRAM_SCAN,
     CONF_ENABLE_SUB_DEVICES,
@@ -126,7 +124,6 @@ class BaseControlUnit:
         self._entry_id: Final = control_config.entry_id
         self._instance_name: Final = control_config.instance_name
         self._backup_directory: Final = control_config.backup_directory
-        self._delay_new_device_creation: Final = control_config.delay_new_device_creation
         self._enable_mqtt: Final = control_config.enable_mqtt
         self._enable_sub_devices: Final = control_config.enable_sub_devices
         self._mqtt_prefix: Final = control_config.mqtt_prefix
@@ -560,7 +557,7 @@ class ControlUnit(BaseControlUnit):
 
         # Handle event of new device creation in Homematic(IP) Local for OpenCCU.
         if system_event == BackendSystemEvent.DEVICES_CREATED:
-            if self._delay_new_device_creation and source and source == SourceOfDeviceCreation.NEW:
+            if source and source == SourceOfDeviceCreation.NEW:
                 return
             self._async_add_virtual_remotes_to_device_registry()
             if new_data_points:
@@ -692,9 +689,6 @@ class ControlConfig:
         self._use_group_channel_for_cover_state: Final[bool] = ac.get(
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE, DEFAULT_USE_GROUP_CHANNEL_FOR_COVER_STATE
         )
-        self.delay_new_device_creation: Final[bool] = ac.get(
-            CONF_DELAY_NEW_DEVICE_CREATION, DEFAULT_DELAY_NEW_DEVICE_CREATION
-        )
         self._backup_path: Final[str] = ac.get(CONF_BACKUP_PATH, DEFAULT_BACKUP_PATH)
 
     @property
@@ -751,7 +745,7 @@ class ControlConfig:
             callback_port_xml_rpc=self._callback_port_xml_rpc if self._callback_port_xml_rpc != PORT_ANY else None,
             central_id=central_id,
             client_session=aiohttp_client.async_get_clientsession(self.hass),
-            delay_new_device_creation=self.delay_new_device_creation,
+            delay_new_device_creation=True,
             enable_device_firmware_check=DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK,
             enable_program_scan=self._enable_program_scan,
             enable_sysvar_scan=self._enable_sysvar_scan,

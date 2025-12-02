@@ -226,5 +226,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
                 del data["callback_port"]
             data[CONF_CALLBACK_PORT_XML_RPC] = callback_port_xml_rpc
         hass.config_entries.async_update_entry(entry, version=10, data=data)
+    if entry.version == 10:
+        data = dict(entry.data)
+        # Remove delay_new_device_creation from advanced config (now always True)
+        if CONF_ADVANCED_CONFIG in data:
+            with contextlib.suppress(Exception):
+                del data[CONF_ADVANCED_CONFIG]["delay_new_device_creation"]
+        hass.config_entries.async_update_entry(entry, version=11, data=data)
     _LOGGER.info("Migration to version %s successful", entry.version)
     return True

@@ -13,7 +13,6 @@ from voluptuous.schema_builder import UNDEFINED, Schema
 
 from aiohomematic.backend_detection import BackendDetectionResult, DetectionConfig, detect_backend
 from aiohomematic.const import (
-    DEFAULT_DELAY_NEW_DEVICE_CREATION,
     DEFAULT_ENABLE_PROGRAM_SCAN,
     DEFAULT_ENABLE_SYSVAR_SCAN,
     DEFAULT_OPTIONAL_SETTINGS,
@@ -52,7 +51,6 @@ from .const import (
     CONF_BACKUP_PATH,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
-    CONF_DELAY_NEW_DEVICE_CREATION,
     CONF_ENABLE_MQTT,
     CONF_ENABLE_PROGRAM_SCAN,
     CONF_ENABLE_SUB_DEVICES,
@@ -344,12 +342,6 @@ def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -
                 ),
             ): BOOLEAN_SELECTOR,
             vol.Optional(
-                CONF_DELAY_NEW_DEVICE_CREATION,
-                default=data.get(CONF_ADVANCED_CONFIG, {}).get(
-                    CONF_DELAY_NEW_DEVICE_CREATION, DEFAULT_DELAY_NEW_DEVICE_CREATION
-                ),
-            ): BOOLEAN_SELECTOR,
-            vol.Optional(
                 CONF_OPTIONAL_SETTINGS,
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_OPTIONAL_SETTINGS, DEFAULT_OPTIONAL_SETTINGS),
             ): SelectSelector(
@@ -421,12 +413,6 @@ def get_advanced_settings_schema(data: ConfigType, all_un_ignore_parameters: lis
                 ),
             ): BOOLEAN_SELECTOR,
             vol.Optional(
-                CONF_DELAY_NEW_DEVICE_CREATION,
-                default=data.get(CONF_ADVANCED_CONFIG, {}).get(
-                    CONF_DELAY_NEW_DEVICE_CREATION, DEFAULT_DELAY_NEW_DEVICE_CREATION
-                ),
-            ): BOOLEAN_SELECTOR,
-            vol.Optional(
                 CONF_OPTIONAL_SETTINGS,
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_OPTIONAL_SETTINGS, DEFAULT_OPTIONAL_SETTINGS),
             ): SelectSelector(
@@ -474,7 +460,7 @@ async def _async_detect_backend(
 class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the instance flow for Homematic(IP) Local for OpenCCU."""
 
-    VERSION = 10
+    VERSION = 11
     CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
@@ -1039,7 +1025,6 @@ def _update_advanced_input(data: ConfigType, advanced_input: ConfigType) -> None
     data[CONF_ADVANCED_CONFIG][CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE] = advanced_input[
         CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE
     ]
-    data[CONF_ADVANCED_CONFIG][CONF_DELAY_NEW_DEVICE_CREATION] = advanced_input[CONF_DELAY_NEW_DEVICE_CREATION]
     data[CONF_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] = advanced_input[CONF_OPTIONAL_SETTINGS]
     data[CONF_ADVANCED_CONFIG][CONF_BACKUP_PATH] = advanced_input.get(CONF_BACKUP_PATH, DEFAULT_BACKUP_PATH)
 
@@ -1070,7 +1055,6 @@ def _update_advanced_settings_input(data: ConfigType, advanced_input: ConfigType
     data[CONF_ADVANCED_CONFIG][CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE] = advanced_input[
         CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE
     ]
-    data[CONF_ADVANCED_CONFIG][CONF_DELAY_NEW_DEVICE_CREATION] = advanced_input[CONF_DELAY_NEW_DEVICE_CREATION]
     data[CONF_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] = advanced_input[CONF_OPTIONAL_SETTINGS]
     data[CONF_ADVANCED_CONFIG][CONF_BACKUP_PATH] = advanced_input.get(CONF_BACKUP_PATH, DEFAULT_BACKUP_PATH)
 
