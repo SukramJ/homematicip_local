@@ -121,6 +121,7 @@ class BaseControlUnit:
 
     def __init__(self, *, control_config: ControlConfig) -> None:
         """Init the control unit."""
+        self._config: Final = control_config
         self._hass: Final = control_config.hass
         self._entry_id: Final = control_config.entry_id
         self._instance_name: Final = control_config.instance_name
@@ -155,6 +156,11 @@ class BaseControlUnit:
     def central(self) -> CentralUnit:
         """Return the Homematic(IP) Local for OpenCCU central unit instance."""
         return self._central
+
+    @property
+    def config(self) -> ControlConfig:
+        """Return the control unit configuration."""
+        return self._config
 
     @property
     def device_info(self) -> DeviceInfo | None:

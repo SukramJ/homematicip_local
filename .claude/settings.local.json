@@ -21,7 +21,8 @@
       "Bash(pip install:*)",
       "Bash(ruff check:*)",
       "Bash(python -c:*)",
-      "Bash(python script/check_translations.py:*)"
+      "Bash(python script/check_translations.py:*)",
+      "Bash(python -m ruff check:*)"
     ],
     "deny": [],
     "ask": []

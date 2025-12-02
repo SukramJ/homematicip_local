@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import partial
 import logging
 from typing import Any, Final, Generic
 
-from aiohomematic.const import CallSource, DataPointUsage
+from aiohomematic.const import CallSource, DataPointUsage, InboxDeviceData
 from aiohomematic.interfaces import (
     CalculatedDataPointProtocol,
     CallbackDataPointProtocol,
@@ -22,12 +23,14 @@ from homeassistant.core import State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue, async_delete_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UndefinedType
 
-from .const import DOMAIN, HmEntityState
+from .const import CONF_INSTANCE_NAME, DOMAIN, HmEntityState
 from .control_unit import ControlUnit
 from .entity_helpers import get_entity_description
+from .repairs import INBOX_DEVICE_DATA, ISSUE_ID_PREFIX_INBOX_DEVICE, REPAIR_CALLBACKS
 from .support import (
     HmGenericDataPointProtocol,
     HmGenericProgramDataPointProtocol,
@@ -40,7 +43,7 @@ ATTR_ADDRESS: Final = "address"
 ATTR_DESCRIPTION: Final = "description"
 ATTR_FUNCTION: Final = "function"
 ATTR_INTERFACE_ID: Final = "interface_id"
-ATTR_MESSAGES: Final = "messages"
+ATTR_DEVICES: Final = "devices"
 ATTR_MODEL: Final = "model"
 ATTR_NAME: Final = "name"
 ATTR_PARAMETER: Final = "parameter"
@@ -378,7 +381,7 @@ class AioHomematicGenericHubEntity(Entity):
 
     NO_RECORDED_ATTRIBUTES = {
         ATTR_DESCRIPTION,
-        ATTR_MESSAGES,
+        ATTR_DEVICES,
         ATTR_NAME,
         ATTR_VALUE_STATE,
     }
@@ -552,6 +555,10 @@ class AioHomematicGenericSysvarEntity(AioHomematicGenericHubEntity, Generic[HmGe
             ATTR_NAME: self._data_point.name,
             ATTR_DESCRIPTION: self._data_point.description,
         }
+        # Track known inbox device addresses to detect new devices
+        self._known_inbox_addresses: set[str] = set()
+        if isinstance(self._data_point, HmInboxSensor):
+            self._known_inbox_addresses = {d.address for d in self._data_point.devices}
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -566,5 +573,72 @@ class AioHomematicGenericSysvarEntity(AioHomematicGenericHubEntity, Generic[HmGe
             attributes[ATTR_VALUE_STATE] = HmEntityState.NOT_VALID
 
         if isinstance(self._data_point, HmInboxSensor):
-            attributes[ATTR_MESSAGES] = [m.name for m in self._data_point.messages]
+            attributes[ATTR_DEVICES] = [m.name for m in self._data_point.devices]
         return attributes
+
+    @callback
+    def _async_hub_entity_updated(self, *args: Any, **kwargs: Any) -> None:
+        """Handle sysvar entity state changes and check for new inbox devices."""
+        # Check for new inbox devices
+        if isinstance(self._data_point, HmInboxSensor):
+            current_addresses = {d.address for d in self._data_point.devices}
+            new_addresses = current_addresses - self._known_inbox_addresses
+            removed_addresses = self._known_inbox_addresses - current_addresses
+
+            # Handle removed devices - delete their repair issues
+            for address in removed_addresses:
+                issue_id = f"{ISSUE_ID_PREFIX_INBOX_DEVICE}|{self._cu.config.entry_id}|{address}"
+                async_delete_issue(hass=self.hass, domain=DOMAIN, issue_id=issue_id)
+                REPAIR_CALLBACKS.pop(issue_id, None)
+                INBOX_DEVICE_DATA.pop(issue_id, None)
+
+            # Handle new devices - create repair issues
+            for device in self._data_point.devices:
+                if device.address in new_addresses:
+                    self._create_inbox_device_repair_issue(device)
+
+            self._known_inbox_addresses = current_addresses
+
+        # Call parent implementation
+        super()._async_hub_entity_updated(*args, **kwargs)
+
+    def _create_inbox_device_repair_issue(self, device: InboxDeviceData) -> None:
+        """Create a repair issue for a new inbox device."""
+        issue_id = f"{ISSUE_ID_PREFIX_INBOX_DEVICE}|{self._cu.config.entry_id}|{device.address}"
+
+        # Store device data for the repair flow
+        INBOX_DEVICE_DATA[issue_id] = {
+            "device_type": device.device_type,
+            "name": device.name,
+            "address": device.address,
+            "interface": device.interface,
+        }
+
+        # Create the fix callback
+        async def _fix_callback(*, device_name: str, _device: InboxDeviceData = device) -> None:
+            """Rename and accept the inbox device."""
+            json_rpc_client = self._cu.central.json_rpc_client
+            # Only rename if a device name is provided
+            if (
+                device_name
+                and (rega_id := await json_rpc_client.get_rega_id_by_address(address=_device.address)) is not None
+            ):
+                await json_rpc_client.rename_device(rega_id=rega_id, new_name=device_name)
+            # Accept the device in the inbox
+            await json_rpc_client.accept_device_in_inbox(device_address=_device.address)
+
+        REPAIR_CALLBACKS[issue_id] = partial(_fix_callback)
+
+        async_create_issue(
+            hass=self.hass,
+            domain=DOMAIN,
+            issue_id=issue_id,
+            is_fixable=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="inbox_device",
+            translation_placeholders={
+                CONF_INSTANCE_NAME: self._cu.config.instance_name,
+                "address": device.address,
+                "device_type": device.device_type,
+            },
+        )

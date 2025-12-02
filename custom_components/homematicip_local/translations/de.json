@@ -726,6 +726,23 @@
             "description": "Daten können mit einem Rega-Skript nicht abgerufen werden.\n\nDies weist auf ein Problem mit Ihrer CCU hin.\n\nDurch die Verwendung eines Fallbacks kommt es zu einem erhöhten DutyCycle beim Integrationsstart für die Schnittstelle {interface_id}", 
             "title": "Fehler beim Abrufen der Anfangsdaten"
         }, 
+        "inbox_device": {
+            "fix_flow": {
+                "step": {
+                    "set_name": {
+                        "data": {
+                            "device_name": "Gerätename"
+                        }, 
+                        "data_description": {
+                            "device_name": "Gib einen Namen für das Gerät ein. Dieser wird als Gerätename in der CCU und Home Assistant verwendet."
+                        }, 
+                        "description": "Ein neues Gerät **{device_type}** mit der Adresse **{address}** wurde im Posteingang der CCU gefunden.\n\nGib einen Namen ein und bestätige, um es zur CCU hinzuzufügen.", 
+                        "title": "Posteingangsgerät {address} hinzufügen"
+                    }
+                }
+            }, 
+            "title": "Neues Gerät {device_type} ({address}) im Posteingang für {instance_name}"
+        }, 
         "interface_not_reachable": {
             "description": "Keine Verbindung zu Schnittstelle {interface_id}.\n\nDiese Integration versucht eine automatische Wiederverbindung.\n\nWeitere Informationen findest Du in den Protokolldateien von Home Assistant", 
             "title": "Interface {interface_id} nicht erreichbar"
