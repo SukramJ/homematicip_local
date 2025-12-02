@@ -44,7 +44,6 @@ from custom_components.homematicip_local.const import (
     CONF_ADVANCED_CONFIG as CONST_ADVANCED_CONFIG,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
-    CONF_DELAY_NEW_DEVICE_CREATION,
     CONF_ENABLE_MQTT as CONST_ENABLE_MQTT,
     CONF_ENABLE_PROGRAM_SCAN,
     CONF_ENABLE_SUB_DEVICES,
@@ -1114,7 +1113,6 @@ class TestConfigFlowHelpers:
             CONF_MQTT_PREFIX: "hmip",
             CONF_ENABLE_SUB_DEVICES: True,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: True,
-            CONF_DELAY_NEW_DEVICE_CREATION: True,
             CONF_OPTIONAL_SETTINGS: ["no_wakeup"],
             CONF_UN_IGNORES: ["A", "B"],
         }
@@ -1131,7 +1129,6 @@ class TestConfigFlowHelpers:
         assert data[CONST_ADVANCED_CONFIG][CONF_MQTT_PREFIX] == "hmip"
         assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_SUB_DEVICES] is True
         assert data[CONST_ADVANCED_CONFIG][CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE] is True
-        assert data[CONST_ADVANCED_CONFIG][CONF_DELAY_NEW_DEVICE_CREATION] is True
         assert data[CONST_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] == adv_input_for_helper[CONF_OPTIONAL_SETTINGS]
         assert data[CONST_ADVANCED_CONFIG][CONF_UN_IGNORES] == ["A", "B"]
 
@@ -1257,7 +1254,6 @@ class TestAdvancedConfigurationFlow:
             CONF_MQTT_PREFIX: "hmip",
             CONF_ENABLE_SUB_DEVICES: True,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
-            CONF_DELAY_NEW_DEVICE_CREATION: False,
             CONF_OPTIONAL_SETTINGS: [],
         }
         with (
@@ -1325,7 +1321,6 @@ class TestAdvancedConfigurationFlow:
             CONF_MQTT_PREFIX: "hmip",
             CONF_ENABLE_SUB_DEVICES: True,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
-            CONF_DELAY_NEW_DEVICE_CREATION: False,
             CONF_OPTIONAL_SETTINGS: [],
             CONF_UN_IGNORES: [],  # UN-IGNORE field
         }

@@ -12,6 +12,7 @@ DOMAIN: Final = "homematicip_local"
 HMIP_LOCAL_MIN_HA_VERSION: Final = "2025.10.0"
 ENABLE_EXPERIMENTAL_FEATURES: Final = False
 
+DEFAULT_BACKUP_PATH: Final = "backup"
 DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK: Final = True
 DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS: Final = True
 DEFAULT_LISTEN_ON_ALL_IP: Final = False
@@ -23,6 +24,7 @@ LEARN_MORE_URL_XMLRPC_SERVER_RECEIVES_NO_EVENTS: Final = "https://github.com/suk
 LEARN_MORE_URL_PONG_MISMATCH: Final = "https://github.com/sukramj/homematicip_local#what-is-the-meaning-of-pending-pong-mismatch-on-interface--austehende-pong-ereignisse-auf-interface"
 
 CONF_ADVANCED_CONFIG: Final = "advanced_config"
+CONF_BACKUP_PATH: Final = "backup_path"
 CONF_CALLBACK_HOST: Final = "callback_host"
 CONF_CALLBACK_PORT_XML_RPC: Final = "callback_port_xml_rpc"
 CONF_DELAY_NEW_DEVICE_CREATION: Final = "delay_new_device_creation"
@@ -66,6 +68,7 @@ class HmipLocalServices(StrEnum):
     CLEAR_CACHE = "clear_cache"
     COPY_SCHEDULE = "copy_schedule"
     COPY_SCHEDULE_PROFILE = "copy_schedule_profile"
+    CREATE_CCU_BACKUP = "create_ccu_backup"
     CREATE_CENTRAL_LINKS = "create_central_links"
     DISABLE_AWAY_MODE = "disable_away_mode"
     ENABLE_AWAY_MODE_BY_CALENDAR = "enable_away_mode_by_calendar"

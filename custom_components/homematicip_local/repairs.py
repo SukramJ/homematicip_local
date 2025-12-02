@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 import contextlib
 import logging
-from typing import Any
+from typing import Any, Final
 
 import voluptuous as vol
 
@@ -18,8 +18,10 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_DEVICE_NAME: Final = "device_name"
+
 # Per-issue fix callbacks for repairs UI
-REPAIR_CALLBACKS: dict[str, Callable[..., Any]] = {}
+REPAIR_CALLBACKS: dict[str, Callable[..., Awaitable[Any]]] = {}
 
 
 async def async_create_fix_flow(hass: HomeAssistant, issue_id: str, data: dict[str, Any]) -> RepairsFlow:
@@ -28,12 +30,12 @@ async def async_create_fix_flow(hass: HomeAssistant, issue_id: str, data: dict[s
 
 
 class _DevicesDelayedFixFlow(RepairsFlow):
-    """Minimal fix flow: confirm and run the registered fix callback (if any), then close the issue."""
+    """Fix flow for delayed devices: allows naming the device before adding it."""
 
     def __init__(self, hass: HomeAssistant, issue_id: str) -> None:
         self.hass = hass
         self._issue_id = issue_id
-        # Issue id format: devices_delayed-<interface_id>-<address>
+        # Issue id format: devices_delayed|<interface_id>|<address>
         self._interface_id: str | None = None
         self._address: str | None = None
         parts = issue_id.split("|", 2)
@@ -41,28 +43,35 @@ class _DevicesDelayedFixFlow(RepairsFlow):
             self._interface_id = parts[1] or None
             self._address = parts[2] or None
 
-    async def async_step_confirm(self, user_input: dict[str, Any] | None = None) -> FlowResult:
-        """Handle the confirmation to trigger the manual device add and close the issue."""
-        # Execute best-effort fix callback if present
-        cb = REPAIR_CALLBACKS.pop(self._issue_id, None)
-        if cb is not None:
-            with contextlib.suppress(Exception):
-                await cb()
-
-        # Close the issue
-        async_delete_issue(hass=self.hass, domain=DOMAIN, issue_id=self._issue_id)
-
-        # Let the frontend use the translation for success message
-        return self.async_create_entry(title="", data={})
-
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:  # noqa: D401
-        # Always show the confirm form first
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Show the form to enter a device name."""
         return self.async_show_form(
-            step_id="confirm",
-            data_schema=vol.Schema({}),
+            step_id="set_name",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_DEVICE_NAME, default=""): str,
+                }
+            ),
             description_placeholders={
-                "issue_id": self._issue_id,
                 "interface_id": self._interface_id or "",
                 "address": self._address or "",
             },
         )
+
+    async def async_step_set_name(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Handle the name input and trigger the device addition."""
+        if user_input is None:
+            return await self.async_step_init()
+
+        device_name = user_input.get(CONF_DEVICE_NAME, "").strip() if user_input else ""
+
+        # Execute the fix callback with the device name (empty string skips rename)
+        cb = REPAIR_CALLBACKS.pop(self._issue_id, None)
+        if cb is not None:
+            with contextlib.suppress(Exception):
+                await cb(device_name=device_name)
+
+        # Close the issue
+        async_delete_issue(hass=self.hass, domain=DOMAIN, issue_id=self._issue_id)
+
+        return self.async_create_entry(title="", data={})

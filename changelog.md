@@ -1,10 +1,13 @@
 # Version 1.91.0 (2025-12-01)
 
 ## What's Changed
-- Bump aiohomematic to 2025.12.1
+- Bump aiohomematic to 2025.12.4
   - Feature
     - Add backend detection
     - Add translations for log messages with level >= INFO or translation exclusions
+    - Add create_backup_and_download to BackupProvider/CentralUnit
+    - Add rename_device / accept_device_in_inbox to Central/DeviceManagement
+- Refactor Client
   - Refactoring
     - Avoid potential memory leaks
     - Clean up event bus implementation and remove legacy code
@@ -36,6 +39,7 @@
   - Enhance CCU support
     - Show Update entity for system update status
 - Add backend detection
+- Add service for ccu backup
 - Add translation for press events
 - Add scheduler attributes to climate entities with schedule support
 - Fix naming of untranslated entities

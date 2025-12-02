@@ -40,7 +40,7 @@ ATTR_ADDRESS: Final = "address"
 ATTR_DESCRIPTION: Final = "description"
 ATTR_FUNCTION: Final = "function"
 ATTR_INTERFACE_ID: Final = "interface_id"
-ATTR_MESSAGES: Final = "messages"
+ATTR_DEVICES: Final = "devices"
 ATTR_MODEL: Final = "model"
 ATTR_NAME: Final = "name"
 ATTR_PARAMETER: Final = "parameter"
@@ -378,7 +378,7 @@ class AioHomematicGenericHubEntity(Entity):
 
     NO_RECORDED_ATTRIBUTES = {
         ATTR_DESCRIPTION,
-        ATTR_MESSAGES,
+        ATTR_DEVICES,
         ATTR_NAME,
         ATTR_VALUE_STATE,
     }
@@ -566,5 +566,5 @@ class AioHomematicGenericSysvarEntity(AioHomematicGenericHubEntity, Generic[HmGe
             attributes[ATTR_VALUE_STATE] = HmEntityState.NOT_VALID
 
         if isinstance(self._data_point, HmInboxSensor):
-            attributes[ATTR_MESSAGES] = [m.name for m in self._data_point.messages]
+            attributes[ATTR_DEVICES] = [m.name for m in self._data_point.devices]
         return attributes

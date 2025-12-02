@@ -19,7 +19,7 @@
         "step": {
             "advanced": {
                 "data": {
-                    "delay_new_device_creation": "Delay new device creation", 
+                    "backup_path": "Backup directory", 
                     "enable_system_notifications": "Enable system notifications", 
                     "listen_on_all_ip": "Listen on all network interfaces", 
                     "mqtt_enabled": "Enable MQTT", 
@@ -34,7 +34,7 @@
                     "use_group_channel_for_cover_state": "Use group channel for cover state"
                 }, 
                 "data_description": {
-                    "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.", 
+                    "backup_path": "Subdirectory name for CCU backups within the integration storage directory (default: backup).", 
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
                     "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
                     "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge", 
@@ -254,6 +254,9 @@
             }
         }, 
         "button": {
+            "create_backup": {
+                "name": "Create Backup"
+            }, 
             "press": {
                 "name": "Key Press"
             }, 
@@ -709,9 +712,15 @@
         "devices_delayed": {
             "fix_flow": {
                 "step": {
-                    "confirm": {
-                        "description": "This will trigger the manual addition of device **{address}** on interface **{interface_id}**.\n\nConfirm to continue.", 
-                        "title": "Manually add delayed device {address}"
+                    "set_name": {
+                        "data": {
+                            "device_name": "Device name"
+                        }, 
+                        "data_description": {
+                            "device_name": "Enter a name for the device. This will be used as the device name in the CCU and Home Assistant. Leave empty to keep the default name."
+                        }, 
+                        "description": "A new device with address **{address}** was detected on interface **{interface_id}**.\n\nEnter a name and confirm to add it to Home Assistant.", 
+                        "title": "Add delayed device {address}"
                     }
                 }
             }, 
@@ -748,7 +757,7 @@
         "step": {
             "advanced_settings": {
                 "data": {
-                    "delay_new_device_creation": "Delay new device creation", 
+                    "backup_path": "Backup directory", 
                     "enable_system_notifications": "Enable system notifications", 
                     "listen_on_all_ip": "Listen on all network interfaces", 
                     "mqtt_enabled": "Enable MQTT", 
@@ -759,7 +768,7 @@
                     "use_group_channel_for_cover_state": "Use group channel for cover state"
                 }, 
                 "data_description": {
-                    "delay_new_device_creation": "Delay creating new devices until fully configured in the CCU; instead create a repair to add later.", 
+                    "backup_path": "Subdirectory name for CCU backups within the integration storage directory (default: backup).", 
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
                     "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
                     "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge", 
@@ -899,6 +908,16 @@
                 }
             }, 
             "name": "Copy schedule profile"
+        }, 
+        "create_ccu_backup": {
+            "description": "Create and download a system backup from the CCU. Saves the backup file to the configured backup directory.", 
+            "fields": {
+                "entry_id": {
+                    "description": "Name(s) of Homematic central to create and download backup from", 
+                    "name": "Central"
+                }
+            }, 
+            "name": "Create CCU backup"
         }, 
         "create_central_links": {
             "description": "Create links to the central to enable support key press events", 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
+from pathlib import Path
 from typing import TYPE_CHECKING, Final, cast
 
 import voluptuous as vol
@@ -110,6 +111,12 @@ SCHEMA_CREATE_CENTRAL_LINKS = vol.All(
 )
 
 SCHEMA_CLEAR_CACHE = vol.Schema(
+    {
+        vol.Required(CONF_ENTRY_ID): cv.string,
+    }
+)
+
+SCHEMA_CREATE_CCU_BACKUP = vol.Schema(
     {
         vol.Required(CONF_ENTRY_ID): cv.string,
     }
@@ -272,6 +279,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             await _async_service_add_link(hass=hass, service=service)
         elif service_name == HmipLocalServices.CLEAR_CACHE:
             await _async_service_clear_cache(hass=hass, service=service)
+        elif service_name == HmipLocalServices.CREATE_CCU_BACKUP:
+            return await _async_service_create_ccu_backup(hass=hass, service=service)
         elif service_name == HmipLocalServices.EXPORT_DEVICE_DEFINITION:
             await _async_service_export_device_definition(hass=hass, service=service)
         elif service_name == HmipLocalServices.FETCH_SYSTEM_VARIABLES:
@@ -328,6 +337,15 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         service=HmipLocalServices.CLEAR_CACHE,
         service_func=async_call_hmip_local_service,
         schema=SCHEMA_CLEAR_CACHE,
+    )
+
+    async_register_admin_service(
+        hass=hass,
+        domain=DOMAIN,
+        service=HmipLocalServices.CREATE_CCU_BACKUP,
+        service_func=async_call_hmip_local_service,
+        schema=SCHEMA_CREATE_CCU_BACKUP,
+        supports_response=SupportsResponse.ONLY,
     )
 
     async_register_admin_service(
@@ -968,6 +986,39 @@ async def _async_service_update_device_firmware_data(*, hass: HomeAssistant, ser
     entry_id = service.data[CONF_ENTRY_ID]
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
         await control.central.refresh_firmware_data()
+
+
+async def _async_service_create_ccu_backup(*, hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
+    """Service to create and download a backup from the CCU and save to file."""
+    entry_id = service.data[CONF_ENTRY_ID]
+
+    if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
+        try:
+            backup_bytes = await control.central.create_backup_and_download()
+            if backup_bytes is None:
+                raise HomeAssistantError("Failed to create and download backup from CCU")
+
+            # Save backup to file
+            backup_dir = Path(control.backup_directory)
+            backup_dir.mkdir(parents=True, exist_ok=True)
+
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"ccu_backup_{control.central.name}_{timestamp}.sbk"
+            backup_path = backup_dir / filename
+
+            await hass.async_add_executor_job(backup_path.write_bytes, backup_bytes)
+
+            _LOGGER.info("CCU backup saved to %s (%d bytes)", backup_path, len(backup_bytes))
+
+            return {
+                "success": True,
+                "path": str(backup_path),
+                "filename": filename,
+                "size": len(backup_bytes),
+            }
+        except BaseHomematicException as bhexc:
+            raise HomeAssistantError(bhexc) from bhexc
+    return None
 
 
 @callback

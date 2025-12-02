@@ -21,7 +21,7 @@ class TestRepairsFlow:
 
     @pytest.mark.asyncio
     async def test_async_create_fix_flow_and_confirm_with_callback(self, hass) -> None:
-        """It should show a confirm form and, upon confirm, run the callback and delete the issue."""
+        """It should show a form and, upon submit, run the callback and delete the issue."""
         issue_id = "devices_delayed|intf123|ABC0001"
 
         # Prepare a callback that we verify was awaited
@@ -34,17 +34,17 @@ class TestRepairsFlow:
         # Initial step should be a form with placeholders from issue id parts
         step_init = await flow.async_step_init()
         assert step_init["type"] == "form"
+        assert step_init["step_id"] == "set_name"
         placeholders = step_init["description_placeholders"]
-        assert placeholders["issue_id"] == issue_id
         assert placeholders["interface_id"] == "intf123"
         assert placeholders["address"] == "ABC0001"
 
-        # Confirm the flow and ensure it deletes the issue and awaits the callback
+        # Submit the set_name step and ensure it deletes the issue and awaits the callback
         with patch("custom_components.homematicip_local.repairs.async_delete_issue") as delete_issue:
-            result = await flow.async_step_confirm(user_input={})
+            result = await flow.async_step_set_name(user_input={"device_name": "My Device"})
 
         delete_issue.assert_called_once_with(hass=hass, domain=hm_repairs.DOMAIN, issue_id=issue_id)
-        cb.assert_awaited()
+        cb.assert_awaited_once_with(device_name="My Device")
         assert result["type"] == "create_entry"
 
     @pytest.mark.asyncio
@@ -58,7 +58,7 @@ class TestRepairsFlow:
         flow = await hm_repairs.async_create_fix_flow(hass, issue_id, data={})
 
         with patch("custom_components.homematicip_local.repairs.async_delete_issue") as delete_issue:
-            result = await flow.async_step_confirm(user_input={})
+            result = await flow.async_step_set_name(user_input={"device_name": ""})
 
         delete_issue.assert_called_once_with(hass=hass, domain=hm_repairs.DOMAIN, issue_id=issue_id)
         assert result["type"] == "create_entry"

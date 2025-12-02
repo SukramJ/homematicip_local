@@ -19,7 +19,7 @@
         "step": {
             "advanced": {
                 "data": {
-                    "delay_new_device_creation": "Erstellung neuer Geräte verzögern", 
+                    "backup_path": "Backup-Verzeichnis", 
                     "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
                     "listen_on_all_ip": "Auf allen Netzwerkschnittstellen lauschen", 
                     "mqtt_enabled": "MQTT aktivieren", 
@@ -34,7 +34,7 @@
                     "use_group_channel_for_cover_state": "Gruppenkanal für Cover-Status verwenden"
                 }, 
                 "data_description": {
-                    "delay_new_device_creation": "Die Erstellung neuer Geräte verzögern, bis diese in der CCU vollständig konfiguriert sind; stattdessen wird eine Reparatur erstellt, um das Gerät später hinzuzufügen.", 
+                    "backup_path": "Unterverzeichnisname für CCU-Backups im Speicherverzeichnis der Integration (Standard: backup).", 
                     "listen_on_all_ip": "Aktivieren, wenn Home Assistant in Docker oder einer VM läuft. Erforderlich wenn die IP von HA sich von der Host-IP unterscheidet.", 
                     "mqtt_enabled": "MQTT aktivieren um Callbacks für CCU-Jack und CUxD zu nutzen", 
                     "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix", 
@@ -254,6 +254,9 @@
             }
         }, 
         "button": {
+            "create_backup": {
+                "name": "Backup erstellen"
+            }, 
             "press": {
                 "name": "Tastendruck"
             }, 
@@ -709,9 +712,15 @@
         "devices_delayed": {
             "fix_flow": {
                 "step": {
-                    "confirm": {
-                        "description": "Dies stößt das manuelle Hinzufügen des Geräts **{address}** auf Schnittstelle **{interface_id}** an.\n\nBestätige, um fortzufahren.", 
-                        "title": "Gerät {address} manuell hinzufügen"
+                    "set_name": {
+                        "data": {
+                            "device_name": "Gerätename"
+                        }, 
+                        "data_description": {
+                            "device_name": "Gib einen Namen für das Gerät ein. Dieser wird als Gerätename in der CCU und Home Assistant verwendet. Leer lassen um den Standardnamen zu behalten."
+                        }, 
+                        "description": "Ein neues Gerät mit der Adresse **{address}** wurde auf Schnittstelle **{interface_id}** erkannt.\n\nGib einen Namen ein und bestätige, um es zu Home Assistant hinzuzufügen.", 
+                        "title": "Verzögertes Gerät {address} hinzufügen"
                     }
                 }
             }, 
@@ -748,7 +757,7 @@
         "step": {
             "advanced_settings": {
                 "data": {
-                    "delay_new_device_creation": "Erstellung neuer Geräte verzögern", 
+                    "backup_path": "Backup-Verzeichnis", 
                     "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
                     "listen_on_all_ip": "Auf allen Netzwerkschnittstellen lauschen", 
                     "mqtt_enabled": "MQTT aktivieren", 
@@ -759,7 +768,7 @@
                     "use_group_channel_for_cover_state": "Gruppenkanal für Cover-Status verwenden"
                 }, 
                 "data_description": {
-                    "delay_new_device_creation": "Die Erstellung neuer Geräte verzögern, bis diese in der CCU vollständig konfiguriert sind; stattdessen wird eine Reparatur erstellt.", 
+                    "backup_path": "Unterverzeichnisname für CCU-Backups im Speicherverzeichnis der Integration (Standard: backup).", 
                     "listen_on_all_ip": "Aktivieren, wenn Home Assistant in Docker oder einer VM läuft. Erforderlich wenn die IP von HA sich von der Host-IP unterscheidet.", 
                     "mqtt_enabled": "MQTT aktivieren um Callbacks für CCU-Jack und CUxD zu nutzen", 
                     "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix", 
@@ -899,6 +908,16 @@
                 }
             }, 
             "name": "Zeitplan-Profil kopieren"
+        }, 
+        "create_ccu_backup": {
+            "description": "Erstellt und lädt ein System-Backup von der CCU herunter. Speichert die Backup-Datei im konfigurierten Backup-Verzeichnis.", 
+            "fields": {
+                "entry_id": {
+                    "description": "Name der Homematic Zentrale, auf der das Backup erstellt und heruntergeladen werden soll", 
+                    "name": "Zentrale"
+                }
+            }, 
+            "name": "CCU-Backup erstellen"
         }, 
         "create_central_links": {
             "description": "Erstellt Verknüpfungen zur Zentrale, um Tastendruck-Ereignisse zu ermöglichen", 
