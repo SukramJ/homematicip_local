@@ -8,39 +8,39 @@
     - Add get_install_mode/set_install_mode to DeviceManagement/CentralUnit
     - Add rename_device / accept_device_in_inbox to Central/DeviceManagement
     - Add translations for log messages with level >= INFO or translation exclusions
+  - Refactor Client
+    - Refactoring
+      - Avoid potential memory leaks
+      - Clean up event bus implementation and remove legacy code
+      - Clear in-memory caches on stop
+      - De-couple from central unit
+      - Extract coordinators from central unit
+      - Extract device registry from central
+      - Extract scheduler from central
+      - Improve typing in protocols/interfaces
+      - Refactor event handling to event bus
+      - Use Protocol for callback with parameters
+      - Use Protocol for model
+      - Remove need for empty parentheses for bind_collector
+      - Rename writeable to writable
+      - Switch mypy to strict
+      - Use CentralConnectionState in AioJsonRpcAioHttpClient
+    - Improve climate schedule support
+      - Add base_temperature to CLIMATE_SIMPLE_WEEKDAY_DATA
+      - Add climate schedule cache
+      - Add input converter to climate scheduler setter
+      - Add more simple services and converters to week profile
+      - Add schedule support to custom data point
+      - Filter entries in validate_and_convert_weekday_to_simple
+      - Improve the test coverage of week_profile
+      - Optimize climate get/set_schedule
+      - Refactor simple schedule
+      - Return filtered climate schedule data on get_schedule / Accept filtered data in climate set_schedule
+      - Use schedule cache for climate get/set schedule operations
+    - Enhance CCU support
+      - Show Update entity for system update status
 - Add CCU backup support with button entity and action (see [CCU Backup](README.md#ccu-backup))
 - Add documentation for new device handling (see [Adding New Devices](README.md#adding-new-devices))
-- Refactor Client
-  - Refactoring
-    - Avoid potential memory leaks
-    - Clean up event bus implementation and remove legacy code
-    - Clear in-memory caches on stop
-    - De-couple from central unit
-    - Extract coordinators from central unit
-    - Extract device registry from central
-    - Extract scheduler from central
-    - Improve typing in protocols/interfaces
-    - Refactor event handling to event bus
-    - Use Protocol for callback with parameters
-    - Use Protocol for model
-    - Remove need for empty parentheses for bind_collector
-    - Rename writeable to writable
-    - Switch mypy to strict
-    - Use CentralConnectionState in AioJsonRpcAioHttpClient
-  - Improve climate schedule support
-    - Add base_temperature to CLIMATE_SIMPLE_WEEKDAY_DATA
-    - Add climate schedule cache
-    - Add input converter to climate scheduler setter
-    - Add more simple services and converters to week profile
-    - Add schedule support to custom data point
-    - Filter entries in validate_and_convert_weekday_to_simple
-    - Improve the test coverage of week_profile
-    - Optimize climate get/set_schedule
-    - Refactor simple schedule
-    - Return filtered climate schedule data on get_schedule / Accept filtered data in climate set_schedule
-    - Use schedule cache for climate get/set schedule operations
-  - Enhance CCU support
-    - Show Update entity for system update status
 - Add backend detection
 - Add service for ccu backup
 - Add translation for press events
@@ -53,7 +53,6 @@
   - set_schedule_profile_weekday -> set_schedule_weekday
   - set_schedule_simple_profile_weekday -> set_schedule_simple_weekday
 - Switch mypy to strict
-- Update documentation
 
 # Version 1.90.2 (2025-11-05)
 
