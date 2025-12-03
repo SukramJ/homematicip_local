@@ -352,10 +352,6 @@ def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -
                     options=[str(v) for v in OptionalSettings],
                 )
             ),
-            vol.Optional(
-                CONF_BACKUP_PATH,
-                default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_BACKUP_PATH, DEFAULT_BACKUP_PATH),
-            ): TEXT_SELECTOR,
         }
     )
     if not all_un_ignore_parameters:
@@ -1026,7 +1022,6 @@ def _update_advanced_input(data: ConfigType, advanced_input: ConfigType) -> None
         CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE
     ]
     data[CONF_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] = advanced_input[CONF_OPTIONAL_SETTINGS]
-    data[CONF_ADVANCED_CONFIG][CONF_BACKUP_PATH] = advanced_input.get(CONF_BACKUP_PATH, DEFAULT_BACKUP_PATH)
 
     if advanced_input.get(CONF_UN_IGNORES):
         data[CONF_ADVANCED_CONFIG][CONF_UN_IGNORES] = advanced_input[CONF_UN_IGNORES]

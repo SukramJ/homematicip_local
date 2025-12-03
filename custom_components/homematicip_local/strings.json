@@ -19,7 +19,6 @@
         "step": {
             "advanced": {
                 "data": {
-                    "backup_path": "Backup directory", 
                     "enable_system_notifications": "Enable system notifications", 
                     "listen_on_all_ip": "Listen on all network interfaces", 
                     "mqtt_enabled": "Enable MQTT", 
@@ -34,7 +33,6 @@
                     "use_group_channel_for_cover_state": "Use group channel for cover state"
                 }, 
                 "data_description": {
-                    "backup_path": "Subdirectory name for CCU backups within the integration storage directory (default: backup).", 
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
                     "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
                     "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge", 
