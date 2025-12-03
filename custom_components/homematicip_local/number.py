@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aiohomematic.const import DataPointCategory, SysvarType
+from aiohomematic.const import DataPointCategory, HubValueType
 from aiohomematic.model.generic import BaseDpNumber
 from aiohomematic.model.hub import SysvarDpNumber
 from homeassistant.components.number import NumberEntity, NumberMode, RestoreNumber
@@ -159,8 +159,8 @@ class AioHomematicSysvarNumber(AioHomematicGenericSysvarEntity[SysvarDpNumber], 
         if data_point.unit:
             self._attr_native_unit_of_measurement = data_point.unit
         elif data_point.data_type in (
-            SysvarType.FLOAT,
-            SysvarType.INTEGER,
+            HubValueType.FLOAT,
+            HubValueType.INTEGER,
         ):
             self._attr_native_unit_of_measurement = " "
 

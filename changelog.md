@@ -1,12 +1,15 @@
 # Version 1.91.0 (2025-12-01)
 
 ## What's Changed
-- Bump aiohomematic to 2025.12.4
+- Bump aiohomematic to 2025.12.5
   - Feature
     - Add backend detection
-    - Add translations for log messages with level >= INFO or translation exclusions
     - Add create_backup_and_download to BackupProvider/CentralUnit
+    - Add get_install_mode/set_install_mode to DeviceManagement/CentralUnit
     - Add rename_device / accept_device_in_inbox to Central/DeviceManagement
+    - Add translations for log messages with level >= INFO or translation exclusions
+- Add CCU backup support with button entity and action (see [CCU Backup](README.md#ccu-backup))
+- Add documentation for new device handling (see [Adding New Devices](README.md#adding-new-devices))
 - Refactor Client
   - Refactoring
     - Avoid potential memory leaks
