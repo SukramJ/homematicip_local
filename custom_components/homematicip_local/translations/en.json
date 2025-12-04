@@ -252,9 +252,15 @@
             }
         }, 
         "button": {
+            "install_mode_bidcos_button": {
+                "name": "Install Mode BidCos-RF"
+            },
             "create_backup": {
                 "name": "Create Backup"
-            }, 
+            },
+            "install_mode_hmip_button": {
+                "name": "Install Mode HmIP-RF"
+            },
             "press": {
                 "name": "Key Press"
             }, 
@@ -363,7 +369,10 @@
             }, 
             "battery_state": {
                 "name": "Battery State"
-            }, 
+            },
+            "install_mode_bidcos": {
+                "name": "Install Mode BidCos-RF"
+            },
             "brightness": {
                 "name": "Brightness"
             }, 
@@ -453,10 +462,13 @@
             }, 
             "highest_illumination": {
                 "name": "Highest Illumination"
-            }, 
+            },
+            "install_mode_hmip": {
+                "name": "Install Mode HmIP-RF"
+            },
             "humidity": {
                 "name": "Humidity"
-            }, 
+            },
             "iec_energy_counter": {
                 "name": "IEC Energy Counter"
             }, 
@@ -465,7 +477,10 @@
             }, 
             "illumination": {
                 "name": "Illumination"
-            }, 
+            },
+            "inbox": {
+                "name": "Inbox"
+            },
             "ip_address": {
                 "name": "IP Address"
             }, 

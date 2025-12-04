@@ -255,6 +255,12 @@
             "create_backup": {
                 "name": "Backup erstellen"
             }, 
+            "install_mode_bidcos_button": {
+                "name": "Anlernmodus BidCos-RF"
+            }, 
+            "install_mode_hmip_button": {
+                "name": "Anlernmodus HmIP-RF"
+            }, 
             "press": {
                 "name": "Tastendruck"
             }, 
@@ -465,6 +471,15 @@
             }, 
             "illumination": {
                 "name": "Beleuchtungsstärke"
+            }, 
+            "inbox": {
+                "name": "Posteingang"
+            }, 
+            "install_mode_bidcos": {
+                "name": "Anlernmodus BidCos-RF"
+            }, 
+            "install_mode_hmip": {
+                "name": "Anlernmodus HmIP-RF"
             }, 
             "ip_address": {
                 "name": "IP Adresse"

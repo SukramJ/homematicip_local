@@ -255,6 +255,12 @@
             "create_backup": {
                 "name": "Create Backup"
             }, 
+            "install_mode_bidcos_button": {
+                "name": "Install Mode BidCos-RF"
+            }, 
+            "install_mode_hmip_button": {
+                "name": "Install Mode HmIP-RF"
+            }, 
             "press": {
                 "name": "Key Press"
             }, 
@@ -465,6 +471,15 @@
             }, 
             "illumination": {
                 "name": "Illumination"
+            }, 
+            "inbox": {
+                "name": "Inbox"
+            }, 
+            "install_mode_bidcos": {
+                "name": "Install Mode BidCos-RF"
+            }, 
+            "install_mode_hmip": {
+                "name": "Install Mode HmIP-RF"
             }, 
             "ip_address": {
                 "name": "IP Address"
