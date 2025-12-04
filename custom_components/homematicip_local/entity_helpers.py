@@ -16,7 +16,6 @@ from aiohomematic.interfaces import (
     CustomDataPointProtocol,
     GenericDataPointProtocol,
     GenericHubDataPointProtocol,
-    GenericSysvarDataPointProtocol,
 )
 from aiohomematic.support import element_matches_key
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntityDescription
@@ -473,6 +472,17 @@ _SENSOR_DESCRIPTIONS_BY_PARAM: Mapping[str | tuple[str, ...], EntityDescription]
     ),
 }
 
+_BUTTON_DESCRIPTIONS_BY_VAR_NAME: Mapping[str | tuple[str, ...], EntityDescription] = {
+    "INSTALL_MODE_HMIP_BUTTON": HmButtonEntityDescription(
+        key="INSTALL_MODE_HMIP_BUTTON",
+        translation_key="install_mode_hmip_button",
+    ),
+    "INSTALL_MODE_BIDCOS_BUTTON": HmButtonEntityDescription(
+        key="INSTALL_MODE_BIDCOS_BUTTON",
+        translation_key="install_mode_bidcos_button",
+    ),
+}
+
 _SENSOR_DESCRIPTIONS_BY_VAR_NAME: Mapping[str | tuple[str, ...], EntityDescription] = {
     "ALARM_MESSAGES": HmSensorEntityDescription(
         key="ALARM_MESSAGES",
@@ -481,6 +491,18 @@ _SENSOR_DESCRIPTIONS_BY_VAR_NAME: Mapping[str | tuple[str, ...], EntityDescripti
     "SERVICE_MESSAGES": HmSensorEntityDescription(
         key="SERVICE_MESSAGES",
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "INSTALL_MODE_HMIP": HmSensorEntityDescription(
+        key="INSTALL_MODE_HMIP",
+        translation_key="install_mode_hmip",
+    ),
+    "INSTALL_MODE_BIDCOS": HmSensorEntityDescription(
+        key="INSTALL_MODE_BIDCOS",
+        translation_key="install_mode_bidcos",
+    ),
+    "INBOX": HmSensorEntityDescription(
+        key="INBOX",
+        translation_key="inbox",
     ),
     "svEnergyCounter": HmSensorEntityDescription(
         key="ENERGY_COUNTER",
@@ -971,6 +993,7 @@ _ENTITY_DESCRIPTION_BY_PARAM: Mapping[DataPointCategory, Mapping[str | tuple[str
 
 _ENTITY_DESCRIPTION_BY_VAR_NAME: Mapping[DataPointCategory, Mapping[str | tuple[str, ...], EntityDescription]] = {
     DataPointCategory.HUB_SENSOR: _SENSOR_DESCRIPTIONS_BY_VAR_NAME,
+    DataPointCategory.HUB_BUTTON: _BUTTON_DESCRIPTIONS_BY_VAR_NAME,
 }
 
 _ENTITY_DESCRIPTION_BY_POSTFIX: Mapping[DataPointCategory, Mapping[str | tuple[str, ...], EntityDescription]] = {
@@ -1114,7 +1137,7 @@ def _find_entity_description(
         if entity_desc := _get_entity_description_by_postfix(data_point=data_point):
             return entity_desc
 
-    if isinstance(data_point, GenericSysvarDataPointProtocol) and (
+    if isinstance(data_point, GenericHubDataPointProtocol) and (
         entity_desc := _get_entity_description_by_var_name(data_point=data_point)
     ):
         return entity_desc
@@ -1182,7 +1205,7 @@ def _get_entity_description_by_model(
 
 def _get_entity_description_by_var_name(
     *,
-    data_point: GenericSysvarDataPointProtocol,
+    data_point: GenericHubDataPointProtocol,
 ) -> EntityDescription | None:
     """Get entity_description by var name."""
     if platform_var_name_descriptions := _ENTITY_DESCRIPTION_BY_VAR_NAME.get(data_point.category):

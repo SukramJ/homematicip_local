@@ -111,6 +111,31 @@ IF_VIRTUAL_DEVICES_PORT: Final = 9292
 IF_VIRTUAL_DEVICES_TLS_PORT: Final = 49292
 IF_VIRTUAL_DEVICES_PATH: Final = "/groups"
 
+# Mapping of interfaces to their standard port pairs (non-TLS, TLS)
+INTERFACE_PORT_MAPPING: Final[dict[Interface, tuple[int, int]]] = {
+    Interface.HMIP_RF: (IF_HMIP_RF_PORT, IF_HMIP_RF_TLS_PORT),
+    Interface.BIDCOS_RF: (IF_BIDCOS_RF_PORT, IF_BIDCOS_RF_TLS_PORT),
+    Interface.BIDCOS_WIRED: (IF_BIDCOS_WIRED_PORT, IF_BIDCOS_WIRED_TLS_PORT),
+    Interface.VIRTUAL_DEVICES: (IF_VIRTUAL_DEVICES_PORT, IF_VIRTUAL_DEVICES_TLS_PORT),
+}
+
+
+def _update_interface_ports_for_tls(interfaces: dict[Interface, dict[str, Any]], use_tls: bool) -> None:
+    """
+    Update interface ports when TLS setting changes.
+
+    Only updates ports that are using standard (non-custom) port values.
+    Custom ports are preserved.
+    """
+    for interface, (non_tls_port, tls_port) in INTERFACE_PORT_MAPPING.items():
+        if interface not in interfaces:
+            continue
+        current_port = interfaces[interface].get(CONF_PORT)
+        # Only update if the current port is a standard port (not a custom port)
+        if current_port in (non_tls_port, tls_port):
+            interfaces[interface][CONF_PORT] = tls_port if use_tls else non_tls_port
+
+
 TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 BOOLEAN_SELECTOR = BooleanSelector()
@@ -352,10 +377,6 @@ def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -
                     options=[str(v) for v in OptionalSettings],
                 )
             ),
-            vol.Optional(
-                CONF_BACKUP_PATH,
-                default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_BACKUP_PATH, DEFAULT_BACKUP_PATH),
-            ): TEXT_SELECTOR,
         }
     )
     if not all_un_ignore_parameters:
@@ -614,6 +635,10 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             updated_data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
             updated_data[CONF_TLS] = user_input[CONF_TLS]
             updated_data[CONF_VERIFY_TLS] = user_input[CONF_VERIFY_TLS]
+
+            # Update interface ports when TLS setting changes
+            if CONF_INTERFACE in updated_data:
+                _update_interface_ports_for_tls(updated_data[CONF_INTERFACE], user_input[CONF_TLS])
 
             errors: dict[str, str] = {}
             description_placeholders: dict[str, str] = {}
@@ -1026,7 +1051,6 @@ def _update_advanced_input(data: ConfigType, advanced_input: ConfigType) -> None
         CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE
     ]
     data[CONF_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] = advanced_input[CONF_OPTIONAL_SETTINGS]
-    data[CONF_ADVANCED_CONFIG][CONF_BACKUP_PATH] = advanced_input.get(CONF_BACKUP_PATH, DEFAULT_BACKUP_PATH)
 
     if advanced_input.get(CONF_UN_IGNORES):
         data[CONF_ADVANCED_CONFIG][CONF_UN_IGNORES] = advanced_input[CONF_UN_IGNORES]

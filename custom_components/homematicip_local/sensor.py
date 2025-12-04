@@ -7,7 +7,7 @@ from decimal import Decimal
 import logging
 from typing import Any, cast
 
-from aiohomematic.const import DEFAULT_MULTIPLIER, DataPointCategory, ParameterType, SysvarType
+from aiohomematic.const import DEFAULT_MULTIPLIER, DataPointCategory, HubValueType, ParameterType
 from aiohomematic.model.generic import DpSensor
 from aiohomematic.model.hub import SysvarDpSensor
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass, SensorEntity, SensorStateClass
@@ -164,12 +164,12 @@ class AioHomematicSysvarSensor(AioHomematicGenericSysvarEntity[SysvarDpSensor], 
         """Initialize the sensor entity."""
         super().__init__(control_unit=control_unit, data_point=data_point)
         if not hasattr(self, "entity_description"):
-            if data_point.data_type == SysvarType.LIST:
+            if data_point.data_type == HubValueType.LIST:
                 self._attr_options = list(data_point.values) if data_point.values else None
                 self._attr_device_class = SensorDeviceClass.ENUM
             elif data_point.data_type in (
-                SysvarType.FLOAT,
-                SysvarType.INTEGER,
+                HubValueType.FLOAT,
+                HubValueType.INTEGER,
             ):
                 self._attr_state_class = SensorStateClass.MEASUREMENT
                 if unit := data_point.unit:

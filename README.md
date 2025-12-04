@@ -82,6 +82,8 @@ To connect locally to your Homematic Home Control Unit (HmIP-HCU1), please use t
 - [Troubleshooting Common Issues](#troubleshooting-common-issues)
 - [Technical Details](#technical-details)
 - [Updating Device Firmware](#updating-device-firmware)
+- [CCU Backup](#ccu-backup)
+- [Adding New Devices](#adding-new-devices)
 - [CUxD, CCU-Jack & MQTT Support](#cuxd-ccu-jack--mqtt-support)
 - [Setting Up MQTT Support](#setting-up-mqtt-support)
 - [CUxD & CCU-Jack Device Compatibility](#cuxd--ccu-jack-device-compatibility)
@@ -1285,6 +1287,108 @@ action: homeassistant.update_device_firmware_data
 ```
 
 **⚠️ Warning:** Frequent manual checks may impact CCU performance!
+
+## CCU Backup
+
+This integration provides functionality to create and download backups from your CCU directly from Home Assistant.
+
+### Creating Backups
+
+**Two methods are available:**
+
+| Method | How to Use | Best For |
+|--------|-----------|----------|
+| **Button Entity** | Click "Create Backup" button on your CCU device | Quick manual backups, dashboard integration |
+| **Action** | Call `homematicip_local.create_ccu_backup` | Automations, scheduled backups |
+
+### Backup Storage
+
+Backups are saved to a configurable directory within Home Assistant's storage:
+
+- **location:** `<HA_storage>/homematicip_local/backup/`
+- **File format:** `ccu_backup_<central_name>_<YYYYMMDD_HHMMSS>.sbk`
+
+### Using the Backup Action
+
+```yaml
+action: homematicip_local.create_ccu_backup
+data:
+  entry_id: YOUR_ENTRY_ID
+```
+
+**Returns:**
+```yaml
+success: true
+path: "/config/.storage/homematicip_local/backup/ccu_backup_ccu3_20251203_143022.sbk"
+filename: "ccu_backup_ccu3_20251203_143022.sbk"
+size: 12345678
+```
+
+### Automating Backups
+
+**Example: Weekly backup automation**
+
+```yaml
+automation:
+  - alias: "Weekly CCU Backup"
+    trigger:
+      - platform: time
+        at: "03:00:00"
+    condition:
+      - condition: time
+        weekday:
+          - sun
+    action:
+      - action: homematicip_local.create_ccu_backup
+        data:
+          entry_id: YOUR_ENTRY_ID
+```
+
+**Note:** Backup creation can take several minutes depending on your CCU configuration size.
+
+---
+
+## Adding New Devices
+
+When you add new devices to your CCU, they are integrated into Home Assistant via a controlled process using repair notifications.
+
+### How New Device Integration Works
+
+When a new device is paired with your CCU:
+
+1. **Pair device** with your CCU (via CCU web interface)
+2. **Integration detects** the new device
+3. **HA creates a repair notification** (Settings → System → Repairs)
+4. **Name the device** in CCU's web interface (if not already done)
+5. **Open the repair** in HA and enter the device name (optional)
+6. **Device and entities are created** in HA
+
+This approach ensures devices get proper names from the start and entity IDs are based on meaningful names.
+
+### Adding a New Device Step-by-Step
+
+| Step | Where | Action |
+|------|-------|--------|
+| 1 | **CCU** | Pair device via CCU web interface |
+| 2 | **CCU** | Assign room (optional, enables HA area assignment) |
+| 3 | **HA** | Go to Settings → System → Repairs |
+| 4 | **HA** | Click on the new device notification |
+| 5 | **HA** | Enter device name and confirm |
+
+**Naming options:**
+- **Option A:** Name the device in CCU first → leave device name empty in HA repair dialog
+- **Option B:** Leave device unnamed in CCU → enter device name in HA repair dialog
+
+**Result:** Device appears in HA with proper naming and optional area assignment.
+
+### Benefits of This Approach
+
+- **Clean names:** Devices get proper names instead of technical IDs like `VCU1234567:1`
+- **Correct entity IDs:** Entity IDs are based on meaningful device names
+- **Room/Area sync:** CCU room assignments transfer to HA areas
+- **User control:** You decide when a device is added to HA
+
+---
 
 ## CUxD, CCU-Jack & MQTT Support
 

@@ -26,10 +26,14 @@ from custom_components.homematicip_local.config_flow import (
     CONF_VIRTUAL_DEVICES_PATH,
     CONF_VIRTUAL_DEVICES_PORT,
     IF_BIDCOS_RF_PORT,
+    IF_BIDCOS_RF_TLS_PORT,
     IF_BIDCOS_WIRED_PORT,
+    IF_BIDCOS_WIRED_TLS_PORT,
     IF_HMIP_RF_PORT,
+    IF_HMIP_RF_TLS_PORT,
     IF_VIRTUAL_DEVICES_PATH,
     IF_VIRTUAL_DEVICES_PORT,
+    IF_VIRTUAL_DEVICES_TLS_PORT,
     InvalidConfig,
     _async_validate_config_and_get_system_information,
     _get_ccu_data,
@@ -37,6 +41,7 @@ from custom_components.homematicip_local.config_flow import (
     _get_serial,
     _update_advanced_input,
     _update_interface_input,
+    _update_interface_ports_for_tls,
     get_advanced_schema,
     get_interface_schema,
 )
@@ -1336,3 +1341,242 @@ class TestAdvancedConfigurationFlow:
             result3 = await hass.config_entries.options.async_configure(result["flow_id"], advanced_input)
             await hass.async_block_till_done()
         assert result3["type"] == FlowResultType.CREATE_ENTRY
+
+
+class TestUpdateInterfacePortsForTls:
+    """Test the _update_interface_ports_for_tls helper function."""
+
+    def test_empty_interfaces(self) -> None:
+        """Test with empty interfaces dict."""
+        interfaces: dict[Interface, dict[str, Any]] = {}
+
+        _update_interface_ports_for_tls(interfaces, use_tls=True)
+
+        assert interfaces == {}
+
+    def test_partial_interfaces(self) -> None:
+        """Test with only some interfaces configured."""
+        interfaces = {
+            Interface.HMIP_RF: {CONF_PORT: IF_HMIP_RF_PORT},
+        }
+
+        _update_interface_ports_for_tls(interfaces, use_tls=True)
+
+        assert interfaces[Interface.HMIP_RF][CONF_PORT] == IF_HMIP_RF_TLS_PORT
+        # Other interfaces should not exist
+        assert Interface.BIDCOS_RF not in interfaces
+
+    def test_preserve_custom_ports(self) -> None:
+        """Test that custom ports are preserved when TLS setting changes."""
+        custom_port = 12345
+        interfaces = {
+            Interface.HMIP_RF: {CONF_PORT: custom_port},  # Custom port
+            Interface.BIDCOS_RF: {CONF_PORT: IF_BIDCOS_RF_PORT},  # Standard port
+        }
+
+        _update_interface_ports_for_tls(interfaces, use_tls=True)
+
+        # Custom port should be preserved
+        assert interfaces[Interface.HMIP_RF][CONF_PORT] == custom_port
+        # Standard port should be updated
+        assert interfaces[Interface.BIDCOS_RF][CONF_PORT] == IF_BIDCOS_RF_TLS_PORT
+
+    def test_update_ports_from_tls(self) -> None:
+        """Test updating ports from TLS to non-TLS."""
+        interfaces = {
+            Interface.HMIP_RF: {CONF_PORT: IF_HMIP_RF_TLS_PORT},
+            Interface.BIDCOS_RF: {CONF_PORT: IF_BIDCOS_RF_TLS_PORT},
+            Interface.BIDCOS_WIRED: {CONF_PORT: IF_BIDCOS_WIRED_TLS_PORT},
+            Interface.VIRTUAL_DEVICES: {CONF_PORT: IF_VIRTUAL_DEVICES_TLS_PORT},
+        }
+
+        _update_interface_ports_for_tls(interfaces, use_tls=False)
+
+        assert interfaces[Interface.HMIP_RF][CONF_PORT] == IF_HMIP_RF_PORT
+        assert interfaces[Interface.BIDCOS_RF][CONF_PORT] == IF_BIDCOS_RF_PORT
+        assert interfaces[Interface.BIDCOS_WIRED][CONF_PORT] == IF_BIDCOS_WIRED_PORT
+        assert interfaces[Interface.VIRTUAL_DEVICES][CONF_PORT] == IF_VIRTUAL_DEVICES_PORT
+
+    def test_update_ports_to_tls(self) -> None:
+        """Test updating ports from non-TLS to TLS."""
+        interfaces = {
+            Interface.HMIP_RF: {CONF_PORT: IF_HMIP_RF_PORT},
+            Interface.BIDCOS_RF: {CONF_PORT: IF_BIDCOS_RF_PORT},
+            Interface.BIDCOS_WIRED: {CONF_PORT: IF_BIDCOS_WIRED_PORT},
+            Interface.VIRTUAL_DEVICES: {CONF_PORT: IF_VIRTUAL_DEVICES_PORT},
+        }
+
+        _update_interface_ports_for_tls(interfaces, use_tls=True)
+
+        assert interfaces[Interface.HMIP_RF][CONF_PORT] == IF_HMIP_RF_TLS_PORT
+        assert interfaces[Interface.BIDCOS_RF][CONF_PORT] == IF_BIDCOS_RF_TLS_PORT
+        assert interfaces[Interface.BIDCOS_WIRED][CONF_PORT] == IF_BIDCOS_WIRED_TLS_PORT
+        assert interfaces[Interface.VIRTUAL_DEVICES][CONF_PORT] == IF_VIRTUAL_DEVICES_TLS_PORT
+
+
+class TestReconfigureFlow:
+    """Test the reconfigure flow."""
+
+    async def test_reconfigure_preserves_custom_ports(self, hass: HomeAssistant) -> None:
+        """Test that reconfigure preserves custom ports when TLS changes."""
+        custom_port = 12345
+        entry = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            data={
+                "instance_name": const.INSTANCE_NAME,
+                CONF_HOST: const.HOST,
+                CONF_USERNAME: const.USERNAME,
+                CONF_PASSWORD: const.PASSWORD,
+                CONF_TLS: False,
+                CONF_VERIFY_TLS: False,
+                CONF_INTERFACE: {
+                    Interface.HMIP_RF: {CONF_PORT: custom_port},  # Custom port
+                    Interface.BIDCOS_RF: {CONF_PORT: IF_BIDCOS_RF_PORT},  # Standard port
+                },
+                CONST_ADVANCED_CONFIG: {},
+            },
+        )
+        entry.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            HMIP_DOMAIN,
+            context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+        )
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            return_value=SystemInformation(
+                available_interfaces=[],
+                auth_enabled=False,
+                https_redirect_enabled=False,
+                serial=const.SERIAL,
+            ),
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_HOST: const.HOST,
+                    CONF_USERNAME: const.USERNAME,
+                    CONF_PASSWORD: const.PASSWORD,
+                    CONF_TLS: True,  # Enable TLS
+                    CONF_VERIFY_TLS: False,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result2["type"] == FlowResultType.ABORT
+        assert result2["reason"] == "reconfigure_successful"
+
+        # Custom port should be preserved, standard port should be updated
+        assert entry.data[CONF_INTERFACE][Interface.HMIP_RF][CONF_PORT] == custom_port
+        assert entry.data[CONF_INTERFACE][Interface.BIDCOS_RF][CONF_PORT] == IF_BIDCOS_RF_TLS_PORT
+
+    async def test_reconfigure_updates_ports_when_disabling_tls(self, hass: HomeAssistant) -> None:
+        """Test that reconfigure updates ports when disabling TLS."""
+        entry = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            data={
+                "instance_name": const.INSTANCE_NAME,
+                CONF_HOST: const.HOST,
+                CONF_USERNAME: const.USERNAME,
+                CONF_PASSWORD: const.PASSWORD,
+                CONF_TLS: True,
+                CONF_VERIFY_TLS: True,
+                CONF_INTERFACE: {
+                    Interface.HMIP_RF: {CONF_PORT: IF_HMIP_RF_TLS_PORT},
+                    Interface.BIDCOS_RF: {CONF_PORT: IF_BIDCOS_RF_TLS_PORT},
+                },
+                CONST_ADVANCED_CONFIG: {},
+            },
+        )
+        entry.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            HMIP_DOMAIN,
+            context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            return_value=SystemInformation(
+                available_interfaces=[],
+                auth_enabled=False,
+                https_redirect_enabled=False,
+                serial=const.SERIAL,
+            ),
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_HOST: const.HOST,
+                    CONF_USERNAME: const.USERNAME,
+                    CONF_PASSWORD: const.PASSWORD,
+                    CONF_TLS: False,  # Disable TLS
+                    CONF_VERIFY_TLS: False,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result2["type"] == FlowResultType.ABORT
+        assert result2["reason"] == "reconfigure_successful"
+
+        # Verify ports were updated to non-TLS ports
+        assert entry.data[CONF_INTERFACE][Interface.HMIP_RF][CONF_PORT] == IF_HMIP_RF_PORT
+        assert entry.data[CONF_INTERFACE][Interface.BIDCOS_RF][CONF_PORT] == IF_BIDCOS_RF_PORT
+
+    async def test_reconfigure_updates_ports_when_enabling_tls(self, hass: HomeAssistant) -> None:
+        """Test that reconfigure updates ports when enabling TLS."""
+        entry = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            data={
+                "instance_name": const.INSTANCE_NAME,
+                CONF_HOST: const.HOST,
+                CONF_USERNAME: const.USERNAME,
+                CONF_PASSWORD: const.PASSWORD,
+                CONF_TLS: False,
+                CONF_VERIFY_TLS: False,
+                CONF_INTERFACE: {
+                    Interface.HMIP_RF: {CONF_PORT: IF_HMIP_RF_PORT},
+                    Interface.BIDCOS_RF: {CONF_PORT: IF_BIDCOS_RF_PORT},
+                },
+                CONST_ADVANCED_CONFIG: {},
+            },
+        )
+        entry.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            HMIP_DOMAIN,
+            context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            return_value=SystemInformation(
+                available_interfaces=[],
+                auth_enabled=False,
+                https_redirect_enabled=False,
+                serial=const.SERIAL,
+            ),
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_HOST: const.HOST,
+                    CONF_USERNAME: const.USERNAME,
+                    CONF_PASSWORD: const.PASSWORD,
+                    CONF_TLS: True,  # Enable TLS
+                    CONF_VERIFY_TLS: False,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result2["type"] == FlowResultType.ABORT
+        assert result2["reason"] == "reconfigure_successful"
+
+        # Verify ports were updated to TLS ports
+        assert entry.data[CONF_INTERFACE][Interface.HMIP_RF][CONF_PORT] == IF_HMIP_RF_TLS_PORT
+        assert entry.data[CONF_INTERFACE][Interface.BIDCOS_RF][CONF_PORT] == IF_BIDCOS_RF_TLS_PORT

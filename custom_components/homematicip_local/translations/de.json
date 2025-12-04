@@ -19,7 +19,6 @@
         "step": {
             "advanced": {
                 "data": {
-                    "backup_path": "Backup-Verzeichnis", 
                     "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
                     "listen_on_all_ip": "Auf allen Netzwerkschnittstellen lauschen", 
                     "mqtt_enabled": "MQTT aktivieren", 
@@ -34,7 +33,6 @@
                     "use_group_channel_for_cover_state": "Gruppenkanal für Cover-Status verwenden"
                 }, 
                 "data_description": {
-                    "backup_path": "Unterverzeichnisname für CCU-Backups im Speicherverzeichnis der Integration (Standard: backup).", 
                     "listen_on_all_ip": "Aktivieren, wenn Home Assistant in Docker oder einer VM läuft. Erforderlich wenn die IP von HA sich von der Host-IP unterscheidet.", 
                     "mqtt_enabled": "MQTT aktivieren um Callbacks für CCU-Jack und CUxD zu nutzen", 
                     "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix", 
@@ -257,6 +255,12 @@
             "create_backup": {
                 "name": "Backup erstellen"
             }, 
+            "install_mode_bidcos_button": {
+                "name": "Anlernmodus BidCos-RF aktivieren"
+            }, 
+            "install_mode_hmip_button": {
+                "name": "Anlernmodus HmIP-RF aktivieren"
+            }, 
             "press": {
                 "name": "Tastendruck"
             }, 
@@ -467,6 +471,15 @@
             }, 
             "illumination": {
                 "name": "Beleuchtungsstärke"
+            }, 
+            "inbox": {
+                "name": "Posteingang"
+            }, 
+            "install_mode_bidcos": {
+                "name": "Anlernmodus BidCos-RF Dauer"
+            }, 
+            "install_mode_hmip": {
+                "name": "Anlernmodus HmIP-RF Dauer"
             }, 
             "ip_address": {
                 "name": "IP Adresse"
