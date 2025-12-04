@@ -256,10 +256,10 @@
                 "name": "Create Backup"
             }, 
             "install_mode_bidcos_button": {
-                "name": "Install Mode BidCos-RF"
+                "name": "Activate install Mode BidCos-RF"
             }, 
             "install_mode_hmip_button": {
-                "name": "Install Mode HmIP-RF"
+                "name": "Activate install Mode HmIP-RF"
             }, 
             "press": {
                 "name": "Key Press"
@@ -476,10 +476,10 @@
                 "name": "Inbox"
             }, 
             "install_mode_bidcos": {
-                "name": "Install Mode BidCos-RF"
+                "name": "Install Mode BidCos-RF duration"
             }, 
             "install_mode_hmip": {
-                "name": "Install Mode HmIP-RF"
+                "name": "Install Mode HmIP-RF duration"
             }, 
             "ip_address": {
                 "name": "IP Address"
