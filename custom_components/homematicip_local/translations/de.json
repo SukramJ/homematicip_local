@@ -424,6 +424,9 @@
             "energy_counter": {
                 "name": "Energiezähler"
             }, 
+            "energy_counter_feed_in": {
+                "name": "Energiezähler Einspeisung"
+            }, 
             "energy_counter_feed_in_total": {
                 "name": "Energiezähler Einspeisung Gesamt"
             }, 

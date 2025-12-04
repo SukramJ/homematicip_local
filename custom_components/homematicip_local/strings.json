@@ -424,6 +424,9 @@
             "energy_counter": {
                 "name": "Energy Counter"
             }, 
+            "energy_counter_feed_in": {
+                "name": "Energy Counter feed in"
+            }, 
             "energy_counter_feed_in_total": {
                 "name": "Energy Counter feed in Total"
             }, 

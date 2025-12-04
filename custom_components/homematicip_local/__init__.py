@@ -5,6 +5,7 @@ from __future__ import annotations
 import contextlib
 from dataclasses import dataclass
 import logging
+import time
 from typing import TypeAlias
 
 from awesomeversion import AwesomeVersion
@@ -29,6 +30,7 @@ from .const import (
     CONF_INSTANCE_NAME,
     CONF_SYS_SCAN_INTERVAL,
     CONF_UN_IGNORES,
+    DEFAULT_AUTO_CONFIRM_NEW_DEVICES_TIMEOUT,
     DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS,
     DOMAIN,
     HMIP_LOCAL_MIN_HA_VERSION,
@@ -84,10 +86,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
         default_callback_port_xml_rpc = find_free_port()
         hass.data[HM_KEY].default_callback_port_xml_rpc = default_callback_port_xml_rpc
 
+    # Check if this is an initial setup (no devices exist for this entry)
+    # If so, enable auto-confirm for new devices during a time window
+    device_registry = dr.async_get(hass)
+    existing_devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    auto_confirm_until: float | None = None
+    if len(existing_devices) == 0:
+        auto_confirm_until = time.time() + DEFAULT_AUTO_CONFIRM_NEW_DEVICES_TIMEOUT
+        _LOGGER.debug(
+            "Initial setup detected for %s. Auto-confirming new devices for %s seconds",
+            entry.data.get(CONF_INSTANCE_NAME),
+            DEFAULT_AUTO_CONFIRM_NEW_DEVICES_TIMEOUT,
+        )
+
     control = ControlConfig(
         hass=hass,
         entry_id=entry.entry_id,
         data=entry.data,
+        auto_confirm_until=auto_confirm_until,
         default_callback_port_xml_rpc=default_callback_port_xml_rpc,
     ).create_control_unit()
     entry.runtime_data = control
