@@ -22,7 +22,8 @@
       "Bash(ruff check:*)",
       "Bash(python -c:*)",
       "Bash(python script/check_translations.py:*)",
-      "Bash(python -m ruff check:*)"
+      "Bash(python -m ruff check:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

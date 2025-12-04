@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 from functools import partial
 import logging
+import time
 from types import UnionType
 from typing import Any, Final, TypeVar, cast
 
@@ -198,6 +199,7 @@ class ControlUnit(BaseControlUnit):
         """Init the control unit."""
         super().__init__(control_config=control_config)
         self._mqtt_consumer: MQTTConsumer | None = None
+        self._auto_confirm_until: Final = control_config.auto_confirm_until
 
     def ensure_via_device_exists(self, identifier: str, suggested_area: str | None, via_device: str) -> None:
         """Create a via device for a device."""
@@ -587,37 +589,49 @@ class ControlUnit(BaseControlUnit):
                         )
             return
         if system_event == BackendSystemEvent.DEVICES_DELAYED and new_addresses:
-            for address in new_addresses:
-                issue_id = f"devices_delayed|{interface_id}|{address}"
+            # Check if we are in auto-confirm window (initial setup)
+            auto_confirm = self._auto_confirm_until is not None and time.time() < self._auto_confirm_until
 
-                if not interface_id or not address:
-                    continue
+            if not interface_id:
+                return
 
-                async def _fix_callback(*, device_name: str, _interface_id: str, _address: str) -> None:
-                    """Rename, accept inbox device, and trigger manual add of the delayed device."""
-                    if not _interface_id:
-                        return
-
-                    # Trigger manual add of the device
-                    await self._central.add_new_device_manually(
-                        interface_id=_interface_id, address=_address, device_name=device_name
-                    )
-
-                REPAIR_CALLBACKS[issue_id] = partial(_fix_callback, _interface_id=interface_id, _address=address)
-
-                async_create_issue(
-                    hass=self._hass,
-                    domain=DOMAIN,
-                    issue_id=issue_id,
-                    is_fixable=True,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="devices_delayed",
-                    translation_placeholders={
-                        CONF_INSTANCE_NAME: self._instance_name,
-                        CONF_INTERFACE_ID: interface_id,
-                        CONF_ADDRESS: address,
-                    },
+            # During initial setup window, auto-confirm new devices
+            if auto_confirm:
+                await self._central.add_new_devices_manually(
+                    interface_id=interface_id,
+                    address_names=dict.fromkeys(new_addresses),
                 )
+
+            else:
+                for address in new_addresses:
+                    # Normal behavior: create repair issue
+                    issue_id = f"devices_delayed|{interface_id}|{address}"
+
+                    async def _fix_callback(*, device_name: str, _interface_id: str, _address: str) -> None:
+                        """Rename, accept inbox device, and trigger manual add of the delayed device."""
+                        if not _interface_id:
+                            return
+
+                        # Trigger manual add of the device
+                        await self._central.add_new_devices_manually(
+                            interface_id=_interface_id, address_names={_address: device_name}
+                        )
+
+                    REPAIR_CALLBACKS[issue_id] = partial(_fix_callback, _interface_id=interface_id, _address=address)
+
+                    async_create_issue(
+                        hass=self._hass,
+                        domain=DOMAIN,
+                        issue_id=issue_id,
+                        is_fixable=True,
+                        severity=IssueSeverity.WARNING,
+                        translation_key="devices_delayed",
+                        translation_placeholders={
+                            CONF_INSTANCE_NAME: self._instance_name,
+                            CONF_INTERFACE_ID: interface_id,
+                            CONF_ADDRESS: address,
+                        },
+                    )
             return
         return
 
@@ -640,6 +654,7 @@ class ControlConfig:
         hass: HomeAssistant,
         entry_id: str,
         data: Mapping[str, Any],
+        auto_confirm_until: float | None = None,
         default_callback_port_xml_rpc: int = PORT_ANY,
         enable_device_firmware_check: bool = DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK,
         start_direct: bool = False,
@@ -648,6 +663,7 @@ class ControlConfig:
         self.hass: Final = hass
         self.entry_id: Final = entry_id
         self._data: Final = data
+        self.auto_confirm_until: Final = auto_confirm_until
         self._default_callback_port_xml_rpc: Final = default_callback_port_xml_rpc
         self._start_direct: Final = start_direct
         self._enable_device_firmware_check: Final = enable_device_firmware_check

@@ -1,7 +1,7 @@
 # Version 1.91.0 (2025-12-01)
 
 ## What's Changed
-- Bump aiohomematic to 2025.12.5
+- Bump aiohomematic to 2025.12.6
   - Feature
     - Add backend detection
     - Add create_backup_and_download to BackupProvider/CentralUnit

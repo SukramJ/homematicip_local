@@ -215,7 +215,7 @@ _SENSOR_DESCRIPTIONS_BY_PARAM: Mapping[str | tuple[str, ...], EntityDescription]
         icon="mdi:radio-tower",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "ENERGY_COUNTER": HmSensorEntityDescription(
+    ("ENERGY_COUNTER", "ENERGY_COUNTER_FEED_IN"): HmSensorEntityDescription(
         key="ENERGY_COUNTER",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
