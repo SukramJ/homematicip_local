@@ -11,11 +11,16 @@ from typing import TypeAlias
 from awesomeversion import AwesomeVersion
 
 from aiohomematic import __version__ as HAHM_VERSION
-from aiohomematic.const import DEFAULT_ENABLE_SYSVAR_SCAN, DEFAULT_SYS_SCAN_INTERVAL, DEFAULT_UN_IGNORES
+from aiohomematic.const import (
+    DEFAULT_ENABLE_SYSVAR_SCAN,
+    DEFAULT_SYS_SCAN_INTERVAL,
+    DEFAULT_UN_IGNORES,
+    is_interface_default_port,
+)
 from aiohomematic.store import cleanup_files
 from aiohomematic.support import find_free_port
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, __version__ as HA_VERSION_STR
+from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, __version__ as HA_VERSION_STR
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import async_migrate_entries
@@ -24,10 +29,12 @@ from homeassistant.util.hass_dict import HassKey
 from .const import (
     CONF_ADVANCED_CONFIG,
     CONF_CALLBACK_PORT_XML_RPC,
+    CONF_CUSTOM_PORTS,
     CONF_ENABLE_PROGRAM_SCAN,
     CONF_ENABLE_SYSTEM_NOTIFICATIONS,
     CONF_ENABLE_SYSVAR_SCAN,
     CONF_INSTANCE_NAME,
+    CONF_INTERFACE,
     CONF_SYS_SCAN_INTERVAL,
     CONF_UN_IGNORES,
     DEFAULT_AUTO_CONFIRM_NEW_DEVICES_TIMEOUT,
@@ -249,5 +256,22 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
             with contextlib.suppress(Exception):
                 del data[CONF_ADVANCED_CONFIG]["delay_new_device_creation"]
         hass.config_entries.async_update_entry(entry, version=11, data=data)
+    if entry.version == 11:
+        data = dict(entry.data)
+        # Extract custom (non-default) ports to CONF_CUSTOM_PORTS
+        custom_ports: dict[str, int] = {}
+        if interfaces := data.get(CONF_INTERFACE):
+            for interface_key, interface_config in interfaces.items():
+                if isinstance(interface_config, dict) and CONF_PORT in interface_config:
+                    port = interface_config[CONF_PORT]
+                    # Get interface name - could be enum or string key
+                    interface_name = interface_key.value if hasattr(interface_key, "value") else str(interface_key)
+                    # Check if port is non-default (custom)
+                    if not is_interface_default_port(interface_name, port):
+                        custom_ports[interface_name] = port
+        # Only add CONF_CUSTOM_PORTS if there are custom ports
+        if custom_ports:
+            data[CONF_CUSTOM_PORTS] = custom_ports
+        hass.config_entries.async_update_entry(entry, version=12, data=data)
     _LOGGER.info("Migration to version %s successful", entry.version)
     return True

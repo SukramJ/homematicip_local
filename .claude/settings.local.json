@@ -23,7 +23,9 @@
       "Bash(python -c:*)",
       "Bash(python script/check_translations.py:*)",
       "Bash(python -m ruff check:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(pre-commit run:*)",
+      "Bash(timeout 120 python -m pytest:*)"
     ],
     "deny": [],
     "ask": []
