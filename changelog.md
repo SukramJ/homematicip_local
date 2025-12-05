@@ -1,7 +1,7 @@
-# Version 1.91.0 (2025-12-01)
+# Version 1.91.0 (2025-12-05)
 
 ## What's Changed
-- Bump aiohomematic to 2025.12.6
+- Bump aiohomematic to 2025.12.7
   - Feature
     - Add backend detection
     - Add create_backup_and_download to BackupProvider/CentralUnit
@@ -47,7 +47,7 @@
 - Add scheduler attributes to climate entities with schedule support
 - Fix naming of untranslated entities
 - Follow backend changes
-- Improve config flow
+- Refactor flows
 - Rename actions:
   - get_schedule_profile_weekday -> get_schedule_weekday
   - set_schedule_profile_weekday -> set_schedule_weekday

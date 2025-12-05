@@ -210,7 +210,7 @@ The integration uses a multi-step configuration flow that guides you through all
 
 ---
 
-## Step 1: CCU Connection Settings
+## Step 1: CCU Connection (Step 1 of 2)
 
 These are the basic settings required to connect Home Assistant to your Homematic hub.
 
@@ -223,31 +223,7 @@ These are the basic settings required to connect Home Assistant to your Homemati
 | **Username** | Admin username on your CCU | `Admin` | **Case sensitive!** User must have administrator privileges. |
 | **Password** | Password for the admin user | `MySecurePass123` | **Case sensitive!** Only use allowed characters: `A-Z`, `a-z`, `0-9`, and `.!$():;#-` |
 
-### Security & Network Settings
-
-| Setting | Default | When to Use |
-|---------|---------|-------------|
-| **Use TLS** | `false` | Enable if your CCU uses HTTPS. Changes JSON-RPC port from 80 to 443. **Note:** State updates from CCU to HA are always unencrypted. |
-| **Verify TLS** | `false` | Enable to verify TLS certificates. Only enable if your CCU has a valid SSL certificate. |
-
-### Advanced Connection Settings (Optional)
-
-These settings are only needed in special network scenarios:
-
-| Setting | Purpose | When to Use | How to Reset |
-|---------|---------|-------------|--------------|
-| **Callback Host** | IP/hostname that CCU uses to reach HA | Required if HA runs in Docker with custom networking, or if HA's auto-detected IP is unreachable from the CCU | Set to one blank space character |
-| **Callback Port (XML-RPC)** | Port that CCU uses to send state updates | Required in Docker setups where port forwarding is needed | Set to `0` |
-| **JSON-RPC Port** | Port for fetching device names and room info | Only if you changed the CCU's JSON-RPC port from default (80/443) | Set to `0` |
-
-#### Docker Users: Network Setup
-
-If running Home Assistant in Docker:
-- **Recommended:** Use `network_mode: host` in your Docker configuration
-- **Alternative:** If you can't use host networking:
-  1. Set **Callback Host** to your Docker host's IP address
-  2. Set **Callback Port** to a port you forward to the HA container
-  3. Configure port forwarding on your Docker host
+> **Note:** Network settings like Callback Host and Port have been moved to **Advanced Options** (Step 3).
 
 ---
 
@@ -268,33 +244,20 @@ This detection runs automatically and shows a progress indicator. The detected i
 
 ---
 
-## Step 2: Interface Selection
+## Step 2: TLS & Interface Selection (Step 2 of 2)
 
-Select which device types you want to integrate. The available interfaces are pre-selected based on the automatic backend detection. Enable only the interfaces your CCU actually uses.
+Configure TLS and select which device types you want to integrate. The available interfaces are pre-selected based on the automatic backend detection.
 
-### Common Interface Configurations
+### TLS Settings
 
-#### HomematicIP Only (Most Modern Setups)
-```
-✓ HomematicIP (HmIP-RF)     Port: 2010 (or 42010 with TLS)
-✗ Homematic (BidCos-RF)
-✗ Homematic Wired
-✗ Heating Groups
-✗ CUxD
-✗ CCU-Jack
-```
+| Setting | Default | When to Use |
+|---------|---------|-------------|
+| **Use TLS** | `false` | Enable if your CCU uses HTTPS. Ports are automatically adjusted (e.g., 2010 → 42010). |
+| **Verify TLS** | `false` | Enable to verify TLS certificates. Only enable if your CCU has a valid SSL certificate. |
 
-#### Mixed Homematic & HomematicIP
-```
-✓ HomematicIP (HmIP-RF)     Port: 2010 (or 42010 with TLS)
-✓ Homematic (BidCos-RF)     Port: 2001 (or 42001 with TLS)
-✗ Homematic Wired
-✓ Heating Groups            Port: 9292, Path: /groups
-✗ CUxD
-✗ CCU-Jack
-```
+### Interface Selection
 
-### Detailed Interface Options
+Enable only the interfaces your CCU actually uses:
 
 | Interface | Enable If You Have... | Default Port | TLS Port |
 |-----------|----------------------|--------------|----------|
@@ -305,17 +268,49 @@ Select which device types you want to integrate. The available interfaces are pr
 | **CUxD** | CUxD add-on installed | - | - |
 | **CCU-Jack** | CCU-Jack software installed | - | - |
 
+### Custom Port Configuration (Optional)
+
+By default, ports are automatically set based on your TLS setting. Enable **Configure custom ports** only if:
+- Your CCU uses non-standard ports
+- You need to override the automatic port selection
+- Connection fails with default ports (the port configuration page will appear automatically)
+
+**Common Interface Configurations:**
+
+| Setup Type | Interfaces to Enable |
+|------------|---------------------|
+| **HomematicIP Only** | ✓ HomematicIP only |
+| **Mixed Setup** | ✓ HomematicIP + ✓ Homematic (BidCos-RF) |
+| **With Heating Groups** | Add ✓ Heating Groups to above |
+| **With CUxD/CCU-Jack** | Add respective interface + enable MQTT in Advanced Options |
+
 **Important Notes:**
 - Only enable interfaces you actually use - disabled interfaces save resources
 - CUxD and CCU-Jack require additional setup (see [CUxD, CCU-Jack and MQTT support](#cuxd-ccu-jack-and-mqtt-support))
-- Port numbers are automatically adjusted when TLS is enabled
-- Custom ports can be specified if you changed defaults in your CCU
 
 ---
 
 ## Step 3: Advanced Options (Optional)
 
-After configuring interfaces, you can choose to configure advanced options or finish setup immediately. Most users can skip this step.
+After configuring interfaces, you can choose to configure advanced options or finish setup immediately. Most users can skip this step and use the defaults.
+
+### Callback Settings (Network)
+
+These settings are only needed in special network scenarios (e.g., Docker setups):
+
+| Setting | Purpose | When to Use | How to Reset |
+|---------|---------|-------------|--------------|
+| **Callback Host** | IP/hostname that CCU uses to reach HA | Required if HA runs in Docker with custom networking, or if HA's auto-detected IP is unreachable from the CCU | Leave empty or set to one blank space |
+| **Callback Port (XML-RPC)** | Port that CCU uses to send state updates | Required in Docker setups where port forwarding is needed | Leave empty or set to `0` |
+
+#### Docker Users: Network Setup
+
+If running Home Assistant in Docker:
+- **Recommended:** Use `network_mode: host` in your Docker configuration
+- **Alternative:** If you can't use host networking:
+  1. Set **Callback Host** to your Docker host's IP address
+  2. Set **Callback Port** to a port you forward to the HA container
+  3. Configure port forwarding on your Docker host
 
 ### System Variables & Programs
 
@@ -381,15 +376,14 @@ Markers are keywords in the description field of system variables/programs in th
 - Host: `192.168.1.50`
 - Username: `Admin`
 - Password: Your CCU admin password
+
+**Step 2 - TLS & Interfaces:**
 - Use TLS: `false` (unless your CCU requires HTTPS)
-- Verify TLS: `false`
-
-**Step 2 - Interfaces:**
 - Enable: HomematicIP (HmIP-RF) only
-- Use default port: 2010
+- Configure custom ports: `false` (use automatic ports)
 
-**Step 3 - Advanced:**
-- Click "Complete Setup" to skip advanced options
+**Finish:**
+- Click "Finish setup" to complete with default settings
 
 **Result:** All HomematicIP devices will be discovered and added to Home Assistant.
 
@@ -401,17 +395,17 @@ Markers are keywords in the description field of system variables/programs in th
 - Instance Name: `home_ccu` (unique if you have multiple CCUs)
 - Host: Your CCU IP/hostname
 - Credentials: Admin username and password
-- TLS: Enable if your CCU uses HTTPS
 
-**Step 2 - Interfaces:**
+**Step 2 - TLS & Interfaces:**
+- Use TLS: Enable if your CCU uses HTTPS
 - Enable: HomematicIP, Homematic (BidCos-RF), and Heating Groups
-- Use default ports (automatically adjusted for TLS)
+- Configure custom ports: `false` (ports are automatically adjusted for TLS)
 
-**Step 3 - Advanced Options:**
+**Choose "Configure advanced options" then:**
 - System Variable Markers: Select `HAHM` for writable variables
 - Scan Interval: `30` seconds
 - Enable MQTT: `true` (if using CUxD or CCU-Jack)
-- All other settings: Keep defaults
+- Callback settings: Only configure if using Docker with custom networking
 
 ---
 
@@ -422,17 +416,32 @@ You can update your CCU connection settings without removing and re-adding the i
 1. Go to **Settings** → **Devices & Services**
 2. Find **Homematic(IP) Local for OpenCCU**
 3. Click the **three-dot menu** → **Reconfigure**
-4. Update your settings (host, username, password, TLS, etc.)
-5. The integration will validate and reload with new settings
+4. **Step 1:** Update connection settings (host, username, password)
+5. **Step 2:** Update TLS and interface settings
+6. Optionally configure custom ports if needed
+7. The integration will validate and reload with new settings
 
 **What you can reconfigure:**
 - Host/IP address (if CCU moved to different IP)
 - Username and password
 - TLS settings
-- Callback settings
-- JSON-RPC port
+- Interface selection
+- Custom ports
 
-**Note:** To change interfaces or advanced options, use the **Configure** option instead of Reconfigure.
+**Note:** To change advanced options (callbacks, system variables, MQTT, etc.), use the **Configure** option instead of Reconfigure.
+
+---
+
+## Options Flow (Configure)
+
+Use **Configure** (not Reconfigure) to access all settings via a menu:
+
+| Menu Option | Settings |
+|-------------|----------|
+| **Connection** | Host, username, password |
+| **TLS & Interfaces** | TLS settings, interface selection, custom ports |
+| **Programs & Sysvars** | System variable/program scanning and markers |
+| **Advanced Settings** | Callbacks, MQTT, device behavior, unignore parameters |
 
 ## System Variables & Programs
 
