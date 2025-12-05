@@ -51,6 +51,10 @@ CONF_UN_IGNORES: Final = "un_ignore"
 CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: Final = "use_group_channel_for_cover_state"
 CONF_VERIFY_TLS: Final = "verify_tls"
 
+# New constants for simplified config flow (v12)
+CONF_CUSTOM_PORTS: Final = "custom_ports"  # Dict of custom interface ports
+CONF_CUSTOM_PORT_CONFIG: Final = "custom_port_config"  # Checkbox for custom port configuration
+
 EVENT_DEVICE_ID: Final = "device_id"
 EVENT_ERROR: Final = "error"
 EVENT_ERROR_VALUE: Final = "error_value"

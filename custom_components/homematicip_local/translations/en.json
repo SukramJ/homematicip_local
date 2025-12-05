@@ -19,6 +19,8 @@
         "step": {
             "advanced": {
                 "data": {
+                    "callback_host": "Callback host (optional)", 
+                    "callback_port_xml_rpc": "Callback port (optional)", 
                     "enable_system_notifications": "Enable system notifications", 
                     "listen_on_all_ip": "Listen on all network interfaces", 
                     "mqtt_enabled": "Enable MQTT", 
@@ -33,6 +35,8 @@
                     "use_group_channel_for_cover_state": "Use group channel for cover state"
                 }, 
                 "data_description": {
+                    "callback_host": "IP address for CCU callbacks. Leave empty for auto-detection.", 
+                    "callback_port_xml_rpc": "Port for XML-RPC callbacks. Leave empty for automatic assignment.", 
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
                     "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
                     "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge", 
@@ -46,24 +50,15 @@
             }, 
             "central": {
                 "data": {
-                    "callback_host": "Callback hostname/IP address", 
-                    "callback_port_xml_rpc": "Callback XML-RPC port", 
                     "host": "CCU hostname/IP address", 
                     "instance_name": "Integration instance name", 
-                    "json_port": "JSON-RPC port", 
                     "password": "CCU password", 
-                    "tls": "Use TLS (encrypted connection)", 
-                    "username": "CCU username", 
-                    "verify_tls": "Verify TLS certificate"
+                    "username": "CCU username"
                 }, 
                 "data_description": {
-                    "callback_host": "To reset the callback host it must be set to one blank character", 
-                    "callback_port_xml_rpc": "To reset the callback port it must be set to 0", 
                     "instance_name": "Name of the HA instance.\n If you want to connect to the same CCU instance from multiple HA installations this instance_name must be unique on every HA instance", 
-                    "json_port": "To reset the JSON-RPC port it must be set to 0", 
                     "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
-                    "username": "Case sensitive. User must have administrator role", 
-                    "verify_tls": "Verify the CCU's TLS certificate. Disable for self-signed certificates."
+                    "username": "Case sensitive. User must have administrator role"
                 }, 
                 "description": "Step {step_current} of {step_total}: Configure CCU connection", 
                 "title": "CCU connection"
@@ -83,35 +78,93 @@
             "interface": {
                 "data": {
                     "bidcos_rf_enabled": "Enable Homematic (Bidcos-RF)", 
-                    "bidcos_rf_port": "HM-RF port", 
                     "bidcos_wired_enabled": "Enable BidCos-Wired (HM-Wired)", 
-                    "bidcos_wired_port": "BidCos-Wired port", 
                     "ccu_jack_enabled": "Enable CCU-Jack", 
+                    "custom_port_config": "Configure custom ports", 
                     "cuxd_enabled": "Enable CUxD", 
                     "hmip_rf_enabled": "Enable Homematic IP", 
+                    "tls": "Use TLS (encrypted connection)", 
+                    "verify_tls": "Verify TLS certificate", 
+                    "virtual_devices_enabled": "Enable groups (heating groups)"
+                }, 
+                "data_description": {
+                    "custom_port_config": "Enable to configure non-standard ports on the next page. Otherwise, ports are automatically set based on TLS setting.", 
+                    "tls": "Enable TLS for encrypted communication with your CCU.", 
+                    "verify_tls": "Verify the CCU's TLS certificate. Disable for self-signed certificates."
+                }, 
+                "description": "Step {step_current} of {step_total}: Configure TLS and interfaces. Detected: {detected_interfaces}", 
+                "title": "TLS and interface selection"
+            }, 
+            "port_config": {
+                "data": {
+                    "bidcos_rf_port": "HM-RF port", 
+                    "bidcos_wired_port": "BidCos-Wired port", 
                     "hmip_rf_port": "HmIP-RF port", 
-                    "virtual_devices_enabled": "Enable groups (heating groups)", 
+                    "json_port": "JSON-RPC port", 
                     "virtual_devices_path": "Groups path", 
                     "virtual_devices_port": "Groups port"
                 }, 
-                "description": "Step {step_current} of {step_total}: Configure interfaces. Detected: {detected_interfaces}", 
-                "title": "Interface selection"
+                "data_description": {
+                    "bidcos_rf_port": "Standard ports: 2001 (non-TLS), 42001 (TLS)", 
+                    "bidcos_wired_port": "Standard ports: 2000 (non-TLS), 42000 (TLS)", 
+                    "hmip_rf_port": "Standard ports: 2010 (non-TLS), 42010 (TLS)", 
+                    "json_port": "Standard ports: 80 (non-TLS), 443 (TLS). Set to 0 to use defaults.", 
+                    "virtual_devices_port": "Standard ports: 9292 (non-TLS), 49292 (TLS)"
+                }, 
+                "description": "Configure interface ports (TLS is {tls_status})", 
+                "title": "Port configuration"
             }, 
             "reconfigure": {
                 "data": {
                     "host": "CCU hostname/IP address", 
                     "password": "CCU password", 
-                    "tls": "Use TLS (encrypted connection)", 
-                    "username": "CCU username", 
-                    "verify_tls": "Verify TLS certificate"
+                    "username": "CCU username"
                 }, 
                 "data_description": {
                     "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
-                    "username": "Case sensitive. User must have administrator role", 
+                    "username": "Case sensitive. User must have administrator role"
+                }, 
+                "description": "Step {step_current} of {step_total}: Update connection settings", 
+                "title": "Reconfigure connection"
+            }, 
+            "reconfigure_interface": {
+                "data": {
+                    "bidcos_rf_enabled": "Enable Homematic (Bidcos-RF)", 
+                    "bidcos_wired_enabled": "Enable BidCos-Wired (HM-Wired)", 
+                    "ccu_jack_enabled": "Enable CCU-Jack", 
+                    "custom_port_config": "Configure custom ports", 
+                    "cuxd_enabled": "Enable CUxD", 
+                    "hmip_rf_enabled": "Enable Homematic IP", 
+                    "tls": "Use TLS (encrypted connection)", 
+                    "verify_tls": "Verify TLS certificate", 
+                    "virtual_devices_enabled": "Enable groups (heating groups)"
+                }, 
+                "data_description": {
+                    "custom_port_config": "Enable to configure non-standard ports on the next page. Otherwise, ports are automatically set based on TLS setting.", 
+                    "tls": "Enable TLS for encrypted communication with your CCU.", 
                     "verify_tls": "Verify the CCU's TLS certificate. Disable for self-signed certificates."
                 }, 
-                "description": "Update the connection settings for your CCU", 
-                "title": "Reconfigure connection"
+                "description": "Step {step_current} of {step_total}: Configure TLS and interfaces", 
+                "title": "TLS and interface selection"
+            }, 
+            "reconfigure_port_config": {
+                "data": {
+                    "bidcos_rf_port": "HM-RF port", 
+                    "bidcos_wired_port": "BidCos-Wired port", 
+                    "hmip_rf_port": "HmIP-RF port", 
+                    "json_port": "JSON-RPC port", 
+                    "virtual_devices_path": "Groups path", 
+                    "virtual_devices_port": "Groups port"
+                }, 
+                "data_description": {
+                    "bidcos_rf_port": "Standard ports: 2001 (non-TLS), 42001 (TLS)", 
+                    "bidcos_wired_port": "Standard ports: 2000 (non-TLS), 42000 (TLS)", 
+                    "hmip_rf_port": "Standard ports: 2010 (non-TLS), 42010 (TLS)", 
+                    "json_port": "Standard ports: 80 (non-TLS), 443 (TLS). Set to 0 to use defaults.", 
+                    "virtual_devices_port": "Standard ports: 9292 (non-TLS), 49292 (TLS)"
+                }, 
+                "description": "Configure interface ports (TLS is {tls_status})", 
+                "title": "Port configuration"
             }
         }
     }, 
@@ -423,10 +476,10 @@
             }, 
             "energy_counter": {
                 "name": "Energy Counter"
-            },
+            }, 
             "energy_counter_feed_in": {
                 "name": "Energy Counter feed in"
-            },
+            }, 
             "energy_counter_feed_in_total": {
                 "name": "Energy Counter feed in Total"
             }, 
@@ -773,7 +826,8 @@
         "step": {
             "advanced_settings": {
                 "data": {
-                    "backup_path": "Backup directory", 
+                    "callback_host": "Callback hostname/IP address", 
+                    "callback_port_xml_rpc": "Callback XML-RPC port", 
                     "enable_system_notifications": "Enable system notifications", 
                     "listen_on_all_ip": "Listen on all network interfaces", 
                     "mqtt_enabled": "Enable MQTT", 
@@ -784,7 +838,8 @@
                     "use_group_channel_for_cover_state": "Use group channel for cover state"
                 }, 
                 "data_description": {
-                    "backup_path": "Subdirectory name for CCU backups within the integration storage directory (default: backup).", 
+                    "callback_host": "IP address for CCU callbacks. Leave empty for auto-detection.", 
+                    "callback_port_xml_rpc": "Port for XML-RPC callbacks. Leave empty for automatic assignment.", 
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
                     "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
                     "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge", 
@@ -792,27 +847,18 @@
                     "sub_devices_enabled": "Creates separate entities for each channel of multi-channel devices (e.g., each button of a remote).", 
                     "un_ignore": "Check the documentation for information about UN-IGNORE"
                 }, 
-                "description": "Configure advanced settings including MQTT and device options", 
+                "description": "Configure advanced settings including callbacks, MQTT and device options", 
                 "title": "Advanced settings"
             }, 
             "connection": {
                 "data": {
-                    "callback_host": "Callback hostname/IP address", 
-                    "callback_port_xml_rpc": "Callback XML-RPC port", 
                     "host": "CCU hostname/IP address", 
-                    "json_port": "JSON-RPC port", 
                     "password": "CCU password", 
-                    "tls": "Use TLS (encrypted connection)", 
-                    "username": "CCU username", 
-                    "verify_tls": "Verify TLS certificate"
+                    "username": "CCU username"
                 }, 
                 "data_description": {
-                    "callback_host": "To reset the callback host it must be set to one blank character", 
-                    "callback_port_xml_rpc": "To reset the callback port it must be set to 0", 
-                    "json_port": "To reset the JSON-RPC port it must be set to 0", 
                     "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
-                    "username": "Case sensitive. User must have administrator role", 
-                    "verify_tls": "Verify the CCU's TLS certificate. Disable for self-signed certificates."
+                    "username": "Case sensitive. User must have administrator role"
                 }, 
                 "description": "Configure connection settings to your CCU", 
                 "title": "Connection settings"
@@ -822,7 +868,7 @@
                 "menu_options": {
                     "advanced_settings": "Advanced settings", 
                     "connection": "Connection settings", 
-                    "interfaces": "Interface configuration", 
+                    "interfaces": "TLS & interfaces", 
                     "programs_sysvars": "Programs & system variables"
                 }, 
                 "title": "Configure integration"
@@ -830,19 +876,41 @@
             "interfaces": {
                 "data": {
                     "bidcos_rf_enabled": "Enable Homematic (Bidcos-RF)", 
-                    "bidcos_rf_port": "HM-RF port", 
                     "bidcos_wired_enabled": "Enable BidCos-Wired (HM-Wired)", 
-                    "bidcos_wired_port": "BidCos-Wired port", 
                     "ccu_jack_enabled": "Enable CCU-Jack", 
+                    "custom_port_config": "Configure custom ports", 
                     "cuxd_enabled": "Enable CUxD", 
                     "hmip_rf_enabled": "Enable Homematic IP", 
+                    "tls": "Use TLS (encrypted connection)", 
+                    "verify_tls": "Verify TLS certificate", 
+                    "virtual_devices_enabled": "Enable groups (heating groups)"
+                }, 
+                "data_description": {
+                    "custom_port_config": "Enable to configure non-standard ports on the next page. Otherwise, ports are automatically set based on TLS setting.", 
+                    "tls": "Enable TLS for encrypted communication with your CCU.", 
+                    "verify_tls": "Verify the CCU's TLS certificate. Disable for self-signed certificates."
+                }, 
+                "description": "Configure TLS and interfaces", 
+                "title": "TLS and interface selection"
+            }, 
+            "interfaces_port_config": {
+                "data": {
+                    "bidcos_rf_port": "HM-RF port", 
+                    "bidcos_wired_port": "BidCos-Wired port", 
                     "hmip_rf_port": "HmIP-RF port", 
-                    "virtual_devices_enabled": "Enable groups (heating groups)", 
+                    "json_port": "JSON-RPC port", 
                     "virtual_devices_path": "Groups path", 
                     "virtual_devices_port": "Groups port"
                 }, 
-                "description": "Configure which interfaces to use", 
-                "title": "Interface configuration"
+                "data_description": {
+                    "bidcos_rf_port": "Standard ports: 2001 (non-TLS), 42001 (TLS)", 
+                    "bidcos_wired_port": "Standard ports: 2000 (non-TLS), 42000 (TLS)", 
+                    "hmip_rf_port": "Standard ports: 2010 (non-TLS), 42010 (TLS)", 
+                    "json_port": "Standard ports: 80 (non-TLS), 443 (TLS). Set to 0 to use defaults.", 
+                    "virtual_devices_port": "Standard ports: 9292 (non-TLS), 49292 (TLS)"
+                }, 
+                "description": "Configure interface ports (TLS is {tls_status})", 
+                "title": "Port configuration"
             }, 
             "programs_sysvars": {
                 "data": {
