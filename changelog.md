@@ -22,7 +22,6 @@
       - Use Protocol for callback with parameters
       - Use Protocol for model
       - Remove need for empty parentheses for bind_collector
-      - Rename writeable to writable
       - Split interfaces.py into interfaces/ package for better maintainability
       - Switch mypy to strict
       - Use CentralConnectionState in AioJsonRpcAioHttpClient
