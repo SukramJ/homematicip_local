@@ -11,7 +11,7 @@ import logging
 from typing import Final
 
 from aiohomematic.const import DataPointCategory
-from aiohomematic.interfaces import (
+from aiohomematic.interfaces.model import (
     CalculatedDataPointProtocol,
     CustomDataPointProtocol,
     GenericDataPointProtocol,

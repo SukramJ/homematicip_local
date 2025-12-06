@@ -10,7 +10,7 @@ from typing import Any, TypeAlias, TypeVar, cast
 import voluptuous as vol
 
 from aiohomematic.const import IDENTIFIER_SEPARATOR, EventKey
-from aiohomematic.interfaces import (
+from aiohomematic.interfaces.model import (
     CalculatedDataPointProtocol,
     CustomDataPointProtocol,
     GenericDataPointProtocol,

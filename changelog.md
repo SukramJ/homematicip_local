@@ -1,7 +1,7 @@
 # Version 1.91.0 (2025-12-05)
 
 ## What's Changed
-- Bump aiohomematic to 2025.12.7
+- Bump aiohomematic to 2025.12.9
   - Feature
     - Add backend detection
     - Add create_backup_and_download to BackupProvider/CentralUnit
@@ -23,6 +23,7 @@
       - Use Protocol for model
       - Remove need for empty parentheses for bind_collector
       - Rename writeable to writable
+      - Split interfaces.py into interfaces/ package for better maintainability
       - Switch mypy to strict
       - Use CentralConnectionState in AioJsonRpcAioHttpClient
     - Improve climate schedule support
