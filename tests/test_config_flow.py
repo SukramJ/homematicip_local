@@ -23,6 +23,7 @@ from custom_components.homematicip_local.config_flow import (
     CONF_BIDCOS_RF_PORT,
     CONF_BIDCOS_WIRED_PORT,
     CONF_CUSTOM_PORT_CONFIG,
+    CONF_CUSTOM_PORTS,
     CONF_ENABLE_BIDCOS_RF,
     CONF_ENABLE_BIDCOS_WIRED,
     CONF_ENABLE_CCU_JACK,
@@ -48,7 +49,7 @@ from custom_components.homematicip_local.const import (
     CONF_ADVANCED_CONFIG as CONST_ADVANCED_CONFIG,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
-    CONF_ENABLE_MQTT as CONST_ENABLE_MQTT,
+    CONF_ENABLE_MQTT,
     CONF_ENABLE_PROGRAM_SCAN,
     CONF_ENABLE_SUB_DEVICES,
     CONF_ENABLE_SYSTEM_NOTIFICATIONS,
@@ -1180,7 +1181,7 @@ class TestConfigFlowHelpers:
             CONF_SYS_SCAN_INTERVAL: 30,
             CONF_ENABLE_SYSTEM_NOTIFICATIONS: True,
             CONF_LISTEN_ON_ALL_IP: True,
-            CONST_ENABLE_MQTT: DEFAULT_ENABLE_MQTT,
+            CONF_ENABLE_MQTT: DEFAULT_ENABLE_MQTT,
             CONF_MQTT_PREFIX: "hmip",
             CONF_ENABLE_SUB_DEVICES: True,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: True,
@@ -1196,7 +1197,7 @@ class TestConfigFlowHelpers:
         assert data[CONST_ADVANCED_CONFIG][CONF_SYS_SCAN_INTERVAL] == 30
         assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_SYSTEM_NOTIFICATIONS] is True
         assert data[CONST_ADVANCED_CONFIG][CONF_LISTEN_ON_ALL_IP] is True
-        assert data[CONST_ADVANCED_CONFIG][CONST_ENABLE_MQTT] == DEFAULT_ENABLE_MQTT
+        assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_MQTT] == DEFAULT_ENABLE_MQTT
         assert data[CONST_ADVANCED_CONFIG][CONF_MQTT_PREFIX] == "hmip"
         assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_SUB_DEVICES] is True
         assert data[CONST_ADVANCED_CONFIG][CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE] is True
@@ -1334,7 +1335,7 @@ class TestAdvancedConfigurationFlow:
             CONF_SYS_SCAN_INTERVAL: 30,
             CONF_ENABLE_SYSTEM_NOTIFICATIONS: True,
             CONF_LISTEN_ON_ALL_IP: False,
-            CONST_ENABLE_MQTT: False,
+            CONF_ENABLE_MQTT: False,
             CONF_MQTT_PREFIX: "hmip",
             CONF_ENABLE_SUB_DEVICES: True,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
@@ -1401,7 +1402,7 @@ class TestAdvancedConfigurationFlow:
         advanced_input = {
             CONF_ENABLE_SYSTEM_NOTIFICATIONS: True,
             CONF_LISTEN_ON_ALL_IP: False,
-            CONST_ENABLE_MQTT: False,
+            CONF_ENABLE_MQTT: False,
             CONF_MQTT_PREFIX: "hmip",
             CONF_ENABLE_SUB_DEVICES: True,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
@@ -1725,3 +1726,1224 @@ class TestReconfigureFlow:
         # Verify ports were automatically updated to TLS ports
         assert entry.data[CONF_INTERFACE][Interface.HMIP_RF][CONF_PORT] == IF_HMIP_RF_TLS_PORT
         assert entry.data[CONF_INTERFACE][Interface.BIDCOS_RF][CONF_PORT] == IF_BIDCOS_RF_TLS_PORT
+
+
+class TestPortConfigErrorHandling:
+    """Tests for port configuration step error handling."""
+
+    async def test_port_config_auth_failure(self, hass: HomeAssistant) -> None:
+        """Test port config step handles auth failure."""
+        with (
+            patch(
+                "custom_components.homematicip_local.config_flow._async_detect_backend",
+                new_callable=AsyncMock,
+                return_value=_get_default_detection_result(),
+            ),
+            patch(
+                "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+                new_callable=AsyncMock,
+                side_effect=NoConnectionException("connection failed"),
+            ),
+        ):
+            result = await hass.config_entries.flow.async_init(
+                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_INSTANCE_NAME: const.INSTANCE_NAME,
+                    CONF_HOST: const.HOST,
+                    CONF_USERNAME: const.USERNAME,
+                    CONF_PASSWORD: const.PASSWORD,
+                },
+            )
+            await hass.async_block_till_done()
+
+            # Handle progress step
+            while result2["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+                await hass.async_block_till_done()
+                result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+                await hass.async_block_till_done()
+
+            assert result2["type"] == FlowResultType.FORM
+            assert result2["step_id"] == "interface"
+
+            # Submit interface with custom_port_config checked
+            result3 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_TLS: False,
+                    CONF_VERIFY_TLS: False,
+                    CONF_ENABLE_HMIP_RF: True,
+                    CONF_ENABLE_BIDCOS_RF: False,
+                    CONF_ENABLE_VIRTUAL_DEVICES: False,
+                    CONF_ENABLE_BIDCOS_WIRED: False,
+                    CONF_ENABLE_CCU_JACK: False,
+                    CONF_ENABLE_CUXD: False,
+                    CONF_CUSTOM_PORT_CONFIG: True,
+                },
+            )
+            await hass.async_block_till_done()
+
+        # Should show port config step
+        assert result3["type"] == FlowResultType.FORM
+        assert result3["step_id"] == "port_config"
+
+        # Now test auth failure in port config step
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            new_callable=AsyncMock,
+            side_effect=AuthFailure("invalid credentials"),
+        ):
+            result4 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_JSON_PORT: 80,
+                    CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result4["type"] == FlowResultType.FORM
+        assert result4["step_id"] == "port_config"
+        assert result4["errors"] == {"base": "invalid_auth"}
+
+    async def test_port_config_invalid_config(self, hass: HomeAssistant) -> None:
+        """Test port config step handles InvalidConfig exception."""
+        with (
+            patch(
+                "custom_components.homematicip_local.config_flow._async_detect_backend",
+                new_callable=AsyncMock,
+                return_value=_get_default_detection_result(),
+            ),
+            patch(
+                "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+                new_callable=AsyncMock,
+                side_effect=NoConnectionException("connection failed"),
+            ),
+        ):
+            result = await hass.config_entries.flow.async_init(
+                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_INSTANCE_NAME: const.INSTANCE_NAME,
+                    CONF_HOST: const.HOST,
+                    CONF_USERNAME: const.USERNAME,
+                    CONF_PASSWORD: const.PASSWORD,
+                },
+            )
+            await hass.async_block_till_done()
+
+            while result2["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+                await hass.async_block_till_done()
+                result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+                await hass.async_block_till_done()
+
+            result3 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_TLS: False,
+                    CONF_VERIFY_TLS: False,
+                    CONF_ENABLE_HMIP_RF: True,
+                    CONF_ENABLE_BIDCOS_RF: False,
+                    CONF_ENABLE_VIRTUAL_DEVICES: False,
+                    CONF_ENABLE_BIDCOS_WIRED: False,
+                    CONF_ENABLE_CCU_JACK: False,
+                    CONF_ENABLE_CUXD: False,
+                    CONF_CUSTOM_PORT_CONFIG: True,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result3["type"] == FlowResultType.FORM
+        assert result3["step_id"] == "port_config"
+
+        # Test InvalidConfig exception
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            new_callable=AsyncMock,
+            side_effect=InvalidConfig("invalid config value"),
+        ):
+            result4 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_JSON_PORT: 80,
+                    CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result4["type"] == FlowResultType.FORM
+        assert result4["step_id"] == "port_config"
+        assert result4["errors"] == {"base": "invalid_config"}
+
+
+class TestOptionsFlowProgramsSysvars:
+    """Tests for Options Flow programs and sysvars step."""
+
+    async def test_options_programs_sysvars_auth_failure(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """Test programs_sysvars step handles auth failure."""
+        mock_config_entry_v2.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
+
+        await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {"next_step_id": "programs_sysvars"},
+        )
+        await hass.async_block_till_done()
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            side_effect=AuthFailure("auth failed"),
+        ):
+            result3 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {
+                    CONF_ENABLE_PROGRAM_SCAN: True,
+                    CONF_PROGRAM_MARKERS: [],
+                    CONF_ENABLE_SYSVAR_SCAN: True,
+                    CONF_SYSVAR_MARKERS: [],
+                    CONF_SYS_SCAN_INTERVAL: 30,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result3["type"] == FlowResultType.FORM
+        assert result3["errors"] == {"base": "invalid_auth"}
+
+    async def test_options_programs_sysvars_success(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """Test programs_sysvars step saves settings correctly."""
+        mock_config_entry_v2.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
+
+        assert result["type"] == FlowResultType.MENU
+        assert result["step_id"] == "init"
+
+        # Select programs_sysvars from menu
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {"next_step_id": "programs_sysvars"},
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["step_id"] == "programs_sysvars"
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            return_value=SystemInformation(
+                available_interfaces=[],
+                auth_enabled=False,
+                https_redirect_enabled=False,
+                serial=const.SERIAL,
+            ),
+        ):
+            result3 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {
+                    CONF_ENABLE_PROGRAM_SCAN: True,
+                    CONF_PROGRAM_MARKERS: ["HX"],
+                    CONF_ENABLE_SYSVAR_SCAN: True,
+                    CONF_SYSVAR_MARKERS: ["HAHM", "MQTT"],
+                    CONF_SYS_SCAN_INTERVAL: 60,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result3["type"] == FlowResultType.CREATE_ENTRY
+        # Verify settings were saved
+        advanced_config = mock_config_entry_v2.data.get(CONST_ADVANCED_CONFIG, {})
+        assert advanced_config.get(CONF_ENABLE_PROGRAM_SCAN) is True
+        assert advanced_config.get(CONF_ENABLE_SYSVAR_SCAN) is True
+
+
+class TestOptionsFlowInterfacesPortConfig:
+    """Tests for Options Flow interfaces port config step."""
+
+    async def test_options_interfaces_port_config_auth_failure(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """Test interfaces_port_config step handles auth failure."""
+        mock_config_entry_v2.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
+
+        assert result["type"] == FlowResultType.MENU
+
+        # Select interfaces from menu
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {"next_step_id": "interfaces"},
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["step_id"] == "interfaces"
+
+        # Enable custom port config to go to port config step
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            side_effect=NoConnectionException("connection failed"),
+        ):
+            result3 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {
+                    CONF_TLS: False,
+                    CONF_VERIFY_TLS: False,
+                    CONF_ENABLE_HMIP_RF: True,
+                    CONF_ENABLE_BIDCOS_RF: False,
+                    CONF_ENABLE_VIRTUAL_DEVICES: False,
+                    CONF_ENABLE_BIDCOS_WIRED: False,
+                    CONF_ENABLE_CCU_JACK: False,
+                    CONF_ENABLE_CUXD: False,
+                    CONF_CUSTOM_PORT_CONFIG: True,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result3["type"] == FlowResultType.FORM
+        assert result3["step_id"] == "interfaces_port_config"
+
+        # Now test auth failure in port config
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            side_effect=AuthFailure("auth failed"),
+        ):
+            result4 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {
+                    CONF_JSON_PORT: 80,
+                    CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result4["type"] == FlowResultType.FORM
+        assert result4["step_id"] == "interfaces_port_config"
+        assert result4["errors"] == {"base": "invalid_auth"}
+
+    async def test_options_interfaces_port_config_invalid_config(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """Test interfaces_port_config step handles InvalidConfig exception."""
+        mock_config_entry_v2.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
+
+        await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {"next_step_id": "interfaces"},
+        )
+        await hass.async_block_till_done()
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            side_effect=NoConnectionException("connection failed"),
+        ):
+            result3 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {
+                    CONF_TLS: False,
+                    CONF_VERIFY_TLS: False,
+                    CONF_ENABLE_HMIP_RF: True,
+                    CONF_ENABLE_BIDCOS_RF: False,
+                    CONF_ENABLE_VIRTUAL_DEVICES: False,
+                    CONF_ENABLE_BIDCOS_WIRED: False,
+                    CONF_ENABLE_CCU_JACK: False,
+                    CONF_ENABLE_CUXD: False,
+                    CONF_CUSTOM_PORT_CONFIG: True,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result3["step_id"] == "interfaces_port_config"
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            side_effect=InvalidConfig("invalid config"),
+        ):
+            result4 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {
+                    CONF_JSON_PORT: 80,
+                    CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result4["type"] == FlowResultType.FORM
+        assert result4["errors"] == {"base": "invalid_config"}
+
+
+class TestReconfigurePortConfigErrors:
+    """Tests for reconfigure port config error handling."""
+
+    async def test_reconfigure_port_config_auth_failure(self, hass: HomeAssistant) -> None:
+        """Test reconfigure port config handles auth failure."""
+        entry = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            data={
+                "instance_name": const.INSTANCE_NAME,
+                CONF_HOST: const.HOST,
+                CONF_USERNAME: const.USERNAME,
+                CONF_PASSWORD: const.PASSWORD,
+                CONF_TLS: False,
+                CONF_VERIFY_TLS: False,
+                CONF_INTERFACE: {
+                    Interface.HMIP_RF: {CONF_PORT: IF_HMIP_RF_PORT},
+                },
+                CONST_ADVANCED_CONFIG: {},
+            },
+        )
+        entry.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            HMIP_DOMAIN,
+            context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+        )
+
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: const.HOST,
+                CONF_USERNAME: const.USERNAME,
+                CONF_PASSWORD: const.PASSWORD,
+            },
+        )
+
+        # Enable custom port config
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            side_effect=NoConnectionException("connection failed"),
+        ):
+            result3 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_TLS: False,
+                    CONF_VERIFY_TLS: False,
+                    CONF_ENABLE_HMIP_RF: True,
+                    CONF_ENABLE_BIDCOS_RF: False,
+                    CONF_ENABLE_VIRTUAL_DEVICES: False,
+                    CONF_ENABLE_BIDCOS_WIRED: False,
+                    CONF_ENABLE_CCU_JACK: False,
+                    CONF_ENABLE_CUXD: False,
+                    CONF_CUSTOM_PORT_CONFIG: True,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result3["step_id"] == "reconfigure_port_config"
+
+        # Test auth failure
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            side_effect=AuthFailure("auth failed"),
+        ):
+            result4 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_JSON_PORT: 80,
+                    CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result4["type"] == FlowResultType.FORM
+        assert result4["errors"] == {"base": "invalid_auth"}
+
+    async def test_reconfigure_port_config_invalid_config(self, hass: HomeAssistant) -> None:
+        """Test reconfigure port config handles InvalidConfig exception."""
+        entry = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            data={
+                "instance_name": const.INSTANCE_NAME,
+                CONF_HOST: const.HOST,
+                CONF_USERNAME: const.USERNAME,
+                CONF_PASSWORD: const.PASSWORD,
+                CONF_TLS: False,
+                CONF_VERIFY_TLS: False,
+                CONF_INTERFACE: {
+                    Interface.HMIP_RF: {CONF_PORT: IF_HMIP_RF_PORT},
+                },
+                CONST_ADVANCED_CONFIG: {},
+            },
+        )
+        entry.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            HMIP_DOMAIN,
+            context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+        )
+
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: const.HOST,
+                CONF_USERNAME: const.USERNAME,
+                CONF_PASSWORD: const.PASSWORD,
+            },
+        )
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            side_effect=NoConnectionException("connection failed"),
+        ):
+            await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_TLS: False,
+                    CONF_VERIFY_TLS: False,
+                    CONF_ENABLE_HMIP_RF: True,
+                    CONF_ENABLE_BIDCOS_RF: False,
+                    CONF_ENABLE_VIRTUAL_DEVICES: False,
+                    CONF_ENABLE_BIDCOS_WIRED: False,
+                    CONF_ENABLE_CCU_JACK: False,
+                    CONF_ENABLE_CUXD: False,
+                    CONF_CUSTOM_PORT_CONFIG: True,
+                },
+            )
+            await hass.async_block_till_done()
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            side_effect=InvalidConfig("invalid config"),
+        ):
+            result4 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_JSON_PORT: 80,
+                    CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result4["type"] == FlowResultType.FORM
+        assert result4["errors"] == {"base": "invalid_config"}
+
+
+class TestCustomPortHandling:
+    """Tests for custom port handling functions."""
+
+    def test_get_effective_json_port_with_custom_port(self) -> None:
+        """Test _get_effective_json_port returns custom port."""
+        from custom_components.homematicip_local.config_flow import _get_effective_json_port
+
+        data = {
+            CONF_JSON_PORT: 8080,  # Non-default port
+        }
+
+        result = _get_effective_json_port(tls=False, data=data)
+        assert result == 8080
+
+    def test_get_effective_port_with_custom_ports(self) -> None:
+        """Test _get_effective_port returns custom port from CONF_CUSTOM_PORTS."""
+        from custom_components.homematicip_local.config_flow import _get_effective_port
+        from custom_components.homematicip_local.const import CONF_CUSTOM_PORTS
+
+        data = {
+            CONF_CUSTOM_PORTS: {
+                Interface.HMIP_RF.value: 12345,
+            },
+            CONF_INTERFACE: {},
+        }
+
+        result = _get_effective_port(Interface.HMIP_RF, tls=False, data=data)
+        assert result == 12345
+
+    def test_get_effective_port_with_legacy_format(self) -> None:
+        """Test _get_effective_port returns custom port from legacy interface format."""
+        from custom_components.homematicip_local.config_flow import _get_effective_port
+
+        # Use a non-default port to ensure it's returned
+        custom_port = 12345
+        data = {
+            CONF_INTERFACE: {
+                Interface.HMIP_RF: {CONF_PORT: custom_port},
+            },
+        }
+
+        result = _get_effective_port(Interface.HMIP_RF, tls=False, data=data)
+        assert result == custom_port
+
+
+class TestBackendDetectionErrors:
+    """Tests for backend detection error handling."""
+
+    async def test_detection_base_homematic_exception(self, hass: HomeAssistant) -> None:
+        """Test detection handles BaseHomematicException."""
+        from aiohomematic.exceptions import BaseHomematicException
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_detect_backend",
+            new_callable=AsyncMock,
+            side_effect=BaseHomematicException("generic error"),
+        ):
+            result = await hass.config_entries.flow.async_init(
+                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_INSTANCE_NAME: const.INSTANCE_NAME,
+                    CONF_HOST: const.HOST,
+                    CONF_USERNAME: const.USERNAME,
+                    CONF_PASSWORD: const.PASSWORD,
+                },
+            )
+            await hass.async_block_till_done()
+
+            while result2["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+                await hass.async_block_till_done()
+                result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+                await hass.async_block_till_done()
+
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["step_id"] == "central"
+        assert result2["errors"] == {"base": "cannot_connect"}
+
+    async def test_detection_validation_exception(self, hass: HomeAssistant) -> None:
+        """Test detection handles ValidationException."""
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_detect_backend",
+            new_callable=AsyncMock,
+            side_effect=ValidationException("validation error"),
+        ):
+            result = await hass.config_entries.flow.async_init(
+                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_INSTANCE_NAME: const.INSTANCE_NAME,
+                    CONF_HOST: const.HOST,
+                    CONF_USERNAME: const.USERNAME,
+                    CONF_PASSWORD: const.PASSWORD,
+                },
+            )
+            await hass.async_block_till_done()
+
+            # Handle progress step
+            while result2["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+                await hass.async_block_till_done()
+                result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+                await hass.async_block_till_done()
+
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["step_id"] == "central"
+        assert result2["errors"] == {"base": "invalid_config"}
+
+
+class TestOptionsFlowInterfacesValidation:
+    """Tests for Options Flow interfaces step validation without custom ports."""
+
+    async def test_options_interfaces_no_custom_ports_auth_error(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """Test interfaces step shows auth error when not requesting custom ports."""
+        mock_config_entry_v2.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
+
+        await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {"next_step_id": "interfaces"},
+        )
+        await hass.async_block_till_done()
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            side_effect=AuthFailure("auth failed"),
+        ):
+            result3 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {
+                    CONF_TLS: False,
+                    CONF_VERIFY_TLS: False,
+                    CONF_ENABLE_HMIP_RF: True,
+                    CONF_ENABLE_BIDCOS_RF: False,
+                    CONF_ENABLE_VIRTUAL_DEVICES: False,
+                    CONF_ENABLE_BIDCOS_WIRED: False,
+                    CONF_ENABLE_CCU_JACK: False,
+                    CONF_ENABLE_CUXD: False,
+                    CONF_CUSTOM_PORT_CONFIG: False,
+                },
+            )
+            await hass.async_block_till_done()
+
+        # Should show auth error on the same step
+        assert result3["type"] == FlowResultType.FORM
+        assert result3["step_id"] == "interfaces"
+        assert result3["errors"] == {"base": "invalid_auth"}
+
+    async def test_options_interfaces_no_custom_ports_connection_error(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """Test interfaces step redirects to port_config on connection error when not requesting custom ports."""
+        mock_config_entry_v2.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
+
+        await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {"next_step_id": "interfaces"},
+        )
+        await hass.async_block_till_done()
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            side_effect=NoConnectionException("cannot connect"),
+        ):
+            result3 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {
+                    CONF_TLS: False,
+                    CONF_VERIFY_TLS: False,
+                    CONF_ENABLE_HMIP_RF: True,
+                    CONF_ENABLE_BIDCOS_RF: False,
+                    CONF_ENABLE_VIRTUAL_DEVICES: False,
+                    CONF_ENABLE_BIDCOS_WIRED: False,
+                    CONF_ENABLE_CCU_JACK: False,
+                    CONF_ENABLE_CUXD: False,
+                    CONF_CUSTOM_PORT_CONFIG: False,
+                },
+            )
+            await hass.async_block_till_done()
+
+        # Should redirect to port config step with validation error
+        assert result3["type"] == FlowResultType.FORM
+        assert result3["step_id"] == "interfaces_port_config"
+        assert result3["errors"] == {"base": "cannot_connect"}
+
+    async def test_options_interfaces_no_custom_ports_success(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """Test interfaces step succeeds when validation passes without custom ports."""
+        mock_config_entry_v2.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
+
+        await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {"next_step_id": "interfaces"},
+        )
+        await hass.async_block_till_done()
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            return_value=SystemInformation(
+                available_interfaces=[],
+                auth_enabled=False,
+                https_redirect_enabled=False,
+                serial=const.SERIAL,
+            ),
+        ):
+            result3 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {
+                    CONF_TLS: False,
+                    CONF_VERIFY_TLS: False,
+                    CONF_ENABLE_HMIP_RF: True,
+                    CONF_ENABLE_BIDCOS_RF: False,
+                    CONF_ENABLE_VIRTUAL_DEVICES: False,
+                    CONF_ENABLE_BIDCOS_WIRED: False,
+                    CONF_ENABLE_CCU_JACK: False,
+                    CONF_ENABLE_CUXD: False,
+                    CONF_CUSTOM_PORT_CONFIG: False,
+                },
+            )
+            await hass.async_block_till_done()
+
+        # Should complete successfully
+        assert result3["type"] == FlowResultType.CREATE_ENTRY
+
+
+class TestOptionsFlowProgramsSysvarsErrors:
+    """Tests for Options Flow programs_sysvars step error handling."""
+
+    async def test_options_programs_sysvars_base_exception(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """Test programs_sysvars step handles BaseHomematicException."""
+        from aiohomematic.exceptions import BaseHomematicException
+
+        mock_config_entry_v2.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
+
+        await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {"next_step_id": "programs_sysvars"},
+        )
+        await hass.async_block_till_done()
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            side_effect=BaseHomematicException("generic error"),
+        ):
+            result3 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {
+                    CONF_ENABLE_PROGRAM_SCAN: True,
+                    CONF_PROGRAM_MARKERS: [],
+                    CONF_ENABLE_SYSVAR_SCAN: True,
+                    CONF_SYSVAR_MARKERS: [],
+                    CONF_SYS_SCAN_INTERVAL: 30,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result3["type"] == FlowResultType.FORM
+        assert result3["errors"] == {"base": "cannot_connect"}
+
+    async def test_options_programs_sysvars_invalid_config(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """Test programs_sysvars step handles InvalidConfig."""
+        mock_config_entry_v2.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
+
+        await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {"next_step_id": "programs_sysvars"},
+        )
+        await hass.async_block_till_done()
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            side_effect=InvalidConfig("config error"),
+        ):
+            result3 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {
+                    CONF_ENABLE_PROGRAM_SCAN: True,
+                    CONF_PROGRAM_MARKERS: [],
+                    CONF_ENABLE_SYSVAR_SCAN: True,
+                    CONF_SYSVAR_MARKERS: [],
+                    CONF_SYS_SCAN_INTERVAL: 30,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result3["type"] == FlowResultType.FORM
+        assert result3["errors"] == {"base": "invalid_config"}
+
+
+class TestOptionsFlowInterfacesPortConfigErrors:
+    """Tests for Options Flow interfaces_port_config exception handling."""
+
+    async def test_options_interfaces_port_config_base_exception(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """Test interfaces_port_config handles BaseHomematicException."""
+        from aiohomematic.exceptions import BaseHomematicException
+
+        mock_config_entry_v2.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
+
+        await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {"next_step_id": "interfaces"},
+        )
+        await hass.async_block_till_done()
+
+        # Request custom port config
+        result3 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_TLS: False,
+                CONF_VERIFY_TLS: False,
+                CONF_ENABLE_HMIP_RF: True,
+                CONF_ENABLE_BIDCOS_RF: False,
+                CONF_ENABLE_VIRTUAL_DEVICES: False,
+                CONF_ENABLE_BIDCOS_WIRED: False,
+                CONF_ENABLE_CCU_JACK: False,
+                CONF_ENABLE_CUXD: False,
+                CONF_CUSTOM_PORT_CONFIG: True,
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result3["step_id"] == "interfaces_port_config"
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            side_effect=BaseHomematicException("generic error"),
+        ):
+            result4 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {
+                    CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
+                    CONF_JSON_PORT: 80,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result4["type"] == FlowResultType.FORM
+        assert result4["errors"] == {"base": "cannot_connect"}
+
+    async def test_options_interfaces_port_config_no_connection(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """Test interfaces_port_config handles NoConnectionException."""
+        mock_config_entry_v2.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(mock_config_entry_v2.entry_id)
+
+        await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {"next_step_id": "interfaces"},
+        )
+        await hass.async_block_till_done()
+
+        # Request custom port config
+        result3 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_TLS: False,
+                CONF_VERIFY_TLS: False,
+                CONF_ENABLE_HMIP_RF: True,
+                CONF_ENABLE_BIDCOS_RF: False,
+                CONF_ENABLE_VIRTUAL_DEVICES: False,
+                CONF_ENABLE_BIDCOS_WIRED: False,
+                CONF_ENABLE_CCU_JACK: False,
+                CONF_ENABLE_CUXD: False,
+                CONF_CUSTOM_PORT_CONFIG: True,
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result3["step_id"] == "interfaces_port_config"
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            side_effect=NoConnectionException("cannot connect"),
+        ):
+            result4 = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {
+                    CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
+                    CONF_JSON_PORT: 80,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result4["type"] == FlowResultType.FORM
+        assert result4["errors"] == {"base": "cannot_connect"}
+
+
+class TestHelperFunctions:
+    """Tests for config flow helper functions."""
+
+    def test_get_ccu_data_with_json_port(self) -> None:
+        """Test _get_ccu_data includes JSON port when set."""
+        data = {
+            CONF_JSON_PORT: 8080,
+        }
+        user_input = {
+            CONF_INSTANCE_NAME: const.INSTANCE_NAME,
+            CONF_HOST: const.HOST,
+            CONF_USERNAME: const.USERNAME,
+            CONF_PASSWORD: const.PASSWORD,
+        }
+
+        ccu_data = _get_ccu_data(data, user_input)
+
+        assert ccu_data[CONF_JSON_PORT] == 8080
+
+    def test_update_advanced_input_removes_empty_callbacks(self) -> None:
+        """Test _update_advanced_input removes empty callback settings."""
+        from custom_components.homematicip_local.config_flow import _update_advanced_input
+
+        data: dict[str, Any] = {
+            CONF_CALLBACK_HOST: "old_host",
+            CONF_CALLBACK_PORT_XML_RPC: 1234,
+        }
+        advanced_input = {
+            CONF_LISTEN_ON_ALL_IP: True,
+            CONF_PROGRAM_MARKERS: [],
+            CONF_ENABLE_PROGRAM_SCAN: False,
+            CONF_SYSVAR_MARKERS: [],
+            CONF_ENABLE_SYSVAR_SCAN: False,
+            CONF_SYS_SCAN_INTERVAL: 30,
+            CONF_ENABLE_SYSTEM_NOTIFICATIONS: False,
+            CONF_ENABLE_MQTT: DEFAULT_ENABLE_MQTT,
+            CONF_MQTT_PREFIX: "",
+            CONF_ENABLE_SUB_DEVICES: False,
+            CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
+            CONF_OPTIONAL_SETTINGS: [],
+        }
+
+        _update_advanced_input(data, advanced_input)
+
+        assert CONF_CALLBACK_HOST not in data
+        assert CONF_CALLBACK_PORT_XML_RPC not in data
+
+    def test_update_advanced_input_with_callbacks(self) -> None:
+        """Test _update_advanced_input handles callback settings."""
+        from custom_components.homematicip_local.config_flow import _update_advanced_input
+
+        data: dict[str, Any] = {}
+        advanced_input = {
+            CONF_CALLBACK_HOST: "192.168.1.100",
+            CONF_CALLBACK_PORT_XML_RPC: 9292,
+            CONF_LISTEN_ON_ALL_IP: True,
+            CONF_PROGRAM_MARKERS: [],
+            CONF_ENABLE_PROGRAM_SCAN: False,
+            CONF_SYSVAR_MARKERS: [],
+            CONF_ENABLE_SYSVAR_SCAN: False,
+            CONF_SYS_SCAN_INTERVAL: 30,
+            CONF_ENABLE_SYSTEM_NOTIFICATIONS: False,
+            CONF_ENABLE_MQTT: DEFAULT_ENABLE_MQTT,
+            CONF_MQTT_PREFIX: "",
+            CONF_ENABLE_SUB_DEVICES: False,
+            CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
+            CONF_OPTIONAL_SETTINGS: [],
+        }
+
+        _update_advanced_input(data, advanced_input)
+
+        assert data[CONF_CALLBACK_HOST] == "192.168.1.100"
+        assert data[CONF_CALLBACK_PORT_XML_RPC] == 9292
+
+    def test_update_advanced_settings_input_empty_returns_early(self) -> None:
+        """Test _update_advanced_settings_input returns early with empty input."""
+        from custom_components.homematicip_local.config_flow import _update_advanced_settings_input
+
+        data: dict[str, Any] = {"key": "value"}
+        _update_advanced_settings_input(data, {})
+        assert data == {"key": "value"}
+
+    def test_update_advanced_settings_input_removes_empty_callbacks(self) -> None:
+        """Test _update_advanced_settings_input removes empty callback settings."""
+        from custom_components.homematicip_local.config_flow import CONF_BACKUP_PATH, _update_advanced_settings_input
+
+        data: dict[str, Any] = {
+            CONF_CALLBACK_HOST: "old_host",
+            CONF_CALLBACK_PORT_XML_RPC: 1234,
+        }
+        advanced_input = {
+            CONF_LISTEN_ON_ALL_IP: True,
+            CONF_ENABLE_SYSTEM_NOTIFICATIONS: False,
+            CONF_ENABLE_MQTT: DEFAULT_ENABLE_MQTT,
+            CONF_MQTT_PREFIX: "",
+            CONF_ENABLE_SUB_DEVICES: False,
+            CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
+            CONF_OPTIONAL_SETTINGS: [],
+            CONF_BACKUP_PATH: "",
+        }
+
+        _update_advanced_settings_input(data, advanced_input)
+
+        assert CONF_CALLBACK_HOST not in data
+        assert CONF_CALLBACK_PORT_XML_RPC not in data
+
+    def test_update_advanced_settings_input_with_callbacks(self) -> None:
+        """Test _update_advanced_settings_input handles callback settings."""
+        from custom_components.homematicip_local.config_flow import CONF_BACKUP_PATH, _update_advanced_settings_input
+
+        data: dict[str, Any] = {}
+        advanced_input = {
+            CONF_CALLBACK_HOST: "192.168.1.100",
+            CONF_CALLBACK_PORT_XML_RPC: 9292,
+            CONF_LISTEN_ON_ALL_IP: True,
+            CONF_ENABLE_SYSTEM_NOTIFICATIONS: False,
+            CONF_ENABLE_MQTT: DEFAULT_ENABLE_MQTT,
+            CONF_MQTT_PREFIX: "",
+            CONF_ENABLE_SUB_DEVICES: False,
+            CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
+            CONF_OPTIONAL_SETTINGS: [],
+            CONF_BACKUP_PATH: "",
+        }
+
+        _update_advanced_settings_input(data, advanced_input)
+
+        assert data[CONF_CALLBACK_HOST] == "192.168.1.100"
+        assert data[CONF_CALLBACK_PORT_XML_RPC] == 9292
+
+    def test_update_advanced_settings_input_with_un_ignores(self) -> None:
+        """Test _update_advanced_settings_input handles un_ignores."""
+        from custom_components.homematicip_local.config_flow import CONF_BACKUP_PATH, _update_advanced_settings_input
+
+        data: dict[str, Any] = {}
+        advanced_input = {
+            CONF_LISTEN_ON_ALL_IP: True,
+            CONF_ENABLE_SYSTEM_NOTIFICATIONS: False,
+            CONF_ENABLE_MQTT: DEFAULT_ENABLE_MQTT,
+            CONF_MQTT_PREFIX: "",
+            CONF_ENABLE_SUB_DEVICES: False,
+            CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
+            CONF_OPTIONAL_SETTINGS: [],
+            CONF_BACKUP_PATH: "",
+            CONF_UN_IGNORES: ["param1", "param2"],
+        }
+
+        _update_advanced_settings_input(data, advanced_input)
+
+        assert data[CONST_ADVANCED_CONFIG][CONF_UN_IGNORES] == ["param1", "param2"]
+
+    def test_update_interface_input_removes_json_port(self) -> None:
+        """Test _update_interface_input removes JSON port when None."""
+        from custom_components.homematicip_local.config_flow import _update_interface_input
+
+        data: dict[str, Any] = {CONF_JSON_PORT: 8080}
+        interface_input = {
+            CONF_TLS: False,
+            CONF_VERIFY_TLS: False,
+            CONF_ENABLE_HMIP_RF: True,
+            CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
+            CONF_ENABLE_BIDCOS_RF: False,
+            CONF_BIDCOS_RF_PORT: IF_BIDCOS_RF_PORT,
+            CONF_ENABLE_VIRTUAL_DEVICES: False,
+            CONF_VIRTUAL_DEVICES_PORT: IF_VIRTUAL_DEVICES_PORT,
+            CONF_ENABLE_BIDCOS_WIRED: False,
+            CONF_BIDCOS_WIRED_PORT: IF_BIDCOS_WIRED_PORT,
+            CONF_ENABLE_CCU_JACK: False,
+            CONF_ENABLE_CUXD: False,
+        }
+
+        _update_interface_input(data, interface_input)
+
+        assert CONF_JSON_PORT not in data
+
+    def test_update_interface_input_with_json_port(self) -> None:
+        """Test _update_interface_input updates JSON port."""
+        from custom_components.homematicip_local.config_flow import _update_interface_input
+
+        data: dict[str, Any] = {}
+        interface_input = {
+            CONF_TLS: False,
+            CONF_VERIFY_TLS: False,
+            CONF_JSON_PORT: 8080,
+            CONF_ENABLE_HMIP_RF: True,
+            CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
+            CONF_ENABLE_BIDCOS_RF: False,
+            CONF_BIDCOS_RF_PORT: IF_BIDCOS_RF_PORT,
+            CONF_ENABLE_VIRTUAL_DEVICES: False,
+            CONF_VIRTUAL_DEVICES_PORT: IF_VIRTUAL_DEVICES_PORT,
+            CONF_ENABLE_BIDCOS_WIRED: False,
+            CONF_BIDCOS_WIRED_PORT: IF_BIDCOS_WIRED_PORT,
+            CONF_ENABLE_CCU_JACK: False,
+            CONF_ENABLE_CUXD: False,
+        }
+
+        _update_interface_input(data, interface_input)
+
+        assert data[CONF_JSON_PORT] == 8080
+        assert data[CONF_TLS] is False
+        assert Interface.HMIP_RF in data[CONF_INTERFACE]
+
+    def test_update_port_config_input_clears_empty_custom_ports(self) -> None:
+        """Test _update_port_config_input removes empty custom_ports dict."""
+        from custom_components.homematicip_local.config_flow import _update_port_config_input
+
+        data: dict[str, Any] = {
+            CONF_TLS: False,
+            CONF_INTERFACE: {Interface.HMIP_RF: {CONF_PORT: IF_HMIP_RF_PORT}},
+            CONF_CUSTOM_PORTS: {},
+        }
+        port_input = {
+            CONF_JSON_PORT: 80,
+            CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
+        }
+
+        _update_port_config_input(data, port_input)
+
+        # Empty custom_ports should be removed
+        assert CONF_CUSTOM_PORTS not in data
+
+    def test_update_port_config_input_custom_json_port(self) -> None:
+        """Test _update_port_config_input handles custom JSON port."""
+        from custom_components.homematicip_local.config_flow import _update_port_config_input
+
+        data: dict[str, Any] = {
+            CONF_TLS: False,
+            CONF_INTERFACE: {Interface.HMIP_RF: {CONF_PORT: IF_HMIP_RF_PORT}},
+        }
+        port_input = {
+            CONF_JSON_PORT: 8080,  # Non-default
+            CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,
+        }
+
+        _update_port_config_input(data, port_input)
+
+        assert data[CONF_JSON_PORT] == 8080
+
+    def test_update_port_config_input_empty_returns_early(self) -> None:
+        """Test _update_port_config_input returns early with empty input."""
+        from custom_components.homematicip_local.config_flow import _update_port_config_input
+
+        data: dict[str, Any] = {"key": "value"}
+        _update_port_config_input(data, {})
+        assert data == {"key": "value"}
+
+    def test_update_port_config_input_removes_default_custom_port(self) -> None:
+        """Test _update_port_config_input removes custom port when switching to default."""
+        from custom_components.homematicip_local.config_flow import _update_port_config_input
+
+        data: dict[str, Any] = {
+            CONF_TLS: False,
+            CONF_INTERFACE: {Interface.HMIP_RF: {CONF_PORT: 12345}},
+            CONF_CUSTOM_PORTS: {Interface.HMIP_RF.value: 12345},
+        }
+        port_input = {
+            CONF_JSON_PORT: 80,  # Default for non-TLS
+            CONF_HMIP_RF_PORT: IF_HMIP_RF_PORT,  # Switch to default
+        }
+
+        _update_port_config_input(data, port_input)
+
+        # Custom port should be removed
+        assert Interface.HMIP_RF.value not in data.get(CONF_CUSTOM_PORTS, {})
+
+    def test_update_port_config_input_virtual_devices_path(self) -> None:
+        """Test _update_port_config_input handles VirtualDevices path."""
+        from custom_components.homematicip_local.config_flow import _update_port_config_input
+
+        data: dict[str, Any] = {
+            CONF_TLS: False,
+            CONF_INTERFACE: {Interface.VIRTUAL_DEVICES: {CONF_PORT: IF_VIRTUAL_DEVICES_PORT}},
+        }
+        port_input = {
+            CONF_JSON_PORT: 80,
+            CONF_VIRTUAL_DEVICES_PORT: IF_VIRTUAL_DEVICES_PORT,
+            CONF_VIRTUAL_DEVICES_PATH: "/custom/path",
+        }
+
+        _update_port_config_input(data, port_input)
+
+        assert data[CONF_INTERFACE][Interface.VIRTUAL_DEVICES][CONF_PATH] == "/custom/path"
+
+    def test_update_tls_interfaces_input_empty_returns_early(self) -> None:
+        """Test _update_tls_interfaces_input returns early with empty input."""
+        from custom_components.homematicip_local.config_flow import _update_tls_interfaces_input
+
+        data: dict[str, Any] = {"key": "value"}
+        _update_tls_interfaces_input(data, {})
+        assert data == {"key": "value"}
+
+    def test_update_tls_interfaces_input_with_custom_port(self) -> None:
+        """Test _update_tls_interfaces_input uses custom ports when available."""
+        from custom_components.homematicip_local.config_flow import _update_tls_interfaces_input
+
+        data: dict[str, Any] = {CONF_CUSTOM_PORTS: {Interface.HMIP_RF.value: 12345}}
+        interface_input = {
+            CONF_TLS: False,
+            CONF_VERIFY_TLS: False,
+            CONF_ENABLE_HMIP_RF: True,
+            CONF_ENABLE_BIDCOS_RF: False,
+            CONF_ENABLE_VIRTUAL_DEVICES: False,
+            CONF_ENABLE_BIDCOS_WIRED: False,
+            CONF_ENABLE_CCU_JACK: True,
+            CONF_ENABLE_CUXD: True,
+        }
+
+        _update_tls_interfaces_input(data, interface_input)
+
+        # HMIP_RF should use custom port
+        assert data[CONF_INTERFACE][Interface.HMIP_RF][CONF_PORT] == 12345
+        # CCU_JACK and CUXD should be added without port
+        assert Interface.CCU_JACK in data[CONF_INTERFACE]
+        assert Interface.CUXD in data[CONF_INTERFACE]
