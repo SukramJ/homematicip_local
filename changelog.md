@@ -47,7 +47,17 @@
 - Add scheduler attributes to climate entities with schedule support
 - Fix naming of untranslated entities
 - Follow backend changes
-- Refactor flows
+- Redesign Config Flow (v2)
+  - Simplify setup with automatic port configuration based on TLS setting
+  - Add "Configure custom ports" checkbox for non-standard port setups
+  - Move callback settings from Step 1 to Advanced Options
+  - Add two-step Reconfigure Flow (Connection → TLS & Interfaces)
+  - Add menu-based Options Flow with four sections:
+    - Connection (host, username, password)
+    - TLS & Interfaces (with optional custom port configuration)
+    - Programs & Sysvars
+    - Advanced Settings (callbacks, MQTT, device behavior)
+  - Improve error handling with automatic port configuration page on connection failure
 - Rename actions:
   - get_schedule_profile_weekday -> get_schedule_weekday
   - set_schedule_profile_weekday -> set_schedule_weekday
