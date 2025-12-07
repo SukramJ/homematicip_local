@@ -16,7 +16,6 @@ from aiohomematic.interfaces.model import (
     GenericProgramDataPointProtocol,
     GenericSysvarDataPointProtocol,
 )
-from aiohomematic.model.hub.inbox import HmInboxSensor
 from aiohomematic.type_aliases import UnsubscribeHandler
 from homeassistant.core import State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -565,6 +564,6 @@ class AioHomematicGenericSysvarEntity(AioHomematicGenericHubEntity, Generic[HmGe
         else:
             attributes[ATTR_VALUE_STATE] = HmEntityState.NOT_VALID
 
-        if isinstance(self._data_point, HmInboxSensor):
+        if hasattr(self._data_point, "devices"):
             attributes[ATTR_DEVICES] = [m.name for m in self._data_point.devices]
         return attributes
