@@ -4,6 +4,7 @@ async-upnp-client==0.46.0
 aiohomematic==2025.12.11
 aiohomematic-test-support==2025.12.11
 isal==1.8.0
+mypy==1.18.2
 pre-commit==4.5.0
 pur==7.3.3
 pylint==4.0.4
