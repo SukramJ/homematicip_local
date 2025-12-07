@@ -2,68 +2,47 @@
 
 ## What's Changed
 - Bump aiohomematic to 2025.12.9
-  - Feature
-    - Add backend detection
-    - Add create_backup_and_download to BackupProvider/CentralUnit
-    - Add get_install_mode/set_install_mode to DeviceManagement/CentralUnit
-    - Add rename_device / accept_device_in_inbox to Central/DeviceManagement
-    - Add translations for log messages with level >= INFO or translation exclusions
-  - Refactor Client
-    - Refactoring
-      - Avoid potential memory leaks
-      - Clean up event bus implementation and remove legacy code
-      - Clear in-memory caches on stop
-      - De-couple from central unit
-      - Extract coordinators from central unit
-      - Extract device registry from central
-      - Extract scheduler from central
-      - Improve typing in protocols/interfaces
-      - Refactor event handling to event bus
-      - Use Protocol for callback with parameters
-      - Use Protocol for model
-      - Remove need for empty parentheses for bind_collector
-      - Split interfaces.py into interfaces/ package for better maintainability
-      - Switch mypy to strict
-      - Use CentralConnectionState in AioJsonRpcAioHttpClient
-    - Improve climate schedule support
-      - Add base_temperature to CLIMATE_SIMPLE_WEEKDAY_DATA
-      - Add climate schedule cache
-      - Add input converter to climate scheduler setter
-      - Add more simple services and converters to week profile
-      - Add schedule support to custom data point
-      - Filter entries in validate_and_convert_weekday_to_simple
-      - Improve the test coverage of week_profile
-      - Optimize climate get/set_schedule
-      - Refactor simple schedule
-      - Return filtered climate schedule data on get_schedule / Accept filtered data in climate set_schedule
-      - Use schedule cache for climate get/set schedule operations
-    - Enhance CCU support
-      - Show Update entity for system update status
+    -Architecture & Internals
+      - Protocol-based dependency injection - Decoupled CentralUnit via protocol interfaces, extracted coordinators (Device, Client, Hub, Cache, Event)
+      - Event bus migration - Replaced legacy callback system with modern EventBus pattern
+      - DeviceProfileRegistry - New central registry for device-to-profile mappings with type-safe dataclasses, replacing distributed ALL_DEVICES dictionaries
+      - Shared mixins - Added reusable mixins for custom entities (StateChangeTimer, Brightness, Position, GroupState, TimerUnit)
+      - Split interfaces package - Reorganized interfaces.py into interfaces/ subpackage for maintainability
+    - CLI Enhancements (hmcli)
+      - Interactive REPL mode - Command history, tab completion, shell completion scripts
+      - Device discovery commands - list-devices, list-channels, list-parameters, device-info, get/set
+    - Device Management
+      - Install mode support - Per-interface install mode with countdown timer, virtual data points
+      - Device inbox - Accept, rename devices pending pairing
+      - Rename support - Device and channel renaming via API
+      - Backup/restore - Create and download CCU system backups
+    - Reliability & Error Handling
+      - Retry strategy - RetryStrategy class with exponential backoff for transient errors
+      - Login rate limiting - Exponential backoff for JSON-RPC authentication
+      - Resource limits - Prevent unbounded growth of internal collections
+      - Backend detection - Automatic detection of CCU type (CCU3, RaspberryMatic, Homegear)
+    - Climate & Schedule
+      - Schedule support - Get/set climate schedules with caching and validation
+      - Simple schedule format - Converter for simplified weekday schedule data
+    - Type Safety
+      - Strict mypy mode - Full type coverage with strict mode enabled
+      - Protocol-based typing - HubProtocol, WeekProfileProtocol, model data point protocols
+    -Internationalization
+      - Translatable exceptions - Exception messages support i18n
+      - Log message translations - INFO+ level log messages translatable
 - Add CCU backup support with button entity and action (see [CCU Backup](README.md#ccu-backup))
 - Add documentation for new device handling (see [Adding New Devices](README.md#adding-new-devices))
-- Add backend detection
-- Add service for ccu backup
-- Add translation for press events
-- Add scheduler attributes to climate entities with schedule support
-- Fix naming of untranslated entities
-- Follow backend changes
-- Redesign Config Flow (v2)
-  - Simplify setup with automatic port configuration based on TLS setting
-  - Add "Configure custom ports" checkbox for non-standard port setups
-  - Move callback settings from Step 1 to Advanced Options
-  - Add two-step Reconfigure Flow (Connection → TLS & Interfaces)
-  - Add menu-based Options Flow with four sections:
-    - Connection (host, username, password)
-    - TLS & Interfaces (with optional custom port configuration)
-    - Programs & Sysvars
-    - Advanced Settings (callbacks, MQTT, device behavior)
-  - Improve error handling with automatic port configuration page on connection failure
-- Refactor entity description handling
-- Rename actions:
-  - get_schedule_profile_weekday -> get_schedule_weekday
-  - set_schedule_profile_weekday -> set_schedule_weekday
-  - set_schedule_simple_profile_weekday -> set_schedule_simple_weekday
-- Switch mypy to strict
+- CCU backup functionality: New button entity and action for creating and downloading CCU system backups
+- Config Flow v2 redesign: Automatic port configuration based on TLS setting, optional custom port configuration, new menu-based Options Flow with four sections (Connection, TLS & Interfaces, Programs &
+Sysvars, Advanced Settings)
+- Reconfigure Flow: Two-step flow for quick updates to connection and TLS settings without full re-setup
+- Climate schedule support: New scheduler attributes for climate entities, get/set weekly schedules with caching and validation
+- Backend detection: Automatic detection of CCU type (CCU3, RaspberryMatic, Homegear)
+- Improved error handling: RetryStrategy with exponential backoff, login rate limiting, automatic port configuration page on connection failure
+- Device management: Per-interface install mode support, device inbox for pending pairings, device and channel renaming via API
+- Type safety: Strict mypy mode enabled, protocol-based typing throughout
+- Internationalization: Translatable exceptions and log messages, translations for press events
+- Renamed actions: get_schedule_profile_weekday → get_schedule_weekday, set_schedule_profile_weekday → set_schedule_weekday
 
 # Version 1.90.2 (2025-11-05)
 
