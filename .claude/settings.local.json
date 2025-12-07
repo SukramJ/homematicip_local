@@ -27,7 +27,10 @@
       "Bash(pre-commit run:*)",
       "Bash(timeout 120 python -m pytest:*)",
       "Bash(python -m ruff:*)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(wc:*)",
+      "Bash(find:*)",
+      "Bash(python -m pylint:*)"
     ],
     "deny": [],
     "ask": []

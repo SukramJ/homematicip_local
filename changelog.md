@@ -58,6 +58,7 @@
     - Programs & Sysvars
     - Advanced Settings (callbacks, MQTT, device behavior)
   - Improve error handling with automatic port configuration page on connection failure
+- Refactor entity description handling
 - Rename actions:
   - get_schedule_profile_weekday -> get_schedule_weekday
   - set_schedule_profile_weekday -> set_schedule_weekday
