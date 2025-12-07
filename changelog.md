@@ -1,7 +1,7 @@
 # Version 1.91.0 (2025-12-05)
 
 ## What's Changed
-- Bump aiohomematic to 2025.12.11
+- Bump aiohomematic to 2025.12.12
     -Architecture & Internals
       - Protocol-based dependency injection - Decoupled CentralUnit via protocol interfaces, extracted coordinators (Device, Client, Hub, Cache, Event)
       - Event bus migration - Replaced legacy callback system with modern EventBus pattern
