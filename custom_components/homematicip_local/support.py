@@ -17,7 +17,7 @@ from aiohomematic.interfaces.model import (
     GenericProgramDataPointProtocol,
     GenericSysvarDataPointProtocol,
 )
-from aiohomematic.model.data_point import EVENT_DATA_SCHEMA
+from aiohomematic.schemas import EVENT_DATA_SCHEMA
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
