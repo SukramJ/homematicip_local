@@ -10,14 +10,14 @@ from typing import Any, TypeAlias, TypeVar, cast
 import voluptuous as vol
 
 from aiohomematic.const import IDENTIFIER_SEPARATOR, EventKey
-from aiohomematic.interfaces import (
+from aiohomematic.interfaces.model import (
     CalculatedDataPointProtocol,
     CustomDataPointProtocol,
     GenericDataPointProtocol,
     GenericProgramDataPointProtocol,
     GenericSysvarDataPointProtocol,
 )
-from aiohomematic.model.data_point import EVENT_DATA_SCHEMA
+from aiohomematic.schemas import EVENT_DATA_SCHEMA
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError

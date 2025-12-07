@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from aiohomematic.const import ForcedDeviceAvailability, ParamsetKey
 from aiohomematic.exceptions import BaseHomematicException
-from aiohomematic.interfaces import DeviceProtocol
+from aiohomematic.interfaces.model import DeviceProtocol
 from aiohomematic.support import get_device_address, to_bool
 import aiohomematic.validator as haval
 from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
