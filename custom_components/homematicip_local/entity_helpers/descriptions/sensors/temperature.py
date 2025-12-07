@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
+from custom_components.homematicip_local.entity_helpers.factories import diagnostic_sensor, measurement_sensor
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import UnitOfTemperature
-
-from ...factories import diagnostic_sensor, measurement_sensor
-from ...registry import EntityDescriptionRule
 
 # Devices where temperature is diagnostic info (switch devices with internal sensor)
 _TEMPERATURE_DIAGNOSTIC_DEVICES: tuple[str, ...] = (

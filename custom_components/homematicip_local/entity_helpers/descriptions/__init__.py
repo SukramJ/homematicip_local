@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from ..registry import EntityDescriptionRule
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
+
 from .binary_sensors import BINARY_SENSOR_RULES
 from .buttons import BUTTON_RULES
 from .covers import COVER_RULES

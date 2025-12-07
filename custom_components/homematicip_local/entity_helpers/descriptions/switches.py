@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntityDescription
 from homeassistant.const import EntityCategory
-
-from ..registry import EntityDescriptionRule
 
 SWITCH_RULES: list[EntityDescriptionRule] = [
     # Outlet (HmIP-PS)

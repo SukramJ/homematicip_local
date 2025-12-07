@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.siren import SirenEntityDescription
-
-from ..registry import EntityDescriptionRule
 
 SIREN_RULES: list[EntityDescriptionRule] = [
     # Smoke detector siren (SWSD)

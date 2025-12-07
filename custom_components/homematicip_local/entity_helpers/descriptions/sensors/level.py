@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
+from custom_components.homematicip_local.entity_helpers.base import HmSensorEntityDescription
+from custom_components.homematicip_local.entity_helpers.factories import measurement_sensor, simple_sensor
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE
-
-from ...base import HmSensorEntityDescription
-from ...factories import measurement_sensor
-from ...registry import EntityDescriptionRule
 
 # Device groups for LEVEL parameter handling
 _THERMOSTAT_DEVICES: tuple[str, ...] = (
@@ -58,6 +58,7 @@ LEVEL_SENSOR_RULES: list[EntityDescriptionRule] = [
             entity_registry_enabled_default=False,
             multiplier=100,
             native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
             translation_key="pipe_level",
         ),
     ),
@@ -72,6 +73,7 @@ LEVEL_SENSOR_RULES: list[EntityDescriptionRule] = [
             entity_registry_enabled_default=False,
             multiplier=100,
             native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
             translation_key="cover_level",
         ),
     ),
@@ -86,6 +88,7 @@ LEVEL_SENSOR_RULES: list[EntityDescriptionRule] = [
             entity_registry_enabled_default=False,
             multiplier=100,
             native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
             translation_key="light_level",
         ),
     ),
@@ -100,18 +103,19 @@ LEVEL_SENSOR_RULES: list[EntityDescriptionRule] = [
             entity_registry_enabled_default=False,
             multiplier=100,
             native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
             translation_key="cover_tilt",
         ),
     ),
-    # COLOR on specific devices
+    # COLOR on specific devices (no state_class in original)
     EntityDescriptionRule(
         category=DataPointCategory.SENSOR,
         parameters=("COLOR",),
         devices=("HmIP-BSL", "HmIP-RGBW", "HmIPW-WRC6"),
         priority=10,
-        description=measurement_sensor(
+        description=simple_sensor(
             key="COLOR",
-            entity_registry_enabled_default=False,
+            enabled_default=False,
         ),
     ),
     # Generic level sensor (fallback)
@@ -122,6 +126,7 @@ LEVEL_SENSOR_RULES: list[EntityDescriptionRule] = [
             key="LEVEL",
             multiplier=100,
             native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
     # Filling level

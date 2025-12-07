@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityDescription
-
-from ..registry import EntityDescriptionRule
 
 COVER_RULES: list[EntityDescriptionRule] = [
     # Blinds (with tilt)

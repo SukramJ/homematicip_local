@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
-
-from ..factories import button, config_button
-from ..registry import EntityDescriptionRule
+from custom_components.homematicip_local.entity_helpers.factories import button, config_button
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 
 BUTTON_RULES: list[EntityDescriptionRule] = [
     # Reset motion

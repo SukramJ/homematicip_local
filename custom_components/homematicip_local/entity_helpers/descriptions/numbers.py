@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
+from custom_components.homematicip_local.entity_helpers.factories import number, percentage_number
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.const import UnitOfFrequency
-
-from ..factories import number, percentage_number
-from ..registry import EntityDescriptionRule
 
 # Devices where LEVEL should show pipe level translation
 _THERMOSTAT_DEVICES: tuple[str, ...] = (

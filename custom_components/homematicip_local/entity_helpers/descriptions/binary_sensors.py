@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
+from custom_components.homematicip_local.entity_helpers.factories import binary_sensor, diagnostic_binary_sensor
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-
-from ..factories import binary_sensor, diagnostic_binary_sensor
-from ..registry import EntityDescriptionRule
 
 BINARY_SENSOR_RULES: list[EntityDescriptionRule] = [
     # Safety/Alarm sensors

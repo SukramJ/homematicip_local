@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
+from custom_components.homematicip_local.entity_helpers.base import HmSensorEntityDescription
+from custom_components.homematicip_local.entity_helpers.factories import (
+    diagnostic_sensor,
+    enum_sensor,
+    measurement_sensor,
+    simple_sensor,
+)
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT, EntityCategory, UnitOfTime
-
-from ...base import HmSensorEntityDescription
-from ...factories import diagnostic_sensor, enum_sensor, measurement_sensor, simple_sensor
-from ...registry import EntityDescriptionRule
 
 MISC_SENSOR_RULES: list[EntityDescriptionRule] = [
     # RSSI signal strength

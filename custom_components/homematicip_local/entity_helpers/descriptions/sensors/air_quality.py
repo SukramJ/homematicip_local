@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import Final
 
 from aiohomematic.const import DataPointCategory
+from custom_components.homematicip_local.entity_helpers.factories import measurement_sensor
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     CONCENTRATION_GRAMS_PER_CUBIC_METER,
@@ -12,9 +14,6 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
 )
-
-from ...factories import measurement_sensor
-from ...registry import EntityDescriptionRule
 
 # Custom units
 NUMBER_CONCENTRATION_CM3: Final = "1/cm\u00b3"  # HmIP-SFD

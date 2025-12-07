@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from ...registry import EntityDescriptionRule
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
+
 from .air_quality import AIR_QUALITY_SENSOR_RULES
 from .battery import BATTERY_SENSOR_RULES
 from .energy import ENERGY_SENSOR_RULES

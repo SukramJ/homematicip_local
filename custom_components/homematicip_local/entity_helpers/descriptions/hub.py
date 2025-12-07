@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
+from custom_components.homematicip_local.entity_helpers.base import HmButtonEntityDescription, HmSensorEntityDescription
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import UnitOfEnergy, UnitOfLength, UnitOfTime
-
-from ..base import HmButtonEntityDescription, HmSensorEntityDescription
-from ..registry import EntityDescriptionRule
 
 HUB_RULES: list[EntityDescriptionRule] = [
     # Hub buttons

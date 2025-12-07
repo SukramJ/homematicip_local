@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
+from custom_components.homematicip_local.entity_helpers.factories import measurement_sensor, total_increasing_sensor
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import DEGREE, LIGHT_LUX, UnitOfLength, UnitOfSpeed, UnitOfTime
-
-from ...factories import measurement_sensor, total_increasing_sensor
-from ...registry import EntityDescriptionRule
 
 WEATHER_SENSOR_RULES: list[EntityDescriptionRule] = [
     # Brightness (no device class, custom translation)

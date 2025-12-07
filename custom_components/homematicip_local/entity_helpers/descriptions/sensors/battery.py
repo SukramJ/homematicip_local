@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
+from custom_components.homematicip_local.entity_helpers.factories import diagnostic_sensor
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import PERCENTAGE, UnitOfElectricPotential
-
-from ...factories import diagnostic_sensor
-from ...registry import EntityDescriptionRule
 
 BATTERY_SENSOR_RULES: list[EntityDescriptionRule] = [
     # Operating voltage (battery state)

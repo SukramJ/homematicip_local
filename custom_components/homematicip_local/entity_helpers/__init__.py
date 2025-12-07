@@ -12,9 +12,7 @@ from aiohomematic.interfaces.model import (
     GenericDataPointProtocol,
     GenericHubDataPointProtocol,
 )
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-
-from .base import (
+from custom_components.homematicip_local.entity_helpers.base import (
     HmBinarySensorEntityDescription,
     HmButtonEntityDescription,
     HmEntityDescription,
@@ -23,15 +21,19 @@ from .base import (
     HmSelectEntityDescription,
     HmSensorEntityDescription,
 )
-from .defaults import DEFAULT_DESCRIPTIONS
-from .descriptions import get_all_rules
-from .descriptions.sensors.air_quality import KILOJOULS_PERKILOGRAM, LENGTH_MICROMETER, NUMBER_CONCENTRATION_CM3
-from .registry import REGISTRY, EntityDescriptionRule
+from custom_components.homematicip_local.entity_helpers.defaults import DEFAULT_DESCRIPTIONS
+from custom_components.homematicip_local.entity_helpers.descriptions import get_all_rules
+from custom_components.homematicip_local.entity_helpers.descriptions.sensors.air_quality import (
+    KILOJOULS_PERKILOGRAM,
+    LENGTH_MICROMETER,
+    NUMBER_CONCENTRATION_CM3,
+)
+from custom_components.homematicip_local.entity_helpers.registry import REGISTRY, EntityDescriptionRule
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
+    from custom_components.homematicip_local.support import HmGenericDataPointProtocol
     from homeassistant.helpers.entity import EntityDescription
-
-    from ..support import HmGenericDataPointProtocol
 
 _LOGGER = logging.getLogger(__name__)
 

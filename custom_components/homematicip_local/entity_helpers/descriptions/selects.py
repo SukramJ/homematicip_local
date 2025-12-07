@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
+from custom_components.homematicip_local.entity_helpers.base import HmSelectEntityDescription
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.const import EntityCategory
-
-from ..base import HmSelectEntityDescription
-from ..registry import EntityDescriptionRule
 
 SELECT_RULES: list[EntityDescriptionRule] = [
     # Heating/Cooling mode

@@ -3,6 +3,13 @@
 from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
+from custom_components.homematicip_local.entity_helpers.factories import (
+    measurement_sensor,
+    simple_sensor,
+    total_increasing_sensor,
+    total_sensor,
+)
+from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     UnitOfElectricCurrent,
@@ -13,9 +20,6 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
-
-from ...factories import measurement_sensor, total_increasing_sensor
-from ...registry import EntityDescriptionRule
 
 ENERGY_SENSOR_RULES: list[EntityDescriptionRule] = [
     # Power (Watt)
@@ -88,15 +92,15 @@ ENERGY_SENSOR_RULES: list[EntityDescriptionRule] = [
             unit=UnitOfFrequency.HERTZ,
         ),
     ),
-    # Device-specific: HMW-IO-12-Sw14-DR uses mHz for frequency
+    # Device-specific: HMW-IO-12-Sw14-DR uses mHz for frequency (no state_class)
     EntityDescriptionRule(
         category=DataPointCategory.SENSOR,
         parameters=("FREQUENCY",),
         devices=("HMW-IO-12-Sw14-DR",),
         priority=10,
-        description=measurement_sensor(
-            key="FREQUENCY_MHZ",
-            unit="mHz",
+        description=simple_sensor(
+            key="FREQUENCY",
+            native_unit_of_measurement="mHz",
             translation_key="frequency",
         ),
     ),
@@ -122,9 +126,9 @@ ENERGY_SENSOR_RULES: list[EntityDescriptionRule] = [
     EntityDescriptionRule(
         category=DataPointCategory.SENSOR,
         parameters=("GAS_POWER",),
-        description=measurement_sensor(
+        description=simple_sensor(
             key="GAS_POWER",
-            unit=UnitOfVolume.CUBIC_METERS,
+            native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         ),
     ),
     EntityDescriptionRule(
@@ -159,11 +163,10 @@ ENERGY_SENSOR_RULES: list[EntityDescriptionRule] = [
     EntityDescriptionRule(
         category=DataPointCategory.SENSOR,
         parameters=("WATER_VOLUME_SINCE_OPEN",),
-        description=measurement_sensor(
+        description=total_sensor(
             key="WATER_VOLUME_SINCE_OPEN",
             device_class=SensorDeviceClass.WATER,
             unit=UnitOfVolume.LITERS,
-            # Using TOTAL state class for this specific case
         ),
     ),
 ]
