@@ -16,7 +16,7 @@ from aiohomematic.interfaces.model import (
     GenericProgramDataPointProtocol,
     GenericSysvarDataPointProtocol,
 )
-from aiohomematic.type_aliases import UnsubscribeHandler
+from aiohomematic.type_aliases import UnsubscribeCallback
 from homeassistant.core import State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -111,7 +111,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         )
 
         self._static_state_attributes = self._get_static_state_attributes()
-        self._unsubscribe_handlers: list[UnsubscribeHandler] = []
+        self._unsubscribe_callbacks: list[UnsubscribeCallback] = []
 
         _LOGGER.debug("init: Setting up %s", data_point.full_name)
         if (
@@ -240,12 +240,12 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
         if isinstance(self._data_point, CallbackDataPointProtocol):
-            self._unsubscribe_handlers.append(
+            self._unsubscribe_callbacks.append(
                 self._data_point.subscribe_to_data_point_updated(
                     handler=self._async_data_point_updated, custom_id=self.entity_id
                 )
             )
-            self._unsubscribe_handlers.append(
+            self._unsubscribe_callbacks.append(
                 self._data_point.subscribe_to_device_removed(handler=self._async_device_removed)
             )
         # Init value of entity.
@@ -273,7 +273,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
         # Remove callback from device.
-        for unregister in self._unsubscribe_handlers:
+        for unregister in self._unsubscribe_callbacks:
             if unregister is not None:
                 unregister()
 
@@ -404,7 +404,7 @@ class AioHomematicGenericHubEntity(Entity):
                 self._attr_name = data_point.name
 
         self._attr_device_info = self._get_device_info()
-        self._unsubscribe_handlers: list[UnsubscribeHandler] = []
+        self._unsubscribe_callbacks: list[UnsubscribeCallback] = []
         _LOGGER.debug("init sysvar: Setting up %s", self._data_point.name)
 
     @property
@@ -447,20 +447,20 @@ class AioHomematicGenericHubEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
         if isinstance(self._data_point, CallbackDataPointProtocol):
-            self._unsubscribe_handlers.append(
+            self._unsubscribe_callbacks.append(
                 self._data_point.subscribe_to_data_point_updated(
                     handler=self._async_hub_entity_updated,
                     custom_id=self.entity_id,
                 )
             )
-            self._unsubscribe_handlers.append(
+            self._unsubscribe_callbacks.append(
                 self._data_point.subscribe_to_device_removed(handler=self._async_hub_device_removed)
             )
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip sysvar entity will be removed from hass."""
         # Remove callbacks.
-        for unregister in self._unsubscribe_handlers:
+        for unregister in self._unsubscribe_callbacks:
             if unregister is not None:
                 unregister()
 
