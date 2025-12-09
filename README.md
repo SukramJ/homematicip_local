@@ -29,7 +29,7 @@ To connect locally to your Homematic Home Control Unit (HmIP-HCU1), please use t
 - Communication: Local XML-RPC for control and push state updates; JSON-RPC for names and rooms.
 - Installation: HACS recommended; manual installation supported.
 - Auto-discovery: Supported for CCU and compatible hubs.
-- Minimum requirements: Home Assistant 2025.8.0+; for Homematic IP on CCU require at least CCU2 2.53.27 / CCU3 3.53.26.
+- Minimum requirements: Home Assistant 2025.10.0+; for Homematic IP on CCU require at least CCU2 2.53.27 / CCU3 3.53.26.
 - Useful links: [Installation guide](https://github.com/sukramj/homematicip_local/wiki/Installation), [Wiki](https://github.com/sukramj/aiohomematic/wiki), [Issues](https://github.com/sukramj/aiohomematic/issues), [Discussions](https://github.com/sukramj/aiohomematic/discussions), [Changelog](https://github.com/sukramj/homematicip_local/blob/master/changelog.md).
 
 ## Table of contents
@@ -46,31 +46,33 @@ To connect locally to your Homematic Home Control Unit (HmIP-HCU1), please use t
 - [Manual configuration steps](#manual-configuration-steps)
 - [Auto-discovery](#auto-discovery)
   - [Configuration Variables](#configuration-variables)
-- [Step 1: CCU Connection Settings](#step-1-ccu-connection-settings)
+- [Step 1: CCU Connection (Step 1 of 2)](#step-1-ccu-connection-step-1-of-2)
   - [Required Settings](#required-settings)
-  - [Security & Network Settings](#security--network-settings)
-  - [Advanced Connection Settings (Optional)](#advanced-connection-settings-optional)
 - [Automatic Backend Detection](#automatic-backend-detection)
-- [Step 2: Interface Selection](#step-2-interface-selection)
-  - [Common Interface Configurations](#common-interface-configurations)
-  - [Detailed Interface Options](#detailed-interface-options)
-- [Step 3: Advanced Options (Optional)](#step-3-advanced-options-optional)
+- [Step 2: TLS & Interface Selection (Step 2 of 2)](#step-2-tls--interface-selection-step-2-of-2)
+  - [TLS Settings](#tls-settings)
+  - [Interface Selection](#interface-selection)
+  - [Custom Port Configuration (Optional)](#custom-port-configuration-optional)
+- [Finish or Configure Advanced](#finish-or-configure-advanced)
+- [Advanced Options (Optional)](#advanced-options-optional)
+  - [Callback Settings (Docker/Network)](#callback-settings-dockernetwork)
   - [System Variables & Programs](#system-variables--programs)
-  - [Communication & Networking](#communication--networking)
-  - [MQTT Integration (For CUxD and CCU-Jack)](#mqtt-integration-for-cuxd-and-ccu-jack)
+  - [Communication Settings](#communication-settings)
+  - [MQTT Integration](#mqtt-integration)
   - [Device Behavior](#device-behavior)
   - [Expert Options](#expert-options)
 - [Quick Setup Guide](#quick-setup-guide)
-  - [Typical HomematicIP Setup (Recommended for Beginners)](#typical-homematicip-setup-recommended-for-beginners)
-  - [Advanced Setup with Multiple Device Types](#advanced-setup-with-multiple-device-types)
+  - [Beginner Setup (HomematicIP Only)](#beginner-setup-homematicip-only)
+  - [Advanced Setup (Mixed Devices + Custom Options)](#advanced-setup-mixed-devices--custom-options)
 - [Reconfiguring the Integration](#reconfiguring-the-integration)
+- [Options Flow (Configure)](#options-flow-configure)
 - [System Variables & Programs](#system-variables--programs-1)
   - [Key Facts](#key-facts)
 - [Understanding System Variables](#understanding-system-variables)
 - [Two Modes: DEFAULT vs EXTENDED](#two-modes-default-vs-extended)
 - [Filtering: Import Only What You Need](#filtering-import-only-what-you-need)
 - [CCU Programs](#ccu-programs)
-- [Quick Start Guide](#quick-start-guide)
+- [System Variables Quick Start](#system-variables-quick-start)
 - [Important Notes](#important-notes)
 - [Actions](#actions)
 - [Events](#events)
@@ -83,12 +85,12 @@ To connect locally to your Homematic Home Control Unit (HmIP-HCU1), please use t
 - [Technical Details](#technical-details)
 - [Updating Device Firmware](#updating-device-firmware)
 - [CCU Backup](#ccu-backup)
-- [Adding New Devices](#adding-new-devices)
+- [Adding New Devices (Pairing)](#adding-new-devices-pairing)
 - [CUxD, CCU-Jack & MQTT Support](#cuxd-ccu-jack--mqtt-support)
 - [Setting Up MQTT Support](#setting-up-mqtt-support)
 - [CUxD & CCU-Jack Device Compatibility](#cuxd--ccu-jack-device-compatibility)
 - [Troubleshooting](#troubleshooting)
-- [Frequently asked questions](#frequently-asked-questions)
+- [Frequently Asked Questions](#frequently-asked-questions)
 - [Examples in YAML](#examples-in-yaml)
 - [Available Blueprints](#available-blueprints)
 - [Support and Contributing](#support-and-contributing)
@@ -206,54 +208,70 @@ Known cases are in combination with the rf-module `HM-MOD-RPI-PCB`.
 
 ### Configuration Variables
 
-The integration uses a multi-step configuration flow that guides you through all necessary settings. This section explains each configuration option in detail.
+The integration uses a streamlined 2-step configuration flow with optional advanced settings. This section explains each configuration option in detail.
+
+**Configuration Flow Overview:**
+
+```
+Step 1: CCU Connection → Backend Detection → Step 2: TLS & Interfaces → Menu: Finish or Configure Advanced
+```
 
 ---
 
 ## Step 1: CCU Connection (Step 1 of 2)
 
-These are the basic settings required to connect Home Assistant to your Homematic hub.
+Enter your CCU credentials. The integration will automatically detect your backend type and available interfaces.
 
 ### Required Settings
 
 | Setting | Description | Example | Notes |
 |---------|-------------|---------|-------|
-| **Instance Name** | Unique identifier for this integration instance | `homematic_ccu3` | Use lowercase letters and numbers only (a-z, 0-9). Must be unique if connecting multiple HA instances to the same CCU or connecting to multiple CCUs. |
+| **Instance Name** | Unique identifier for this integration instance | `ccu3` | Use lowercase letters and numbers only (a-z, 0-9). Must be unique if connecting multiple HA instances to the same CCU or connecting to multiple CCUs. |
 | **Host** | Hostname or IP address of your CCU | `192.168.1.50` or `ccu3.local` | Make sure your CCU has a static IP or use a hostname that doesn't change. |
 | **Username** | Admin username on your CCU | `Admin` | **Case sensitive!** User must have administrator privileges. |
 | **Password** | Password for the admin user | `MySecurePass123` | **Case sensitive!** Only use allowed characters: `A-Z`, `a-z`, `0-9`, and `.!$():;#-` |
 
-> **Note:** Network settings like Callback Host and Port have been moved to **Advanced Options** (Step 3).
+> **Tip:** After clicking "Submit", the integration automatically detects your CCU type and available interfaces. You'll see a brief progress indicator during detection.
 
 ---
 
 ## Automatic Backend Detection
 
-After entering your CCU connection settings, the integration automatically detects your setup:
+After entering your connection settings, the integration runs **automatic backend detection**:
 
-| Detection | Description |
-|-----------|-------------|
-| **Backend Type** | Identifies whether you're using CCU2, CCU3, OpenCCU, Debmatic, or Homegear |
-| **Available Interfaces** | Discovers which interfaces (HmIP-RF, BidCos-RF, etc.) are available on your CCU |
-| **TLS Configuration** | Detects if your CCU is configured for encrypted connections |
-| **HTTPS Redirect** | Checks if your CCU redirects HTTP to HTTPS |
+| What's Detected | Description |
+|-----------------|-------------|
+| **Backend Type** | CCU2, CCU3, OpenCCU, Debmatic, or Homegear |
+| **Available Interfaces** | HmIP-RF, BidCos-RF, BidCos-Wired, Virtual Devices, CUxD, CCU-Jack |
+| **TLS Configuration** | Whether your CCU uses encrypted connections |
+| **HTTPS Redirect** | Whether HTTP is redirected to HTTPS |
 
-This detection runs automatically and shows a progress indicator. The detected information pre-configures the interface selection in Step 2, making setup easier and reducing configuration errors.
+**What happens:**
+1. ✅ A progress screen shows "Detecting backend type and available interfaces..."
+2. ✅ Detected interfaces are **pre-selected** in Step 2
+3. ✅ TLS is **automatically enabled** if your CCU uses HTTPS
+4. ❌ If detection fails, you're returned to Step 1 with a clear error message
 
-> **Note:** If detection fails (e.g., wrong credentials or network issues), you'll be returned to Step 1 with an error message explaining the problem.
+**Common detection errors:**
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `Authentication failed` | Wrong username/password | Verify credentials are correct (case-sensitive) |
+| `Cannot connect` | Network issue or wrong host | Check CCU IP address, ensure it's powered on |
+| `Detection failed` | CCU not responding properly | Verify user has admin privileges |
 
 ---
 
 ## Step 2: TLS & Interface Selection (Step 2 of 2)
 
-Configure TLS and select which device types you want to integrate. The available interfaces are pre-selected based on the automatic backend detection.
+Configure TLS settings and select which device types to integrate. Interfaces detected in the previous step are **pre-selected**.
 
 ### TLS Settings
 
 | Setting | Default | When to Use |
 |---------|---------|-------------|
-| **Use TLS** | `false` | Enable if your CCU uses HTTPS. Ports are automatically adjusted (e.g., 2010 → 42010). |
-| **Verify TLS** | `false` | Enable to verify TLS certificates. Only enable if your CCU has a valid SSL certificate. |
+| **Use TLS** | Auto-detected | Enable if your CCU uses HTTPS. Ports automatically adjust (e.g., 2010 → 42010). |
+| **Verify TLS** | `false` | Enable only if your CCU has a valid SSL certificate (not self-signed). |
 
 ### Interface Selection
 
@@ -270,165 +288,182 @@ Enable only the interfaces your CCU actually uses:
 
 ### Custom Port Configuration (Optional)
 
-By default, ports are automatically set based on your TLS setting. Enable **Configure custom ports** only if:
+**Ports are automatically set** based on your TLS setting. Only enable **"Configure custom ports"** if:
 - Your CCU uses non-standard ports
-- You need to override the automatic port selection
-- Connection fails with default ports (the port configuration page will appear automatically)
+- Connection fails with default ports (the port page appears automatically in this case)
+
+> **Note:** If the default ports don't work, the integration automatically shows the port configuration page so you can adjust them.
 
 **Common Interface Configurations:**
 
-| Setup Type | Interfaces to Enable |
-|------------|---------------------|
-| **HomematicIP Only** | ✓ HomematicIP only |
-| **Mixed Setup** | ✓ HomematicIP + ✓ Homematic (BidCos-RF) |
-| **With Heating Groups** | Add ✓ Heating Groups to above |
-| **With CUxD/CCU-Jack** | Add respective interface + enable MQTT in Advanced Options |
-
-**Important Notes:**
-- Only enable interfaces you actually use - disabled interfaces save resources
-- CUxD and CCU-Jack require additional setup (see [CUxD, CCU-Jack and MQTT support](#cuxd-ccu-jack-and-mqtt-support))
+| Your Devices | Interfaces to Enable |
+|--------------|---------------------|
+| Only HomematicIP devices | ✓ HomematicIP only |
+| HomematicIP + classic Homematic | ✓ HomematicIP + ✓ Homematic (BidCos-RF) |
+| With thermostat groups | Add ✓ Heating Groups |
+| With CUxD or CCU-Jack | Add respective interface + configure MQTT later |
 
 ---
 
-## Step 3: Advanced Options (Optional)
+## Finish or Configure Advanced
 
-After configuring interfaces, you can choose to configure advanced options or finish setup immediately. Most users can skip this step and use the defaults.
+After Step 2, you see a menu with two options:
 
-### Callback Settings (Network)
+| Option | When to Choose |
+|--------|----------------|
+| **Finish setup** | ✅ Recommended for most users. Uses sensible defaults. |
+| **Configure advanced options** | Only if you need: callback settings (Docker), MQTT, marker filtering, or expert options |
 
-These settings are only needed in special network scenarios (e.g., Docker setups):
+> **Tip:** You can always access advanced options later via **Configure** in the integration settings.
 
-| Setting | Purpose | When to Use | How to Reset |
-|---------|---------|-------------|--------------|
-| **Callback Host** | IP/hostname that CCU uses to reach HA | Required if HA runs in Docker with custom networking, or if HA's auto-detected IP is unreachable from the CCU | Leave empty or set to one blank space |
-| **Callback Port (XML-RPC)** | Port that CCU uses to send state updates | Required in Docker setups where port forwarding is needed | Leave empty or set to `0` |
+---
 
-#### Docker Users: Network Setup
+## Advanced Options (Optional)
 
-If running Home Assistant in Docker:
+Only accessible if you choose "Configure advanced options" in the menu. Most users don't need these settings.
+
+### Callback Settings (Docker/Network)
+
+Only configure these if Home Assistant can't receive state updates from your CCU:
+
+| Setting | Purpose | When to Use |
+|---------|---------|-------------|
+| **Callback Host** | IP address the CCU uses to reach HA | Required if HA runs in Docker with custom networking |
+| **Callback Port (XML-RPC)** | Port for state updates from CCU | Required in Docker setups with port forwarding |
+
+**Docker Users:**
 - **Recommended:** Use `network_mode: host` in your Docker configuration
-- **Alternative:** If you can't use host networking:
-  1. Set **Callback Host** to your Docker host's IP address
-  2. Set **Callback Port** to a port you forward to the HA container
-  3. Configure port forwarding on your Docker host
+- **Alternative:** Set Callback Host to your Docker host's IP and configure port forwarding
 
 ### System Variables & Programs
 
-Control how CCU system variables and programs are imported into Home Assistant.
-
-| Setting | Default | Description | Recommendation |
-|---------|---------|-------------|----------------|
-| **Enable System Variable Scan** | `true` | Fetch system variables from CCU | Keep enabled unless you don't use system variables |
-| **System Variable Markers** | All | Filter which variables to import (HAHM, MQTT, HX, INTERNAL) | Use markers to import only needed variables |
-| **Enable Program Scan** | `true` | Fetch programs from CCU | Keep enabled unless you don't use programs |
-| **Program Markers** | All except INTERNAL | Filter which programs to import | Use markers to import only needed programs |
-| **Scan Interval** | 30 seconds | How often to poll for variable/program changes | Use 30-60s. For values under 15s, use on-demand fetching instead. |
+| Setting | Default | Description |
+|---------|---------|-------------|
+| **Enable System Variable Scan** | `true` | Fetch system variables from CCU |
+| **System Variable Markers** | All | Filter which variables to import (HAHM, MQTT, HX, INTERNAL) |
+| **Enable Program Scan** | `true` | Fetch programs from CCU |
+| **Program Markers** | All except INTERNAL | Filter which programs to import |
+| **Scan Interval** | 30 seconds | How often to poll for changes |
 
 **About Markers:**
-Markers are keywords in the description field of system variables/programs in the CCU:
-- **HAHM** - Extended mode: Creates writable entities (switch, select, number, text) instead of read-only sensors
-- **MQTT** - For CCU-Jack MQTT support: Enables push updates for variables
+- **HAHM** - Creates writable entities (switch, select, number, text)
+- **MQTT** - Enables push updates via MQTT (requires CCU-Jack)
 - **HX** - Custom marker for your own filtering
-- **INTERNAL** - CCU's internal checkbox: Includes CCU-internal variables/programs
+- **INTERNAL** - Includes CCU-internal variables/programs
 
-### Communication & Networking
+### Communication Settings
 
 | Setting | Default | When to Change |
 |---------|---------|----------------|
-| **System Notifications** | `true` | Shows warnings about CALLBACK and PINGPONG issues. **Don't disable** - fix network issues instead. |
-| **Listen on All IPs** | `false` | Enable only for Docker-on-Mac/Windows with double virtualization issues. Security risk if enabled unnecessarily. |
+| **System Notifications** | `true` | Don't disable - shows important network warnings |
+| **Listen on All IPs** | `false` | Only for Docker-on-Mac/Windows with virtualization issues |
 
-### MQTT Integration (For CUxD and CCU-Jack)
+### MQTT Integration
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| **Enable MQTT** | `false` | Enable to receive events from CUxD and CCU-Jack devices via MQTT |
-| **MQTT Prefix** | _(empty)_ | Set if using MQTT Bridge (RemotePrefix in CCU-Jack config) |
+| **Enable MQTT** | `false` | For CUxD and CCU-Jack device events |
+| **MQTT Prefix** | _(empty)_ | Set if using MQTT Bridge |
 
-**Prerequisites for MQTT:**
-- HA must be connected to an MQTT broker
-- CCU-Jack installed OR MQTT Bridge configured
-- See [CUxD, CCU-Jack and MQTT support](#cuxd-ccu-jack-and-mqtt-support) for setup guide
+**Prerequisites:** HA connected to MQTT broker, CCU-Jack installed
 
 ### Device Behavior
 
-| Setting | Default | Description | Impact |
-|---------|---------|-------------|--------|
-| **Enable Sub-Devices** | `false` | Creates separate HA devices for each channel on multi-channel Homematic devices (e.g., HmIP-DRSI4, HmIP-DRDI3) | Affects device-based automations - update automations when changing |
-| **Use Group Channel for Cover State** | `true` | Cover groups display level from state channel instead of own level | Only disable if you need to control all three channels separately (experts only) |
-| **Delay New Device Creation** | `false` | New devices create a repair notification instead of immediate entity creation | Useful to avoid auto-created names like "VCU1234567:1" - wait until properly named in CCU |
+| Setting | Default | Description |
+|---------|---------|-------------|
+| **Enable Sub-Devices** | `false` | Create separate devices for each channel |
+| **Use Group Channel for Cover State** | `true` | Cover groups use state channel level |
 
 ### Expert Options
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| **Unignore Parameters** | _(empty)_ | Add normally filtered device parameters as entities | See [Unignore device parameters](#unignore-device-parameters). Use at your own risk. |
-| **Optional Settings** | _(empty)_ | Enable debug/analytics features | **Don't use in production** - for development only |
+| Setting | Description |
+|---------|-------------|
+| **Unignore Parameters** | Add filtered device parameters as entities |
+| **Optional Settings** | Debug/analytics features (development only) |
 
 ---
 
 ## Quick Setup Guide
 
-### Typical HomematicIP Setup (Recommended for Beginners)
+### Beginner Setup (HomematicIP Only)
 
-**Step 1 - CCU Connection:**
-- Instance Name: `ccu3`
-- Host: `192.168.1.50`
-- Username: `Admin`
-- Password: Your CCU admin password
+Most users only need HomematicIP devices. Follow these simple steps:
 
-**Step 2 - TLS & Interfaces:**
-- Use TLS: `false` (unless your CCU requires HTTPS)
-- Enable: HomematicIP (HmIP-RF) only
-- Configure custom ports: `false` (use automatic ports)
+**Step 1 - Enter CCU Connection:**
+```
+Instance Name: OpenCCU-Prod
+Host:          192.168.1.50  (your CCU's IP address)
+Username:      Admin
+Password:      (your CCU admin password)
+```
+
+**Automatic Detection:**
+- Wait for the progress indicator to complete
+- The integration detects your CCU type and available interfaces
+
+**Step 2 - Verify Settings:**
+- TLS: Leave as detected (usually `false`)
+- Interfaces: HomematicIP/ BidCos-RF / Bidcos-Wired could be pre-selected ✓
+- Custom ports: Leave unchecked
 
 **Finish:**
-- Click "Finish setup" to complete with default settings
-
-**Result:** All HomematicIP devices will be discovered and added to Home Assistant.
+- Click **"Finish setup"**
+- Done! Your devices will appear within seconds.
 
 ---
 
-### Advanced Setup with Multiple Device Types
+### Advanced Setup (Mixed Devices + Custom Options)
 
-**Step 1 - CCU Connection:**
-- Instance Name: `home_ccu` (unique if you have multiple CCUs)
-- Host: Your CCU IP/hostname
-- Credentials: Admin username and password
+For users with multiple device types or special network setups:
 
-**Step 2 - TLS & Interfaces:**
-- Use TLS: Enable if your CCU uses HTTPS
-- Enable: HomematicIP, Homematic (BidCos-RF), and Heating Groups
-- Configure custom ports: `false` (ports are automatically adjusted for TLS)
+**Step 1 - Enter CCU Connection:**
+```
+Instance Name: OpenCCU-Prod  (unique name for your setup)
+Host:          192.168.1.50
+Username:      Admin
+Password:      (your password)
+```
 
-**Choose "Configure advanced options" then:**
-- System Variable Markers: Select `HAHM` for writable variables
-- Scan Interval: `30` seconds
-- Enable MQTT: `true` (if using CUxD or CCU-Jack)
-- Callback settings: Only configure if using Docker with custom networking
+**Step 2 - Configure Interfaces:**
+- TLS: Enable if your CCU uses HTTPS
+- Select all interfaces you use:
+  - ✓ HomematicIP
+  - ✓ Homematic (BidCos-RF)
+  - ✓ Heating Groups (if you have thermostat groups)
+
+**Choose "Configure advanced options" → Then:**
+```
+Callback Host:    (leave empty, unless Docker with custom network)
+Enable MQTT:      true (if using CUxD or CCU-Jack)
+Sysvar Markers:   Select HAHM (for writable system variables)
+Scan Interval:    30
+```
+
+**Click Submit → Done!**
 
 ---
 
 ## Reconfiguring the Integration
 
-You can update your CCU connection settings without removing and re-adding the integration:
+Update your CCU connection without removing and re-adding the integration:
 
 1. Go to **Settings** → **Devices & Services**
 2. Find **Homematic(IP) Local for OpenCCU**
-3. Click the **three-dot menu** → **Reconfigure**
-4. **Step 1:** Update connection settings (host, username, password)
+3. Click the **three-dot menu (⋮)** → **Reconfigure**
+4. **Step 1:** Update host, username, or password
 5. **Step 2:** Update TLS and interface settings
-6. Optionally configure custom ports if needed
-7. The integration will validate and reload with new settings
+6. Submit → Integration reloads with new settings
 
-**What you can reconfigure:**
-- Host/IP address (if CCU moved to different IP)
-- Username and password
-- TLS settings
-- Interface selection
-- Custom ports
+**What Reconfigure changes:**
+- ✅ Host/IP address
+- ✅ Username and password
+- ✅ TLS settings
+- ✅ Interface selection
+- ✅ Custom ports
 
-**Note:** To change advanced options (callbacks, system variables, MQTT, etc.), use the **Configure** option instead of Reconfigure.
+**What Reconfigure does NOT change:**
+- ❌ Advanced options (use **Configure** instead)
+- ❌ Instance name (must delete and re-add)
 
 ---
 
@@ -436,12 +471,20 @@ You can update your CCU connection settings without removing and re-adding the i
 
 Use **Configure** (not Reconfigure) to access all settings via a menu:
 
-| Menu Option | Settings |
-|-------------|----------|
+1. Go to **Settings** → **Devices & Services**
+2. Find **Homematic(IP) Local for OpenCCU**
+3. Click **Configure**
+
+| Menu Option | What You Can Change |
+|-------------|---------------------|
 | **Connection** | Host, username, password |
 | **TLS & Interfaces** | TLS settings, interface selection, custom ports |
 | **Programs & Sysvars** | System variable/program scanning and markers |
 | **Advanced Settings** | Callbacks, MQTT, device behavior, unignore parameters |
+
+> **When to use Configure vs Reconfigure:**
+> - **Reconfigure:** Quick updates to connection/interface settings
+> - **Configure:** Access to all settings including advanced options
 
 ## System Variables & Programs
 
@@ -575,7 +618,7 @@ CCU programs work the same as system variables:
 
 ---
 
-## Quick Start Guide
+## System Variables Quick Start
 
 ### For Beginners (Simple Setup)
 
@@ -1357,45 +1400,100 @@ automation:
 
 ---
 
-## Adding New Devices
+## Adding New Devices (Pairing)
 
-When you add new devices to your CCU, they are integrated into Home Assistant via a controlled process using repair notifications.
+New devices are added to Home Assistant through a **controlled repair notification process**. This ensures devices get proper names and entity IDs from the start.
 
-### How New Device Integration Works
+### Why Repair Notifications?
 
-When a new device is paired with your CCU:
+When you pair a new device with your CCU, it typically has a technical address like `VCU1234567`. If the integration created entities immediately, you'd get ugly entity IDs like `sensor.vcu1234567_temperature`.
 
-1. **Pair device** with your CCU (via CCU web interface)
-2. **Integration detects** the new device
-3. **HA creates a repair notification** (Settings → System → Repairs)
-4. **Name the device** in CCU's web interface (if not already done)
-5. **Open the repair** in HA and enter the device name (optional)
-6. **Device and entities are created** in HA
+The repair notification gives you the chance to:
+- ✅ Name the device properly before entities are created
+- ✅ Get clean entity IDs like `sensor.living_room_thermostat_temperature`
+- ✅ Control exactly when devices appear in Home Assistant
 
-This approach ensures devices get proper names from the start and entity IDs are based on meaningful names.
+### Step-by-Step: Adding a New Device
 
-### Adding a New Device Step-by-Step
+**1. Pair the device with your CCU**
 
-| Step | Where | Action |
-|------|-------|--------|
-| 1 | **CCU** | Pair device via CCU web interface |
-| 2 | **CCU** | Assign room (optional, enables HA area assignment) |
-| 3 | **HA** | Go to Settings → System → Repairs |
-| 4 | **HA** | Click on the new device notification |
-| 5 | **HA** | Enter device name and confirm |
+Use your CCU's web interface to pair the new device:
+- CCU3/OpenCCU: Settings → Devices → Teach-in device
+- Follow the device's pairing instructions (usually pressing a button)
 
-**Naming options:**
-- **Option A:** Name the device in CCU first → leave device name empty in HA repair dialog
-- **Option B:** Leave device unnamed in CCU → enter device name in HA repair dialog
+**2. (Recommended) Name the device in CCU**
 
-**Result:** Device appears in HA with proper naming and optional area assignment.
+While still in the CCU interface:
+- Give the device a meaningful name (e.g., "Living Room Thermostat")
+- Assign it to a room (this becomes the HA area)
 
-### Benefits of This Approach
+> **Tip:** Naming in CCU first is easier because you can use spaces and special characters. The integration will use this name.
 
-- **Clean names:** Devices get proper names instead of technical IDs like `VCU1234567:1`
-- **Correct entity IDs:** Entity IDs are based on meaningful device names
-- **Room/Area sync:** CCU room assignments transfer to HA areas
-- **User control:** You decide when a device is added to HA
+**3. Check Home Assistant Repairs**
+
+After pairing, Home Assistant shows a repair notification:
+
+1. Go to **Settings** → **System** → **Repairs**
+2. You'll see: "Device creation of [ADDRESS] delayed on [INTERFACE]"
+3. Click on the notification
+
+**4. Confirm or Name the Device**
+
+In the repair dialog:
+
+| If you... | Then... |
+|-----------|---------|
+| Named the device in CCU | Leave the name field **empty** → Click Submit |
+| Didn't name in CCU | Enter a name (e.g., "Kitchen Motion Sensor") → Click Submit |
+
+**5. Done!**
+
+The device and all its entities are now created in Home Assistant with proper names.
+
+### Example: Adding a Temperature Sensor
+
+```
+CCU: Pair device HmIP-STHD → Address: VCU0012345
+CCU: Name it "Bedroom Thermostat", assign to room "Bedroom"
+HA:  Repair notification appears
+HA:  Click repair → Leave name empty → Submit
+HA:  Device "Bedroom Thermostat" created in area "Bedroom"
+HA:  Entities: climate.bedroom_thermostat, sensor.bedroom_thermostat_temperature, etc.
+```
+
+### Naming Options Comparison
+
+| Method | Where to Name | Result |
+|--------|---------------|--------|
+| **Option A (Recommended)** | Name in CCU first | CCU name is used, syncs both systems |
+| **Option B** | Name in HA repair dialog | Name only in HA, CCU keeps technical address |
+| **Option C** | Skip naming | Technical address used (not recommended) |
+
+### Room/Area Assignment
+
+| CCU Room Configuration | HA Area Assignment |
+|------------------------|-------------------|
+| Device assigned to one room | ✅ Area matches CCU room |
+| Device assigned to multiple rooms | ❌ No area (HA only allows one) |
+| No room assigned | ❌ No area assigned |
+
+> **Note:** You can always change the area later in HA device settings.
+
+### Troubleshooting New Devices
+
+**Device doesn't appear as repair notification:**
+- Wait 30-60 seconds after pairing
+- Check if the device is visible in CCU
+- Reload the integration (Settings → Integrations → Reload)
+
+**Wrong name was used:**
+1. Delete the device in HA (Settings → Devices → Select device → Delete)
+2. Rename in CCU
+3. Reload integration → New repair notification appears
+
+**Device appears with technical address:**
+- This happens if you confirmed without entering a name
+- Delete and re-add as described above
 
 ---
 
@@ -1493,32 +1591,116 @@ If CUxD or CCU-Jack behaves differently than expected, adapt using HA's templati
 
 ## Troubleshooting
 
-If the integration does not work as expected, try the following before opening an issue:
-- Review Home Assistant logs for entries related to this integration: homematicip_local and aiohomematic. Address any errors or warnings shown.
-- Verify required ports are open and reachable between HA and your hub (CCU/OpenCCU/Homegear). See Firewall and required ports above.
-- Ensure the CCU user has admin privileges and that your password only contains supported characters (A-Z, a-z, 0-9 and .!$():;#-).
-- When running HA in Docker, prefer network_mode: host. Otherwise, set callback_host and callback_port_xml_rpc in the configuration and allow inbound connections from the CCU to that port.
-- If you run multiple HA instances or connect to multiple CCUs, make instance_name unique per HA instance.
-- For persistent auto-discovery entries after setup, click Ignore or reconfigure the existing instance, then restart HA.
-- After updating CCU firmware or changing interfaces, restart Home Assistant and reload the integration.
-- For CUxD/CCU-Jack, ensure MQTT is set up correctly and verify topics/events with an MQTT Explorer before reporting issues.
+Before opening an issue, work through this troubleshooting guide:
 
-## Frequently asked questions
+### First Steps Checklist
 
-Q: I can see an entity, but it is unavailable.<br>
-A: Possible reason: the entity is deactivated. Go into the entity configuration and activate the entity.
+| Check | How to Verify |
+|-------|---------------|
+| ✅ HA logs reviewed | Settings → System → Logs → Filter: `homematicip_local`, `aiohomematic` |
+| ✅ Ports open | Can reach CCU from HA (test with ping, telnet to port 2010) |
+| ✅ CCU reachable | CCU web interface accessible from same network |
+| ✅ Admin user | CCU user has administrator privileges |
+| ✅ Valid password | Only characters: A-Z, a-z, 0-9 and `.!$():;#-` |
 
-Q: I'm using a button on a remote control as a trigger in an automation, but the automation doesn't fire after the button is pressed.<br>
-A: See [Events for Homematic(IP) devices](#events-for-homematicip-devices)
+### Docker-Specific Issues
 
-Q: My device is not listed under [Events for Homematic(IP) devices](#events-for-homematicip-devices)<br>
-A: It doesn't matter. These are just examples. If you can press it, it is a button and events are emitted.
+| Problem | Solution |
+|---------|----------|
+| No state updates | Set `callback_host` to Docker host IP in Advanced Options |
+| Connection refused | Use `network_mode: host` (recommended) |
+| Multiple instances conflict | Ensure unique `instance_name` per HA instance |
 
-Q: I have a problem with the integration. What can I do?<br>
-A: Before creating an issue, you should review the HA log files for `error` or `warning` entries related to this integration (`homematicip_local`, `aiohomematic`) and read the corresponding messages. You can find further information about some messages in this document.
+### Common Problems & Solutions
 
-Q: What is the source of OPERATING_VOLTAGE_LEVEL, APPARENT_TEMPERATURE, DEW_POINT, FROST_POINT, VAPOR_CONCENTRATION
-A: These are parameters/sensors, that are [calculated](https://github.com/SukramJ/aiohomematic/blob/devel/docs/calculated_climate_sensors.md) based on existing parameters to add more information to a device.
+**Entity shows "Unavailable"**
+1. Entity might be **disabled** → Settings → Entities → Enable it
+2. Device offline → Check CCU if device is reachable
+3. After CCU restart → Wait for device to report in (battery devices: hours)
+
+**Devices not appearing**
+1. New devices appear as **Repair notifications** → Check Settings → System → Repairs
+2. Reload integration → Settings → Integrations → Reload
+3. Check interface is enabled → Reconfigure → Verify correct interfaces selected
+
+**Auto-discovery keeps appearing**
+1. Click **Ignore** on the discovery notification
+2. Or reconfigure the existing integration entry
+3. Restart Home Assistant
+
+**After CCU firmware update**
+1. Restart Home Assistant
+2. Reload the integration
+3. Check for changed ports or interfaces
+
+### Getting Help
+
+If you can't resolve the issue:
+
+1. **Search existing issues:** [GitHub Issues](https://github.com/sukramj/aiohomematic/issues)
+2. **Ask in discussions:** [GitHub Discussions](https://github.com/sukramj/aiohomematic/discussions)
+3. **Open an issue** with:
+   - HA version and integration version
+   - CCU type and firmware version
+   - Relevant log entries
+   - Steps to reproduce
+
+---
+
+## Frequently Asked Questions
+
+**Q: Entity shows "unavailable" - why?**
+
+The entity might be disabled. Go to Settings → Entities → find the entity → click Enable.
+
+---
+
+**Q: Button presses don't trigger my automation**
+
+HomematicIP button devices need central links enabled. See [Enabling Button Events](#enabling-button-events) section.
+
+---
+
+**Q: My device isn't listed in the button events documentation**
+
+That's fine! The documentation shows examples. Any device with physical buttons will emit events - if you can press it, it works.
+
+---
+
+**Q: What are APPARENT_TEMPERATURE, DEW_POINT, FROST_POINT sensors?**
+
+These are [calculated sensors](https://github.com/SukramJ/aiohomematic/blob/devel/docs/calculated_climate_sensors.md) derived from existing device parameters to provide additional information.
+
+---
+
+**Q: New device added to CCU but doesn't appear in HA**
+
+New devices create a **repair notification** instead of appearing automatically:
+1. Go to **Settings** → **System** → **Repairs**
+2. Click the notification for your new device
+3. Enter a name and confirm
+
+See [Adding New Devices](#adding-new-devices-pairing) for details.
+
+---
+
+**Q: How do I change a device name?**
+
+| Goal | Method |
+|------|--------|
+| Change name in HA only | Settings → Devices → Select device → Edit name |
+| Sync name from CCU | Rename in CCU → Reload integration |
+| Change entity ID too | Delete device in HA → Rename in CCU → Reload integration |
+
+---
+
+**Q: My CCU has many system variables but I only see a few**
+
+By default, system variables are imported as **disabled entities**. To see them:
+1. Settings → Entities → Show disabled entities
+2. Enable the ones you need
+
+Or use **markers** to auto-enable specific variables. See [System Variables & Programs](#system-variables--programs).
 
 ## Examples in YAML
 
