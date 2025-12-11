@@ -1,7 +1,7 @@
 # Version 2.0.0 (2025-12-11)
 
 ## What's Changed
-- Bump aiohomematic to 2025.12.21
+- Bump aiohomematic to 2025.12.22
   - New Features
     - Add install mode support with countdown timer for both HmIP-RF and BidCos-RF interfaces
     - Add device inbox hub entity for viewing pending device pairings
