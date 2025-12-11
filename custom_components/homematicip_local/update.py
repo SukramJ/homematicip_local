@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Any, Final
 
-from aiohomematic.const import DataPointCategory
+from aiohomematic.const import CCUType, DataPointCategory
+from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.hub.update import HmUpdate
 from aiohomematic.model.update import DpUpdate
 from aiohomematic.type_aliases import UnsubscribeCallback
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -190,8 +193,6 @@ class AioHomematicUpdate(UpdateEntity):
 class AioHomematicHubUpdate(UpdateEntity):
     """Representation of the HomematicIP update entity."""
 
-    # _attr_supported_features = UpdateEntityFeature.INSTALL
-
     _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_entity_registry_enabled_default = True
@@ -206,6 +207,11 @@ class AioHomematicHubUpdate(UpdateEntity):
         self._data_point: HmUpdate = data_point
         self._attr_unique_id = f"{DOMAIN}_{data_point.unique_id}"
         self._attr_device_info = control_unit.device_info
+        self._attr_supported_features = (
+            UpdateEntityFeature.BACKUP | UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+            if control_unit.central.system_information.ccu_type == CCUType.OPENCCU
+            else UpdateEntityFeature.INSTALL
+        )
         self._unsubscribe_callbacks: list[UnsubscribeCallback] = []
         _LOGGER.debug("init: Setting up %s", data_point.full_name)
 
@@ -214,10 +220,10 @@ class AioHomematicHubUpdate(UpdateEntity):
         """Return if data point is available."""
         return self._data_point.available
 
-    # @property
-    # def in_progress(self) -> bool | None:
-    #    """Update installation progress."""
-    #    return self._data_point.in_progress
+    @property
+    def in_progress(self) -> bool | None:
+        """Update installation progress."""
+        return self._data_point.in_progress
 
     @property
     def installed_version(self) -> str | None:
@@ -247,11 +253,12 @@ class AioHomematicHubUpdate(UpdateEntity):
 
     async def async_install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
         """Install an update."""
+        if backup:
+            await self._async_create_backup()
         await self._data_point.install()
 
     async def async_update(self) -> None:
         """Update entity."""
-        # await self._data_point.refresh_firmware_data()
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
@@ -259,6 +266,27 @@ class AioHomematicHubUpdate(UpdateEntity):
         for unregister in self._unsubscribe_callbacks:
             if unregister is not None:
                 unregister()
+
+    async def _async_create_backup(self) -> None:
+        """Create a backup before installing the update."""
+        try:
+            backup_data = await self._cu.central.create_backup_and_download()
+            if backup_data is None:
+                raise HomeAssistantError("Failed to create backup before update")
+
+            # Save backup to file
+            backup_dir = Path(self._cu.backup_directory)
+            backup_dir.mkdir(parents=True, exist_ok=True)
+
+            backup_path = backup_dir / backup_data.filename
+
+            await self.hass.async_add_executor_job(backup_path.write_bytes, backup_data.content)
+
+            _LOGGER.info(
+                "CCU backup saved to %s (%d bytes) before firmware update", backup_path, len(backup_data.content)
+            )
+        except BaseHomematicException as err:
+            raise HomeAssistantError(f"Failed to create backup before update: {err}") from err
 
     @callback
     def _async_device_removed(self) -> None:

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 from pathlib import Path
 
@@ -134,20 +133,18 @@ class HmipLocalCreateBackupButton(ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press."""
         try:
-            backup_bytes = await self._cu.central.create_backup_and_download()
-            if backup_bytes is None:
+            backup_data = await self._cu.central.create_backup_and_download()
+            if backup_data is None:
                 raise HomeAssistantError("Failed to create and download CCU backup")
 
             # Save backup to file
             backup_dir = Path(self._cu.backup_directory)
             backup_dir.mkdir(parents=True, exist_ok=True)
 
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"ccu_backup_{self._cu.central.name}_{timestamp}.sbk"
-            backup_path = backup_dir / filename
+            backup_path = backup_dir / backup_data.filename
 
-            await self.hass.async_add_executor_job(backup_path.write_bytes, backup_bytes)
+            await self.hass.async_add_executor_job(backup_path.write_bytes, backup_data.content)
 
-            _LOGGER.info("CCU backup saved to %s (%d bytes)", backup_path, len(backup_bytes))
+            _LOGGER.info("CCU backup saved to %s (%d bytes)", backup_path, len(backup_data.content))
         except BaseHomematicException as err:
             raise HomeAssistantError(f"Failed to create CCU backup: {err}") from err

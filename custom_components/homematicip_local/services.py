@@ -994,27 +994,25 @@ async def _async_service_create_ccu_backup(*, hass: HomeAssistant, service: Serv
 
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
         try:
-            backup_bytes = await control.central.create_backup_and_download()
-            if backup_bytes is None:
+            backup_data = await control.central.create_backup_and_download()
+            if backup_data is None:
                 raise HomeAssistantError("Failed to create and download backup from CCU")
 
             # Save backup to file
             backup_dir = Path(control.backup_directory)
             backup_dir.mkdir(parents=True, exist_ok=True)
 
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"ccu_backup_{control.central.name}_{timestamp}.sbk"
-            backup_path = backup_dir / filename
+            backup_path = backup_dir / backup_data.filename
 
-            await hass.async_add_executor_job(backup_path.write_bytes, backup_bytes)
+            await hass.async_add_executor_job(backup_path.write_bytes, backup_data.content)
 
-            _LOGGER.info("CCU backup saved to %s (%d bytes)", backup_path, len(backup_bytes))
+            _LOGGER.info("CCU backup saved to %s (%d bytes)", backup_path, len(backup_data.content))
 
             return {
                 "success": True,
                 "path": str(backup_path),
-                "filename": filename,
-                "size": len(backup_bytes),
+                "filename": backup_data.filename,
+                "size": len(backup_data.content),
             }
         except BaseHomematicException as bhexc:
             raise HomeAssistantError(bhexc) from bhexc
