@@ -1,38 +1,37 @@
-# Version 2.0.0 (2025-12-09)
+# Version 2.0.0 (2025-12-010)
 
 ## What's Changed
-- Bump aiohomematic to 2025.12.18
-    -Architecture & Internals
-      - Protocol-based dependency injection - Decoupled CentralUnit via protocol interfaces, extracted coordinators (Device, Client, Hub, Cache, Event)
-      - Event bus migration - Replaced legacy callback system with modern EventBus pattern
-      - DeviceProfileRegistry - New central registry for device-to-profile mappings with type-safe dataclasses, replacing distributed ALL_DEVICES dictionaries
-      - Shared mixins - Added reusable mixins for custom entities (StateChangeTimer, Brightness, Position, GroupState, TimerUnit)
-      - Split interfaces package - Reorganized interfaces.py into interfaces/ subpackage for maintainability
-    - CLI Enhancements (hmcli)
-      - Interactive REPL mode - Command history, tab completion, shell completion scripts
-      - Device discovery commands - list-devices, list-channels, list-parameters, device-info, get/set
-    - Device Management
-      - Install mode support - Per-interface install mode with countdown timer, virtual data points
-      - Device inbox - Accept, rename devices pending pairing
-      - Rename support - Device and channel renaming via API
-      - Backup/restore - Create and download CCU system backups
-    - Reliability & Error Handling
-      - Retry strategy - RetryStrategy class with exponential backoff for transient errors
-      - Login rate limiting - Exponential backoff for JSON-RPC authentication
-      - Resource limits - Prevent unbounded growth of internal collections
-      - Backend detection - Automatic detection of CCU type (CCU3, RaspberryMatic, Homegear)
-    - Climate & Schedule
-      - Schedule support - Get/set climate schedules with caching and validation
-      - Simple schedule format - Converter for simplified weekday schedule data
-    - Type Safety
-      - Strict mypy mode - Full type coverage with strict mode enabled
-      - Protocol-based typing - HubProtocol, WeekProfileProtocol, model data point protocols
-    -Internationalization
-      - Translatable exceptions - Exception messages support i18n
-      - Log message translations - INFO+ level log messages translatable
-- Add CCU backup support with button entity and action (see [CCU Backup](README.md#ccu-backup))
+- Bump aiohomematic to 2025.12.20
+  - New Features
+    - Add install mode support with countdown timer for both HmIP-RF and BidCos-RF interfaces
+    - Add device inbox hub entity for viewing pending device pairings
+    - Add system update status hub entity
+    - Add create_backup() and download_backup() methods for OpenCCU system backups
+    - Add rename_device() and rename_channel() methods
+    - Add accept_device_in_inbox() for accepting newly paired devices
+    - Add CCU type identification (CCU vs OpenCCU/RaspberryMatic)
+    - Add climate schedule cache for faster thermostat schedule operations
+    - Add simplified climate schedule format with base_temperature support
+    - Add ENERGY_COUNTER_FEED_IN parameter support
+  - Reliability & Performance
+    - Add CircuitBreaker to prevent retry-storms during backend outages (XML-RPC and JSON-RPC)
+    - Add RequestCoalescer to deduplicate concurrent identical RPC calls
+    - Add login rate limiting with exponential backoff for JSON-RPC client
+    - Add automatic retry with RetryStrategy for transient network errors
+    - Fix thread-safety issues in scheduler, device registry, and climate subscriptions
+    - Fix memory leaks with auto-cleanup of EventBus subscriptions
+    - Clear in-memory caches on stop to prevent potential memory leaks
+  - Bug Fixes
+    - Fix delayed device handling improvements
+    - Fix hub data points initialization timing
+    - Fix week profile filtering
+  - Architecture (Internal)
+    - Migrate to Protocol-based model for better type safety and decoupling
+    - Add DeviceProfileRegistry as central registry for all 117 device models
+    - Add translatable exceptions and log messages (INFO level and above)
+- Add OpenCCU backup support with button entity and action (see [CCU Backup](README.md#openccu-backup))
 - Add documentation for new device handling (see [Adding New Devices](README.md#adding-new-devices))
-- CCU backup functionality: New button entity and action for creating and downloading CCU system backups
+- OpenCCU backup functionality: New button entity and action for creating and downloading CCU system backups
 - Config Flow v2 redesign: Automatic port configuration based on TLS setting, optional custom port configuration, new menu-based Options Flow with four sections (Connection, TLS & Interfaces, Programs &
 Sysvars, Advanced Settings)
 - Reconfigure Flow: Two-step flow for quick updates to connection and TLS settings without full re-setup

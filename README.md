@@ -87,7 +87,7 @@ To connect locally to your Homematic Home Control Unit (HmIP-HCU1), please use t
 - [Troubleshooting Common Issues](#troubleshooting-common-issues)
 - [Technical Details](#technical-details)
 - [Updating Device Firmware](#updating-device-firmware)
-- [CCU Backup](#ccu-backup)
+- [OpenCCU Backup](#openccu-backup)
 - [Adding New Devices (Pairing)](#adding-new-devices-pairing)
 - [CUxD, CCU-Jack & MQTT Support](#cuxd-ccu-jack--mqtt-support)
 - [Setting Up MQTT Support](#setting-up-mqtt-support)
@@ -110,6 +110,7 @@ A good practice is to search in issues and discussions before starting a new one
 
 Additional topics:
 - Naming of devices and entities: docs/naming.md
+- Glossary of terms used in aiohomematic and this integration: https://github.com/SukramJ/aiohomematic/blob/devel/docs/glossary.md
 
 The [Homematic](https://www.homematic.com/) integration provides bi-directional communication with your Homematic hub (CCU, Homegear etc.).
 It uses an XML-RPC connection to set values on devices and subscribes to receive events the devices and the CCU emit.
@@ -1343,24 +1344,33 @@ action: homeassistant.update_device_firmware_data
 
 **⚠️ Warning:** Frequent manual checks may impact CCU performance!
 
-## CCU Backup
+## OpenCCU Backup
 
-This integration provides functionality to create and download backups from your CCU directly from Home Assistant.
+This integration provides functionality to create and download backups directly from Home Assistant.
+
+> **⚠️ Important:** This feature is **only available for OpenCCU** (formerly RaspberryMatic). It is **not supported** on original CCU-based systems due to firmware limitations.
+
+| Supported     | Not Supported |
+|---------------|---------------|
+| ✅ OpenCCU    | ❌ CCU2       |
+|               | ❌ CCU3       |
+|               | ❌ Debmatic   |
+|               | ❌ piVCCU     |
 
 ### Creating Backups
 
 **Two methods are available:**
 
-| Method | How to Use | Best For |
-|--------|-----------|----------|
-| **Button Entity** | Click "Create Backup" button on your CCU device | Quick manual backups, dashboard integration |
-| **Action** | Call `homematicip_local.create_ccu_backup` | Automations, scheduled backups |
+| Method | How to Use                                          | Best For |
+|--------|-----------------------------------------------------|----------|
+| **Button Entity** | Click "Create Backup" button on your OpenCCU device | Quick manual backups, dashboard integration |
+| **Action** | Call `homematicip_local.create_ccu_backup`          | Automations, scheduled backups |
 
 ### Backup Storage
 
 Backups are saved to a configurable directory within Home Assistant's storage:
 
-- **location:** `<HA_storage>/homematicip_local/backup/`
+- **Location:** `<HA_storage>/homematicip_local/backup/`
 - **File format:** `ccu_backup_<central_name>_<YYYYMMDD_HHMMSS>.sbk`
 
 ### Using the Backup Action
@@ -1374,8 +1384,8 @@ data:
 **Returns:**
 ```yaml
 success: true
-path: "/config/.storage/homematicip_local/backup/ccu_backup_ccu3_20251203_143022.sbk"
-filename: "ccu_backup_ccu3_20251203_143022.sbk"
+path: "/config/.storage/homematicip_local/backup/ccu_backup_raspberrymatic_20251203_143022.sbk"
+filename: "ccu_backup_raspberrymatic_20251203_143022.sbk"
 size: 12345678
 ```
 
@@ -1385,7 +1395,7 @@ size: 12345678
 
 ```yaml
 automation:
-  - alias: "Weekly CCU Backup"
+  - alias: "Weekly OpenCCU Backup"
     trigger:
       - platform: time
         at: "03:00:00"
@@ -1399,7 +1409,7 @@ automation:
           entry_id: YOUR_ENTRY_ID
 ```
 
-**Note:** Backup creation can take several minutes depending on your CCU configuration size.
+**Note:** Backup creation can take several minutes depending on your OpenCCU configuration size.
 
 ---
 
