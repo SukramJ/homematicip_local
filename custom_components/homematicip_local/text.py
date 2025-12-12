@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity, AioHomematicGenericSysvarEntity
+from .support import handle_homematic_errors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,6 +93,7 @@ class AioHomematicText(AioHomematicGenericRestoreEntity[DpText], TextEntity):
             return restored_state
         return None
 
+    @handle_homematic_errors
     async def async_set_value(self, value: str) -> None:
         """Send the text."""
         await self._data_point.send_value(value=value)
@@ -105,6 +107,7 @@ class AioHomematicSysvarText(AioHomematicGenericSysvarEntity[SysvarDpText], Text
         """Return the value reported by the text."""
         return self._data_point.value  # type: ignore[no-any-return]
 
+    @handle_homematic_errors
     async def async_set_value(self, value: str) -> None:
         """Send the text."""
         await self._data_point.send_variable(value=value)

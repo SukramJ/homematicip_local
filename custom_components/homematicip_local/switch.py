@@ -22,6 +22,7 @@ from .generic_entity import (
     AioHomematicGenericRestoreEntity,
     AioHomematicGenericSysvarEntity,
 )
+from .support import handle_homematic_errors
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_CHANNEL_STATE: Final = "channel_state"
@@ -123,6 +124,7 @@ class AioHomematicSwitch(AioHomematicGenericRestoreEntity[CustomDpSwitch | DpSwi
             return restored_state == STATE_ON
         return None
 
+    @handle_homematic_errors
     async def async_set_on_time(self, on_time: float) -> None:
         """Set the on time of the light."""
         if isinstance(self._data_point, CustomDpSwitch):
@@ -130,10 +132,12 @@ class AioHomematicSwitch(AioHomematicGenericRestoreEntity[CustomDpSwitch | DpSwi
         if isinstance(self._data_point, DpSwitch):
             await self._data_point.set_on_time(on_time=on_time)
 
+    @handle_homematic_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._data_point.turn_off()
 
+    @handle_homematic_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._data_point.turn_on()
@@ -147,10 +151,12 @@ class AioHomematicSysvarSwitch(AioHomematicGenericSysvarEntity[SysvarDpSwitch], 
         """Return true if switch is on."""
         return bool(self._data_point.value)
 
+    @handle_homematic_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._data_point.send_variable(value=False)
 
+    @handle_homematic_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._data_point.send_variable(value=True)
@@ -176,10 +182,12 @@ class AioHomematicProgramSwitch(AioHomematicGenericProgramEntity[ProgramDpSwitch
         """Return true if switch is on."""
         return self._data_point.value is True
 
+    @handle_homematic_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._data_point.turn_off()
 
+    @handle_homematic_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._data_point.turn_on()

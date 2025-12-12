@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Coroutine, Mapping
+from functools import wraps
 import logging
 import re
 from typing import Any, TypeAlias, TypeVar, cast
@@ -10,6 +11,7 @@ from typing import Any, TypeAlias, TypeVar, cast
 import voluptuous as vol
 
 from aiohomematic.const import IDENTIFIER_SEPARATOR, EventKey
+from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.interfaces.model import (
     CalculatedDataPointProtocol,
     CustomDataPointProtocol,
@@ -81,6 +83,27 @@ DEVICE_ERROR_EVENT_SCHEMA = BASE_EVENT_DATA_SCHEMA.extend(
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def handle_homematic_errors[**P, R](
+    func: Callable[P, Coroutine[Any, Any, R]],
+) -> Callable[P, Coroutine[Any, Any, R]]:
+    """
+    Handle aiohomematic exceptions and convert to HomeAssistantError.
+
+    This decorator prevents log flooding by converting backend exceptions
+    to HomeAssistantError, which Home Assistant displays as a toast notification
+    instead of logging repeatedly.
+    """
+
+    @wraps(func)
+    async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        try:
+            return await func(*args, **kwargs)
+        except BaseHomematicException as exc:
+            raise HomeAssistantError(str(exc)) from exc
+
+    return wrapper
 
 
 def cleanup_click_event_data(event_data: dict[Any, Any]) -> dict[str, Any]:

@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity
+from .support import handle_homematic_errors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,14 +99,17 @@ class AioHomematicLock(AioHomematicGenericRestoreEntity[BaseCustomDpLock], LockE
         """Return true if the lock is unlocking."""
         return self._data_point.is_unlocking
 
+    @handle_homematic_errors
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self._data_point.lock()
 
+    @handle_homematic_errors
     async def async_open(self, **kwargs: Any) -> None:
         """Open the lock."""
         await self._data_point.open()
 
+    @handle_homematic_errors
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self._data_point.unlock()

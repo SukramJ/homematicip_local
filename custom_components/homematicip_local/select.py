@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity, AioHomematicGenericSysvarEntity
+from .support import handle_homematic_errors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,6 +102,7 @@ class AioHomematicSelect(AioHomematicGenericRestoreEntity[DpSelect], SelectEntit
             return [option.lower() for option in options]
         return []
 
+    @handle_homematic_errors
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         await self._data_point.send_value(value=option.upper())
@@ -121,6 +123,7 @@ class AioHomematicSysvarSelect(AioHomematicGenericSysvarEntity[SysvarDpSelect], 
             return list(options)
         return []
 
+    @handle_homematic_errors
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         await self._data_point.send_variable(value=option)

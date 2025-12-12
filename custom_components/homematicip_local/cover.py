@@ -23,6 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity
+from .support import handle_homematic_errors
 
 ATTR_CHANNEL_POSITION: Final = "channel_position"
 ATTR_CHANNEL_TILT_POSITION: Final = "channel_tilt_position"
@@ -149,14 +150,17 @@ class AioHomematicBaseCover(AioHomematicGenericRestoreEntity[HmGenericCover], Co
         """Return if the cover is opening."""
         return self._data_point.is_opening
 
+    @handle_homematic_errors
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._data_point.close()
 
+    @handle_homematic_errors
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._data_point.open()
 
+    @handle_homematic_errors
     async def async_set_cover_combined_position(
         self, position: int, tilt_position: int | None = None, wait_for_callback: int | None = None
     ) -> None:
@@ -165,6 +169,7 @@ class AioHomematicBaseCover(AioHomematicGenericRestoreEntity[HmGenericCover], Co
         await self._data_point.set_position(position=position, tilt_position=tilt_position, collector=collector)
         await collector.send_data(wait_for_callback=wait_for_callback)
 
+    @handle_homematic_errors
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         # Hm cover is closed:1 -> open:0
@@ -172,6 +177,7 @@ class AioHomematicBaseCover(AioHomematicGenericRestoreEntity[HmGenericCover], Co
             position = int(kwargs[ATTR_POSITION])
             await self._data_point.set_position(position=position)
 
+    @handle_homematic_errors
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the device if in motion."""
         await self._data_point.stop()
@@ -202,20 +208,24 @@ class AioHomematicBlind(AioHomematicBaseCover[CustomDpBlind | CustomDpIpBlind]):
 
         return attributes
 
+    @handle_homematic_errors
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the tilt."""
         await self._data_point.close_tilt()
 
+    @handle_homematic_errors
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the tilt."""
         await self._data_point.open_tilt()
 
+    @handle_homematic_errors
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific tilt position."""
         if ATTR_TILT_POSITION in kwargs:
             tilt_position = int(kwargs[ATTR_TILT_POSITION])
             await self._data_point.set_position(tilt_position=tilt_position)
 
+    @handle_homematic_errors
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the device if in motion."""
         await self._data_point.stop_tilt()

@@ -47,6 +47,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import ATTR_SCHEDULE_DATA, AioHomematicGenericEntity, AioHomematicGenericRestoreEntity
+from .support import handle_homematic_errors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -275,6 +276,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             return self._restored_state.attributes.get(ATTR_TEMPERATURE)
         return None
 
+    @handle_homematic_errors
     async def async_copy_schedule(self, source_entity_id: str) -> None:
         """Copy a schedule from this entity to another."""
         if source_climate_data_point := cast(
@@ -283,6 +285,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         ):
             await source_climate_data_point.copy_schedule(target_climate_data_point=self._data_point)
 
+    @handle_homematic_errors
     async def async_copy_schedule_profile(
         self, source_profile: ScheduleProfile, target_profile: ScheduleProfile, source_entity_id: str | None = None
     ) -> None:
@@ -301,10 +304,12 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         else:
             await self._data_point.copy_schedule_profile(source_profile=source_profile, target_profile=target_profile)
 
+    @handle_homematic_errors
     async def async_disable_away_mode(self) -> None:
         """Disable the away mode on thermostat."""
         await self._data_point.disable_away_mode()
 
+    @handle_homematic_errors
     async def async_enable_away_mode_by_calendar(
         self,
         end: datetime,
@@ -315,68 +320,44 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         start = start or datetime.now() - timedelta(minutes=10)
         await self._data_point.enable_away_mode_by_calendar(start=start, end=end, away_temperature=away_temperature)
 
+    @handle_homematic_errors
     async def async_enable_away_mode_by_duration(self, hours: int, away_temperature: float) -> None:
         """Enable the away mode by duration on thermostat."""
         await self._data_point.enable_away_mode_by_duration(hours=hours, away_temperature=away_temperature)
 
+    @handle_homematic_errors
     async def async_get_schedule_profile(self, profile: str | ScheduleProfile) -> ServiceResponse:
         """Get a schedule profile."""
-        try:
-            schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
-            if profile_data := await self._data_point.get_schedule_profile(profile=schedule_profile):
-                return cast(ServiceResponse, profile_data)
-        except Exception as err:
-            _LOGGER.error(
-                "Failed to get schedule profile %s for %s: %s",
-                profile,
-                self._data_point.custom_id,
-                err,
-            )
+        schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
+        if profile_data := await self._data_point.get_schedule_profile(profile=schedule_profile):
+            return cast(ServiceResponse, profile_data)
         return None
 
+    @handle_homematic_errors
     async def async_get_schedule_weekday(
         self, profile: str | ScheduleProfile, weekday: str | WeekdayStr
     ) -> ServiceResponse:
         """Get a schedule profile weekday."""
-        try:
-            schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
-            schedule_weekday = weekday if isinstance(weekday, WeekdayStr) else WeekdayStr(weekday)
-            if weekday_data := await self._data_point.get_schedule_weekday(
-                profile=schedule_profile, weekday=schedule_weekday
-            ):
-                return cast(ServiceResponse, weekday_data)
-        except Exception as err:
-            _LOGGER.error(
-                "Failed to get schedule profile weekday %s/%s for %s: %s",
-                profile,
-                weekday,
-                self._data_point.custom_id,
-                err,
-            )
+        schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
+        schedule_weekday = weekday if isinstance(weekday, WeekdayStr) else WeekdayStr(weekday)
+        if weekday_data := await self._data_point.get_schedule_weekday(
+            profile=schedule_profile, weekday=schedule_weekday
+        ):
+            return cast(ServiceResponse, weekday_data)
         return None
 
     async def async_set_active_profile(self, profile: str | ScheduleProfile) -> None:
         """Set the active profile."""
-        try:
-            schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
-            profile_key = schedule_profile.value
-            self._current_profile = schedule_profile
+        schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
+        self._current_profile = schedule_profile
+        self.async_write_ha_state()
+        _LOGGER.debug(
+            "Set active profile %s for %s",
+            schedule_profile.value,
+            self._data_point.custom_id,
+        )
 
-            self.async_write_ha_state()
-
-            _LOGGER.debug(
-                "Set active profile %s for %s",
-                profile_key,
-                self._data_point.custom_id,
-            )
-        except Exception as err:
-            _LOGGER.error(
-                "Failed to set active profile %s for %s: %s",
-                profile,
-                self._data_point.custom_id,
-                err,
-            )
-
+    @handle_homematic_errors
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode not in HA_TO_HM_HVAC_MODE:
@@ -384,6 +365,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             return
         await self._data_point.set_mode(mode=HA_TO_HM_HVAC_MODE[hvac_mode])
 
+    @handle_homematic_errors
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode not in self.preset_modes:
@@ -395,34 +377,28 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             return
         await self._data_point.set_profile(profile=ClimateProfile(preset_mode))
 
+    @handle_homematic_errors
     async def async_set_schedule_profile(
         self, profile: str | ScheduleProfile, profile_data: CLIMATE_PROFILE_DICT
     ) -> None:
         """Set a schedule profile."""
-        try:
-            schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
-            # Convert string keys to WeekdayStr if needed
-            converted_data = {}
-            for weekday_key, weekday_value in profile_data.items():
-                if isinstance(weekday_key, str):
-                    weekday_key = WeekdayStr(weekday_key)
-                converted_data[weekday_key] = weekday_value
+        schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
+        # Convert string keys to WeekdayStr if needed
+        converted_data = {}
+        for weekday_key, weekday_value in profile_data.items():
+            if isinstance(weekday_key, str):
+                weekday_key = WeekdayStr(weekday_key)
+            converted_data[weekday_key] = weekday_value
 
-            await self._data_point.set_schedule_profile(profile=schedule_profile, profile_data=converted_data)
+        await self._data_point.set_schedule_profile(profile=schedule_profile, profile_data=converted_data)
 
-            _LOGGER.debug(
-                "Set schedule profile %s for %s",
-                schedule_profile.value,
-                self._data_point.custom_id,
-            )
-        except Exception as err:
-            _LOGGER.error(
-                "Failed to set schedule profile %s for %s: %s",
-                profile,
-                self._data_point.custom_id,
-                err,
-            )
+        _LOGGER.debug(
+            "Set schedule profile %s for %s",
+            schedule_profile.value,
+            self._data_point.custom_id,
+        )
 
+    @handle_homematic_errors
     async def async_set_schedule_simple_profile(
         self, profile: ScheduleProfile, simple_profile_data: CLIMATE_SIMPLE_PROFILE_DICT
     ) -> None:
@@ -432,6 +408,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             simple_profile_data=simple_profile_data,
         )
 
+    @handle_homematic_errors
     async def async_set_schedule_simple_weekday(
         self,
         profile: ScheduleProfile,
@@ -447,35 +424,28 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             simple_weekday_data=simple_weekday_data,
         )
 
+    @handle_homematic_errors
     async def async_set_schedule_weekday(
         self, profile: str | ScheduleProfile, weekday: str | WeekdayStr, weekday_data: CLIMATE_WEEKDAY_DICT
     ) -> None:
         """Set a schedule profile weekday."""
-        try:
-            schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
-            schedule_weekday = weekday if isinstance(weekday, WeekdayStr) else WeekdayStr(weekday)
+        schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
+        schedule_weekday = weekday if isinstance(weekday, WeekdayStr) else WeekdayStr(weekday)
 
-            await self._data_point.set_schedule_weekday(
-                profile=schedule_profile,
-                weekday=schedule_weekday,
-                weekday_data=weekday_data,
-            )
+        await self._data_point.set_schedule_weekday(
+            profile=schedule_profile,
+            weekday=schedule_weekday,
+            weekday_data=weekday_data,
+        )
 
-            _LOGGER.debug(
-                "Set schedule profile weekday %s/%s for %s",
-                schedule_profile.value,
-                weekday,
-                self._data_point.custom_id,
-            )
-        except Exception as err:
-            _LOGGER.error(
-                "Failed to set schedule profile weekday %s/%s for %s: %s",
-                profile,
-                weekday,
-                self._data_point.custom_id,
-                err,
-            )
+        _LOGGER.debug(
+            "Set schedule profile weekday %s/%s for %s",
+            schedule_profile.value,
+            weekday,
+            self._data_point.custom_id,
+        )
 
+    @handle_homematic_errors
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
