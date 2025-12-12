@@ -778,6 +778,14 @@
         }
     }, 
     "issues": {
+        "central_degraded": {
+            "description": "The CCU connection for **{instance_name}** is in a degraded state.\n\nReason: {reason}\n\nSome interfaces are disconnected. The integration is attempting automatic recovery.", 
+            "title": "CCU connection degraded"
+        }, 
+        "central_failed": {
+            "description": "The CCU connection for **{instance_name}** has failed.\n\nReason: {reason}\n\nAutomatic recovery attempts have been exhausted. Please check:\n- CCU is powered on and reachable\n- Network connectivity\n- CCU logs for errors\n\nReload the integration to retry.", 
+            "title": "CCU connection failed"
+        }, 
         "devices_delayed": {
             "fix_flow": {
                 "step": {

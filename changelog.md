@@ -1,7 +1,23 @@
 # Version 2.0.0 (2025-12-12)
 
 ## What's Changed
-- Bump aiohomematic to 2025.12.23
+- Add Central State Machine integration for improved connection monitoring
+- Add error handling decorator for entity actions to prevent log flooding during connection issues
+- Add error handling decorator for entity actions to prevent log flooding during connection issues
+- Add OpenCCU backup support with button entity and action (see [CCU Backup](README.md#openccu-backup))
+- Add documentation for new device handling (see [Adding New Devices](README.md#adding-new-devices))
+- OpenCCU backup functionality: New button entity and action for creating and downloading CCU system backups
+- Config Flow v2 redesign: Automatic port configuration based on TLS setting, optional custom port configuration, new menu-based Options Flow with four sections (Connection, TLS & Interfaces, Programs &
+Sysvars, Advanced Settings)
+- Reconfigure Flow: Two-step flow for quick updates to connection and TLS settings without full re-setup
+- Climate schedule support: New scheduler attributes for climate entities, get/set weekly schedules with caching and validation
+- Backend detection: Automatic detection of CCU type (CCU3, RaspberryMatic, Homegear)
+- Improved error handling: RetryStrategy with exponential backoff, login rate limiting, automatic port configuration page on connection failure
+- Device management: Per-interface install mode support, device inbox for pending pairings, device and channel renaming via API
+- Type safety: Strict mypy mode enabled, protocol-based typing throughout
+- Internationalization: Translatable exceptions and log messages, translations for press events
+- Renamed actions: get_schedule_profile_weekday → get_schedule_weekday, set_schedule_profile_weekday → set_schedule_weekday
+- Bump aiohomematic to 2025.12.24
   - New Features
     - Add install mode support with countdown timer for both HmIP-RF and BidCos-RF interfaces
     - Add device inbox hub entity for viewing pending device pairings
@@ -30,20 +46,6 @@
     - Migrate to Protocol-based model for better type safety and decoupling
     - Add DeviceProfileRegistry as central registry for all 117 device models
     - Add translatable exceptions and log messages (INFO level and above)
-- Add error handling decorator for entity actions to prevent log flooding during connection issues
-- Add OpenCCU backup support with button entity and action (see [CCU Backup](README.md#openccu-backup))
-- Add documentation for new device handling (see [Adding New Devices](README.md#adding-new-devices))
-- OpenCCU backup functionality: New button entity and action for creating and downloading CCU system backups
-- Config Flow v2 redesign: Automatic port configuration based on TLS setting, optional custom port configuration, new menu-based Options Flow with four sections (Connection, TLS & Interfaces, Programs &
-Sysvars, Advanced Settings)
-- Reconfigure Flow: Two-step flow for quick updates to connection and TLS settings without full re-setup
-- Climate schedule support: New scheduler attributes for climate entities, get/set weekly schedules with caching and validation
-- Backend detection: Automatic detection of CCU type (CCU3, RaspberryMatic, Homegear)
-- Improved error handling: RetryStrategy with exponential backoff, login rate limiting, automatic port configuration page on connection failure
-- Device management: Per-interface install mode support, device inbox for pending pairings, device and channel renaming via API
-- Type safety: Strict mypy mode enabled, protocol-based typing throughout
-- Internationalization: Translatable exceptions and log messages, translations for press events
-- Renamed actions: get_schedule_profile_weekday → get_schedule_weekday, set_schedule_profile_weekday → set_schedule_weekday
 
 # Version 1.90.2 (2025-11-05)
 
