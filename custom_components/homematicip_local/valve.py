@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity
+from .support import handle_homematic_errors
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_CHANNEL_STATE: Final = "channel_state"
@@ -98,10 +99,12 @@ class AioHomematicValve(AioHomematicGenericRestoreEntity[CustomDpIpIrrigationVal
         """Return the list of supported features."""
         return ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
 
+    @handle_homematic_errors
     async def async_close_valve(self) -> None:
         """Close the valve."""
         await self._data_point.close()
 
+    @handle_homematic_errors
     async def async_open_valve(self) -> None:
         """Open the valve."""
         await self._data_point.open()

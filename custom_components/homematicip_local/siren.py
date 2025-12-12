@@ -18,6 +18,7 @@ from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity
 from .services import ATTR_LIGHT
+from .support import handle_homematic_errors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,10 +103,12 @@ class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], Sir
             return restored_state == STATE_ON
         return None
 
+    @handle_homematic_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._data_point.turn_off()
 
+    @handle_homematic_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         hm_kwargs = SirenOnArgs()

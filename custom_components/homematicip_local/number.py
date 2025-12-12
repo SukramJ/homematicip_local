@@ -19,6 +19,7 @@ from .const import HmEntityState
 from .control_unit import ControlUnit, signal_new_data_point
 from .entity_helpers import HmNumberEntityDescription
 from .generic_entity import ATTR_VALUE_STATE, AioHomematicGenericEntity, AioHomematicGenericSysvarEntity
+from .support import handle_homematic_errors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,6 +136,7 @@ class AioHomematicNumber(AioHomematicGenericEntity[BaseDpNumber[Any]], RestoreNu
         if not self._data_point.is_valid and (restored_sensor_data := await self.async_get_last_number_data()):
             self._restored_native_value = restored_sensor_data.native_value
 
+    @handle_homematic_errors
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await self._data_point.send_value(value=value / self._multiplier)
@@ -171,6 +173,7 @@ class AioHomematicSysvarNumber(AioHomematicGenericSysvarEntity[SysvarDpNumber], 
             return float(value)
         return None
 
+    @handle_homematic_errors
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await self._data_point.send_variable(value=value)

@@ -25,6 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity
+from .support import handle_homematic_errors
 
 ATTR_COLOR: Final = "color"
 ATTR_CHANNEL_COLOR: Final = "channel_color"
@@ -187,6 +188,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         """Set the on time of the light."""
         self._data_point.set_timer_on_time(on_time=on_time)
 
+    @handle_homematic_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         hm_kwargs = LightOffArgs()
@@ -195,6 +197,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
             hm_kwargs["ramp_time"] = ramp_time
         await self._data_point.turn_off(**hm_kwargs)
 
+    @handle_homematic_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         hm_kwargs = LightOnArgs()
