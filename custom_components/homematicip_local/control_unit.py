@@ -12,7 +12,12 @@ from typing import Any, Final, TypeVar, cast
 
 from aiohomematic import __version__ as AIOHM_VERSION
 from aiohomematic.central import CentralConfig, CentralUnit, check_config
-from aiohomematic.central.event_bus import BackendSystemEventData, HomematicEvent
+from aiohomematic.central.event_bus import (
+    BackendSystemEventData,
+    CentralStateChangedEvent,
+    ConnectionStateChangedEvent,
+    HomematicEvent,
+)
 from aiohomematic.client import InterfaceConfig
 from aiohomematic.const import (
     CONF_PASSWORD,
@@ -29,6 +34,7 @@ from aiohomematic.const import (
     IP_ANY_V4,
     PORT_ANY,
     BackendSystemEvent,
+    CentralState,
     CentralUnitState,
     DataPointCategory,
     DescriptionMarker,
@@ -285,6 +291,20 @@ class ControlUnit(BaseControlUnit):
                 handler=self._on_homematic_event,
             )
         )
+        self._unsubscribe_callbacks.append(
+            self._central.event_bus.subscribe(
+                event_type=CentralStateChangedEvent,
+                event_key=None,
+                handler=self._on_central_state_changed,
+            )
+        )
+        self._unsubscribe_callbacks.append(
+            self._central.event_bus.subscribe(
+                event_type=ConnectionStateChangedEvent,
+                event_key=None,
+                handler=self._on_connection_state_changed,
+            )
+        )
         self._async_add_central_to_device_registry()
         await super().start_central()
         if self._enable_mqtt:
@@ -363,6 +383,109 @@ class ControlUnit(BaseControlUnit):
                     hm_device.identifier,
                 )
             }
+        )
+
+    async def _on_central_state_changed(self, event: CentralStateChangedEvent) -> None:
+        """Handle central state changes for issue registry and HA events."""
+        _LOGGER.debug(
+            "Central state changed: %s → %s (reason: %s)",
+            event.old_state,
+            event.new_state,
+            event.reason,
+        )
+
+        new_state = event.new_state
+        issue_id_degraded = f"central_degraded-{self._instance_name}"
+        issue_id_failed = f"central_failed-{self._instance_name}"
+
+        if new_state == CentralState.RUNNING:
+            # All interfaces connected - remove any existing issues
+            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
+            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
+            _LOGGER.info("Central %s is RUNNING - all interfaces connected", self._instance_name)
+
+        elif new_state == CentralState.DEGRADED:
+            if not self._enable_system_notifications:
+                _LOGGER.debug("SYSTEM NOTIFICATION disabled for DEGRADED state")
+                return
+            # Some interfaces disconnected - create warning issue
+            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
+            async_create_issue(
+                hass=self._hass,
+                domain=DOMAIN,
+                issue_id=issue_id_degraded,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="central_degraded",
+                translation_placeholders={
+                    CONF_INSTANCE_NAME: self._instance_name,
+                    "reason": event.reason or "unknown",
+                },
+            )
+            _LOGGER.warning(
+                "Central %s is DEGRADED: %s",
+                self._instance_name,
+                event.reason,
+            )
+
+        elif new_state == CentralState.FAILED:
+            if not self._enable_system_notifications:
+                _LOGGER.debug("SYSTEM NOTIFICATION disabled for FAILED state")
+                return
+            # Recovery failed - create error issue
+            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
+            async_create_issue(
+                hass=self._hass,
+                domain=DOMAIN,
+                issue_id=issue_id_failed,
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="central_failed",
+                translation_placeholders={
+                    CONF_INSTANCE_NAME: self._instance_name,
+                    "reason": event.reason or "unknown",
+                },
+            )
+            _LOGGER.error(
+                "Central %s FAILED: %s",
+                self._instance_name,
+                event.reason,
+            )
+
+        elif new_state == CentralState.RECOVERING:
+            _LOGGER.info(
+                "Central %s is RECOVERING: %s",
+                self._instance_name,
+                event.reason,
+            )
+
+        # Fire HA event for automations
+        self._hass.bus.fire(
+            event_type=f"{DOMAIN}.central_state_changed",
+            event_data={
+                "instance_name": self._instance_name,
+                "old_state": event.old_state.value if event.old_state else None,
+                "new_state": new_state.value,
+                "reason": event.reason,
+            },
+        )
+
+    async def _on_connection_state_changed(self, event: ConnectionStateChangedEvent) -> None:
+        """Handle interface connection state changes."""
+        _LOGGER.debug(
+            "Interface %s connection state: %s",
+            event.interface_id,
+            "connected" if event.connected else "disconnected",
+        )
+
+        # Fire HA event for automations
+        self._hass.bus.fire(
+            event_type=f"{DOMAIN}.interface_connection_changed",
+            event_data={
+                "instance_name": self._instance_name,
+                "interface_id": event.interface_id,
+                "connected": event.connected,
+            },
         )
 
     async def _on_homematic_event(self, event: HomematicEvent) -> None:  # noqa: C901

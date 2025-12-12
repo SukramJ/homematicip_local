@@ -778,6 +778,14 @@
         }
     }, 
     "issues": {
+        "central_degraded": {
+            "description": "Die CCU-Verbindung für **{instance_name}** ist beeinträchtigt.\n\nGrund: {reason}\n\nEinige Schnittstellen sind nicht verbunden. Die Integration versucht eine automatische Wiederherstellung.", 
+            "title": "CCU-Verbindung beeinträchtigt"
+        }, 
+        "central_failed": {
+            "description": "Die CCU-Verbindung für **{instance_name}** ist fehlgeschlagen.\n\nGrund: {reason}\n\nDie automatischen Wiederherstellungsversuche wurden erschöpft. Bitte überprüfe:\n- CCU ist eingeschaltet und erreichbar\n- Netzwerkverbindung\n- CCU-Protokolle auf Fehler\n\nLade die Integration neu, um es erneut zu versuchen.", 
+            "title": "CCU-Verbindung fehlgeschlagen"
+        }, 
         "devices_delayed": {
             "fix_flow": {
                 "step": {
