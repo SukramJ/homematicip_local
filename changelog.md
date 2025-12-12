@@ -1,7 +1,7 @@
 # Version 2.0.0 (2025-12-12)
 
 ## What's Changed
-- Bump aiohomematic to 2025.12.22
+- Bump aiohomematic to 2025.12.23
   - New Features
     - Add install mode support with countdown timer for both HmIP-RF and BidCos-RF interfaces
     - Add device inbox hub entity for viewing pending device pairings
@@ -21,6 +21,7 @@
     - Fix thread-safety issues in scheduler, device registry, and climate subscriptions
     - Fix memory leaks with auto-cleanup of EventBus subscriptions
     - Clear in-memory caches on stop to prevent potential memory leaks
+    - New Central State Machine architecture for improved reconnection reliability
   - Bug Fixes
     - Fix delayed device handling improvements
     - Fix hub data points initialization timing
