@@ -2,7 +2,7 @@
 
 ## What's Changed
 - Add Central State Machine integration for improved connection monitoring
-- Add error handling decorator for entity actions to prevent log flooding during connection issues
+- Complete migration to modern typed EventBus events (replaces all legacy InterfaceEventType handling)
 - Add error handling decorator for entity actions to prevent log flooding during connection issues
 - Add OpenCCU backup support with button entity and action (see [CCU Backup](README.md#openccu-backup))
 - Add documentation for new device handling (see [Adding New Devices](README.md#adding-new-devices))
@@ -17,7 +17,8 @@ Sysvars, Advanced Settings)
 - Type safety: Strict mypy mode enabled, protocol-based typing throughout
 - Internationalization: Translatable exceptions and log messages, translations for press events
 - Renamed actions: get_schedule_profile_weekday → get_schedule_weekday, set_schedule_profile_weekday → set_schedule_weekday
-- Bump aiohomematic to 2025.12.24
+
+### Bump aiohomematic to 2025.12.25
   - New Features
     - Add install mode support with countdown timer for both HmIP-RF and BidCos-RF interfaces
     - Add device inbox hub entity for viewing pending device pairings
@@ -42,6 +43,7 @@ Sysvars, Advanced Settings)
     - Fix delayed device handling improvements
     - Fix hub data points initialization timing
     - Fix week profile filtering
+    - Replace fixed cool-down with staged reconnection for faster recovery after CCU restart
   - Architecture (Internal)
     - Migrate to Protocol-based model for better type safety and decoupling
     - Add DeviceProfileRegistry as central registry for all 117 device models

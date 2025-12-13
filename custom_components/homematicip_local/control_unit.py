@@ -14,9 +14,14 @@ from aiohomematic import __version__ as AIOHM_VERSION
 from aiohomematic.central import CentralConfig, CentralUnit, check_config
 from aiohomematic.central.event_bus import (
     BackendSystemEventData,
+    CallbackStateChangedEvent,
     CentralStateChangedEvent,
+    ClientStateChangedEvent,
     ConnectionStateChangedEvent,
+    DeviceAvailabilityChangedEvent,
+    FetchDataFailedEvent,
     HomematicEvent,
+    PingPongMismatchEvent,
 )
 from aiohomematic.client import InterfaceConfig
 from aiohomematic.const import (
@@ -36,21 +41,20 @@ from aiohomematic.const import (
     BackendSystemEvent,
     CentralState,
     CentralUnitState,
+    ClientState,
     DataPointCategory,
     DescriptionMarker,
     EventKey,
     EventType,
     Interface,
-    InterfaceEventType,
     Manufacturer,
     OptionalSettings,
-    Parameter,
+    PingPongMismatchType,
     SourceOfDeviceCreation,
     SystemInformation,
 )
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.data_point import CallbackDataPoint
-from aiohomematic.schemas import INTERFACE_EVENT_SCHEMA
 from aiohomematic.type_aliases import UnsubscribeCallback
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PATH, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
@@ -305,6 +309,41 @@ class ControlUnit(BaseControlUnit):
                 handler=self._on_connection_state_changed,
             )
         )
+        self._unsubscribe_callbacks.append(
+            self._central.event_bus.subscribe(
+                event_type=CallbackStateChangedEvent,
+                event_key=None,
+                handler=self._on_callback_state_changed,
+            )
+        )
+        self._unsubscribe_callbacks.append(
+            self._central.event_bus.subscribe(
+                event_type=ClientStateChangedEvent,
+                event_key=None,
+                handler=self._on_client_state_changed,
+            )
+        )
+        self._unsubscribe_callbacks.append(
+            self._central.event_bus.subscribe(
+                event_type=FetchDataFailedEvent,
+                event_key=None,
+                handler=self._on_fetch_data_failed,
+            )
+        )
+        self._unsubscribe_callbacks.append(
+            self._central.event_bus.subscribe(
+                event_type=PingPongMismatchEvent,
+                event_key=None,
+                handler=self._on_pingpong_mismatch,
+            )
+        )
+        self._unsubscribe_callbacks.append(
+            self._central.event_bus.subscribe(
+                event_type=DeviceAvailabilityChangedEvent,
+                event_key=None,
+                handler=self._on_device_availability_changed,
+            )
+        )
         self._async_add_central_to_device_registry()
         await super().start_central()
         if self._enable_mqtt:
@@ -384,6 +423,39 @@ class ControlUnit(BaseControlUnit):
                 )
             }
         )
+
+    async def _on_callback_state_changed(self, event: CallbackStateChangedEvent) -> None:
+        """Handle callback state changes (XML-RPC server receives no events)."""
+        interface_id = event.interface_id
+        issue_id = f"callback-{interface_id}"
+
+        _LOGGER.debug(
+            "Callback state changed for %s: alive=%s, seconds_since_last=%s",
+            interface_id,
+            event.alive,
+            event.seconds_since_last_event,
+        )
+
+        if not self._enable_system_notifications:
+            _LOGGER.debug("SYSTEM NOTIFICATION disabled for CALLBACK")
+            return
+
+        if event.alive:
+            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
+        else:
+            async_create_issue(
+                hass=self._hass,
+                domain=DOMAIN,
+                issue_id=issue_id,
+                is_fixable=False,
+                learn_more_url=LEARN_MORE_URL_XMLRPC_SERVER_RECEIVES_NO_EVENTS,
+                severity=IssueSeverity.WARNING,
+                translation_key="xmlrpc_server_receives_no_events",
+                translation_placeholders={
+                    EventKey.INTERFACE_ID: interface_id,
+                    EventKey.SECONDS_SINCE_LAST_EVENT: str(event.seconds_since_last_event),
+                },
+            )
 
     async def _on_central_state_changed(self, event: CentralStateChangedEvent) -> None:
         """Handle central state changes for issue registry and HA events."""
@@ -470,6 +542,38 @@ class ControlUnit(BaseControlUnit):
             },
         )
 
+    async def _on_client_state_changed(self, event: ClientStateChangedEvent) -> None:
+        """Handle client state changes (interface not reachable)."""
+        interface_id = event.interface_id
+        issue_id = f"proxy-{interface_id}"
+        available = event.new_state == ClientState.CONNECTED
+
+        _LOGGER.debug(
+            "Client state changed for %s: %s → %s",
+            interface_id,
+            event.old_state,
+            event.new_state,
+        )
+
+        if not self._enable_system_notifications:
+            _LOGGER.debug("SYSTEM NOTIFICATION disabled for PROXY")
+            return
+
+        if available:
+            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
+        else:
+            async_create_issue(
+                hass=self._hass,
+                domain=DOMAIN,
+                issue_id=issue_id,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="interface_not_reachable",
+                translation_placeholders={
+                    EventKey.INTERFACE_ID: interface_id,
+                },
+            )
+
     async def _on_connection_state_changed(self, event: ConnectionStateChangedEvent) -> None:
         """Handle interface connection state changes."""
         _LOGGER.debug(
@@ -488,181 +592,158 @@ class ControlUnit(BaseControlUnit):
             },
         )
 
-    async def _on_homematic_event(self, event: HomematicEvent) -> None:  # noqa: C901
+    async def _on_device_availability_changed(self, event: DeviceAvailabilityChangedEvent) -> None:
+        """Handle device availability changes (UN_REACH/STICKY_UN_REACH)."""
+        device_address = event.device_address
+        interface_id = event.channel_address.split(":")[0] if ":" in event.channel_address else ""
+
+        _LOGGER.debug(
+            "Device availability changed for %s: available=%s, parameter=%s",
+            device_address,
+            event.available,
+            event.parameter,
+        )
+
+        # Get device name for event data
+        name: str | None = None
+        if device_entry := self._async_get_device_entry(device_address=device_address):
+            name = device_entry.name_by_user or device_entry.name
+
+        # Build event data
+        title = f"{DOMAIN.upper()} Device not reachable"
+        event_data: dict[str, Any] = {
+            EVENT_IDENTIFIER: f"{device_address}_DEVICE_AVAILABILITY",
+            EVENT_TITLE: title,
+            EVENT_MESSAGE: f"{name}/{device_address} on interface {interface_id}",
+            EVENT_UNAVAILABLE: not event.available,
+            EventKey.ADDRESS: device_address,
+            EventKey.INTERFACE_ID: interface_id,
+            EventKey.PARAMETER: event.parameter,
+            EventKey.VALUE: not event.available,
+        }
+        if device_entry:
+            event_data[EVENT_DEVICE_ID] = device_entry.id
+            event_data[EVENT_NAME] = name
+
+        if is_valid_event(event_data=event_data, schema=DEVICE_AVAILABILITY_EVENT_SCHEMA):
+            self._hass.bus.fire(
+                event_type="homematic.device_availability",
+                event_data=event_data,
+            )
+
+    async def _on_fetch_data_failed(self, event: FetchDataFailedEvent) -> None:
+        """Handle fetch data failed events."""
+        interface_id = event.interface_id
+        issue_id = f"fetch_data-{interface_id}"
+
+        _LOGGER.debug("Fetch data failed for %s", interface_id)
+
+        if not self._enable_system_notifications:
+            _LOGGER.debug("SYSTEM NOTIFICATION disabled for FETCH_DATA")
+            return
+
+        async_create_issue(
+            hass=self._hass,
+            domain=DOMAIN,
+            issue_id=issue_id,
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="fetch_data",
+            translation_placeholders={
+                EventKey.INTERFACE_ID: interface_id,
+            },
+        )
+
+    async def _on_homematic_event(self, event: HomematicEvent) -> None:
         """Execute the callback used for device related events."""
         event_type = event.event_type
         event_data_ha: dict[EventKey | str, Any] = cast(dict[EventKey | str, Any], event.event_data)
-        send_unknown_pong = True
         interface_id = event_data_ha[EventKey.INTERFACE_ID]
-        if event_type == EventType.INTERFACE:
-            interface_event_type = event_data_ha[EventKey.TYPE]
-            issue_id = f"{interface_event_type}-{interface_id}"
-            event_data_ha = cast(dict[EventKey | str, Any], INTERFACE_EVENT_SCHEMA(event_data_ha))
-            data = event_data_ha[EventKey.DATA]
-            if interface_event_type == InterfaceEventType.CALLBACK:
-                if not self._enable_system_notifications:
-                    _LOGGER.debug("SYSTEM NOTIFICATION disabled for CALLBACK")
-                    return
-                if data[EventKey.AVAILABLE]:
-                    async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
-                else:
-                    async_create_issue(
-                        hass=self._hass,
-                        domain=DOMAIN,
-                        issue_id=issue_id,
-                        is_fixable=False,
-                        learn_more_url=LEARN_MORE_URL_XMLRPC_SERVER_RECEIVES_NO_EVENTS,
-                        severity=IssueSeverity.WARNING,
-                        translation_key="xmlrpc_server_receives_no_events",
-                        translation_placeholders={
-                            EventKey.INTERFACE_ID: interface_id,
-                            EventKey.SECONDS_SINCE_LAST_EVENT: data[EventKey.SECONDS_SINCE_LAST_EVENT],
-                        },
-                    )
-            elif interface_event_type == InterfaceEventType.PENDING_PONG:
-                if not self._enable_system_notifications:
-                    _LOGGER.debug("SYSTEM NOTIFICATION disabled for PENDING_PONG")
-                    return
-                if data[EventKey.PONG_MISMATCH_ACCEPTABLE]:
-                    async_delete_issue(
-                        hass=self._hass,
-                        domain=DOMAIN,
-                        issue_id=issue_id,
-                    )
-                    _LOGGER.debug("PENDING_PONG: Removed issue for interface: %s", interface_id)
-                else:
-                    async_create_issue(
-                        hass=self._hass,
-                        domain=DOMAIN,
-                        issue_id=issue_id,
-                        is_fixable=False,
-                        learn_more_url=LEARN_MORE_URL_PONG_MISMATCH,
-                        severity=IssueSeverity.WARNING,
-                        translation_key="pending_pong_mismatch",
-                        translation_placeholders={
-                            CONF_INSTANCE_NAME: self._instance_name,
-                            EventKey.INTERFACE_ID: interface_id,
-                        },
-                    )
-                    _LOGGER.debug("PENDING_PONG: Added issue for interface: %s", interface_id)
-            elif interface_event_type == InterfaceEventType.UNKNOWN_PONG:
-                if not self._enable_system_notifications:
-                    _LOGGER.debug("SYSTEM NOTIFICATION disabled for UNKNOWN_PONG")
-                    return
-                if data[EventKey.PONG_MISMATCH_ACCEPTABLE]:
-                    async_delete_issue(
-                        hass=self._hass,
-                        domain=DOMAIN,
-                        issue_id=issue_id,
-                    )
-                    _LOGGER.debug("UNKNOWN_PONG: Removed issue for interface: %s", interface_id)
-                else:
-                    if send_unknown_pong:
-                        async_create_issue(
-                            hass=self._hass,
-                            domain=DOMAIN,
-                            issue_id=issue_id,
-                            is_fixable=False,
-                            severity=IssueSeverity.WARNING,
-                            translation_key="unknown_pong_mismatch",
-                            translation_placeholders={
-                                CONF_INSTANCE_NAME: self._instance_name,
-                                EventKey.INTERFACE_ID: interface_id,
-                            },
-                        )
-                    _LOGGER.debug("UNKNOWN_PONG: Added issue for interface: %s", interface_id)
-            elif interface_event_type == InterfaceEventType.PROXY:
-                if data[EventKey.AVAILABLE]:
-                    async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
-                else:
-                    async_create_issue(
-                        hass=self._hass,
-                        domain=DOMAIN,
-                        issue_id=issue_id,
-                        is_fixable=False,
-                        severity=IssueSeverity.WARNING,
-                        translation_key="interface_not_reachable",
-                        translation_placeholders={
-                            EventKey.INTERFACE_ID: interface_id,
-                        },
-                    )
-            elif interface_event_type == InterfaceEventType.FETCH_DATA:
-                async_create_issue(
-                    hass=self._hass,
-                    domain=DOMAIN,
-                    issue_id=issue_id,
-                    is_fixable=False,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="fetch_data",
-                    translation_placeholders={
-                        EventKey.INTERFACE_ID: interface_id,
-                    },
+
+        device_address = event_data_ha[EventKey.ADDRESS]
+        name: str | None = None
+        if device_entry := self._async_get_device_entry(device_address=device_address):
+            name = device_entry.name_by_user or device_entry.name
+            event_data_ha.update({EVENT_DEVICE_ID: device_entry.id, EVENT_NAME: name})
+
+        if event_type in (EventType.IMPULSE, EventType.KEYPRESS):
+            event_data_ha = cleanup_click_event_data(event_data=event_data_ha)
+            if is_valid_event(event_data=event_data_ha, schema=CLICK_EVENT_SCHEMA):
+                self._hass.bus.fire(
+                    event_type=event_type.value,
+                    event_data=event_data_ha,
                 )
+        elif event_type == EventType.DEVICE_ERROR:
+            error_parameter = event_data_ha[EventKey.PARAMETER]
+            if error_parameter in FILTER_ERROR_EVENT_PARAMETERS:
+                return
+            error_parameter_display = error_parameter.replace("_", " ").title()
+            title = f"{DOMAIN.upper()} Device Error"
+            error_message: str = ""
+            error_value = event_data_ha[EventKey.VALUE]
+            display_error: bool = False
+            if isinstance(error_value, bool):
+                display_error = error_value
+                error_message = f"{name}/{device_address} on interface {interface_id}: {error_parameter_display}"
+            if isinstance(error_value, int):
+                display_error = error_value != 0
+                error_message = (
+                    f"{name}/{device_address} on interface {interface_id}: {error_parameter_display} {error_value}"
+                )
+            event_data_ha.update(
+                {
+                    EVENT_IDENTIFIER: f"{device_address}_{error_parameter}",
+                    EVENT_TITLE: title,
+                    EVENT_MESSAGE: error_message,
+                    EVENT_ERROR_VALUE: error_value,
+                    EVENT_ERROR: display_error,
+                }
+            )
+            if is_valid_event(event_data=event_data_ha, schema=DEVICE_ERROR_EVENT_SCHEMA):
+                self._hass.bus.fire(
+                    event_type=event_type.value,
+                    event_data=event_data_ha,
+                )
+
+    async def _on_pingpong_mismatch(self, event: PingPongMismatchEvent) -> None:
+        """Handle ping/pong mismatch events (pending or unknown pongs)."""
+        interface_id = event.interface_id
+        mismatch_type = event.mismatch_type
+        issue_id = f"pingpong_{mismatch_type.value}-{interface_id}"
+
+        _LOGGER.debug(
+            "PingPong mismatch for %s: type=%s, count=%s, acceptable=%s",
+            interface_id,
+            mismatch_type,
+            event.mismatch_count,
+            event.acceptable,
+        )
+
+        if not self._enable_system_notifications:
+            _LOGGER.debug("SYSTEM NOTIFICATION disabled for %s", mismatch_type)
+            return
+
+        if event.acceptable:
+            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
+            _LOGGER.debug("%s: Removed issue for interface: %s", mismatch_type, interface_id)
         else:
-            device_address = event_data_ha[EventKey.ADDRESS]
-            name: str | None = None
-            if device_entry := self._async_get_device_entry(device_address=device_address):
-                name = device_entry.name_by_user or device_entry.name
-                event_data_ha.update({EVENT_DEVICE_ID: device_entry.id, EVENT_NAME: name})
-            if event_type in (EventType.IMPULSE, EventType.KEYPRESS):
-                event_data_ha = cleanup_click_event_data(event_data=event_data_ha)
-                if is_valid_event(event_data=event_data_ha, schema=CLICK_EVENT_SCHEMA):
-                    self._hass.bus.fire(
-                        event_type=event_type.value,
-                        event_data=event_data_ha,
-                    )
-            elif event_type == EventType.DEVICE_AVAILABILITY:
-                parameter = event_data_ha[EventKey.PARAMETER]
-                unavailable = event_data_ha[EventKey.VALUE]
-                if parameter in (Parameter.STICKY_UN_REACH, Parameter.UN_REACH):
-                    title = f"{DOMAIN.upper()} Device not reachable"
-                    event_data_ha.update(
-                        {
-                            EVENT_IDENTIFIER: f"{device_address}_DEVICE_AVAILABILITY",
-                            EVENT_TITLE: title,
-                            EVENT_MESSAGE: f"{name}/{device_address} on interface {interface_id}",
-                            EVENT_UNAVAILABLE: unavailable,
-                        }
-                    )
-                    if is_valid_event(
-                        event_data=event_data_ha,
-                        schema=DEVICE_AVAILABILITY_EVENT_SCHEMA,
-                    ):
-                        self._hass.bus.fire(
-                            event_type=event_type.value,
-                            event_data=event_data_ha,
-                        )
-            elif event_type == EventType.DEVICE_ERROR:
-                error_parameter = event_data_ha[EventKey.PARAMETER]
-                if error_parameter in FILTER_ERROR_EVENT_PARAMETERS:
-                    return
-                error_parameter_display = error_parameter.replace("_", " ").title()
-                title = f"{DOMAIN.upper()} Device Error"
-                error_message: str = ""
-                error_value = event_data_ha[EventKey.VALUE]
-                display_error: bool = False
-                if isinstance(error_value, bool):
-                    display_error = error_value
-                    error_message = f"{name}/{device_address} on interface {interface_id}: {error_parameter_display}"
-                if isinstance(error_value, int):
-                    display_error = error_value != 0
-                    error_message = (
-                        f"{name}/{device_address} on interface {interface_id}: {error_parameter_display} {error_value}"
-                    )
-                event_data_ha.update(
-                    {
-                        EVENT_IDENTIFIER: f"{device_address}_{error_parameter}",
-                        EVENT_TITLE: title,
-                        EVENT_MESSAGE: error_message,
-                        EVENT_ERROR_VALUE: error_value,
-                        EVENT_ERROR: display_error,
-                    }
-                )
-                if is_valid_event(event_data=event_data_ha, schema=DEVICE_ERROR_EVENT_SCHEMA):
-                    self._hass.bus.fire(
-                        event_type=event_type.value,
-                        event_data=event_data_ha,
-                    )
+            translation_key = (
+                "pending_pong_mismatch" if mismatch_type == PingPongMismatchType.PENDING else "unknown_pong_mismatch"
+            )
+            async_create_issue(
+                hass=self._hass,
+                domain=DOMAIN,
+                issue_id=issue_id,
+                is_fixable=False,
+                learn_more_url=LEARN_MORE_URL_PONG_MISMATCH,
+                severity=IssueSeverity.WARNING,
+                translation_key=translation_key,
+                translation_placeholders={
+                    CONF_INSTANCE_NAME: self._instance_name,
+                    EventKey.INTERFACE_ID: interface_id,
+                },
+            )
+            _LOGGER.debug("%s: Added issue for interface: %s", mismatch_type, interface_id)
 
     async def _on_system_event(self, event: BackendSystemEventData) -> None:
         """Handle backend system events."""
