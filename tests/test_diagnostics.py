@@ -110,6 +110,11 @@ class TestAsyncGetConfigEntryDiagnostics:
         control_unit.central.hub_coordinator.sysvar_data_points = []
         # Provide a minimal dataclass for system_information to satisfy asdict(...)
         control_unit.central.system_information = _SystemInformation(serial="ABC123", version="1.2.3")
+        # Mock health data
+        control_unit.central.health.overall_health_score = 100
+        control_unit.central.health.all_clients_healthy = True
+        control_unit.central.health.failed_clients = []
+        control_unit.central.health.client_health = {}
 
         diag = await async_get_config_entry_diagnostics(hass, entry)
 
@@ -125,3 +130,10 @@ class TestAsyncGetConfigEntryDiagnostics:
         # System information present and shaped as a dict derived from dataclass
         assert isinstance(diag["system_information"], dict)
         assert diag["system_information"]["version"] == "1.2.3"
+
+        # System health present
+        assert "system_health" in diag
+        assert diag["system_health"]["overall"]["overall_score"] == 100
+        assert diag["system_health"]["overall"]["all_healthy"] is True
+        assert diag["system_health"]["overall"]["failed_clients"] == []
+        assert diag["system_health"]["clients"] == {}
