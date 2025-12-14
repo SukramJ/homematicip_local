@@ -2,7 +2,7 @@
 
 ## What's Changed
 - Add Central State Machine integration for improved connection monitoring
-- Complete migration to modern typed EventBus events (replaces all legacy InterfaceEventType handling)
+- Migrated from 9 legacy EventBus subscriptions to 4 focused integration events (`SystemStatusEvent`, `DeviceLifecycleEvent`, `DataPointsCreatedEvent`, `DeviceTriggerEvent`) 
 - Add error handling decorator for entity actions to prevent log flooding during connection issues
 - Add OpenCCU backup support with button entity and action (see [CCU Backup](README.md#openccu-backup))
 - Add documentation for new device handling (see [Adding New Devices](README.md#adding-new-devices))
@@ -18,7 +18,7 @@ Sysvars, Advanced Settings)
 - Internationalization: Translatable exceptions and log messages, translations for press events
 - Renamed actions: get_schedule_profile_weekday → get_schedule_weekday, set_schedule_profile_weekday → set_schedule_weekday
 
-### Bump aiohomematic to 2025.12.25
+### Bump aiohomematic to 2025.12.26
   - New Features
     - Add install mode support with countdown timer for both HmIP-RF and BidCos-RF interfaces
     - Add device inbox hub entity for viewing pending device pairings
