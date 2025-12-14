@@ -416,14 +416,16 @@ class ControlUnit(BaseControlUnit):
             match central_state:
                 case CentralState.RUNNING:
                     # All interfaces connected - remove any existing issues
+                    # Always delete issues when RUNNING, regardless of _enable_system_notifications
                     async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
                     async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
                     _LOGGER.info("Central %s is RUNNING - all interfaces connected", self._instance_name)
 
                 case CentralState.DEGRADED:
                     # Some interfaces disconnected - create warning issue
+                    # Always delete FAILED issue first
+                    async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
                     if self._enable_system_notifications:
-                        async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
                         ir.async_create_issue(
                             hass=self._hass,
                             domain=DOMAIN,
@@ -435,16 +437,19 @@ class ControlUnit(BaseControlUnit):
                         )
                         _LOGGER.warning("Central %s is DEGRADED - some interfaces disconnected", self._instance_name)
                     else:
+                        # Also delete DEGRADED issue if notifications are disabled
+                        async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
                         _LOGGER.debug("SYSTEM NOTIFICATION disabled for DEGRADED state")
 
                 case CentralState.RECOVERING:
-                    # Active recovery in progress
+                    # Active recovery in progress - no issue changes
                     _LOGGER.info("Central %s is RECOVERING - attempting reconnection", self._instance_name)
 
                 case CentralState.FAILED:
                     # Critical error - all recovery attempts failed
+                    # Always delete DEGRADED issue first
+                    async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
                     if self._enable_system_notifications:
-                        async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
                         ir.async_create_issue(
                             hass=self._hass,
                             domain=DOMAIN,
@@ -456,6 +461,8 @@ class ControlUnit(BaseControlUnit):
                         )
                         _LOGGER.error("Central %s FAILED - recovery unsuccessful", self._instance_name)
                     else:
+                        # Also delete FAILED issue if notifications are disabled
+                        async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
                         _LOGGER.debug("SYSTEM NOTIFICATION disabled for FAILED state")
 
             # Fire HA event for automations
