@@ -119,7 +119,7 @@ def get_data_point(control: ControlUnit, entity_id: str):
     for dp in control.central.get_data_points():
         if dp.custom_id == entity_id:
             return dp
-    for dp in control.central.get_hub_data_points():
+    for dp in control.central.hub_coordinator.get_hub_data_points():
         if dp.custom_id == entity_id:
             return dp
 

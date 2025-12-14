@@ -35,7 +35,7 @@ class TestCeSwitch:
         )
         assert ha_state.state == STATE_OFF
 
-        await control.central.data_point_event(
+        await control.central.event_coordinator.data_point_event(
             interface_id=const.INTERFACE_ID, channel_address="VCU2128127:4", parameter="STATE", value=1
         )
         await hass.async_block_till_done()
@@ -47,7 +47,7 @@ class TestCeSwitch:
         await hass.services.async_call("switch", "turn_on", {"entity_id": entity_id}, blocking=True)
         assert data_point.turn_on.call_count == 1
 
-        await control.central.data_point_event(
+        await control.central.event_coordinator.data_point_event(
             interface_id=const.INTERFACE_ID, channel_address="VCU2128127:4", parameter="STATE", value=0
         )
         await hass.async_block_till_done()

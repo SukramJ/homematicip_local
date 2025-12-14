@@ -40,7 +40,6 @@ from aiohomematic.const import (
     PORT_ANY,
     BackendSystemEvent,
     CentralState,
-    CentralUnitState,
     ClientState,
     DataPointCategory,
     DescriptionMarker,
@@ -198,7 +197,7 @@ class BaseControlUnit:
             "Stopping central unit %s",
             self._instance_name,
         )
-        if self._central.state == CentralUnitState.RUNNING:
+        if self._central.state != CentralState.STOPPED:
             await self._central.stop()
             _LOGGER.info("Stopped central unit for %s", self._instance_name)
 
@@ -272,7 +271,7 @@ class ControlUnit(BaseControlUnit):
         """Return all data points by type."""
         return cast(
             tuple[_DATA_POINT_T, ...],
-            self.central.get_hub_data_points(
+            self.central.hub_coordinator.get_hub_data_points(
                 category=data_point_type.default_category(),
                 registered=False,
             ),
@@ -384,7 +383,7 @@ class ControlUnit(BaseControlUnit):
     @callback
     def _async_add_virtual_remotes_to_device_registry(self) -> None:
         """Add the virtual remotes to device registry."""
-        if not self._central.has_clients:
+        if not self._central.client_coordinator.has_clients:
             _LOGGER.error(
                 "Cannot create ControlUnit %s virtual remote devices. No clients",
                 self._instance_name,
@@ -392,7 +391,7 @@ class ControlUnit(BaseControlUnit):
             return
 
         device_registry = dr.async_get(self._hass)
-        for virtual_remote in self._central.get_virtual_remotes():
+        for virtual_remote in self._central.device_coordinator.get_virtual_remotes():
             device_registry.async_get_or_create(
                 config_entry_id=self._entry_id,
                 identifiers={
@@ -412,7 +411,7 @@ class ControlUnit(BaseControlUnit):
     @callback
     def _async_get_device_entry(self, *, device_address: str) -> DeviceEntry | None:
         """Return the device of the ha device."""
-        if (hm_device := self._central.get_device(address=device_address)) is None:
+        if (hm_device := self._central.device_coordinator.get_device(address=device_address)) is None:
             return None
         device_registry = dr.async_get(self._hass)
         return device_registry.async_get_device(
@@ -802,7 +801,7 @@ class ControlUnit(BaseControlUnit):
 
             # During initial setup window, auto-confirm new devices
             if auto_confirm:
-                await self._central.add_new_devices_manually(
+                await self._central.device_coordinator.add_new_devices_manually(
                     interface_id=interface_id,
                     address_names=dict.fromkeys(new_addresses),
                 )
@@ -818,7 +817,7 @@ class ControlUnit(BaseControlUnit):
                             return
 
                         # Trigger manual add of the device
-                        await self._central.add_new_devices_manually(
+                        await self._central.device_coordinator.add_new_devices_manually(
                             interface_id=_interface_id, address_names={_address: device_name}
                         )
 
@@ -846,7 +845,7 @@ class ControlUnitTemp(BaseControlUnit):
 
     async def stop_central(self, *args: Any) -> None:
         """Stop the control unit."""
-        await self._central.clear_files()
+        await self._central.cache_coordinator.clear_all()
         await super().stop_central(*args)
 
 

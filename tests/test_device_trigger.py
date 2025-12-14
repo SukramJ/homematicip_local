@@ -64,9 +64,15 @@ class _FakeClickEvent:
 
 def _make_runtime_data(has_client: bool, *, hm_device: Any | None) -> Any:
     """Create a ControlUnit-like object with a .central supporting has_client/get_device."""
+    client_coordinator = Mock()
+    client_coordinator.has_client.return_value = has_client
+
+    device_coordinator = Mock()
+    device_coordinator.get_device.return_value = hm_device
+
     central = Mock()
-    central.has_client.return_value = has_client
-    central.get_device.return_value = hm_device
+    central.client_coordinator = client_coordinator
+    central.device_coordinator = device_coordinator
 
     runtime_data = Mock()
     runtime_data.central = central
@@ -133,15 +139,15 @@ class TestAsyncGetTriggers:
         triggers = await dt.async_get_triggers(hass, device_id=device_entry.id)
         assert triggers == []
 
-        # 5) device present but event not ClickEvent -> filtered
-        hm_device = Mock()
-        hm_device.generic_events = [object()]
-
         # Patch ClickEvent class in module so isinstance checks work
         class MyClickEvent(_FakeClickEvent):
             pass
 
         monkeypatch.setattr(dt, "ClickEvent", MyClickEvent)
+
+        # 5) device present but event not ClickEvent -> filtered
+        hm_device = Mock()
+        hm_device.generic_events = [object()]  # List with non-ClickEvent object
 
         entry.runtime_data = _make_runtime_data(has_client=True, hm_device=hm_device)
         triggers = await dt.async_get_triggers(hass, device_id=device_entry.id)
@@ -155,14 +161,16 @@ class TestAsyncGetTriggers:
             EventKey.CHANNEL_NO: 1,
             EventKey.VALUE: True,
         }
-        hm_device.generic_events = [
+        hm_device.generic_events = [  # List with NO_CREATE ClickEvent
             MyClickEvent(usage=MyDataPointUsage.NO_CREATE, event_type="evt", event_data=ev_data)
         ]
         triggers = await dt.async_get_triggers(hass, device_id=device_entry.id)
         assert triggers == []
 
         # 7) Valid ClickEvent -> trigger dict created (uses cleanup_click_event_data)
-        hm_device.generic_events = [MyClickEvent(usage=object(), event_type="evt_type", event_data=ev_data)]
+        hm_device.generic_events = [  # List with valid ClickEvent
+            MyClickEvent(usage=object(), event_type="evt_type", event_data=ev_data)
+        ]
         triggers = await dt.async_get_triggers(hass, device_id=device_entry.id)
         assert len(triggers) == 1
         trig = triggers[0]

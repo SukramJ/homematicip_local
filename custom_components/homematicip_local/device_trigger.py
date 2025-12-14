@@ -46,9 +46,9 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[s
     for entry_id in device.config_entries:
         if (entry := hass.config_entries.async_get_entry(entry_id=entry_id)) and entry.domain == DOMAIN:
             control_unit: ControlUnit = entry.runtime_data
-            if control_unit.central.has_client(interface_id=interface_id) is False:
+            if control_unit.central.client_coordinator.has_client(interface_id=interface_id) is False:
                 continue
-            if hm_device := control_unit.central.get_device(address=device_address):
+            if hm_device := control_unit.central.device_coordinator.get_device(address=device_address):
                 for action_event in hm_device.generic_events:
                     if not isinstance(action_event, ClickEvent):
                         continue

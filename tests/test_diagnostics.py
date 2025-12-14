@@ -23,14 +23,21 @@ from custom_components.homematicip_local.diagnostics import (
 )
 
 
+class _HubCoordinatorStub:
+    """Minimal hub coordinator stub."""
+
+    def __init__(self) -> None:
+        self.program_data_points: list[Any] = []
+        self.sysvar_data_points: list[Any] = []
+
+
 class _CentralStub:
     """Very small central stub exposing only what the helpers need."""
 
     def __init__(self) -> None:
         self.devices: list[Any] = []
         self._data_points: list[Any] = []
-        self.program_data_points: list[Any] = []
-        self.sysvar_data_points: list[Any] = []
+        self.hub_coordinator = _HubCoordinatorStub()
 
     def get_data_points(self, registered: bool | None = None) -> list[Any]:  # noqa: ARG002 - parity with real API
         return list(self._data_points)
@@ -73,8 +80,8 @@ class TestGetDataPointsByPlatformStats:
         """It should count data points across all sources per category and return a sorted mapping."""
         central = _CentralStub()
         central._data_points = [_dp(DataPointCategory.BINARY_SENSOR), _dp(DataPointCategory.SENSOR)]
-        central.program_data_points = [_dp(DataPointCategory.SWITCH)]
-        central.sysvar_data_points = [_dp(DataPointCategory.SENSOR)]
+        central.hub_coordinator.program_data_points = [_dp(DataPointCategory.SWITCH)]
+        central.hub_coordinator.sysvar_data_points = [_dp(DataPointCategory.SENSOR)]
 
         result = get_data_points_by_platform_stats(central=central)  # type: ignore[arg-type]
 
@@ -98,8 +105,9 @@ class TestAsyncGetConfigEntryDiagnostics:
         # Ensure central has required attributes used by diagnostics
         control_unit.central.devices = []
         control_unit.central.get_data_points.return_value = []
-        control_unit.central.program_data_points = []
-        control_unit.central.sysvar_data_points = []
+        # hub_coordinator needs program_data_points and sysvar_data_points as lists
+        control_unit.central.hub_coordinator.program_data_points = []
+        control_unit.central.hub_coordinator.sysvar_data_points = []
         # Provide a minimal dataclass for system_information to satisfy asdict(...)
         control_unit.central.system_information = _SystemInformation(serial="ABC123", version="1.2.3")
 
