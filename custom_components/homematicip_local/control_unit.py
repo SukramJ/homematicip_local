@@ -4,19 +4,18 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from copy import deepcopy
-from functools import partial
 import logging
-import time
 from types import UnionType
 from typing import Any, Final, TypeVar, cast
 
 from aiohomematic import __version__ as AIOHM_VERSION
 from aiohomematic.central import CentralConfig, CentralUnit, check_config
-from aiohomematic.central.event_bus import (
-    BackendSystemEventData,
-    CentralStateChangedEvent,
-    ConnectionStateChangedEvent,
-    HomematicEvent,
+from aiohomematic.central.integration_events import (
+    DataPointsCreatedEvent,
+    DeviceLifecycleEvent,
+    DeviceLifecycleEventType,
+    DeviceTriggerEvent,
+    SystemStatusEvent,
 )
 from aiohomematic.client import InterfaceConfig
 from aiohomematic.const import (
@@ -33,33 +32,26 @@ from aiohomematic.const import (
     DEFAULT_USE_GROUP_CHANNEL_FOR_COVER_STATE,
     IP_ANY_V4,
     PORT_ANY,
-    BackendSystemEvent,
     CentralState,
-    CentralUnitState,
+    ClientState,
     DataPointCategory,
     DescriptionMarker,
-    EventKey,
-    EventType,
     Interface,
-    InterfaceEventType,
     Manufacturer,
     OptionalSettings,
-    Parameter,
-    SourceOfDeviceCreation,
     SystemInformation,
 )
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.data_point import CallbackDataPoint
-from aiohomematic.schemas import INTERFACE_EVENT_SCHEMA
 from aiohomematic.type_aliases import UnsubscribeCallback
-from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PATH, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 
 # --- Repairs/fix flow support ---
-from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers import aiohttp_client, device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue, async_delete_issue
+from homeassistant.helpers.issue_registry import async_delete_issue
 
 from .const import (
     CONF_ADVANCED_CONFIG,
@@ -73,7 +65,6 @@ from .const import (
     CONF_ENABLE_SYSVAR_SCAN,
     CONF_INSTANCE_NAME,
     CONF_INTERFACE,
-    CONF_INTERFACE_ID,
     CONF_JSON_PORT,
     CONF_LISTEN_ON_ALL_IP,
     CONF_MQTT_PREFIX,
@@ -93,28 +84,9 @@ from .const import (
     DEFAULT_LISTEN_ON_ALL_IP,
     DEFAULT_MQTT_PREFIX,
     DOMAIN,
-    EVENT_DEVICE_ID,
-    EVENT_ERROR,
-    EVENT_ERROR_VALUE,
-    EVENT_IDENTIFIER,
-    EVENT_MESSAGE,
-    EVENT_NAME,
-    EVENT_TITLE,
-    EVENT_UNAVAILABLE,
-    FILTER_ERROR_EVENT_PARAMETERS,
-    LEARN_MORE_URL_PONG_MISMATCH,
-    LEARN_MORE_URL_XMLRPC_SERVER_RECEIVES_NO_EVENTS,
 )
 from .mqtt import MQTTConsumer
-from .repairs import REPAIR_CALLBACKS
-from .support import (
-    CLICK_EVENT_SCHEMA,
-    DEVICE_AVAILABILITY_EVENT_SCHEMA,
-    DEVICE_ERROR_EVENT_SCHEMA,
-    InvalidConfig,
-    cleanup_click_event_data,
-    is_valid_event,
-)
+from .support import InvalidConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -194,7 +166,7 @@ class BaseControlUnit:
             "Stopping central unit %s",
             self._instance_name,
         )
-        if self._central.state == CentralUnitState.RUNNING:
+        if self._central.state != CentralState.STOPPED:
             await self._central.stop()
             _LOGGER.info("Stopped central unit for %s", self._instance_name)
 
@@ -268,7 +240,7 @@ class ControlUnit(BaseControlUnit):
         """Return all data points by type."""
         return cast(
             tuple[_DATA_POINT_T, ...],
-            self.central.get_hub_data_points(
+            self.central.hub_coordinator.get_hub_data_points(
                 category=data_point_type.default_category(),
                 registered=False,
             ),
@@ -276,33 +248,34 @@ class ControlUnit(BaseControlUnit):
 
     async def start_central(self) -> None:
         """Start the central unit."""
-        # Subscribe to EventBus events
+        # Subscribe to integration events (4 focused subscriptions)
+        _LOGGER.debug("Subscribing to integration events")
         self._unsubscribe_callbacks.append(
             self._central.event_bus.subscribe(
-                event_type=BackendSystemEventData,
+                event_type=SystemStatusEvent,
                 event_key=None,
-                handler=self._on_system_event,
+                handler=self._on_system_status,
             )
         )
         self._unsubscribe_callbacks.append(
             self._central.event_bus.subscribe(
-                event_type=HomematicEvent,
+                event_type=DeviceLifecycleEvent,
                 event_key=None,
-                handler=self._on_homematic_event,
+                handler=self._on_device_lifecycle,
             )
         )
         self._unsubscribe_callbacks.append(
             self._central.event_bus.subscribe(
-                event_type=CentralStateChangedEvent,
+                event_type=DataPointsCreatedEvent,
                 event_key=None,
-                handler=self._on_central_state_changed,
+                handler=self._on_data_points_created,
             )
         )
         self._unsubscribe_callbacks.append(
             self._central.event_bus.subscribe(
-                event_type=ConnectionStateChangedEvent,
+                event_type=DeviceTriggerEvent,
                 event_key=None,
-                handler=self._on_connection_state_changed,
+                handler=self._on_device_trigger,
             )
         )
         self._async_add_central_to_device_registry()
@@ -345,7 +318,7 @@ class ControlUnit(BaseControlUnit):
     @callback
     def _async_add_virtual_remotes_to_device_registry(self) -> None:
         """Add the virtual remotes to device registry."""
-        if not self._central.has_clients:
+        if not self._central.client_coordinator.has_clients:
             _LOGGER.error(
                 "Cannot create ControlUnit %s virtual remote devices. No clients",
                 self._instance_name,
@@ -353,7 +326,7 @@ class ControlUnit(BaseControlUnit):
             return
 
         device_registry = dr.async_get(self._hass)
-        for virtual_remote in self._central.get_virtual_remotes():
+        for virtual_remote in self._central.device_coordinator.get_virtual_remotes():
             device_registry.async_get_or_create(
                 config_entry_id=self._entry_id,
                 identifiers={
@@ -373,7 +346,7 @@ class ControlUnit(BaseControlUnit):
     @callback
     def _async_get_device_entry(self, *, device_address: str) -> DeviceEntry | None:
         """Return the device of the ha device."""
-        if (hm_device := self._central.get_device(address=device_address)) is None:
+        if (hm_device := self._central.device_coordinator.get_device(address=device_address)) is None:
             return None
         device_registry = dr.async_get(self._hass)
         return device_registry.async_get_device(
@@ -385,379 +358,209 @@ class ControlUnit(BaseControlUnit):
             }
         )
 
-    async def _on_central_state_changed(self, event: CentralStateChangedEvent) -> None:
-        """Handle central state changes for issue registry and HA events."""
-        _LOGGER.debug(
-            "Central state changed: %s → %s (reason: %s)",
-            event.old_state,
-            event.new_state,
-            event.reason,
-        )
+    async def _on_data_points_created(self, event: DataPointsCreatedEvent) -> None:
+        """Handle data points created event from aiohomematic (Entity discovery)."""
+        # event.new_data_points is tuple[tuple[DataPointCategory, tuple[BaseDataPoint, ...]], ...]
+        for item in event.new_data_points:
+            # Each item is a tuple of (category, data_points_tuple)
+            category = item[0]
+            data_points = item[1]
+            if data_points and len(data_points) > 0:
+                async_dispatcher_send(
+                    self._hass,
+                    signal_new_data_point(entry_id=self._entry_id, platform=category),
+                    data_points,
+                )
 
-        new_state = event.new_state
-        issue_id_degraded = f"central_degraded-{self._instance_name}"
-        issue_id_failed = f"central_failed-{self._instance_name}"
+    async def _on_device_lifecycle(self, event: DeviceLifecycleEvent) -> None:
+        """Handle device lifecycle event from aiohomematic (Device lifecycle + availability)."""
+        if event.event_type == DeviceLifecycleEventType.CREATED:
+            _LOGGER.debug("Devices created: %s", event.device_addresses)
+            if event.includes_virtual_remotes:
+                self._async_add_virtual_remotes_to_device_registry()
 
-        if new_state == CentralState.RUNNING:
-            # All interfaces connected - remove any existing issues
-            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
-            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
-            _LOGGER.info("Central %s is RUNNING - all interfaces connected", self._instance_name)
+        elif event.event_type == DeviceLifecycleEventType.AVAILABILITY_CHANGED:
+            for device_address, available in event.availability_changes:
+                _LOGGER.debug("Device %s availability: %s", device_address, available)
+                # Update device registry
+                device_registry = dr.async_get(self._hass)
+                if ha_device := device_registry.async_get_device(
+                    identifiers={(DOMAIN, f"{device_address}{self._central.config.central_id}")}
+                ):
+                    device_registry.async_update_device(
+                        device_id=ha_device.id,
+                        disabled_by=None if available else dr.DeviceEntryDisabler.INTEGRATION,
+                    )
 
-        elif new_state == CentralState.DEGRADED:
-            if not self._enable_system_notifications:
-                _LOGGER.debug("SYSTEM NOTIFICATION disabled for DEGRADED state")
-                return
-            # Some interfaces disconnected - create warning issue
-            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
-            async_create_issue(
-                hass=self._hass,
-                domain=DOMAIN,
-                issue_id=issue_id_degraded,
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="central_degraded",
-                translation_placeholders={
-                    CONF_INSTANCE_NAME: self._instance_name,
-                    "reason": event.reason or "unknown",
-                },
-            )
-            _LOGGER.warning(
-                "Central %s is DEGRADED: %s",
-                self._instance_name,
-                event.reason,
-            )
-
-        elif new_state == CentralState.FAILED:
-            if not self._enable_system_notifications:
-                _LOGGER.debug("SYSTEM NOTIFICATION disabled for FAILED state")
-                return
-            # Recovery failed - create error issue
-            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
-            async_create_issue(
-                hass=self._hass,
-                domain=DOMAIN,
-                issue_id=issue_id_failed,
-                is_fixable=False,
-                severity=IssueSeverity.ERROR,
-                translation_key="central_failed",
-                translation_placeholders={
-                    CONF_INSTANCE_NAME: self._instance_name,
-                    "reason": event.reason or "unknown",
-                },
-            )
-            _LOGGER.error(
-                "Central %s FAILED: %s",
-                self._instance_name,
-                event.reason,
-            )
-
-        elif new_state == CentralState.RECOVERING:
-            _LOGGER.info(
-                "Central %s is RECOVERING: %s",
-                self._instance_name,
-                event.reason,
-            )
-
-        # Fire HA event for automations
-        self._hass.bus.fire(
-            event_type=f"{DOMAIN}.central_state_changed",
+    async def _on_device_trigger(self, event: DeviceTriggerEvent) -> None:
+        """Handle device trigger event from aiohomematic (Device triggers for HA event bus)."""
+        self._hass.bus.async_fire(
+            event_type=f"{DOMAIN}.event",
             event_data={
-                "instance_name": self._instance_name,
-                "old_state": event.old_state.value if event.old_state else None,
-                "new_state": new_state.value,
-                "reason": event.reason,
-            },
-        )
-
-    async def _on_connection_state_changed(self, event: ConnectionStateChangedEvent) -> None:
-        """Handle interface connection state changes."""
-        _LOGGER.debug(
-            "Interface %s connection state: %s",
-            event.interface_id,
-            "connected" if event.connected else "disconnected",
-        )
-
-        # Fire HA event for automations
-        self._hass.bus.fire(
-            event_type=f"{DOMAIN}.interface_connection_changed",
-            event_data={
-                "instance_name": self._instance_name,
+                "entry_id": self._entry_id,
                 "interface_id": event.interface_id,
-                "connected": event.connected,
+                "channel_address": event.channel_address,
+                "parameter": event.parameter,
+                "value": event.value,
             },
         )
 
-    async def _on_homematic_event(self, event: HomematicEvent) -> None:  # noqa: C901
-        """Execute the callback used for device related events."""
-        event_type = event.event_type
-        event_data_ha: dict[EventKey | str, Any] = cast(dict[EventKey | str, Any], event.event_data)
-        send_unknown_pong = True
-        interface_id = event_data_ha[EventKey.INTERFACE_ID]
-        if event_type == EventType.INTERFACE:
-            interface_event_type = event_data_ha[EventKey.TYPE]
-            issue_id = f"{interface_event_type}-{interface_id}"
-            event_data_ha = cast(dict[EventKey | str, Any], INTERFACE_EVENT_SCHEMA(event_data_ha))
-            data = event_data_ha[EventKey.DATA]
-            if interface_event_type == InterfaceEventType.CALLBACK:
-                if not self._enable_system_notifications:
-                    _LOGGER.debug("SYSTEM NOTIFICATION disabled for CALLBACK")
-                    return
-                if data[EventKey.AVAILABLE]:
-                    async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
-                else:
-                    async_create_issue(
-                        hass=self._hass,
-                        domain=DOMAIN,
-                        issue_id=issue_id,
-                        is_fixable=False,
-                        learn_more_url=LEARN_MORE_URL_XMLRPC_SERVER_RECEIVES_NO_EVENTS,
-                        severity=IssueSeverity.WARNING,
-                        translation_key="xmlrpc_server_receives_no_events",
-                        translation_placeholders={
-                            EventKey.INTERFACE_ID: interface_id,
-                            EventKey.SECONDS_SINCE_LAST_EVENT: data[EventKey.SECONDS_SINCE_LAST_EVENT],
-                        },
-                    )
-            elif interface_event_type == InterfaceEventType.PENDING_PONG:
-                if not self._enable_system_notifications:
-                    _LOGGER.debug("SYSTEM NOTIFICATION disabled for PENDING_PONG")
-                    return
-                if data[EventKey.PONG_MISMATCH_ACCEPTABLE]:
-                    async_delete_issue(
-                        hass=self._hass,
-                        domain=DOMAIN,
-                        issue_id=issue_id,
-                    )
-                    _LOGGER.debug("PENDING_PONG: Removed issue for interface: %s", interface_id)
-                else:
-                    async_create_issue(
-                        hass=self._hass,
-                        domain=DOMAIN,
-                        issue_id=issue_id,
-                        is_fixable=False,
-                        learn_more_url=LEARN_MORE_URL_PONG_MISMATCH,
-                        severity=IssueSeverity.WARNING,
-                        translation_key="pending_pong_mismatch",
-                        translation_placeholders={
-                            CONF_INSTANCE_NAME: self._instance_name,
-                            EventKey.INTERFACE_ID: interface_id,
-                        },
-                    )
-                    _LOGGER.debug("PENDING_PONG: Added issue for interface: %s", interface_id)
-            elif interface_event_type == InterfaceEventType.UNKNOWN_PONG:
-                if not self._enable_system_notifications:
-                    _LOGGER.debug("SYSTEM NOTIFICATION disabled for UNKNOWN_PONG")
-                    return
-                if data[EventKey.PONG_MISMATCH_ACCEPTABLE]:
-                    async_delete_issue(
-                        hass=self._hass,
-                        domain=DOMAIN,
-                        issue_id=issue_id,
-                    )
-                    _LOGGER.debug("UNKNOWN_PONG: Removed issue for interface: %s", interface_id)
-                else:
-                    if send_unknown_pong:
-                        async_create_issue(
+    async def _on_system_status(self, event: SystemStatusEvent) -> None:
+        """Handle system status event from aiohomematic (Infrastructure + Lifecycle)."""
+        # Central state changes
+        if event.central_state:
+            central_state = event.central_state
+            issue_id_degraded = f"{self._entry_id}_central_degraded"
+            issue_id_failed = f"{self._entry_id}_central_failed"
+
+            match central_state:
+                case CentralState.RUNNING:
+                    # All interfaces connected - remove any existing issues
+                    # Always delete issues when RUNNING, regardless of _enable_system_notifications
+                    async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
+                    async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
+                    _LOGGER.info("Central %s is RUNNING - all interfaces connected", self._instance_name)
+
+                case CentralState.DEGRADED:
+                    # Some interfaces disconnected - create warning issue
+                    # Always delete FAILED issue first
+                    async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
+                    if self._enable_system_notifications:
+                        ir.async_create_issue(
                             hass=self._hass,
                             domain=DOMAIN,
-                            issue_id=issue_id,
+                            issue_id=issue_id_degraded,
                             is_fixable=False,
-                            severity=IssueSeverity.WARNING,
-                            translation_key="unknown_pong_mismatch",
-                            translation_placeholders={
-                                CONF_INSTANCE_NAME: self._instance_name,
-                                EventKey.INTERFACE_ID: interface_id,
-                            },
+                            severity=ir.IssueSeverity.WARNING,
+                            translation_key="central_degraded",
+                            translation_placeholders={"name": self._instance_name},
                         )
-                    _LOGGER.debug("UNKNOWN_PONG: Added issue for interface: %s", interface_id)
-            elif interface_event_type == InterfaceEventType.PROXY:
-                if data[EventKey.AVAILABLE]:
-                    async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
-                else:
-                    async_create_issue(
-                        hass=self._hass,
-                        domain=DOMAIN,
-                        issue_id=issue_id,
-                        is_fixable=False,
-                        severity=IssueSeverity.WARNING,
-                        translation_key="interface_not_reachable",
-                        translation_placeholders={
-                            EventKey.INTERFACE_ID: interface_id,
-                        },
-                    )
-            elif interface_event_type == InterfaceEventType.FETCH_DATA:
-                async_create_issue(
+                        _LOGGER.warning("Central %s is DEGRADED - some interfaces disconnected", self._instance_name)
+                    else:
+                        # Also delete DEGRADED issue if notifications are disabled
+                        async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
+                        _LOGGER.debug("SYSTEM NOTIFICATION disabled for DEGRADED state")
+
+                case CentralState.RECOVERING:
+                    # Active recovery in progress - no issue changes
+                    _LOGGER.info("Central %s is RECOVERING - attempting reconnection", self._instance_name)
+
+                case CentralState.FAILED:
+                    # Critical error - all recovery attempts failed
+                    # Always delete DEGRADED issue first
+                    async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
+                    if self._enable_system_notifications:
+                        ir.async_create_issue(
+                            hass=self._hass,
+                            domain=DOMAIN,
+                            issue_id=issue_id_failed,
+                            is_fixable=False,
+                            severity=ir.IssueSeverity.ERROR,
+                            translation_key="central_failed",
+                            translation_placeholders={"name": self._instance_name},
+                        )
+                        _LOGGER.error("Central %s FAILED - recovery unsuccessful", self._instance_name)
+                    else:
+                        # Also delete FAILED issue if notifications are disabled
+                        async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
+                        _LOGGER.debug("SYSTEM NOTIFICATION disabled for FAILED state")
+
+            # Fire HA event for automations
+            self._hass.bus.async_fire(
+                event_type=f"{DOMAIN}.central_state_changed",
+                event_data={
+                    "instance_name": self._instance_name,
+                    "new_state": central_state.value,
+                },
+            )
+
+        # Connection state changes: tuple[str, bool] = (interface_id, connected)
+        if event.connection_state:
+            interface_id, connected = event.connection_state
+            _LOGGER.debug("Connection state for %s: connected=%s", interface_id, connected)
+            if not connected:
+                ir.async_create_issue(
                     hass=self._hass,
                     domain=DOMAIN,
-                    issue_id=issue_id,
+                    issue_id=f"{self._entry_id}_connection_{interface_id}",
                     is_fixable=False,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="fetch_data",
-                    translation_placeholders={
-                        EventKey.INTERFACE_ID: interface_id,
-                    },
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="connection_failed",
+                    translation_placeholders={"interface_id": interface_id},
                 )
-        else:
-            device_address = event_data_ha[EventKey.ADDRESS]
-            name: str | None = None
-            if device_entry := self._async_get_device_entry(device_address=device_address):
-                name = device_entry.name_by_user or device_entry.name
-                event_data_ha.update({EVENT_DEVICE_ID: device_entry.id, EVENT_NAME: name})
-            if event_type in (EventType.IMPULSE, EventType.KEYPRESS):
-                event_data_ha = cleanup_click_event_data(event_data=event_data_ha)
-                if is_valid_event(event_data=event_data_ha, schema=CLICK_EVENT_SCHEMA):
-                    self._hass.bus.fire(
-                        event_type=event_type.value,
-                        event_data=event_data_ha,
-                    )
-            elif event_type == EventType.DEVICE_AVAILABILITY:
-                parameter = event_data_ha[EventKey.PARAMETER]
-                unavailable = event_data_ha[EventKey.VALUE]
-                if parameter in (Parameter.STICKY_UN_REACH, Parameter.UN_REACH):
-                    title = f"{DOMAIN.upper()} Device not reachable"
-                    event_data_ha.update(
-                        {
-                            EVENT_IDENTIFIER: f"{device_address}_DEVICE_AVAILABILITY",
-                            EVENT_TITLE: title,
-                            EVENT_MESSAGE: f"{name}/{device_address} on interface {interface_id}",
-                            EVENT_UNAVAILABLE: unavailable,
-                        }
-                    )
-                    if is_valid_event(
-                        event_data=event_data_ha,
-                        schema=DEVICE_AVAILABILITY_EVENT_SCHEMA,
-                    ):
-                        self._hass.bus.fire(
-                            event_type=event_type.value,
-                            event_data=event_data_ha,
-                        )
-            elif event_type == EventType.DEVICE_ERROR:
-                error_parameter = event_data_ha[EventKey.PARAMETER]
-                if error_parameter in FILTER_ERROR_EVENT_PARAMETERS:
-                    return
-                error_parameter_display = error_parameter.replace("_", " ").title()
-                title = f"{DOMAIN.upper()} Device Error"
-                error_message: str = ""
-                error_value = event_data_ha[EventKey.VALUE]
-                display_error: bool = False
-                if isinstance(error_value, bool):
-                    display_error = error_value
-                    error_message = f"{name}/{device_address} on interface {interface_id}: {error_parameter_display}"
-                if isinstance(error_value, int):
-                    display_error = error_value != 0
-                    error_message = (
-                        f"{name}/{device_address} on interface {interface_id}: {error_parameter_display} {error_value}"
-                    )
-                event_data_ha.update(
-                    {
-                        EVENT_IDENTIFIER: f"{device_address}_{error_parameter}",
-                        EVENT_TITLE: title,
-                        EVENT_MESSAGE: error_message,
-                        EVENT_ERROR_VALUE: error_value,
-                        EVENT_ERROR: display_error,
-                    }
-                )
-                if is_valid_event(event_data=event_data_ha, schema=DEVICE_ERROR_EVENT_SCHEMA):
-                    self._hass.bus.fire(
-                        event_type=event_type.value,
-                        event_data=event_data_ha,
-                    )
-
-    async def _on_system_event(self, event: BackendSystemEventData) -> None:
-        """Handle backend system events."""
-        _LOGGER.debug(
-            "callback_system_event: Received system event %s for event for %s",
-            event.system_event,
-            self._instance_name,
-        )
-
-        system_event = event.system_event
-        data = event.data
-        interface_id = data.get("interface_id")
-        new_addresses = data.get("new_addresses")
-        new_channel_events = data.get("new_channel_events")
-        new_data_points = data.get("new_data_points")
-        source = data.get("source")
-
-        # Handle event of new device creation in Homematic(IP) Local for OpenCCU.
-        if system_event == BackendSystemEvent.DEVICES_CREATED:
-            if source and source == SourceOfDeviceCreation.NEW:
-                return
-            self._async_add_virtual_remotes_to_device_registry()
-            if new_data_points:
-                for platform, data_points in new_data_points.items():
-                    if data_points and len(data_points) > 0:
-                        async_dispatcher_send(
-                            self._hass,
-                            signal_new_data_point(entry_id=self._entry_id, platform=platform),
-                            data_points,
-                        )
-            if new_channel_events:
-                for channel_events in new_channel_events:
-                    async_dispatcher_send(
-                        self._hass,
-                        signal_new_data_point(entry_id=self._entry_id, platform=DataPointCategory.EVENT),
-                        channel_events,
-                    )
-            return
-        if system_event == BackendSystemEvent.HUB_REFRESHED:
-            # Handle event of new hub entity creation in Homematic(IP) Local for OpenCCU.
-            if new_data_points:
-                for platform, hub_data_points in new_data_points.items():
-                    if hub_data_points and len(hub_data_points) > 0:
-                        async_dispatcher_send(
-                            self._hass,
-                            signal_new_data_point(entry_id=self._entry_id, platform=platform),
-                            hub_data_points,
-                        )
-            return
-        if system_event == BackendSystemEvent.DEVICES_DELAYED and new_addresses:
-            # Check if we are in auto-confirm window (initial setup)
-            auto_confirm = self._auto_confirm_until is not None and time.time() < self._auto_confirm_until
-
-            if not interface_id:
-                return
-
-            # During initial setup window, auto-confirm new devices
-            if auto_confirm:
-                await self._central.add_new_devices_manually(
-                    interface_id=interface_id,
-                    address_names=dict.fromkeys(new_addresses),
-                )
-
             else:
-                for address in new_addresses:
-                    # Normal behavior: create repair issue
-                    issue_id = f"devices_delayed|{interface_id}|{address}"
+                # Connection restored - delete issue
+                async_delete_issue(
+                    hass=self._hass,
+                    domain=DOMAIN,
+                    issue_id=f"{self._entry_id}_connection_{interface_id}",
+                )
 
-                    async def _fix_callback(*, device_name: str, _interface_id: str, _address: str) -> None:
-                        """Rename, accept inbox device, and trigger manual add of the delayed device."""
-                        if not _interface_id:
-                            return
+            # Fire HA event for automations
+            self._hass.bus.async_fire(
+                event_type=f"{DOMAIN}.interface_connection_changed",
+                event_data={
+                    "instance_name": self._instance_name,
+                    "interface_id": interface_id,
+                    "connected": connected,
+                },
+            )
 
-                        # Trigger manual add of the device
-                        await self._central.add_new_devices_manually(
-                            interface_id=_interface_id, address_names={_address: device_name}
-                        )
+        # Client state changes: tuple[str, ClientState, ClientState] = (interface_id, old_state, new_state)
+        if event.client_state:
+            interface_id, old_state, new_state = event.client_state
+            _LOGGER.debug("Client state for %s: %s -> %s", interface_id, old_state, new_state)
+            if new_state == ClientState.CONNECTED:
+                # Client connected - delete issue
+                async_delete_issue(
+                    hass=self._hass,
+                    domain=DOMAIN,
+                    issue_id=f"{self._entry_id}_client_{interface_id}",
+                )
+            elif new_state == ClientState.DISCONNECTED:
+                ir.async_create_issue(
+                    hass=self._hass,
+                    domain=DOMAIN,
+                    issue_id=f"{self._entry_id}_client_{interface_id}",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="client_failed",
+                    translation_placeholders={"interface_id": interface_id},
+                )
 
-                    REPAIR_CALLBACKS[issue_id] = partial(_fix_callback, _interface_id=interface_id, _address=address)
+        # Callback state changes: tuple[str, bool] = (interface_id, alive)
+        if event.callback_state:
+            interface_id, alive = event.callback_state
+            _LOGGER.debug("Callback state for %s: alive=%s", interface_id, alive)
+            if alive:
+                # Callback alive - delete issue
+                async_delete_issue(
+                    hass=self._hass,
+                    domain=DOMAIN,
+                    issue_id=f"{self._entry_id}_callback_{interface_id}",
+                )
+            else:
+                ir.async_create_issue(
+                    hass=self._hass,
+                    domain=DOMAIN,
+                    issue_id=f"{self._entry_id}_callback_{interface_id}",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="callback_server_failed",
+                    translation_placeholders={"interface_id": interface_id},
+                )
 
-                    async_create_issue(
-                        hass=self._hass,
-                        domain=DOMAIN,
-                        issue_id=issue_id,
-                        is_fixable=True,
-                        severity=IssueSeverity.WARNING,
-                        translation_key="devices_delayed",
-                        translation_placeholders={
-                            CONF_INSTANCE_NAME: self._instance_name,
-                            CONF_INTERFACE_ID: interface_id,
-                            CONF_ADDRESS: address,
-                        },
-                    )
-            return
-        return
+        # Issues from aiohomematic
+        for issue in event.issues:
+            ir.async_create_issue(
+                hass=self._hass,
+                domain=DOMAIN,
+                issue_id=f"{self._entry_id}_{issue.issue_id}",
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR if issue.severity == "error" else ir.IssueSeverity.WARNING,
+                translation_key=issue.translation_key,
+                translation_placeholders=dict(issue.translation_placeholders),
+            )
 
 
 class ControlUnitTemp(BaseControlUnit):
@@ -765,7 +568,7 @@ class ControlUnitTemp(BaseControlUnit):
 
     async def stop_central(self, *args: Any) -> None:
         """Stop the control unit."""
-        await self._central.clear_files()
+        await self._central.cache_coordinator.clear_all()
         await super().stop_central(*args)
 
 
@@ -933,9 +736,10 @@ class ControlConfig:
         return True
 
 
-def signal_new_data_point(*, entry_id: str, platform: DataPointCategory) -> str:
+def signal_new_data_point(*, entry_id: str, platform: DataPointCategory | str) -> str:
     """Gateway specific event to signal new device."""
-    return f"{DOMAIN}-new-data-point-{entry_id}-{platform.value}"
+    platform_value = platform.value if isinstance(platform, DataPointCategory) else platform
+    return f"{DOMAIN}-new-data-point-{entry_id}-{platform_value}"
 
 
 async def validate_config_and_get_system_information(

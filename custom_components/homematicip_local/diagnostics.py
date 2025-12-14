@@ -39,7 +39,11 @@ def get_data_points_by_platform_stats(
 ) -> Mapping[DataPointCategory, int]:
     """Return the central statistics for data points by platform."""
     _data_points_by_platform: dict[DataPointCategory, int] = {}
-    for dp in central.get_data_points(registered=registered) + central.program_data_points + central.sysvar_data_points:
+    for dp in (
+        central.get_data_points(registered=registered)
+        + central.hub_coordinator.program_data_points
+        + central.hub_coordinator.sysvar_data_points
+    ):
         if (platform := dp.category) not in _data_points_by_platform:
             _data_points_by_platform[platform] = 0
         _data_points_by_platform[platform] += 1

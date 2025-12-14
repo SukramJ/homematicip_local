@@ -152,7 +152,9 @@ async def async_remove_config_entry_device(
     interface_id: str = address_data[1]
 
     if interface_id and device_address and (control_unit := entry.runtime_data):
-        await control_unit.central.delete_device(interface_id=interface_id, device_address=device_address)
+        await control_unit.central.device_coordinator.delete_device(
+            interface_id=interface_id, device_address=device_address
+        )
         _LOGGER.debug(
             "Called delete_device: %s, %s",
             interface_id,

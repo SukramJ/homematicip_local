@@ -31,14 +31,14 @@ class TestSensor:
         )
         assert ha_state.state == STATE_UNKNOWN
 
-        await control.central.data_point_event(
+        await control.central.event_coordinator.data_point_event(
             interface_id=const.INTERFACE_ID, channel_address="VCU7837366:1", parameter="Abs_Luftfeuchte", value=1
         )
         await hass.async_block_till_done()
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == "1.0"
 
-        await control.central.data_point_event(
+        await control.central.event_coordinator.data_point_event(
             interface_id=const.INTERFACE_ID, channel_address="VCU7837366:1", parameter="Abs_Luftfeuchte", value=0
         )
         await hass.async_block_till_done()
@@ -57,14 +57,14 @@ class TestSensor:
         )
         assert ha_state.state == STATE_UNKNOWN
 
-        await control.central.data_point_event(
+        await control.central.event_coordinator.data_point_event(
             interface_id=const.INTERFACE_ID, channel_address="VCU7837366:1", parameter="Taupunkt", value=1
         )
         await hass.async_block_till_done()
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == "1.0"
 
-        await control.central.data_point_event(
+        await control.central.event_coordinator.data_point_event(
             interface_id=const.INTERFACE_ID, channel_address="VCU7837366:1", parameter="Taupunkt", value=0
         )
         await hass.async_block_till_done()

@@ -709,7 +709,7 @@ async def _async_service_create_central_link(*, hass: HomeAssistant, service: Se
         if (entry_id := service.data.get(CONF_ENTRY_ID)) is not None and (
             control := _async_get_control_unit(hass=hass, entry_id=entry_id)
         ) is not None:
-            await control.central.create_central_links()
+            await control.central.device_coordinator.create_central_links()
         elif hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
             await hm_device.create_central_links()
     except BaseHomematicException as bhexc:
@@ -723,7 +723,7 @@ async def _async_service_remove_central_link(*, hass: HomeAssistant, service: Se
         if (entry_id := service.data.get(CONF_ENTRY_ID)) is not None and (
             control := _async_get_control_unit(hass=hass, entry_id=entry_id)
         ) is not None:
-            await control.central.remove_central_links()
+            await control.central.device_coordinator.remove_central_links()
         elif hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
             await hm_device.remove_central_links()
     except BaseHomematicException as bhexc:
@@ -850,7 +850,7 @@ async def _async_service_get_variable_value(*, hass: HomeAssistant, service: Ser
 
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
         try:
-            if (value := await control.central.get_system_variable(legacy_name=name)) is not None:
+            if (value := await control.central.hub_coordinator.get_system_variable(legacy_name=name)) is not None:
                 return {"result": value}
         except BaseHomematicException as bhexc:
             raise HomeAssistantError(bhexc) from bhexc
@@ -902,22 +902,22 @@ async def _async_service_set_variable_value(*, hass: HomeAssistant, service: Ser
     value = service.data[CONF_VALUE]
 
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
-        await control.central.set_system_variable(legacy_name=name, value=value)
+        await control.central.hub_coordinator.set_system_variable(legacy_name=name, value=value)
 
 
 async def _async_service_clear_cache(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to clear the cache."""
     entry_id = service.data[CONF_ENTRY_ID]
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
-        await control.central.clear_files()
+        await control.central.cache_coordinator.clear_all()
 
 
 async def _async_service_fetch_system_variables(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to fetch system variables from backend."""
     entry_id = service.data[CONF_ENTRY_ID]
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
-        await control.central.fetch_program_data(scheduled=False)
-        await control.central.fetch_sysvar_data(scheduled=False)
+        await control.central.hub_coordinator.fetch_program_data(scheduled=False)
+        await control.central.hub_coordinator.fetch_sysvar_data(scheduled=False)
 
 
 async def _async_service_put_link_paramset(*, hass: HomeAssistant, service: ServiceCall) -> None:
@@ -976,7 +976,7 @@ async def _async_service_record_session(*, hass: HomeAssistant, service: Service
     randomize_output = service.data[CONF_RANDOMIZE_OUTPUT]
 
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
-        await control.central.recorder.activate(
+        await control.central.cache_coordinator.recorder.activate(
             on_time=on_time, auto_save=True, randomize_output=randomize_output, use_ts_in_file_name=True
         )
 
@@ -985,7 +985,7 @@ async def _async_service_update_device_firmware_data(*, hass: HomeAssistant, ser
     """Service to clear the cache."""
     entry_id = service.data[CONF_ENTRY_ID]
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
-        await control.central.refresh_firmware_data()
+        await control.central.device_coordinator.refresh_firmware_data()
 
 
 async def _async_service_create_ccu_backup(*, hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
@@ -1092,7 +1092,7 @@ def _async_get_control_units(*, hass: HomeAssistant) -> list[ControlUnit]:
 def _async_get_hm_device_by_address(*, hass: HomeAssistant, device_address: str) -> DeviceProtocol | None:
     """Return the Homematic device."""
     for control_unit in _async_get_control_units(hass=hass):
-        if hm_device := control_unit.central.get_device(address=device_address):
+        if hm_device := control_unit.central.device_coordinator.get_device(address=device_address):
             return hm_device
     return None
 
@@ -1101,7 +1101,7 @@ def _async_get_hm_device_by_address(*, hass: HomeAssistant, device_address: str)
 def _async_get_cu_by_interface_id(*, hass: HomeAssistant, interface_id: str) -> ControlUnit | None:
     """Get ControlUnit by interface_id."""
     for control_unit in _async_get_control_units(hass=hass):
-        if control_unit.central.has_client(interface_id=interface_id):
+        if control_unit.central.client_coordinator.has_client(interface_id=interface_id):
             return control_unit
     return None
 
@@ -1116,8 +1116,8 @@ def _asnyc_get_hm_device_by_id(*, hass: HomeAssistant, device_id: str) -> Device
         return None
     device_address, interface_id = data
     for control_unit in _async_get_control_units(hass=hass):
-        if control_unit.central.has_client(interface_id=interface_id) and (
-            hm_device := control_unit.central.get_device(address=device_address)
+        if control_unit.central.client_coordinator.has_client(interface_id=interface_id) and (
+            hm_device := control_unit.central.device_coordinator.get_device(address=device_address)
         ):
             return hm_device
     return None

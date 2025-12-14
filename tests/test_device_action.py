@@ -65,9 +65,15 @@ class _FakeActionDp:
 
 def _make_runtime_data(has_client: bool, *, hm_device: Any | None) -> Any:
     """Create a ControlUnit-like object with a .central supporting has_client/get_device."""
+    client_coordinator = Mock()
+    client_coordinator.has_client.return_value = has_client
+
+    device_coordinator = Mock()
+    device_coordinator.get_device.return_value = hm_device
+
     central = Mock()
-    central.has_client.return_value = has_client
-    central.get_device.return_value = hm_device
+    central.client_coordinator = client_coordinator
+    central.device_coordinator = device_coordinator
 
     runtime_data = Mock()
     runtime_data.central = central
@@ -119,9 +125,6 @@ class TestAsyncGetActions:
         actions = await da.async_get_actions(hass, device_id=device_entry.id)
         assert actions == []
 
-        # 4) hm_device with non-action data points only -> filtered to []
-        non_action_dp = object()  # won't match isinstance checks after patching below
-
         # Patch DpAction/DpButton in module to our fake so isinstance works with fake objects
         class MyDpAction(_FakeActionDp):
             pass
@@ -132,22 +135,27 @@ class TestAsyncGetActions:
         monkeypatch.setattr(da, "DpAction", MyDpAction)
         monkeypatch.setattr(da, "DpButton", MyDpButton)
 
+        # 4) hm_device with non-action data points only -> filtered to []
+        non_action_dp = object()  # won't match isinstance checks after patching below
+
         hm_device = Mock()
-        hm_device.generic_data_points = [non_action_dp]
+        hm_device.generic_data_points = [non_action_dp]  # List of data points
         entry.runtime_data = _make_runtime_data(has_client=True, hm_device=hm_device)
         actions = await da.async_get_actions(hass, device_id=device_entry.id)
         assert actions == []
 
         # 5) hm_device with action DPs where one has unsupported parameter -> filtered
         dp_other = MyDpAction(parameter="FOO", channel_no=2)
-        hm_device.generic_data_points = [dp_other]
+        hm_device.generic_data_points = [dp_other]  # List with unsupported parameter
+        entry.runtime_data = _make_runtime_data(has_client=True, hm_device=hm_device)
         actions = await da.async_get_actions(hass, device_id=device_entry.id)
         assert actions == []
 
         # 6) hm_device with valid action DPs -> action dicts created
         dp_short = MyDpAction(parameter="PRESS_SHORT", channel_no=1)
         dp_long = MyDpButton(parameter="PRESS_LONG", channel_no=3)
-        hm_device.generic_data_points = [dp_short, dp_long]
+        hm_device.generic_data_points = [dp_short, dp_long]  # List with valid DPs
+        entry.runtime_data = _make_runtime_data(has_client=True, hm_device=hm_device)
         actions = await da.async_get_actions(hass, device_id=device_entry.id)
         assert {
             CONF_DOMAIN: HMIP_DOMAIN,
@@ -214,7 +222,8 @@ class TestAsyncCallActionFromConfig:
 
         # 4) device present but no matching DP -> no send_value
         hm_device = Mock()
-        hm_device.generic_data_points = [MyDpAction("PRESS_LONG", 4)]
+        dp_no_match = MyDpAction("PRESS_LONG", 4)
+        hm_device.generic_data_points = [dp_no_match]  # List with non-matching DP
         entry.runtime_data = _make_runtime_data(has_client=True, hm_device=hm_device)
         await da.async_call_action_from_config(
             hass,
@@ -223,11 +232,11 @@ class TestAsyncCallActionFromConfig:
             None,
         )
         # ensure it didn't call
-        hm_device.generic_data_points[0].send_value.assert_not_called()
+        dp_no_match.send_value.assert_not_called()
 
         # 5) matching DP -> send_value(True) awaited
         dp = MyDpButton("PRESS_SHORT", 1)
-        hm_device.generic_data_points = [dp]
+        hm_device.generic_data_points = [dp]  # List with matching DP
         await da.async_call_action_from_config(
             hass,
             {CONF_DEVICE_ID: device_entry.id, CONF_TYPE: "press_short", "subtype": 1},
