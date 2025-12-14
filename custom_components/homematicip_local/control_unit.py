@@ -433,7 +433,10 @@ class ControlUnit(BaseControlUnit):
                             is_fixable=False,
                             severity=ir.IssueSeverity.WARNING,
                             translation_key="central_degraded",
-                            translation_placeholders={"name": self._instance_name},
+                            translation_placeholders={
+                                "instance_name": self._instance_name,
+                                "reason": "Some interfaces disconnected",
+                            },
                         )
                         _LOGGER.warning("Central %s is DEGRADED - some interfaces disconnected", self._instance_name)
                     else:
@@ -457,7 +460,10 @@ class ControlUnit(BaseControlUnit):
                             is_fixable=False,
                             severity=ir.IssueSeverity.ERROR,
                             translation_key="central_failed",
-                            translation_placeholders={"name": self._instance_name},
+                            translation_placeholders={
+                                "instance_name": self._instance_name,
+                                "reason": "All recovery attempts exhausted",
+                            },
                         )
                         _LOGGER.error("Central %s FAILED - recovery unsuccessful", self._instance_name)
                     else:

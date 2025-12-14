@@ -25,6 +25,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: Homemat
     diag["platform_stats"] = get_data_points_by_platform_stats(central=control_unit.central, registered=True)
     diag["devices"] = get_devices_per_type_stats(central=control_unit.central)
     diag["system_information"] = async_redact_data(asdict(control_unit.central.system_information), "serial")
+    diag["system_health"] = get_system_health(central=control_unit.central)
 
     return diag
 
@@ -48,3 +49,23 @@ def get_data_points_by_platform_stats(
             _data_points_by_platform[platform] = 0
         _data_points_by_platform[platform] += 1
     return dict(sorted(_data_points_by_platform.items()))
+
+
+def get_system_health(*, central: CentralUnit) -> dict[str, Any]:
+    """Return the system health information."""
+    return {
+        "overall": {
+            "overall_score": central.health.overall_health_score,
+            "all_healthy": central.health.all_clients_healthy,
+            "failed_clients": central.health.failed_clients,
+        },
+        "clients": {
+            health.interface_id: {
+                "available": health.is_available,
+                "health_score": health.health_score,
+                "consecutive_failures": health.consecutive_failures,
+                "last_event": health.last_event_received.isoformat() if health.last_event_received else None,
+            }
+            for health in central.health.client_health.values()
+        },
+    }
