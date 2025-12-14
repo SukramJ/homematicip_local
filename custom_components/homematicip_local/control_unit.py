@@ -360,7 +360,11 @@ class ControlUnit(BaseControlUnit):
 
     async def _on_data_points_created(self, event: DataPointsCreatedEvent) -> None:
         """Handle data points created event from aiohomematic (Entity discovery)."""
-        for category, data_points in event.new_data_points:
+        # event.new_data_points is tuple[tuple[DataPointCategory, tuple[BaseDataPoint, ...]], ...]
+        for item in event.new_data_points:
+            # Each item is a tuple of (category, data_points_tuple)
+            category = item[0]
+            data_points = item[1]
             if data_points and len(data_points) > 0:
                 async_dispatcher_send(
                     self._hass,
@@ -725,9 +729,10 @@ class ControlConfig:
         return True
 
 
-def signal_new_data_point(*, entry_id: str, platform: DataPointCategory) -> str:
+def signal_new_data_point(*, entry_id: str, platform: DataPointCategory | str) -> str:
     """Gateway specific event to signal new device."""
-    return f"{DOMAIN}-new-data-point-{entry_id}-{platform.value}"
+    platform_value = platform.value if isinstance(platform, DataPointCategory) else platform
+    return f"{DOMAIN}-new-data-point-{entry_id}-{platform_value}"
 
 
 async def validate_config_and_get_system_information(

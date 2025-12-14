@@ -1,53 +1,57 @@
-# Version 2.0.0 (2025-12-12)
+# Version 2.0.0 (2025-12-14)
 
 ## What's Changed
-- Add Central State Machine integration for improved connection monitoring
-- Migrated from 9 legacy EventBus subscriptions to 4 focused integration events (`SystemStatusEvent`, `DeviceLifecycleEvent`, `DataPointsCreatedEvent`, `DeviceTriggerEvent`) 
-- Add error handling decorator for entity actions to prevent log flooding during connection issues
-- Add OpenCCU backup support with button entity and action (see [CCU Backup](README.md#openccu-backup))
-- Add documentation for new device handling (see [Adding New Devices](README.md#adding-new-devices))
-- OpenCCU backup functionality: New button entity and action for creating and downloading CCU system backups
-- Config Flow v2 redesign: Automatic port configuration based on TLS setting, optional custom port configuration, new menu-based Options Flow with four sections (Connection, TLS & Interfaces, Programs &
-Sysvars, Advanced Settings)
-- Reconfigure Flow: Two-step flow for quick updates to connection and TLS settings without full re-setup
-- Climate schedule support: New scheduler attributes for climate entities, get/set weekly schedules with caching and validation
-- Backend detection: Automatic detection of CCU type (CCU3, RaspberryMatic, Homegear)
-- Improved error handling: RetryStrategy with exponential backoff, login rate limiting, automatic port configuration page on connection failure
-- Device management: Per-interface install mode support, device inbox for pending pairings, device and channel renaming via API
-- Type safety: Strict mypy mode enabled, protocol-based typing throughout
-- Internationalization: Translatable exceptions and log messages, translations for press events
-- Renamed actions: get_schedule_profile_weekday → get_schedule_weekday, set_schedule_profile_weekday → set_schedule_weekday
+- Config Flow Redesign: Automatic port configuration based on TLS setting, new menu-based options flow with organized sections, and quick reconfigure flow for connection updates
+- Improved Connection Monitoring: New central state machine with DEGRADED and RECOVERING states for better visibility into connection issues
+- Faster Reconnection: Staged reconnection with TCP port checks recovers from CCU restarts in ~10 seconds instead of fixed 60-second delays
+- Climate Schedule Support: Get and set weekly thermostat schedules with caching and validation, simplified schedule format
+- OpenCCU Backup: New button entity and action for creating and downloading complete CCU system backups
+- Device Management: Install mode support with countdown timers, device inbox for handling pending pairings, rename devices and channels via API
+- Backend Detection: Automatic detection of CCU type (CCU3, RaspberryMatic, Homegear)
+- Firmware Updates: Check for updates and trigger firmware installation on OpenCCU systems, improved firmware data refresh
+- Better Error Handling: Exponential backoff retry strategy (2s→120s), login rate limiting, circuit breakers to prevent retry-storms
+- Simplified Event System: Modern event architecture with 4 focused event types replacing 9 legacy events for better performance
+- Enhanced Internationalization: Translatable exceptions and log messages, translations for button press events
+- Improved Type Safety: Strict mypy mode enabled throughout codebase with protocol-based typing
+- Memory & Performance: Automatic cleanup of event subscriptions, request coalescing for concurrent calls, resource limits to prevent unbounded growth
+- Action Renaming: Climate schedule actions renamed for clarity (get_schedule_profile_weekday → get_schedule_weekday)
 
-### Bump aiohomematic to 2025.12.26
-  - New Features
-    - Add install mode support with countdown timer for both HmIP-RF and BidCos-RF interfaces
-    - Add device inbox hub entity for viewing pending device pairings
-    - Add system update status hub entity
-    - Add create_backup() and download_backup() methods for OpenCCU system backups
-    - Add rename_device() and rename_channel() methods
-    - Add accept_device_in_inbox() for accepting newly paired devices
-    - Add CCU type identification (CCU vs OpenCCU/RaspberryMatic)
-    - Add climate schedule cache for faster thermostat schedule operations
-    - Add simplified climate schedule format with base_temperature support
-    - Add ENERGY_COUNTER_FEED_IN parameter support
-  - Reliability & Performance
-    - Add CircuitBreaker to prevent retry-storms during backend outages (XML-RPC and JSON-RPC)
-    - Add RequestCoalescer to deduplicate concurrent identical RPC calls
-    - Add login rate limiting with exponential backoff for JSON-RPC client
-    - Add automatic retry with RetryStrategy for transient network errors
-    - Fix thread-safety issues in scheduler, device registry, and climate subscriptions
-    - Fix memory leaks with auto-cleanup of EventBus subscriptions
-    - Clear in-memory caches on stop to prevent potential memory leaks
-    - New Central State Machine architecture for improved reconnection reliability
-  - Bug Fixes
-    - Fix delayed device handling improvements
-    - Fix hub data points initialization timing
-    - Fix week profile filtering
-    - Replace fixed cool-down with staged reconnection for faster recovery after CCU restart
-  - Architecture (Internal)
-    - Migrate to Protocol-based model for better type safety and decoupling
-    - Add DeviceProfileRegistry as central registry for all 117 device models
-    - Add translatable exceptions and log messages (INFO level and above)
+### Bump aiohomematic to 2025.12.27
+- Reliability & Reconnection
+  - Improved CCU reconnection: Staged reconnection with TCP port checks for faster recovery after CCU restart (10s initial + warmup vs fixed 60s delay)
+  - New central state machine: States now include DEGRADED (partial connectivity) and RECOVERING for better status visibility
+  - Circuit breakers: Prevent retry-storms during CCU outages; auto-reset after successful reconnect
+  - Exponential backoff: Smarter retry timing (2s→120s) reduces load during connection issues
+- Device Management
+  - Install mode support: Per-interface install mode with countdown timer for HmIP-RF and BidCos-RF
+  - Device inbox handling: Accept/rename new devices pending pairing via accept_device_in_inbox()
+  - Device renaming: Rename devices and channels directly via rename_device() / rename_channel()
+- Backup & Firmware
+  - CCU backup: Create and download system backups with descriptive filenames (hostname + version)
+  - Firmware updates: Check for updates and trigger firmware update on OpenCCU systems
+  - Firmware refresh fix: Device firmware data now properly updates after refresh calls
+- Simplified Event System
+  - 4 focused integration events replace 9 legacy events:
+    - SystemStatusEvent: All infrastructure/lifecycle changes (connection, client, callback states)
+    - DeviceLifecycleEvent: Device creation, removal, availability changes
+    - DataPointsCreatedEvent: New entity discovery
+    - DeviceTriggerEvent: Button presses, sensor triggers
+- CLI Enhancements
+  - New subcommand structure: list-devices, list-channels, device-info, get, set
+  - Interactive REPL mode: Command history and tab completion
+  - Shell completion: Generate scripts for bash, zsh, fish
+- Architecture Improvements
+  - Protocol-based dependency injection: Components use minimal protocol interfaces
+  - Coordinator pattern: Direct access via central.device_coordinator, central.cache_coordinator, etc.
+  - DeviceProfileRegistry: Centralized device-to-profile mappings (117 device models)
+  - Handler classes: Client operations split into focused handlers (Backup, Firmware, Programs, etc.)
+- Week Profile / Climate
+  - Schedule caching: Climate schedules cached for faster get/set operations
+  - Simple schedule format: Easier-to-use schedule representation for thermostats
+- Memory & Performance
+  - Automatic EventBus cleanup: Subscriptions auto-removed when devices/data points removed
+  - Request coalescing: Deduplicates concurrent RPC calls during device discovery
+  - Resource limits: Collection size limits prevent unbounded memory growth
 
 # Version 1.90.2 (2025-11-05)
 
