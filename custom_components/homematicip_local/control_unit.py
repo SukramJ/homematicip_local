@@ -360,11 +360,7 @@ class ControlUnit(BaseControlUnit):
 
     async def _on_data_points_created(self, event: DataPointsCreatedEvent) -> None:
         """Handle data points created event from aiohomematic (Entity discovery)."""
-        # event.new_data_points is tuple[tuple[DataPointCategory, tuple[BaseDataPoint, ...]], ...]
-        for item in event.new_data_points:
-            # Each item is a tuple of (category, data_points_tuple)
-            category = item[0]
-            data_points = item[1]
+        for category, data_points in event.new_data_points.items():
             if data_points and len(data_points) > 0:
                 async_dispatcher_send(
                     self._hass,
