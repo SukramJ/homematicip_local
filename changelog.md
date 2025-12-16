@@ -16,7 +16,7 @@
 - Memory & Performance: Automatic cleanup of event subscriptions, request coalescing for concurrent calls, resource limits to prevent unbounded growth
 - Action Renaming: Climate schedule actions renamed for clarity (get_schedule_profile_weekday → get_schedule_weekday)
 
-### Bump aiohomematic to 2025.12.29
+### Bump aiohomematic to 2025.12.31
 - Reliability & Reconnection
   - Improved CCU reconnection: Staged reconnection with TCP port checks for faster recovery after CCU restart (10s initial + warmup vs fixed 60s delay)
   - New central state machine: States now include DEGRADED (partial connectivity) and RECOVERING for better status visibility
