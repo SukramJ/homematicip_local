@@ -11,12 +11,7 @@ from typing import TypeAlias
 from awesomeversion import AwesomeVersion
 
 from aiohomematic import __version__ as HAHM_VERSION
-from aiohomematic.const import (
-    DEFAULT_ENABLE_SYSVAR_SCAN,
-    DEFAULT_SYS_SCAN_INTERVAL,
-    DEFAULT_UN_IGNORES,
-    is_interface_default_port,
-)
+from aiohomematic.const import DEFAULT_ENABLE_SYSVAR_SCAN, DEFAULT_UN_IGNORES, is_interface_default_port
 from aiohomematic.store import cleanup_files
 from aiohomematic.support import find_free_port
 from homeassistant.config_entries import ConfigEntry
@@ -39,6 +34,7 @@ from .const import (
     CONF_UN_IGNORES,
     DEFAULT_AUTO_CONFIRM_NEW_DEVICES_TIMEOUT,
     DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS,
+    DEFAULT_SYS_SCAN_INTERVAL,
     DOMAIN,
     HMIP_LOCAL_MIN_HA_VERSION,
     HMIP_LOCAL_PLATFORMS,

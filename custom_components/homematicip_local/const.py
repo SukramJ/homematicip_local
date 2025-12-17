@@ -21,6 +21,8 @@ DEFAULT_ENABLE_MQTT: Final = False
 DEFAULT_MQTT_PREFIX: Final = ""
 DEFAULT_ENABLE_SUB_DEVICES: Final = False
 
+DEFAULT_SYS_SCAN_INTERVAL: Final = 30
+
 LEARN_MORE_URL_XMLRPC_SERVER_RECEIVES_NO_EVENTS: Final = "https://github.com/sukramj/homematicip_local?tab=readme-ov-file#what-is-the-meaning-of-xmlrpc-server-received-no-events--xmlrpc-server-empf%C3%A4ngt-keine-ereignisse"
 LEARN_MORE_URL_PONG_MISMATCH: Final = "https://github.com/sukramj/homematicip_local#what-is-the-meaning-of-pending-pong-mismatch-on-interface--austehende-pong-ereignisse-auf-interface"
 
