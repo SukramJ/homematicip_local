@@ -26,7 +26,6 @@ from aiohomematic.const import (
     DEFAULT_INTERFACES_REQUIRING_PERIODIC_REFRESH,
     DEFAULT_OPTIONAL_SETTINGS,
     DEFAULT_PROGRAM_MARKERS,
-    DEFAULT_SYS_SCAN_INTERVAL,
     DEFAULT_SYSVAR_MARKERS,
     DEFAULT_UN_IGNORES,
     DEFAULT_USE_GROUP_CHANNEL_FOR_COVER_STATE,
@@ -39,6 +38,7 @@ from aiohomematic.const import (
     Interface,
     Manufacturer,
     OptionalSettings,
+    ScheduleTimerConfig,
     SystemInformation,
 )
 from aiohomematic.exceptions import BaseHomematicException
@@ -83,6 +83,7 @@ from .const import (
     DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS,
     DEFAULT_LISTEN_ON_ALL_IP,
     DEFAULT_MQTT_PREFIX,
+    DEFAULT_SYS_SCAN_INTERVAL,
     DOMAIN,
 )
 from .mqtt import MQTTConsumer
@@ -709,9 +710,9 @@ class ControlConfig:
             optional_settings=self._optional_settings,
             password=self._password,
             program_markers=self._program_markers,
+            schedule_timer_config=ScheduleTimerConfig(sys_scan_interval=self._sys_scan_interval),
             start_direct=self._start_direct,
             storage_directory=get_storage_directory(hass=self.hass),
-            sys_scan_interval=self._sys_scan_interval,
             sysvar_markers=self._sysvar_markers,
             tls=self._tls,
             un_ignore_list=self._un_ignore,

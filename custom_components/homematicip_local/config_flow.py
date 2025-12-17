@@ -19,7 +19,6 @@ from aiohomematic.const import (
     DEFAULT_JSON_RPC_TLS_PORT,
     DEFAULT_OPTIONAL_SETTINGS,
     DEFAULT_PROGRAM_MARKERS,
-    DEFAULT_SYS_SCAN_INTERVAL,
     DEFAULT_SYSVAR_MARKERS,
     DEFAULT_TLS,
     DEFAULT_UN_IGNORES,
@@ -82,6 +81,7 @@ from .const import (
     DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS,
     DEFAULT_LISTEN_ON_ALL_IP,
     DEFAULT_MQTT_PREFIX,
+    DEFAULT_SYS_SCAN_INTERVAL,
     DOMAIN,
 )
 from .control_unit import ControlConfig, ControlUnit, validate_config_and_get_system_information
