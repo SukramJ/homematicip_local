@@ -920,10 +920,13 @@ Sends a complete schedule for a climate profile to a device using a **simplified
 **Why use this?** The simple format is easier to write and understand - you only specify the temperature periods you care about, without worrying about 13 slots or filling gaps.
 
 **How it works:**
-- You specify only the active heating/cooling periods with STARTTIME, ENDTIME, and TEMPERATURE
+- Each weekday has a `base_temperature` and a list of `periods`
+- You specify only the active heating/cooling periods with `starttime`, `endtime`, and `temperature` (lowercase keys)
 - The system automatically fills gaps with `base_temperature`
 - All time periods outside your specified slots use `base_temperature`
 - The system converts everything to the required 13-slot format automatically
+
+**Note:** Since version 2.0.0, simple schedules use lowercase keys for better JSON serialization support.
 
 **Example:** See [sample](#sample-for-set_schedule_simple_profile) below for the full data structure.
 
@@ -936,7 +939,7 @@ Sends the schedule for a single weekday of a climate profile using a **simplifie
 **Why use this?** Instead of managing 13 slots, you only define the specific temperature periods you need.
 
 **How it works:**
-1. You provide a list of temperature periods with STARTTIME, ENDTIME, and TEMPERATURE
+1. You provide a list of temperature periods with `starttime`, `endtime`, and `temperature` (lowercase keys)
 2. You specify a `base_temperature` for all times not covered by your periods
 3. The system automatically:
    - Sorts your periods chronologically
@@ -944,16 +947,18 @@ Sends the schedule for a single weekday of a climate profile using a **simplifie
    - Converts to the required 13-slot format
    - Validates all ranges and sequences
 
+**Note:** Since version 2.0.0, simple schedules use lowercase keys for better JSON serialization support.
+
 **Example:**
 ```yaml
 base_temperature: 18.0
 simple_weekday_list:
-  - STARTTIME: "06:00"
-    ENDTIME: "08:00"
-    TEMPERATURE: 21.0
-  - STARTTIME: "17:00"
-    ENDTIME: "22:00"
-    TEMPERATURE: 21.0
+  - starttime: "06:00"
+    endtime: "08:00"
+    temperature: 21.0
+  - starttime: "17:00"
+    endtime: "22:00"
+    temperature: 21.0
 ```
 
 This creates:
@@ -963,7 +968,7 @@ This creates:
 - 17:00-22:00: 21.0°C (your second period)
 - 22:00-24:00: 18.0°C (base_temperature)
 
-See the [sample](#sample-for-set_schedule_weekday) below for a complete example. 
+See the [sample](#sample-for-set_schedule_simple_weekday) below for a complete example. 
 
 ### `homematicip_local.get_variable_value`
 
@@ -1853,7 +1858,9 @@ data:
 
 Send a simple climate profile (all weekdays) to the device:
 
-**What this does:** Sets profile P1 with a base temperature of 4.5°C. For each weekday, three heating periods are defined. All other times use the base temperature.
+**What this does:** Sets profile P1 with heating periods for each weekday. Each weekday has its own base temperature and periods. All times not covered by periods use the weekday's base temperature.
+
+**Note:** Since version 2.0.0, the simple schedule format uses lowercase keys (`starttime`, `endtime`, `temperature`) for better JSON serialization support.
 
 ```yaml
 ---
@@ -1861,33 +1868,36 @@ action: homematicip_local.set_schedule_simple_profile
 target:
   entity_id: climate.heizkorperthermostat_db
 data:
-  base_temperature: 4.5  # Temperature for all times not covered by periods below
   profile: P1
   simple_profile_data:
     MONDAY:
-      # Morning warm-up: 05:00-06:00 at 17°C
-      - TEMPERATURE: 17
-        STARTTIME: "05:00"
-        ENDTIME: "06:00"
-      # Daytime: 09:00-15:00 at 17°C
-      - TEMPERATURE: 17
-        STARTTIME: "09:00"
-        ENDTIME: "15:00"
-      # Evening: 19:00-22:00 at 22°C
-      - TEMPERATURE: 22
-        STARTTIME: "19:00"
-        ENDTIME: "22:00"
-      # All other times (00:00-05:00, 06:00-09:00, 15:00-19:00, 22:00-24:00) use base_temperature 4.5°C
+      base_temperature: 16.0  # Base temp for Monday
+      periods:
+        # Morning warm-up: 05:00-06:00 at 17°C
+        - starttime: "05:00"
+          endtime: "06:00"
+          temperature: 17.0
+        # Daytime: 09:00-15:00 at 17°C
+        - starttime: "09:00"
+          endtime: "15:00"
+          temperature: 17.0
+        # Evening: 19:00-22:00 at 22°C
+        - starttime: "19:00"
+          endtime: "22:00"
+          temperature: 22.0
+      # All other times use base_temperature 16.0°C
     TUESDAY:
-      - TEMPERATURE: 17
-        STARTTIME: "05:00"
-        ENDTIME: "06:00"
-      - TEMPERATURE: 17
-        STARTTIME: "09:00"
-        ENDTIME: "15:00"
-      - TEMPERATURE: 22
-        STARTTIME: "19:00"
-        ENDTIME: "22:00"
+      base_temperature: 16.0  # Base temp for Tuesday
+      periods:
+        - starttime: "05:00"
+          endtime: "06:00"
+          temperature: 17.0
+        - starttime: "09:00"
+          endtime: "15:00"
+          temperature: 17.0
+        - starttime: "19:00"
+          endtime: "22:00"
+          temperature: 22.0
     # Add other weekdays as needed (WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY)
 ```
 
@@ -1896,6 +1906,8 @@ data:
 Send a simple climate schedule for Monday only:
 
 **What this does:** Sets Monday's schedule for profile P3. Three heating periods are defined. The base temperature (16°C) is used for all other times.
+
+**Note:** Since version 2.0.0, the simple schedule format uses lowercase keys (`starttime`, `endtime`, `temperature`) for better JSON serialization support.
 
 ```yaml
 ---
@@ -1908,17 +1920,17 @@ data:
   base_temperature: 16  # Temperature for all times not covered by periods below
   simple_weekday_list:
     # Morning warm-up: 05:00-06:00 at 17°C
-    - TEMPERATURE: 17
-      STARTTIME: "05:00"
-      ENDTIME: "06:00"
+    - starttime: "05:00"
+      endtime: "06:00"
+      temperature: 17.0
     # Daytime: 09:00-15:00 at 17°C
-    - TEMPERATURE: 17
-      STARTTIME: "09:00"
-      ENDTIME: "15:00"
+    - starttime: "09:00"
+      endtime: "15:00"
+      temperature: 17.0
     # Evening: 19:00-22:00 at 22°C
-    - TEMPERATURE: 22
-      STARTTIME: "19:00"
-      ENDTIME: "22:00"
+    - starttime: "19:00"
+      endtime: "22:00"
+      temperature: 22.0
     # All other times (00:00-05:00, 06:00-09:00, 15:00-19:00, 22:00-24:00) use base_temperature 16°C
 ```
 
