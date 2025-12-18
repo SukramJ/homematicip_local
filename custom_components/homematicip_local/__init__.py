@@ -12,11 +12,13 @@ from awesomeversion import AwesomeVersion
 
 from aiohomematic import __version__ as HAHM_VERSION
 from aiohomematic.const import DEFAULT_ENABLE_SYSVAR_SCAN, DEFAULT_UN_IGNORES, is_interface_default_port
+from aiohomematic.exceptions import AuthFailure
 from aiohomematic.store import cleanup_files
 from aiohomematic.support import find_free_port
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, __version__ as HA_VERSION_STR
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import async_migrate_entries
 from homeassistant.util.hass_dict import HassKey
@@ -111,7 +113,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
     ).create_control_unit()
     entry.runtime_data = control
     await hass.config_entries.async_forward_entry_setups(entry, HMIP_LOCAL_PLATFORMS)
-    await control.start_central()
+    try:
+        await control.start_central()
+    except AuthFailure as err:
+        _LOGGER.warning(
+            "Authentication failed for %s. Triggering reauthentication flow",
+            entry.data.get(CONF_INSTANCE_NAME),
+        )
+        raise ConfigEntryAuthFailed("Authentication failed") from err
     await async_setup_services(hass)
 
     # Register on HA stop event to gracefully shutdown Homematic(IP) Local connection

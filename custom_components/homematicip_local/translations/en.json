@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Entry with the serial {serial} is already configured", 
+            "reauth_failed": "Could not find the configuration entry to reauthenticate", 
+            "reauth_successful": "Reauthentication successful. Connection restored.", 
             "reconfigure_failed": "Could not find the configuration entry to reconfigure", 
             "reconfigure_successful": "Connection settings updated successfully"
         }, 
@@ -113,6 +115,18 @@
                 }, 
                 "description": "Configure interface ports (TLS is {tls_status})", 
                 "title": "Port configuration"
+            }, 
+            "reauth_confirm": {
+                "data": {
+                    "password": "CCU password", 
+                    "username": "CCU username"
+                }, 
+                "data_description": {
+                    "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
+                    "username": "Case sensitive. User must have administrator role"
+                }, 
+                "description": "Step {step_current} of {step_total}: Authentication for {host} has failed. Please enter new credentials.", 
+                "title": "Reauthenticate CCU connection"
             }, 
             "reconfigure": {
                 "data": {
@@ -778,6 +792,14 @@
         }
     }, 
     "issues": {
+        "central_degraded": {
+            "description": "The CCU connection for **{instance_name}** is in a degraded state.\n\nReason: {reason}\n\nSome interfaces are disconnected. The integration is attempting automatic recovery.", 
+            "title": "CCU connection degraded"
+        }, 
+        "central_failed": {
+            "description": "The CCU connection for **{instance_name}** has failed.\n\nReason: {reason}\n\nAutomatic recovery attempts have been exhausted. Please check:\n- CCU is powered on and reachable\n- Network connectivity\n- CCU logs for errors\n\nReload the integration to retry.", 
+            "title": "CCU connection failed"
+        }, 
         "devices_delayed": {
             "fix_flow": {
                 "step": {
@@ -812,18 +834,10 @@
             "title": "Unknown Pong mismatch on interface {interface_id}"
         }, 
         "xmlrpc_server_receives_no_events": {
-            "description": "Callback for {interface_id} has not received events for {seconds_since_last_event}s.\n\nThis Integration tries an automatic reconnect",
+            "description": "Callback for {interface_id} has not received events for {seconds_since_last_event}s.\n\nThis Integration tries an automatic reconnect", 
             "title": "XmlRPC-Server received no events"
-        },
-        "central_degraded": {
-            "description": "The CCU connection for **{instance_name}** is in a degraded state.\n\nReason: {reason}\n\nSome interfaces are disconnected. The integration is attempting automatic recovery.",
-            "title": "CCU connection degraded"
-        },
-        "central_failed": {
-            "description": "The CCU connection for **{instance_name}** has failed.\n\nReason: {reason}\n\nAutomatic recovery attempts have been exhausted. Please check:\n- CCU is powered on and reachable\n- Network connectivity\n- CCU logs for errors\n\nReload the integration to retry.",
-            "title": "CCU connection failed"
         }
-    },
+    }, 
     "options": {
         "error": {
             "cannot_connect": "Cannot connect to CCU [{invalid_items}]. Please verify: 1) The hostname/IP address is correct, 2) The CCU is powered on and reachable, 3) No firewall is blocking the connection.", 

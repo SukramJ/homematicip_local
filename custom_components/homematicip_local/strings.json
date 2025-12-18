@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Entry with the serial {serial} is already configured", 
+            "reauth_failed": "Could not find the configuration entry to reauthenticate", 
+            "reauth_successful": "Reauthentication successful. Connection restored.", 
             "reconfigure_failed": "Could not find the configuration entry to reconfigure", 
             "reconfigure_successful": "Connection settings updated successfully"
         }, 
@@ -113,6 +115,18 @@
                 }, 
                 "description": "Configure interface ports (TLS is {tls_status})", 
                 "title": "Port configuration"
+            }, 
+            "reauth_confirm": {
+                "data": {
+                    "password": "CCU password", 
+                    "username": "CCU username"
+                }, 
+                "data_description": {
+                    "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
+                    "username": "Case sensitive. User must have administrator role"
+                }, 
+                "description": "Step {step_current} of {step_total}: Authentication for {host} has failed. Please enter new credentials.", 
+                "title": "Reauthenticate CCU connection"
             }, 
             "reconfigure": {
                 "data": {

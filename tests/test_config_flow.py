@@ -2947,3 +2947,190 @@ class TestHelperFunctions:
         # CCU_JACK and CUXD should be added without port
         assert Interface.CCU_JACK in data[CONF_INTERFACE]
         assert Interface.CUXD in data[CONF_INTERFACE]
+
+
+class TestReauthFlow:
+    """Test the reauthentication flow."""
+
+    async def test_reauth_flow_auth_failure(self, hass: HomeAssistant) -> None:
+        """Test reauthentication flow with authentication failure."""
+        entry = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id=const.SERIAL,
+            data={
+                CONF_INSTANCE_NAME: const.INSTANCE_NAME,
+                CONF_HOST: const.HOST,
+                CONF_USERNAME: const.USERNAME,
+                CONF_PASSWORD: const.PASSWORD,
+                CONF_TLS: False,
+                CONF_VERIFY_TLS: False,
+                CONF_INTERFACE: {Interface.HMIP_RF: {CONF_PORT: IF_HMIP_RF_PORT}},
+            },
+        )
+        entry.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            HMIP_DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            new_callable=AsyncMock,
+            side_effect=AuthFailure,
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_USERNAME: "wrong_username",
+                    CONF_PASSWORD: "wrong_password",
+                },
+            )
+
+        # Should show form again with error
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["step_id"] == "reauth_confirm"
+        assert result2["errors"] == {"base": "invalid_auth"}
+
+    async def test_reauth_flow_connection_failure(self, hass: HomeAssistant) -> None:
+        """Test reauthentication flow with connection failure."""
+        entry = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id=const.SERIAL,
+            data={
+                CONF_INSTANCE_NAME: const.INSTANCE_NAME,
+                CONF_HOST: const.HOST,
+                CONF_USERNAME: const.USERNAME,
+                CONF_PASSWORD: const.PASSWORD,
+                CONF_TLS: False,
+                CONF_VERIFY_TLS: False,
+                CONF_INTERFACE: {Interface.HMIP_RF: {CONF_PORT: IF_HMIP_RF_PORT}},
+            },
+        )
+        entry.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            HMIP_DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            new_callable=AsyncMock,
+            side_effect=NoConnectionException,
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_USERNAME: const.USERNAME,
+                    CONF_PASSWORD: const.PASSWORD,
+                },
+            )
+
+        # Should show form again with connection error
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["step_id"] == "reauth_confirm"
+        assert result2["errors"] == {"base": "cannot_connect"}
+
+    async def test_reauth_flow_success(self, hass: HomeAssistant) -> None:
+        """Test successful reauthentication flow."""
+        entry = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id=const.SERIAL,
+            data={
+                CONF_INSTANCE_NAME: const.INSTANCE_NAME,
+                CONF_HOST: const.HOST,
+                CONF_USERNAME: const.USERNAME,
+                CONF_PASSWORD: const.PASSWORD,
+                CONF_TLS: False,
+                CONF_VERIFY_TLS: False,
+                CONF_INTERFACE: {Interface.HMIP_RF: {CONF_PORT: IF_HMIP_RF_PORT}},
+            },
+        )
+        entry.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            HMIP_DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            new_callable=AsyncMock,
+            return_value=SystemInformation(
+                available_interfaces=[],
+                auth_enabled=True,
+                https_redirect_enabled=False,
+                serial=const.SERIAL,
+            ),
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_USERNAME: "new_username",
+                    CONF_PASSWORD: "new_password",
+                },
+            )
+
+        assert result2["type"] == FlowResultType.ABORT
+        assert result2["reason"] == "reauth_successful"
+
+        # Verify credentials were updated
+        assert entry.data[CONF_USERNAME] == "new_username"
+        assert entry.data[CONF_PASSWORD] == "new_password"
+
+    async def test_reauth_flow_validation_failure(self, hass: HomeAssistant) -> None:
+        """Test reauthentication flow with validation failure."""
+        entry = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id=const.SERIAL,
+            data={
+                CONF_INSTANCE_NAME: const.INSTANCE_NAME,
+                CONF_HOST: const.HOST,
+                CONF_USERNAME: const.USERNAME,
+                CONF_PASSWORD: const.PASSWORD,
+                CONF_TLS: False,
+                CONF_VERIFY_TLS: False,
+                CONF_INTERFACE: {Interface.HMIP_RF: {CONF_PORT: IF_HMIP_RF_PORT}},
+            },
+        )
+        entry.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            HMIP_DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            new_callable=AsyncMock,
+            side_effect=ValidationException,
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_USERNAME: const.USERNAME,
+                    CONF_PASSWORD: const.PASSWORD,
+                },
+            )
+
+        # Should show form again with error
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["step_id"] == "reauth_confirm"
+        assert result2["errors"] == {"base": "invalid_config"}

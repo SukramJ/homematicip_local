@@ -1,6 +1,7 @@
 # Version 2.0.0 (2025-12-15)
 
 ## What's Changed
+- Reauthentication Flow: Automatic prompting for new credentials when CCU authentication fails, with full Silver quality scale compliance
 - Config Flow Redesign: Automatic port configuration based on TLS setting, new menu-based options flow with organized sections, and quick reconfigure flow for connection updates
 - Improved Connection Monitoring: New central state machine with DEGRADED and RECOVERING states for better visibility into connection issues
 - Faster Reconnection: Staged reconnection with TCP port checks recovers from CCU restarts in ~10 seconds instead of fixed 60-second delays

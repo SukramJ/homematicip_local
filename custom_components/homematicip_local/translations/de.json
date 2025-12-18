@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Eintrag mit der Seriennummer {serial} ist bereits konfiguriert", 
+            "reauth_failed": "Der Konfigurationseintrag zur erneuten Authentifizierung konnte nicht gefunden werden", 
+            "reauth_successful": "Erneute Authentifizierung erfolgreich. Verbindung wiederhergestellt.", 
             "reconfigure_failed": "Der zu ändernde Konfigurationseintrag konnte nicht gefunden werden", 
             "reconfigure_successful": "Verbindungseinstellungen wurden erfolgreich aktualisiert"
         }, 
@@ -113,6 +115,18 @@
                 }, 
                 "description": "Schnittstellen-Ports konfigurieren (TLS ist {tls_status})", 
                 "title": "Port-Konfiguration"
+            }, 
+            "reauth_confirm": {
+                "data": {
+                    "password": "CCU Passwort", 
+                    "username": "CCU Benutzername"
+                }, 
+                "data_description": {
+                    "password": "Groß-/Kleinschreibung beachten. Erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
+                    "username": "Groß-/Kleinschreibung beachten. Benutzer muss die Administratorrolle haben"
+                }, 
+                "description": "Schritt {step_current} von {step_total}: Authentifizierung für {host} ist fehlgeschlagen. Bitte neue Zugangsdaten eingeben.", 
+                "title": "CCU-Verbindung erneut authentifizieren"
             }, 
             "reconfigure": {
                 "data": {

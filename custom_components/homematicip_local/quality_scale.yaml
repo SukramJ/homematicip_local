@@ -35,9 +35,7 @@ rules:
   parallel-updates:
     status: todo
     comment: PARALLEL_UPDATES constant not defined in any platform file - needs implementation
-  reauthentication-flow:
-    status: todo
-    comment: async_step_reauth not implemented in config_flow.py - needs implementation
+  reauthentication-flow: done
   test-coverage:
     status: todo
     comment: Current coverage is 76% - needs improvement to reach 95% minimum
