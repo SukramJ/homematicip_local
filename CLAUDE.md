@@ -111,19 +111,19 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2025.12.18) - Core async library for Homematic device communication
+- **aiohomematic** (v2025.12.33) - Core async library for Homematic device communication
 - **Home Assistant Core** - Minimum version: 2025.10.0+
 - **Python 3.13+** (target version for development)
 
 ### Development Dependencies
 
 - **pytest-homeassistant-custom-component** (0.13.300) - HA test framework
-- **mypy** (1.18.2) - Static type checker (strict mode)
+- **mypy** (1.19.1) - Static type checker (strict mode)
 - **pylint** (4.0.4) - Code linting
-- **ruff** (0.14.8) - Fast Python linter and formatter
+- **ruff** (0.14.9) - Fast Python linter and formatter
 - **pre-commit** (4.5.0) - Git hooks manager
-- **aiohomematic-test-support** (2025.12.18) - Mock test data
-- **async-upnp-client** (0.46.0) - UPnP discovery
+- **aiohomematic-test-support** (2025.12.33) - Mock test data
+- **async-upnp-client** (0.46.1) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
 
 ---
@@ -1005,7 +1005,7 @@ python script/check_translations.py
 - **Current Version:** 2.0.0
 - **Minimum HA Version:** 2025.10.0+
 - **Python Target:** 3.13+ (CI tests on 3.13, 3.14)
-- **aiohomematic Version:** 2025.12.18
+- **aiohomematic Version:** 2025.12.33
 
 ### External Resources
 

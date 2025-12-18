@@ -6,6 +6,36 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-echo "Installing development dependencies..."
-pip install colorlog pre-commit uv
-uv pip install --prerelease=allow -r requirements_test.txt
+# Check Python version
+PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}' | cut -d. -f1,2)
+REQUIRED_VERSION="3.13"
+
+echo "================================================"
+echo "Homematic(IP) Local - Development Setup"
+echo "================================================"
+echo ""
+echo "Detected Python version: $PYTHON_VERSION"
+
+# Warn if not using recommended Python version
+if [ "$PYTHON_VERSION" != "$REQUIRED_VERSION" ]; then
+    echo "⚠️  Warning: Python $REQUIRED_VERSION is recommended (detected: $PYTHON_VERSION)"
+    echo ""
+fi
+
+# Check if in virtual environment (recommended)
+if [ -z "${VIRTUAL_ENV}" ] && [ -z "${CONDA_DEFAULT_ENV}" ]; then
+    echo "⚠️  Warning: Not running in a virtual environment"
+    echo "   It's recommended to use a virtual environment:"
+    echo "   python3 -m venv venv && source venv/bin/activate"
+    echo ""
+fi
+
+echo "📦 Installing core development tools..."
+pip install --quiet colorlog pre-commit uv
+
+echo "📦 Installing test dependencies (using uv for speed)..."
+uv pip install --quiet --prerelease=allow -r requirements_test.txt
+
+echo ""
+echo "✅ Bootstrap complete!"
+echo "   Run 'script/setup' to finish setup (installs pre-commit hooks)"
