@@ -1,5 +1,5 @@
 rules:
-  # Bronze
+  # Bronze (18 rules)
   action-setup: done
   appropriate-polling: done
   brands: done
@@ -22,54 +22,59 @@ rules:
   test-before-setup:
     status: done
   unique-config-entry: done
-  # Silver
+
+  # Silver (10 rules)
+  action-exceptions: done
   config-entry-unloading: done
-  log-when-unavailable: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
   entity-unavailable:
     status: done
-  action-exceptions: done
-  reauthentication-flow: done
-  parallel-updates: done
-  test-coverage: done
   integration-owner: done
-  docs-installation-parameters: done
-  docs-configuration-parameters: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: todo
+    comment: PARALLEL_UPDATES constant not defined in any platform file - needs implementation
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: Current coverage is 76% - needs improvement to reach 95% minimum
 
-  # Gold
-  entity-translations:
-    status: done
-  entity-device-class:
-    status: done
+  # Gold (21 rules)
   devices:
+    status: done
+  diagnostics: done
+  discovery:
+    status: done
+  discovery-update-info:
+    status: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
     status: done
   entity-category:
     status: done
+  entity-device-class:
+    status: done
   entity-disabled-by-default:
     status: done
-  discovery:
+  entity-translations:
     status: done
-  stale-devices:
-    status: done
-  diagnostics: done
   exception-translations: done
   icon-translations:
     status: done
   reconfiguration-flow: done
-  dynamic-devices:
-    status: done
-  discovery-update-info:
-    status: done
   repair-issues:
     status: done
-  docs-use-cases: done
-  docs-supported-devices: done
-  docs-supported-functions: done
-  docs-data-update: done
-  docs-known-limitations: done
-  docs-troubleshooting: done
-  docs-examples: done
+  stale-devices:
+    status: done
 
-  # Platinum
+  # Platinum (3 rules)
   async-dependency: done
   inject-websession:
     status: done

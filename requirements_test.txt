@@ -1,10 +1,10 @@
 -r requirements_test_pre_commit.txt
 
 async-upnp-client==0.46.1
-aiohomematic==2025.12.33
-aiohomematic-test-support==2025.12.33
+aiohomematic==2025.12.35
+aiohomematic-test-support==2025.12.35
 isal==1.8.0
-mypy==1.19.0
+mypy==1.19.1
 pycares<5.0.0  # Pin to 4.x until aiodns supports pycares 5.0 breaking changes
 pre-commit==4.5.0
 pur==7.3.3

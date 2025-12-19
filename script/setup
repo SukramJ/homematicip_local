@@ -5,5 +5,29 @@
 set -e
 
 cd "$(dirname "$0")/.."
+
+echo ""
+echo "================================================"
+echo "Homematic(IP) Local - Complete Setup"
+echo "================================================"
+echo ""
+
+# Run bootstrap
+echo "Step 1/2: Running bootstrap (installing dependencies)..."
 script/bootstrap
+
+echo ""
+echo "Step 2/2: Installing pre-commit hooks..."
 pre-commit install
+
+echo ""
+echo "================================================"
+echo "✅ Setup complete!"
+echo "================================================"
+echo ""
+echo "Next steps:"
+echo "  • Run tests:          pytest --cov=custom_components tests"
+echo "  • Run pre-commit:     pre-commit run --all-files"
+echo "  • Format code:        ruff format custom_components/homematicip_local/"
+echo "  • Type check:         mypy custom_components/homematicip_local/"
+echo ""

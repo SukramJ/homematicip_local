@@ -100,6 +100,10 @@ STEP_RECONFIGURE: Final = "1"
 STEP_RECONFIGURE_TLS: Final = "2"
 TOTAL_STEPS_RECONFIGURE: Final = "2"
 
+# Reauth flow steps
+STEP_REAUTH: Final = "1"
+TOTAL_STEPS_REAUTH: Final = "1"
+
 _LOGGER = logging.getLogger(__name__)
 
 # Interface enable/disable config keys
@@ -163,6 +167,16 @@ def get_reconfigure_schema(data: ConfigType) -> Schema:
     return vol.Schema(
         {
             vol.Required(CONF_HOST, default=data.get(CONF_HOST)): TEXT_SELECTOR,
+            vol.Required(CONF_USERNAME, default=data.get(CONF_USERNAME)): TEXT_SELECTOR,
+            vol.Required(CONF_PASSWORD, default=data.get(CONF_PASSWORD)): PASSWORD_SELECTOR,
+        }
+    )
+
+
+def get_reauth_schema(data: ConfigType) -> Schema:
+    """Return the reauth schema with only credentials (host is fixed from existing entry)."""
+    return vol.Schema(
+        {
             vol.Required(CONF_USERNAME, default=data.get(CONF_USERNAME)): TEXT_SELECTOR,
             vol.Required(CONF_PASSWORD, default=data.get(CONF_PASSWORD)): PASSWORD_SELECTOR,
         }
@@ -748,6 +762,70 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="port_config",
             data_schema=get_port_config_schema(data=self.data),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_reauth(self, entry_data: ConfigType) -> ConfigFlowResult:
+        """Handle reauthorization request when credentials become invalid."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        if entry is None:
+            return self.async_abort(reason="reauth_failed")
+
+        # Store entry data for use in confirm step
+        self.data = dict(entry.data)
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Handle reauthorization confirmation - prompt for new credentials."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        if entry is None:
+            return self.async_abort(reason="reauth_failed")
+
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = _get_step_placeholders(STEP_REAUTH, TOTAL_STEPS_REAUTH)
+        description_placeholders["host"] = self.data.get(CONF_HOST, "")
+
+        if user_input is not None:
+            # Update credentials in stored data
+            self.data[CONF_USERNAME] = user_input[CONF_USERNAME]
+            self.data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+
+            # Validate new credentials
+            try:
+                await _async_validate_config_and_get_system_information(
+                    hass=self.hass, data=self.data, entry_id=entry.entry_id
+                )
+                # Validation successful - update entry and finish
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data=self.data,
+                    reason="reauth_successful",
+                )
+            except AuthFailure:
+                errors["base"] = "invalid_auth"
+                description_placeholders["invalid_items"] = self.data.get(CONF_HOST, "")
+                description_placeholders["error_detail"] = ""
+                description_placeholders["retry_hint"] = _get_retry_hint("invalid_auth")
+            except NoConnectionException as exc:
+                errors["base"] = "cannot_connect"
+                description_placeholders["invalid_items"] = str(exc) if str(exc) else self.data.get(CONF_HOST, "")
+                description_placeholders["error_detail"] = ""
+                description_placeholders["retry_hint"] = _get_retry_hint("cannot_connect")
+            except ValidationException as ve:
+                errors["base"] = "invalid_config"
+                description_placeholders["invalid_items"] = str(ve) if str(ve) else self.data.get(CONF_HOST, "")
+                description_placeholders["error_detail"] = ""
+                description_placeholders["retry_hint"] = _get_retry_hint("invalid_config")
+            except BaseHomematicException as bhe:
+                errors["base"] = "cannot_connect"
+                description_placeholders["invalid_items"] = bhe.args[0] if bhe.args else self.data.get(CONF_HOST, "")
+                description_placeholders["error_detail"] = ""
+                description_placeholders["retry_hint"] = _get_retry_hint("cannot_connect")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=get_reauth_schema(self.data),
             errors=errors,
             description_placeholders=description_placeholders,
         )

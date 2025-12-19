@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Entry with the serial {serial} is already configured", 
+            "reauth_failed": "Could not find the configuration entry to reauthenticate", 
+            "reauth_successful": "Reauthentication successful. Connection restored.", 
             "reconfigure_failed": "Could not find the configuration entry to reconfigure", 
             "reconfigure_successful": "Connection settings updated successfully"
         }, 
@@ -113,6 +115,18 @@
                 }, 
                 "description": "Configure interface ports (TLS is {tls_status})", 
                 "title": "Port configuration"
+            }, 
+            "reauth_confirm": {
+                "data": {
+                    "password": "CCU password", 
+                    "username": "CCU username"
+                }, 
+                "data_description": {
+                    "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
+                    "username": "Case sensitive. User must have administrator role"
+                }, 
+                "description": "Step {step_current} of {step_total}: Authentication for {host} has failed. Please enter new credentials.", 
+                "title": "Reauthenticate CCU connection"
             }, 
             "reconfigure": {
                 "data": {
@@ -785,6 +799,18 @@
         "central_failed": {
             "description": "The CCU connection for **{instance_name}** has failed.\n\nReason: {reason}\n\nAutomatic recovery attempts have been exhausted. Please check:\n- CCU is powered on and reachable\n- Network connectivity\n- CCU logs for errors\n\nReload the integration to retry.", 
             "title": "CCU connection failed"
+        }, 
+        "central_failed_internal": {
+            "description": "The CCU connection for **{instance_name}** has failed due to an internal CCU error.\n\nInterface: {interface_id}\n\nThe CCU reported an internal error. Please:\n- Check CCU system logs for errors\n- Consider restarting the CCU\n- Update CCU firmware if available\n\nReload the integration to retry.", 
+            "title": "CCU internal error"
+        }, 
+        "central_failed_network": {
+            "description": "The CCU connection for **{instance_name}** has failed due to a network connectivity issue.\n\nInterface: {interface_id}\n\nPlease check:\n- CCU is powered on and reachable on the network\n- Network cables and Wi-Fi connectivity\n- Firewall settings allowing XML-RPC traffic\n- CCU network configuration\n\nReload the integration to retry.", 
+            "title": "CCU network connection failed"
+        }, 
+        "central_failed_timeout": {
+            "description": "The CCU connection for **{instance_name}** has failed due to connection timeouts.\n\nInterface: {interface_id}\n\nThe CCU may be overloaded or experiencing performance issues. Please check:\n- CCU CPU and memory usage\n- CCU is not executing long-running operations\n- Network latency between Home Assistant and CCU\n\nReload the integration to retry.", 
+            "title": "CCU connection timeout"
         }, 
         "devices_delayed": {
             "fix_flow": {

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from aiohomematic.exceptions import AuthFailure
 import custom_components.homematicip_local
 from custom_components.homematicip_local.config_flow import DomainConfigFlow
 from custom_components.homematicip_local.const import CONF_ADVANCED_CONFIG, DOMAIN as HMIP_DOMAIN
@@ -44,6 +45,44 @@ class TestSetupEntry:
             assert len(config_entries) == 1
             config_entry = config_entries[0]
             assert config_entry.state == ConfigEntryState.LOADED
+
+    async def test_setup_entry_auth_failure(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry_v2: MockConfigEntry,
+        mock_control_unit: ControlUnit,
+    ) -> None:
+        """Test setup entry with authentication failure triggers reauth."""
+        # Configure mock to raise AuthFailure during start_central
+        mock_control_unit.start_central = AsyncMock(side_effect=AuthFailure("Invalid credentials"))
+
+        with (
+            patch("custom_components.homematicip_local.find_free_port", return_value=8765),
+            patch(
+                "custom_components.homematicip_local.control_unit.ControlConfig.create_control_unit",
+                return_value=mock_control_unit,
+            ),
+        ):
+            mock_config_entry_v2.add_to_hass(hass)
+
+            # Setup should fail with auth error
+            result = await hass.config_entries.async_setup(mock_config_entry_v2.entry_id)
+            await hass.async_block_till_done()
+
+            # Verify setup failed and entry is in SETUP_ERROR state
+            assert result is False
+            assert mock_config_entry_v2.state == ConfigEntryState.SETUP_ERROR
+
+            # Verify a reauth flow was triggered via the repair issue
+            from homeassistant.helpers import issue_registry as ir
+
+            issue_reg = ir.async_get(hass)
+            issue = issue_reg.async_get_issue(
+                domain="homeassistant",
+                issue_id=f"config_entry_reauth_{HMIP_DOMAIN}_{mock_config_entry_v2.entry_id}",
+            )
+            assert issue is not None
+            assert issue.translation_key == "config_entry_reauth"
 
 
 class TestCheckMinVersion:
