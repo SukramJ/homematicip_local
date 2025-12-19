@@ -18,7 +18,8 @@
 - Action Renaming: Climate schedule actions renamed for clarity (get_schedule_profile_weekday → get_schedule_weekday)
 - Integration now automatically triggers reauth flow when CCU authentication fails
 - Different repair issue types based on failure reason
-
+- Validates config flow and repair issue translations
+ 
 ### Bump aiohomematic to 2025.12.37
 
 - Reliability & Reconnection

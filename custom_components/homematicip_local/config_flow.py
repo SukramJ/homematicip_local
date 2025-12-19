@@ -774,6 +774,13 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Store entry data for use in confirm step
         self.data = dict(entry.data)
+
+        # Set title placeholders for flow title display
+        self.context["title_placeholders"] = {
+            CONF_NAME: self.data.get(CONF_INSTANCE_NAME, ""),
+            CONF_HOST: self.data.get(CONF_HOST, ""),
+        }
+
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
@@ -835,6 +842,12 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         if entry is None:
             return self.async_abort(reason="reconfigure_failed")
+
+        # Set title placeholders for flow title display
+        self.context["title_placeholders"] = {
+            CONF_NAME: entry.data.get(CONF_INSTANCE_NAME, ""),
+            CONF_HOST: entry.data.get(CONF_HOST, ""),
+        }
 
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = _get_step_placeholders(STEP_RECONFIGURE, TOTAL_STEPS_RECONFIGURE)

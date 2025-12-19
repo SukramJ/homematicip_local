@@ -325,6 +325,7 @@ The following hooks run automatically before each commit:
 7. **mypy** - Type checking (strict mode)
 8. **pylint** - Code linting
 9. **check-translations** - String/translation validation
+10. **check-flow-translations** - Config flow & repair translation validation
 
 **To run all hooks manually:**
 
