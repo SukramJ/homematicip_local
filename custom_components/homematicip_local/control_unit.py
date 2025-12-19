@@ -363,6 +363,107 @@ class ControlUnit(BaseControlUnit):
             }
         )
 
+    def _handle_degraded_state(self, event: SystemStatusEvent, issue_id_degraded: str) -> bool:
+        """Handle DEGRADED central state. Return True if reauth was triggered."""
+        # Check if any degraded interface has an authentication failure
+        auth_failed_interfaces: list[str] = []
+        if event.degraded_interfaces:
+            for interface_id, reason in event.degraded_interfaces.items():
+                if reason == FailureReason.AUTH:
+                    auth_failed_interfaces.append(interface_id)
+                    _LOGGER.warning(
+                        "Interface %s in DEGRADED state due to authentication error",
+                        interface_id,
+                    )
+
+        # If any interface has AUTH failure, trigger reauth
+        if auth_failed_interfaces:
+            _LOGGER.warning(
+                "Central %s DEGRADED due to authentication error on interfaces: %s. Triggering reauthentication flow",
+                self._instance_name,
+                ", ".join(auth_failed_interfaces),
+            )
+            # Get config entry and trigger reauth
+            if entry := self._hass.config_entries.async_get_entry(self._entry_id):
+                entry.async_start_reauth(self._hass)
+            return True
+
+        # No AUTH failures - create normal degraded warning if enabled
+        if self._enable_system_notifications:
+            ir.async_create_issue(
+                hass=self._hass,
+                domain=DOMAIN,
+                issue_id=issue_id_degraded,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="central_degraded",
+                translation_placeholders={
+                    "instance_name": self._instance_name,
+                    "reason": "Some interfaces disconnected",
+                },
+            )
+            _LOGGER.warning("Central %s is DEGRADED - some interfaces disconnected", self._instance_name)
+        else:
+            # Also delete DEGRADED issue if notifications are disabled
+            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
+            _LOGGER.debug("SYSTEM NOTIFICATION disabled for DEGRADED state")
+        return False
+
+    def _handle_failed_state(self, event: SystemStatusEvent, issue_id_failed: str) -> bool:
+        """Handle FAILED central state. Return True if reauth was triggered."""
+        # Check if failure is due to authentication issue
+        if event.failure_reason == FailureReason.AUTH:
+            # Trigger reauth flow for authentication failures
+            _LOGGER.warning(
+                "Central %s FAILED due to authentication error. Triggering reauthentication flow",
+                self._instance_name,
+            )
+            # Get config entry and trigger reauth
+            if entry := self._hass.config_entries.async_get_entry(self._entry_id):
+                entry.async_start_reauth(self._hass)
+            return True
+
+        # For non-auth failures, create appropriate repair issue
+        if self._enable_system_notifications:
+            translation_key = "central_failed"
+            reason_text = "All recovery attempts exhausted"
+
+            # Customize message based on failure reason
+            if event.failure_reason == FailureReason.NETWORK:
+                translation_key = "central_failed_network"
+                reason_text = "Network connectivity issue"
+            elif event.failure_reason == FailureReason.TIMEOUT:
+                translation_key = "central_failed_timeout"
+                reason_text = "Connection timeout"
+            elif event.failure_reason == FailureReason.INTERNAL:
+                translation_key = "central_failed_internal"
+                reason_text = "CCU internal error"
+
+            ir.async_create_issue(
+                hass=self._hass,
+                domain=DOMAIN,
+                issue_id=issue_id_failed,
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key=translation_key,
+                translation_placeholders={
+                    "instance_name": self._instance_name,
+                    "reason": reason_text,
+                    "interface_id": event.failure_interface_id or "Unknown",
+                },
+            )
+            _LOGGER.error(
+                "Central %s FAILED - %s (interface: %s)",
+                self._instance_name,
+                reason_text,
+                event.failure_interface_id or "Unknown",
+            )
+        else:
+            # Also delete FAILED issue if notifications are disabled
+            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
+            _LOGGER.debug("SYSTEM NOTIFICATION disabled for FAILED state")
+        return False
+
     async def _on_data_points_created(self, event: DataPointsCreatedEvent) -> None:
         """Handle data points created event from aiohomematic (Entity discovery)."""
         for category, data_points in event.new_data_points.items():
@@ -417,33 +518,15 @@ class ControlUnit(BaseControlUnit):
             match central_state:
                 case CentralState.RUNNING:
                     # All interfaces connected - remove any existing issues
-                    # Always delete issues when RUNNING, regardless of _enable_system_notifications
                     async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
                     async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
                     _LOGGER.info("Central %s is RUNNING - all interfaces connected", self._instance_name)
 
                 case CentralState.DEGRADED:
-                    # Some interfaces disconnected - create warning issue
-                    # Always delete FAILED issue first
+                    # Some interfaces disconnected - check if any have authentication issues
                     async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
-                    if self._enable_system_notifications:
-                        ir.async_create_issue(
-                            hass=self._hass,
-                            domain=DOMAIN,
-                            issue_id=issue_id_degraded,
-                            is_fixable=False,
-                            severity=ir.IssueSeverity.WARNING,
-                            translation_key="central_degraded",
-                            translation_placeholders={
-                                "instance_name": self._instance_name,
-                                "reason": "Some interfaces disconnected",
-                            },
-                        )
-                        _LOGGER.warning("Central %s is DEGRADED - some interfaces disconnected", self._instance_name)
-                    else:
-                        # Also delete DEGRADED issue if notifications are disabled
-                        async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
-                        _LOGGER.debug("SYSTEM NOTIFICATION disabled for DEGRADED state")
+                    if self._handle_degraded_state(event, issue_id_degraded):
+                        return  # Reauth triggered, don't create repair issue
 
                 case CentralState.RECOVERING:
                     # Active recovery in progress - no issue changes
@@ -451,61 +534,9 @@ class ControlUnit(BaseControlUnit):
 
                 case CentralState.FAILED:
                     # Critical error - all recovery attempts failed
-                    # Always delete DEGRADED issue first
                     async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
-
-                    # Check if failure is due to authentication issue
-                    if event.failure_reason == FailureReason.AUTH:
-                        # Trigger reauth flow for authentication failures
-                        _LOGGER.warning(
-                            "Central %s FAILED due to authentication error. Triggering reauthentication flow",
-                            self._instance_name,
-                        )
-                        # Get config entry and trigger reauth
-                        if entry := self._hass.config_entries.async_get_entry(self._entry_id):
-                            entry.async_start_reauth(self._hass)
-                        # Don't create repair issue - reauth flow will handle it
-                        return
-
-                    # For non-auth failures, create appropriate repair issue
-                    if self._enable_system_notifications:
-                        translation_key = "central_failed"
-                        reason_text = "All recovery attempts exhausted"
-
-                        # Customize message based on failure reason
-                        if event.failure_reason == FailureReason.NETWORK:
-                            translation_key = "central_failed_network"
-                            reason_text = "Network connectivity issue"
-                        elif event.failure_reason == FailureReason.TIMEOUT:
-                            translation_key = "central_failed_timeout"
-                            reason_text = "Connection timeout"
-                        elif event.failure_reason == FailureReason.INTERNAL:
-                            translation_key = "central_failed_internal"
-                            reason_text = "CCU internal error"
-
-                        ir.async_create_issue(
-                            hass=self._hass,
-                            domain=DOMAIN,
-                            issue_id=issue_id_failed,
-                            is_fixable=False,
-                            severity=ir.IssueSeverity.ERROR,
-                            translation_key=translation_key,
-                            translation_placeholders={
-                                "instance_name": self._instance_name,
-                                "reason": reason_text,
-                                "interface_id": event.failure_interface_id or "Unknown",
-                            },
-                        )
-                        _LOGGER.error(
-                            "Central %s FAILED - %s (interface: %s)",
-                            self._instance_name,
-                            reason_text,
-                            event.failure_interface_id or "Unknown",
-                        )
-                    else:
-                        # Also delete FAILED issue if notifications are disabled
-                        async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
-                        _LOGGER.debug("SYSTEM NOTIFICATION disabled for FAILED state")
+                    if self._handle_failed_state(event, issue_id_failed):
+                        return  # Reauth triggered, don't create repair issue
 
             # Fire HA event for automations
             self._hass.bus.async_fire(

@@ -27,6 +27,10 @@
   - Circuit breakers: Prevent retry-storms during CCU outages; auto-reset after successful reconnect
   - Exponential backoff: Smarter retry timing (2s→120s) reduces load during connection issues
   - Introduces granular failure classification to differentiate between authentication failures, network issues, timeouts, and internal CCU errors
+  - New `FailureReason` enum with values: `AUTH`, `NETWORK`, `TIMEOUT`, `INTERNAL`, `CIRCUIT_BREAKER`, `UNKNOWN`
+  - `SystemStatusEvent` now includes `failure_reason` and `failure_interface_id` fields when in `FAILED` state
+  - Degraded interfaces tracking: `degraded_interfaces` field shows which interfaces are affected and why when in `DEGRADED` state
+  - Automatic reauthentication: Integration now detects `FailureReason.AUTH` in both `FAILED` and `DEGRADED` states and triggers reauth flow
 - Device Management
   - Install mode support: Per-interface install mode with countdown timer for HmIP-RF and BidCos-RF
   - Device inbox handling: Accept/rename new devices pending pairing via accept_device_in_inbox()
