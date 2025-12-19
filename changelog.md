@@ -19,7 +19,7 @@
 - Integration now automatically triggers reauth flow when CCU authentication fails
 - Different repair issue types based on failure reason
 
-### Bump aiohomematic to 2025.12.35
+### Bump aiohomematic to 2025.12.36
 
 - Reliability & Reconnection
   - Improved CCU reconnection: Staged reconnection with TCP port checks for faster recovery after CCU restart (10s initial + warmup vs fixed 60s delay)
