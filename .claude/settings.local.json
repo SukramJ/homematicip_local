@@ -30,7 +30,8 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(wc:*)",
       "Bash(find:*)",
-      "Bash(python -m pylint:*)"
+      "Bash(python -m pylint:*)",
+      "Bash(pip index:*)"
     ],
     "deny": [],
     "ask": []
