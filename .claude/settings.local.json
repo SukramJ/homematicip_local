@@ -30,7 +30,11 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(wc:*)",
       "Bash(find:*)",
-      "Bash(python -m pylint:*)"
+      "Bash(python -m pylint:*)",
+      "Bash(pip index:*)",
+      "Bash(python /tmp/comprehensive_check.py:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(python script/check_flow_translations.py:*)"
     ],
     "deny": [],
     "ask": []

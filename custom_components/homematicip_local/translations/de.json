@@ -829,9 +829,9 @@
             }, 
             "title": "Geräterstellung von {address} verzögert auf {interface_id}"
         }, 
-        "fetch_data": {
-            "description": "Daten können mit einem Rega-Skript nicht abgerufen werden.\n\nDies weist auf ein Problem mit Ihrer CCU hin.\n\nDurch die Verwendung eines Fallbacks kommt es zu einem erhöhten DutyCycle beim Integrationsstart für die Schnittstelle {interface_id}", 
-            "title": "Fehler beim Abrufen der Anfangsdaten"
+        "fetch_data_failed": {
+            "description": "Fehler beim Abrufen von Gerätedaten von Interface **{interface_id}**.\n\nDaten können mit einem Rega-Skript nicht abgerufen werden. Dies weist auf ein Problem mit Ihrer CCU hin.\n\nDie Integration verwendet eine Fallback-Methode, die zu einem erhöhten DutyCycle beim Start für dieses Interface führen kann.", 
+            "title": "Fehler beim Abrufen von Gerätedaten"
         }, 
         "interface_not_reachable": {
             "description": "Keine Verbindung zu Schnittstelle {interface_id}.\n\nDiese Integration versucht eine automatische Wiederverbindung.\n\nWeitere Informationen findest Du in den Protokolldateien von Home Assistant", 
@@ -840,6 +840,10 @@
         "pending_pong_mismatch": {
             "description": "Es besteht eine Differenz zwischen gesendeten Ping-Ereignissen und empfangenen Pong-Ereignissen für die HA-Instanz {instance_name}.\n\nMögliche Gründe:\n - Du führst mehrere Instanzen von HA mit demselben Instanznamen aus, der für diese Integration konfiguriert ist. Füge eine Instanz erneut hinzu! Andernfalls empfängt diese HA-Instanz keine Aktualisierungsereignisse von Ihrer CCU.\n - Etwas hängt in der CCU oder wurde nicht bereinigt, also versuche einen CCU Neustart.\n - Ihr Setup ist falsch konfiguriert und HA kann keine Ereignisse von der CCU empfangen", 
             "title": "Austehende Pong Ereignisse auf Interface {interface_id}"
+        }, 
+        "ping_pong_mismatch": {
+            "description": "Eine Ping-Pong-Diskrepanz wurde auf Interface **{interface_id}** erkannt.\n\n**Diskrepanz-Typ:** {mismatch_type}\n**Anzahl der Abweichungen:** {mismatch_count}\n\nMögliche Gründe:\n - Sie führen mehrere Instanzen von Home Assistant mit demselben Instanznamen aus, der für diese Integration konfiguriert ist. Fügen Sie eine Instanz erneut hinzu! Andernfalls empfängt diese Home Assistant-Instanz keine Aktualisierungsereignisse von Ihrer CCU.\n - Etwas hängt in der CCU oder wurde nicht bereinigt. Versuchen Sie, die CCU neu zu starten.\n - Ihr Setup ist falsch konfiguriert und Home Assistant kann keine Ereignisse von der CCU empfangen.", 
+            "title": "Ping-Pong-Diskrepanz auf Interface {interface_id}"
         }, 
         "unknown_pong_mismatch": {
             "description": "Es wurden unbekannte Pong-Ereignisse für die HA-Instanz {instance_name} festgestellt.\n\nMögliche Gründe:\n - Du führst mehrere Instanzen von HA mit demselben Instanznamen aus, der für diese Integration konfiguriert ist. Füge eine Instanz erneut hinzu! Andernfalls empfängt diese HA-Instanz keine Aktualisierungsereignisse von Ihrer CCU.\n - Etwas hängt in der CCU oder wurde nicht bereinigt, also versuche einen CCU Neustart.\n - Ihr Setup ist falsch konfiguriert und HA kann keine Ereignisse von der CCU empfangen", 

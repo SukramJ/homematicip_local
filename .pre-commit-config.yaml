@@ -91,3 +91,9 @@ repos:
         entry: python3 script/check_translations.py --fix
         language: system
         files: ^custom_components/homematicip_local/(strings\.json|translations/(en|de)\.json)$
+      - id: check-flow-translations
+        name: Check config flow & repair translations
+        entry: python3 script/check_flow_translations.py
+        language: system
+        files: ^custom_components/homematicip_local/(config_flow\.py|strings\.json|translations/(en|de)\.json)$
+        pass_filenames: false

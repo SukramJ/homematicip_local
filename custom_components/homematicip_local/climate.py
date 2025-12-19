@@ -55,7 +55,6 @@ ATTR_OPTIMUM_START_STOP: Final = "optimum_start_stop"
 ATTR_TEMPERATURE_OFFSET: Final = "temperature_offset"
 ATTR_ACTIVE_PROFILE: Final = "active_profile"
 ATTR_AVAILABLE_PROFILES: Final = "available_profiles"
-ATTR_SIMPLE_SCHEDULE_DATA: Final = "simple_schedule_data"
 
 SUPPORTED_HA_PRESET_MODES: Final = [
     PRESET_AWAY,
@@ -121,9 +120,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
     _attr_translation_key = "hmip_climate"
     _enable_turn_on_off_backwards_compatibility: bool = False
     __no_recored_attributes = AioHomematicGenericEntity.NO_RECORDED_ATTRIBUTES
-    __no_recored_attributes.update(
-        {ATTR_AVAILABLE_PROFILES, ATTR_OPTIMUM_START_STOP, ATTR_TEMPERATURE_OFFSET, ATTR_SIMPLE_SCHEDULE_DATA}
-    )
+    __no_recored_attributes.update({ATTR_AVAILABLE_PROFILES, ATTR_OPTIMUM_START_STOP, ATTR_TEMPERATURE_OFFSET})
     _unrecorded_attributes = frozenset(__no_recored_attributes)
 
     def __init__(
@@ -180,10 +177,8 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             attributes[ATTR_AVAILABLE_PROFILES] = [
                 profile.value for profile in self._data_point.available_schedule_profiles
             ]
-            if schedule_data := self._data_point.schedule.get(self._current_profile):
+            if schedule_data := self._data_point.simple_schedule.get(self._current_profile):
                 attributes[ATTR_SCHEDULE_DATA] = schedule_data
-            if simple_schedule_data := self._data_point.simple_schedule.get(self._current_profile):
-                attributes[ATTR_SIMPLE_SCHEDULE_DATA] = simple_schedule_data
 
         return attributes
 

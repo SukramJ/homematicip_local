@@ -829,9 +829,9 @@
             }, 
             "title": "Device creation of {address} delayed on {interface_id}"
         }, 
-        "fetch_data": {
-            "description": "Unable to fetch data using a rega script.\n\nThis indicates an issue on your CCU.\n\nUsing fallback, that leeds to a higher DutyCycle during Integration startup for interface {interface_id}", 
-            "title": "Error fetching initial data"
+        "fetch_data_failed": {
+            "description": "Failed to fetch device data from interface **{interface_id}**.\n\nUnable to fetch data using a Rega script. This indicates an issue on your CCU.\n\nThe integration will use a fallback method, which may lead to higher DutyCycle during startup for this interface.", 
+            "title": "Failed to fetch device data"
         }, 
         "interface_not_reachable": {
             "description": "No connection to interface {interface_id}.\n\nThis Integration tries an automatic reconnect.\n\nCheck the Home Assistant log files for more details", 
@@ -840,6 +840,10 @@
         "pending_pong_mismatch": {
             "description": "There is a mismatch between send ping events and received pong events for HA instance {instance_name}.\n\nPossible reasons:\n - You are running multiple instances of HA with the same instance name configured for this integration. Re-add one instance! Otherwise this HA instance will not receive update events from your CCU.\n - Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a restart.\n - Your setup is misconfigured and HA is not able to receive events from the CCU", 
             "title": "Pending Pong mismatch on interface {interface_id}"
+        }, 
+        "ping_pong_mismatch": {
+            "description": "A ping-pong mismatch was detected on interface **{interface_id}**.\n\n**Mismatch type:** {mismatch_type}\n**Mismatch count:** {mismatch_count}\n\nPossible reasons:\n - You are running multiple instances of Home Assistant with the same instance name configured for this integration. Re-add one instance! Otherwise this Home Assistant instance will not receive update events from your CCU.\n - Something is stuck on the CCU or hasn't been cleaned up. Try restarting the CCU.\n - Your setup is misconfigured and Home Assistant is not able to receive events from the CCU.", 
+            "title": "Ping-pong mismatch on interface {interface_id}"
         }, 
         "unknown_pong_mismatch": {
             "description": "There are unknown pong events observed for HA instance {instance_name}.\n\nPossible reasons:\n - You are running multiple instances of HA with the same instance name configured for this integration. Re-add one instance! Otherwise this HA instance will not receive update events from your CCU.\n - Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a restart.\n - Your setup is misconfigured and HA is not able to receive events from the CCU", 
