@@ -35,13 +35,14 @@ from aiohomematic.const import (
     ClientState,
     DataPointCategory,
     DescriptionMarker,
+    FailureReason,
     Interface,
     Manufacturer,
     OptionalSettings,
     ScheduleTimerConfig,
     SystemInformation,
 )
-from aiohomematic.exceptions import BaseHomematicException
+from aiohomematic.exceptions import AuthFailure, BaseHomematicException
 from aiohomematic.model.data_point import CallbackDataPoint
 from aiohomematic.type_aliases import UnsubscribeCallback
 from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
@@ -158,6 +159,9 @@ class BaseControlUnit:
         try:
             await self._central.start()
             _LOGGER.info("Started central unit for %s (%s)", self._instance_name, AIOHM_VERSION)
+        except AuthFailure:
+            # Don't catch - let it propagate to trigger reauth
+            raise
         except BaseHomematicException:
             _LOGGER.warning("START_CENTRAL: Failed to start central unit for %s", self._instance_name)
 
@@ -449,20 +453,55 @@ class ControlUnit(BaseControlUnit):
                     # Critical error - all recovery attempts failed
                     # Always delete DEGRADED issue first
                     async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
+
+                    # Check if failure is due to authentication issue
+                    if event.failure_reason == FailureReason.AUTH:
+                        # Trigger reauth flow for authentication failures
+                        _LOGGER.warning(
+                            "Central %s FAILED due to authentication error. Triggering reauthentication flow",
+                            self._instance_name,
+                        )
+                        # Get config entry and trigger reauth
+                        if entry := self._hass.config_entries.async_get_entry(self._entry_id):
+                            entry.async_start_reauth(self._hass)
+                        # Don't create repair issue - reauth flow will handle it
+                        return
+
+                    # For non-auth failures, create appropriate repair issue
                     if self._enable_system_notifications:
+                        translation_key = "central_failed"
+                        reason_text = "All recovery attempts exhausted"
+
+                        # Customize message based on failure reason
+                        if event.failure_reason == FailureReason.NETWORK:
+                            translation_key = "central_failed_network"
+                            reason_text = "Network connectivity issue"
+                        elif event.failure_reason == FailureReason.TIMEOUT:
+                            translation_key = "central_failed_timeout"
+                            reason_text = "Connection timeout"
+                        elif event.failure_reason == FailureReason.INTERNAL:
+                            translation_key = "central_failed_internal"
+                            reason_text = "CCU internal error"
+
                         ir.async_create_issue(
                             hass=self._hass,
                             domain=DOMAIN,
                             issue_id=issue_id_failed,
                             is_fixable=False,
                             severity=ir.IssueSeverity.ERROR,
-                            translation_key="central_failed",
+                            translation_key=translation_key,
                             translation_placeholders={
                                 "instance_name": self._instance_name,
-                                "reason": "All recovery attempts exhausted",
+                                "reason": reason_text,
+                                "interface_id": event.failure_interface_id or "Unknown",
                             },
                         )
-                        _LOGGER.error("Central %s FAILED - recovery unsuccessful", self._instance_name)
+                        _LOGGER.error(
+                            "Central %s FAILED - %s (interface: %s)",
+                            self._instance_name,
+                            reason_text,
+                            event.failure_interface_id or "Unknown",
+                        )
                     else:
                         # Also delete FAILED issue if notifications are disabled
                         async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)

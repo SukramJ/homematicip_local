@@ -800,6 +800,18 @@
             "description": "Die CCU-Verbindung für **{instance_name}** ist fehlgeschlagen.\n\nGrund: {reason}\n\nDie automatischen Wiederherstellungsversuche wurden erschöpft. Bitte überprüfe:\n- CCU ist eingeschaltet und erreichbar\n- Netzwerkverbindung\n- CCU-Protokolle auf Fehler\n\nLade die Integration neu, um es erneut zu versuchen.", 
             "title": "CCU-Verbindung fehlgeschlagen"
         }, 
+        "central_failed_internal": {
+            "description": "Die CCU-Verbindung für **{instance_name}** ist aufgrund eines internen CCU-Fehlers fehlgeschlagen.\n\nSchnittstelle: {interface_id}\n\nDie CCU hat einen internen Fehler gemeldet. Bitte:\n- Überprüfe die CCU-Systemprotokolle auf Fehler\n- Erwäge einen Neustart der CCU\n- Aktualisiere die CCU-Firmware falls verfügbar\n\nLade die Integration neu, um es erneut zu versuchen.", 
+            "title": "Interner CCU-Fehler"
+        }, 
+        "central_failed_network": {
+            "description": "Die CCU-Verbindung für **{instance_name}** ist aufgrund eines Netzwerkverbindungsproblems fehlgeschlagen.\n\nSchnittstelle: {interface_id}\n\nBitte überprüfe:\n- CCU ist eingeschaltet und im Netzwerk erreichbar\n- Netzwerkkabel und WLAN-Verbindung\n- Firewall-Einstellungen erlauben XML-RPC-Verkehr\n- CCU-Netzwerkkonfiguration\n\nLade die Integration neu, um es erneut zu versuchen.", 
+            "title": "CCU-Netzwerkverbindung fehlgeschlagen"
+        }, 
+        "central_failed_timeout": {
+            "description": "Die CCU-Verbindung für **{instance_name}** ist aufgrund von Verbindungszeitüberschreitungen fehlgeschlagen.\n\nSchnittstelle: {interface_id}\n\nDie CCU könnte überlastet sein oder Leistungsprobleme haben. Bitte überprüfe:\n- CCU CPU- und Speicherauslastung\n- CCU führt keine zeitintensiven Operationen aus\n- Netzwerklatenz zwischen Home Assistant und CCU\n\nLade die Integration neu, um es erneut zu versuchen.", 
+            "title": "CCU-Verbindungszeitüberschreitung"
+        }, 
         "devices_delayed": {
             "fix_flow": {
                 "step": {

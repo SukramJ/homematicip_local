@@ -1,4 +1,4 @@
-# Version 2.0.0 (2025-12-15)
+# Version 2.0.0 (2025-12-19)
 
 ## What's Changed
 - Reauthentication Flow: Automatic prompting for new credentials when CCU authentication fails, with full Silver quality scale compliance
@@ -16,13 +16,17 @@
 - Improved Type Safety: Strict mypy mode enabled throughout codebase with protocol-based typing
 - Memory & Performance: Automatic cleanup of event subscriptions, request coalescing for concurrent calls, resource limits to prevent unbounded growth
 - Action Renaming: Climate schedule actions renamed for clarity (get_schedule_profile_weekday → get_schedule_weekday)
+- Integration now automatically triggers reauth flow when CCU authentication fails
+- Different repair issue types based on failure reason
 
-### Bump aiohomematic to 2025.12.33
+### Bump aiohomematic to 2025.12.35
+
 - Reliability & Reconnection
   - Improved CCU reconnection: Staged reconnection with TCP port checks for faster recovery after CCU restart (10s initial + warmup vs fixed 60s delay)
   - New central state machine: States now include DEGRADED (partial connectivity) and RECOVERING for better status visibility
   - Circuit breakers: Prevent retry-storms during CCU outages; auto-reset after successful reconnect
   - Exponential backoff: Smarter retry timing (2s→120s) reduces load during connection issues
+  - Introduces granular failure classification to differentiate between authentication failures, network issues, timeouts, and internal CCU errors
 - Device Management
   - Install mode support: Per-interface install mode with countdown timer for HmIP-RF and BidCos-RF
   - Device inbox handling: Accept/rename new devices pending pairing via accept_device_in_inbox()
