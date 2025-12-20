@@ -246,7 +246,7 @@ class TestAioHomematicUpdateCallbacks:
         """Test _async_device_removed when device not in registry."""
         update = create_mock_update()
         update.hass = hass
-        update.async_remove = AsyncMock()
+        update.async_remove = Mock()
 
         mock_registry_entry = MagicMock()
         mock_registry_entry.device_id = "device_123"
@@ -270,7 +270,7 @@ class TestAioHomematicUpdateCallbacks:
         """Test _async_device_removed when no registry entry."""
         update = create_mock_update()
         update.hass = hass
-        update.async_remove = AsyncMock()
+        update.async_remove = Mock()
         update.registry_entry = None
 
         with patch.object(hass, "async_create_task") as mock_create_task:
@@ -282,7 +282,7 @@ class TestAioHomematicUpdateCallbacks:
         """Test _async_device_removed with device ID."""
         update = create_mock_update()
         update.hass = hass
-        update.async_remove = AsyncMock()
+        update.async_remove = Mock()
 
         mock_registry_entry = MagicMock()
         mock_registry_entry.device_id = "device_123"
@@ -521,7 +521,7 @@ class TestAioHomematicHubUpdateCallbacks:
         """Test _async_device_removed when no registry entry."""
         hub_update = create_mock_hub_update()
         hub_update.hass = hass
-        hub_update.async_remove = AsyncMock()
+        hub_update.async_remove = Mock()
         hub_update.registry_entry = None
 
         with patch.object(hass, "async_create_task"):
@@ -531,7 +531,7 @@ class TestAioHomematicHubUpdateCallbacks:
         """Test _async_device_removed with device ID."""
         hub_update = create_mock_hub_update()
         hub_update.hass = hass
-        hub_update.async_remove = AsyncMock()
+        hub_update.async_remove = Mock()
 
         mock_registry_entry = MagicMock()
         mock_registry_entry.device_id = "hub_device_123"
