@@ -59,13 +59,10 @@ CONF_CUSTOM_PORT_CONFIG: Final = "custom_port_config"  # Checkbox for custom por
 
 
 class EventKey(StrEnum):
-    """Enum with aiohomematic event keys."""
+    """Enum with event keys for Home Assistant events."""
 
     ADDRESS = "address"
-    AVAILABLE = "available"
-    CENTRAL_NAME = "central_name"
     CHANNEL_NO = "channel_no"
-    DATA = "data"
     DEVICE_ID = "device_id"
     ERROR = "error"
     ERROR_VALUE = "error_value"
@@ -75,11 +72,7 @@ class EventKey(StrEnum):
     MODEL = "model"
     NAME = "name"
     PARAMETER = "parameter"
-    PONG_MISMATCH_ACCEPTABLE = "pong_mismatch_allowed"
-    PONG_MISMATCH_COUNT = "pong_mismatch_count"
-    SECONDS_SINCE_LAST_EVENT = "seconds_since_last_event"
     TITLE = "title"
-    TYPE = "type"
     UNAVAILABLE = "unavailable"
     VALUE = "value"
 
