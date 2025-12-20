@@ -36,7 +36,6 @@ from aiohomematic.const import (
     DataPointCategory,
     DescriptionMarker,
     DeviceTriggerEventType,
-    EventKey,
     FailureReason,
     Interface,
     Manufacturer,
@@ -96,6 +95,7 @@ from .const import (
     EVENT_NAME,
     EVENT_TITLE,
     FILTER_ERROR_EVENT_PARAMETERS,
+    EventKey,
 )
 from .mqtt import MQTTConsumer
 from .support import (

@@ -68,6 +68,24 @@ EVENT_TITLE: Final = "title"
 EVENT_UNAVAILABLE: Final = "unavailable"
 
 
+class EventKey(StrEnum):
+    """Enum with aiohomematic event keys."""
+
+    ADDRESS = "address"
+    AVAILABLE = "available"
+    CENTRAL_NAME = "central_name"
+    CHANNEL_NO = "channel_no"
+    DATA = "data"
+    INTERFACE_ID = "interface_id"
+    MODEL = "model"
+    PARAMETER = "parameter"
+    PONG_MISMATCH_ACCEPTABLE = "pong_mismatch_allowed"
+    PONG_MISMATCH_COUNT = "pong_mismatch_count"
+    SECONDS_SINCE_LAST_EVENT = "seconds_since_last_event"
+    TYPE = "type"
+    VALUE = "value"
+
+
 class HmipLocalServices(StrEnum):
     """Enum with services."""
 

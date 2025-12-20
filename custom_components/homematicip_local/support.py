@@ -10,7 +10,8 @@ from typing import Any, TypeAlias, TypeVar, cast
 
 import voluptuous as vol
 
-from aiohomematic.const import IDENTIFIER_SEPARATOR, EventKey
+from aiohomematic import validator as val
+from aiohomematic.const import IDENTIFIER_SEPARATOR
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.interfaces.model import (
     CalculatedDataPointProtocol,
@@ -19,7 +20,6 @@ from aiohomematic.interfaces.model import (
     GenericProgramDataPointProtocol,
     GenericSysvarDataPointProtocol,
 )
-from aiohomematic.schemas import EVENT_DATA_SCHEMA
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -35,6 +35,7 @@ from .const import (
     EVENT_NAME,
     EVENT_TITLE,
     EVENT_UNAVAILABLE,
+    EventKey,
 )
 
 # Union for entity types used as base class for data points
@@ -46,10 +47,16 @@ HmGenericProgramDataPointProtocol = TypeVar("HmGenericProgramDataPointProtocol",
 # Generic base type used for sysvar data points in Homematic(IP) Local for OpenCCU
 HmGenericSysvarDataPointProtocol = TypeVar("HmGenericSysvarDataPointProtocol", bound=GenericSysvarDataPointProtocol)
 
-BASE_EVENT_DATA_SCHEMA = EVENT_DATA_SCHEMA.extend(
+BASE_EVENT_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(EVENT_DEVICE_ID): str,
         vol.Required(EVENT_NAME): str,
+        vol.Required(str(EventKey.ADDRESS)): val.device_address,
+        vol.Required(str(EventKey.CHANNEL_NO)): val.channel_no,
+        vol.Required(str(EventKey.MODEL)): str,
+        vol.Required(str(EventKey.INTERFACE_ID)): str,
+        vol.Required(str(EventKey.PARAMETER)): str,
+        vol.Optional(str(EventKey.VALUE)): vol.Any(bool, int),
     }
 )
 CLICK_EVENT_SCHEMA = BASE_EVENT_DATA_SCHEMA.extend(

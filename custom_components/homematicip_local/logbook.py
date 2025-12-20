@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from aiohomematic.const import DeviceTriggerEventType, EventKey
+from aiohomematic.const import DeviceTriggerEventType
 from homeassistant.components.logbook.const import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.core import Event, HomeAssistant, callback
 
-from .const import DOMAIN as HMIP_DOMAIN, EVENT_ERROR, EVENT_ERROR_VALUE, EVENT_NAME
+from .const import DOMAIN as HMIP_DOMAIN, EVENT_ERROR, EVENT_ERROR_VALUE, EVENT_NAME, EventKey
 from .support import DEVICE_ERROR_EVENT_SCHEMA, is_valid_event
 
 

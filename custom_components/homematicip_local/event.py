@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aiohomematic.const import DATA_POINT_EVENTS, DataPointCategory, EventKey
+from aiohomematic.const import DATA_POINT_EVENTS, DataPointCategory
 from aiohomematic.interfaces.model import ChannelProtocol, DeviceProtocol, GenericEventProtocol
 from aiohomematic.type_aliases import UnsubscribeCallback
 from homeassistant.components.event import EventDeviceClass, EventEntity
@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UndefinedType
 
 from . import HomematicConfigEntry
-from .const import DOMAIN, EVENT_MODEL
+from .const import DOMAIN, EVENT_MODEL, EventKey
 from .control_unit import ControlUnit, signal_new_data_point
 
 _LOGGER = logging.getLogger(__name__)
