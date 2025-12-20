@@ -25,18 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
 
-from .const import (
-    CONF_SUBTYPE,
-    EVENT_DEVICE_ID,
-    EVENT_ERROR,
-    EVENT_ERROR_VALUE,
-    EVENT_IDENTIFIER,
-    EVENT_MESSAGE,
-    EVENT_NAME,
-    EVENT_TITLE,
-    EVENT_UNAVAILABLE,
-    EventKey,
-)
+from .const import CONF_SUBTYPE, EventKey
 
 # Union for entity types used as base class for data points
 HmBaseDataPointProtocol: TypeAlias = CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocol
@@ -49,8 +38,8 @@ HmGenericSysvarDataPointProtocol = TypeVar("HmGenericSysvarDataPointProtocol", b
 
 BASE_EVENT_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(EVENT_DEVICE_ID): str,
-        vol.Required(EVENT_NAME): str,
+        vol.Required(str(EventKey.DEVICE_ID)): str,
+        vol.Required(str(EventKey.NAME)): str,
         vol.Required(str(EventKey.ADDRESS)): val.device_address,
         vol.Required(str(EventKey.CHANNEL_NO)): val.channel_no,
         vol.Required(str(EventKey.MODEL)): str,
@@ -71,20 +60,20 @@ CLICK_EVENT_SCHEMA = BASE_EVENT_DATA_SCHEMA.extend(
 )
 DEVICE_AVAILABILITY_EVENT_SCHEMA = BASE_EVENT_DATA_SCHEMA.extend(
     {
-        vol.Required(EVENT_IDENTIFIER): str,
-        vol.Required(EVENT_TITLE): str,
-        vol.Required(EVENT_MESSAGE): str,
-        vol.Required(EVENT_UNAVAILABLE): bool,
+        vol.Required(str(EventKey.IDENTIFIER)): str,
+        vol.Required(str(EventKey.TITLE)): str,
+        vol.Required(str(EventKey.MESSAGE)): str,
+        vol.Required(str(EventKey.UNAVAILABLE)): bool,
     },
     extra=vol.ALLOW_EXTRA,
 )
 DEVICE_ERROR_EVENT_SCHEMA = BASE_EVENT_DATA_SCHEMA.extend(
     {
-        vol.Required(EVENT_IDENTIFIER): str,
-        vol.Required(EVENT_TITLE): str,
-        vol.Required(EVENT_MESSAGE): str,
-        vol.Required(EVENT_ERROR_VALUE): vol.Any(bool, int),
-        vol.Required(EVENT_ERROR): bool,
+        vol.Required(str(EventKey.IDENTIFIER)): str,
+        vol.Required(str(EventKey.TITLE)): str,
+        vol.Required(str(EventKey.MESSAGE)): str,
+        vol.Required(str(EventKey.ERROR_VALUE)): vol.Any(bool, int),
+        vol.Required(str(EventKey.ERROR)): bool,
     },
     extra=vol.ALLOW_EXTRA,
 )

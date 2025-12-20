@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pytest_homeassistant_custom_component.components.recorder.common import async_wait_recording_done
 
-from aiohomematic.const import DeviceFirmwareState, EventKey
-from custom_components.homematicip_local.const import EVENT_MODEL
+from aiohomematic.const import DeviceFirmwareState
+from custom_components.homematicip_local.const import EventKey
 from custom_components.homematicip_local.generic_entity import (
     ATTR_ADDRESS,
     ATTR_FUNCTION,
@@ -52,7 +52,7 @@ class TestRecorder:
         assert ha_state.state == STATE_UNKNOWN
         assert ha_state.attributes[EventKey.ADDRESS] == "VCU2128127:1"
         assert ha_state.attributes[EventKey.INTERFACE_ID] == "CentralTest-BidCos-RF"
-        assert ha_state.attributes[EVENT_MODEL] == "HmIP-BSM"
+        assert ha_state.attributes[EventKey.MODEL] == "HmIP-BSM"
         await async_wait_recording_done(hass)
 
         states = await hass.async_add_executor_job(
@@ -69,7 +69,7 @@ class TestRecorder:
                 if state.entity_id == entity_id:
                     assert EventKey.ADDRESS not in state.attributes
                     assert EventKey.INTERFACE_ID not in state.attributes
-                    assert EVENT_MODEL not in state.attributes
+                    assert EventKey.MODEL not in state.attributes
                     break
 
     @pytest.mark.asyncio

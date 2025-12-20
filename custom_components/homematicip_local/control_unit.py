@@ -87,13 +87,6 @@ from .const import (
     DEFAULT_MQTT_PREFIX,
     DEFAULT_SYS_SCAN_INTERVAL,
     DOMAIN,
-    EVENT_DEVICE_ID,
-    EVENT_ERROR,
-    EVENT_ERROR_VALUE,
-    EVENT_IDENTIFIER,
-    EVENT_MESSAGE,
-    EVENT_NAME,
-    EVENT_TITLE,
     FILTER_ERROR_EVENT_PARAMETERS,
     EventKey,
 )
@@ -528,8 +521,8 @@ class ControlUnit(BaseControlUnit):
         name: str | None = None
         if device_entry := self._async_get_device_entry(device_address=device_address):
             name = device_entry.name_by_user or device_entry.name
-            event_data[EVENT_DEVICE_ID] = device_entry.id
-            event_data[EVENT_NAME] = name
+            event_data[EventKey.DEVICE_ID] = device_entry.id
+            event_data[EventKey.NAME] = name
 
         trigger_type = event.trigger_type
 
@@ -565,11 +558,11 @@ class ControlUnit(BaseControlUnit):
 
             event_data.update(
                 {
-                    EVENT_IDENTIFIER: f"{device_address}_{error_parameter}",
-                    EVENT_TITLE: title,
-                    EVENT_MESSAGE: error_message,
-                    EVENT_ERROR_VALUE: error_value,
-                    EVENT_ERROR: display_error,
+                    EventKey.IDENTIFIER: f"{device_address}_{error_parameter}",
+                    EventKey.TITLE: title,
+                    EventKey.MESSAGE: error_message,
+                    EventKey.ERROR_VALUE: error_value,
+                    EventKey.ERROR: display_error,
                 }
             )
 
