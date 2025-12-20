@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from aiohomematic.const import EventKey, EventType
+from aiohomematic.const import DeviceTriggerEventType, EventKey
 from homeassistant.components.logbook.const import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.core import Event, HomeAssistant, callback
 
@@ -36,6 +36,6 @@ def async_describe_events(
 
     async_describe_event(
         HMIP_DOMAIN,
-        EventType.DEVICE_ERROR.value,
+        DeviceTriggerEventType.DEVICE_ERROR.value,
         async_describe_homematic_device_error_event,
     )

@@ -496,8 +496,9 @@ class ControlUnit(BaseControlUnit):
 
     async def _on_device_trigger(self, event: DeviceTriggerEvent) -> None:
         """Handle device trigger event from aiohomematic (Device triggers for HA event bus)."""
+
         self._hass.bus.async_fire(
-            event_type=f"{DOMAIN}.event",
+            event_type=event.trigger_type,
             event_data={
                 "entry_id": self._entry_id,
                 "interface_id": event.interface_id,
