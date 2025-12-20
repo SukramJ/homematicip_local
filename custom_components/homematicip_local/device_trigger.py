@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict, is_dataclass
+
 import voluptuous as vol
 
 from aiohomematic.const import CLICK_EVENTS, DataPointUsage
@@ -62,7 +64,12 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[s
                         CONF_DEVICE_ID: device_id,
                         CONF_EVENT_TYPE: action_event.event_type.value,
                     }
-                    trigger.update(cleanup_click_event_data(event_data=action_event.get_event_data()))
+                    event_data = action_event.get_event_data()
+                    trigger.update(
+                        cleanup_click_event_data(
+                            event_data=asdict(event_data) if is_dataclass(event_data) else event_data
+                        )
+                    )
                     triggers.append(trigger)
 
     return triggers

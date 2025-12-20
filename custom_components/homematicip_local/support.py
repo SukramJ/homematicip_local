@@ -10,7 +10,8 @@ from typing import Any, TypeAlias, TypeVar, cast
 
 import voluptuous as vol
 
-from aiohomematic.const import IDENTIFIER_SEPARATOR, EventKey
+from aiohomematic import validator as val
+from aiohomematic.const import IDENTIFIER_SEPARATOR
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.interfaces.model import (
     CalculatedDataPointProtocol,
@@ -19,23 +20,12 @@ from aiohomematic.interfaces.model import (
     GenericProgramDataPointProtocol,
     GenericSysvarDataPointProtocol,
 )
-from aiohomematic.schemas import EVENT_DATA_SCHEMA
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
 
-from .const import (
-    CONF_SUBTYPE,
-    EVENT_DEVICE_ID,
-    EVENT_ERROR,
-    EVENT_ERROR_VALUE,
-    EVENT_IDENTIFIER,
-    EVENT_MESSAGE,
-    EVENT_NAME,
-    EVENT_TITLE,
-    EVENT_UNAVAILABLE,
-)
+from .const import CONF_SUBTYPE, EventKey
 
 # Union for entity types used as base class for data points
 HmBaseDataPointProtocol: TypeAlias = CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocol
@@ -46,10 +36,16 @@ HmGenericProgramDataPointProtocol = TypeVar("HmGenericProgramDataPointProtocol",
 # Generic base type used for sysvar data points in Homematic(IP) Local for OpenCCU
 HmGenericSysvarDataPointProtocol = TypeVar("HmGenericSysvarDataPointProtocol", bound=GenericSysvarDataPointProtocol)
 
-BASE_EVENT_DATA_SCHEMA = EVENT_DATA_SCHEMA.extend(
+BASE_EVENT_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(EVENT_DEVICE_ID): str,
-        vol.Required(EVENT_NAME): str,
+        vol.Required(str(EventKey.DEVICE_ID)): str,
+        vol.Required(str(EventKey.NAME)): str,
+        vol.Required(str(EventKey.ADDRESS)): val.device_address,
+        vol.Required(str(EventKey.CHANNEL_NO)): val.channel_no,
+        vol.Required(str(EventKey.MODEL)): str,
+        vol.Required(str(EventKey.INTERFACE_ID)): str,
+        vol.Required(str(EventKey.PARAMETER)): str,
+        vol.Optional(str(EventKey.VALUE)): vol.Any(bool, int),
     }
 )
 CLICK_EVENT_SCHEMA = BASE_EVENT_DATA_SCHEMA.extend(
@@ -64,20 +60,20 @@ CLICK_EVENT_SCHEMA = BASE_EVENT_DATA_SCHEMA.extend(
 )
 DEVICE_AVAILABILITY_EVENT_SCHEMA = BASE_EVENT_DATA_SCHEMA.extend(
     {
-        vol.Required(EVENT_IDENTIFIER): str,
-        vol.Required(EVENT_TITLE): str,
-        vol.Required(EVENT_MESSAGE): str,
-        vol.Required(EVENT_UNAVAILABLE): bool,
+        vol.Required(str(EventKey.IDENTIFIER)): str,
+        vol.Required(str(EventKey.TITLE)): str,
+        vol.Required(str(EventKey.MESSAGE)): str,
+        vol.Required(str(EventKey.UNAVAILABLE)): bool,
     },
     extra=vol.ALLOW_EXTRA,
 )
 DEVICE_ERROR_EVENT_SCHEMA = BASE_EVENT_DATA_SCHEMA.extend(
     {
-        vol.Required(EVENT_IDENTIFIER): str,
-        vol.Required(EVENT_TITLE): str,
-        vol.Required(EVENT_MESSAGE): str,
-        vol.Required(EVENT_ERROR_VALUE): vol.Any(bool, int),
-        vol.Required(EVENT_ERROR): bool,
+        vol.Required(str(EventKey.IDENTIFIER)): str,
+        vol.Required(str(EventKey.TITLE)): str,
+        vol.Required(str(EventKey.MESSAGE)): str,
+        vol.Required(str(EventKey.ERROR_VALUE)): vol.Any(bool, int),
+        vol.Required(str(EventKey.ERROR)): bool,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -109,19 +105,21 @@ def handle_homematic_errors[**P, R](
 def cleanup_click_event_data(event_data: dict[Any, Any]) -> dict[str, Any]:
     """Cleanup the click_event."""
     cleand_event_data = {str(key): value for key, value in event_data.items()}
+    param_key = str(EventKey.PARAMETER)
+    channel_key = str(EventKey.CHANNEL_NO)
     cleand_event_data.update(
         {
-            CONF_TYPE: cleand_event_data[EventKey.PARAMETER].lower(),
-            CONF_SUBTYPE: cleand_event_data[EventKey.CHANNEL_NO],
+            CONF_TYPE: cleand_event_data[param_key].lower(),
+            CONF_SUBTYPE: cleand_event_data[channel_key],
         }
     )
-    del cleand_event_data[EventKey.PARAMETER]
-    del cleand_event_data[EventKey.CHANNEL_NO]
+    del cleand_event_data[param_key]
+    del cleand_event_data[channel_key]
     return cleand_event_data
 
 
 def is_valid_event(event_data: Mapping[str, Any], schema: vol.Schema) -> bool:
-    """Validate evenc_data against a given schema."""
+    """Validate event_data against a given schema."""
     try:
         schema(event_data)
     except vol.Invalid as err:
