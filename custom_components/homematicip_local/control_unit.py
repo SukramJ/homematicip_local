@@ -512,15 +512,14 @@ class ControlUnit(BaseControlUnit):
 
     async def _on_device_trigger(self, event: DeviceTriggerEvent) -> None:
         """Handle device trigger event from aiohomematic (Device triggers for HA event bus)."""
-        # Extract device address from channel address (format: "DEVICE:CHANNEL")
-        device_address = event.channel_address.split(":")[0]
-        channel_no = int(event.channel_address.split(":")[1]) if ":" in event.channel_address else 0
 
+        device_address = event.device_address
         # Build base event data
         event_data: dict[str, Any] = {
             str(EventKey.INTERFACE_ID): event.interface_id,
             str(EventKey.ADDRESS): device_address,
-            str(EventKey.CHANNEL_NO): channel_no,
+            str(EventKey.CHANNEL_NO): event.channel_no,
+            str(EventKey.MODEL): event.model,
             str(EventKey.PARAMETER): event.parameter,
             str(EventKey.VALUE): event.value,
         }

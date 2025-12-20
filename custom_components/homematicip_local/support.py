@@ -109,19 +109,21 @@ def handle_homematic_errors[**P, R](
 def cleanup_click_event_data(event_data: dict[Any, Any]) -> dict[str, Any]:
     """Cleanup the click_event."""
     cleand_event_data = {str(key): value for key, value in event_data.items()}
+    param_key = str(EventKey.PARAMETER)
+    channel_key = str(EventKey.CHANNEL_NO)
     cleand_event_data.update(
         {
-            CONF_TYPE: cleand_event_data[EventKey.PARAMETER].lower(),
-            CONF_SUBTYPE: cleand_event_data[EventKey.CHANNEL_NO],
+            CONF_TYPE: cleand_event_data[param_key].lower(),
+            CONF_SUBTYPE: cleand_event_data[channel_key],
         }
     )
-    del cleand_event_data[EventKey.PARAMETER]
-    del cleand_event_data[EventKey.CHANNEL_NO]
+    del cleand_event_data[param_key]
+    del cleand_event_data[channel_key]
     return cleand_event_data
 
 
 def is_valid_event(event_data: Mapping[str, Any], schema: vol.Schema) -> bool:
-    """Validate evenc_data against a given schema."""
+    """Validate event_data against a given schema."""
     try:
         schema(event_data)
     except vol.Invalid as err:
