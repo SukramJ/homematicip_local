@@ -20,7 +20,7 @@
 - Different repair issue types based on failure reason
 - Validates config flow and repair issue translations
  
-### Bump aiohomematic to 2025.12.39
+### Bump aiohomematic to 2025.12.40
 
 - Reliability & Reconnection
   - Improved CCU reconnection: Staged reconnection with TCP port checks for faster recovery after CCU restart (10s initial + warmup vs fixed 60s delay)
