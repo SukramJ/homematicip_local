@@ -35,6 +35,8 @@ from aiohomematic.const import (
     ClientState,
     DataPointCategory,
     DescriptionMarker,
+    DeviceTriggerEventType,
+    EventKey,
     FailureReason,
     Interface,
     Manufacturer,
@@ -86,9 +88,23 @@ from .const import (
     DEFAULT_MQTT_PREFIX,
     DEFAULT_SYS_SCAN_INTERVAL,
     DOMAIN,
+    EVENT_DEVICE_ID,
+    EVENT_ERROR,
+    EVENT_ERROR_VALUE,
+    EVENT_IDENTIFIER,
+    EVENT_MESSAGE,
+    EVENT_NAME,
+    EVENT_TITLE,
+    FILTER_ERROR_EVENT_PARAMETERS,
 )
 from .mqtt import MQTTConsumer
-from .support import InvalidConfig
+from .support import (
+    CLICK_EVENT_SCHEMA,
+    DEVICE_ERROR_EVENT_SCHEMA,
+    InvalidConfig,
+    cleanup_click_event_data,
+    is_valid_event,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -496,17 +512,73 @@ class ControlUnit(BaseControlUnit):
 
     async def _on_device_trigger(self, event: DeviceTriggerEvent) -> None:
         """Handle device trigger event from aiohomematic (Device triggers for HA event bus)."""
+        # Extract device address from channel address (format: "DEVICE:CHANNEL")
+        device_address = event.channel_address.split(":")[0]
+        channel_no = int(event.channel_address.split(":")[1]) if ":" in event.channel_address else 0
 
-        self._hass.bus.async_fire(
-            event_type=event.trigger_type,
-            event_data={
-                "entry_id": self._entry_id,
-                "interface_id": event.interface_id,
-                "channel_address": event.channel_address,
-                "parameter": event.parameter,
-                "value": event.value,
-            },
-        )
+        # Build base event data
+        event_data: dict[str, Any] = {
+            str(EventKey.INTERFACE_ID): event.interface_id,
+            str(EventKey.ADDRESS): device_address,
+            str(EventKey.CHANNEL_NO): channel_no,
+            str(EventKey.PARAMETER): event.parameter,
+            str(EventKey.VALUE): event.value,
+        }
+
+        # Lookup device for device_id and name
+        name: str | None = None
+        if device_entry := self._async_get_device_entry(device_address=device_address):
+            name = device_entry.name_by_user or device_entry.name
+            event_data[EVENT_DEVICE_ID] = device_entry.id
+            event_data[EVENT_NAME] = name
+
+        trigger_type = event.trigger_type
+
+        if trigger_type in (DeviceTriggerEventType.IMPULSE, DeviceTriggerEventType.KEYPRESS):
+            # Transform data to match CLICK_EVENT_SCHEMA
+            event_data = cleanup_click_event_data(event_data=event_data)
+            if is_valid_event(event_data=event_data, schema=CLICK_EVENT_SCHEMA):
+                self._hass.bus.async_fire(
+                    event_type=trigger_type.value,
+                    event_data=event_data,
+                )
+
+        elif trigger_type == DeviceTriggerEventType.DEVICE_ERROR:
+            error_parameter = event.parameter
+            if error_parameter in FILTER_ERROR_EVENT_PARAMETERS:
+                return
+
+            error_parameter_display = error_parameter.replace("_", " ").title()
+            title = f"{DOMAIN.upper()} Device Error"
+            error_message: str = ""
+            error_value = event.value
+            display_error: bool = False
+
+            if isinstance(error_value, bool):
+                display_error = error_value
+                error_message = f"{name}/{device_address} on interface {event.interface_id}: {error_parameter_display}"
+            if isinstance(error_value, int):
+                display_error = error_value != 0
+                error_message = (
+                    f"{name}/{device_address} on interface {event.interface_id}: "
+                    f"{error_parameter_display} {error_value}"
+                )
+
+            event_data.update(
+                {
+                    EVENT_IDENTIFIER: f"{device_address}_{error_parameter}",
+                    EVENT_TITLE: title,
+                    EVENT_MESSAGE: error_message,
+                    EVENT_ERROR_VALUE: error_value,
+                    EVENT_ERROR: display_error,
+                }
+            )
+
+            if is_valid_event(event_data=event_data, schema=DEVICE_ERROR_EVENT_SCHEMA):
+                self._hass.bus.async_fire(
+                    event_type=trigger_type.value,
+                    event_data=event_data,
+                )
 
     async def _on_system_status(self, event: SystemStatusEvent) -> None:
         """Handle system status event from aiohomematic (Infrastructure + Lifecycle)."""

@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from aiohomematic.const import EventKey, EventType
+from aiohomematic.const import DeviceTriggerEventType, EventKey
 from custom_components.homematicip_local.const import (
     DOMAIN as HMIP_DOMAIN,
     EVENT_DEVICE_ID,
@@ -49,7 +49,7 @@ class TestAsyncDescribeEvents:
         domain, event_type, _describer = _collect_describer()
 
         assert domain == HMIP_DOMAIN
-        assert event_type == EventType.DEVICE_ERROR.value
+        assert event_type == DeviceTriggerEventType.DEVICE_ERROR.value
 
 
 class TestDescriber:
@@ -67,7 +67,7 @@ class TestDescriber:
     def test_returns_expected_message_for_error_and_resolved(self) -> None:
         """It should format message correctly for error occurred and resolved cases."""
         domain, event_type, describer = _collect_describer()
-        assert domain == HMIP_DOMAIN and event_type == EventType.DEVICE_ERROR.value
+        assert domain == HMIP_DOMAIN and event_type == DeviceTriggerEventType.DEVICE_ERROR.value
 
         # Error occurred
         event = Event(
