@@ -20,7 +20,7 @@
 - Different repair issue types based on failure reason
 - Validates config flow and repair issue translations
  
-### Bump aiohomematic to 2025.12.38
+### Bump aiohomematic to 2025.12.39
 
 - Reliability & Reconnection
   - Improved CCU reconnection: Staged reconnection with TCP port checks for faster recovery after CCU restart (10s initial + warmup vs fixed 60s delay)
@@ -32,8 +32,9 @@
   - `SystemStatusEvent` now includes `failure_reason` and `failure_interface_id` fields when in `FAILED` state
   - Degraded interfaces tracking: `degraded_interfaces` field shows which interfaces are affected and why when in `DEGRADED` state
   - Automatic reauthentication: Integration now detects `FailureReason.AUTH` in both `FAILED` and `DEGRADED` states and triggers reauth flow
-  - Recovery uses actual client failure reasons: More accurate degraded interface diagnosis (2025.12.37)
-  - XML-RPC server binding failures now include failure reason for better error classification (2025.12.37)
+  - Recovery uses actual client failure reasons: More accurate degraded interface diagnosis
+  - XML-RPC server binding failures now include failure reason for better error classification
+  - Properly detect and handle string-based ENUMs vs index-based ENUMs
 - Device Management
   - Install mode support: Per-interface install mode with countdown timer for HmIP-RF and BidCos-RF
   - Device inbox handling: Accept/rename new devices pending pairing via accept_device_in_inbox()
