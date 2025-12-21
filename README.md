@@ -109,8 +109,10 @@ A good practice is to search in issues and discussions before starting a new one
 ## Documentation
 
 Additional topics:
-- Naming of devices and entities: docs/naming.md
-- Glossary of terms used in aiohomematic and this integration: https://github.com/SukramJ/aiohomematic/blob/devel/docs/glossary.md
+- **Contributing Guide**: See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and contribution guidelines
+- **Naming of devices and entities**: See [docs/naming.md](docs/naming.md)
+- **API Behavioral Compatibility**: See [docs/BEHAVIORAL_COMPATIBILITY.md](docs/BEHAVIORAL_COMPATIBILITY.md)
+- **Glossary of terms**: See [aiohomematic glossary](https://github.com/SukramJ/aiohomematic/blob/devel/docs/glossary.md)
 
 The [Homematic](https://www.homematic.com/) integration provides bi-directional communication with your Homematic hub (CCU, Homegear etc.).
 It uses an XML-RPC connection to set values on devices and subscribes to receive events the devices and the CCU emit.
@@ -1998,10 +2000,15 @@ Just copy these files to "your ha-config_dir"/blueprints/automation
 
 ## Support and Contributing
 
-- Issues: https://github.com/sukramj/aiohomematic/issues
-- Discussions: https://github.com/sukramj/aiohomematic/discussions
-- Wiki contributions are welcome: https://github.com/sukramj/aiohomematic/wiki
-- Pull requests are welcome in this repository. Please open an issue or discussion first if you plan larger changes.
+**Getting Help:**
+- **Issues**: Report bugs at https://github.com/sukramj/aiohomematic/issues
+- **Discussions**: Ask questions at https://github.com/sukramj/aiohomematic/discussions
+- **Wiki**: Find additional information at https://github.com/sukramj/aiohomematic/wiki
+
+**Contributing:**
+- **Contributing Guide**: See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development setup, code standards, and workflow
+- **Pull Requests**: Welcome! Please open an issue or discussion first for larger changes
+- **Wiki Contributions**: Help improve documentation at https://github.com/sukramj/aiohomematic/wiki
 
 
 [license-shield]: https://img.shields.io/github/license/SukramJ/homematicip_local.svg?style=for-the-badge

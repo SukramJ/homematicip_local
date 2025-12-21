@@ -101,8 +101,14 @@ homematicip_local/
 │   └── .devcontainer/                    # VS Code DevContainer setup
 │
 ├── docs/                                 # Additional documentation
-├── README.md                             # Comprehensive user documentation (1,295 lines)
-└── changelog.md                          # Release history
+│   ├── BEHAVIORAL_COMPATIBILITY.md       # API stability guidelines
+│   └── naming.md                         # Device and entity naming conventions
+│
+├── Documentation:
+│   ├── README.md                         # Comprehensive user documentation (1,295 lines)
+│   ├── CLAUDE.md                         # AI Assistant development guide
+│   ├── CONTRIBUTING.md                   # Contribution guidelines
+│   └── changelog.md                      # Release history
 ```
 
 ---
@@ -111,7 +117,7 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2025.12.33) - Core async library for Homematic device communication
+- **aiohomematic** (v2025.12.41) - Core async library for Homematic device communication
 - **Home Assistant Core** - Minimum version: 2025.10.0+
 - **Python 3.13+** (target version for development)
 
@@ -122,7 +128,7 @@ homematicip_local/
 - **pylint** (4.0.4) - Code linting
 - **ruff** (0.14.9) - Fast Python linter and formatter
 - **pre-commit** (4.5.0) - Git hooks manager
-- **aiohomematic-test-support** (2025.12.33) - Mock test data
+- **aiohomematic-test-support** (2025.12.41) - Mock test data
 - **async-upnp-client** (0.46.1) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
 
@@ -680,6 +686,66 @@ Events fired by the integration:
    python script/check_translations.py
    ```
 
+### Updating Documentation
+
+**MANDATORY**: When making significant changes, verify and update all relevant documentation.
+
+#### Documentation Update Checklist
+
+After any major feature, refactoring, or API change, check:
+
+```
+□ 1. Module/Class/Method Docstrings - Updated with current behavior
+□ 2. CLAUDE.md - Version numbers, dependencies, architecture changes
+□ 3. CONTRIBUTING.md - Development process, workflow changes
+□ 4. README.md - User-facing features, setup instructions
+□ 5. docs/*.md - Relevant technical documentation
+□ 6. changelog.md - Version entry with breaking changes
+```
+
+#### Key Documentation Files
+
+| File | Update When |
+|------|------------|
+| **Module/Class/Method docstrings** | Code behavior changes |
+| **CLAUDE.md** | Architecture, dependencies, dev processes |
+| **CONTRIBUTING.md** | Git workflow, contribution process |
+| **README.md** | User features, setup, troubleshooting |
+| **docs/BEHAVIORAL_COMPATIBILITY.md** | Public API changes (events, services, triggers) |
+| **docs/naming.md** | Entity/device naming logic |
+| **changelog.md** | Every release, every breaking change |
+
+#### When to Update Documentation
+
+**Always update when:**
+- ✅ Adding new features or services
+- ✅ Changing public APIs (events, services, entity attributes)
+- ✅ Modifying configuration flow
+- ✅ Updating dependencies (aiohomematic, Home Assistant minimum version)
+- ✅ Changing architecture or design patterns
+- ✅ Breaking backward compatibility
+
+**Documentation update workflow:**
+
+1. **Update code docstrings** (inline with code changes)
+2. **Update CLAUDE.md** (if dev process/architecture changed)
+3. **Update README.md** (if user-facing changes)
+4. **Update docs/*.md** (if relevant to that topic)
+5. **Update changelog.md** (required for all releases)
+
+**Verify documentation:**
+
+```bash
+# Check for outdated version numbers
+grep -r "2025.12.33" CLAUDE.md README.md docs/
+
+# Check for broken internal references
+grep -r "TODO\|FIXME\|XXX" *.md docs/*.md
+
+# Validate markdown formatting
+pre-commit run prettier --all-files
+```
+
 ---
 
 ## Git Workflow
@@ -747,7 +813,8 @@ This section defines mandatory rules for all implementations in this project.
 □ 1. Clean Code    - No legacy compatibility layers, deprecated aliases, or shims
 □ 2. Tests         - pytest tests/ passes without errors
 □ 3. Linting       - pre-commit run --all-files passes without errors
-□ 4. Changelog     - changelog.md updated with version entry
+□ 4. Documentation - Docstrings, CLAUDE.md, README.md, docs/*.md updated as needed
+□ 5. Changelog     - changelog.md updated with version entry
 ```
 
 ### Implementation Plan Requirements
@@ -868,13 +935,15 @@ Config entry migrations (`async_migrate_entry` in `__init__.py`) are **only need
 ✅ **Always** provide complete type annotations for all functions and methods
 ✅ **Always** run pre-commit hooks before committing
 ✅ **Always** write tests for new functionality
-✅ **Always** update documentation when changing public APIs
+✅ **Always** update documentation when changing public APIs (see "Updating Documentation")
+✅ **Always** check and update module/class/method docstrings after code changes
 ✅ **Always** use keyword-only arguments for ALL parameters (excluding self/cls)
 ✅ **Always** use descriptive variable names
 ✅ **Always** handle exceptions with proper context
 ✅ **Always** complete the Refactoring Completion Checklist before finishing
 ✅ **Always** update changelog.md with breaking changes
 ✅ **Always** create implementation plans that are Haiku-executable
+✅ **Always** verify docs/*.md files are current after major changes
 
 ### Don'ts
 
@@ -1006,11 +1075,12 @@ python script/check_translations.py
 - **Current Version:** 2.0.0
 - **Minimum HA Version:** 2025.10.0+
 - **Python Target:** 3.13+ (CI tests on 3.13, 3.14)
-- **aiohomematic Version:** 2025.12.33
+- **aiohomematic Version:** 2025.12.41
 
 ### External Resources
 
 - **Main Documentation:** https://github.com/sukramj/homematicip_local
+- **Contributing Guide:** See CONTRIBUTING.md
 - **aiohomematic Wiki:** https://github.com/sukramj/aiohomematic/wiki
 - **Issues:** https://github.com/sukramj/aiohomematic/issues
 - **Discussions:** https://github.com/sukramj/aiohomematic/discussions
@@ -1019,5 +1089,5 @@ python script/check_translations.py
 
 ---
 
-**Last Updated**: 2025-12-16
+**Last Updated**: 2025-12-21
 **Version**: 2.0.0
