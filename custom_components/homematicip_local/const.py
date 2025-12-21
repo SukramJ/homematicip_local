@@ -57,24 +57,20 @@ CONF_VERIFY_TLS: Final = "verify_tls"
 CONF_CUSTOM_PORTS: Final = "custom_ports"  # Dict of custom interface ports
 CONF_CUSTOM_PORT_CONFIG: Final = "custom_port_config"  # Checkbox for custom port configuration
 
-
-class EventKey(StrEnum):
-    """Enum with event keys for Home Assistant events."""
-
-    ADDRESS = "address"
-    CHANNEL_NO = "channel_no"
-    DEVICE_ID = "device_id"
-    ERROR = "error"
-    ERROR_VALUE = "error_value"
-    IDENTIFIER = "identifier"
-    INTERFACE_ID = "interface_id"
-    MESSAGE = "message"
-    MODEL = "model"
-    NAME = "name"
-    PARAMETER = "parameter"
-    TITLE = "title"
-    UNAVAILABLE = "unavailable"
-    VALUE = "value"
+EVENT_ADDRESS = "address"
+EVENT_CHANNEL_NO = "channel_no"
+EVENT_DEVICE_ID = "device_id"
+EVENT_ERROR = "error"
+EVENT_ERROR_VALUE = "error_value"
+EVENT_IDENTIFIER = "identifier"
+EVENT_INTERFACE_ID = "interface_id"
+EVENT_MESSAGE = "message"
+EVENT_MODEL = "model"
+EVENT_NAME = "name"
+EVENT_PARAMETER = "parameter"
+EVENT_TITLE = "title"
+EVENT_UNAVAILABLE = "unavailable"
+EVENT_VALUE = "value"
 
 
 class HmipLocalServices(StrEnum):

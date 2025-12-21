@@ -8,7 +8,7 @@ from aiohomematic.const import DeviceTriggerEventType
 from homeassistant.components.logbook.const import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.core import Event, HomeAssistant, callback
 
-from .const import DOMAIN as HMIP_DOMAIN, EventKey
+from .const import DOMAIN as HMIP_DOMAIN, EVENT_ERROR, EVENT_ERROR_VALUE, EVENT_NAME, EVENT_PARAMETER
 from .support import DEVICE_ERROR_EVENT_SCHEMA, is_valid_event
 
 
@@ -24,13 +24,13 @@ def async_describe_events(
         """Describe Homematic(IP) Local for OpenCCU logbook device error event."""
         if not is_valid_event(event_data=event.data, schema=DEVICE_ERROR_EVENT_SCHEMA):
             return {}
-        error_name = event.data[EventKey.PARAMETER].replace("_", " ").title()
-        error_value = event.data[EventKey.ERROR_VALUE]
-        is_error = event.data[EventKey.ERROR]
+        error_name = event.data[EVENT_PARAMETER].replace("_", " ").title()
+        error_value = event.data[EVENT_ERROR_VALUE]
+        is_error = event.data[EVENT_ERROR]
         error_message = f"{error_name} {error_value} occurred" if is_error else f"{error_name} resolved"
 
         return {
-            LOGBOOK_ENTRY_NAME: event.data[EventKey.NAME],
+            LOGBOOK_ENTRY_NAME: event.data[EVENT_NAME],
             LOGBOOK_ENTRY_MESSAGE: error_message,
         }
 

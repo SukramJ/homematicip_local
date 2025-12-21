@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UndefinedType
 
 from . import HomematicConfigEntry
-from .const import DOMAIN, EventKey
+from .const import DOMAIN, EVENT_ADDRESS, EVENT_INTERFACE_ID, EVENT_MODEL
 from .control_unit import ControlUnit, signal_new_data_point
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ class AioHomematicEvent(EventEntity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    _unrecorded_attributes = frozenset({EventKey.ADDRESS, EventKey.INTERFACE_ID, EventKey.MODEL})
+    _unrecorded_attributes = frozenset({EVENT_ADDRESS, EVENT_INTERFACE_ID, EVENT_MODEL})
 
     def __init__(
         self,
@@ -86,9 +86,9 @@ class AioHomematicEvent(EventEntity):
             identifiers={(DOMAIN, self._hm_device.identifier)},
         )
         self._attr_extra_state_attributes = {
-            EventKey.INTERFACE_ID: self._hm_device.interface_id,
-            EventKey.ADDRESS: self._hm_channel.address,
-            EventKey.MODEL: self._hm_device.model,
+            EVENT_INTERFACE_ID: self._hm_device.interface_id,
+            EVENT_ADDRESS: self._hm_channel.address,
+            EVENT_MODEL: self._hm_device.model,
         }
         self._unsubscribe_callbacks: list[UnsubscribeCallback] = []
         _LOGGER.debug(

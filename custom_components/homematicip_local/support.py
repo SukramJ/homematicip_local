@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Mapping
+from copy import deepcopy
 from functools import wraps
 import logging
 import re
@@ -25,7 +26,23 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
 
-from .const import CONF_SUBTYPE, EventKey
+from .const import (
+    CONF_SUBTYPE,
+    EVENT_ADDRESS,
+    EVENT_CHANNEL_NO,
+    EVENT_DEVICE_ID,
+    EVENT_ERROR,
+    EVENT_ERROR_VALUE,
+    EVENT_IDENTIFIER,
+    EVENT_INTERFACE_ID,
+    EVENT_MESSAGE,
+    EVENT_MODEL,
+    EVENT_NAME,
+    EVENT_PARAMETER,
+    EVENT_TITLE,
+    EVENT_UNAVAILABLE,
+    EVENT_VALUE,
+)
 
 # Union for entity types used as base class for data points
 HmBaseDataPointProtocol: TypeAlias = CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocol
@@ -38,42 +55,42 @@ HmGenericSysvarDataPointProtocol = TypeVar("HmGenericSysvarDataPointProtocol", b
 
 BASE_EVENT_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(str(EventKey.DEVICE_ID)): str,
-        vol.Required(str(EventKey.NAME)): str,
-        vol.Required(str(EventKey.ADDRESS)): val.device_address,
-        vol.Required(str(EventKey.CHANNEL_NO)): val.channel_no,
-        vol.Required(str(EventKey.MODEL)): str,
-        vol.Required(str(EventKey.INTERFACE_ID)): str,
-        vol.Required(str(EventKey.PARAMETER)): str,
-        vol.Optional(str(EventKey.VALUE)): vol.Any(bool, int),
+        vol.Required(EVENT_DEVICE_ID): str,
+        vol.Required(EVENT_NAME): str,
+        vol.Required(EVENT_ADDRESS): val.device_address,
+        vol.Required(EVENT_CHANNEL_NO): val.channel_no,
+        vol.Required(EVENT_MODEL): str,
+        vol.Required(EVENT_INTERFACE_ID): str,
+        vol.Required(EVENT_PARAMETER): str,
+        vol.Optional(EVENT_VALUE): vol.Any(bool, int),
     }
 )
 CLICK_EVENT_SCHEMA = BASE_EVENT_DATA_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): str,
         vol.Required(CONF_SUBTYPE): int,
-        vol.Remove(str(EventKey.CHANNEL_NO)): int,
-        vol.Remove(str(EventKey.PARAMETER)): str,
-        vol.Remove(str(EventKey.VALUE)): vol.Any(bool, int),
+        vol.Remove(EVENT_CHANNEL_NO): int,
+        vol.Remove(EVENT_PARAMETER): str,
+        vol.Remove(EVENT_VALUE): vol.Any(bool, int),
     },
     extra=vol.ALLOW_EXTRA,
 )
 DEVICE_AVAILABILITY_EVENT_SCHEMA = BASE_EVENT_DATA_SCHEMA.extend(
     {
-        vol.Required(str(EventKey.IDENTIFIER)): str,
-        vol.Required(str(EventKey.TITLE)): str,
-        vol.Required(str(EventKey.MESSAGE)): str,
-        vol.Required(str(EventKey.UNAVAILABLE)): bool,
+        vol.Required(EVENT_IDENTIFIER): str,
+        vol.Required(EVENT_TITLE): str,
+        vol.Required(EVENT_MESSAGE): str,
+        vol.Required(EVENT_UNAVAILABLE): bool,
     },
     extra=vol.ALLOW_EXTRA,
 )
 DEVICE_ERROR_EVENT_SCHEMA = BASE_EVENT_DATA_SCHEMA.extend(
     {
-        vol.Required(str(EventKey.IDENTIFIER)): str,
-        vol.Required(str(EventKey.TITLE)): str,
-        vol.Required(str(EventKey.MESSAGE)): str,
-        vol.Required(str(EventKey.ERROR_VALUE)): vol.Any(bool, int),
-        vol.Required(str(EventKey.ERROR)): bool,
+        vol.Required(EVENT_IDENTIFIER): str,
+        vol.Required(EVENT_TITLE): str,
+        vol.Required(EVENT_MESSAGE): str,
+        vol.Required(EVENT_ERROR_VALUE): vol.Any(bool, int),
+        vol.Required(EVENT_ERROR): bool,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -102,19 +119,17 @@ def handle_homematic_errors[**P, R](
     return wrapper
 
 
-def cleanup_click_event_data(event_data: dict[Any, Any]) -> dict[str, Any]:
+def cleanup_click_event_data(event_data: dict[str, Any]) -> dict[str, Any]:
     """Cleanup the click_event."""
-    cleand_event_data = {str(key): value for key, value in event_data.items()}
-    param_key = str(EventKey.PARAMETER)
-    channel_key = str(EventKey.CHANNEL_NO)
+    cleand_event_data = deepcopy(event_data)
     cleand_event_data.update(
         {
-            CONF_TYPE: cleand_event_data[param_key].lower(),
-            CONF_SUBTYPE: cleand_event_data[channel_key],
+            CONF_TYPE: cleand_event_data[EVENT_PARAMETER].lower(),
+            CONF_SUBTYPE: cleand_event_data[EVENT_CHANNEL_NO],
         }
     )
-    del cleand_event_data[param_key]
-    del cleand_event_data[channel_key]
+    del cleand_event_data[EVENT_PARAMETER]
+    del cleand_event_data[EVENT_CHANNEL_NO]
     return cleand_event_data
 
 

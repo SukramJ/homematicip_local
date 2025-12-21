@@ -15,7 +15,8 @@ from types import SimpleNamespace
 
 import voluptuous as vol
 
-from aiohomematic.const import IDENTIFIER_SEPARATOR, EventKey
+from aiohomematic.const import IDENTIFIER_SEPARATOR
+from custom_components.homematicip_local.const import EVENT_CHANNEL_NO, EVENT_PARAMETER
 from custom_components.homematicip_local.support import (
     cleanup_click_event_data,
     get_aiohomematic_version,
@@ -31,8 +32,8 @@ class TestCleanupClickEventData:
     def test_transforms_and_removes(self) -> None:
         """It should lower parameter into type, copy channel_no into subtype, and drop original keys."""
         raw = {
-            EventKey.PARAMETER: "SHORT_PRESS",
-            EventKey.CHANNEL_NO: 2,
+            EVENT_PARAMETER: "SHORT_PRESS",
+            EVENT_CHANNEL_NO: 2,
             "other": 1,
         }
         cleaned = cleanup_click_event_data(raw)
@@ -40,8 +41,8 @@ class TestCleanupClickEventData:
         assert cleaned["type"] == "short_press"
         assert cleaned["subtype"] == 2
         # Originals removed
-        assert EventKey.PARAMETER not in cleaned
-        assert EventKey.CHANNEL_NO not in cleaned
+        assert EVENT_PARAMETER not in cleaned
+        assert EVENT_CHANNEL_NO not in cleaned
         # Pass-through of unrelated keys
         assert cleaned["other"] == 1
 
