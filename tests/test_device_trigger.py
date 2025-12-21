@@ -154,12 +154,12 @@ class TestAsyncGetTriggers:
         assert triggers == []
 
         # 6) ClickEvent with usage NO_CREATE -> skipped
-        from aiohomematic.const import EventKey
+        from custom_components.homematicip_local.const import EVENT_CHANNEL_NO, EVENT_PARAMETER, EVENT_VALUE
 
         ev_data = {
-            EventKey.PARAMETER: "PRESS_SHORT",
-            EventKey.CHANNEL_NO: 1,
-            EventKey.VALUE: True,
+            EVENT_PARAMETER: "PRESS_SHORT",
+            EVENT_CHANNEL_NO: 1,
+            EVENT_VALUE: True,
         }
         hm_device.generic_events = [  # List with NO_CREATE ClickEvent
             MyClickEvent(usage=MyDataPointUsage.NO_CREATE, event_type="evt", event_data=ev_data)

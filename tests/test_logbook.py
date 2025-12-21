@@ -13,7 +13,21 @@ from collections.abc import Callable
 from typing import Any
 
 from aiohomematic.const import DeviceTriggerEventType
-from custom_components.homematicip_local.const import DOMAIN as HMIP_DOMAIN, EventKey
+from custom_components.homematicip_local.const import (
+    DOMAIN as HMIP_DOMAIN,
+    EVENT_ADDRESS,
+    EVENT_CHANNEL_NO,
+    EVENT_DEVICE_ID,
+    EVENT_ERROR,
+    EVENT_ERROR_VALUE,
+    EVENT_IDENTIFIER,
+    EVENT_INTERFACE_ID,
+    EVENT_MESSAGE,
+    EVENT_MODEL,
+    EVENT_NAME,
+    EVENT_PARAMETER,
+    EVENT_TITLE,
+)
 from custom_components.homematicip_local.logbook import async_describe_events
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.core import Event
@@ -51,7 +65,7 @@ class TestDescriber:
         _, event_type, describer = _collect_describer()
 
         # Missing required name field makes the schema invalid
-        event = Event(event_type, data={EventKey.PARAMETER: "low_bat", EventKey.ERROR: True, EventKey.ERROR_VALUE: 1})
+        event = Event(event_type, data={EVENT_PARAMETER: "low_bat", EVENT_ERROR: True, EVENT_ERROR_VALUE: 1})
 
         assert describer(event) == {}
 
@@ -65,20 +79,20 @@ class TestDescriber:
             event_type,
             data={
                 # Required base event schema fields
-                str(EventKey.ADDRESS): "ABC0001",
-                str(EventKey.CHANNEL_NO): 1,
-                str(EventKey.MODEL): "XYZ",
-                str(EventKey.INTERFACE_ID): "if1",
+                EVENT_ADDRESS: "ABC0001",
+                EVENT_CHANNEL_NO: 1,
+                EVENT_MODEL: "XYZ",
+                EVENT_INTERFACE_ID: "if1",
                 # Parameter specific
-                str(EventKey.PARAMETER): "low_bat",
+                EVENT_PARAMETER: "low_bat",
                 # Extended device error schema
-                EventKey.NAME: "Kitchen Sensor",
-                EventKey.IDENTIFIER: "dev-1",
-                EventKey.TITLE: "Device Error",
-                EventKey.MESSAGE: "Something happened",
-                EventKey.DEVICE_ID: "device-123",
-                EventKey.ERROR_VALUE: 1,
-                EventKey.ERROR: True,
+                EVENT_NAME: "Kitchen Sensor",
+                EVENT_IDENTIFIER: "dev-1",
+                EVENT_TITLE: "Device Error",
+                EVENT_MESSAGE: "Something happened",
+                EVENT_DEVICE_ID: "device-123",
+                EVENT_ERROR_VALUE: 1,
+                EVENT_ERROR: True,
             },
         )
         result = describer(event)
@@ -90,20 +104,20 @@ class TestDescriber:
             event_type,
             data={
                 # Required base event schema fields
-                str(EventKey.ADDRESS): "ABC0001",
-                str(EventKey.CHANNEL_NO): 1,
-                str(EventKey.MODEL): "XYZ",
-                str(EventKey.INTERFACE_ID): "if1",
+                EVENT_ADDRESS: "ABC0001",
+                EVENT_CHANNEL_NO: 1,
+                EVENT_MODEL: "XYZ",
+                EVENT_INTERFACE_ID: "if1",
                 # Parameter specific
-                EventKey.PARAMETER: "low_bat",
+                EVENT_PARAMETER: "low_bat",
                 # Extended device error schema
-                EventKey.NAME: "Kitchen Sensor",
-                EventKey.IDENTIFIER: "dev-1",
-                EventKey.TITLE: "Device Error",
-                EventKey.MESSAGE: "Something happened",
-                EventKey.DEVICE_ID: "device-123",
-                EventKey.ERROR_VALUE: 0,
-                EventKey.ERROR: False,
+                EVENT_NAME: "Kitchen Sensor",
+                EVENT_IDENTIFIER: "dev-1",
+                EVENT_TITLE: "Device Error",
+                EVENT_MESSAGE: "Something happened",
+                EVENT_DEVICE_ID: "device-123",
+                EVENT_ERROR_VALUE: 0,
+                EVENT_ERROR: False,
             },
         )
         result = describer(event)

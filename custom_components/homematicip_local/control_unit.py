@@ -87,8 +87,20 @@ from .const import (
     DEFAULT_MQTT_PREFIX,
     DEFAULT_SYS_SCAN_INTERVAL,
     DOMAIN,
+    EVENT_ADDRESS,
+    EVENT_CHANNEL_NO,
+    EVENT_DEVICE_ID,
+    EVENT_ERROR,
+    EVENT_ERROR_VALUE,
+    EVENT_IDENTIFIER,
+    EVENT_INTERFACE_ID,
+    EVENT_MESSAGE,
+    EVENT_MODEL,
+    EVENT_NAME,
+    EVENT_PARAMETER,
+    EVENT_TITLE,
+    EVENT_VALUE,
     FILTER_ERROR_EVENT_PARAMETERS,
-    EventKey,
 )
 from .mqtt import MQTTConsumer
 from .support import (
@@ -509,30 +521,30 @@ class ControlUnit(BaseControlUnit):
         device_address = event.device_address
         # Build base event data
         event_data: dict[str, Any] = {
-            str(EventKey.INTERFACE_ID): event.interface_id,
-            str(EventKey.ADDRESS): device_address,
-            str(EventKey.CHANNEL_NO): event.channel_no,
-            str(EventKey.MODEL): event.model,
-            str(EventKey.PARAMETER): event.parameter,
-            str(EventKey.VALUE): event.value,
+            EVENT_INTERFACE_ID: event.interface_id,
+            EVENT_ADDRESS: device_address,
+            EVENT_CHANNEL_NO: event.channel_no,
+            EVENT_MODEL: event.model,
+            EVENT_PARAMETER: event.parameter,
+            EVENT_VALUE: event.value,
         }
 
         # Lookup device for device_id and name
         name: str | None = None
         if device_entry := self._async_get_device_entry(device_address=device_address):
             name = device_entry.name_by_user or device_entry.name
-            event_data[EventKey.DEVICE_ID] = device_entry.id
-            event_data[EventKey.NAME] = name
+            event_data[EVENT_DEVICE_ID] = device_entry.id
+            event_data[EVENT_NAME] = name
 
         trigger_type = event.trigger_type
 
         if trigger_type in (DeviceTriggerEventType.IMPULSE, DeviceTriggerEventType.KEYPRESS):
             # Transform data to match CLICK_EVENT_SCHEMA
-            event_data = cleanup_click_event_data(event_data=event_data)
-            if is_valid_event(event_data=event_data, schema=CLICK_EVENT_SCHEMA):
+            cleaned_event_data = cleanup_click_event_data(event_data=event_data)
+            if is_valid_event(event_data=cleaned_event_data, schema=CLICK_EVENT_SCHEMA):
                 self._hass.bus.async_fire(
                     event_type=trigger_type.value,
-                    event_data=event_data,
+                    event_data=cleaned_event_data,
                 )
 
         elif trigger_type == DeviceTriggerEventType.DEVICE_ERROR:
@@ -558,14 +570,13 @@ class ControlUnit(BaseControlUnit):
 
             event_data.update(
                 {
-                    EventKey.IDENTIFIER: f"{device_address}_{error_parameter}",
-                    EventKey.TITLE: title,
-                    EventKey.MESSAGE: error_message,
-                    EventKey.ERROR_VALUE: error_value,
-                    EventKey.ERROR: display_error,
+                    EVENT_IDENTIFIER: f"{device_address}_{error_parameter}",
+                    EVENT_TITLE: title,
+                    EVENT_MESSAGE: error_message,
+                    EVENT_ERROR_VALUE: error_value,
+                    EVENT_ERROR: display_error,
                 }
             )
-
             if is_valid_event(event_data=event_data, schema=DEVICE_ERROR_EVENT_SCHEMA):
                 self._hass.bus.async_fire(
                     event_type=trigger_type.value,
