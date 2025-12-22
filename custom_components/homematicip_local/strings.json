@@ -401,11 +401,47 @@
             }
         }, 
         "select": {
+            "acoustic_alarm_selection": {
+                "name": "Siren Tone", 
+                "state": {
+                    "delayed_externally_armed": "Delayed externally armed", 
+                    "delayed_internally_armed": "Delayed internally armed", 
+                    "disable_acoustic_signal": "Disabled", 
+                    "disarmed": "Disarmed", 
+                    "error": "Error", 
+                    "event": "Event", 
+                    "externally_armed": "Externally armed", 
+                    "frequency_alternating_low_high": "Alternating low-high frequency", 
+                    "frequency_alternating_low_mid_high": "Alternating low-mid-high frequency", 
+                    "frequency_falling": "Falling frequency", 
+                    "frequency_highon_longoff": "High on-long off", 
+                    "frequency_highon_off": "High on-off", 
+                    "frequency_lowon_longoff_highon_longoff": "Low on-long off, high on-long off", 
+                    "frequency_lowon_off_highon_off": "Low on-off, high on-off", 
+                    "frequency_rising": "Rising frequency", 
+                    "frequency_rising_and_falling": "Rising and falling frequency", 
+                    "internally_armed": "Internally armed", 
+                    "low_battery": "Low battery"
+                }
+            }, 
             "heating_cooling": {
                 "name": "Operating mode", 
                 "state": {
                     "cooling": "cooling", 
                     "heating": "heating"
+                }
+            }, 
+            "optical_alarm_selection": {
+                "name": "Siren Light Pattern", 
+                "state": {
+                    "blinking_alternately_repeating": "Blinking alternately (repeating)", 
+                    "blinking_both_repeating": "Blinking both (repeating)", 
+                    "confirmation_signal_0_opto_orange": "Confirmation signal 0 (orange)", 
+                    "confirmation_signal_1_opto_orange": "Confirmation signal 1 (orange)", 
+                    "confirmation_signal_2_opto_orange": "Confirmation signal 2 (orange)", 
+                    "disable_optical_signal": "Disabled", 
+                    "double_flashing_repeating": "Double flashing (repeating)", 
+                    "flashing_both_repeating": "Flashing both (repeating)"
                 }
             }, 
             "temperature_offset": {

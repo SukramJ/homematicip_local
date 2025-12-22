@@ -14,9 +14,10 @@ This document provides comprehensive guidance for AI assistants working with the
 8. [Architecture & Design Patterns](#architecture--design-patterns)
 9. [Common Development Tasks](#common-development-tasks)
 10. [Git Workflow](#git-workflow)
-11. [Implementation Policy](#implementation-policy)
-12. [Tips for AI Assistants](#tips-for-ai-assistants)
-13. [Quick Reference](#quick-reference)
+11. [Release Summary Maintenance](#release-summary-maintenance)
+12. [Implementation Policy](#implementation-policy)
+13. [Tips for AI Assistants](#tips-for-ai-assistants)
+14. [Quick Reference](#quick-reference)
 
 ---
 
@@ -801,6 +802,104 @@ Added retry logic with exponential backoff for validation calls.
 
 ---
 
+## Release Summary Maintenance
+
+The file `release_summary.md` provides a **user-focused, high-level summary** of changes across multiple versions. This is different from the detailed `changelog.md` - it consolidates many changes into meaningful user-facing improvements.
+
+**Important**: `release_summary.md` documents **only changes made in this integration** (homematicip_local). Changes in the underlying aiohomematic library are already documented in [aiohomematic/release_summary.md](https://github.com/sukramj/aiohomematic/blob/devel/release_summary.md) and should not be duplicated here.
+
+### Format
+
+```markdown
+# Version 2.0.0 - 2.1.0
+
+## What's Changed
+
+- **Feature Category**: Brief user-focused description
+- **Another Category**: What users can now do differently
+```
+
+### Release States
+
+| State | Format | Meaning |
+|-------|--------|---------|
+| Open | `Version 2.0.0 -` | Collecting changes from 2.0.0 onwards |
+| Closed | `Version 2.0.0 - 2.1.0` | Summary of versions 2.0.0 through 2.1.0 |
+
+### Task: "update release summary"
+
+When the user requests "update release summary":
+
+1. **Read current state**:
+   ```bash
+   head -1 release_summary.md
+   git tag --list 'v2.*' | sort -V | tail -1
+   ```
+
+2. **If release is closed** (has end version):
+   - Create new open release starting from the next version
+   - Example: `Version 2.0.0 - 2.1.0` → add `Version 2.1.0 -`
+
+3. **Analyze Git commits in the version range**:
+   ```bash
+   # Get commits since last release tag
+   git log v2.0.0..HEAD --oneline --no-merges
+
+   # Or between two tags
+   git log v2.0.0..v2.1.0 --oneline --no-merges
+
+   # See changed files in each commit
+   git log v2.0.0..HEAD --name-only --oneline --no-merges
+   ```
+
+4. **Update the open release**:
+   - Analyze commit messages and changed files in the range
+   - **Filter out aiohomematic dependency updates**:
+     - Commits with "Bump aiohomematic", "Update aiohomematic", etc.
+     - Changes only to `manifest.json` or `requirements_test.txt`
+   - **Focus on integration-specific changes**:
+     - New features in custom_components/homematicip_local/
+     - Config flow improvements
+     - Service additions/changes
+     - UI/UX enhancements
+     - Bug fixes specific to the integration layer
+   - Summarize from **user perspective** (not developer perspective)
+   - Group related changes into categories
+   - Consolidate and update existing points if they evolved
+   - Keep descriptions brief and action-oriented
+
+5. **Writing Style**:
+   - Focus on what users can **do** or **experience** differently
+   - Avoid implementation details (no class names, method names, etc.)
+   - Combine multiple related changelog entries into one summary point
+   - Use categories like: New Features, Improvements, Bug Fixes, Breaking Changes
+
+### Example Transformation
+
+**Git commits** (developer-focused):
+```
+a1b2c3d Add DpActionSelect entities for siren tone/light selection
+d4e5f6g Implement config entry persistence for action select values
+h7i8j9k Add translations for siren selection options (strings.json, de.json, en.json)
+l0m1n2o Update README with automatic select entity documentation
+p3q4r5s Fix async_added_to_hass timing for value loading
+t6u7v8w Use deepcopy for config entry data modification
+```
+
+**Release summary** (user-focused):
+```
+- **Siren Control**: Automatic select entities for tone and light pattern selection (no manual InputHelper setup required)
+```
+
+**What NOT to include**:
+```
+x9y0z1a Bump aiohomematic to 2025.12.42  ❌ (dependency update, documented in aiohomematic)
+b2c3d4e Update manifest.json requirements  ❌ (maintenance task)
+f5g6h7i Run pre-commit hooks  ❌ (development process, not user-facing)
+```
+
+---
+
 ## Implementation Policy
 
 This section defines mandatory rules for all implementations in this project.
@@ -1089,5 +1188,5 @@ python script/check_translations.py
 
 ---
 
-**Last Updated**: 2025-12-21
+**Last Updated**: 2025-12-22
 **Version**: 2.0.0

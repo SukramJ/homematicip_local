@@ -989,7 +989,19 @@ For booleans the following values can be used:
 
 ### `homematicip_local.turn_on_siren`
 
-Turn siren on. Siren can be disabled by siren.turn_off. Useful helpers for siren can be found [here](https://github.com/sukramj/aiohomematic/blob/devel/docs/input_select_helper.md#siren).
+Turn siren on. Siren can be disabled by siren.turn_off.
+
+**Note:** Since version 2.0.0, the integration automatically creates **Select entities** for siren tone and light pattern selection. These entities:
+- Store selections locally (persist across Home Assistant restarts)
+- Are grouped under the siren device
+- Appear in the "Configuration" entity category
+- Replace the need for manual [InputHelper creation](https://github.com/sukramj/aiohomematic/blob/devel/docs/input_select_helper.md#siren)
+
+Available automatic select entities:
+- **Siren Tone** (`select.<device>_acoustic_alarm_selection`) - Choose the alarm tone
+- **Siren Light Pattern** (`select.<device>_optical_alarm_selection`) - Choose the light pattern
+
+The selected values are automatically used when calling siren services or using the siren entity.
 
 ### `homematicip_local.light_set_on_time`
 
