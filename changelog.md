@@ -1,4 +1,4 @@
-# Version 2.0.0 (2025-12-20)
+# Version 2.0.0 (2025-12-22)
 
 ## What's Changed
 - Reauthentication Flow: Automatic prompting for new credentials when CCU authentication fails
@@ -20,7 +20,7 @@
 - Different repair issue types based on failure reason
 - Validates config flow and repair issue translations
  
-### Bump aiohomematic to 2025.12.41
+### Bump aiohomematic to 2025.12.43
 
 - Reliability & Reconnection
   - Improved CCU reconnection: Staged reconnection with TCP port checks for faster recovery after CCU restart (10s initial + warmup vs fixed 60s delay)
