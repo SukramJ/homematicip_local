@@ -1,70 +1,73 @@
 # Version 2.0.0 (2025-12-22)
 
 ## What's Changed
-- Reauthentication Flow: Automatic prompting for new credentials when CCU authentication fails
-- Config Flow Redesign: Automatic port configuration based on TLS setting, new menu-based options flow with organized sections, and quick reconfigure flow for connection updates
-- Improved Connection Monitoring: New central state machine with DEGRADED and RECOVERING states for better visibility into connection issues
-- Faster Reconnection: Staged reconnection with TCP port checks recovers from CCU restarts in ~10 seconds instead of fixed 60-second delays
-- Climate Schedule Support: Get and set weekly thermostat schedules with caching and validation, simplified schedule format
-- OpenCCU Backup: New button entity and action for creating and downloading complete CCU system backups
-- Device Management: Install mode support with countdown timers, device inbox for handling pending pairings, rename devices and channels via API
-- Backend Detection: Automatic detection of CCU type (CCU3, RaspberryMatic, Homegear)
-- Firmware Updates: Check for updates and trigger firmware installation on OpenCCU systems, improved firmware data refresh
-- Better Error Handling: Exponential backoff retry strategy (2s→120s), login rate limiting, circuit breakers to prevent retry-storms
-- Simplified Event System: Modern event architecture with 4 focused event types replacing 9 legacy events for better performance
-- Enhanced Internationalization: Translatable exceptions and log messages, translations for button press events
-- Improved Type Safety: Strict mypy mode enabled throughout codebase with protocol-based typing
-- Memory & Performance: Automatic cleanup of event subscriptions, request coalescing for concurrent calls, resource limits to prevent unbounded growth
-- Action Renaming: Climate schedule actions renamed for clarity (get_schedule_profile_weekday → get_schedule_weekday)
-- Integration now automatically triggers reauth flow when CCU authentication fails
-- Different repair issue types based on failure reason
-- Validates config flow and repair issue translations
- 
-### Bump aiohomematic to 2025.12.43
 
-- Reliability & Reconnection
-  - Improved CCU reconnection: Staged reconnection with TCP port checks for faster recovery after CCU restart (10s initial + warmup vs fixed 60s delay)
-  - New central state machine: States now include DEGRADED (partial connectivity) and RECOVERING for better status visibility
-  - Circuit breakers: Prevent retry-storms during CCU outages; auto-reset after successful reconnect
-  - Exponential backoff: Smarter retry timing (2s→120s) reduces load during connection issues
-  - Introduces granular failure classification to differentiate between authentication failures, network issues, timeouts, and internal CCU errors
-  - New `FailureReason` enum with values: `AUTH`, `NETWORK`, `TIMEOUT`, `INTERNAL`, `CIRCUIT_BREAKER`, `UNKNOWN`
-  - `SystemStatusEvent` now includes `failure_reason` and `failure_interface_id` fields when in `FAILED` state
-  - Degraded interfaces tracking: `degraded_interfaces` field shows which interfaces are affected and why when in `DEGRADED` state
-  - Automatic reauthentication: Integration now detects `FailureReason.AUTH` in both `FAILED` and `DEGRADED` states and triggers reauth flow
-  - Recovery uses actual client failure reasons: More accurate degraded interface diagnosis
-  - XML-RPC server binding failures now include failure reason for better error classification
-  - Properly detect and handle string-based ENUMs vs index-based ENUMs
-- Device Management
-  - Install mode support: Per-interface install mode with countdown timer for HmIP-RF and BidCos-RF
-  - Device inbox handling: Accept/rename new devices pending pairing via accept_device_in_inbox()
-  - Device renaming: Rename devices and channels directly via rename_device() / rename_channel()
-- Backup & Firmware
-  - CCU backup: Create and download system backups with descriptive filenames (hostname + version)
-  - Firmware updates: Check for updates and trigger firmware update on OpenCCU systems
-  - Firmware refresh fix: Device firmware data now properly updates after refresh calls
-- Simplified Event System
-  - 4 focused integration events replace 9 legacy events:
-    - SystemStatusEvent: All infrastructure/lifecycle changes (connection, client, callback states)
-    - DeviceLifecycleEvent: Device creation, removal, availability changes
-    - DataPointsCreatedEvent: New entity discovery
-    - DeviceTriggerEvent: Button presses, sensor triggers
-- CLI Enhancements
-  - New subcommand structure: list-devices, list-channels, device-info, get, set
-  - Interactive REPL mode: Command history and tab completion
-  - Shell completion: Generate scripts for bash, zsh, fish
-- Architecture Improvements
-  - Protocol-based dependency injection: Components use minimal protocol interfaces
-  - Coordinator pattern: Direct access via central.device_coordinator, central.cache_coordinator, etc.
-  - DeviceProfileRegistry: Centralized device-to-profile mappings (117 device models)
-  - Handler classes: Client operations split into focused handlers (Backup, Firmware, Programs, etc.)
-- Week Profile / Climate
-  - Schedule caching: Climate schedules cached for faster get/set operations
-  - Simple schedule format: Easier-to-use schedule representation for thermostats
-- Memory & Performance
-  - Automatic EventBus cleanup: Subscriptions auto-removed when devices/data points removed
-  - Request coalescing: Deduplicates concurrent RPC calls during device discovery
-  - Resource limits: Collection size limits prevent unbounded memory growth
+### New Features
+
+- **Siren Control**: Automatic select entities for siren tone and light pattern selection with full translations (no manual InputHelper setup required)
+- **Reauthentication**: Added reauthentication flow to update expired credentials without removing the integration
+- **Reconfigure Flow**: Quick reconfiguration of connection settings without full re-setup
+
+### Improvements
+
+- **Configuration Experience**: Enhanced config flow with improved error messages, progress indicators (Step X of Y), and menu-based navigation
+- **Error Handling**: Reduced log flooding during connection issues with improved error handling decorator for entity actions
+- **Translations**: Fixed naming of untranslated entities and improved translation coverage for press events
+
+### Bug Fixes
+
+- **Services**: Fixed `set_schedule_simple_weekday` service
+- **Translations**: Fixed translation issues
+
+### Developer Experience
+
+- **Code Quality**: Strict mypy type checking, consistent use of keyword-only arguments, removed legacy code from config flow
+- **Testing**: Comprehensive test coverage improvements for config flow, services, lights, and updates
+- **Documentation**: Added comprehensive CLAUDE.md for AI assistants with development guidelines and project structure
+ 
+## Bump aiohomematic to 2025.12.43
+
+### Connection Reliability
+
+- **Improved Reconnection**: New state machine architecture for faster, more reliable recovery after CCU restarts
+- **CircuitBreaker**: Automatic protection against repeated connection failures with staged reconnection
+- **Reduced Log Noise**: Less ERROR logging during expected reconnection scenarios
+
+### Device Management
+
+- **Device Inbox**: Accept and rename new devices pending pairing directly from the integration
+- **Install Mode**: Separate install mode control per interface (HmIP-RF and BidCos-RF) with countdown timer
+- **Backup Support**: Create and download CCU system backups, firmware download and update triggers
+
+### Climate & Schedules
+
+- **Schedule Caching**: Faster schedule operations with intelligent caching
+- **Simple Schedule Format**: Easier to read and modify weekly heating schedules
+- **Schedule Sync**: Bidirectional get/set schedule operations with filtered data format
+
+### Siren Control
+
+- **Visible Alarm Settings**: Acoustic and optical alarm selection now available as controllable entities
+- **Flexible Turn-On**: Siren activation uses entity values as defaults when service parameters omitted
+
+### Bug Fixes
+
+- **RGBW/LSC Auto-Off**: Fixed lights turning off unexpectedly when using transition times
+- **Reconnect Availability**: Entities no longer remain unavailable after CCU reconnect
+- **STATUS Parameters**: Fixed handling of integer values from backend for status updates
+- **Firmware Updates**: Fixed firmware data not refreshing after update check
+
+### New Device Support
+
+- DeviceProfileRegistry for centralized device-to-profile mappings
+- DpActionSelect data point type for write-only selection parameters
+
+### Internal Improvements
+
+- Protocol-based architecture for better testability and decoupling
+- Event bus system replacing legacy callback patterns
+- Strict type checking throughout codebase
+- Translatable log messages and exceptions
 
 # Version 1.90.2 (2025-11-05)
 
