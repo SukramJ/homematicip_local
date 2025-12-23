@@ -213,7 +213,7 @@ class AioHomematicActionSelect(AioHomematicGenericRestoreEntity[DpActionSelect],
         in the config entry data for retrieval across restarts.
         """
         # Store in aiohomematic DP (local only, not sent to device)
-        self._data_point.value = option.upper()  # type: ignore[method-assign]
+        self._data_point.value = option.upper()
 
         # Persist in config entry
         await self._persist_value(option)
@@ -236,7 +236,7 @@ class AioHomematicActionSelect(AioHomematicGenericRestoreEntity[DpActionSelect],
             and channel_address in entry.data[CONF_ACTION_SELECT_VALUES]
             and (value := entry.data[CONF_ACTION_SELECT_VALUES][channel_address].get(parameter))
         ):
-            self._data_point.value = value.upper()  # type: ignore[method-assign]
+            self._data_point.value = value.upper()
             _LOGGER.debug(
                 "Loaded persisted value '%s' for %s:%s from config entry",
                 value,
@@ -245,7 +245,7 @@ class AioHomematicActionSelect(AioHomematicGenericRestoreEntity[DpActionSelect],
             )
         elif default := self._data_point.default:
             # Use default if no persisted value
-            self._data_point.value = default  # type: ignore[method-assign]
+            self._data_point.value = default
             _LOGGER.debug(
                 "Using default value '%s' for %s:%s",
                 default,

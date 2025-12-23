@@ -17,7 +17,7 @@ from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.interfaces.model import (
     CalculatedDataPointProtocol,
     CustomDataPointProtocol,
-    GenericDataPointProtocol,
+    GenericDataPointProtocolAny,
     GenericProgramDataPointProtocol,
     GenericSysvarDataPointProtocol,
 )
@@ -45,7 +45,7 @@ from .const import (
 )
 
 # Union for entity types used as base class for data points
-HmBaseDataPointProtocol: TypeAlias = CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocol
+HmBaseDataPointProtocol: TypeAlias = CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocolAny
 # Generic base type used for data points in Homematic(IP) Local for OpenCCU
 HmGenericDataPointProtocol = TypeVar("HmGenericDataPointProtocol", bound=HmBaseDataPointProtocol)
 # Generic base type used for sysvar data points in Homematic(IP) Local for OpenCCU
