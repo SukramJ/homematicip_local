@@ -25,7 +25,7 @@
 - **Testing**: Comprehensive test coverage improvements for config flow, services, lights, and updates
 - **Documentation**: Added comprehensive CLAUDE.md for AI assistants with development guidelines and project structure
  
-## Bump aiohomematic to 2025.12.43
+## Bump aiohomematic to 2025.12.44
 
 ### Connection Reliability
 

@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from aiohomematic.const import DATA_POINT_EVENTS, DataPointCategory
-from aiohomematic.interfaces.model import ChannelProtocol, DeviceProtocol, GenericEventProtocol
+from aiohomematic.interfaces.model import ChannelProtocol, DeviceProtocol, GenericEventProtocolAny
 from aiohomematic.type_aliases import UnsubscribeCallback
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant, callback
@@ -32,7 +32,7 @@ async def async_setup_entry(
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
-    def async_add_event(data_points: tuple[tuple[GenericEventProtocol, ...], ...]) -> None:
+    def async_add_event(data_points: tuple[tuple[GenericEventProtocolAny, ...], ...]) -> None:
         """Add event from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_EVENT: Adding %i data points", len(data_points))
 
@@ -70,13 +70,13 @@ class AioHomematicEvent(EventEntity):
     def __init__(
         self,
         control_unit: ControlUnit,
-        data_point: tuple[GenericEventProtocol, ...],
+        data_point: tuple[GenericEventProtocolAny, ...],
     ) -> None:
         """Initialize the event."""
         self._cu: ControlUnit = control_unit
         self._hm_channel_events = data_point
         self._attr_event_types = [event.parameter.lower() for event in data_point]
-        self._hm_primary_event: GenericEventProtocol = data_point[0]
+        self._hm_primary_event: GenericEventProtocolAny = data_point[0]
         self._hm_channel: ChannelProtocol = self._hm_primary_event.channel
         self._hm_device: DeviceProtocol = self._hm_channel.device
         self._attr_translation_key = self._hm_primary_event.event_type.value.replace(".", "_")
@@ -139,7 +139,7 @@ class AioHomematicEvent(EventEntity):
                 device_registry.async_remove_device(device_id)
 
     @callback
-    def _async_event_changed(self, data_point: GenericEventProtocol, **kwargs: Any) -> None:
+    def _async_event_changed(self, data_point: GenericEventProtocolAny, **kwargs: Any) -> None:
         """Handle device state changes."""
         # Don't update disabled entities
         if self.enabled:
