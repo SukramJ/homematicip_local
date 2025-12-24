@@ -1,4 +1,4 @@
-# Version 2.0.0 (2025-12-22)
+# Version 2.0.0 (2025-12-24)
 
 ## What's Changed
 
@@ -25,7 +25,7 @@
 - **Testing**: Comprehensive test coverage improvements for config flow, services, lights, and updates
 - **Documentation**: Added comprehensive CLAUDE.md for AI assistants with development guidelines and project structure
  
-## Bump aiohomematic to 2025.12.44
+## Bump aiohomematic to 2025.12.45
 
 ### Connection Reliability
 
@@ -62,12 +62,24 @@
 - DeviceProfileRegistry for centralized device-to-profile mappings
 - DpActionSelect data point type for write-only selection parameters
 
+### Developer Experience
+
+- **Fluent Configuration**: New `CentralConfigBuilder` with method chaining and factory presets for CCU/Homegear
+- **Request Tracing**: Context variables pattern for request tracking through async call chains with automatic log prefixing
+- **Type Converters**: Extensible `to_homematic_value()` / `from_homematic_value()` using singledispatch pattern
+
 ### Internal Improvements
 
 - Protocol-based architecture for better testability and decoupling
 - Event bus system replacing legacy callback patterns
 - Strict type checking throughout codebase
 - Translatable log messages and exceptions
+- Generic protocols for improved mypy type inference on data point values
+- Declarative field descriptors for custom and calculated data points
+- `DelegatedProperty` descriptor for simple property delegation with caching support
+- Enhanced linter with DP004 path validation for DelegatedProperty definitions
+- Store package restructured into `persistent/` and `dynamic/` subpackages for better maintainability
+- Typed dataclasses (`CachedCommand`, `PongTracker`) replace untyped tuples and dicts
 
 # Version 1.90.2 (2025-11-05)
 
