@@ -3,7 +3,7 @@
 > **⚠️ Development Branch:** This is the documentation for the development version. For the stable release documentation, see the [main branch README](https://github.com/sukramj/homematicip_local/blob/main/README.md).
 
 [![releasebadge]][release]
-[![License][license-shield]](LICENSE.md)
+[![License][license-shield]](LICENSE)
 [![hainstall][hainstallbadge]][hainstall]
 [![GitHub Sponsors][sponsorsbadge]][sponsors]
 [![hacs][hacsbadge]][hacs]

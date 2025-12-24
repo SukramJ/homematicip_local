@@ -7,6 +7,7 @@
   "documentation": "https://github.com/sukramj/homematicip_local",
   "homekit": {},
   "integration_type": "hub",
+  "license": "MIT",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/sukramj/aiohomematic/issues",
   "loggers": ["aiohomematic"],
