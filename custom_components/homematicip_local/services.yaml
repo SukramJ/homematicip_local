@@ -755,3 +755,70 @@ update_device_firmware_data:
       selector:
         config_entry:
           integration: homematicip_local
+
+send_text_display:
+  target:
+    entity:
+      domain: notify
+      integration: homematicip_local
+  fields:
+    text:
+      required: true
+      example: "Hello World"
+      selector:
+        text:
+    icon:
+      required: false
+      example: "SUN"
+      selector:
+        text:
+    background_color:
+      required: false
+      example: "WHITE"
+      selector:
+        select:
+          options:
+            - "WHITE"
+            - "BLACK"
+    text_color:
+      required: false
+      example: "BLACK"
+      selector:
+        select:
+          options:
+            - "WHITE"
+            - "BLACK"
+    alignment:
+      required: false
+      example: "CENTER"
+      selector:
+        select:
+          options:
+            - "LEFT"
+            - "CENTER"
+            - "RIGHT"
+    display_id:
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 3
+    sound:
+      required: false
+      example: "EVENT"
+      selector:
+        text:
+    repeat:
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 15
+
+clear_text_display:
+  target:
+    entity:
+      domain: notify
+      integration: homematicip_local

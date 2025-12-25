@@ -424,6 +424,78 @@
                     "low_battery": "Niedriger Batteriestand"
                 }
             }, 
+            "acoustic_notification_selection": {
+                "name": "Akustische Benachrichtigung", 
+                "state": {
+                    "delayed_externally_armed": "Verzögert extern scharf", 
+                    "delayed_internally_armed": "Verzögert intern scharf", 
+                    "disarmed": "Unscharf", 
+                    "error": "Fehler", 
+                    "event": "Ereignis", 
+                    "externally_armed": "Extern scharf", 
+                    "internally_armed": "Intern scharf", 
+                    "low_battery": "Niedriger Batteriestand"
+                }
+            }, 
+            "display_data_alignment": {
+                "name": "Display-Ausrichtung", 
+                "state": {
+                    "center": "Zentriert", 
+                    "left": "Links", 
+                    "right": "Rechts"
+                }
+            }, 
+            "display_data_background_color": {
+                "name": "Display-Hintergrundfarbe", 
+                "state": {
+                    "black": "Schwarz", 
+                    "white": "Weiß"
+                }
+            }, 
+            "display_data_icon": {
+                "name": "Display-Symbol", 
+                "state": {
+                    "bell": "Glocke", 
+                    "clock": "Uhr", 
+                    "cloud": "Wolke", 
+                    "cloud_and_mooon": "Wolke und Mond", 
+                    "cloud_and_sun": "Wolke und Sonne", 
+                    "cloud_sun_and_rain": "Wolke, Sonne und Regen", 
+                    "drizzle": "Nieselregen", 
+                    "eco": "Eco", 
+                    "error": "Fehler", 
+                    "everything_okay": "Alles in Ordnung", 
+                    "external_protection": "Externer Schutz", 
+                    "flame": "Flamme", 
+                    "information": "Information", 
+                    "internal_protection": "Interner Schutz", 
+                    "lamp_off": "Lampe aus", 
+                    "lamp_on": "Lampe an", 
+                    "moon": "Mond", 
+                    "new_message": "Neue Nachricht", 
+                    "no_icon": "Kein Symbol", 
+                    "padlock_closed": "Schloss geschlossen", 
+                    "padlock_open": "Schloss offen", 
+                    "protection_deactivated": "Schutz deaktiviert", 
+                    "rain": "Regen", 
+                    "raindrop": "Regentropfen", 
+                    "service_message": "Servicemeldung", 
+                    "shutters": "Rollläden", 
+                    "snow": "Schnee", 
+                    "snowflake": "Schneeflocke", 
+                    "sun": "Sonne", 
+                    "thunderstorm": "Gewitter", 
+                    "wind": "Wind", 
+                    "window_open": "Fenster offen"
+                }
+            }, 
+            "display_data_text_color": {
+                "name": "Display-Textfarbe", 
+                "state": {
+                    "black": "Schwarz", 
+                    "white": "Weiß"
+                }
+            }, 
             "heating_cooling": {
                 "name": "Betriebsmodus", 
                 "state": {
@@ -511,6 +583,9 @@
                     "undefined": "Nicht definiert", 
                     "up": "Hoch"
                 }
+            }, 
+            "dirt_level": {
+                "name": "Verschmutzungsgrad"
             }, 
             "door_state": {
                 "name": "Türzustand", 
@@ -723,6 +798,9 @@
                     "primary_alarm": "Primär-Alarm", 
                     "secondary_alarm": "Sekundär-Alarm"
                 }
+            }, 
+            "smoke_level": {
+                "name": "Rauchpegel"
             }, 
             "state": {
                 "name": ""
@@ -1038,6 +1116,10 @@
                 }
             }, 
             "name": "Lösche den Cache"
+        }, 
+        "clear_text_display": {
+            "description": "Löscht alle Zeilen auf dem HmIP-WRCD Textdisplay", 
+            "name": "Textdisplay löschen"
         }, 
         "copy_schedule": {
             "description": "Kopiert einen Zeitplan zu einem anderen Gerät", 
@@ -1386,6 +1468,44 @@
                 }
             }, 
             "name": "Eine Direktverknüpfung entfernen"
+        }, 
+        "send_text_display": {
+            "description": "Sendet Text an das HmIP-WRCD Textdisplay", 
+            "fields": {
+                "alignment": {
+                    "description": "Textausrichtung (LEFT, CENTER oder RIGHT)", 
+                    "name": "Ausrichtung"
+                }, 
+                "background_color": {
+                    "description": "Hintergrundfarbe (WHITE oder BLACK)", 
+                    "name": "Hintergrundfarbe"
+                }, 
+                "display_id": {
+                    "description": "Display-Zeile (1-3)", 
+                    "name": "Display-ID"
+                }, 
+                "icon": {
+                    "description": "Anzuzeigendes Symbol (Wert aus available_icons Attribut verwenden)", 
+                    "name": "Symbol"
+                }, 
+                "repeat": {
+                    "description": "Anzahl der Soundwiederholungen (0-15)", 
+                    "name": "Wiederholungen"
+                }, 
+                "sound": {
+                    "description": "Abzuspielender Sound (Wert aus available_sounds Attribut verwenden)", 
+                    "name": "Sound"
+                }, 
+                "text": {
+                    "description": "Anzuzeigender Text (max. 14 Zeichen, 11 mit Symbol)", 
+                    "name": "Text"
+                }, 
+                "text_color": {
+                    "description": "Textfarbe (WHITE oder BLACK)", 
+                    "name": "Textfarbe"
+                }
+            }, 
+            "name": "Text an Display senden"
         }, 
         "set_cover_combined_position": {
             "description": "Bewegt eine Jalousie in eine bestimmte Position und Neigungsposition", 

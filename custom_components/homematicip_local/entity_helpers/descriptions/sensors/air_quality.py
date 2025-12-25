@@ -139,4 +139,22 @@ AIR_QUALITY_SENSOR_RULES: list[EntityDescriptionRule] = [
             unit="hPa",
         ),
     ),
+    # Dirt level (e.g., vacuum cleaner sensors)
+    EntityDescriptionRule(
+        category=DataPointCategory.SENSOR,
+        parameters=("DIRT_LEVEL",),
+        description=measurement_sensor(
+            key="DIRT_LEVEL",
+            unit=PERCENTAGE,
+        ),
+    ),
+    # Smoke level (e.g., smoke detector sensors)
+    EntityDescriptionRule(
+        category=DataPointCategory.SENSOR,
+        parameters=("SMOKE_LEVEL",),
+        description=measurement_sensor(
+            key="SMOKE_LEVEL",
+            unit=PERCENTAGE,
+        ),
+    ),
 ]

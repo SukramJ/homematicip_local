@@ -78,6 +78,7 @@ class HmipLocalServices(StrEnum):
 
     ADD_LINK = "add_link"
     CLEAR_CACHE = "clear_cache"
+    CLEAR_TEXT_DISPLAY = "clear_text_display"
     COPY_SCHEDULE = "copy_schedule"
     COPY_SCHEDULE_PROFILE = "copy_schedule_profile"
     CREATE_CCU_BACKUP = "create_ccu_backup"
@@ -101,6 +102,7 @@ class HmipLocalServices(StrEnum):
     RECORD_SESSION = "record_session"
     REMOVE_CENTRAL_LINKS = "remove_central_links"
     REMOVE_LINK = "remove_link"
+    SEND_TEXT_DISPLAY = "send_text_display"
     SET_COVER_COMBINED_POSITION = "set_cover_combined_position"
     SET_DEVICE_VALUE = "set_device_value"
     SET_SCHEDULE_PROFILE = "set_schedule_profile"
@@ -142,11 +144,16 @@ CONF_ACTION_SELECT_VALUES: Final = "action_select_values"
 
 def _get_hmip_local_platforms() -> tuple[Platform, ...]:
     """Return relevant Homematic(IP) Local for OpenCCU platforms."""
-    return tuple(
+    # Get platforms that directly map from DataPointCategory values
+    category_platforms = tuple(
         Platform(pf)
         for pf in list(Platform)
         if pf in [category.value for category in CATEGORIES if category not in BLOCKED_CATEGORIES]
     )
+    # Add platforms that don't have a direct category mapping
+    # TEXT_DISPLAY maps to NOTIFY platform
+    additional_platforms = (Platform.NOTIFY,)
+    return category_platforms + additional_platforms
 
 
 HMIP_LOCAL_PLATFORMS: Final[tuple[Platform, ...]] = _get_hmip_local_platforms()

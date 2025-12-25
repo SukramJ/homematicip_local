@@ -402,48 +402,120 @@
         }, 
         "select": {
             "acoustic_alarm_selection": {
-                "name": "Siren Tone",
+                "name": "Siren Tone", 
                 "state": {
-                    "disable_acoustic_signal": "Disabled",
-                    "frequency_rising": "Rising frequency",
-                    "frequency_falling": "Falling frequency",
-                    "frequency_rising_and_falling": "Rising and falling frequency",
-                    "frequency_alternating_low_high": "Alternating low-high frequency",
-                    "frequency_alternating_low_mid_high": "Alternating low-mid-high frequency",
-                    "frequency_highon_off": "High on-off",
-                    "frequency_highon_longoff": "High on-long off",
-                    "frequency_lowon_off_highon_off": "Low on-off, high on-off",
-                    "frequency_lowon_longoff_highon_longoff": "Low on-long off, high on-long off",
-                    "low_battery": "Low battery",
-                    "disarmed": "Disarmed",
-                    "internally_armed": "Internally armed",
-                    "externally_armed": "Externally armed",
-                    "delayed_internally_armed": "Delayed internally armed",
-                    "delayed_externally_armed": "Delayed externally armed",
-                    "event": "Event",
-                    "error": "Error"
+                    "delayed_externally_armed": "Delayed externally armed", 
+                    "delayed_internally_armed": "Delayed internally armed", 
+                    "disable_acoustic_signal": "Disabled", 
+                    "disarmed": "Disarmed", 
+                    "error": "Error", 
+                    "event": "Event", 
+                    "externally_armed": "Externally armed", 
+                    "frequency_alternating_low_high": "Alternating low-high frequency", 
+                    "frequency_alternating_low_mid_high": "Alternating low-mid-high frequency", 
+                    "frequency_falling": "Falling frequency", 
+                    "frequency_highon_longoff": "High on-long off", 
+                    "frequency_highon_off": "High on-off", 
+                    "frequency_lowon_longoff_highon_longoff": "Low on-long off, high on-long off", 
+                    "frequency_lowon_off_highon_off": "Low on-off, high on-off", 
+                    "frequency_rising": "Rising frequency", 
+                    "frequency_rising_and_falling": "Rising and falling frequency", 
+                    "internally_armed": "Internally armed", 
+                    "low_battery": "Low battery"
                 }
-            },
-            "heating_cooling": {
-                "name": "Operating mode",
+            }, 
+            "acoustic_notification_selection": {
+                "name": "Acoustic Notification", 
                 "state": {
-                    "cooling": "cooling",
+                    "delayed_externally_armed": "Delayed externally armed", 
+                    "delayed_internally_armed": "Delayed internally armed", 
+                    "disarmed": "Disarmed", 
+                    "error": "Error", 
+                    "event": "Event", 
+                    "externally_armed": "Externally armed", 
+                    "internally_armed": "Internally armed", 
+                    "low_battery": "Low battery"
+                }
+            }, 
+            "display_data_alignment": {
+                "name": "Display Alignment", 
+                "state": {
+                    "center": "Center", 
+                    "left": "Left", 
+                    "right": "Right"
+                }
+            }, 
+            "display_data_background_color": {
+                "name": "Display Background Color", 
+                "state": {
+                    "black": "Black", 
+                    "white": "White"
+                }
+            }, 
+            "display_data_icon": {
+                "name": "Display Icon", 
+                "state": {
+                    "bell": "Bell", 
+                    "clock": "Clock", 
+                    "cloud": "Cloud", 
+                    "cloud_and_mooon": "Cloud and moon", 
+                    "cloud_and_sun": "Cloud and sun", 
+                    "cloud_sun_and_rain": "Cloud, sun and rain", 
+                    "drizzle": "Drizzle", 
+                    "eco": "Eco", 
+                    "error": "Error", 
+                    "everything_okay": "Everything okay", 
+                    "external_protection": "External protection", 
+                    "flame": "Flame", 
+                    "information": "Information", 
+                    "internal_protection": "Internal protection", 
+                    "lamp_off": "Lamp off", 
+                    "lamp_on": "Lamp on", 
+                    "moon": "Moon", 
+                    "new_message": "New message", 
+                    "no_icon": "No icon", 
+                    "padlock_closed": "Padlock closed", 
+                    "padlock_open": "Padlock open", 
+                    "protection_deactivated": "Protection deactivated", 
+                    "rain": "Rain", 
+                    "raindrop": "Raindrop", 
+                    "service_message": "Service message", 
+                    "shutters": "Shutters", 
+                    "snow": "Snow", 
+                    "snowflake": "Snowflake", 
+                    "sun": "Sun", 
+                    "thunderstorm": "Thunderstorm", 
+                    "wind": "Wind", 
+                    "window_open": "Window open"
+                }
+            }, 
+            "display_data_text_color": {
+                "name": "Display Text Color", 
+                "state": {
+                    "black": "Black", 
+                    "white": "White"
+                }
+            }, 
+            "heating_cooling": {
+                "name": "Operating mode", 
+                "state": {
+                    "cooling": "cooling", 
                     "heating": "heating"
                 }
-            },
+            }, 
             "optical_alarm_selection": {
-                "name": "Siren Light Pattern",
+                "name": "Siren Light Pattern", 
                 "state": {
-                    "disable_optical_signal": "Disabled",
-                    "blinking_alternately_repeating": "Blinking alternately (repeating)",
-                    "blinking_both_repeating": "Blinking both (repeating)",
-                    "double_flashing_repeating": "Double flashing (repeating)",
-                    "flashing_both_repeating": "Flashing both (repeating)",
-                    "confirmation_signal_0_opto_orange": "Confirmation signal 0 (orange)",
-                    "confirmation_signal_1_opto_orange": "Confirmation signal 1 (orange)",
-                    "confirmation_signal_2_opto_orange": "Confirmation signal 2 (orange)"
+                    "blinking_alternately_repeating": "Blinking alternately (repeating)", 
+                    "blinking_both_repeating": "Blinking both (repeating)", 
+                    "confirmation_signal_0_opto_orange": "Confirmation signal 0 (orange)", 
+                    "confirmation_signal_1_opto_orange": "Confirmation signal 1 (orange)", 
+                    "confirmation_signal_2_opto_orange": "Confirmation signal 2 (orange)", 
+                    "disable_optical_signal": "Disabled", 
+                    "double_flashing_repeating": "Double flashing (repeating)", 
+                    "flashing_both_repeating": "Flashing both (repeating)"
                 }
-            },
+            }, 
             "temperature_offset": {
                 "name": "temperature offset"
             }
@@ -511,6 +583,9 @@
                     "undefined": "Undefined", 
                     "up": "Up"
                 }
+            }, 
+            "dirt_level": {
+                "name": "Dirt Level"
             }, 
             "door_state": {
                 "name": "Door State", 
@@ -724,6 +799,9 @@
                     "secondary_alarm": "Secondary alarm"
                 }
             }, 
+            "smoke_level": {
+                "name": "Smoke Level"
+            }, 
             "state": {
                 "name": ""
             }, 
@@ -833,21 +911,21 @@
             "title": "CCU connection degraded"
         }, 
         "central_failed": {
-            "description": "The CCU connection for **{instance_name}** has failed.\n\nReason: {reason}\n\nAutomatic recovery attempts have been exhausted. Please check:\n- CCU is powered on and reachable\n- Network connectivity\n- CCU logs for errors\n\nReload the integration to retry.",
+            "description": "The CCU connection for **{instance_name}** has failed.\n\nReason: {reason}\n\nAutomatic recovery attempts have been exhausted. Please check:\n- CCU is powered on and reachable\n- Network connectivity\n- CCU logs for errors\n\nReload the integration to retry.", 
             "title": "CCU connection failed"
-        },
-        "central_failed_network": {
-            "description": "The CCU connection for **{instance_name}** has failed due to a network connectivity issue.\n\nInterface: {interface_id}\n\nPlease check:\n- CCU is powered on and reachable on the network\n- Network cables and Wi-Fi connectivity\n- Firewall settings allowing XML-RPC traffic\n- CCU network configuration\n\nReload the integration to retry.",
-            "title": "CCU network connection failed"
-        },
-        "central_failed_timeout": {
-            "description": "The CCU connection for **{instance_name}** has failed due to connection timeouts.\n\nInterface: {interface_id}\n\nThe CCU may be overloaded or experiencing performance issues. Please check:\n- CCU CPU and memory usage\n- CCU is not executing long-running operations\n- Network latency between Home Assistant and CCU\n\nReload the integration to retry.",
-            "title": "CCU connection timeout"
-        },
+        }, 
         "central_failed_internal": {
-            "description": "The CCU connection for **{instance_name}** has failed due to an internal CCU error.\n\nInterface: {interface_id}\n\nThe CCU reported an internal error. Please:\n- Check CCU system logs for errors\n- Consider restarting the CCU\n- Update CCU firmware if available\n\nReload the integration to retry.",
+            "description": "The CCU connection for **{instance_name}** has failed due to an internal CCU error.\n\nInterface: {interface_id}\n\nThe CCU reported an internal error. Please:\n- Check CCU system logs for errors\n- Consider restarting the CCU\n- Update CCU firmware if available\n\nReload the integration to retry.", 
             "title": "CCU internal error"
-        },
+        }, 
+        "central_failed_network": {
+            "description": "The CCU connection for **{instance_name}** has failed due to a network connectivity issue.\n\nInterface: {interface_id}\n\nPlease check:\n- CCU is powered on and reachable on the network\n- Network cables and Wi-Fi connectivity\n- Firewall settings allowing XML-RPC traffic\n- CCU network configuration\n\nReload the integration to retry.", 
+            "title": "CCU network connection failed"
+        }, 
+        "central_failed_timeout": {
+            "description": "The CCU connection for **{instance_name}** has failed due to connection timeouts.\n\nInterface: {interface_id}\n\nThe CCU may be overloaded or experiencing performance issues. Please check:\n- CCU CPU and memory usage\n- CCU is not executing long-running operations\n- Network latency between Home Assistant and CCU\n\nReload the integration to retry.", 
+            "title": "CCU connection timeout"
+        }, 
         "devices_delayed": {
             "fix_flow": {
                 "step": {
@@ -866,7 +944,7 @@
             "title": "Device creation of {address} delayed on {interface_id}"
         }, 
         "fetch_data_failed": {
-            "description": "Failed to fetch device data from interface **{interface_id}**.\n\nUnable to fetch data using a Rega script. This indicates an issue on your CCU.\n\nThe integration will use a fallback method, which may lead to higher DutyCycle during startup for this interface.",
+            "description": "Failed to fetch device data from interface **{interface_id}**.\n\nUnable to fetch data using a Rega script. This indicates an issue on your CCU.\n\nThe integration will use a fallback method, which may lead to higher DutyCycle during startup for this interface.", 
             "title": "Failed to fetch device data"
         }, 
         "interface_not_reachable": {
@@ -874,11 +952,11 @@
             "title": "Interface {interface_id} not reachable"
         }, 
         "pending_pong_mismatch": {
-            "description": "There is a mismatch between send ping events and received pong events for HA instance {instance_name}.\n\nPossible reasons:\n - You are running multiple instances of HA with the same instance name configured for this integration. Re-add one instance! Otherwise this HA instance will not receive update events from your CCU.\n - Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a restart.\n - Your setup is misconfigured and HA is not able to receive events from the CCU",
+            "description": "There is a mismatch between send ping events and received pong events for HA instance {instance_name}.\n\nPossible reasons:\n - You are running multiple instances of HA with the same instance name configured for this integration. Re-add one instance! Otherwise this HA instance will not receive update events from your CCU.\n - Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a restart.\n - Your setup is misconfigured and HA is not able to receive events from the CCU", 
             "title": "Pending Pong mismatch on interface {interface_id}"
-        },
+        }, 
         "ping_pong_mismatch": {
-            "description": "A ping-pong mismatch was detected on interface **{interface_id}**.\n\n**Mismatch type:** {mismatch_type}\n**Mismatch count:** {mismatch_count}\n\nPossible reasons:\n - You are running multiple instances of Home Assistant with the same instance name configured for this integration. Re-add one instance! Otherwise this Home Assistant instance will not receive update events from your CCU.\n - Something is stuck on the CCU or hasn't been cleaned up. Try restarting the CCU.\n - Your setup is misconfigured and Home Assistant is not able to receive events from the CCU.",
+            "description": "A ping-pong mismatch was detected on interface **{interface_id}**.\n\n**Mismatch type:** {mismatch_type}\n**Mismatch count:** {mismatch_count}\n\nPossible reasons:\n - You are running multiple instances of Home Assistant with the same instance name configured for this integration. Re-add one instance! Otherwise this Home Assistant instance will not receive update events from your CCU.\n - Something is stuck on the CCU or hasn't been cleaned up. Try restarting the CCU.\n - Your setup is misconfigured and Home Assistant is not able to receive events from the CCU.", 
             "title": "Ping-pong mismatch on interface {interface_id}"
         }, 
         "unknown_pong_mismatch": {
@@ -1038,6 +1116,10 @@
                 }
             }, 
             "name": "Clear the cache"
+        }, 
+        "clear_text_display": {
+            "description": "Clear all lines on HmIP-WRCD text display", 
+            "name": "Clear text display"
         }, 
         "copy_schedule": {
             "description": "Copy a schedule to another device", 
@@ -1386,6 +1468,44 @@
                 }
             }, 
             "name": "Remove link"
+        }, 
+        "send_text_display": {
+            "description": "Send text to HmIP-WRCD text display", 
+            "fields": {
+                "alignment": {
+                    "description": "Text alignment (LEFT, CENTER, or RIGHT)", 
+                    "name": "Alignment"
+                }, 
+                "background_color": {
+                    "description": "Background color (WHITE or BLACK)", 
+                    "name": "Background Color"
+                }, 
+                "display_id": {
+                    "description": "Display slot (1-3)", 
+                    "name": "Display ID"
+                }, 
+                "icon": {
+                    "description": "Icon to display (use value from available_icons attribute)", 
+                    "name": "Icon"
+                }, 
+                "repeat": {
+                    "description": "Number of sound repetitions (0-15)", 
+                    "name": "Repeat"
+                }, 
+                "sound": {
+                    "description": "Sound to play (use value from available_sounds attribute)", 
+                    "name": "Sound"
+                }, 
+                "text": {
+                    "description": "Text to display (max 14 characters, 11 with icon)", 
+                    "name": "Text"
+                }, 
+                "text_color": {
+                    "description": "Text color (WHITE or BLACK)", 
+                    "name": "Text Color"
+                }
+            }, 
+            "name": "Send text to display"
         }, 
         "set_cover_combined_position": {
             "description": "Move a blind to a specific position and tilt position", 
