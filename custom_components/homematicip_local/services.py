@@ -44,27 +44,39 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ALIGNMENT: Final = "alignment"
+ATTR_AVAILABLE_COLORS: Final = "available_colors"
+ATTR_AVAILABLE_SOUNDFILES: Final = "available_soundfiles"
 ATTR_AWAY_END: Final = "end"
 ATTR_AWAY_HOURS: Final = "hours"
 ATTR_AWAY_START: Final = "start"
 ATTR_AWAY_TEMPERATURE: Final = "away_temperature"
 ATTR_BACKGROUND_COLOR: Final = "background_color"
 ATTR_BASE_TEMPERATURE: Final = "base_temperature"
+ATTR_BRIGHTNESS: Final = "brightness"
+ATTR_COLOR: Final = "color"
+ATTR_CURRENT_SOUNDFILE: Final = "current_soundfile"
 ATTR_DISPLAY_ID: Final = "display_id"
+ATTR_FLASH_TIME: Final = "flash_time"
+ATTR_HS_COLOR: Final = "hs_color"
 ATTR_ICON: Final = "icon"
 ATTR_LIGHT: Final = "light"
 ATTR_ON_TIME: Final = "on_time"
 ATTR_PROFILE: Final = "profile"
 ATTR_PROFILE_DATA: Final = "profile_data"
+ATTR_RAMP_TIME: Final = "ramp_time"
 ATTR_REPEAT: Final = "repeat"
+ATTR_REPETITIONS: Final = "repetitions"
 ATTR_SIMPLE_PROFILE_DATA: Final = "simple_profile_data"
 ATTR_SIMPLE_WEEKDAY_LIST: Final = "simple_weekday_list"
 ATTR_SOUND: Final = "sound"
+ATTR_SOUNDFILE: Final = "soundfile"
 ATTR_SOURCE_ENTITY_ID: Final = "source_entity_id"
 ATTR_SOURCE_PROFILE: Final = "source_profile"
+ATTR_SUPPORTS_SOUNDFILES: Final = "supports_soundfiles"
 ATTR_TARGET_PROFILE: Final = "target_profile"
 ATTR_TEXT: Final = "text"
 ATTR_TEXT_COLOR: Final = "text_color"
+ATTR_VOLUME: Final = "volume"
 ATTR_WEEKDAY: Final = "weekday"
 ATTR_WEEKDAY_DATA: Final = "weekday_data"
 
@@ -666,6 +678,49 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async_register_platform_entity_service(
         hass=hass,
         service_domain=DOMAIN,
+        service_name=HmipLocalServices.PLAY_SOUND,
+        entity_domain=SIREN_DOMAIN,
+        schema={
+            vol.Optional(ATTR_SOUNDFILE): cv.string,
+            vol.Optional(ATTR_VOLUME): vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
+            vol.Optional(ATTR_ON_TIME): vol.All(vol.Coerce(float), vol.Range(min=0.0)),
+            vol.Optional(ATTR_RAMP_TIME): vol.All(vol.Coerce(float), vol.Range(min=0.0)),
+            vol.Optional(ATTR_REPETITIONS): vol.All(vol.Coerce(int), vol.Range(min=-1, max=18)),
+        },
+        func="async_play_sound",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.STOP_SOUND,
+        entity_domain=SIREN_DOMAIN,
+        schema={},
+        func="async_stop_sound",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.SET_SOUND_LED,
+        entity_domain=LIGHT_DOMAIN,
+        schema={
+            vol.Optional(ATTR_HS_COLOR): vol.All(
+                vol.ExactSequence((vol.Coerce(float), vol.Coerce(float))),
+                vol.Coerce(tuple),
+            ),
+            vol.Optional(ATTR_BRIGHTNESS): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
+            vol.Optional(ATTR_ON_TIME): vol.All(vol.Coerce(float), vol.Range(min=0.0)),
+            vol.Optional(ATTR_RAMP_TIME): vol.All(vol.Coerce(float), vol.Range(min=0.0)),
+            vol.Optional(ATTR_REPETITIONS): vol.All(vol.Coerce(int), vol.Range(min=-1, max=18)),
+            vol.Optional(ATTR_FLASH_TIME): vol.All(vol.Coerce(int), vol.Range(min=0, max=5000)),
+        },
+        func="async_set_led",
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
         service_name=HmipLocalServices.SWITCH_SET_ON_TIME,
         entity_domain=SWITCH_DOMAIN,
         schema={vol.Required(ATTR_ON_TIME): vol.All(vol.Coerce(int), vol.Range(min=-1, max=8580000))},
@@ -693,7 +748,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             vol.Optional(ATTR_BACKGROUND_COLOR): cv.string,
             vol.Optional(ATTR_TEXT_COLOR): cv.string,
             vol.Optional(ATTR_ALIGNMENT): cv.string,
-            vol.Optional(ATTR_DISPLAY_ID): vol.All(vol.Coerce(int), vol.Range(min=1, max=3)),
+            vol.Optional(ATTR_DISPLAY_ID): vol.All(vol.Coerce(int), vol.Range(min=1, max=5)),
             vol.Optional(ATTR_SOUND): cv.string,
             vol.Optional(ATTR_REPEAT): vol.All(vol.Coerce(int), vol.Range(min=0, max=15)),
         },

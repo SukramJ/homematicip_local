@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from aiohomematic.const import DataPointCategory
-from aiohomematic.model.custom import BaseCustomDpSiren, SirenOnArgs
+from aiohomematic.model.custom import BaseCustomDpSiren, CustomDpSoundPlayer, PlaySoundArgs, SirenOnArgs
 from homeassistant.components.siren import SirenEntity
 from homeassistant.components.siren.const import ATTR_DURATION, ATTR_TONE, SirenEntityFeature
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity
-from .services import ATTR_LIGHT
+from .services import ATTR_AVAILABLE_SOUNDFILES, ATTR_CURRENT_SOUNDFILE, ATTR_LIGHT, ATTR_SUPPORTS_SOUNDFILES
 from .support import handle_homematic_errors
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,6 +87,17 @@ class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], Sir
         return self._data_point.available_tones  # type: ignore[return-value]
 
     @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes for sound player entities."""
+        if not isinstance(self._data_point, CustomDpSoundPlayer):
+            return {}
+        return {
+            ATTR_AVAILABLE_SOUNDFILES: self._data_point.available_soundfiles,
+            ATTR_CURRENT_SOUNDFILE: self._data_point.current_soundfile,
+            ATTR_SUPPORTS_SOUNDFILES: self._data_point.supports_soundfiles,
+        }
+
+    @property
     def is_on(self) -> bool | None:
         """Return true if siren is on."""
         if self._data_point.is_valid:
@@ -102,6 +113,50 @@ class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], Sir
         ):
             return restored_state == STATE_ON
         return None
+
+    @handle_homematic_errors
+    async def async_play_sound(
+        self,
+        *,
+        soundfile: str | int | None = None,
+        volume: float | None = None,
+        on_time: float | None = None,
+        ramp_time: float | None = None,
+        repetitions: int | None = None,
+    ) -> None:
+        """Play a sound on HmIP-MP3P devices."""
+        if not isinstance(self._data_point, CustomDpSoundPlayer):
+            _LOGGER.warning(
+                "play_sound is only supported for HmIP-MP3P sound player entities, not %s",
+                type(self._data_point).__name__,
+            )
+            return
+
+        kwargs: PlaySoundArgs = {}
+        if soundfile is not None:
+            kwargs["soundfile"] = soundfile
+        if volume is not None:
+            kwargs["volume"] = volume
+        if on_time is not None:
+            kwargs["on_time"] = on_time
+        if ramp_time is not None:
+            kwargs["ramp_time"] = ramp_time
+        if repetitions is not None:
+            kwargs["repetitions"] = repetitions
+
+        await self._data_point.play_sound(**kwargs)
+
+    @handle_homematic_errors
+    async def async_stop_sound(self) -> None:
+        """Stop sound playback on HmIP-MP3P devices."""
+        if not isinstance(self._data_point, CustomDpSoundPlayer):
+            _LOGGER.warning(
+                "stop_sound is only supported for HmIP-MP3P sound player entities, not %s",
+                type(self._data_point).__name__,
+            )
+            return
+
+        await self._data_point.stop_sound()
 
     @handle_homematic_errors
     async def async_turn_off(self, **kwargs: Any) -> None:

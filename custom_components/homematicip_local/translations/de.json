@@ -1367,6 +1367,32 @@
             }, 
             "name": "Stellt die Einschaltdauer eines Lichts ein"
         }, 
+        "play_sound": {
+            "description": "Spielt einen Sound auf HmIP-MP3P Signalgebern ab", 
+            "fields": {
+                "on_time": {
+                    "description": "Wiedergabedauer in Sekunden", 
+                    "name": "Einschaltzeit"
+                }, 
+                "ramp_time": {
+                    "description": "Anlaufzeit in Sekunden für Lautstärkeüberblendung", 
+                    "name": "Anlaufzeit"
+                }, 
+                "repetitions": {
+                    "description": "Anzahl der Wiederholungen (0=keine, 1-18=Anzahl, -1=unendlich)", 
+                    "name": "Wiederholungen"
+                }, 
+                "soundfile": {
+                    "description": "Abzuspielende Sounddatei (z.B. SOUNDFILE_001, SOUNDFILE_002 oder INTERNAL_SOUNDFILE)", 
+                    "name": "Sounddatei"
+                }, 
+                "volume": {
+                    "description": "Wiedergabelautstärke (0.0 bis 1.0)", 
+                    "name": "Lautstärke"
+                }
+            }, 
+            "name": "Sound abspielen"
+        }, 
         "put_link_paramset": {
             "description": "Schreibt einen Parametersatz einer Direktverknüpfung über die XML-RPC-Schnittstelle", 
             "fields": {
@@ -1481,7 +1507,7 @@
                     "name": "Hintergrundfarbe"
                 }, 
                 "display_id": {
-                    "description": "Display-Zeile (1-3)", 
+                    "description": "Display-Zeile (1-5)", 
                     "name": "Display-ID"
                 }, 
                 "icon": {
@@ -1645,6 +1671,36 @@
             }, 
             "name": "Zeitplan-Profil Wochentag setzen"
         }, 
+        "set_sound_led": {
+            "description": "Setzt LED-Farbe und Helligkeit auf HmIP-MP3P Signalgebern", 
+            "fields": {
+                "brightness": {
+                    "description": "LED-Helligkeit (0 bis 255)", 
+                    "name": "Helligkeit"
+                }, 
+                "flash_time": {
+                    "description": "Blinkdauer in Millisekunden (0 bis 5000)", 
+                    "name": "Blinkzeit"
+                }, 
+                "hs_color": {
+                    "description": "LED-Farbe als Farbton/Sättigung-Tupel [Farbton, Sättigung]", 
+                    "name": "HS-Farbe"
+                }, 
+                "on_time": {
+                    "description": "LED-Einschaltdauer in Sekunden", 
+                    "name": "Einschaltzeit"
+                }, 
+                "ramp_time": {
+                    "description": "Anlaufzeit in Sekunden für Helligkeitsüberblendung", 
+                    "name": "Anlaufzeit"
+                }, 
+                "repetitions": {
+                    "description": "Anzahl der Wiederholungen (0=keine, 1-18=Anzahl, -1=unendlich)", 
+                    "name": "Wiederholungen"
+                }
+            }, 
+            "name": "Signalgeber-LED setzen"
+        }, 
         "set_variable_value": {
             "description": "Schreibt einen Wert in eine Homematic Systemvariable", 
             "fields": {
@@ -1662,6 +1718,10 @@
                 }
             }, 
             "name": "Wert einer Systemvariable schreiben"
+        }, 
+        "stop_sound": {
+            "description": "Stoppt die Soundwiedergabe auf HmIP-MP3P Signalgebern", 
+            "name": "Sound stoppen"
         }, 
         "switch_set_on_time": {
             "description": "Stellt die Einschaltdauer eines Schalters ein. Muss von einem switch.turn_on gefolgt werden", 

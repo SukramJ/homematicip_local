@@ -1367,6 +1367,32 @@
             }, 
             "name": "Set light on time"
         }, 
+        "play_sound": {
+            "description": "Play a sound on HmIP-MP3P sound player devices", 
+            "fields": {
+                "on_time": {
+                    "description": "Playback duration in seconds", 
+                    "name": "On time"
+                }, 
+                "ramp_time": {
+                    "description": "Ramp time in seconds for volume fade", 
+                    "name": "Ramp time"
+                }, 
+                "repetitions": {
+                    "description": "Number of repetitions (0=none, 1-18=count, -1=infinite)", 
+                    "name": "Repetitions"
+                }, 
+                "soundfile": {
+                    "description": "Sound file to play (e.g., SOUNDFILE_001, SOUNDFILE_002, or INTERNAL_SOUNDFILE)", 
+                    "name": "Sound file"
+                }, 
+                "volume": {
+                    "description": "Playback volume (0.0 to 1.0)", 
+                    "name": "Volume"
+                }
+            }, 
+            "name": "Play sound"
+        }, 
         "put_link_paramset": {
             "description": "Call to putParamset on the RPC XML interface", 
             "fields": {
@@ -1481,7 +1507,7 @@
                     "name": "Background Color"
                 }, 
                 "display_id": {
-                    "description": "Display slot (1-3)", 
+                    "description": "Display slot (1-5)", 
                     "name": "Display ID"
                 }, 
                 "icon": {
@@ -1645,6 +1671,36 @@
             }, 
             "name": "Set schedule profile weekday"
         }, 
+        "set_sound_led": {
+            "description": "Set LED color and brightness on HmIP-MP3P sound player devices", 
+            "fields": {
+                "brightness": {
+                    "description": "LED brightness (0 to 255)", 
+                    "name": "Brightness"
+                }, 
+                "flash_time": {
+                    "description": "Flash duration in milliseconds (0 to 5000)", 
+                    "name": "Flash time"
+                }, 
+                "hs_color": {
+                    "description": "LED color as hue/saturation tuple [hue, saturation]", 
+                    "name": "HS color"
+                }, 
+                "on_time": {
+                    "description": "LED on duration in seconds", 
+                    "name": "On time"
+                }, 
+                "ramp_time": {
+                    "description": "Ramp time in seconds for brightness fade", 
+                    "name": "Ramp time"
+                }, 
+                "repetitions": {
+                    "description": "Number of repetitions (0=none, 1-18=count, -1=infinite)", 
+                    "name": "Repetitions"
+                }
+            }, 
+            "name": "Set sound player LED"
+        }, 
         "set_variable_value": {
             "description": "Write a value to a variable", 
             "fields": {
@@ -1662,6 +1718,10 @@
                 }
             }, 
             "name": "Set variable value"
+        }, 
+        "stop_sound": {
+            "description": "Stop sound playback on HmIP-MP3P sound player devices", 
+            "name": "Stop sound"
         }, 
         "switch_set_on_time": {
             "description": "Set on time for a switch entity. Must be followed by a switch.turn_on", 
