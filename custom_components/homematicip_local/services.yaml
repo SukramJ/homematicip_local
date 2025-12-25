@@ -675,6 +675,122 @@ turn_on_siren:
       selector:
         text:
 
+play_sound:
+  target:
+    entity:
+      domain: siren
+      integration: homematicip_local
+  fields:
+    soundfile:
+      required: false
+      example: "SOUNDFILE_001"
+      selector:
+        text:
+    volume:
+      required: false
+      example: 0.5
+      selector:
+        number:
+          min: 0.0
+          max: 1.0
+          step: 0.1
+          mode: slider
+    on_time:
+      required: false
+      example: 10.0
+      selector:
+        number:
+          min: 0.0
+          max: 86400.0
+          step: 0.1
+          mode: box
+          unit_of_measurement: "s"
+    ramp_time:
+      required: false
+      example: 0.0
+      selector:
+        number:
+          min: 0.0
+          max: 86400.0
+          step: 0.1
+          mode: box
+          unit_of_measurement: "s"
+    repetitions:
+      required: false
+      example: 0
+      selector:
+        number:
+          min: -1
+          max: 18
+          step: 1
+          mode: box
+
+stop_sound:
+  target:
+    entity:
+      domain: siren
+      integration: homematicip_local
+
+set_sound_led:
+  target:
+    entity:
+      domain: light
+      integration: homematicip_local
+  fields:
+    hs_color:
+      required: false
+      example: [0, 100]
+      selector:
+        object:
+    brightness:
+      required: false
+      example: 255
+      selector:
+        number:
+          min: 0
+          max: 255
+          step: 1
+          mode: slider
+    on_time:
+      required: false
+      example: 10.0
+      selector:
+        number:
+          min: 0.0
+          max: 86400.0
+          step: 0.1
+          mode: box
+          unit_of_measurement: "s"
+    ramp_time:
+      required: false
+      example: 0.0
+      selector:
+        number:
+          min: 0.0
+          max: 86400.0
+          step: 0.1
+          mode: box
+          unit_of_measurement: "s"
+    repetitions:
+      required: false
+      example: 0
+      selector:
+        number:
+          min: -1
+          max: 18
+          step: 1
+          mode: box
+    flash_time:
+      required: false
+      example: 500
+      selector:
+        number:
+          min: 0
+          max: 5000
+          step: 100
+          mode: box
+          unit_of_measurement: "ms"
+
 light_set_on_time:
   target:
     entity:
@@ -755,3 +871,70 @@ update_device_firmware_data:
       selector:
         config_entry:
           integration: homematicip_local
+
+send_text_display:
+  target:
+    entity:
+      domain: notify
+      integration: homematicip_local
+  fields:
+    text:
+      required: true
+      example: "Hello World"
+      selector:
+        text:
+    icon:
+      required: false
+      example: "SUN"
+      selector:
+        text:
+    background_color:
+      required: false
+      example: "WHITE"
+      selector:
+        select:
+          options:
+            - "WHITE"
+            - "BLACK"
+    text_color:
+      required: false
+      example: "BLACK"
+      selector:
+        select:
+          options:
+            - "WHITE"
+            - "BLACK"
+    alignment:
+      required: false
+      example: "CENTER"
+      selector:
+        select:
+          options:
+            - "LEFT"
+            - "CENTER"
+            - "RIGHT"
+    display_id:
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 5
+    sound:
+      required: false
+      example: "EVENT"
+      selector:
+        text:
+    repeat:
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 15
+
+clear_text_display:
+  target:
+    entity:
+      domain: notify
+      integration: homematicip_local

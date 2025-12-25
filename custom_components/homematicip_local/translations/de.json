@@ -424,6 +424,78 @@
                     "low_battery": "Niedriger Batteriestand"
                 }
             }, 
+            "acoustic_notification_selection": {
+                "name": "Akustische Benachrichtigung", 
+                "state": {
+                    "delayed_externally_armed": "Verzögert extern scharf", 
+                    "delayed_internally_armed": "Verzögert intern scharf", 
+                    "disarmed": "Unscharf", 
+                    "error": "Fehler", 
+                    "event": "Ereignis", 
+                    "externally_armed": "Extern scharf", 
+                    "internally_armed": "Intern scharf", 
+                    "low_battery": "Niedriger Batteriestand"
+                }
+            }, 
+            "display_data_alignment": {
+                "name": "Display-Ausrichtung", 
+                "state": {
+                    "center": "Zentriert", 
+                    "left": "Links", 
+                    "right": "Rechts"
+                }
+            }, 
+            "display_data_background_color": {
+                "name": "Display-Hintergrundfarbe", 
+                "state": {
+                    "black": "Schwarz", 
+                    "white": "Weiß"
+                }
+            }, 
+            "display_data_icon": {
+                "name": "Display-Symbol", 
+                "state": {
+                    "bell": "Glocke", 
+                    "clock": "Uhr", 
+                    "cloud": "Wolke", 
+                    "cloud_and_mooon": "Wolke und Mond", 
+                    "cloud_and_sun": "Wolke und Sonne", 
+                    "cloud_sun_and_rain": "Wolke, Sonne und Regen", 
+                    "drizzle": "Nieselregen", 
+                    "eco": "Eco", 
+                    "error": "Fehler", 
+                    "everything_okay": "Alles in Ordnung", 
+                    "external_protection": "Externer Schutz", 
+                    "flame": "Flamme", 
+                    "information": "Information", 
+                    "internal_protection": "Interner Schutz", 
+                    "lamp_off": "Lampe aus", 
+                    "lamp_on": "Lampe an", 
+                    "moon": "Mond", 
+                    "new_message": "Neue Nachricht", 
+                    "no_icon": "Kein Symbol", 
+                    "padlock_closed": "Schloss geschlossen", 
+                    "padlock_open": "Schloss offen", 
+                    "protection_deactivated": "Schutz deaktiviert", 
+                    "rain": "Regen", 
+                    "raindrop": "Regentropfen", 
+                    "service_message": "Servicemeldung", 
+                    "shutters": "Rollläden", 
+                    "snow": "Schnee", 
+                    "snowflake": "Schneeflocke", 
+                    "sun": "Sonne", 
+                    "thunderstorm": "Gewitter", 
+                    "wind": "Wind", 
+                    "window_open": "Fenster offen"
+                }
+            }, 
+            "display_data_text_color": {
+                "name": "Display-Textfarbe", 
+                "state": {
+                    "black": "Schwarz", 
+                    "white": "Weiß"
+                }
+            }, 
             "heating_cooling": {
                 "name": "Betriebsmodus", 
                 "state": {
@@ -511,6 +583,9 @@
                     "undefined": "Nicht definiert", 
                     "up": "Hoch"
                 }
+            }, 
+            "dirt_level": {
+                "name": "Verschmutzungsgrad"
             }, 
             "door_state": {
                 "name": "Türzustand", 
@@ -723,6 +798,9 @@
                     "primary_alarm": "Primär-Alarm", 
                     "secondary_alarm": "Sekundär-Alarm"
                 }
+            }, 
+            "smoke_level": {
+                "name": "Rauchpegel"
             }, 
             "state": {
                 "name": ""
@@ -1039,6 +1117,10 @@
             }, 
             "name": "Lösche den Cache"
         }, 
+        "clear_text_display": {
+            "description": "Löscht alle Zeilen auf dem HmIP-WRCD Textdisplay", 
+            "name": "Textdisplay löschen"
+        }, 
         "copy_schedule": {
             "description": "Kopiert einen Zeitplan zu einem anderen Gerät", 
             "fields": {
@@ -1285,6 +1367,32 @@
             }, 
             "name": "Stellt die Einschaltdauer eines Lichts ein"
         }, 
+        "play_sound": {
+            "description": "Spielt einen Sound auf HmIP-MP3P Signalgebern ab", 
+            "fields": {
+                "on_time": {
+                    "description": "Wiedergabedauer in Sekunden", 
+                    "name": "Einschaltzeit"
+                }, 
+                "ramp_time": {
+                    "description": "Anlaufzeit in Sekunden für Lautstärkeüberblendung", 
+                    "name": "Anlaufzeit"
+                }, 
+                "repetitions": {
+                    "description": "Anzahl der Wiederholungen (0=keine, 1-18=Anzahl, -1=unendlich)", 
+                    "name": "Wiederholungen"
+                }, 
+                "soundfile": {
+                    "description": "Abzuspielende Sounddatei (z.B. SOUNDFILE_001, SOUNDFILE_002 oder INTERNAL_SOUNDFILE)", 
+                    "name": "Sounddatei"
+                }, 
+                "volume": {
+                    "description": "Wiedergabelautstärke (0.0 bis 1.0)", 
+                    "name": "Lautstärke"
+                }
+            }, 
+            "name": "Sound abspielen"
+        }, 
         "put_link_paramset": {
             "description": "Schreibt einen Parametersatz einer Direktverknüpfung über die XML-RPC-Schnittstelle", 
             "fields": {
@@ -1386,6 +1494,44 @@
                 }
             }, 
             "name": "Eine Direktverknüpfung entfernen"
+        }, 
+        "send_text_display": {
+            "description": "Sendet Text an das HmIP-WRCD Textdisplay", 
+            "fields": {
+                "alignment": {
+                    "description": "Textausrichtung (LEFT, CENTER oder RIGHT)", 
+                    "name": "Ausrichtung"
+                }, 
+                "background_color": {
+                    "description": "Hintergrundfarbe (WHITE oder BLACK)", 
+                    "name": "Hintergrundfarbe"
+                }, 
+                "display_id": {
+                    "description": "Display-Zeile (1-5)", 
+                    "name": "Display-ID"
+                }, 
+                "icon": {
+                    "description": "Anzuzeigendes Symbol (Wert aus available_icons Attribut verwenden)", 
+                    "name": "Symbol"
+                }, 
+                "repeat": {
+                    "description": "Anzahl der Soundwiederholungen (0-15)", 
+                    "name": "Wiederholungen"
+                }, 
+                "sound": {
+                    "description": "Abzuspielender Sound (Wert aus available_sounds Attribut verwenden)", 
+                    "name": "Sound"
+                }, 
+                "text": {
+                    "description": "Anzuzeigender Text (max. 14 Zeichen, 11 mit Symbol)", 
+                    "name": "Text"
+                }, 
+                "text_color": {
+                    "description": "Textfarbe (WHITE oder BLACK)", 
+                    "name": "Textfarbe"
+                }
+            }, 
+            "name": "Text an Display senden"
         }, 
         "set_cover_combined_position": {
             "description": "Bewegt eine Jalousie in eine bestimmte Position und Neigungsposition", 
@@ -1525,6 +1671,36 @@
             }, 
             "name": "Zeitplan-Profil Wochentag setzen"
         }, 
+        "set_sound_led": {
+            "description": "Setzt LED-Farbe und Helligkeit auf HmIP-MP3P Signalgebern", 
+            "fields": {
+                "brightness": {
+                    "description": "LED-Helligkeit (0 bis 255)", 
+                    "name": "Helligkeit"
+                }, 
+                "flash_time": {
+                    "description": "Blinkdauer in Millisekunden (0 bis 5000)", 
+                    "name": "Blinkzeit"
+                }, 
+                "hs_color": {
+                    "description": "LED-Farbe als Farbton/Sättigung-Tupel [Farbton, Sättigung]", 
+                    "name": "HS-Farbe"
+                }, 
+                "on_time": {
+                    "description": "LED-Einschaltdauer in Sekunden", 
+                    "name": "Einschaltzeit"
+                }, 
+                "ramp_time": {
+                    "description": "Anlaufzeit in Sekunden für Helligkeitsüberblendung", 
+                    "name": "Anlaufzeit"
+                }, 
+                "repetitions": {
+                    "description": "Anzahl der Wiederholungen (0=keine, 1-18=Anzahl, -1=unendlich)", 
+                    "name": "Wiederholungen"
+                }
+            }, 
+            "name": "Signalgeber-LED setzen"
+        }, 
         "set_variable_value": {
             "description": "Schreibt einen Wert in eine Homematic Systemvariable", 
             "fields": {
@@ -1542,6 +1718,10 @@
                 }
             }, 
             "name": "Wert einer Systemvariable schreiben"
+        }, 
+        "stop_sound": {
+            "description": "Stoppt die Soundwiedergabe auf HmIP-MP3P Signalgebern", 
+            "name": "Sound stoppen"
         }, 
         "switch_set_on_time": {
             "description": "Stellt die Einschaltdauer eines Schalters ein. Muss von einem switch.turn_on gefolgt werden", 

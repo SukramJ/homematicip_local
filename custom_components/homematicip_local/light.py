@@ -6,7 +6,14 @@ import logging
 from typing import Any, Final
 
 from aiohomematic.const import DataPointCategory
-from aiohomematic.model.custom import CustomDpDimmer, CustomDpIpFixedColorLight, LightOffArgs, LightOnArgs
+from aiohomematic.model.custom import (
+    CustomDpDimmer,
+    CustomDpIpFixedColorLight,
+    CustomDpSoundPlayerLed,
+    LightOffArgs,
+    LightOnArgs,
+    SoundPlayerLedOnArgs,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -25,6 +32,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity
+from .services import ATTR_AVAILABLE_COLORS
 from .support import handle_homematic_errors
 
 ATTR_COLOR: Final = "color"
@@ -131,6 +139,10 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
             ):
                 attributes[ATTR_CHANNEL_COLOR] = self._data_point.channel_color_name
 
+        if isinstance(self._data_point, CustomDpSoundPlayerLed):
+            attributes[ATTR_AVAILABLE_COLORS] = self._data_point.available_colors
+            attributes[ATTR_COLOR] = self._data_point.color_name
+
         return attributes
 
     @property
@@ -182,6 +194,41 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         if self._data_point.supports_effects:
             supported_features |= LightEntityFeature.EFFECT
         return supported_features
+
+    @handle_homematic_errors
+    async def async_set_led(
+        self,
+        *,
+        hs_color: tuple[float, float] | None = None,
+        brightness: int | None = None,
+        on_time: float | None = None,
+        ramp_time: float | None = None,
+        repetitions: int | None = None,
+        flash_time: int | None = None,
+    ) -> None:
+        """Set LED on HmIP-MP3P devices."""
+        if not isinstance(self._data_point, CustomDpSoundPlayerLed):
+            _LOGGER.warning(
+                "set_led is only supported for HmIP-MP3P LED entities, not %s",
+                type(self._data_point).__name__,
+            )
+            return
+
+        kwargs: SoundPlayerLedOnArgs = {}
+        if hs_color is not None:
+            kwargs["hs_color"] = hs_color
+        if brightness is not None:
+            kwargs["brightness"] = brightness
+        if on_time is not None:
+            kwargs["on_time"] = on_time
+        if ramp_time is not None:
+            kwargs["ramp_time"] = ramp_time
+        if repetitions is not None:
+            kwargs["repetitions"] = repetitions
+        if flash_time is not None:
+            kwargs["flash_time"] = flash_time
+
+        await self._data_point.turn_on(**kwargs)
 
     @callback
     def async_set_on_time(self, on_time: float) -> None:

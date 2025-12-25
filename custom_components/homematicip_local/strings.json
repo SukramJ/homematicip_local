@@ -424,6 +424,78 @@
                     "low_battery": "Low battery"
                 }
             }, 
+            "acoustic_notification_selection": {
+                "name": "Acoustic Notification", 
+                "state": {
+                    "delayed_externally_armed": "Delayed externally armed", 
+                    "delayed_internally_armed": "Delayed internally armed", 
+                    "disarmed": "Disarmed", 
+                    "error": "Error", 
+                    "event": "Event", 
+                    "externally_armed": "Externally armed", 
+                    "internally_armed": "Internally armed", 
+                    "low_battery": "Low battery"
+                }
+            }, 
+            "display_data_alignment": {
+                "name": "Display Alignment", 
+                "state": {
+                    "center": "Center", 
+                    "left": "Left", 
+                    "right": "Right"
+                }
+            }, 
+            "display_data_background_color": {
+                "name": "Display Background Color", 
+                "state": {
+                    "black": "Black", 
+                    "white": "White"
+                }
+            }, 
+            "display_data_icon": {
+                "name": "Display Icon", 
+                "state": {
+                    "bell": "Bell", 
+                    "clock": "Clock", 
+                    "cloud": "Cloud", 
+                    "cloud_and_mooon": "Cloud and moon", 
+                    "cloud_and_sun": "Cloud and sun", 
+                    "cloud_sun_and_rain": "Cloud, sun and rain", 
+                    "drizzle": "Drizzle", 
+                    "eco": "Eco", 
+                    "error": "Error", 
+                    "everything_okay": "Everything okay", 
+                    "external_protection": "External protection", 
+                    "flame": "Flame", 
+                    "information": "Information", 
+                    "internal_protection": "Internal protection", 
+                    "lamp_off": "Lamp off", 
+                    "lamp_on": "Lamp on", 
+                    "moon": "Moon", 
+                    "new_message": "New message", 
+                    "no_icon": "No icon", 
+                    "padlock_closed": "Padlock closed", 
+                    "padlock_open": "Padlock open", 
+                    "protection_deactivated": "Protection deactivated", 
+                    "rain": "Rain", 
+                    "raindrop": "Raindrop", 
+                    "service_message": "Service message", 
+                    "shutters": "Shutters", 
+                    "snow": "Snow", 
+                    "snowflake": "Snowflake", 
+                    "sun": "Sun", 
+                    "thunderstorm": "Thunderstorm", 
+                    "wind": "Wind", 
+                    "window_open": "Window open"
+                }
+            }, 
+            "display_data_text_color": {
+                "name": "Display Text Color", 
+                "state": {
+                    "black": "Black", 
+                    "white": "White"
+                }
+            }, 
             "heating_cooling": {
                 "name": "Operating mode", 
                 "state": {
@@ -511,6 +583,9 @@
                     "undefined": "Undefined", 
                     "up": "Up"
                 }
+            }, 
+            "dirt_level": {
+                "name": "Dirt Level"
             }, 
             "door_state": {
                 "name": "Door State", 
@@ -723,6 +798,9 @@
                     "primary_alarm": "Primary alarm", 
                     "secondary_alarm": "Secondary alarm"
                 }
+            }, 
+            "smoke_level": {
+                "name": "Smoke Level"
             }, 
             "state": {
                 "name": ""
@@ -1039,6 +1117,10 @@
             }, 
             "name": "Clear the cache"
         }, 
+        "clear_text_display": {
+            "description": "Clear all lines on HmIP-WRCD text display", 
+            "name": "Clear text display"
+        }, 
         "copy_schedule": {
             "description": "Copy a schedule to another device", 
             "fields": {
@@ -1285,6 +1367,32 @@
             }, 
             "name": "Set light on time"
         }, 
+        "play_sound": {
+            "description": "Play a sound on HmIP-MP3P sound player devices", 
+            "fields": {
+                "on_time": {
+                    "description": "Playback duration in seconds", 
+                    "name": "On time"
+                }, 
+                "ramp_time": {
+                    "description": "Ramp time in seconds for volume fade", 
+                    "name": "Ramp time"
+                }, 
+                "repetitions": {
+                    "description": "Number of repetitions (0=none, 1-18=count, -1=infinite)", 
+                    "name": "Repetitions"
+                }, 
+                "soundfile": {
+                    "description": "Sound file to play (e.g., SOUNDFILE_001, SOUNDFILE_002, or INTERNAL_SOUNDFILE)", 
+                    "name": "Sound file"
+                }, 
+                "volume": {
+                    "description": "Playback volume (0.0 to 1.0)", 
+                    "name": "Volume"
+                }
+            }, 
+            "name": "Play sound"
+        }, 
         "put_link_paramset": {
             "description": "Call to putParamset on the RPC XML interface", 
             "fields": {
@@ -1386,6 +1494,44 @@
                 }
             }, 
             "name": "Remove link"
+        }, 
+        "send_text_display": {
+            "description": "Send text to HmIP-WRCD text display", 
+            "fields": {
+                "alignment": {
+                    "description": "Text alignment (LEFT, CENTER, or RIGHT)", 
+                    "name": "Alignment"
+                }, 
+                "background_color": {
+                    "description": "Background color (WHITE or BLACK)", 
+                    "name": "Background Color"
+                }, 
+                "display_id": {
+                    "description": "Display slot (1-5)", 
+                    "name": "Display ID"
+                }, 
+                "icon": {
+                    "description": "Icon to display (use value from available_icons attribute)", 
+                    "name": "Icon"
+                }, 
+                "repeat": {
+                    "description": "Number of sound repetitions (0-15)", 
+                    "name": "Repeat"
+                }, 
+                "sound": {
+                    "description": "Sound to play (use value from available_sounds attribute)", 
+                    "name": "Sound"
+                }, 
+                "text": {
+                    "description": "Text to display (max 14 characters, 11 with icon)", 
+                    "name": "Text"
+                }, 
+                "text_color": {
+                    "description": "Text color (WHITE or BLACK)", 
+                    "name": "Text Color"
+                }
+            }, 
+            "name": "Send text to display"
         }, 
         "set_cover_combined_position": {
             "description": "Move a blind to a specific position and tilt position", 
@@ -1525,6 +1671,36 @@
             }, 
             "name": "Set schedule profile weekday"
         }, 
+        "set_sound_led": {
+            "description": "Set LED color and brightness on HmIP-MP3P sound player devices", 
+            "fields": {
+                "brightness": {
+                    "description": "LED brightness (0 to 255)", 
+                    "name": "Brightness"
+                }, 
+                "flash_time": {
+                    "description": "Flash duration in milliseconds (0 to 5000)", 
+                    "name": "Flash time"
+                }, 
+                "hs_color": {
+                    "description": "LED color as hue/saturation tuple [hue, saturation]", 
+                    "name": "HS color"
+                }, 
+                "on_time": {
+                    "description": "LED on duration in seconds", 
+                    "name": "On time"
+                }, 
+                "ramp_time": {
+                    "description": "Ramp time in seconds for brightness fade", 
+                    "name": "Ramp time"
+                }, 
+                "repetitions": {
+                    "description": "Number of repetitions (0=none, 1-18=count, -1=infinite)", 
+                    "name": "Repetitions"
+                }
+            }, 
+            "name": "Set sound player LED"
+        }, 
         "set_variable_value": {
             "description": "Write a value to a variable", 
             "fields": {
@@ -1542,6 +1718,10 @@
                 }
             }, 
             "name": "Set variable value"
+        }, 
+        "stop_sound": {
+            "description": "Stop sound playback on HmIP-MP3P sound player devices", 
+            "name": "Stop sound"
         }, 
         "switch_set_on_time": {
             "description": "Set on time for a switch entity. Must be followed by a switch.turn_on", 

@@ -4,9 +4,12 @@
 
 ### New Features
 
+- **HmIP-WRCD Text Display**: Full support for the wall-mount remote control with display via NotifyEntity, including services for sending text with icons, colors, sounds, and alignment options
+- **HmIP-MP3P Sound Player**: Full support for the combination signalling device with services for sound playback (play_sound, stop_sound) and LED control (set_sound_led) with colors, brightness, and timing options
 - **Siren Control**: Automatic select entities for siren tone and light pattern selection with full translations (no manual InputHelper setup required)
 - **Reauthentication**: Added reauthentication flow to update expired credentials without removing the integration
 - **Reconfigure Flow**: Quick reconfiguration of connection settings without full re-setup
+- **Air Quality Sensors**: New entity descriptions for DIRT_LEVEL and SMOKE_LEVEL sensors
 
 ### Improvements
 

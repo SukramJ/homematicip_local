@@ -25,7 +25,7 @@
 - **Testing**: Comprehensive test coverage improvements for config flow, services, lights, and updates
 - **Documentation**: Added comprehensive CLAUDE.md for AI assistants with development guidelines and project structure
  
-## Bump aiohomematic to 2025.12.45
+## Bump aiohomematic to 2025.12.47
 
 ### Connection Reliability
 
@@ -59,6 +59,8 @@
 
 ### New Device Support
 
+- **HmIP-MP3P Kombisignalgeber**: Sound player with MP3 playback (channel 2) and RGB LED control (channel 6)
+- **HmIP-WRCD Text Display**: Wall-mount Remote Control with Display - send text, icons, colors, and sounds to the LCD
 - DeviceProfileRegistry for centralized device-to-profile mappings
 - DpActionSelect data point type for write-only selection parameters
 

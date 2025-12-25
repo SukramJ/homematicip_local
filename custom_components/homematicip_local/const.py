@@ -78,6 +78,7 @@ class HmipLocalServices(StrEnum):
 
     ADD_LINK = "add_link"
     CLEAR_CACHE = "clear_cache"
+    CLEAR_TEXT_DISPLAY = "clear_text_display"
     COPY_SCHEDULE = "copy_schedule"
     COPY_SCHEDULE_PROFILE = "copy_schedule_profile"
     CREATE_CCU_BACKUP = "create_ccu_backup"
@@ -96,11 +97,13 @@ class HmipLocalServices(StrEnum):
     GET_SCHEDULE_WEEKDAY = "get_schedule_weekday"
     GET_VARIABLE_VALUE = "get_variable_value"
     LIGHT_SET_ON_TIME = "light_set_on_time"
+    PLAY_SOUND = "play_sound"
     PUT_LINK_PARAMSET = "put_link_paramset"
     PUT_PARAMSET = "put_paramset"
     RECORD_SESSION = "record_session"
     REMOVE_CENTRAL_LINKS = "remove_central_links"
     REMOVE_LINK = "remove_link"
+    SEND_TEXT_DISPLAY = "send_text_display"
     SET_COVER_COMBINED_POSITION = "set_cover_combined_position"
     SET_DEVICE_VALUE = "set_device_value"
     SET_SCHEDULE_PROFILE = "set_schedule_profile"
@@ -108,7 +111,9 @@ class HmipLocalServices(StrEnum):
     SET_SCHEDULE_SIMPLE_PROFILE = "set_schedule_simple_profile"
     SET_SCHEDULE_SIMPLE_WEEKDAY = "set_schedule_simple_weekday"
     SET_SCHEDULE_ACTIVE_PROFILE = "set_schedule_active_profile"
+    SET_SOUND_LED = "set_sound_led"
     SET_VARIABLE_VALUE = "set_variable_value"
+    STOP_SOUND = "stop_sound"
     SWITCH_SET_ON_TIME = "switch_set_on_time"
     TURN_ON_SIREN = "turn_on_siren"
     UPDATE_DEVICE_FIRMWARE_DATA = "update_device_firmware_data"
@@ -142,11 +147,16 @@ CONF_ACTION_SELECT_VALUES: Final = "action_select_values"
 
 def _get_hmip_local_platforms() -> tuple[Platform, ...]:
     """Return relevant Homematic(IP) Local for OpenCCU platforms."""
-    return tuple(
+    # Get platforms that directly map from DataPointCategory values
+    category_platforms = tuple(
         Platform(pf)
         for pf in list(Platform)
         if pf in [category.value for category in CATEGORIES if category not in BLOCKED_CATEGORIES]
     )
+    # Add platforms that don't have a direct category mapping
+    # TEXT_DISPLAY maps to NOTIFY platform
+    additional_platforms = (Platform.NOTIFY,)
+    return category_platforms + additional_platforms
 
 
 HMIP_LOCAL_PLATFORMS: Final[tuple[Platform, ...]] = _get_hmip_local_platforms()

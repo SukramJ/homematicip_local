@@ -34,7 +34,8 @@
       "Bash(pip index:*)",
       "Bash(python /tmp/comprehensive_check.py:*)",
       "Bash(python -m json.tool:*)",
-      "Bash(python script/check_flow_translations.py:*)"
+      "Bash(python script/check_flow_translations.py:*)",
+      "Bash(git tag:*)"
     ],
     "deny": [],
     "ask": []
