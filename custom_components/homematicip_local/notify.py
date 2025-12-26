@@ -178,18 +178,19 @@ class HmipTextDisplayNotifyEntity(AioHomematicGenericEntity[CustomDpTextDisplay]
     ) -> None:
         """Send text to display with full control over all parameters."""
         kwargs: dict[str, Any] = {"text": text}
+        # Convert string parameters to uppercase (device expects uppercase values)
         if icon is not None:
-            kwargs["icon"] = icon
+            kwargs["icon"] = icon.upper()
         if background_color is not None:
-            kwargs["background_color"] = background_color
+            kwargs["background_color"] = background_color.upper()
         if text_color is not None:
-            kwargs["text_color"] = text_color
+            kwargs["text_color"] = text_color.upper()
         if alignment is not None:
-            kwargs["alignment"] = alignment
+            kwargs["alignment"] = alignment.upper()
         if display_id is not None:
             kwargs["display_id"] = display_id
         if sound is not None:
-            kwargs["sound"] = sound
+            kwargs["sound"] = sound.upper()
         if repeat is not None:
             kwargs["repeat"] = repeat
 
