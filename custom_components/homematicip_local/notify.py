@@ -16,6 +16,17 @@ from homeassistant.helpers.storage import Store
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericEntity
+from .services import (
+    ATTR_AVAILABLE_ALIGNMENTS,
+    ATTR_AVAILABLE_BACKGROUND_COLORS,
+    ATTR_AVAILABLE_ICONS,
+    ATTR_AVAILABLE_SOUNDS,
+    ATTR_AVAILABLE_TEXT_COLORS,
+    ATTR_BURST_LIMIT_WARNING,
+    ATTR_CURRENT_LINES,
+    ATTR_SUPPORTS_ICONS,
+    ATTR_SUPPORTS_SOUNDS,
+)
 from .support import handle_homematic_errors
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,6 +92,20 @@ class HmipTextDisplayNotifyEntity(AioHomematicGenericEntity[CustomDpTextDisplay]
     """Notify entity for HmIP text display devices (e.g., HmIP-WRCD)."""
 
     _attr_supported_features = NotifyEntityFeature.TITLE
+    __no_recored_attributes = AioHomematicGenericEntity.NO_RECORDED_ATTRIBUTES
+    __no_recored_attributes.update(
+        {
+            ATTR_AVAILABLE_ALIGNMENTS,
+            ATTR_AVAILABLE_BACKGROUND_COLORS,
+            ATTR_AVAILABLE_ICONS,
+            ATTR_AVAILABLE_SOUNDS,
+            ATTR_AVAILABLE_TEXT_COLORS,
+            ATTR_CURRENT_LINES,
+            ATTR_SUPPORTS_ICONS,
+            ATTR_SUPPORTS_SOUNDS,
+        }
+    )
+    _unrecorded_attributes = frozenset(__no_recored_attributes)
 
     def __init__(
         self,
@@ -98,16 +123,17 @@ class HmipTextDisplayNotifyEntity(AioHomematicGenericEntity[CustomDpTextDisplay]
         """Return extra state attributes for UI/cards."""
         return {
             # Available options from ActionSelects (paramset VALUE_LIST)
-            "available_icons": self._data_point.available_icons,
-            "available_sounds": self._data_point.available_sounds,
-            "available_background_colors": self._data_point.available_background_colors,
-            "available_text_colors": self._data_point.available_text_colors,
-            "available_alignments": self._data_point.available_alignments,
+            ATTR_AVAILABLE_ICONS: self._data_point.available_icons,
+            ATTR_AVAILABLE_SOUNDS: self._data_point.available_sounds,
+            ATTR_AVAILABLE_BACKGROUND_COLORS: self._data_point.available_background_colors,
+            ATTR_AVAILABLE_TEXT_COLORS: self._data_point.available_text_colors,
+            ATTR_AVAILABLE_ALIGNMENTS: self._data_point.available_alignments,
+            ATTR_BURST_LIMIT_WARNING: self._data_point.burst_limit_warning,
             # Feature support
-            "supports_icons": self._data_point.supports_icons,
-            "supports_sounds": self._data_point.supports_sounds,
+            ATTR_SUPPORTS_ICONS: self._data_point.supports_icons,
+            ATTR_SUPPORTS_SOUNDS: self._data_point.supports_sounds,
             # Current state (persisted)
-            "current_lines": self._current_state.get("lines", {}),
+            ATTR_CURRENT_LINES: self._current_state.get("lines", {}),
         }
 
     async def async_added_to_hass(self) -> None:
