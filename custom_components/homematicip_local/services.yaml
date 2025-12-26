@@ -885,34 +885,71 @@ send_text_display:
         text:
     icon:
       required: false
-      example: "SUN"
+      example: "sun"
       selector:
-        text:
+        select:
+          translation_key: "display_icon"
+          options:
+            - "no_icon"
+            - "sun"
+            - "moon"
+            - "cloud"
+            - "cloud_and_sun"
+            - "cloud_and_mooon"
+            - "cloud_sun_and_rain"
+            - "rain"
+            - "raindrop"
+            - "drizzle"
+            - "snow"
+            - "snowflake"
+            - "wind"
+            - "thunderstorm"
+            - "bell"
+            - "clock"
+            - "eco"
+            - "flame"
+            - "lamp_on"
+            - "lamp_off"
+            - "padlock_open"
+            - "padlock_closed"
+            - "error"
+            - "everything_okay"
+            - "information"
+            - "new_message"
+            - "service_message"
+            - "shutters"
+            - "window_open"
+            - "external_protection"
+            - "internal_protection"
+            - "protection_deactivated"
     background_color:
       required: false
-      example: "WHITE"
+      example: "white"
       selector:
         select:
+          translation_key: "display_color"
           options:
-            - "WHITE"
-            - "BLACK"
+            - "white"
+            - "black"
     text_color:
       required: false
-      example: "BLACK"
+      example: "black"
       selector:
         select:
+          translation_key: "display_color"
           options:
-            - "WHITE"
-            - "BLACK"
+            - "white"
+            - "black"
     alignment:
       required: false
-      example: "CENTER"
+      example: "center"
       selector:
         select:
+          translation_key: "display_alignment"
           options:
-            - "LEFT"
-            - "CENTER"
-            - "RIGHT"
+            - "left"
+            - "center"
+            - "right"
     display_id:
       required: false
       example: 1
@@ -922,9 +959,19 @@ send_text_display:
           max: 5
     sound:
       required: false
-      example: "EVENT"
+      example: "event"
       selector:
-        text:
+        select:
+          translation_key: "display_sound"
+          options:
+            - "disarmed"
+            - "externally_armed"
+            - "internally_armed"
+            - "delayed_externally_armed"
+            - "delayed_internally_armed"
+            - "event"
+            - "error"
+            - "low_battery"
     repeat:
       required: false
       example: 1

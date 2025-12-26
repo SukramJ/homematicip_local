@@ -424,78 +424,6 @@
                     "low_battery": "Niedriger Batteriestand"
                 }
             }, 
-            "acoustic_notification_selection": {
-                "name": "Akustische Benachrichtigung", 
-                "state": {
-                    "delayed_externally_armed": "Verzögert extern scharf", 
-                    "delayed_internally_armed": "Verzögert intern scharf", 
-                    "disarmed": "Unscharf", 
-                    "error": "Fehler", 
-                    "event": "Ereignis", 
-                    "externally_armed": "Extern scharf", 
-                    "internally_armed": "Intern scharf", 
-                    "low_battery": "Niedriger Batteriestand"
-                }
-            }, 
-            "display_data_alignment": {
-                "name": "Display-Ausrichtung", 
-                "state": {
-                    "center": "Zentriert", 
-                    "left": "Links", 
-                    "right": "Rechts"
-                }
-            }, 
-            "display_data_background_color": {
-                "name": "Display-Hintergrundfarbe", 
-                "state": {
-                    "black": "Schwarz", 
-                    "white": "Weiß"
-                }
-            }, 
-            "display_data_icon": {
-                "name": "Display-Symbol", 
-                "state": {
-                    "bell": "Glocke", 
-                    "clock": "Uhr", 
-                    "cloud": "Wolke", 
-                    "cloud_and_mooon": "Wolke und Mond", 
-                    "cloud_and_sun": "Wolke und Sonne", 
-                    "cloud_sun_and_rain": "Wolke, Sonne und Regen", 
-                    "drizzle": "Nieselregen", 
-                    "eco": "Eco", 
-                    "error": "Fehler", 
-                    "everything_okay": "Alles in Ordnung", 
-                    "external_protection": "Externer Schutz", 
-                    "flame": "Flamme", 
-                    "information": "Information", 
-                    "internal_protection": "Interner Schutz", 
-                    "lamp_off": "Lampe aus", 
-                    "lamp_on": "Lampe an", 
-                    "moon": "Mond", 
-                    "new_message": "Neue Nachricht", 
-                    "no_icon": "Kein Symbol", 
-                    "padlock_closed": "Schloss geschlossen", 
-                    "padlock_open": "Schloss offen", 
-                    "protection_deactivated": "Schutz deaktiviert", 
-                    "rain": "Regen", 
-                    "raindrop": "Regentropfen", 
-                    "service_message": "Servicemeldung", 
-                    "shutters": "Rollläden", 
-                    "snow": "Schnee", 
-                    "snowflake": "Schneeflocke", 
-                    "sun": "Sonne", 
-                    "thunderstorm": "Gewitter", 
-                    "wind": "Wind", 
-                    "window_open": "Fenster offen"
-                }
-            }, 
-            "display_data_text_color": {
-                "name": "Display-Textfarbe", 
-                "state": {
-                    "black": "Schwarz", 
-                    "white": "Weiß"
-                }
-            }, 
             "heating_cooling": {
                 "name": "Betriebsmodus", 
                 "state": {
@@ -1081,6 +1009,69 @@
                 }, 
                 "description": "Programm- und Systemvariablen-Scanning konfigurieren", 
                 "title": "Programme & Systemvariablen"
+            }
+        }
+    }, 
+    "selector": {
+        "display_alignment": {
+            "options": {
+                "center": "Zentriert", 
+                "left": "Links", 
+                "right": "Rechts"
+            }
+        }, 
+        "display_color": {
+            "options": {
+                "black": "Schwarz", 
+                "white": "Weiß"
+            }
+        }, 
+        "display_icon": {
+            "options": {
+                "bell": "Glocke", 
+                "clock": "Uhr", 
+                "cloud": "Wolke", 
+                "cloud_and_mooon": "Wolke und Mond", 
+                "cloud_and_sun": "Wolke und Sonne", 
+                "cloud_sun_and_rain": "Wolke, Sonne und Regen", 
+                "drizzle": "Nieselregen", 
+                "eco": "Eco", 
+                "error": "Fehler", 
+                "everything_okay": "Alles in Ordnung", 
+                "external_protection": "Externer Schutz", 
+                "flame": "Flamme", 
+                "information": "Information", 
+                "internal_protection": "Interner Schutz", 
+                "lamp_off": "Lampe aus", 
+                "lamp_on": "Lampe an", 
+                "moon": "Mond", 
+                "new_message": "Neue Nachricht", 
+                "no_icon": "Kein Symbol", 
+                "padlock_closed": "Schloss geschlossen", 
+                "padlock_open": "Schloss offen", 
+                "protection_deactivated": "Schutz deaktiviert", 
+                "rain": "Regen", 
+                "raindrop": "Regentropfen", 
+                "service_message": "Servicemeldung", 
+                "shutters": "Rollläden", 
+                "snow": "Schnee", 
+                "snowflake": "Schneeflocke", 
+                "sun": "Sonne", 
+                "thunderstorm": "Gewitter", 
+                "wind": "Wind", 
+                "window_open": "Fenster offen"
+            }
+        }, 
+        "display_sound": {
+            "options": {
+                "delayed_externally_armed": "Verzögert extern scharf", 
+                "delayed_internally_armed": "Verzögert intern scharf", 
+                "disarmed": "Unscharf", 
+                "error": "Fehler", 
+                "event": "Ereignis", 
+                "externally_armed": "Extern scharf", 
+                "internally_armed": "Intern scharf", 
+                "low_battery": "Niedriger Batteriestand"
             }
         }
     }, 

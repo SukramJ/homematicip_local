@@ -424,78 +424,6 @@
                     "low_battery": "Low battery"
                 }
             }, 
-            "acoustic_notification_selection": {
-                "name": "Acoustic Notification", 
-                "state": {
-                    "delayed_externally_armed": "Delayed externally armed", 
-                    "delayed_internally_armed": "Delayed internally armed", 
-                    "disarmed": "Disarmed", 
-                    "error": "Error", 
-                    "event": "Event", 
-                    "externally_armed": "Externally armed", 
-                    "internally_armed": "Internally armed", 
-                    "low_battery": "Low battery"
-                }
-            }, 
-            "display_data_alignment": {
-                "name": "Display Alignment", 
-                "state": {
-                    "center": "Center", 
-                    "left": "Left", 
-                    "right": "Right"
-                }
-            }, 
-            "display_data_background_color": {
-                "name": "Display Background Color", 
-                "state": {
-                    "black": "Black", 
-                    "white": "White"
-                }
-            }, 
-            "display_data_icon": {
-                "name": "Display Icon", 
-                "state": {
-                    "bell": "Bell", 
-                    "clock": "Clock", 
-                    "cloud": "Cloud", 
-                    "cloud_and_mooon": "Cloud and moon", 
-                    "cloud_and_sun": "Cloud and sun", 
-                    "cloud_sun_and_rain": "Cloud, sun and rain", 
-                    "drizzle": "Drizzle", 
-                    "eco": "Eco", 
-                    "error": "Error", 
-                    "everything_okay": "Everything okay", 
-                    "external_protection": "External protection", 
-                    "flame": "Flame", 
-                    "information": "Information", 
-                    "internal_protection": "Internal protection", 
-                    "lamp_off": "Lamp off", 
-                    "lamp_on": "Lamp on", 
-                    "moon": "Moon", 
-                    "new_message": "New message", 
-                    "no_icon": "No icon", 
-                    "padlock_closed": "Padlock closed", 
-                    "padlock_open": "Padlock open", 
-                    "protection_deactivated": "Protection deactivated", 
-                    "rain": "Rain", 
-                    "raindrop": "Raindrop", 
-                    "service_message": "Service message", 
-                    "shutters": "Shutters", 
-                    "snow": "Snow", 
-                    "snowflake": "Snowflake", 
-                    "sun": "Sun", 
-                    "thunderstorm": "Thunderstorm", 
-                    "wind": "Wind", 
-                    "window_open": "Window open"
-                }
-            }, 
-            "display_data_text_color": {
-                "name": "Display Text Color", 
-                "state": {
-                    "black": "Black", 
-                    "white": "White"
-                }
-            }, 
             "heating_cooling": {
                 "name": "Operating mode", 
                 "state": {
@@ -1762,14 +1690,77 @@
             "name": "Update device firmware data"
         }, 
         "valve_set_on_time": {
-            "description": "Set on time for a valve entity. Must be followed by a valve.open", 
+            "description": "Set on time for a valve entity. Must be followed by a valve.open",
             "fields": {
                 "on_time": {
-                    "description": "On time for a valve in seconds. Use 0 to reset the on time", 
+                    "description": "On time for a valve in seconds. Use 0 to reset the on time",
                     "name": "On Time"
                 }
-            }, 
+            },
             "name": "Set valve on time"
+        }
+    },
+    "selector": {
+        "display_alignment": {
+            "options": {
+                "center": "Center",
+                "left": "Left",
+                "right": "Right"
+            }
+        },
+        "display_color": {
+            "options": {
+                "black": "Black",
+                "white": "White"
+            }
+        },
+        "display_icon": {
+            "options": {
+                "bell": "Bell",
+                "clock": "Clock",
+                "cloud": "Cloud",
+                "cloud_and_mooon": "Cloud and moon",
+                "cloud_and_sun": "Cloud and sun",
+                "cloud_sun_and_rain": "Cloud, sun and rain",
+                "drizzle": "Drizzle",
+                "eco": "Eco",
+                "error": "Error",
+                "everything_okay": "Everything okay",
+                "external_protection": "External protection",
+                "flame": "Flame",
+                "information": "Information",
+                "internal_protection": "Internal protection",
+                "lamp_off": "Lamp off",
+                "lamp_on": "Lamp on",
+                "moon": "Moon",
+                "new_message": "New message",
+                "no_icon": "No icon",
+                "padlock_closed": "Padlock closed",
+                "padlock_open": "Padlock open",
+                "protection_deactivated": "Protection deactivated",
+                "rain": "Rain",
+                "raindrop": "Raindrop",
+                "service_message": "Service message",
+                "shutters": "Shutters",
+                "snow": "Snow",
+                "snowflake": "Snowflake",
+                "sun": "Sun",
+                "thunderstorm": "Thunderstorm",
+                "wind": "Wind",
+                "window_open": "Window open"
+            }
+        },
+        "display_sound": {
+            "options": {
+                "delayed_externally_armed": "Delayed externally armed",
+                "delayed_internally_armed": "Delayed internally armed",
+                "disarmed": "Disarmed",
+                "error": "Error",
+                "event": "Event",
+                "externally_armed": "Externally armed",
+                "internally_armed": "Internally armed",
+                "low_battery": "Low battery"
+            }
         }
     }
 }
