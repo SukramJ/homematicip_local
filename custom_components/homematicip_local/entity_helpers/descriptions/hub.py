@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from aiohomematic.const import DataPointCategory
+from aiohomematic.const import (
+    INBOX_SENSOR_NAME,
+    METRICS_SENSOR_CONNECTION_LATENCY_NAME,
+    METRICS_SENSOR_LAST_EVENT_AGE_NAME,
+    METRICS_SENSOR_SYSTEM_HEALTH_NAME,
+    DataPointCategory,
+)
 from custom_components.homematicip_local.entity_helpers.base import HmButtonEntityDescription, HmSensorEntityDescription
 from custom_components.homematicip_local.entity_helpers.factories import diagnostic_sensor
 from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
@@ -64,7 +70,7 @@ HUB_RULES: list[EntityDescriptionRule] = [
     # Hub sensors - Inbox
     EntityDescriptionRule(
         category=DataPointCategory.HUB_SENSOR,
-        var_name_contains="INBOX",
+        var_name_contains=INBOX_SENSOR_NAME,
         description=HmSensorEntityDescription(
             key="INBOX",
             translation_key="inbox",
@@ -161,7 +167,7 @@ HUB_RULES: list[EntityDescriptionRule] = [
     # Hub sensors - Metrics (diagnostics)
     EntityDescriptionRule(
         category=DataPointCategory.HUB_SENSOR,
-        var_name_contains="system-health",
+        var_name_contains=METRICS_SENSOR_SYSTEM_HEALTH_NAME,
         description=diagnostic_sensor(
             key="SYSTEM_HEALTH",
             unit=PERCENTAGE,
@@ -173,7 +179,7 @@ HUB_RULES: list[EntityDescriptionRule] = [
     ),
     EntityDescriptionRule(
         category=DataPointCategory.HUB_SENSOR,
-        var_name_contains="connection-latency",
+        var_name_contains=METRICS_SENSOR_CONNECTION_LATENCY_NAME,
         description=diagnostic_sensor(
             key="CONNECTION_LATENCY",
             device_class=SensorDeviceClass.DURATION,
@@ -186,7 +192,7 @@ HUB_RULES: list[EntityDescriptionRule] = [
     ),
     EntityDescriptionRule(
         category=DataPointCategory.HUB_SENSOR,
-        var_name_contains="last-event-age",
+        var_name_contains=METRICS_SENSOR_LAST_EVENT_AGE_NAME,
         description=diagnostic_sensor(
             key="LAST_EVENT_AGE",
             device_class=SensorDeviceClass.DURATION,

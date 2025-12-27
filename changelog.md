@@ -19,11 +19,15 @@
 - **Error Handling**: Reduced log flooding during connection issues with improved error handling decorator for entity actions
 - **Translations**: Fixed naming of untranslated entities and improved translation coverage for press events
  
-## Bump aiohomematic to 2025.12.50
+## Bump aiohomematic to 2025.12.51
 
 ### Observability & Metrics
 
 - **Unified Metrics**: New `CentralUnit.metrics` property providing centralized access to all runtime statistics
+- **Hub Metrics Sensors**: Three new HA-visible sensors for real-time system monitoring:
+  - System Health (0-100%)
+  - Connection Latency (ms)
+  - Last Event Age (seconds since last CCU event)
 - **RPC Monitoring**: Track success/failure rates, latency, and request coalescing effectiveness
 - **Event Tracking**: Monitor handler execution times, error rates, and event throughput
 - **Cache Statistics**: View hit rates and sizes across all caches
@@ -68,25 +72,6 @@
 - **HmIP-WRCD Text Display**: Wall-mount Remote Control with Display - send text, icons, colors, and sounds to the LCD
 - DeviceProfileRegistry for centralized device-to-profile mappings
 - DpActionSelect data point type for write-only selection parameters
-
-### Developer Experience
-
-- **Fluent Configuration**: New `CentralConfigBuilder` with method chaining and factory presets for CCU/Homegear
-- **Request Tracing**: Context variables pattern for request tracking through async call chains with automatic log prefixing
-- **Type Converters**: Extensible `to_homematic_value()` / `from_homematic_value()` using singledispatch pattern
-
-### Internal Improvements
-
-- Protocol-based architecture for better testability and decoupling
-- Event bus system replacing legacy callback patterns
-- Strict type checking throughout codebase
-- Translatable log messages and exceptions
-- Generic protocols for improved mypy type inference on data point values
-- Declarative field descriptors for custom and calculated data points
-- `DelegatedProperty` descriptor for simple property delegation with caching support
-- Enhanced linter with DP004 path validation for DelegatedProperty definitions
-- Store package restructured into `persistent/` and `dynamic/` subpackages for better maintainability
-- Typed dataclasses (`CachedCommand`, `PongTracker`) replace untyped tuples and dicts
 
 # Version 1.90.2 (2025-11-05)
 
