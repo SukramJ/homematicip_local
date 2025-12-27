@@ -78,12 +78,12 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests import const
 
 # Port constants using helper function (must be after imports)
-IF_HMIP_RF_PORT = get_interface_default_port(Interface.HMIP_RF, tls=False)
-IF_HMIP_RF_TLS_PORT = get_interface_default_port(Interface.HMIP_RF, tls=True)
-IF_BIDCOS_RF_PORT = get_interface_default_port(Interface.BIDCOS_RF, tls=False)
-IF_BIDCOS_RF_TLS_PORT = get_interface_default_port(Interface.BIDCOS_RF, tls=True)
-IF_BIDCOS_WIRED_PORT = get_interface_default_port(Interface.BIDCOS_WIRED, tls=False)
-IF_VIRTUAL_DEVICES_PORT = get_interface_default_port(Interface.VIRTUAL_DEVICES, tls=False)
+IF_HMIP_RF_PORT = get_interface_default_port(interface=Interface.HMIP_RF, tls=False)
+IF_HMIP_RF_TLS_PORT = get_interface_default_port(interface=Interface.HMIP_RF, tls=True)
+IF_BIDCOS_RF_PORT = get_interface_default_port(interface=Interface.BIDCOS_RF, tls=False)
+IF_BIDCOS_RF_TLS_PORT = get_interface_default_port(interface=Interface.BIDCOS_RF, tls=True)
+IF_BIDCOS_WIRED_PORT = get_interface_default_port(interface=Interface.BIDCOS_WIRED, tls=False)
+IF_VIRTUAL_DEVICES_PORT = get_interface_default_port(interface=Interface.VIRTUAL_DEVICES, tls=False)
 
 
 def _get_default_detection_result(tls: bool = False) -> BackendDetectionResult:

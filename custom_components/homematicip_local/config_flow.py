@@ -215,11 +215,11 @@ def _get_effective_port(interface: Interface, tls: bool, data: ConfigType) -> in
     if interface in interfaces and CONF_PORT in interfaces[interface]:
         port: int = interfaces[interface][CONF_PORT]
         # Only return if it's a custom (non-default) port
-        if not is_interface_default_port(interface, port):
+        if not is_interface_default_port(interface=interface, port=port):
             return port
 
     # Return TLS-based default
-    return int(get_interface_default_port(interface, tls=tls) or 0)
+    return int(get_interface_default_port(interface=interface, tls=tls) or 0)
 
 
 def _get_effective_json_port(tls: bool, data: ConfigType) -> int:
@@ -1015,7 +1015,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         interfaces: dict[Interface, dict[str, Any]] = {}
 
         for interface in self._detection_result.available_interfaces:
-            if default_port := get_interface_default_port(interface, tls=use_tls):
+            if default_port := get_interface_default_port(interface=interface, tls=use_tls):
                 interface_config: dict[str, Any] = {CONF_PORT: default_port}
                 # Add path for VirtualDevices
                 if interface == Interface.VIRTUAL_DEVICES:
@@ -1478,7 +1478,7 @@ def _update_tls_interfaces_input(data: ConfigType, interface_input: ConfigType) 
         """Get custom port if available, otherwise TLS-based default."""
         if interface.value in custom_ports:
             return int(custom_ports[interface.value])
-        return int(get_interface_default_port(interface, tls=tls) or 0)
+        return int(get_interface_default_port(interface=interface, tls=tls) or 0)
 
     if interface_input[CONF_ENABLE_HMIP_RF] is True:
         data[CONF_INTERFACE][Interface.HMIP_RF] = {CONF_PORT: _get_port(Interface.HMIP_RF)}
@@ -1534,7 +1534,7 @@ def _update_port_config_input(data: ConfigType, port_input: ConfigType) -> None:
             port = port_input[port_key]
             interfaces[interface][CONF_PORT] = port
             # Track if it's a custom (non-default) port
-            if not is_interface_default_port(interface, port):
+            if not is_interface_default_port(interface=interface, port=port):
                 custom_ports[interface.value] = port
             elif interface.value in custom_ports:
                 del custom_ports[interface.value]

@@ -19,7 +19,7 @@
 - **Error Handling**: Reduced log flooding during connection issues with improved error handling decorator for entity actions
 - **Translations**: Fixed naming of untranslated entities and improved translation coverage for press events
  
-## Bump aiohomematic to 2025.12.49
+## Bump aiohomematic to 2025.12.50
 
 ### Observability & Metrics
 

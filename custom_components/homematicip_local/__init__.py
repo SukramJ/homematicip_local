@@ -274,7 +274,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
                     # Get interface name - could be enum or string key
                     interface_name = interface_key.value if hasattr(interface_key, "value") else str(interface_key)
                     # Check if port is non-default (custom)
-                    if not is_interface_default_port(interface_name, port):
+                    if not is_interface_default_port(interface=interface_name, port=port):
                         custom_ports[interface_name] = port
         # Only add CONF_CUSTOM_PORTS if there are custom ports
         if custom_ports:
