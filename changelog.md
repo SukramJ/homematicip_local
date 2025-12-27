@@ -4,28 +4,31 @@
 
 ### New Features
 
+- **HmIP-WRCD Text Display**: Full support for the wall-mount remote control with display via NotifyEntity, including services for sending text with icons, colors, sounds, and alignment options
+- **HmIP-MP3P Sound Player**: Full support for the combination signalling device with services for sound playback (play_sound, stop_sound) and LED control (set_sound_led) with colors, brightness, and timing options
 - **Siren Control**: Automatic select entities for siren tone and light pattern selection with full translations (no manual InputHelper setup required)
 - **Reauthentication**: Added reauthentication flow to update expired credentials without removing the integration
 - **Reconfigure Flow**: Quick reconfiguration of connection settings without full re-setup
+- **Air Quality Sensors**: New entity descriptions for DIRT_LEVEL and SMOKE_LEVEL sensors
+- **Enhanced Diagnostics**: Comprehensive system metrics in diagnostics including RPC statistics, event bus metrics, cache performance, health status, and service call analytics
+- **System Metrics Sensors**: New diagnostic sensors for monitoring system health (%), connection latency (ms), and last event age (s) - providing real-time visibility into CCU communication status
 
 ### Improvements
 
 - **Configuration Experience**: Enhanced config flow with improved error messages, progress indicators (Step X of Y), and menu-based navigation
 - **Error Handling**: Reduced log flooding during connection issues with improved error handling decorator for entity actions
 - **Translations**: Fixed naming of untranslated entities and improved translation coverage for press events
-
-### Bug Fixes
-
-- **Services**: Fixed `set_schedule_simple_weekday` service
-- **Translations**: Fixed translation issues
-
-### Developer Experience
-
-- **Code Quality**: Strict mypy type checking, consistent use of keyword-only arguments, removed legacy code from config flow
-- **Testing**: Comprehensive test coverage improvements for config flow, services, lights, and updates
-- **Documentation**: Added comprehensive CLAUDE.md for AI assistants with development guidelines and project structure
  
-## Bump aiohomematic to 2025.12.48
+## Bump aiohomematic to 2025.12.50
+
+### Observability & Metrics
+
+- **Unified Metrics**: New `CentralUnit.metrics` property providing centralized access to all runtime statistics
+- **RPC Monitoring**: Track success/failure rates, latency, and request coalescing effectiveness
+- **Event Tracking**: Monitor handler execution times, error rates, and event throughput
+- **Cache Statistics**: View hit rates and sizes across all caches
+- **Health Overview**: Client availability rates and overall system health scores
+- **Service Call Metrics**: Track per-method call counts, durations, and error rates via `@inspector` decorator
 
 ### Connection Reliability
 
@@ -52,6 +55,8 @@
 
 ### Bug Fixes
 
+- **Cover/Dimmer Restart**: Fixed `is_valid` returning False after CCU restart when status is UNKNOWN
+- **Empty Numeric Values**: Fixed conversion error when CCU sends empty strings for FLOAT/INTEGER parameters
 - **RGBW/LSC Auto-Off**: Fixed lights turning off unexpectedly when using transition times
 - **Reconnect Availability**: Entities no longer remain unavailable after CCU reconnect
 - **STATUS Parameters**: Fixed handling of integer values from backend for status updates

@@ -23,8 +23,8 @@ from .base import (
 
 
 def measurement_sensor(
-    key: str,
     *,
+    key: str,
     device_class: SensorDeviceClass | None = None,
     unit: str | None = None,
     translation_key: str | None = None,
@@ -63,8 +63,8 @@ def measurement_sensor(
 
 
 def total_increasing_sensor(
-    key: str,
     *,
+    key: str,
     device_class: SensorDeviceClass | None = None,
     unit: str | None = None,
     translation_key: str | None = None,
@@ -97,8 +97,8 @@ def total_increasing_sensor(
 
 
 def total_sensor(
-    key: str,
     *,
+    key: str,
     device_class: SensorDeviceClass | None = None,
     unit: str | None = None,
     translation_key: str | None = None,
@@ -129,8 +129,8 @@ def total_sensor(
 
 
 def diagnostic_sensor(
-    key: str,
     *,
+    key: str,
     device_class: SensorDeviceClass | None = None,
     unit: str | None = None,
     translation_key: str | None = None,
@@ -170,8 +170,8 @@ def diagnostic_sensor(
 
 
 def enum_sensor(
-    key: str,
     *,
+    key: str,
     translation_key: str,
     enabled_default: bool = True,
     entity_category: EntityCategory | None = None,
@@ -198,8 +198,8 @@ def enum_sensor(
 
 
 def simple_sensor(
-    key: str,
     *,
+    key: str,
     translation_key: str | None = None,
     enabled_default: bool = True,
     **kwargs: Any,
@@ -223,8 +223,8 @@ def simple_sensor(
 
 
 def binary_sensor(
-    key: str,
     *,
+    key: str,
     device_class: BinarySensorDeviceClass,
     enabled_default: bool = True,
     entity_category: EntityCategory | None = None,
@@ -249,8 +249,8 @@ def binary_sensor(
 
 
 def diagnostic_binary_sensor(
-    key: str,
     *,
+    key: str,
     device_class: BinarySensorDeviceClass,
     enabled_default: bool = False,
     icon: str | None = None,
@@ -283,8 +283,8 @@ def diagnostic_binary_sensor(
 
 
 def button(
-    key: str,
     *,
+    key: str,
     translation_key: str | None = None,
     enabled_default: bool = False,
     entity_category: EntityCategory | None = None,
@@ -307,8 +307,8 @@ def button(
 
 
 def config_button(
-    key: str,
     *,
+    key: str,
     translation_key: str | None = None,
     enabled_default: bool = False,
     **kwargs: Any,
@@ -339,8 +339,8 @@ def config_button(
 
 
 def number(
-    key: str,
     *,
+    key: str,
     device_class: NumberDeviceClass | None = None,
     unit: str | None = None,
     translation_key: str | None = None,
@@ -367,8 +367,8 @@ def number(
 
 
 def percentage_number(
-    key: str,
     *,
+    key: str,
     translation_key: str | None = None,
     enabled_default: bool = True,
     **kwargs: Any,

@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
 from custom_components.homematicip_local.entity_helpers.base import HmButtonEntityDescription, HmSensorEntityDescription
+from custom_components.homematicip_local.entity_helpers.factories import diagnostic_sensor
 from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import UnitOfEnergy, UnitOfLength, UnitOfTime
+from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfLength, UnitOfTime
 
 HUB_RULES: list[EntityDescriptionRule] = [
     # Hub buttons
@@ -155,6 +156,45 @@ HUB_RULES: list[EntityDescriptionRule] = [
             native_unit_of_measurement=UnitOfTime.MINUTES,
             state_class=SensorStateClass.TOTAL_INCREASING,
             translation_key="sunshine_counter_yesterday",
+        ),
+    ),
+    # Hub sensors - Metrics (diagnostics)
+    EntityDescriptionRule(
+        category=DataPointCategory.HUB_SENSOR,
+        var_name_contains="system-health",
+        description=diagnostic_sensor(
+            key="SYSTEM_HEALTH",
+            unit=PERCENTAGE,
+            icon="mdi:heart-pulse",
+            translation_key="system_health",
+            enabled_default=True,
+            suggested_display_precision=1,
+        ),
+    ),
+    EntityDescriptionRule(
+        category=DataPointCategory.HUB_SENSOR,
+        var_name_contains="connection-latency",
+        description=diagnostic_sensor(
+            key="CONNECTION_LATENCY",
+            device_class=SensorDeviceClass.DURATION,
+            unit=UnitOfTime.MILLISECONDS,
+            icon="mdi:timer-outline",
+            translation_key="connection_latency",
+            enabled_default=True,
+            suggested_display_precision=1,
+        ),
+    ),
+    EntityDescriptionRule(
+        category=DataPointCategory.HUB_SENSOR,
+        var_name_contains="last-event-age",
+        description=diagnostic_sensor(
+            key="LAST_EVENT_AGE",
+            device_class=SensorDeviceClass.DURATION,
+            unit=UnitOfTime.SECONDS,
+            icon="mdi:clock-alert-outline",
+            translation_key="last_event_age",
+            enabled_default=True,
+            suggested_display_precision=1,
         ),
     ),
 ]

@@ -12,9 +12,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 
+from aiohomematic.central.metrics import MetricsSnapshot
 from aiohomematic.const import DataPointCategory
 from custom_components.homematicip_local.diagnostics import (
     async_get_config_entry_diagnostics,
@@ -115,6 +117,10 @@ class TestAsyncGetConfigEntryDiagnostics:
         control_unit.central.health.all_clients_healthy = True
         control_unit.central.health.failed_clients = []
         control_unit.central.health.client_health = {}
+        # Mock metrics
+        mock_metrics = MagicMock()
+        mock_metrics.snapshot.return_value = MetricsSnapshot()
+        control_unit.central.metrics = mock_metrics
 
         diag = await async_get_config_entry_diagnostics(hass, entry)
 
@@ -137,3 +143,14 @@ class TestAsyncGetConfigEntryDiagnostics:
         assert diag["system_health"]["overall"]["all_healthy"] is True
         assert diag["system_health"]["overall"]["failed_clients"] == []
         assert diag["system_health"]["clients"] == {}
+
+        # Metrics present with expected structure
+        assert "metrics" in diag
+        assert "timestamp" in diag["metrics"]
+        assert "rpc" in diag["metrics"]
+        assert "events" in diag["metrics"]
+        assert "cache" in diag["metrics"]
+        assert "health" in diag["metrics"]
+        assert "recovery" in diag["metrics"]
+        assert "model" in diag["metrics"]
+        assert "services" in diag["metrics"]

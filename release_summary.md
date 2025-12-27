@@ -10,6 +10,8 @@
 - **Reauthentication**: Added reauthentication flow to update expired credentials without removing the integration
 - **Reconfigure Flow**: Quick reconfiguration of connection settings without full re-setup
 - **Air Quality Sensors**: New entity descriptions for DIRT_LEVEL and SMOKE_LEVEL sensors
+- **Enhanced Diagnostics**: Comprehensive system metrics in diagnostics including RPC statistics, event bus metrics, cache performance, health status, and service call analytics
+- **System Metrics Sensors**: New diagnostic sensors for monitoring system health (%), connection latency (ms), and last event age (s) - providing real-time visibility into CCU communication status
 
 ### Improvements
 
