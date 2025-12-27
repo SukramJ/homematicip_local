@@ -485,6 +485,9 @@
             "concentration": {
                 "name": "Konzentration"
             }, 
+            "connection_latency": {
+                "name": "Verbindungslatenz"
+            }, 
             "cover_level": {
                 "name": "Position"
             }, 
@@ -592,6 +595,9 @@
             }, 
             "ip_address": {
                 "name": "IP Adresse"
+            }, 
+            "last_event_age": {
+                "name": "Alter letztes Ereignis"
             }, 
             "level": {
                 "name": "Level"
@@ -747,6 +753,9 @@
             }, 
             "sunshine_duration": {
                 "name": "Sonnenscheindauer"
+            }, 
+            "system_health": {
+                "name": "Systemzustand"
             }, 
             "taupunkt": {
                 "name": "Taupunkt"

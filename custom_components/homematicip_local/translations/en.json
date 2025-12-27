@@ -484,7 +484,10 @@
             }, 
             "concentration": {
                 "name": "Concentration"
-            }, 
+            },
+            "connection_latency": {
+                "name": "Connection Latency"
+            },
             "cover_level": {
                 "name": "Position"
             }, 
@@ -592,10 +595,13 @@
             }, 
             "ip_address": {
                 "name": "IP Address"
-            }, 
+            },
+            "last_event_age": {
+                "name": "Last Event Age"
+            },
             "level": {
                 "name": "Level"
-            }, 
+            },
             "level_2": {
                 "name": "Level 2"
             }, 
@@ -747,7 +753,10 @@
             }, 
             "sunshine_duration": {
                 "name": "Sunshine Duration"
-            }, 
+            },
+            "system_health": {
+                "name": "System Health"
+            },
             "taupunkt": {
                 "name": "dew point"
             }, 
