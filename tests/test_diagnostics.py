@@ -16,8 +16,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from aiohomematic.central.metrics import MetricsSnapshot
 from aiohomematic.const import DataPointCategory
+from aiohomematic.metrics import MetricsSnapshot
 from custom_components.homematicip_local.diagnostics import (
     async_get_config_entry_diagnostics,
     get_data_points_by_platform_stats,
@@ -117,10 +117,10 @@ class TestAsyncGetConfigEntryDiagnostics:
         control_unit.central.health.all_clients_healthy = True
         control_unit.central.health.failed_clients = []
         control_unit.central.health.client_health = {}
-        # Mock metrics
-        mock_metrics = MagicMock()
-        mock_metrics.snapshot.return_value = MetricsSnapshot()
-        control_unit.central.metrics = mock_metrics
+        # Mock metrics_aggregator (polling-based metrics for diagnostics)
+        mock_metrics_aggregator = MagicMock()
+        mock_metrics_aggregator.snapshot.return_value = MetricsSnapshot()
+        control_unit.central.metrics_aggregator = mock_metrics_aggregator
 
         diag = await async_get_config_entry_diagnostics(hass, entry)
 

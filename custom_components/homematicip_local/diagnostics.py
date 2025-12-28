@@ -7,8 +7,8 @@ from dataclasses import asdict
 from typing import Any
 
 from aiohomematic.central import CentralUnit
-from aiohomematic.central.metrics import MetricsSnapshot
 from aiohomematic.const import CONF_PASSWORD, CONF_USERNAME, DataPointCategory
+from aiohomematic.metrics import MetricsSnapshot
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
@@ -75,7 +75,7 @@ def get_system_health(*, central: CentralUnit) -> dict[str, Any]:
 
 def get_metrics(*, central: CentralUnit) -> dict[str, Any]:
     """Return metrics snapshot as dictionary."""
-    snapshot: MetricsSnapshot = central.metrics.snapshot()
+    snapshot: MetricsSnapshot = central.metrics_aggregator.snapshot()
     return _metrics_snapshot_to_dict(snapshot=snapshot)
 
 
