@@ -13,7 +13,7 @@ from awesomeversion import AwesomeVersion
 from aiohomematic import __version__ as HAHM_VERSION
 from aiohomematic.const import DEFAULT_ENABLE_SYSVAR_SCAN, DEFAULT_UN_IGNORES, is_interface_default_port
 from aiohomematic.exceptions import AuthFailure
-from aiohomematic.store import cleanup_files
+from aiohomematic.store.persistent import cleanup_files
 from aiohomematic.support import find_free_port
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, __version__ as HA_VERSION_STR
