@@ -748,8 +748,8 @@ class TestAioHomematicLightRestoreLastBrightness:
         # Verify set_last_non_default_value was called with converted level
         # brightness_to_level(127) = 127 / 255 ≈ 0.498
         light._data_point._dp_level.set_last_non_default_value.assert_called_once()
-        call_args = light._data_point._dp_level.set_last_non_default_value.call_args[0]
-        assert abs(call_args[0] - 0.498) < 0.01
+        call_kwargs = light._data_point._dp_level.set_last_non_default_value.call_args.kwargs
+        assert abs(call_kwargs["value"] - 0.498) < 0.01
 
     @pytest.mark.asyncio
     async def test_restore_last_brightness_skipped_when_no_restored_state(self) -> None:

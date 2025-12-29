@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from aiohomematic.central.event_bus import BackendParameterEvent
+from aiohomematic.central.event_bus import RpcParameterReceivedEvent
 from aiohomematic.central.integration_events import (
     DataPointsCreatedEvent,
     DeviceLifecycleEvent,
@@ -78,7 +78,9 @@ class Factory:
         central.event_bus.subscribe(event_type=DeviceLifecycleEvent, event_key=None, handler=self.system_event_mock)
         central.event_bus.subscribe(event_type=DataPointsCreatedEvent, event_key=None, handler=self.system_event_mock)
         central.event_bus.subscribe(event_type=DeviceTriggerEvent, event_key=None, handler=self.ha_event_mock)
-        central.event_bus.subscribe(event_type=BackendParameterEvent, event_key=None, handler=self.entity_event_mock)
+        central.event_bus.subscribe(
+            event_type=RpcParameterReceivedEvent, event_key=None, handler=self.entity_event_mock
+        )
         await central.start()
         await central.hub_coordinator.init_hub()
 
