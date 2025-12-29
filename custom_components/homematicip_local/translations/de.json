@@ -864,7 +864,6 @@
             "title": "CCU-Verbindungszeitüberschreitung"
         }, 
         "devices_delayed": {
-            "description": "Ein neues Gerät mit der Adresse **{address}** wurde auf Schnittstelle **{interface_id}** erkannt, muss aber vor dem Hinzufügen bestätigt werden.\n\nKlicke auf 'Beheben', um das Gerät zu benennen und zu Home Assistant hinzuzufügen.", 
             "fix_flow": {
                 "step": {
                     "set_name": {
