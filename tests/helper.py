@@ -17,7 +17,7 @@ from aiohomematic.central.integration_events import (
     DataPointsCreatedEvent,
     DeviceLifecycleEvent,
     DeviceTriggerEvent,
-    SystemStatusEvent,
+    SystemStatusChangedEvent,
 )
 from aiohomematic.interfaces import BaseParameterDataPointProtocol, CustomDataPointProtocol
 from aiohomematic_test_support.factory import FactoryWithClient
@@ -74,7 +74,7 @@ class Factory:
         ).get_default_central(start=False)
 
         # Subscribe to integration events
-        central.event_bus.subscribe(event_type=SystemStatusEvent, event_key=None, handler=self.system_event_mock)
+        central.event_bus.subscribe(event_type=SystemStatusChangedEvent, event_key=None, handler=self.system_event_mock)
         central.event_bus.subscribe(event_type=DeviceLifecycleEvent, event_key=None, handler=self.system_event_mock)
         central.event_bus.subscribe(event_type=DataPointsCreatedEvent, event_key=None, handler=self.system_event_mock)
         central.event_bus.subscribe(event_type=DeviceTriggerEvent, event_key=None, handler=self.ha_event_mock)

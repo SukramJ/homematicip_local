@@ -16,7 +16,7 @@ from aiohomematic.central.integration_events import (
     DeviceLifecycleEvent,
     DeviceLifecycleEventType,
     DeviceTriggerEvent,
-    SystemStatusEvent,
+    SystemStatusChangedEvent,
 )
 from aiohomematic.client import InterfaceConfig
 from aiohomematic.const import (
@@ -280,7 +280,7 @@ class ControlUnit(BaseControlUnit):
         _LOGGER.debug("Subscribing to integration events")
         self._unsubscribe_callbacks.append(
             self._central.event_bus.subscribe(
-                event_type=SystemStatusEvent,
+                event_type=SystemStatusChangedEvent,
                 event_key=None,
                 handler=self._on_system_status,
             )
@@ -386,7 +386,7 @@ class ControlUnit(BaseControlUnit):
             }
         )
 
-    def _handle_degraded_state(self, event: SystemStatusEvent, issue_id_degraded: str) -> bool:
+    def _handle_degraded_state(self, event: SystemStatusChangedEvent, issue_id_degraded: str) -> bool:
         """Handle DEGRADED central state. Return True if reauth was triggered."""
         # Check if any degraded interface has an authentication failure
         auth_failed_interfaces: list[str] = []
@@ -432,7 +432,7 @@ class ControlUnit(BaseControlUnit):
             _LOGGER.debug("SYSTEM NOTIFICATION disabled for DEGRADED state")
         return False
 
-    def _handle_failed_state(self, event: SystemStatusEvent, issue_id_failed: str) -> bool:
+    def _handle_failed_state(self, event: SystemStatusChangedEvent, issue_id_failed: str) -> bool:
         """Handle FAILED central state. Return True if reauth was triggered."""
         # Check if failure is due to authentication issue
         if event.failure_reason == FailureReason.AUTH:
@@ -619,7 +619,7 @@ class ControlUnit(BaseControlUnit):
                     event_data=event_data,
                 )
 
-    async def _on_system_status(self, event: SystemStatusEvent) -> None:
+    async def _on_system_status(self, event: SystemStatusChangedEvent) -> None:
         """Handle system status event from aiohomematic (Infrastructure + Lifecycle)."""
         # Central state changes
         if event.central_state:
