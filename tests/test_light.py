@@ -11,6 +11,7 @@ from custom_components.homematicip_local.light import (
     ATTR_CHANNEL_BRIGHTNESS,
     ATTR_CHANNEL_COLOR,
     ATTR_COLOR,
+    ATTR_LAST_BRIGHTNESS,
     AioHomematicLight,
     async_setup_entry,
 )
@@ -55,6 +56,7 @@ def create_mock_light(
     is_fixed_color_light: bool = False,
     color_name: str | None = None,
     channel_color_name: str | None = None,
+    last_non_default_value: float | None = None,
 ) -> AioHomematicLight:
     """Create a mock light entity with patched initialization."""
     # Create mock data point
@@ -74,6 +76,14 @@ def create_mock_light(
     mock_data_point.turn_on = AsyncMock()
     mock_data_point.turn_off = AsyncMock()
     mock_data_point.set_timer_on_time = Mock()
+
+    # Mock _dp_level for last_brightness support
+    mock_dp_level = MagicMock()
+    mock_dp_level.last_non_default_value = last_non_default_value
+    mock_dp_level.set_last_non_default_value = Mock()
+    mock_data_point._dp_level = mock_dp_level
+    mock_data_point.level_to_brightness = Mock(side_effect=lambda x: int(x * 255))
+    mock_data_point.brightness_to_level = Mock(side_effect=lambda x: x / 255)
 
     # For CustomDpIpFixedColorLight support
     if is_fixed_color_light:
@@ -653,3 +663,248 @@ class TestAioHomematicLightIsRestored:
         restored = MockRestoredState(state=STATE_ON)
         light = create_mock_light(is_valid=False, is_restored=True, restored_state=restored)
         assert light.is_restored is True
+
+
+class TestAioHomematicLightLastBrightness:
+    """Tests for last_brightness property."""
+
+    def test_last_brightness_converts_level_to_brightness(self) -> None:
+        """Test last_brightness converts level (0.0-1.0) to brightness (0-255)."""
+        light = create_mock_light(last_non_default_value=0.5)
+        # level_to_brightness(0.5) = int(0.5 * 255) = 127
+        assert light.last_brightness == 127
+
+    def test_last_brightness_full_level(self) -> None:
+        """Test last_brightness at full level."""
+        light = create_mock_light(last_non_default_value=1.0)
+        # level_to_brightness(1.0) = int(1.0 * 255) = 255
+        assert light.last_brightness == 255
+
+    def test_last_brightness_low_level(self) -> None:
+        """Test last_brightness at low level."""
+        light = create_mock_light(last_non_default_value=0.1)
+        # level_to_brightness(0.1) = int(0.1 * 255) = 25
+        assert light.last_brightness == 25
+
+    def test_last_brightness_none_when_no_value(self) -> None:
+        """Test last_brightness returns None when no last_non_default_value."""
+        light = create_mock_light(last_non_default_value=None)
+        assert light.last_brightness is None
+
+    def test_last_brightness_none_when_zero(self) -> None:
+        """Test last_brightness returns None when last_non_default_value is zero."""
+        light = create_mock_light(last_non_default_value=0.0)
+        assert light.last_brightness is None
+
+
+class TestAioHomematicLightLastBrightnessAttribute:
+    """Tests for last_brightness in extra_state_attributes."""
+
+    def test_extra_state_attributes_includes_last_brightness(self) -> None:
+        """Test extra_state_attributes includes last_brightness when available."""
+        light = create_mock_light(last_non_default_value=0.5)
+        attrs = light.extra_state_attributes
+        assert ATTR_LAST_BRIGHTNESS in attrs
+        assert attrs[ATTR_LAST_BRIGHTNESS] == 127
+
+    def test_extra_state_attributes_no_last_brightness_when_none(self) -> None:
+        """Test extra_state_attributes excludes last_brightness when None."""
+        light = create_mock_light(last_non_default_value=None)
+        attrs = light.extra_state_attributes
+        assert ATTR_LAST_BRIGHTNESS not in attrs
+
+    def test_extra_state_attributes_no_last_brightness_when_zero(self) -> None:
+        """Test extra_state_attributes excludes last_brightness when zero."""
+        light = create_mock_light(last_non_default_value=0.0)
+        attrs = light.extra_state_attributes
+        assert ATTR_LAST_BRIGHTNESS not in attrs
+
+
+class TestAioHomematicLightRestoreLastBrightness:
+    """Tests for async_added_to_hass restore last_brightness behavior."""
+
+    @pytest.mark.asyncio
+    async def test_restore_last_brightness_from_state(self) -> None:
+        """Test last_brightness is restored from previous state."""
+        restored = MockRestoredState(
+            state=STATE_OFF,
+            attributes={ATTR_LAST_BRIGHTNESS: 127},
+        )
+        light = create_mock_light(
+            is_valid=False,
+            is_restored=True,
+            restored_state=restored,
+            last_non_default_value=None,  # No value in aiohomematic yet
+        )
+
+        # Mock super().async_added_to_hass
+        with patch.object(
+            AioHomematicLight.__bases__[0],
+            "async_added_to_hass",
+            new_callable=AsyncMock,
+        ):
+            await light.async_added_to_hass()
+
+        # Verify set_last_non_default_value was called with converted level
+        # brightness_to_level(127) = 127 / 255 ≈ 0.498
+        light._data_point._dp_level.set_last_non_default_value.assert_called_once()
+        call_args = light._data_point._dp_level.set_last_non_default_value.call_args[0]
+        assert abs(call_args[0] - 0.498) < 0.01
+
+    @pytest.mark.asyncio
+    async def test_restore_last_brightness_skipped_when_no_restored_state(self) -> None:
+        """Test restore is skipped when no restored state."""
+        light = create_mock_light(
+            is_valid=True,
+            is_restored=False,
+            restored_state=None,
+            last_non_default_value=None,
+        )
+
+        with patch.object(
+            AioHomematicLight.__bases__[0],
+            "async_added_to_hass",
+            new_callable=AsyncMock,
+        ):
+            await light.async_added_to_hass()
+
+        # Verify set_last_non_default_value was NOT called
+        light._data_point._dp_level.set_last_non_default_value.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_restore_last_brightness_skipped_when_no_stored_value(self) -> None:
+        """Test restore is skipped when restored state has no last_brightness."""
+        restored = MockRestoredState(
+            state=STATE_OFF,
+            attributes={},  # No ATTR_LAST_BRIGHTNESS
+        )
+        light = create_mock_light(
+            is_valid=False,
+            is_restored=True,
+            restored_state=restored,
+            last_non_default_value=None,
+        )
+
+        with patch.object(
+            AioHomematicLight.__bases__[0],
+            "async_added_to_hass",
+            new_callable=AsyncMock,
+        ):
+            await light.async_added_to_hass()
+
+        # Verify set_last_non_default_value was NOT called
+        light._data_point._dp_level.set_last_non_default_value.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_restore_last_brightness_skipped_when_value_exists(self) -> None:
+        """Test restore is skipped when aiohomematic already has a value."""
+        restored = MockRestoredState(
+            state=STATE_OFF,
+            attributes={ATTR_LAST_BRIGHTNESS: 127},
+        )
+        light = create_mock_light(
+            is_valid=False,
+            is_restored=True,
+            restored_state=restored,
+            last_non_default_value=0.8,  # Already has a value
+        )
+
+        with patch.object(
+            AioHomematicLight.__bases__[0],
+            "async_added_to_hass",
+            new_callable=AsyncMock,
+        ):
+            await light.async_added_to_hass()
+
+        # Verify set_last_non_default_value was NOT called
+        light._data_point._dp_level.set_last_non_default_value.assert_not_called()
+
+
+class TestAioHomematicLightTurnOnLastBrightnessFallback:
+    """Tests for async_turn_on using last_brightness fallback."""
+
+    @pytest.mark.asyncio
+    async def test_turn_on_defaults_to_255_when_no_brightness(self) -> None:
+        """Test turn_on defaults to 255 when off and no last_brightness."""
+        light = create_mock_light(
+            is_valid=True,
+            is_on=False,
+            brightness=None,
+            last_non_default_value=None,  # No last brightness
+        )
+        light._is_restored = False
+
+        await light.async_turn_on()
+
+        light._data_point.turn_on.assert_called_once()
+        call_kwargs = light._data_point.turn_on.call_args[1]
+        # Should default to 255
+        assert call_kwargs.get("brightness") == 255
+
+    @pytest.mark.asyncio
+    async def test_turn_on_explicit_brightness_overrides_fallback(self) -> None:
+        """Test turn_on uses explicit brightness over fallbacks."""
+        light = create_mock_light(
+            is_valid=True,
+            is_on=False,
+            brightness=0,
+            last_non_default_value=0.5,  # 127 brightness (should not be used)
+        )
+
+        await light.async_turn_on(**{ATTR_BRIGHTNESS: 50})
+
+        light._data_point.turn_on.assert_called_once()
+        call_kwargs = light._data_point.turn_on.call_args[1]
+        # Should use explicit brightness (50)
+        assert call_kwargs.get("brightness") == 50
+
+    @pytest.mark.asyncio
+    async def test_turn_on_uses_current_brightness_fallback_when_no_last(self) -> None:
+        """Test turn_on uses current brightness if no last_brightness and light is off."""
+        light = create_mock_light(
+            is_valid=True,
+            is_on=False,
+            brightness=100,  # Current brightness from restored state
+            last_non_default_value=None,  # No last brightness
+        )
+
+        await light.async_turn_on()
+
+        light._data_point.turn_on.assert_called_once()
+        call_kwargs = light._data_point.turn_on.call_args[1]
+        # Should use current brightness (100) as fallback
+        assert call_kwargs.get("brightness") == 100
+
+    @pytest.mark.asyncio
+    async def test_turn_on_uses_current_brightness_when_on(self) -> None:
+        """Test turn_on uses current brightness when light is on."""
+        light = create_mock_light(
+            is_valid=True,
+            is_on=True,
+            brightness=200,
+            last_non_default_value=0.5,  # 127 brightness (should not be used)
+        )
+
+        await light.async_turn_on()
+
+        light._data_point.turn_on.assert_called_once()
+        call_kwargs = light._data_point.turn_on.call_args[1]
+        # Should use current brightness (200) since light is on
+        assert call_kwargs.get("brightness") == 200
+
+    @pytest.mark.asyncio
+    async def test_turn_on_uses_last_brightness_when_off(self) -> None:
+        """Test turn_on uses last_brightness when light is off and no brightness provided."""
+        light = create_mock_light(
+            is_valid=True,
+            is_on=False,
+            brightness=0,
+            last_non_default_value=0.5,  # 127 brightness
+        )
+
+        await light.async_turn_on()
+
+        light._data_point.turn_on.assert_called_once()
+        call_kwargs = light._data_point.turn_on.call_args[1]
+        # Should use last_brightness (127) since light is off
+        assert call_kwargs.get("brightness") == 127

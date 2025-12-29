@@ -1,4 +1,4 @@
-# Version 2.0.0 (2025-12-24)
+# Version 2.0.0 (2025-12-29)
 
 ## What's Changed
 
@@ -12,14 +12,38 @@
 - **Air Quality Sensors**: New entity descriptions for DIRT_LEVEL and SMOKE_LEVEL sensors
 - **Enhanced Diagnostics**: Comprehensive system metrics in diagnostics including RPC statistics, event bus metrics, cache performance, health status, and service call analytics
 - **System Metrics Sensors**: New diagnostic sensors for monitoring system health (%), connection latency (ms), and last event age (s) - providing real-time visibility into CCU communication status
+- **Delayed Device Repair**: Devices stuck in the CCU inbox can now be added through Home Assistant's repairs interface with a guided fix flow
+- **Restore Last Brightness**: Dimmers now remember their last brightness level and automatically restore it when turned on without specifying brightness (persists across HA restarts)
 
 ### Improvements
 
 - **Configuration Experience**: Enhanced config flow with improved error messages, progress indicators (Step X of Y), and menu-based navigation
 - **Error Handling**: Reduced log flooding during connection issues with improved error handling decorator for entity actions
 - **Translations**: Fixed naming of untranslated entities and improved translation coverage for press events
- 
+
+### Bug Fixes
+
+- **Services**: Fixed `set_schedule_simple_weekday` service
+- **Translations**: Fixed translation issues
+
+### Developer Experience
+
+- **Code Quality**: Strict mypy type checking, consistent use of keyword-only arguments, removed legacy code from config flow
+- **Testing**: Comprehensive test coverage improvements for config flow, services, lights, and updates
+- **Documentation**: Added comprehensive CLAUDE.md for AI assistants with development guidelines and project structure
+
 ## Bump aiohomematic to 2025.12.54
+
+### Connection Recovery
+
+- **Unified Recovery Architecture**: New event-driven connection recovery coordinator
+  - Staged recovery process: TCP check → RPC check → Warmup → Stability check → Reconnect
+  - Automatic retry with exponential backoff (max 8 attempts)
+  - Parallel recovery support for multi-interface setups
+- **Fixed Authentication Errors**: JSON-RPC sessions are now cleared when recovery starts
+  - Prevents "access denied" errors after CCU restarts
+- **Device Inbox at Startup**: Inbox sensor now available immediately after integration start
+- **Repair Issues Restored**: Delayed device creation again triggers repair issues in HA
 
 ### Observability & Metrics
 

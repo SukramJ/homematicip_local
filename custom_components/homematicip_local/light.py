@@ -38,6 +38,7 @@ from .support import handle_homematic_errors
 ATTR_COLOR: Final = "color"
 ATTR_CHANNEL_COLOR: Final = "channel_color"
 ATTR_CHANNEL_BRIGHTNESS: Final = "channel_brightness"
+ATTR_LAST_BRIGHTNESS: Final = "last_brightness"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,6 +144,9 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
             attributes[ATTR_AVAILABLE_COLORS] = self._data_point.available_colors
             attributes[ATTR_COLOR] = self._data_point.color_name
 
+        if (last_brightness := self.last_brightness) is not None:
+            attributes[ATTR_LAST_BRIGHTNESS] = last_brightness
+
         return attributes
 
     @property
@@ -172,6 +176,14 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         return None
 
     @property
+    def last_brightness(self) -> int | None:
+        """Return the last non-off brightness value (0-255)."""
+        # pylint: disable=protected-access
+        if (last_level := self._data_point._dp_level.last_non_default_value) is not None and last_level > 0:
+            return self._data_point.level_to_brightness(last_level)
+        return None
+
+    @property
     def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
         """Flag supported color modes."""
         supported_color_modes: set[ColorMode] = set()
@@ -194,6 +206,20 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         if self._data_point.supports_effects:
             supported_features |= LightEntityFeature.EFFECT
         return supported_features
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last_brightness from previous state."""
+        await super().async_added_to_hass()
+
+        # Restore last_non_default_value from HA state for persistence across restarts
+        # pylint: disable=protected-access
+        if (
+            self._restored_state is not None
+            and (stored := self._restored_state.attributes.get(ATTR_LAST_BRIGHTNESS)) is not None
+            and self._data_point._dp_level.last_non_default_value is None
+        ):
+            stored_level = self._data_point.brightness_to_level(int(stored))
+            self._data_point._dp_level.set_last_non_default_value(value=stored_level)
 
     @handle_homematic_errors
     async def async_set_led(
@@ -254,9 +280,11 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         # Use hs_color from kwargs, if not applicable use current hs_color.
         if hs_color := kwargs.get(ATTR_HS_COLOR, self.hs_color):
             hm_kwargs["hs_color"] = hs_color
-        # Use brightness from kwargs, if not applicable use current brightness.
-        if brightness := kwargs.get(ATTR_BRIGHTNESS, self.brightness) or 255:
-            hm_kwargs["brightness"] = brightness
+        # Use brightness from kwargs, with last_brightness fallback when light is off.
+        brightness: int | None = kwargs.get(ATTR_BRIGHTNESS)
+        if brightness is None:
+            brightness = (self.brightness if self._data_point.is_on else self.last_brightness or self.brightness) or 255
+        hm_kwargs["brightness"] = brightness
         # Use transition from kwargs, if not applicable use 0.
         if ramp_time := kwargs.get(ATTR_TRANSITION, 0):
             hm_kwargs["ramp_time"] = ramp_time

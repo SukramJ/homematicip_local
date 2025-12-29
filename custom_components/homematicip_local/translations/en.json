@@ -864,6 +864,7 @@
             "title": "CCU connection timeout"
         }, 
         "devices_delayed": {
+            "description": "A new device with address **{address}** was detected on interface **{interface_id}** but requires confirmation before being added.\n\nClick 'Fix' to name the device and add it to Home Assistant.",
             "fix_flow": {
                 "step": {
                     "set_name": {

@@ -12,6 +12,8 @@
 - **Air Quality Sensors**: New entity descriptions for DIRT_LEVEL and SMOKE_LEVEL sensors
 - **Enhanced Diagnostics**: Comprehensive system metrics in diagnostics including RPC statistics, event bus metrics, cache performance, health status, and service call analytics
 - **System Metrics Sensors**: New diagnostic sensors for monitoring system health (%), connection latency (ms), and last event age (s) - providing real-time visibility into CCU communication status
+- **Delayed Device Repair**: Devices stuck in the CCU inbox can now be added through Home Assistant's repairs interface with a guided fix flow
+- **Restore Last Brightness**: Dimmers now remember their last brightness level and automatically restore it when turned on without specifying brightness (persists across HA restarts)
 
 ### Improvements
 
