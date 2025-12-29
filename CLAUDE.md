@@ -102,8 +102,7 @@ homematicip_local/
 │   └── .devcontainer/                    # VS Code DevContainer setup
 │
 ├── docs/                                 # Additional documentation
-│   ├── BEHAVIORAL_COMPATIBILITY.md       # API stability guidelines
-│   └── naming.md                         # Device and entity naming conventions
+│   ├── naming.md                         # Device and entity naming conventions
 │
 ├── Documentation:
 │   ├── README.md                         # Comprehensive user documentation (1,295 lines)
@@ -712,7 +711,6 @@ After any major feature, refactoring, or API change, check:
 | **CLAUDE.md** | Architecture, dependencies, dev processes |
 | **CONTRIBUTING.md** | Git workflow, contribution process |
 | **README.md** | User features, setup, troubleshooting |
-| **docs/BEHAVIORAL_COMPATIBILITY.md** | Public API changes (events, services, triggers) |
 | **docs/naming.md** | Entity/device naming logic |
 | **changelog.md** | Every release, every breaking change |
 
