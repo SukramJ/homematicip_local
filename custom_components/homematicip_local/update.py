@@ -8,7 +8,7 @@ from typing import Any, Final
 
 from aiohomematic.const import CCUType, DataPointCategory
 from aiohomematic.exceptions import BaseHomematicException
-from aiohomematic.model.hub.update import HmUpdate
+from aiohomematic.model.hub import HmUpdate
 from aiohomematic.model.update import DpUpdate
 from aiohomematic.type_aliases import UnsubscribeCallback
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature

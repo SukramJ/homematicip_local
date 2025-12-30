@@ -319,6 +319,9 @@
             }
         }, 
         "button": {
+            "button_press": {
+                "name": "Taste"
+            }, 
             "create_backup": {
                 "name": "Backup erstellen"
             }, 
@@ -843,6 +846,10 @@
         }
     }, 
     "issues": {
+        "callback_server_failed": {
+            "description": "Der Callback-Server für Schnittstelle **{interface_id}** konnte nicht gestartet werden.\n\nDie Integration kann keine Statusaktualisierungen von der CCU empfangen. Bitte überprüfe:\n- Der konfigurierte Callback-Port wird nicht von einer anderen Anwendung verwendet\n- Netzwerk-/Firewall-Einstellungen erlauben eingehende Verbindungen\n- Home Assistant hat die Berechtigung, den Port zu verwenden\n\nLade die Integration neu, um es erneut zu versuchen.", 
+            "title": "Callback-Server für {interface_id} fehlgeschlagen"
+        }, 
         "central_degraded": {
             "description": "Die CCU-Verbindung für **{instance_name}** ist beeinträchtigt.\n\nGrund: {reason}\n\nEinige Schnittstellen sind nicht verbunden. Die Integration versucht eine automatische Wiederherstellung.", 
             "title": "CCU-Verbindung beeinträchtigt"
@@ -862,6 +869,14 @@
         "central_failed_timeout": {
             "description": "Die CCU-Verbindung für **{instance_name}** ist aufgrund von Verbindungszeitüberschreitungen fehlgeschlagen.\n\nSchnittstelle: {interface_id}\n\nDie CCU könnte überlastet sein oder Leistungsprobleme haben. Bitte überprüfe:\n- CCU CPU- und Speicherauslastung\n- CCU führt keine zeitintensiven Operationen aus\n- Netzwerklatenz zwischen Home Assistant und CCU\n\nLade die Integration neu, um es erneut zu versuchen.", 
             "title": "CCU-Verbindungszeitüberschreitung"
+        }, 
+        "client_failed": {
+            "description": "Der XML-RPC-Client für Schnittstelle **{interface_id}** wurde getrennt.\n\nDie Integration kann keine Befehle an die CCU für diese Schnittstelle senden. Bitte überprüfe:\n- CCU ist eingeschaltet und erreichbar\n- Netzwerkverbindung zur CCU\n- CCU-Protokolle auf Fehler\n\nDie Integration versucht eine automatische Wiederverbindung.", 
+            "title": "Client getrennt für {interface_id}"
+        }, 
+        "connection_failed": {
+            "description": "Die Verbindung zu Schnittstelle **{interface_id}** ist fehlgeschlagen.\n\nDie Integration kann nicht mit dieser Schnittstelle kommunizieren. Bitte überprüfe:\n- CCU ist eingeschaltet und erreichbar\n- Die Schnittstelle ist auf der CCU aktiviert\n- Netzwerk-/Firewall-Einstellungen\n\nDie Integration versucht eine automatische Wiederverbindung.", 
+            "title": "Verbindung fehlgeschlagen für {interface_id}"
         }, 
         "devices_delayed": {
             "fix_flow": {
@@ -1081,6 +1096,18 @@
                 "externally_armed": "Extern scharf", 
                 "internally_armed": "Intern scharf", 
                 "low_battery": "Niedriger Batteriestand"
+            }
+        }, 
+        "fixed_color": {
+            "options": {
+                "black": "Schwarz", 
+                "blue": "Blau", 
+                "green": "Grün", 
+                "purple": "Violett", 
+                "red": "Rot", 
+                "turquoise": "Türkis", 
+                "white": "Weiß", 
+                "yellow": "Gelb"
             }
         }
     }, 
@@ -1678,13 +1705,13 @@
                     "description": "LED-Helligkeit (0 bis 255)", 
                     "name": "Helligkeit"
                 }, 
+                "color": {
+                    "description": "LED-Farbe (schwarz, blau, grün, türkis, rot, violett, gelb, weiß)", 
+                    "name": "Farbe"
+                }, 
                 "flash_time": {
                     "description": "Blinkdauer in Millisekunden (0 bis 5000)", 
                     "name": "Blinkzeit"
-                }, 
-                "hs_color": {
-                    "description": "LED-Farbe als Farbton/Sättigung-Tupel [Farbton, Sättigung]", 
-                    "name": "HS-Farbe"
                 }, 
                 "on_time": {
                     "description": "LED-Einschaltdauer in Sekunden", 

@@ -12,11 +12,11 @@ from unittest.mock import MagicMock, Mock, patch
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from aiohomematic.central.event_bus import RpcParameterReceivedEvent
-from aiohomematic.central.integration_events import (
+from aiohomematic.central.events import (
     DataPointsCreatedEvent,
     DeviceLifecycleEvent,
     DeviceTriggerEvent,
+    RpcParameterReceivedEvent,
     SystemStatusChangedEvent,
 )
 from aiohomematic.interfaces import BaseParameterDataPointProtocol, CustomDataPointProtocol

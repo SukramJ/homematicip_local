@@ -319,6 +319,9 @@
             }
         }, 
         "button": {
+            "button_press": {
+                "name": "Button"
+            }, 
             "create_backup": {
                 "name": "Create Backup"
             }, 
@@ -484,10 +487,10 @@
             }, 
             "concentration": {
                 "name": "Concentration"
-            },
+            }, 
             "connection_latency": {
                 "name": "Connection Latency"
-            },
+            }, 
             "cover_level": {
                 "name": "Position"
             }, 
@@ -595,13 +598,13 @@
             }, 
             "ip_address": {
                 "name": "IP Address"
-            },
+            }, 
             "last_event_age": {
                 "name": "Last Event Age"
-            },
+            }, 
             "level": {
                 "name": "Level"
-            },
+            }, 
             "level_2": {
                 "name": "Level 2"
             }, 
@@ -753,10 +756,10 @@
             }, 
             "sunshine_duration": {
                 "name": "Sunshine Duration"
-            },
+            }, 
             "system_health": {
                 "name": "System Health"
-            },
+            }, 
             "taupunkt": {
                 "name": "dew point"
             }, 
@@ -843,6 +846,10 @@
         }
     }, 
     "issues": {
+        "callback_server_failed": {
+            "description": "The callback server for interface **{interface_id}** failed to start.\n\nThe integration cannot receive state updates from the CCU. Please check:\n- The configured callback port is not in use by another application\n- Network/firewall settings allow incoming connections\n- Home Assistant has permission to bind to the port\n\nReload the integration to retry.", 
+            "title": "Callback server failed for {interface_id}"
+        }, 
         "central_degraded": {
             "description": "The CCU connection for **{instance_name}** is in a degraded state.\n\nReason: {reason}\n\nSome interfaces are disconnected. The integration is attempting automatic recovery.", 
             "title": "CCU connection degraded"
@@ -862,6 +869,14 @@
         "central_failed_timeout": {
             "description": "The CCU connection for **{instance_name}** has failed due to connection timeouts.\n\nInterface: {interface_id}\n\nThe CCU may be overloaded or experiencing performance issues. Please check:\n- CCU CPU and memory usage\n- CCU is not executing long-running operations\n- Network latency between Home Assistant and CCU\n\nReload the integration to retry.", 
             "title": "CCU connection timeout"
+        }, 
+        "client_failed": {
+            "description": "The XML-RPC client for interface **{interface_id}** has disconnected.\n\nThe integration cannot send commands to the CCU for this interface. Please check:\n- CCU is powered on and reachable\n- Network connectivity to the CCU\n- CCU logs for errors\n\nThe integration is attempting automatic reconnection.", 
+            "title": "Client disconnected for {interface_id}"
+        }, 
+        "connection_failed": {
+            "description": "The connection to interface **{interface_id}** has failed.\n\nThe integration cannot communicate with this interface. Please check:\n- CCU is powered on and reachable\n- The interface is enabled on the CCU\n- Network/firewall settings\n\nThe integration is attempting automatic reconnection.", 
+            "title": "Connection failed for {interface_id}"
         }, 
         "devices_delayed": {
             "fix_flow": {
@@ -1018,6 +1033,81 @@
                 }, 
                 "description": "Configure program and system variable scanning", 
                 "title": "Programs & system variables"
+            }
+        }
+    }, 
+    "selector": {
+        "display_alignment": {
+            "options": {
+                "center": "Center", 
+                "left": "Left", 
+                "right": "Right"
+            }
+        }, 
+        "display_color": {
+            "options": {
+                "black": "Black", 
+                "white": "White"
+            }
+        }, 
+        "display_icon": {
+            "options": {
+                "bell": "Bell", 
+                "clock": "Clock", 
+                "cloud": "Cloud", 
+                "cloud_and_mooon": "Cloud and moon", 
+                "cloud_and_sun": "Cloud and sun", 
+                "cloud_sun_and_rain": "Cloud, sun and rain", 
+                "drizzle": "Drizzle", 
+                "eco": "Eco", 
+                "error": "Error", 
+                "everything_okay": "Everything okay", 
+                "external_protection": "External protection", 
+                "flame": "Flame", 
+                "information": "Information", 
+                "internal_protection": "Internal protection", 
+                "lamp_off": "Lamp off", 
+                "lamp_on": "Lamp on", 
+                "moon": "Moon", 
+                "new_message": "New message", 
+                "no_icon": "No icon", 
+                "padlock_closed": "Padlock closed", 
+                "padlock_open": "Padlock open", 
+                "protection_deactivated": "Protection deactivated", 
+                "rain": "Rain", 
+                "raindrop": "Raindrop", 
+                "service_message": "Service message", 
+                "shutters": "Shutters", 
+                "snow": "Snow", 
+                "snowflake": "Snowflake", 
+                "sun": "Sun", 
+                "thunderstorm": "Thunderstorm", 
+                "wind": "Wind", 
+                "window_open": "Window open"
+            }
+        }, 
+        "display_sound": {
+            "options": {
+                "delayed_externally_armed": "Delayed externally armed", 
+                "delayed_internally_armed": "Delayed internally armed", 
+                "disarmed": "Disarmed", 
+                "error": "Error", 
+                "event": "Event", 
+                "externally_armed": "Externally armed", 
+                "internally_armed": "Internally armed", 
+                "low_battery": "Low battery"
+            }
+        }, 
+        "fixed_color": {
+            "options": {
+                "black": "Black", 
+                "blue": "Blue", 
+                "green": "Green", 
+                "purple": "Purple", 
+                "red": "Red", 
+                "turquoise": "Turquoise", 
+                "white": "White", 
+                "yellow": "Yellow"
             }
         }
     }, 
@@ -1305,29 +1395,29 @@
             "name": "Set light on time"
         }, 
         "play_sound": {
-            "description": "Play a sound on HmIP-MP3P sound player devices",
+            "description": "Play a sound on HmIP-MP3P sound player devices", 
             "fields": {
                 "on_time": {
-                    "description": "Playback duration in seconds",
+                    "description": "Playback duration in seconds", 
                     "name": "On time"
-                },
+                }, 
                 "ramp_time": {
-                    "description": "Ramp time in seconds for volume fade",
+                    "description": "Ramp time in seconds for volume fade", 
                     "name": "Ramp time"
-                },
+                }, 
                 "repetitions": {
-                    "description": "Number of repetitions (0=none, 1-18=count, -1=infinite)",
+                    "description": "Number of repetitions (0=none, 1-18=count, -1=infinite)", 
                     "name": "Repetitions"
-                },
+                }, 
                 "soundfile": {
-                    "description": "Sound file to play (e.g., SOUNDFILE_001, SOUNDFILE_002, or INTERNAL_SOUNDFILE)",
+                    "description": "Sound file to play (e.g., SOUNDFILE_001, SOUNDFILE_002, or INTERNAL_SOUNDFILE)", 
                     "name": "Sound file"
-                },
+                }, 
                 "volume": {
-                    "description": "Playback volume (0.0 to 1.0)",
+                    "description": "Playback volume (0.0 to 1.0)", 
                     "name": "Volume"
                 }
-            },
+            }, 
             "name": "Play sound"
         }, 
         "put_link_paramset": {
@@ -1444,7 +1534,7 @@
                     "name": "Background Color"
                 }, 
                 "display_id": {
-                    "description": "Display slot (1-5)",
+                    "description": "Display slot (1-5)", 
                     "name": "Display ID"
                 }, 
                 "icon": {
@@ -1609,35 +1699,35 @@
             "name": "Set schedule profile weekday"
         }, 
         "set_sound_led": {
-            "description": "Set LED color and brightness on HmIP-MP3P sound player devices",
+            "description": "Set LED color and brightness on HmIP-MP3P sound player devices", 
             "fields": {
                 "brightness": {
-                    "description": "LED brightness (0 to 255)",
+                    "description": "LED brightness (0 to 255)", 
                     "name": "Brightness"
-                },
+                }, 
+                "color": {
+                    "description": "LED color (black, blue, green, turquoise, red, purple, yellow, white)", 
+                    "name": "Color"
+                }, 
                 "flash_time": {
-                    "description": "Flash duration in milliseconds (0 to 5000)",
+                    "description": "Flash duration in milliseconds (0 to 5000)", 
                     "name": "Flash time"
-                },
-                "hs_color": {
-                    "description": "LED color as hue/saturation tuple [hue, saturation]",
-                    "name": "HS color"
-                },
+                }, 
                 "on_time": {
-                    "description": "LED on duration in seconds",
+                    "description": "LED on duration in seconds", 
                     "name": "On time"
-                },
+                }, 
                 "ramp_time": {
-                    "description": "Ramp time in seconds for brightness fade",
+                    "description": "Ramp time in seconds for brightness fade", 
                     "name": "Ramp time"
-                },
+                }, 
                 "repetitions": {
-                    "description": "Number of repetitions (0=none, 1-18=count, -1=infinite)",
+                    "description": "Number of repetitions (0=none, 1-18=count, -1=infinite)", 
                     "name": "Repetitions"
                 }
-            },
+            }, 
             "name": "Set sound player LED"
-        },
+        }, 
         "set_variable_value": {
             "description": "Write a value to a variable", 
             "fields": {
@@ -1699,77 +1789,14 @@
             "name": "Update device firmware data"
         }, 
         "valve_set_on_time": {
-            "description": "Set on time for a valve entity. Must be followed by a valve.open",
+            "description": "Set on time for a valve entity. Must be followed by a valve.open", 
             "fields": {
                 "on_time": {
-                    "description": "On time for a valve in seconds. Use 0 to reset the on time",
+                    "description": "On time for a valve in seconds. Use 0 to reset the on time", 
                     "name": "On Time"
                 }
-            },
+            }, 
             "name": "Set valve on time"
-        }
-    },
-    "selector": {
-        "display_alignment": {
-            "options": {
-                "center": "Center",
-                "left": "Left",
-                "right": "Right"
-            }
-        },
-        "display_color": {
-            "options": {
-                "black": "Black",
-                "white": "White"
-            }
-        },
-        "display_icon": {
-            "options": {
-                "bell": "Bell",
-                "clock": "Clock",
-                "cloud": "Cloud",
-                "cloud_and_mooon": "Cloud and moon",
-                "cloud_and_sun": "Cloud and sun",
-                "cloud_sun_and_rain": "Cloud, sun and rain",
-                "drizzle": "Drizzle",
-                "eco": "Eco",
-                "error": "Error",
-                "everything_okay": "Everything okay",
-                "external_protection": "External protection",
-                "flame": "Flame",
-                "information": "Information",
-                "internal_protection": "Internal protection",
-                "lamp_off": "Lamp off",
-                "lamp_on": "Lamp on",
-                "moon": "Moon",
-                "new_message": "New message",
-                "no_icon": "No icon",
-                "padlock_closed": "Padlock closed",
-                "padlock_open": "Padlock open",
-                "protection_deactivated": "Protection deactivated",
-                "rain": "Rain",
-                "raindrop": "Raindrop",
-                "service_message": "Service message",
-                "shutters": "Shutters",
-                "snow": "Snow",
-                "snowflake": "Snowflake",
-                "sun": "Sun",
-                "thunderstorm": "Thunderstorm",
-                "wind": "Wind",
-                "window_open": "Window open"
-            }
-        },
-        "display_sound": {
-            "options": {
-                "delayed_externally_armed": "Delayed externally armed",
-                "delayed_internally_armed": "Delayed internally armed",
-                "disarmed": "Disarmed",
-                "error": "Error",
-                "event": "Event",
-                "externally_armed": "Externally armed",
-                "internally_armed": "Internally armed",
-                "low_battery": "Low battery"
-            }
         }
     }
 }

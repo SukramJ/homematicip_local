@@ -7,7 +7,7 @@ import logging
 from typing import Any, Final, Generic
 
 from aiohomematic.const import CallSource, DataPointUsage
-from aiohomematic.interfaces.model import (
+from aiohomematic.interfaces import (
     CalculatedDataPointProtocol,
     CallbackDataPointProtocol,
     CustomDataPointProtocol,

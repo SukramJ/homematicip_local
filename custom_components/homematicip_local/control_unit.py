@@ -11,7 +11,7 @@ from typing import Any, Final, TypeVar, cast
 
 from aiohomematic import __version__ as AIOHM_VERSION
 from aiohomematic.central import CentralConfig, CentralUnit, check_config
-from aiohomematic.central.integration_events import (
+from aiohomematic.central.events import (
     DataPointsCreatedEvent,
     DeviceLifecycleEvent,
     DeviceLifecycleEventType,

@@ -737,11 +737,21 @@ set_sound_led:
       domain: light
       integration: homematicip_local
   fields:
-    hs_color:
+    color:
       required: false
-      example: [0, 100]
+      example: "red"
       selector:
-        object:
+        select:
+          translation_key: "fixed_color"
+          options:
+            - "black"
+            - "blue"
+            - "green"
+            - "turquoise"
+            - "red"
+            - "purple"
+            - "yellow"
+            - "white"
     brightness:
       required: false
       example: 255

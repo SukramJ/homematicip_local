@@ -7,6 +7,7 @@ from typing import Any, Final
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import (
+    FIXED_COLOR_TO_HS_CONVERTER,
     CustomDpDimmer,
     CustomDpIpFixedColorLight,
     CustomDpSoundPlayerLed,
@@ -225,7 +226,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
     async def async_set_led(
         self,
         *,
-        hs_color: tuple[float, float] | None = None,
+        color: str | None = None,
         brightness: int | None = None,
         on_time: float | None = None,
         ramp_time: float | None = None,
@@ -241,8 +242,17 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
             return
 
         kwargs: SoundPlayerLedOnArgs = {}
-        if hs_color is not None:
-            kwargs["hs_color"] = hs_color
+        if color is not None:
+            # Convert fixed color name to hs_color tuple for aiohomematic
+            hs_color = FIXED_COLOR_TO_HS_CONVERTER.get(color.upper())
+            if hs_color is not None:
+                kwargs["hs_color"] = hs_color
+            else:
+                _LOGGER.warning(
+                    "Invalid color '%s'. Must be one of: %s",
+                    color,
+                    ", ".join(FIXED_COLOR_TO_HS_CONVERTER.keys()),
+                )
         if brightness is not None:
             kwargs["brightness"] = brightness
         if on_time is not None:

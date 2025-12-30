@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from aiohomematic.const import ForcedDeviceAvailability, ParamsetKey
 from aiohomematic.exceptions import BaseHomematicException
-from aiohomematic.interfaces.model import DeviceProtocol
+from aiohomematic.interfaces import DeviceProtocol
 from aiohomematic.support import get_device_address, to_bool
 import aiohomematic.validator as haval
 from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
@@ -714,9 +714,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         service_name=HmipLocalServices.SET_SOUND_LED,
         entity_domain=LIGHT_DOMAIN,
         schema={
-            vol.Optional(ATTR_HS_COLOR): vol.All(
-                vol.ExactSequence((vol.Coerce(float), vol.Coerce(float))),
-                vol.Coerce(tuple),
+            vol.Optional(ATTR_COLOR): vol.In(
+                ["black", "blue", "green", "turquoise", "red", "purple", "yellow", "white"]
             ),
             vol.Optional(ATTR_BRIGHTNESS): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
             vol.Optional(ATTR_ON_TIME): vol.All(vol.Coerce(float), vol.Range(min=0.0)),

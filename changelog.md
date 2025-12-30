@@ -20,6 +20,7 @@
 - **Configuration Experience**: Enhanced config flow with improved error messages, progress indicators (Step X of Y), and menu-based navigation
 - **Error Handling**: Reduced log flooding during connection issues with improved error handling decorator for entity actions
 - **Translations**: Fixed naming of untranslated entities and improved translation coverage for press events
+- **Translations**: Added missing repair issue translations (callback_server_failed, client_failed, connection_failed) and entity translations (button_press)
 
 ### Bug Fixes
 
@@ -32,7 +33,7 @@
 - **Testing**: Comprehensive test coverage improvements for config flow, services, lights, and updates
 - **Documentation**: Added comprehensive CLAUDE.md for AI assistants with development guidelines and project structure
 
-## Bump aiohomematic to 2025.12.54
+## Bump aiohomematic to 2025.12.55
 
 ### Connection Recovery
 
@@ -130,6 +131,13 @@
 - Store package restructured into `persistent/` and `dynamic/` subpackages for better maintainability
 - Typed dataclasses (`CachedCommand`, `PongTracker`) replace untyped tuples and dicts
 - Event-driven test patterns with `EventCapture` fixture for behavior verification through events
+- Import standardization with `lint-package-imports` pre-commit hook enforcing package facade usage
+- Package structure refactoring: Split large `__init__.py` files into dedicated modules
+  - `central/coordinators/` subpackage for CacheCoordinator, ClientCoordinator, ConnectionRecoveryCoordinator, DeviceCoordinator, EventCoordinator, HubCoordinator
+  - `central/events/` subpackage for EventBus, event types, and integration events
+  - `client/ccu.py`, `client/config.py` for client classes
+  - `model/hub/hub.py` for Hub orchestrator
+- Export validation with `lint_all_exports.py` ensuring consistent `__all__` exports
 
 # Version 1.90.2 (2025-11-05)
 

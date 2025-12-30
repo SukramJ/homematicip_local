@@ -20,6 +20,7 @@
 - **Configuration Experience**: Enhanced config flow with improved error messages, progress indicators (Step X of Y), and menu-based navigation
 - **Error Handling**: Reduced log flooding during connection issues with improved error handling decorator for entity actions
 - **Translations**: Fixed naming of untranslated entities and improved translation coverage for press events
+- **Translations**: Added missing repair issue translations (callback_server_failed, client_failed, connection_failed) and entity translations (button_press)
 
 ### Bug Fixes
 

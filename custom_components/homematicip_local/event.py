@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from aiohomematic.const import DATA_POINT_EVENTS, DataPointCategory
-from aiohomematic.interfaces.model import ChannelProtocol, DeviceProtocol, GenericEventProtocolAny
+from aiohomematic.interfaces import ChannelProtocol, DeviceProtocol, GenericEventProtocolAny
 from aiohomematic.type_aliases import UnsubscribeCallback
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant, callback

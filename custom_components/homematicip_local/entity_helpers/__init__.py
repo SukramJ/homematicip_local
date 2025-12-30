@@ -6,7 +6,7 @@ import dataclasses
 import logging
 from typing import TYPE_CHECKING
 
-from aiohomematic.interfaces.model import (
+from aiohomematic.interfaces import (
     CalculatedDataPointProtocol,
     CustomDataPointProtocol,
     GenericDataPointProtocol,

@@ -14,7 +14,7 @@ import voluptuous as vol
 from aiohomematic import validator as val
 from aiohomematic.const import IDENTIFIER_SEPARATOR
 from aiohomematic.exceptions import BaseHomematicException
-from aiohomematic.interfaces.model import (
+from aiohomematic.interfaces import (
     CalculatedDataPointProtocol,
     CustomDataPointProtocol,
     GenericDataPointProtocolAny,
