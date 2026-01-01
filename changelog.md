@@ -33,7 +33,7 @@
 - **Testing**: Comprehensive test coverage improvements for config flow, services, lights, and updates
 - **Documentation**: Added comprehensive CLAUDE.md for AI assistants with development guidelines and project structure
 
-## Bump aiohomematic to 2026.1.0
+## Bump aiohomematic to 2026.1.1
 
 ### Storage & Persistence
 
@@ -76,19 +76,16 @@
   - Circuit breaker state transitions and trip notifications
   - Scheduler task execution and data refresh events
   - Request coalescing events for performance monitoring
+- **RPC Server Monitoring**: Track incoming requests from CCU with latency, error rates, and active tasks
+- **Generic Serialization**: All metrics and health data now export to JSON-serializable dictionaries
+- **Data Point Categories**: View data point counts grouped by type (SWITCH, SENSOR, CLIMATE, etc.)
+- **Improved Cache Metrics**: Clear distinction between true caches (with hit/miss) and trackers (size only)
 - **Self-Healing Recovery**: Automatic data refresh after circuit breaker recovery
-- **Migrated Components**: All core components use emit-only pattern
-  - `PingPongCache`: Emits RTT latency per interface
-  - `CentralDataCache`: Emits cache hit/miss counters
-  - `CircuitBreaker`: Emits success/failure/rejection counters
-  - `@inspector`: Emits service call latency and error counts (global registry deprecated)
-  - `HealthTracker`: Emits client health events
 - **Hub Metrics Sensors**: Three HA-visible sensors for real-time system monitoring:
   - System Health (0-100%)
   - Connection Latency (ms)
   - Last Event Age (seconds since last CCU event)
 - **RPC Monitoring**: Track success/failure rates, latency, and request coalescing effectiveness
-- **Cache Statistics**: View hit rates and sizes across all caches
 
 ### Connection Reliability
 
@@ -115,6 +112,8 @@
 
 ### Bug Fixes
 
+- **Device Creation Race Condition**: Fixed startup crash when CCU callback and initialization code raced
+- **Resilient Channel Handling**: Devices remain functional even when some channel descriptions are missing
 - **Cover/Dimmer Restart**: Fixed `is_valid` returning False after CCU restart when status is UNKNOWN
 - **Empty Numeric Values**: Fixed conversion error when CCU sends empty strings for FLOAT/INTEGER parameters
 - **RGBW/LSC Auto-Off**: Fixed lights turning off unexpectedly when using transition times
@@ -155,6 +154,12 @@
   - `client/ccu.py`, `client/config.py` for client classes
   - `model/hub/hub.py` for Hub orchestrator
 - Export validation with `lint_all_exports.py` ensuring consistent `__all__` exports
+- **Semantic Naming**: Renamed classes to reflect actual purpose
+  - `CommandCache` → `CommandTracker` (tracks sent commands, not a cache)
+  - `PingPongCache` → `PingPongTracker` (tracks connection health)
+  - `*DescriptionCache` → `*DescriptionRegistry` (authoritative stores)
+  - `ParameterVisibilityCache` → `ParameterVisibilityRegistry`
+- **TrackerStatistics**: Dedicated statistics class for trackers (evictions only, no hit/miss)
 
 # Version 1.90.2 (2025-11-05)
 
