@@ -730,12 +730,16 @@ Enable the away mode immediately, and specify the end time by setting a duration
 
 ### `homematicip_local.export_device_definition`
 
-Exports a device definition (2 files) to
+Exports a device definition as a single ZIP file to:
 
-- 'Your home-assistant config directory'/homematicip_local/export_device_descriptions/{device_type}.json
-- 'Your home-assistant config directory'/homematicip_local/export_paramset_descriptions/{device_type}.json
+- `'Your home-assistant config directory'/homematicip_local/{device_model}.zip`
 
-Please create a pull request with both files at [pydevccu](https://github.com/sukramj/pydevccu), if the device not exists, to support future development of this component.
+The ZIP file contains:
+
+- `device_descriptions/{device_model}.json`
+- `paramset_descriptions/{device_model}.json`
+
+Please upload this ZIP file at [pydevccu](https://github.com/sukramj/pydevccu) (create a pull request), if the device does not exist, to support future development of this component.
 This data can be used by the developers to add customized entities for new devices.
 
 ### `homematicip_local.fetch_system_variables`

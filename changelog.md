@@ -1,4 +1,4 @@
-# Version 2.0.0 (2025-12-29)
+# Version 2.0.0 (2026-01-01)
 
 ## What's Changed
 
@@ -33,7 +33,24 @@
 - **Testing**: Comprehensive test coverage improvements for config flow, services, lights, and updates
 - **Documentation**: Added comprehensive CLAUDE.md for AI assistants with development guidelines and project structure
 
-## Bump aiohomematic to 2025.12.55
+## Bump aiohomematic to 2026.1.0
+
+### Storage & Persistence
+
+- **Storage Abstraction Layer**: Unified storage system enabling Home Assistant Store integration
+  - Protocol-based architecture allows transparent substitution of storage backends
+  - Local implementation uses orjson for fast serialization with atomic writes
+  - Supports ZIP archive loading, version migrations, and delayed/debounced saves
+- **Device Definition Export**: Export device definitions as single ZIP file for easier sharing and debugging
+
+### RPC Server
+
+- **Async XML-RPC Server** (Experimental): New asyncio-native alternative to thread-based server
+  - Enable via `OptionalSettings.ASYNC_RPC_SERVER` in CentralConfig
+  - Full `system.multicall` support for batched CCU events
+  - Health-check endpoint (`GET /health`) for monitoring
+  - Metrics: request count, error count, latency, active background tasks
+  - Graceful shutdown with task cancellation
 
 ### Connection Recovery
 
