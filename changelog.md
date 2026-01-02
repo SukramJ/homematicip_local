@@ -1,4 +1,4 @@
-# Version 2.0.0 (2026-01-01)
+# Version [2.0.0](https://github.com/SukramJ/homematicip_local/compare/1.90.2...2.0.0) (2026-01-02)
 
 ## What's Changed
 
@@ -33,7 +33,7 @@
 - **Testing**: Comprehensive test coverage improvements for config flow, services, lights, and updates
 - **Documentation**: Added comprehensive CLAUDE.md for AI assistants with development guidelines and project structure
 
-## Bump aiohomematic to 2026.1.1
+## Bump aiohomematic to [2026.1.2](https://github.com/SukramJ/aiohomematic/compare/2025.11.7...2026.1.2)
 
 ### Storage & Persistence
 
