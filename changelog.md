@@ -10,13 +10,20 @@
 
 - **Callback Issues Cleanup**: Stale callback repair issues are now cleaned up at startup (fixes leftover issues from PingPong race condition)
 
-## Bump aiohomematic to [2026.1.4](https://github.com/SukramJ/aiohomematic/compare/2026.1.3...2026.1.4)
+## Bump aiohomematic to [2026.1.5](https://github.com/SukramJ/aiohomematic/compare/2026.1.3...2026.1.5)
+
+### New Features
+
+- **Add IncidentStore for Persistent Diagnostic Incidents**: New storage system for tracking and persisting diagnostic incidents
+- **PingPong Tracker Incident Recording**: Connection health issues are now recorded as incidents
+- **PingPong Diagnostics Journal**: Enhanced diagnostic capabilities for connection monitoring
 
 ### Bug Fixes
 
 - **Fix PingPong Unknown Issue Not Cleared**: Unknown PONG mismatch issues are now properly cleared when conditions normalize
 - **Fix OperatingVoltageLevel Shows Unknown After Restart** (Issue #2674): Battery parameters now load from cache on startup
-
+- **Fix KeyError for PARENT in Device Descriptions**: Use `.get()` to safely access optional `PARENT` field
+- 
 # Version [2.0.1](https://github.com/SukramJ/homematicip_local/compare/2.0.0...2.0.1) (2026-01-02)
 
 ## What's Changed

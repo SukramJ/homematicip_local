@@ -26,5 +26,6 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: Homemat
     diag["system_information"] = async_redact_data(asdict(central.system_information), "serial")
     diag["system_health"] = central.health.to_dict()
     diag["metrics"] = metrics.to_dict()
+    diag["incident_store"] = await central.cache_coordinator.incident_store.get_diagnostics()
 
     return diag
