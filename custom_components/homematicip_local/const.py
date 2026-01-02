@@ -78,6 +78,7 @@ class HmipLocalServices(StrEnum):
 
     ADD_LINK = "add_link"
     CLEAR_CACHE = "clear_cache"
+    CONFIRM_ALL_DELAYED_DEVICES = "confirm_all_delayed_devices"
     CLEAR_TEXT_DISPLAY = "clear_text_display"
     COPY_SCHEDULE = "copy_schedule"
     COPY_SCHEDULE_PROFILE = "copy_schedule_profile"

@@ -686,6 +686,10 @@ Creates a direct connection.
 
 Clears the cache for a central unit from Home Assistant. Requires a restart.
 
+### `homematicip_local.confirm_all_delayed_devices`
+
+Confirms all delayed devices (devices in the CCU inbox) at once and adds them to Home Assistant. This is useful when multiple new devices need to be added without going through the repair flow for each one individually. The devices will be added without setting a custom name.
+
 ### `homematicip_local.create_central_links`
 
 Creates a central link from a device to the backend. This is required for rf-devices to enable button-press events.

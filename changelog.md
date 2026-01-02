@@ -1,3 +1,22 @@
+# Version [2.0.2](https://github.com/SukramJ/homematicip_local/compare/2.0.1...2.0.2) (2026-01-02)
+
+## What's Changed
+
+### New Features
+
+- **Confirm All Delayed Devices Service**: New service `confirm_all_delayed_devices` to confirm all pending inbox devices at once
+
+### Bug Fixes
+
+- **Callback Issues Cleanup**: Stale callback repair issues are now cleaned up at startup (fixes leftover issues from PingPong race condition)
+
+## Bump aiohomematic to [2026.1.4](https://github.com/SukramJ/aiohomematic/compare/2026.1.3...2026.1.4)
+
+### Bug Fixes
+
+- **Fix PingPong Unknown Issue Not Cleared**: Unknown PONG mismatch issues are now properly cleared when conditions normalize
+- **Fix OperatingVoltageLevel Shows Unknown After Restart** (Issue #2674): Battery parameters now load from cache on startup
+
 # Version [2.0.1](https://github.com/SukramJ/homematicip_local/compare/2.0.0...2.0.1) (2026-01-02)
 
 ## What's Changed
@@ -5,6 +24,7 @@
 ### Bug Fixes
 
 - **Select Entities**: Fixed Select entities (e.g., WINDOW_STATE) not being created due to incorrect whitelist filtering
+- **Callback Issues Cleanup**: Stale callback repair issues are now cleaned up at startup (fixes leftover issues from PingPong race condition)
 
 ## Bump aiohomematic to [2026.1.3](https://github.com/SukramJ/aiohomematic/compare/2026.1.2...2026.1.3)
 

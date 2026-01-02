@@ -145,6 +145,12 @@ SCHEMA_CLEAR_CACHE = vol.Schema(
     }
 )
 
+SCHEMA_CONFIRM_ALL_DELAYED_DEVICES = vol.Schema(
+    {
+        vol.Required(CONF_ENTRY_ID): cv.string,
+    }
+)
+
 SCHEMA_CREATE_CCU_BACKUP = vol.Schema(
     {
         vol.Required(CONF_ENTRY_ID): cv.string,
@@ -308,6 +314,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             await _async_service_add_link(hass=hass, service=service)
         elif service_name == HmipLocalServices.CLEAR_CACHE:
             await _async_service_clear_cache(hass=hass, service=service)
+        elif service_name == HmipLocalServices.CONFIRM_ALL_DELAYED_DEVICES:
+            await _async_service_confirm_all_delayed_devices(hass=hass, service=service)
         elif service_name == HmipLocalServices.CREATE_CCU_BACKUP:
             return await _async_service_create_ccu_backup(hass=hass, service=service)
         elif service_name == HmipLocalServices.EXPORT_DEVICE_DEFINITION:
@@ -366,6 +374,14 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         service=HmipLocalServices.CLEAR_CACHE,
         service_func=async_call_hmip_local_service,
         schema=SCHEMA_CLEAR_CACHE,
+    )
+
+    async_register_admin_service(
+        hass=hass,
+        domain=DOMAIN,
+        service=HmipLocalServices.CONFIRM_ALL_DELAYED_DEVICES,
+        service_func=async_call_hmip_local_service,
+        schema=SCHEMA_CONFIRM_ALL_DELAYED_DEVICES,
     )
 
     async_register_admin_service(
@@ -1009,6 +1025,37 @@ async def _async_service_clear_cache(*, hass: HomeAssistant, service: ServiceCal
     entry_id = service.data[CONF_ENTRY_ID]
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
         await control.central.cache_coordinator.clear_all()
+
+
+async def _async_service_confirm_all_delayed_devices(*, hass: HomeAssistant, service: ServiceCall) -> None:
+    """Service to confirm all delayed devices at once."""
+    from homeassistant.helpers.issue_registry import (  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
+        async_delete_issue,
+    )
+
+    from .repairs import REPAIR_CALLBACKS  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
+
+    entry_id = service.data[CONF_ENTRY_ID]
+    if not _async_get_control_unit(hass=hass, entry_id=entry_id):
+        return
+
+    # Find all delayed device issues for this entry
+    delayed_issue_ids = [
+        issue_id for issue_id in list(REPAIR_CALLBACKS.keys()) if issue_id.startswith("devices_delayed|")
+    ]
+
+    for issue_id in delayed_issue_ids:
+        # Execute the fix callback with empty device name
+        if cb := REPAIR_CALLBACKS.pop(issue_id, None):
+            try:
+                await cb(device_name="")
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Failed to confirm delayed device for issue %s", issue_id)
+
+        # Delete the repair issue
+        async_delete_issue(hass=hass, domain=DOMAIN, issue_id=issue_id)
+
+    _LOGGER.info("Confirmed %d delayed devices", len(delayed_issue_ids))
 
 
 async def _async_service_fetch_system_variables(*, hass: HomeAssistant, service: ServiceCall) -> None:

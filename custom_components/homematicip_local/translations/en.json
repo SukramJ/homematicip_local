@@ -1148,6 +1148,16 @@
             "description": "Clear all lines on HmIP-WRCD text display", 
             "name": "Clear text display"
         }, 
+        "confirm_all_delayed_devices": {
+            "description": "Confirm all delayed devices at once and add them to Home Assistant", 
+            "fields": {
+                "entry_id": {
+                    "description": "Homematic central to confirm devices for", 
+                    "name": "Central"
+                }
+            }, 
+            "name": "Confirm all delayed devices"
+        }, 
         "copy_schedule": {
             "description": "Copy a schedule to another device", 
             "fields": {

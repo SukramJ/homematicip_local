@@ -277,6 +277,10 @@ class ControlUnit(BaseControlUnit):
 
     async def start_central(self) -> None:
         """Start the central unit."""
+        # Clean up stale callback repair issues from previous sessions
+        # (e.g., from PingPong race condition bug fixed in aiohomematic 2026.1.3)
+        self._cleanup_callback_issues()
+
         # Subscribe to integration events (4 focused subscriptions)
         _LOGGER.debug("Subscribing to integration events")
         self._unsubscribe_callbacks.append(
@@ -386,6 +390,17 @@ class ControlUnit(BaseControlUnit):
                 )
             }
         )
+
+    @callback
+    def _cleanup_callback_issues(self) -> None:
+        """Clean up stale callback repair issues from previous sessions."""
+        for interface_name in self._config.interface_config:
+            interface_id = f"{self._instance_name}-{interface_name}"
+            async_delete_issue(
+                hass=self._hass,
+                domain=DOMAIN,
+                issue_id=f"{self._entry_id}_callback_{interface_id}",
+            )
 
     def _handle_degraded_state(self, event: SystemStatusChangedEvent, issue_id_degraded: str) -> bool:
         """Handle DEGRADED central state. Return True if reauth was triggered."""
@@ -807,7 +822,7 @@ class ControlConfig:
         self._json_port: Final[int | None] = self._data.get(CONF_JSON_PORT)
 
         # interface_config
-        self._interface_config = self._data.get(CONF_INTERFACE, {})
+        self._interface_config: Final[Mapping[str, Any]] = self._data.get(CONF_INTERFACE, {})
         # advanced_config
         ac = self._data.get(CONF_ADVANCED_CONFIG, {})
         self.enable_mqtt: Final[bool] = ac.get(CONF_ENABLE_MQTT, DEFAULT_ENABLE_MQTT)
@@ -851,6 +866,11 @@ class ControlConfig:
     def backup_directory(self) -> str:
         """Return the full path to the backup directory."""
         return f"{get_storage_directory(hass=self.hass)}/{self._backup_path}"
+
+    @property
+    def interface_config(self) -> Mapping[str, Any]:
+        """Return the interface configuration."""
+        return self._interface_config
 
     def check_config(self) -> None:
         """Check config. Throws BaseHomematicException on failure."""

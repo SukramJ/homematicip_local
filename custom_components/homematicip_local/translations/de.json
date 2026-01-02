@@ -1148,6 +1148,16 @@
             "description": "Löscht alle Zeilen auf dem HmIP-WRCD Textdisplay", 
             "name": "Textdisplay löschen"
         }, 
+        "confirm_all_delayed_devices": {
+            "description": "Bestätigt alle verzögerten Geräte auf einmal und fügt sie zu Home Assistant hinzu", 
+            "fields": {
+                "entry_id": {
+                    "description": "Homematic Zentrale, für die Geräte bestätigt werden sollen", 
+                    "name": "Zentrale"
+                }
+            }, 
+            "name": "Alle verzögerten Geräte bestätigen"
+        }, 
         "copy_schedule": {
             "description": "Kopiert einen Zeitplan zu einem anderen Gerät", 
             "fields": {
