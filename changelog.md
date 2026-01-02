@@ -1,3 +1,19 @@
+# Version [2.0.1](https://github.com/SukramJ/homematicip_local/compare/2.0.0...2.0.1) (2026-01-02)
+
+## What's Changed
+
+### Bug Fixes
+
+- **Select Entities**: Fixed Select entities (e.g., WINDOW_STATE) not being created due to incorrect whitelist filtering
+
+## Bump aiohomematic to [2026.1.3](https://github.com/SukramJ/aiohomematic/compare/2026.1.2...2026.1.3)
+
+### Bug Fixes
+
+- **Fix PingPong Race Condition**: Register ping token in tracker _before_ sending the ping request
+- **Fix Week Profile ScheduleCondition**: Extended `ScheduleCondition` enum with all 8 valid values
+- **Fix ClientJsonCCU Handler Initialization**: `ClientJsonCCU` (used for CCU-Jack) now properly initializes handlers
+
 # Version [2.0.0](https://github.com/SukramJ/homematicip_local/compare/1.90.2...2.0.0) (2026-01-02)
 
 ## What's Changed

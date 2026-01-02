@@ -42,7 +42,6 @@ async def async_setup_entry(
                 data_point=data_point,
             )
             for data_point in data_points
-            if data_point.parameter in DP_ACTION_SELECT_WHITELIST
         ]:
             async_add_entities(entities)
 
@@ -67,6 +66,7 @@ async def async_setup_entry(
                 data_point=data_point,
             )
             for data_point in data_points
+            if data_point.parameter in DP_ACTION_SELECT_WHITELIST
         ]:
             async_add_entities(entities)
 

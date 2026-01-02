@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 from functools import partial
 import logging
+import time
 from types import UnionType
 from typing import Any, Final, TypeVar, cast
 
@@ -508,6 +509,20 @@ class ControlUnit(BaseControlUnit):
             _LOGGER.debug("Devices delayed: %s on interface %s", event.device_addresses, event.interface_id)
             interface_id = event.interface_id
             if not interface_id:
+                return
+
+            # Check if we're in auto-confirm window (initial setup)
+            if self._auto_confirm_until is not None and time.time() < self._auto_confirm_until:
+                _LOGGER.debug(
+                    "Auto-confirming devices during initial setup: %s on interface %s",
+                    event.device_addresses,
+                    interface_id,
+                )
+                # Directly add devices without creating repair issues
+                await self._central.device_coordinator.add_new_devices_manually(
+                    interface_id=interface_id,
+                    address_names=dict.fromkeys(event.device_addresses, ""),
+                )
                 return
 
             for address in event.device_addresses:
