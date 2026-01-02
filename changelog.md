@@ -24,7 +24,6 @@
 ### Bug Fixes
 
 - **Select Entities**: Fixed Select entities (e.g., WINDOW_STATE) not being created due to incorrect whitelist filtering
-- **Callback Issues Cleanup**: Stale callback repair issues are now cleaned up at startup (fixes leftover issues from PingPong race condition)
 
 ## Bump aiohomematic to [2026.1.3](https://github.com/SukramJ/aiohomematic/compare/2026.1.2...2026.1.3)
 
