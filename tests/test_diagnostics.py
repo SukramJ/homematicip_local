@@ -8,7 +8,7 @@ This suite validates:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -64,6 +64,13 @@ class TestAsyncGetConfigEntryDiagnostics:
         mock_metrics_aggregator = MagicMock()
         mock_metrics_aggregator.snapshot.return_value = mock_metrics_snapshot
         control_unit.central.metrics_aggregator = mock_metrics_aggregator
+
+        # Mock cache_coordinator.incident_store.get_diagnostics() (async method)
+        mock_incident_store = MagicMock()
+        mock_incident_store.get_diagnostics = AsyncMock(return_value={"incidents": []})
+        mock_cache_coordinator = MagicMock()
+        mock_cache_coordinator.incident_store = mock_incident_store
+        control_unit.central.cache_coordinator = mock_cache_coordinator
 
         diag = await async_get_config_entry_diagnostics(hass, entry)
 
