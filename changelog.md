@@ -8,14 +8,21 @@
 - **Service Schema**: Removed invalid `base_temperature` parameter from `set_schedule_simple_profile` service schema (parameter is part of `simple_profile_data`, not a separate field)
 - **Service Name**: Fixed incorrect service name `create_backup` → `create_ccu_backup` in release notes
 
-### Documentation
-
-- **Relative Links**: Changed all branch-specific links in README.md and CLAUDE.md to relative paths for consistent navigation across branches
-
 ## Bump aiohomematic to [2026.1.6](https://github.com/SukramJ/aiohomematic/compare/2026.1.5...2026.1.6)
 
+### Bug Fixes
 
+- **Fix CuXD/CCU-Jack Device Control**: `ClientJsonCCU` now properly overrides `set_value` and `put_paramset` to use JSON-RPC
+- **Fix Sysvar-to-Device Association**: System variables with device references are now correctly associated with their devices/channels
 
+### New Features
+
+- **Circuit Breaker Incident Recording**: Circuit breaker state changes are now recorded as incidents
+- **CONNECTION_LOST Incident Recording**: Connection loss events are now recorded as incidents
+- **CONNECTION_RESTORED Incident Recording**: Connection restoration events are now recorded as incidents
+- **RPC_ERROR Incident Recording**: RPC call failures are now recorded as incidents
+- **CALLBACK_TIMEOUT Incident Recording**: Callback timeout events are now recorded as incidents
+- **Per-Type Incident Storage**: IncidentStore now uses per-IncidentType storage limits
 
 # Version [2.0.2](https://github.com/SukramJ/homematicip_local/compare/2.0.1...2.0.2) (2026-01-02)
 
