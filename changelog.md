@@ -4,7 +4,12 @@
 
 ### New Features
 
-- **Light Last Brightness Option**: Added config option `Enable last brightness for lights` in advanced settings. When enabled, lights will turn on with the last non-zero brightness level instead of default 100%. Default is disabled.
+- **Light Last Brightness Option**: Added config option `Restore last brightness for lights` in advanced settings. When enabled, lights will turn on with the last non-zero brightness level instead of default 100%. Default is disabled.
+
+### Improvements
+
+- **Configuration Options**: Improved labels and descriptions for all advanced configuration options in config flow and options flow
+- **Documentation**: Updated README.md with corrected descriptions for Device Behavior and Expert Options sections
 
 ### Bug Fixes
 

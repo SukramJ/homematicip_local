@@ -24,30 +24,35 @@
                     "callback_host": "Callback host (optional)", 
                     "callback_port_xml_rpc": "Callback port (optional)", 
                     "enable_system_notifications": "Enable system notifications", 
-                    "light_last_brightness_enabled": "Enable last brightness for lights", 
+                    "light_last_brightness_enabled": "Restore last brightness for lights", 
                     "listen_on_all_ip": "Listen on all network interfaces", 
                     "mqtt_enabled": "Enable MQTT", 
                     "mqtt_prefix": "MQTT prefix", 
-                    "optional_settings": "Debug & analytics settings", 
+                    "optional_settings": "Experimental features", 
                     "program_markers": "Program markers", 
-                    "program_scan_enabled": "Enable program scan", 
+                    "program_scan_enabled": "Enable program import", 
                     "sub_devices_enabled": "Create sub-device entities", 
                     "sysvar_markers": "System variable markers", 
-                    "sysvar_scan_enabled": "Enable system variable scan", 
-                    "sysvar_scan_interval": "Sysvar/Program scan interval", 
-                    "use_group_channel_for_cover_state": "Use group channel for cover state"
+                    "sysvar_scan_enabled": "Enable system variable import", 
+                    "sysvar_scan_interval": "Scan interval (seconds)", 
+                    "use_group_channel_for_cover_state": "Report cover position from group channel"
                 }, 
                 "data_description": {
                     "callback_host": "IP address for CCU callbacks. Leave empty for auto-detection.", 
                     "callback_port_xml_rpc": "Port for XML-RPC callbacks. Leave empty for automatic assignment.", 
+                    "enable_system_notifications": "Show notifications for connection issues and device errors in Home Assistant.", 
                     "light_last_brightness_enabled": "When enabled, lights will turn on with the last non-zero brightness level instead of default 100%.", 
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
-                    "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
-                    "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge", 
-                    "optional_settings": "Enable optional settings. Used for analytics and debugging. Should not be used during normal operations.", 
-                    "program_markers": "Comma separated list of markers for programs to enable fetching. To reset, the value must be set to a space.", 
-                    "sub_devices_enabled": "Creates separate entities for each channel of multi-channel devices (e.g., each button of a remote).", 
-                    "sysvar_markers": "Comma separated list of markers for system variables to enable fetching, To reset, the value must be set to a space."
+                    "mqtt_enabled": "Required for CUxD and CCU-Jack device support. Requires MQTT broker connected to Home Assistant.", 
+                    "mqtt_prefix": "MQTT topic prefix configured in CCU-Jack. Leave empty if not using CCU-Jack MQTT bridge.", 
+                    "optional_settings": "Enable experimental features to try out new functionality. These features may change or be removed in future versions.", 
+                    "program_markers": "Filter programs by marker in description (HAHM, HX, INTERNAL). Leave empty to import all programs.", 
+                    "program_scan_enabled": "Import CCU programs as button entities to trigger them from Home Assistant.", 
+                    "sub_devices_enabled": "Splits devices with multiple channel groups into a main device with sub-devices. Entities are assigned to their corresponding sub-device based on channel group.", 
+                    "sysvar_markers": "Filter system variables by marker in description (HAHM, HX, INTERNAL). Leave empty to import all variables.", 
+                    "sysvar_scan_enabled": "Import CCU system variables as entities to read and write them from Home Assistant.", 
+                    "sysvar_scan_interval": "Polling interval in seconds for system variables and programs (default: 30).", 
+                    "use_group_channel_for_cover_state": "Use the group channel to report cover position. Enable this for covers that report incorrect positions on their individual channels."
                 }, 
                 "description": "Step {step_current} of {step_total}: Configure advanced parameters", 
                 "title": "Advanced settings"
@@ -932,28 +937,30 @@
         "step": {
             "advanced_settings": {
                 "data": {
-                    "callback_host": "Callback hostname/IP address", 
-                    "callback_port_xml_rpc": "Callback XML-RPC port", 
+                    "callback_host": "Callback host (optional)", 
+                    "callback_port_xml_rpc": "Callback port (optional)", 
                     "enable_system_notifications": "Enable system notifications", 
-                    "light_last_brightness_enabled": "Enable last brightness for lights", 
+                    "light_last_brightness_enabled": "Restore last brightness for lights", 
                     "listen_on_all_ip": "Listen on all network interfaces", 
                     "mqtt_enabled": "Enable MQTT", 
                     "mqtt_prefix": "MQTT prefix", 
-                    "optional_settings": "Debug & analytics settings", 
+                    "optional_settings": "Experimental features", 
                     "sub_devices_enabled": "Create sub-device entities", 
                     "un_ignore": "UN-IGNORE parameters", 
-                    "use_group_channel_for_cover_state": "Use group channel for cover state"
+                    "use_group_channel_for_cover_state": "Report cover position from group channel"
                 }, 
                 "data_description": {
                     "callback_host": "IP address for CCU callbacks. Leave empty for auto-detection.", 
                     "callback_port_xml_rpc": "Port for XML-RPC callbacks. Leave empty for automatic assignment.", 
+                    "enable_system_notifications": "Show notifications for connection issues and device errors in Home Assistant.", 
                     "light_last_brightness_enabled": "When enabled, lights will turn on with the last non-zero brightness level instead of default 100%.", 
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
-                    "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
-                    "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge", 
-                    "optional_settings": "Enable optional settings. Used for analytics and debugging. Should not be used during normal operations.", 
-                    "sub_devices_enabled": "Creates separate entities for each channel of multi-channel devices (e.g., each button of a remote).", 
-                    "un_ignore": "Check the documentation for information about UN-IGNORE"
+                    "mqtt_enabled": "Required for CUxD and CCU-Jack device support. Requires MQTT broker connected to Home Assistant.", 
+                    "mqtt_prefix": "MQTT topic prefix configured in CCU-Jack. Leave empty if not using CCU-Jack MQTT bridge.", 
+                    "optional_settings": "Enable experimental features to try out new functionality. These features may change or be removed in future versions.", 
+                    "sub_devices_enabled": "Splits devices with multiple channel groups into a main device with sub-devices. Entities are assigned to their corresponding sub-device based on channel group.", 
+                    "un_ignore": "Re-enable hidden device parameters as entities. See documentation for available parameters.", 
+                    "use_group_channel_for_cover_state": "Use the group channel to report cover position. Enable this for covers that report incorrect positions on their individual channels."
                 }, 
                 "description": "Configure advanced settings including callbacks, MQTT and device options", 
                 "title": "Advanced settings"

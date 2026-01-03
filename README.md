@@ -363,15 +363,15 @@ Only configure these if Home Assistant can't receive state updates from your CCU
 
 | Setting | Default | When to Change |
 |---------|---------|----------------|
-| **System Notifications** | `true` | Don't disable - shows important network warnings |
-| **Listen on All IPs** | `false` | Only for Docker-on-Mac/Windows with virtualization issues |
+| **System Notifications** | `true` | Enable persistent notifications for system events like network issues or device unreachable warnings |
+| **Listen on All IPs** | `false` | Enable if Home Assistant runs in Docker or VM. Required when HA's IP differs from host IP. |
 
 ### MQTT Integration
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| **Enable MQTT** | `false` | For CUxD and CCU-Jack device events |
-| **MQTT Prefix** | _(empty)_ | Set if using MQTT Bridge |
+| **Enable MQTT** | `false` | Enable MQTT for CCU-Jack and CUxD callback events |
+| **MQTT Prefix** | _(empty)_ | The MQTT prefix used for the CCU-Jack bridge |
 
 **Prerequisites:** HA connected to MQTT broker, CCU-Jack installed
 
@@ -379,15 +379,16 @@ Only configure these if Home Assistant can't receive state updates from your CCU
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| **Enable Sub-Devices** | `false` | Create separate devices for each channel |
-| **Use Group Channel for Cover State** | `true` | Cover groups use state channel level |
+| **Enable Sub-Devices** | `false` | Split devices with multiple channel groups into a main device with sub-devices. Entities are assigned to sub-devices based on their channel group. |
+| **Use Group Channel for Cover State** | `true` | Use group channel for cover position reporting. Enable for covers that report incorrect positions on individual channels. |
+| **Restore Last Brightness** | `false` | When enabled, lights turn on at their last brightness level instead of 100%. See [Restore Last Brightness](#restore-last-brightness). |
 
 ### Expert Options
 
 | Setting | Description |
 |---------|-------------|
-| **Unignore Parameters** | Add filtered device parameters as entities |
-| **Optional Settings** | Debug/analytics features (development only) |
+| **Unignore Parameters** | See [documentation](https://github.com/sukramj/aiohomematic/blob/devel/docs/unignore.md) for unignore information |
+| **Experimental Features** | Enable experimental features to try out new functionality. These features may change or be removed in future versions. |
 
 ---
 
@@ -1316,9 +1317,13 @@ See [detailed explanation](https://github.com/sukramj/aiohomematic/blob/devel/do
 
 ### Restore Last Brightness
 
-Dimmers now save their last brightness setting and automatically restore it when turned on - even after a Home Assistant restart.
+Dimmers can save their last brightness setting and automatically restore it when turned on - even after a Home Assistant restart.
 
-**In practice this means:**
+**Enable this feature:**
+- Configure in **Advanced Options** → **Restore Last Brightness**: `true`
+- Default: `false` (lights turn on at 100%)
+
+**In practice this means (when enabled):**
 - Set dimmer to 40% → turn off → turn on → dimmer is back at 40%
 - Works with all dimmers (HmIP-BDT, HmIP-PDT, etc.)
 - The setting survives Home Assistant restarts
