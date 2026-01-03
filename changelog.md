@@ -12,7 +12,7 @@
 - **Service Schema**: Removed invalid `base_temperature` parameter from `set_schedule_simple_profile` service schema (parameter is part of `simple_profile_data`, not a separate field)
 - **Service Name**: Fixed incorrect service name `create_backup` → `create_ccu_backup` in release notes
 
-## Bump aiohomematic to [2026.1.7](https://github.com/SukramJ/aiohomematic/compare/2026.1.5...2026.1.7)
+## Bump aiohomematic to [2026.1.8](https://github.com/SukramJ/aiohomematic/compare/2026.1.5...2026.1.8)
 
 ### Bug Fixes
 
