@@ -7,6 +7,7 @@ from custom_components.homematicip_local.entity_helpers.registry import EntityDe
 from .air_quality import AIR_QUALITY_SENSOR_RULES
 from .battery import BATTERY_SENSOR_RULES
 from .energy import ENERGY_SENSOR_RULES
+from .fallback import FALLBACK_SENSOR_RULES
 from .level import LEVEL_SENSOR_RULES
 from .misc import MISC_SENSOR_RULES
 from .temperature import TEMPERATURE_SENSOR_RULES
@@ -23,4 +24,6 @@ def get_all_sensor_rules() -> list[EntityDescriptionRule]:
         *BATTERY_SENSOR_RULES,
         *LEVEL_SENSOR_RULES,
         *MISC_SENSOR_RULES,
+        # Fallback rules (low priority, match by unit only)
+        *FALLBACK_SENSOR_RULES,
     ]
