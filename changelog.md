@@ -8,13 +8,14 @@
 - **Service Schema**: Removed invalid `base_temperature` parameter from `set_schedule_simple_profile` service schema (parameter is part of `simple_profile_data`, not a separate field)
 - **Service Name**: Fixed incorrect service name `create_backup` → `create_ccu_backup` in release notes
 
-## Bump aiohomematic to [2026.1.6](https://github.com/SukramJ/aiohomematic/compare/2026.1.5...2026.1.6)
+## Bump aiohomematic to [2026.1.7](https://github.com/SukramJ/aiohomematic/compare/2026.1.5...2026.1.7)
 
 ### Bug Fixes
 
 - **Fix CuXD/CCU-Jack Device Control**: `ClientJsonCCU` now properly overrides `set_value` and `put_paramset` to use JSON-RPC
 - **Fix Sysvar-to-Device Association**: System variables with device references are now correctly associated with their devices/channels
-
+- **Fix Runtime Device Addition**: Fixed `KeyError` when adding new devices during runtime after cache was loaded
+- 
 ### New Features
 
 - **Circuit Breaker Incident Recording**: Circuit breaker state changes are now recorded as incidents
