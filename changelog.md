@@ -2,6 +2,10 @@
 
 ## What's Changed
 
+### New Features
+
+- **Light Last Brightness Option**: Added config option `Enable last brightness for lights` in advanced settings. When enabled, lights will turn on with the last non-zero brightness level instead of default 100%. Default is disabled.
+
 ### Bug Fixes
 
 - **Device Model Matching**: Fixed case-insensitive device model matching for entity description rules. Older devices like HmIP-SWDO (reported as `HMIP-SWDO` by CCU) now correctly receive their device_class (e.g., `window`)

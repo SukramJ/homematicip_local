@@ -24,6 +24,7 @@
                     "callback_host": "Callback-Host (optional)", 
                     "callback_port_xml_rpc": "Callback-Port (optional)", 
                     "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
+                    "light_last_brightness_enabled": "Letzte Helligkeit für Lichter aktivieren", 
                     "listen_on_all_ip": "Auf allen Netzwerkschnittstellen lauschen", 
                     "mqtt_enabled": "MQTT aktivieren", 
                     "mqtt_prefix": "MQTT-Präfix", 
@@ -39,6 +40,7 @@
                 "data_description": {
                     "callback_host": "IP-Adresse für CCU-Callbacks. Leer lassen für automatische Erkennung.", 
                     "callback_port_xml_rpc": "Port für XML-RPC-Callbacks. Leer lassen für automatische Zuweisung.", 
+                    "light_last_brightness_enabled": "Wenn aktiviert, schalten Lichter mit der letzten Helligkeitsstufe ein, anstatt mit 100%.", 
                     "listen_on_all_ip": "Aktivieren, wenn Home Assistant in Docker oder einer VM läuft. Erforderlich wenn die IP von HA sich von der Host-IP unterscheidet.", 
                     "mqtt_enabled": "MQTT aktivieren um Callbacks für CCU-Jack und CUxD zu nutzen", 
                     "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix", 
@@ -933,6 +935,7 @@
                     "callback_host": "Callback Hostname/IP-Adresse", 
                     "callback_port_xml_rpc": "Callback XML-RPC Port", 
                     "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
+                    "light_last_brightness_enabled": "Letzte Helligkeit für Lichter aktivieren", 
                     "listen_on_all_ip": "Auf allen Netzwerkschnittstellen lauschen", 
                     "mqtt_enabled": "MQTT aktivieren", 
                     "mqtt_prefix": "MQTT-Präfix", 
@@ -944,6 +947,7 @@
                 "data_description": {
                     "callback_host": "IP-Adresse für CCU-Callbacks. Leer lassen für automatische Erkennung.", 
                     "callback_port_xml_rpc": "Port für XML-RPC-Callbacks. Leer lassen für automatische Zuweisung.", 
+                    "light_last_brightness_enabled": "Wenn aktiviert, schalten Lichter mit der letzten Helligkeitsstufe ein, anstatt mit 100%.", 
                     "listen_on_all_ip": "Aktivieren, wenn Home Assistant in Docker oder einer VM läuft. Erforderlich wenn die IP von HA sich von der Host-IP unterscheidet.", 
                     "mqtt_enabled": "MQTT aktivieren um Callbacks für CCU-Jack und CUxD zu nutzen", 
                     "mqtt_prefix": "Das für die CCU-Jack-Brücke verwendete MQTT-Präfix", 

@@ -290,10 +290,15 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         # Use hs_color from kwargs, if not applicable use current hs_color.
         if hs_color := kwargs.get(ATTR_HS_COLOR, self.hs_color):
             hm_kwargs["hs_color"] = hs_color
-        # Use brightness from kwargs, with last_brightness fallback when light is off.
+        # Use brightness from kwargs, with optional last_brightness fallback when light is off.
         brightness: int | None = kwargs.get(ATTR_BRIGHTNESS)
         if brightness is None:
-            brightness = (self.brightness if self._data_point.is_on else self.last_brightness or self.brightness) or 255
+            if self._data_point.is_on:
+                brightness = self.brightness or 255
+            elif self._cu.enable_light_last_brightness:
+                brightness = self.last_brightness or self.brightness or 255
+            else:
+                brightness = self.brightness or 255
         hm_kwargs["brightness"] = brightness
         # Use transition from kwargs, if not applicable use 0.
         if ramp_time := kwargs.get(ATTR_TRANSITION, 0):

@@ -62,6 +62,7 @@ from .const import (
     CONF_BACKUP_PATH,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
+    CONF_ENABLE_LIGHT_LAST_BRIGHTNESS,
     CONF_ENABLE_MQTT,
     CONF_ENABLE_PROGRAM_SCAN,
     CONF_ENABLE_SUB_DEVICES,
@@ -82,6 +83,7 @@ from .const import (
     CONF_VERIFY_TLS,
     DEFAULT_BACKUP_PATH,
     DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK,
+    DEFAULT_ENABLE_LIGHT_LAST_BRIGHTNESS,
     DEFAULT_ENABLE_MQTT,
     DEFAULT_ENABLE_SUB_DEVICES,
     DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS,
@@ -129,6 +131,7 @@ class BaseControlUnit:
         self._entry_id: Final = control_config.entry_id
         self._instance_name: Final = control_config.instance_name
         self._backup_directory: Final = control_config.backup_directory
+        self._enable_light_last_brightness: Final = control_config.enable_light_last_brightness
         self._enable_mqtt: Final = control_config.enable_mqtt
         self._enable_sub_devices: Final = control_config.enable_sub_devices
         self._mqtt_prefix: Final = control_config.mqtt_prefix
@@ -168,6 +171,11 @@ class BaseControlUnit:
     def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         return self._attr_device_info
+
+    @property
+    def enable_light_last_brightness(self) -> bool:
+        """Return if last brightness for lights is enabled."""
+        return self._enable_light_last_brightness
 
     @property
     def enable_sub_devices(self) -> bool:
@@ -825,6 +833,9 @@ class ControlConfig:
         self._interface_config: Final[Mapping[str, Any]] = self._data.get(CONF_INTERFACE, {})
         # advanced_config
         ac = self._data.get(CONF_ADVANCED_CONFIG, {})
+        self.enable_light_last_brightness: Final[bool] = ac.get(
+            CONF_ENABLE_LIGHT_LAST_BRIGHTNESS, DEFAULT_ENABLE_LIGHT_LAST_BRIGHTNESS
+        )
         self.enable_mqtt: Final[bool] = ac.get(CONF_ENABLE_MQTT, DEFAULT_ENABLE_MQTT)
         self._enable_program_scan: Final[bool] = ac.get(CONF_ENABLE_PROGRAM_SCAN, DEFAULT_ENABLE_PROGRAM_SCAN)
         self.enable_sub_devices: Final[bool] = ac.get(CONF_ENABLE_SUB_DEVICES, DEFAULT_ENABLE_SUB_DEVICES)

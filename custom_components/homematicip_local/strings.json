@@ -24,6 +24,7 @@
                     "callback_host": "Callback host (optional)", 
                     "callback_port_xml_rpc": "Callback port (optional)", 
                     "enable_system_notifications": "Enable system notifications", 
+                    "light_last_brightness_enabled": "Enable last brightness for lights", 
                     "listen_on_all_ip": "Listen on all network interfaces", 
                     "mqtt_enabled": "Enable MQTT", 
                     "mqtt_prefix": "MQTT prefix", 
@@ -39,6 +40,7 @@
                 "data_description": {
                     "callback_host": "IP address for CCU callbacks. Leave empty for auto-detection.", 
                     "callback_port_xml_rpc": "Port for XML-RPC callbacks. Leave empty for automatic assignment.", 
+                    "light_last_brightness_enabled": "When enabled, lights will turn on with the last non-zero brightness level instead of default 100%.", 
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
                     "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
                     "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge", 
@@ -933,6 +935,7 @@
                     "callback_host": "Callback hostname/IP address", 
                     "callback_port_xml_rpc": "Callback XML-RPC port", 
                     "enable_system_notifications": "Enable system notifications", 
+                    "light_last_brightness_enabled": "Enable last brightness for lights", 
                     "listen_on_all_ip": "Listen on all network interfaces", 
                     "mqtt_enabled": "Enable MQTT", 
                     "mqtt_prefix": "MQTT prefix", 
@@ -944,6 +947,7 @@
                 "data_description": {
                     "callback_host": "IP address for CCU callbacks. Leave empty for auto-detection.", 
                     "callback_port_xml_rpc": "Port for XML-RPC callbacks. Leave empty for automatic assignment.", 
+                    "light_last_brightness_enabled": "When enabled, lights will turn on with the last non-zero brightness level instead of default 100%.", 
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.", 
                     "mqtt_enabled": "Enable MQTT to support callbacks for CCU-Jack and CUxD", 
                     "mqtt_prefix": "The MQTT prefix used for the CCU-Jack bridge", 

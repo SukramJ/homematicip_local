@@ -49,6 +49,7 @@ from custom_components.homematicip_local.const import (
     CONF_ADVANCED_CONFIG as CONST_ADVANCED_CONFIG,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
+    CONF_ENABLE_LIGHT_LAST_BRIGHTNESS,
     CONF_ENABLE_MQTT,
     CONF_ENABLE_PROGRAM_SCAN,
     CONF_ENABLE_SUB_DEVICES,
@@ -1184,6 +1185,7 @@ class TestConfigFlowHelpers:
             CONF_ENABLE_MQTT: DEFAULT_ENABLE_MQTT,
             CONF_MQTT_PREFIX: "hmip",
             CONF_ENABLE_SUB_DEVICES: True,
+            CONF_ENABLE_LIGHT_LAST_BRIGHTNESS: True,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: True,
             CONF_OPTIONAL_SETTINGS: ["no_wakeup"],
             CONF_UN_IGNORES: ["A", "B"],
@@ -1200,6 +1202,7 @@ class TestConfigFlowHelpers:
         assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_MQTT] == DEFAULT_ENABLE_MQTT
         assert data[CONST_ADVANCED_CONFIG][CONF_MQTT_PREFIX] == "hmip"
         assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_SUB_DEVICES] is True
+        assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_LIGHT_LAST_BRIGHTNESS] is True
         assert data[CONST_ADVANCED_CONFIG][CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE] is True
         assert data[CONST_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] == adv_input_for_helper[CONF_OPTIONAL_SETTINGS]
         assert data[CONST_ADVANCED_CONFIG][CONF_UN_IGNORES] == ["A", "B"]
@@ -2672,6 +2675,7 @@ class TestHelperFunctions:
             CONF_ENABLE_MQTT: DEFAULT_ENABLE_MQTT,
             CONF_MQTT_PREFIX: "",
             CONF_ENABLE_SUB_DEVICES: False,
+            CONF_ENABLE_LIGHT_LAST_BRIGHTNESS: False,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
             CONF_OPTIONAL_SETTINGS: [],
         }
@@ -2699,6 +2703,7 @@ class TestHelperFunctions:
             CONF_ENABLE_MQTT: DEFAULT_ENABLE_MQTT,
             CONF_MQTT_PREFIX: "",
             CONF_ENABLE_SUB_DEVICES: False,
+            CONF_ENABLE_LIGHT_LAST_BRIGHTNESS: False,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
             CONF_OPTIONAL_SETTINGS: [],
         }
@@ -2730,6 +2735,7 @@ class TestHelperFunctions:
             CONF_ENABLE_MQTT: DEFAULT_ENABLE_MQTT,
             CONF_MQTT_PREFIX: "",
             CONF_ENABLE_SUB_DEVICES: False,
+            CONF_ENABLE_LIGHT_LAST_BRIGHTNESS: False,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
             CONF_OPTIONAL_SETTINGS: [],
             CONF_BACKUP_PATH: "",
@@ -2753,6 +2759,7 @@ class TestHelperFunctions:
             CONF_ENABLE_MQTT: DEFAULT_ENABLE_MQTT,
             CONF_MQTT_PREFIX: "",
             CONF_ENABLE_SUB_DEVICES: False,
+            CONF_ENABLE_LIGHT_LAST_BRIGHTNESS: False,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
             CONF_OPTIONAL_SETTINGS: [],
             CONF_BACKUP_PATH: "",
@@ -2774,6 +2781,7 @@ class TestHelperFunctions:
             CONF_ENABLE_MQTT: DEFAULT_ENABLE_MQTT,
             CONF_MQTT_PREFIX: "",
             CONF_ENABLE_SUB_DEVICES: False,
+            CONF_ENABLE_LIGHT_LAST_BRIGHTNESS: False,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
             CONF_OPTIONAL_SETTINGS: [],
             CONF_BACKUP_PATH: "",
