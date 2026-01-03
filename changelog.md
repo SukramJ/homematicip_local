@@ -5,10 +5,16 @@
 ### Bug Fixes
 
 - **Device Model Matching**: Fixed case-insensitive device model matching for entity description rules. Older devices like HmIP-SWDO (reported as `HMIP-SWDO` by CCU) now correctly receive their device_class (e.g., `window`)
+- **Service Name**: Fixed incorrect service name `create_backup` → `create_ccu_backup` in release notes
 
 ### Documentation
 
 - **Relative Links**: Changed all branch-specific links in README.md and CLAUDE.md to relative paths for consistent navigation across branches
+
+## Bump aiohomematic to [2026.1.6](https://github.com/SukramJ/aiohomematic/compare/2026.1.5...2026.1.6)
+
+
+
 
 # Version [2.0.2](https://github.com/SukramJ/homematicip_local/compare/2.0.1...2.0.2) (2026-01-02)
 

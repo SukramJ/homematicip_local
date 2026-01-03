@@ -37,7 +37,7 @@ You can now create CCU system backups directly from Home Assistant using the new
 **How to create a backup:**
 
 ```yaml
-service: homematicip_local.create_backup
+service: homematicip_local.create_ccu_backup
 data: {}
 ```
 
@@ -59,7 +59,7 @@ automation:
         weekday:
           - sun
     action:
-      - service: homematicip_local.create_backup
+      - service: homematicip_local.create_ccu_backup
 ```
 
 ---
