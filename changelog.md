@@ -1,3 +1,15 @@
+# Version [2.0.3](https://github.com/SukramJ/homematicip_local/compare/2.0.2...2.0.3) (2026-01-03)
+
+## What's Changed
+
+### Bug Fixes
+
+- **Device Model Matching**: Fixed case-insensitive device model matching for entity description rules. Older devices like HmIP-SWDO (reported as `HMIP-SWDO` by CCU) now correctly receive their device_class (e.g., `window`)
+
+### Documentation
+
+- **Relative Links**: Changed all branch-specific links in README.md and CLAUDE.md to relative paths for consistent navigation across branches
+
 # Version [2.0.2](https://github.com/SukramJ/homematicip_local/compare/2.0.1...2.0.2) (2026-01-02)
 
 ## What's Changed

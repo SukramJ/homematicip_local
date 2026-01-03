@@ -99,11 +99,12 @@ class EntityDescriptionRule:
             if not any(p.upper() == param_upper for p in self.parameters):
                 return False
 
-        # Check device model match (prefix matching)
+        # Check device model match (case-insensitive prefix matching)
         if self.devices is not None:
             if device_model is None:
                 return False
-            if not any(device_model.startswith(d) for d in self.devices):
+            model_lower = device_model.lower()
+            if not any(model_lower.startswith(d.lower()) for d in self.devices):
                 return False
 
         # Check unit match
