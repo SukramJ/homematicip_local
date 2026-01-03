@@ -1653,10 +1653,6 @@
         "set_schedule_simple_profile": {
             "description": "Call to store a schedule on a climate device", 
             "fields": {
-                "base_temperature": {
-                    "description": "Select a base temperature", 
-                    "name": "Base temperature"
-                }, 
                 "profile": {
                     "description": "Select a profile", 
                     "name": "Profile"

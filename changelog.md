@@ -5,6 +5,7 @@
 ### Bug Fixes
 
 - **Device Model Matching**: Fixed case-insensitive device model matching for entity description rules. Older devices like HmIP-SWDO (reported as `HMIP-SWDO` by CCU) now correctly receive their device_class (e.g., `window`)
+- **Service Schema**: Removed invalid `base_temperature` parameter from `set_schedule_simple_profile` service schema (parameter is part of `simple_profile_data`, not a separate field)
 - **Service Name**: Fixed incorrect service name `create_backup` → `create_ccu_backup` in release notes
 
 ### Documentation

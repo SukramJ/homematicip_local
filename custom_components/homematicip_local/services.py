@@ -645,7 +645,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=CLIMATE_DOMAIN,
         schema={
             vol.Required(ATTR_PROFILE): cv.string,
-            vol.Required(ATTR_BASE_TEMPERATURE): cv.positive_float,
             vol.Required(ATTR_SIMPLE_PROFILE_DATA): dict,
         },
         func="async_set_schedule_simple_profile",
