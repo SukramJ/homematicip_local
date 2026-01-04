@@ -1,3 +1,11 @@
+# Version [2.0.5](https://github.com/SukramJ/homematicip_local/compare/2.0.4...2.0.5) (2026-01-04)
+
+## Bump aiohomematic to [2026.1.10](https://github.com/SukramJ/aiohomematic/compare/2026.1.9...2026.1.10)
+
+### Bug Fixes
+
+- **CUxD/CCU-Jack Recovery Fix**: Fixed recovery mechanism for JSON-RPC-only interfaces (CUxD, CCU-Jack). Recovery now checks the JSON-RPC port (80/443) instead of failing at the TCP check stage. This prevents the central unit from entering a FAILED state when these services are actually available
+
 # Version [2.0.4](https://github.com/SukramJ/homematicip_local/compare/2.0.3...2.0.4) (2026-01-04)
 
 ## What's Changed
