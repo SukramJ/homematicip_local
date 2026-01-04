@@ -703,6 +703,31 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("User requested custom port configuration")
                 return await self.async_step_port_config()
 
+            # Check for undetected interfaces BEFORE validation
+            undetected = self._get_undetected_interfaces()
+            if undetected:
+                undetected_names = ", ".join(i.value for i in undetected)
+                _LOGGER.warning(
+                    "User enabled interfaces that were not detected on the CCU: %s",
+                    undetected_names,
+                )
+                placeholders = _get_step_placeholders(STEP_INTERFACE, TOTAL_STEPS_BASIC)
+                if self._detection_result:
+                    placeholders["detected_backend"] = self._detection_result.backend.value
+                    placeholders["detected_interfaces"] = ", ".join(
+                        i.value for i in self._detection_result.available_interfaces
+                    )
+                    placeholders["detected_tls"] = str(
+                        self._detection_result.tls or self._detection_result.https_redirect_enabled
+                    )
+                placeholders["invalid_items"] = undetected_names
+                return self.async_show_form(
+                    step_id="interface",
+                    data_schema=get_tls_interfaces_schema(data=self.data),
+                    errors={"base": "interface_not_available"},
+                    description_placeholders=placeholders,
+                )
+
             # User didn't request custom ports - validate with defaults
             try:
                 await _async_validate_config_and_get_system_information(
@@ -717,7 +742,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._detection_error_detail = self.data.get(CONF_HOST, "")
                 return await self.async_step_central_error()
             except (NoConnectionException, InvalidConfig, BaseHomematicException) as ex:
-                # Connection/config errors - stay on interface page so user can disable problematic interfaces
+                # Connection/config errors - stay on interface page so user can adjust settings
                 _LOGGER.debug("Validation failed, showing error on interface page: %s", ex)
                 error_msg = str(ex) if str(ex) else self.data.get(CONF_HOST, "")
                 placeholders = _get_step_placeholders(STEP_INTERFACE, TOTAL_STEPS_BASIC)

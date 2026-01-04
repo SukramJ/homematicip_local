@@ -87,11 +87,14 @@ IF_BIDCOS_WIRED_PORT = get_interface_default_port(interface=Interface.BIDCOS_WIR
 IF_VIRTUAL_DEVICES_PORT = get_interface_default_port(interface=Interface.VIRTUAL_DEVICES, tls=False)
 
 
-def _get_default_detection_result(tls: bool = False) -> BackendDetectionResult:
+def _get_default_detection_result(
+    tls: bool = False,
+    interfaces: tuple[Interface, ...] | None = None,
+) -> BackendDetectionResult:
     """Return a default detection result for tests."""
     return BackendDetectionResult(
         backend=Backend.CCU,
-        available_interfaces=(Interface.HMIP_RF, Interface.BIDCOS_RF),
+        available_interfaces=interfaces or (Interface.HMIP_RF, Interface.BIDCOS_RF),
         detected_port=2010 if not tls else 42010,
         tls=tls,
         host=const.HOST,
@@ -381,7 +384,9 @@ class TestConfigFlowForm:
             CONF_ENABLE_VIRTUAL_DEVICES: False,
             CONF_ENABLE_BIDCOS_WIRED: True,
         }
-        data = await async_check_form(hass, interface_data=interface_data)
+        # Include BidCos-Wired in detection result so it's considered available
+        detection_result = _get_default_detection_result(interfaces=(Interface.BIDCOS_WIRED,))
+        data = await async_check_form(hass, interface_data=interface_data, detection_result=detection_result)
         interface = data["interface"]
         assert interface.get(Interface.HMIP_RF) is None
         assert interface.get(Interface.BIDCOS_RF) is None
@@ -396,7 +401,9 @@ class TestConfigFlowForm:
             CONF_ENABLE_VIRTUAL_DEVICES: True,
             CONF_ENABLE_BIDCOS_WIRED: False,
         }
-        data = await async_check_form(hass, interface_data=interface_data)
+        # Include VirtualDevices in detection result so it's considered available
+        detection_result = _get_default_detection_result(interfaces=(Interface.VIRTUAL_DEVICES,))
+        data = await async_check_form(hass, interface_data=interface_data, detection_result=detection_result)
         interface = data["interface"]
         assert interface.get(Interface.HMIP_RF) is None
         assert interface.get(Interface.BIDCOS_RF) is None

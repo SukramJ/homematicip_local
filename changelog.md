@@ -10,6 +10,7 @@
 
 - **Device Trigger Address Mapping**: Fixed `device_address` to `address` conversion in device triggers. Existing automations using device triggers (e.g., button press events) that failed with "required key not provided @ data['address']" will now work after re-saving
 - **Validation Error UX**: Validation errors during interface configuration now stay on the interface page instead of navigating to port configuration. This allows users to disable problematic interfaces (e.g., CUxD not running) directly
+- **Interface Availability Pre-Check**: Config flow now validates interface availability BEFORE attempting connection. If an interface is enabled but was not detected on the CCU, a clear error message is shown immediately without unnecessary connection attempts
 
 ## Bump aiohomematic to [2026.1.9](https://github.com/SukramJ/aiohomematic/compare/2026.1.8...2026.1.9)
 
