@@ -61,6 +61,7 @@ CONF_CUSTOM_PORT_CONFIG: Final = "custom_port_config"  # Checkbox for custom por
 
 EVENT_ADDRESS = "address"
 EVENT_CHANNEL_NO = "channel_no"
+EVENT_DEVICE_ADDRESS = "device_address"
 EVENT_DEVICE_ID = "device_id"
 EVENT_ERROR = "error"
 EVENT_ERROR_VALUE = "error_value"

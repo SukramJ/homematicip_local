@@ -77,11 +77,11 @@
                 "title": "Backend detection"
             }, 
             "finish_or_configure": {
-                "description": "Setup is ready. Choose an option:", 
+                "description": "Setup is ready. Choose an option:{undetected_interfaces_warning}",
                 "menu_options": {
-                    "configure_advanced": "Configure advanced options", 
+                    "configure_advanced": "Configure advanced options",
                     "finish_setup": "Finish setup"
-                }, 
+                },
                 "title": "Finish or configure"
             }, 
             "interface": {

@@ -572,6 +572,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         self._detection_error: str | None = None
         self._detection_error_detail: str | None = None
         self._validation_error: str | None = None
+        self._undetected_interfaces: list[Interface] = []
 
     @staticmethod
     @callback
@@ -661,9 +662,25 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_finish_or_configure(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
         """Show menu to choose between finishing setup or configuring advanced options."""
+        description_placeholders: dict[str, str] = {"undetected_interfaces_warning": ""}
+
+        # Check for undetected interfaces and add warning if necessary
+        self._undetected_interfaces = self._get_undetected_interfaces()
+        if self._undetected_interfaces:
+            undetected_names = ", ".join(i.value for i in self._undetected_interfaces)
+            description_placeholders["undetected_interfaces_warning"] = (
+                f"\n\n**Warning:** The following interfaces were enabled but not detected "
+                f"on the CCU: {undetected_names}. These interfaces may not work correctly."
+            )
+            _LOGGER.warning(
+                "The following interfaces were enabled but not detected on the CCU: %s",
+                undetected_names,
+            )
+
         return self.async_show_menu(
             step_id="finish_or_configure",
             menu_options=["finish_setup", "configure_advanced"],
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_finish_setup(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
@@ -700,10 +717,25 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._detection_error_detail = self.data.get(CONF_HOST, "")
                 return await self.async_step_central_error()
             except (NoConnectionException, InvalidConfig, BaseHomematicException) as ex:
-                # Connection/config errors - show port configuration to allow manual adjustment
-                _LOGGER.debug("Validation failed with default ports, showing port config: %s", ex)
-                self._validation_error = str(ex) if str(ex) else self.data.get(CONF_HOST, "")
-                return await self.async_step_port_config()
+                # Connection/config errors - stay on interface page so user can disable problematic interfaces
+                _LOGGER.debug("Validation failed, showing error on interface page: %s", ex)
+                error_msg = str(ex) if str(ex) else self.data.get(CONF_HOST, "")
+                placeholders = _get_step_placeholders(STEP_INTERFACE, TOTAL_STEPS_BASIC)
+                if self._detection_result:
+                    placeholders["detected_backend"] = self._detection_result.backend.value
+                    placeholders["detected_interfaces"] = ", ".join(
+                        i.value for i in self._detection_result.available_interfaces
+                    )
+                    placeholders["detected_tls"] = str(
+                        self._detection_result.tls or self._detection_result.https_redirect_enabled
+                    )
+                placeholders["invalid_items"] = error_msg
+                return self.async_show_form(
+                    step_id="interface",
+                    data_schema=get_tls_interfaces_schema(data=self.data),
+                    errors={"base": "cannot_connect"},
+                    description_placeholders=placeholders,
+                )
 
         _LOGGER.debug("ConfigFlow.step_interface, no user input")
         placeholders = _get_step_placeholders(STEP_INTERFACE, TOTAL_STEPS_BASIC)
@@ -1088,6 +1120,16 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("Backend detection failed: no backend found at host %s", self.data[CONF_HOST])
             self._detection_error = "detection_failed"
             self._detection_error_detail = self.data[CONF_HOST]
+
+    def _get_undetected_interfaces(self) -> list[Interface]:
+        """Return list of enabled interfaces that were not detected on the CCU."""
+        if not self._detection_result:
+            return []
+
+        detected = set(self._detection_result.available_interfaces)
+        configured = set(self.data.get(CONF_INTERFACE, {}).keys())
+
+        return sorted(configured - detected, key=lambda i: i.value)
 
     async def _validate_and_finish_config_flow(self) -> ConfigFlowResult:
         """Validate and finish the config flow."""

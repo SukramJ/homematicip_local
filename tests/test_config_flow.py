@@ -816,10 +816,10 @@ class TestConfigFlowErrorHandling:
                 await hass.async_block_till_done()
 
         assert result3["type"] == FlowResultType.FORM
-        # Note: With the new simplified flow, InvalidConfig shows port_config step
-        # which uses "cannot_connect" as the base error
+        # Note: Validation errors now stay on interface page so user can disable
+        # problematic interfaces (e.g., CUxD not running)
         assert result3["errors"] == {"base": "cannot_connect"}
-        assert result3["step_id"] == "port_config"
+        assert result3["step_id"] == "interface"
 
 
 class TestOptionsFlowErrorHandling:

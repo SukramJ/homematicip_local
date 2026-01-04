@@ -30,6 +30,7 @@ from .const import (
     CONF_SUBTYPE,
     EVENT_ADDRESS,
     EVENT_CHANNEL_NO,
+    EVENT_DEVICE_ADDRESS,
     EVENT_DEVICE_ID,
     EVENT_ERROR,
     EVENT_ERROR_VALUE,
@@ -130,6 +131,9 @@ def cleanup_click_event_data(event_data: dict[str, Any]) -> dict[str, Any]:
     )
     del cleand_event_data[EVENT_PARAMETER]
     del cleand_event_data[EVENT_CHANNEL_NO]
+    # Rename device_address to address (required by TRIGGER_SCHEMA)
+    if EVENT_DEVICE_ADDRESS in cleand_event_data:
+        cleand_event_data[EVENT_ADDRESS] = cleand_event_data.pop(EVENT_DEVICE_ADDRESS)
     return cleand_event_data
 
 

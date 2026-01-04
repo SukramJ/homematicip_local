@@ -1,3 +1,23 @@
+# Version [2.0.4](https://github.com/SukramJ/homematicip_local/compare/2.0.3...2.0.4) (2026-01-04)
+
+## What's Changed
+
+### New Features
+
+- **Undetected Interface Warning**: Config flow now shows a warning when enabled interfaces were not detected on the CCU (e.g., CUxD installed but not running)
+
+### Bug Fixes
+
+- **Device Trigger Address Mapping**: Fixed `device_address` to `address` conversion in device triggers. Existing automations using device triggers (e.g., button press events) that failed with "required key not provided @ data['address']" will now work after re-saving
+- **Validation Error UX**: Validation errors during interface configuration now stay on the interface page instead of navigating to port configuration. This allows users to disable problematic interfaces (e.g., CUxD not running) directly
+
+## Bump aiohomematic to [2026.1.9](https://github.com/SukramJ/aiohomematic/compare/2026.1.8...2026.1.9)
+
+### Improvements
+
+- **Backend Detection Validates Interface Availability**: The backend detection now verifies that each interface process is actually running via `is_present()` check, not just installed
+- **Fix CUxD/CCU-Jack JSON-RPC Method Overrides**: `ClientJsonCCU` now properly uses JSON-RPC for all device operations
+- 
 # Version [2.0.3](https://github.com/SukramJ/homematicip_local/compare/2.0.2...2.0.3) (2026-01-03)
 
 ## What's Changed

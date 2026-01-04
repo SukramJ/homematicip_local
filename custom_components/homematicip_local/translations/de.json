@@ -77,7 +77,7 @@
                 "title": "Backend-Erkennung"
             }, 
             "finish_or_configure": {
-                "description": "Einrichtung ist bereit. Wähle eine Option:", 
+                "description": "Einrichtung ist bereit. Wähle eine Option:{undetected_interfaces_warning}", 
                 "menu_options": {
                     "configure_advanced": "Erweiterte Optionen konfigurieren", 
                     "finish_setup": "Einrichtung abschließen"
