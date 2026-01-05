@@ -1,4 +1,10 @@
-# Version [2.0.5](https://github.com/SukramJ/homematicip_local/compare/2.0.4...2.0.5) (2026-01-04)
+# Version [2.0.5](https://github.com/SukramJ/homematicip_local/compare/2.0.4...2.0.5) (2026-01-05)
+
+## What's Changed
+
+### Deprecations
+
+- **Schedule Services**: Deprecated `set_schedule_profile` and `set_schedule_weekday` services. These will be removed in April 2026. Use `set_schedule_simple_profile` and `set_schedule_simple_weekday` instead. A warning is now logged when using the deprecated services.
 
 ## Bump aiohomematic to [2026.1.10](https://github.com/SukramJ/aiohomematic/compare/2026.1.9...2026.1.10)
 

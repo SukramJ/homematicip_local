@@ -377,6 +377,10 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         self, profile: str | ScheduleProfile, profile_data: ClimateProfileSchedule
     ) -> None:
         """Set a schedule profile."""
+        _LOGGER.warning(
+            "Service 'set_schedule_profile' is deprecated and will be removed in April 2026. "
+            "Please use 'set_schedule_simple_profile' instead"
+        )
         schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
         # Convert string keys to WeekdayStr if needed
         converted_data = {}
@@ -427,6 +431,10 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         self, profile: str | ScheduleProfile, weekday: str | WeekdayStr, weekday_data: ClimateWeekdaySchedule
     ) -> None:
         """Set a schedule profile weekday."""
+        _LOGGER.warning(
+            "Service 'set_schedule_weekday' is deprecated and will be removed in April 2026. "
+            "Please use 'set_schedule_simple_weekday' instead"
+        )
         schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
         schedule_weekday = weekday if isinstance(weekday, WeekdayStr) else WeekdayStr(weekday)
 

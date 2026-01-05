@@ -1649,7 +1649,7 @@
             "name": "Aktives Zeitplan-Profil setzen"
         }, 
         "set_schedule_profile": {
-            "description": "Setzt ein Zeitplan-Profil auf einer Zeitplan-Entität", 
+            "description": "[VERALTET - wird April 2026 entfernt] Bitte 'set_schedule_simple_profile' verwenden. Setzt ein Zeitplan-Profil auf einer Zeitplan-Entität", 
             "fields": {
                 "profile": {
                     "description": "Wählen Sie ein Profil", 
@@ -1660,7 +1660,7 @@
                     "name": "Profil-Daten"
                 }
             }, 
-            "name": "Zeitplan-Profil setzen"
+            "name": "[Veraltet] Zeitplan-Profil setzen"
         }, 
         "set_schedule_simple_profile": {
             "description": "Speichert einen Zeitplan auf einem Thermostat", 
@@ -1699,7 +1699,7 @@
             "name": "Einfachen Wochentag speichern"
         }, 
         "set_schedule_weekday": {
-            "description": "Setzt einen Wochentag eines Zeitplan-Profils", 
+            "description": "[VERALTET - wird April 2026 entfernt] Bitte 'set_schedule_simple_weekday' verwenden. Setzt einen Wochentag eines Zeitplan-Profils", 
             "fields": {
                 "profile": {
                     "description": "Wählen Sie ein Profil", 
@@ -1714,7 +1714,7 @@
                     "name": "Wochentag-Daten"
                 }
             }, 
-            "name": "Zeitplan-Profil Wochentag setzen"
+            "name": "[Veraltet] Zeitplan-Profil Wochentag setzen"
         }, 
         "set_sound_led": {
             "description": "Setzt LED-Farbe und Helligkeit auf HmIP-MP3P Signalgebern", 

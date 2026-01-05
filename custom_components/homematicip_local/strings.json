@@ -1649,7 +1649,7 @@
             "name": "Set active schedule profile"
         }, 
         "set_schedule_profile": {
-            "description": "Call to store a schedule on a climate device", 
+            "description": "[DEPRECATED - will be removed April 2026] Use 'set_schedule_simple_profile' instead. Call to store a schedule on a climate device", 
             "fields": {
                 "profile": {
                     "description": "Select a profile", 
@@ -1660,7 +1660,7 @@
                     "name": "Profile data"
                 }
             }, 
-            "name": "Set schedule profile"
+            "name": "[Deprecated] Set schedule profile"
         }, 
         "set_schedule_simple_profile": {
             "description": "Call to store a schedule on a climate device", 
@@ -1699,7 +1699,7 @@
             "name": "Set simple schedule profile weekday"
         }, 
         "set_schedule_weekday": {
-            "description": "Call to store a schedule on a climate device", 
+            "description": "[DEPRECATED - will be removed April 2026] Use 'set_schedule_simple_weekday' instead. Call to store a schedule on a climate device", 
             "fields": {
                 "profile": {
                     "description": "Select a profile", 
@@ -1714,7 +1714,7 @@
                     "name": "Weekday profile data"
                 }
             }, 
-            "name": "Set schedule profile weekday"
+            "name": "[Deprecated] Set schedule profile weekday"
         }, 
         "set_sound_led": {
             "description": "Set LED color and brightness on HmIP-MP3P sound player devices", 
