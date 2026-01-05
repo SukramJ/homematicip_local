@@ -76,7 +76,7 @@ class MQTTConsumer:
         if (
             (payload_value := cast(dict[str, Any], payload_dict).get("v")) is not None
             and (dp := self._central.get_generic_data_point(state_path=state_path))
-            and not dp.device.client.supports_rpc_callback
+            and not dp.device.client.capabilities.supports_rpc_callback
         ):
             self._hass.create_task(
                 target=dp.event(value=payload_value, received_at=datetime.now()),

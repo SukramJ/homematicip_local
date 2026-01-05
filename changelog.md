@@ -6,11 +6,14 @@
 
 - **Schedule Services**: Deprecated `set_schedule_profile` and `set_schedule_weekday` services. These will be removed in April 2026. Use `set_schedule_simple_profile` and `set_schedule_simple_weekday` instead. A warning is now logged when using the deprecated services.
 
-## Bump aiohomematic to [2026.1.10](https://github.com/SukramJ/aiohomematic/compare/2026.1.9...2026.1.10)
+## Bump aiohomematic to [2026.1.11](https://github.com/SukramJ/aiohomematic/compare/2026.1.9...2026.1.11)
 
 ### Bug Fixes
 
 - **CUxD/CCU-Jack Recovery Fix**: Fixed recovery mechanism for JSON-RPC-only interfaces (CUxD, CCU-Jack). Recovery now checks the JSON-RPC port (80/443) instead of failing at the TCP check stage. This prevents the central unit from entering a FAILED state when these services are actually available
+- **Device Availability Not Updating**: Fixed devices not showing as unavailable when UN_REACH changes. All entity states are now refreshed when device availability changes
+- **HmIP-MP3P LED Auto-Off**: Fixed LED turning off after 10 seconds on HmIP-MP3P sound player devices
+- **VirtualDevices Init Timeout**: Fixed initialization timeout causing client failure for virtual devices
 
 # Version [2.0.4](https://github.com/SukramJ/homematicip_local/compare/2.0.3...2.0.4) (2026-01-04)
 
