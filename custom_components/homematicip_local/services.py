@@ -605,6 +605,31 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async_register_platform_entity_service(
         hass=hass,
         service_domain=DOMAIN,
+        service_name=HmipLocalServices.GET_SCHEDULE_SIMPLE_PROFILE,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            vol.Required(ATTR_PROFILE): cv.string,
+        },
+        func="async_get_schedule_simple_profile",
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.GET_SCHEDULE_SIMPLE_WEEKDAY,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            vol.Required(ATTR_PROFILE): cv.string,
+            vol.Required(ATTR_WEEKDAY): cv.string,
+        },
+        func="async_get_schedule_simple_weekday",
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
         service_name=HmipLocalServices.SET_SCHEDULE_PROFILE,
         entity_domain=CLIMATE_DOMAIN,
         schema={

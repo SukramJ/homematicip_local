@@ -1369,17 +1369,27 @@
             "name": "Parametersatz von einem Gerät oder Kanal lesen"
         }, 
         "get_schedule_profile": {
-            "description": "Lädt ein Zeitplan-Profil von einer Zeitplan-Entität", 
+            "description": "[VERALTET - wird im April 2026 entfernt] Verwende 'get_schedule_simple_profile' stattdessen. Lädt ein Zeitplan-Profil von einer Zeitplan-Entität", 
             "fields": {
                 "profile": {
                     "description": "Wählen Sie ein Profil zum Laden", 
                     "name": "Profil"
                 }
             }, 
-            "name": "Zeitplan-Profil abrufen"
+            "name": "[Veraltet] Zeitplan-Profil abrufen"
         }, 
-        "get_schedule_weekday": {
-            "description": "Lädt einen Wochentag eines Zeitplan-Profils", 
+        "get_schedule_simple_profile": {
+            "description": "Lädt ein Zeitplan-Profil von einer Zeitplan-Entität im vereinfachten Format", 
+            "fields": {
+                "profile": {
+                    "description": "Wählen Sie ein Profil zum Laden", 
+                    "name": "Profil"
+                }
+            }, 
+            "name": "Einfaches Zeitplan-Profil abrufen"
+        }, 
+        "get_schedule_simple_weekday": {
+            "description": "Lädt einen Wochentag eines Zeitplan-Profils im vereinfachten Format", 
             "fields": {
                 "profile": {
                     "description": "Wählen Sie ein Profil", 
@@ -1390,7 +1400,21 @@
                     "name": "Wochentag"
                 }
             }, 
-            "name": "Zeitplan-Profil Wochentag abrufen"
+            "name": "Einfaches Zeitplan-Profil Wochentag abrufen"
+        }, 
+        "get_schedule_weekday": {
+            "description": "[VERALTET - wird im April 2026 entfernt] Verwende 'get_schedule_simple_weekday' stattdessen. Lädt einen Wochentag eines Zeitplan-Profils", 
+            "fields": {
+                "profile": {
+                    "description": "Wählen Sie ein Profil", 
+                    "name": "Profil"
+                }, 
+                "weekday": {
+                    "description": "Wählen Sie einen Wochentag", 
+                    "name": "Wochentag"
+                }
+            }, 
+            "name": "[Veraltet] Zeitplan-Profil Wochentag abrufen"
         }, 
         "get_variable_value": {
             "description": "Wert einer Homematic Systemvariable lesen", 

@@ -98,6 +98,8 @@ class HmipLocalServices(StrEnum):
     GET_LINK_PEERS = "get_link_peers"
     GET_PARAMSET = "get_paramset"
     GET_SCHEDULE_PROFILE = "get_schedule_profile"
+    GET_SCHEDULE_SIMPLE_PROFILE = "get_schedule_simple_profile"
+    GET_SCHEDULE_SIMPLE_WEEKDAY = "get_schedule_simple_weekday"
     GET_SCHEDULE_WEEKDAY = "get_schedule_weekday"
     GET_VARIABLE_VALUE = "get_variable_value"
     LIGHT_SET_ON_TIME = "light_set_on_time"

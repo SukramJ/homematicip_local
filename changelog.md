@@ -2,9 +2,13 @@
 
 ## What's Changed
 
+### New Features
+
+- **Simple Schedule Services**: Added `get_schedule_simple_profile` and `get_schedule_simple_weekday` services. These return schedule data in a simplified format that is easier to read and use.
+
 ### Deprecations
 
-- **Schedule Services**: Deprecated `set_schedule_profile` and `set_schedule_weekday` services. These will be removed in April 2026. Use `set_schedule_simple_profile` and `set_schedule_simple_weekday` instead. A warning is now logged when using the deprecated services.
+- **Schedule Services**: Deprecated `set_schedule_profile`, `set_schedule_weekday`, `get_schedule_profile`, and `get_schedule_weekday` services. These will be removed in April 2026. Use `set_schedule_simple_profile`, `set_schedule_simple_weekday`, `get_schedule_simple_profile`, and `get_schedule_simple_weekday` instead. A warning is now logged when using the deprecated services.
 
 ## Bump aiohomematic to [2026.1.11](https://github.com/SukramJ/aiohomematic/compare/2026.1.9...2026.1.11)
 

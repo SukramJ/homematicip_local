@@ -1369,17 +1369,27 @@
             "name": "Get paramset"
         }, 
         "get_schedule_profile": {
-            "description": "Call to get a schedule of a climate device", 
+            "description": "[DEPRECATED - will be removed April 2026] Use 'get_schedule_simple_profile' instead. Call to get a schedule of a climate device", 
             "fields": {
                 "profile": {
                     "description": "Select a profile", 
                     "name": "Profile"
                 }
             }, 
-            "name": "Get schedule profile"
+            "name": "[Deprecated] Get schedule profile"
         }, 
-        "get_schedule_weekday": {
-            "description": "Call to get a schedule of a climate device", 
+        "get_schedule_simple_profile": {
+            "description": "Call to get a schedule of a climate device in simplified format", 
+            "fields": {
+                "profile": {
+                    "description": "Select a profile", 
+                    "name": "Profile"
+                }
+            }, 
+            "name": "Get simple schedule profile"
+        }, 
+        "get_schedule_simple_weekday": {
+            "description": "Call to get a schedule of a climate device for a weekday in simplified format", 
             "fields": {
                 "profile": {
                     "description": "Select a profile", 
@@ -1390,7 +1400,21 @@
                     "name": "Weekday"
                 }
             }, 
-            "name": "Get schedule profile weekday"
+            "name": "Get simple schedule profile weekday"
+        }, 
+        "get_schedule_weekday": {
+            "description": "[DEPRECATED - will be removed April 2026] Use 'get_schedule_simple_weekday' instead. Call to get a schedule of a climate device", 
+            "fields": {
+                "profile": {
+                    "description": "Select a profile", 
+                    "name": "Profile"
+                }, 
+                "weekday": {
+                    "description": "Select a weekday", 
+                    "name": "Weekday"
+                }
+            }, 
+            "name": "[Deprecated] Get schedule profile weekday"
         }, 
         "get_variable_value": {
             "description": "Read a value of a variable", 

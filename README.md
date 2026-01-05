@@ -781,52 +781,6 @@ Returns a paramset
 Call to `getParamset` for direct connections on the XML-RPC interface.
 Returns a paramset
 
-### `homematicip_local.get_schedule_profile`
-
-Returns the schedule of a climate profile (e.g., P1, P2, etc.).
-
-**Return format:** The returned data contains all weekdays for the specified profile. Redundant 24:00 slots are automatically filtered out, so you typically receive only the meaningful time slots (usually 3-7 slots instead of 13).
-
-**Example structure:**
-```yaml
-MONDAY:
-  1:
-    ENDTIME: "06:00"
-    TEMPERATURE: 18.0
-  2:
-    ENDTIME: "22:00"
-    TEMPERATURE: 21.0
-  3:
-    ENDTIME: "24:00"
-    TEMPERATURE: 18.0
-TUESDAY:
-  ...
-```
-
-### `homematicip_local.get_schedule_weekday`
-
-Returns the schedule of a climate profile for a specific weekday.
-
-**Return format:** The returned data is filtered to show only meaningful slots. Redundant 24:00 slots at the end are removed automatically. Each slot defines a temperature period that ends at the specified ENDTIME.
-
-**Example structure:**
-```yaml
-1:
-  ENDTIME: "06:00"
-  TEMPERATURE: 18.0
-2:
-  ENDTIME: "08:00"
-  TEMPERATURE: 21.0
-3:
-  ENDTIME: "24:00"
-  TEMPERATURE: 18.0
-```
-
-**Understanding slots:**
-- Slot 1 means: From 00:00 until 06:00, maintain 18.0°C
-- Slot 2 means: From 06:00 until 08:00, maintain 21.0°C
-- Slot 3 means: From 08:00 until 24:00, maintain 18.0°C
-
 ### `homematicip_local.put_paramset`
 
 __Disclaimer: Too much writing to the device MASTER paramset could kill your device's storage.__
@@ -920,7 +874,60 @@ This creates:
 - 17:00-22:00: 21.0°C (your second period)
 - 22:00-24:00: 18.0°C (base_temperature)
 
-See the [sample](#sample-for-set_schedule_simple_weekday) below for a complete example. 
+See the [sample](#sample-for-set_schedule_simple_weekday) below for a complete example.
+
+### `homematicip_local.get_schedule_simple_profile`
+
+Returns the schedule of a climate profile in a **simplified format**.
+
+**How it works:** The service analyzes the schedule and automatically determines the `base_temperature` as the most frequently used temperature throughout the day. Only time periods that deviate from this base temperature are returned as `periods`. This makes the schedule much easier to read and understand.
+
+**Return format:** The returned data contains all weekdays for the specified profile. Each weekday has a `base_temperature` and a list of `periods` with `starttime`, `endtime`, and `temperature`.
+
+**Example structure:**
+```yaml
+MONDAY:
+  base_temperature: 18.0
+  periods:
+    - starttime: "06:00"
+      endtime: "08:00"
+      temperature: 21.0
+    - starttime: "17:00"
+      endtime: "22:00"
+      temperature: 21.0
+TUESDAY:
+  base_temperature: 18.0
+  periods:
+    - starttime: "06:00"
+      endtime: "22:00"
+      temperature: 21.0
+# ... other weekdays
+```
+
+### `homematicip_local.get_schedule_simple_weekday`
+
+Returns the schedule of a climate profile for a specific weekday in a **simplified format**.
+
+**How it works:** The service analyzes the weekday schedule and determines the `base_temperature` as the most frequently used temperature. Only time periods with temperatures that differ from the base are returned as `periods`, keeping the output compact and readable.
+
+**Return format:** The returned data contains the `base_temperature` and a list of `periods` for the specified weekday.
+
+**Example structure:**
+```yaml
+base_temperature: 18.0
+periods:
+  - starttime: "06:00"
+    endtime: "08:00"
+    temperature: 21.0
+  - starttime: "17:00"
+    endtime: "22:00"
+    temperature: 21.0
+```
+
+**Understanding the format:**
+- `base_temperature`: The default temperature used for all times not covered by periods
+- `periods`: List of heating/cooling periods with start time, end time, and target temperature
+- Times are in 24-hour format ("HH:MM")
 
 ### `homematicip_local.get_variable_value`
 
