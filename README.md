@@ -82,7 +82,6 @@ To connect locally to your Homematic Home Control Unit (HmIP-HCU1), please use t
 - [Managing Devices & Entities](#managing-devices--entities)
 - [Working with Device Parameters](#working-with-device-parameters)
 - [Button Devices & Events](#button-devices--events)
-- [Troubleshooting Common Issues](#troubleshooting-common-issues)
 - [Technical Details](#technical-details)
   - [Restore Last Brightness](#restore-last-brightness)
 - [Updating Device Firmware](#updating-device-firmware)
@@ -1198,71 +1197,6 @@ data:
 
 ---
 
-## Troubleshooting Common Issues
-
-### "Error fetching initial data"
-
-**What it means:** The integration couldn't process the CCU's initial data response.
-
-**Why it happens:** The CCU's REGA script returned invalid data (rare).
-
-**Impact:** Integration falls back to individual requests (slower startup, higher CCU load).
-
-**This is NOT a bug in the integration.** It's a CCU data issue.
-
-**How to diagnose:**
-1. Get the [REGA script](https://github.com/sukramj/aiohomematic/blob/devel/aiohomematic/rega_scripts/fetch_all_device_data.fn)
-2. Replace `##interface##` (line 17) with the interface from the error message
-3. Run in CCU web interface
-4. Check if output is valid JSON
-5. Search discussions for "GET_ALL_DEVICE_DATA"
-
-**What to do:** Post in [Discussions](https://github.com/sukramj/aiohomematic/discussions) with script output.
-
----
-
-### "XmlRPC-Server received no events"
-
-**What it means:** HA isn't receiving state updates from CCU for 10+ minutes.
-
-**How the check works:**
-- HA sends PING to CCU every 15 seconds
-- Expects PONG response via XML-RPC server
-- Alert triggers after 10 minutes of missing PONGs/updates
-
-**This is a network communication problem, not an integration bug.**
-
-**Common causes:**
-1. Firewall blocking CCU → HA connection
-2. Docker networking issues (callback_host not configured)
-3. CCU overloaded or unresponsive
-4. Network issues between CCU and HA
-
-**How to fix:**
-1. Check firewall rules (allow CCU → HA on callback port)
-2. Docker users: Set `callback_host` and `callback_port_xml_rpc`
-3. Verify CCU is responsive
-4. Check HA logs for connection errors
-
----
-
-### "Pending Pong mismatch"
-
-**What it means:** Number of sent PINGs doesn't match received PONGs.
-
-**Scenario 1: Fewer PONGs received**
-- **Cause:** Another HA instance with same `instance_name` started after this one
-- **Effect:** That instance receives all events (including device updates)
-- **Alternative cause:** CCU or network communication problem
-
-**Scenario 2: More PONGs received**
-- **Cause:** Another HA instance with same `instance_name` started before this one
-- **Effect:** This instance receives events from both
-
-**Solution:** Ensure each HA instance has a unique `instance_name` when connecting to the same CCU.
-
----
-
 ## Technical Details
 
 ### RSSI Signal Strength
@@ -1667,9 +1601,13 @@ If CUxD or CCU-Jack behaves differently than expected, adapt using HA's templati
 
 ## Troubleshooting
 
-Before opening an issue, work through this troubleshooting guide:
+> **📖 Full Troubleshooting Guide**
+>
+> For comprehensive troubleshooting with step-by-step diagnostics, detailed solutions for all common issues, and network/container specifics, see the **[Complete Troubleshooting Guide](https://github.com/sukramj/aiohomematic/blob/devel/docs/homeassistant_troubleshooting.md)**.
 
-### First Steps Checklist
+### Quick Checklist
+
+Before diving deeper, verify these basics:
 
 | Check | How to Verify |
 |-------|---------------|
@@ -1679,7 +1617,7 @@ Before opening an issue, work through this troubleshooting guide:
 | ✅ Admin user | CCU user has administrator privileges |
 | ✅ Valid password | Only characters: A-Z, a-z, 0-9 and `.!$():;#-` |
 
-### Docker-Specific Issues
+### Docker Quick Fixes
 
 | Problem | Solution |
 |---------|----------|
@@ -1687,39 +1625,12 @@ Before opening an issue, work through this troubleshooting guide:
 | Connection refused | Use `network_mode: host` (recommended) |
 | Multiple instances conflict | Ensure unique `instance_name` per HA instance |
 
-### Common Problems & Solutions
-
-**Entity shows "Unavailable"**
-1. Entity might be **disabled** → Settings → Entities → Enable it
-2. Device offline → Check CCU if device is reachable
-3. After CCU restart → Wait for device to report in (battery devices: hours)
-
-**Devices not appearing**
-1. New devices appear as **Repair notifications** → Check Settings → System → Repairs
-2. Reload integration → Settings → Integrations → Reload
-3. Check interface is enabled → Reconfigure → Verify correct interfaces selected
-
-**Auto-discovery keeps appearing**
-1. Click **Ignore** on the discovery notification
-2. Or reconfigure the existing integration entry
-3. Restart Home Assistant
-
-**After CCU firmware update**
-1. Restart Home Assistant
-2. Reload the integration
-3. Check for changed ports or interfaces
-
 ### Getting Help
 
-If you can't resolve the issue:
-
-1. **Search existing issues:** [GitHub Issues](https://github.com/sukramj/aiohomematic/issues)
-2. **Ask in discussions:** [GitHub Discussions](https://github.com/sukramj/aiohomematic/discussions)
-3. **Open an issue** with:
-   - HA version and integration version
-   - CCU type and firmware version
-   - Relevant log entries
-   - Steps to reproduce
+1. **Read the guide:** [Full Troubleshooting Guide](https://github.com/sukramj/aiohomematic/blob/devel/docs/homeassistant_troubleshooting.md)
+2. **Search existing issues:** [GitHub Issues](https://github.com/sukramj/aiohomematic/issues)
+3. **Ask in discussions:** [GitHub Discussions](https://github.com/sukramj/aiohomematic/discussions)
+4. **Open an issue** with: HA version, integration version, CCU type/firmware, relevant logs, steps to reproduce
 
 ---
 

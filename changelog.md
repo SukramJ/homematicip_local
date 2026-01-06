@@ -10,7 +10,7 @@
 
 - **Schedule Services**: Deprecated `set_schedule_profile`, `set_schedule_weekday`, `get_schedule_profile`, and `get_schedule_weekday` services. These will be removed in April 2026. Use `set_schedule_simple_profile`, `set_schedule_simple_weekday`, `get_schedule_simple_profile`, and `get_schedule_simple_weekday` instead. A warning is now logged when using the deprecated services.
 
-## Bump aiohomematic to [2026.1.12](https://github.com/SukramJ/aiohomematic/compare/2026.1.9...2026.1.12)
+## Bump aiohomematic to [2026.1.13](https://github.com/SukramJ/aiohomematic/compare/2026.1.9...2026.1.13)
 
 ### Bug Fixes
 
@@ -22,6 +22,7 @@
 - **Device Replacement/Re-pairing**: Fixed device replacement and re-pairing handlers. Old device entries are now properly removed and recreated with fresh data
 - **Hub Entities with Secondary Client Failures**: Fixed system variables and programs not appearing when secondary clients (e.g., CUxD) fail to initialize
 - **Connection Recovery Port Detection**: Fixed port detection during connection recovery for all client implementations
+- **Channel Names Not Loading**: Fixed channel names not loading when using InterfaceClient (JSON-RPC). The nested channels array from the JSON-RPC response is now processed correctly
 
 # Version [2.0.4](https://github.com/SukramJ/homematicip_local/compare/2.0.3...2.0.4) (2026-01-04)
 
