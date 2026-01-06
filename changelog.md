@@ -1,3 +1,11 @@
+# Version [2.0.6](https://github.com/SukramJ/homematicip_local/compare/2.0.5...2.0.6) (2026-01-06)
+
+## Bump aiohomematic to [2026.1.14](https://github.com/SukramJ/aiohomematic/compare/2026.1.13...2026.1.14)
+
+### Bug Fixes
+
+- **Retry Mechanism Removed**: Removed the retry mechanism that was conflicting with CircuitBreaker pattern, causing cascading failures. This particularly affected slower backends (Virtual Devices on Raspberry Pi 4, OpenCCU systems) where retry attempts counted toward circuit breaker thresholds, triggering premature failures during initialization. Network errors now fail immediately for more predictable behavior
+
 # Version [2.0.5](https://github.com/SukramJ/homematicip_local/compare/2.0.4...2.0.5) (2026-01-05)
 
 ## What's Changed
