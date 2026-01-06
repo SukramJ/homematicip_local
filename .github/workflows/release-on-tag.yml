@@ -1,0 +1,84 @@
+name: Create Release on Tag
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Get version from tag
+        id: version
+        run: |
+          # Remove 'v' prefix if present
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Check if this is a stable release (no 'b' in version)
+          if [[ "$VERSION" != *"b"* ]]; then
+            echo "is_stable=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_stable=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract changelog section
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Extract the section for this version from changelog.md
+          # Matches from "# Version [X.Y.Z]" to the next "# Version [" or end of file
+          CHANGELOG_CONTENT=$(awk -v ver="$VERSION" '
+            BEGIN { found=0; content="" }
+            /^# Version \[/ {
+              if (found) exit
+              if (index($0, "[" ver "]") > 0) found=1
+            }
+            found { content = content $0 "\n" }
+            END { print content }
+          ' changelog.md)
+
+          # Remove the first line (version header) as GitHub will show the tag as title
+          CHANGELOG_CONTENT=$(echo "$CHANGELOG_CONTENT" | tail -n +2)
+
+          # Write to file for multi-line handling
+          echo "$CHANGELOG_CONTENT" > /tmp/changelog_section.md
+
+      - name: Build release body
+        id: body
+        run: |
+          # Start with empty body
+          BODY=""
+
+          # If stable release, prepend sponsoring section
+          if [[ "${{ steps.version.outputs.is_stable }}" == "true" ]]; then
+            if [[ -f ".github/SPONSORING.md" ]]; then
+              SPONSORING=$(cat .github/SPONSORING.md)
+              BODY="${SPONSORING}"$'\n'
+            fi
+          fi
+
+          # Append changelog content
+          CHANGELOG=$(cat /tmp/changelog_section.md)
+          BODY="${BODY}${CHANGELOG}"
+
+          # Write to file for GitHub release
+          echo "$BODY" > /tmp/release_body.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.version.outputs.version }}
+          body_path: /tmp/release_body.md
+          prerelease: true
+          generate_release_notes: false

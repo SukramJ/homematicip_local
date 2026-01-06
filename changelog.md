@@ -10,7 +10,7 @@
 
 - **Schedule Services**: Deprecated `set_schedule_profile`, `set_schedule_weekday`, `get_schedule_profile`, and `get_schedule_weekday` services. These will be removed in April 2026. Use `set_schedule_simple_profile`, `set_schedule_simple_weekday`, `get_schedule_simple_profile`, and `get_schedule_simple_weekday` instead. A warning is now logged when using the deprecated services.
 
-## Bump aiohomematic to [2026.1.11](https://github.com/SukramJ/aiohomematic/compare/2026.1.9...2026.1.11)
+## Bump aiohomematic to [2026.1.12](https://github.com/SukramJ/aiohomematic/compare/2026.1.9...2026.1.12)
 
 ### Bug Fixes
 
@@ -18,6 +18,10 @@
 - **Device Availability Not Updating**: Fixed devices not showing as unavailable when UN_REACH changes. All entity states are now refreshed when device availability changes
 - **HmIP-MP3P LED Auto-Off**: Fixed LED turning off after 10 seconds on HmIP-MP3P sound player devices
 - **VirtualDevices Init Timeout**: Fixed initialization timeout causing client failure for virtual devices
+- **Device Cache After Firmware Updates**: Fixed device structure changes after firmware updates. Cached descriptions are now removed and refreshed from the CCU, preventing errors like "Non-existent Channel 3"
+- **Device Replacement/Re-pairing**: Fixed device replacement and re-pairing handlers. Old device entries are now properly removed and recreated with fresh data
+- **Hub Entities with Secondary Client Failures**: Fixed system variables and programs not appearing when secondary clients (e.g., CUxD) fail to initialize
+- **Connection Recovery Port Detection**: Fixed port detection during connection recovery for all client implementations
 
 # Version [2.0.4](https://github.com/SukramJ/homematicip_local/compare/2.0.3...2.0.4) (2026-01-04)
 
