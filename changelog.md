@@ -1,9 +1,10 @@
 # Version [2.0.6](https://github.com/SukramJ/homematicip_local/compare/2.0.5...2.0.6) (2026-01-06)
 
-## Bump aiohomematic to [2026.1.15](https://github.com/SukramJ/aiohomematic/compare/2026.1.13...2026.1.15)
+## Bump aiohomematic to [2026.1.16](https://github.com/SukramJ/aiohomematic/compare/2026.1.13...2026.1.16)
 
 ### Bug Fixes
 
+- **VirtualDevices Init Timeout**: Fixed VirtualDevices init() timing out even though the CCU successfully processed the request. On some CCU backends (OpenCCU, RaspberryMatic), the VirtualDevices service processes the init() request correctly but fails to send the response. The initialization is now treated as successful if a listDevices callback was received during the timeout
 - **VirtualDevices Connection Failure**: Fixed VirtualDevices failing to connect on OpenCCU/RaspberryMatic. The CCU's XML-RPC parser crashed when receiving device descriptions with empty `CHILDREN` fields. Device descriptions are now normalized to ensure `CHILDREN` is always a list
 - **Retry Mechanism Removed**: Removed the retry mechanism that was conflicting with CircuitBreaker pattern, causing cascading failures. This particularly affected slower backends (Virtual Devices on Raspberry Pi 4, OpenCCU systems) where retry attempts counted toward circuit breaker thresholds, triggering premature failures during initialization. Network errors now fail immediately for more predictable behavior
 
