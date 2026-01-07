@@ -548,7 +548,34 @@ class ControlUnit(BaseControlUnit):
                 )
                 return
 
+            # Check which devices already exist in HA device registry (e.g., after cache clear)
+            # These should be auto-confirmed without creating repair issues
+            device_registry = dr.async_get(self._hass)
+            existing_addresses: list[str] = []
+            new_addresses: list[str] = []
+
             for address in event.device_addresses:
+                if device_registry.async_get_device(
+                    identifiers={(DOMAIN, f"{address}{self._central.config.central_id}")}
+                ):
+                    existing_addresses.append(address)
+                else:
+                    new_addresses.append(address)
+
+            # Auto-confirm devices that already exist in HA (cache was cleared but devices are known)
+            if existing_addresses:
+                _LOGGER.debug(
+                    "Auto-confirming existing devices after cache clear: %s on interface %s",
+                    existing_addresses,
+                    interface_id,
+                )
+                await self._central.device_coordinator.add_new_devices_manually(
+                    interface_id=interface_id,
+                    address_names=dict.fromkeys(existing_addresses, ""),
+                )
+
+            # Create repair issues only for truly new devices
+            for address in new_addresses:
                 issue_id = f"devices_delayed|{interface_id}|{address}"
 
                 async def _fix_callback(*, device_name: str, _interface_id: str, _address: str) -> None:
