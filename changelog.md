@@ -1,4 +1,11 @@
-# Version [2.0.6](https://github.com/SukramJ/homematicip_local/compare/2.0.5...2.0.6) (2026-01-07)
+# Version [2.0.6](https://github.com/SukramJ/homematicip_local/compare/2.0.5...2.0.6) (2026-01-08)
+
+## What's Changed
+
+### Bug Fixes
+
+- **Device Auto-Confirmation After Cache Clear**: Fixed devices not being auto-confirmed after clearing the aiohomematic cache. Previously, all devices were incorrectly shown as repair issues because the wrong device identifier format was used for registry lookups. Devices that already exist in Home Assistant are now correctly recognized and auto-confirmed
+- **Device Availability Updates**: Fixed device availability changes not updating the device registry correctly due to the same identifier format mismatch
 
 ## Bump aiohomematic to [2026.1.17](https://github.com/SukramJ/aiohomematic/compare/2026.1.13...2026.1.17)
 

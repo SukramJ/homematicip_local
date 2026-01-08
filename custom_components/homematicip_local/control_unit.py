@@ -555,9 +555,9 @@ class ControlUnit(BaseControlUnit):
             new_addresses: list[str] = []
 
             for address in event.device_addresses:
-                if device_registry.async_get_device(
-                    identifiers={(DOMAIN, f"{address}{self._central.config.central_id}")}
-                ):
+                # Device identifier format is: {address}@{interface_id}
+                expected_identifier = f"{address}@{interface_id}"
+                if device_registry.async_get_device(identifiers={(DOMAIN, expected_identifier)}):
                     existing_addresses.append(address)
                 else:
                     new_addresses.append(address)
@@ -607,10 +607,8 @@ class ControlUnit(BaseControlUnit):
             for device_address, available in event.availability_changes:
                 _LOGGER.debug("Device %s availability: %s", device_address, available)
                 # Update device registry
-                device_registry = dr.async_get(self._hass)
-                if ha_device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, f"{device_address}{self._central.config.central_id}")}
-                ):
+                if ha_device := self._async_get_device_entry(device_address=device_address):
+                    device_registry = dr.async_get(self._hass)
                     device_registry.async_update_device(
                         device_id=ha_device.id,
                         disabled_by=None if available else dr.DeviceEntryDisabler.INTEGRATION,

@@ -9,4 +9,4 @@ pre-commit==4.5.1
 pur==7.3.3
 pylint==4.0.4
 pylint_strict_informational==0.1
-pytest-homeassistant-custom-component==0.13.304
+pytest-homeassistant-custom-component==0.13.305
