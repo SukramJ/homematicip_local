@@ -539,7 +539,7 @@ async def _async_validate_config_and_get_system_information(
 ) -> SystemInformation | None:
     """Validate the user input allows us to connect."""
     control_config = ControlConfig(hass=hass, entry_id=entry_id, data=data)
-    control_config.check_config()
+    await control_config.check_config()
     return await validate_config_and_get_system_information(control_config=control_config)
 
 

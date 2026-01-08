@@ -1,3 +1,30 @@
+# Version [2.1.0](https://github.com/SukramJ/homematicip_local/compare/2.0.6...2.1.0) (2026-01-08)
+
+## What's Changed
+
+### Bug Fixes
+
+- **Home Assistant 2026.1.0+ Compatibility**: Fixed "Detected blocking call to import_module" error that prevented the integration from loading. All blocking I/O operations during central unit creation now run in a thread pool executor.
+
+### Internal
+
+- **Async Central Creation**: Migrated `ControlConfig.create_central()`, `check_config()`, `create_control_unit()`, and `create_control_unit_temp()` to async methods
+- **Factory Pattern for ControlUnit**: Added `BaseControlUnit.async_create()` class method for async instantiation
+
+## Bump aiohomematic to [2026.1.20](https://github.com/SukramJ/aiohomematic/compare/2026.1.17...2026.1.20)
+
+### New Features
+
+- **`old_value` and `new_value` fields in `DataPointStateChangedEvent`**: External consumers can now track what changed without maintaining their own previous state
+- **`AvailabilityInfo` dataclass**: New unified view of device availability bundling reachability, battery, and signal information
+- **`Device.availability` property**: Returns `AvailabilityInfo` providing a unified view of device connectivity and health status
+- **Consumer API documentation**: New `docs/consumer_api.md` guide for external consumers like Matter bridges
+
+### Internal
+
+- **Eliminate all remaining lazy imports**: All `noqa: PLC0415` markers have been removed from production code. Circular imports have been resolved through module restructuring
+- **Remove unnecessary delayed imports**: Moved imports to top-level where no circular dependency exists
+
 # Version [2.0.6](https://github.com/SukramJ/homematicip_local/compare/2.0.5...2.0.6) (2026-01-08)
 
 ## What's Changed

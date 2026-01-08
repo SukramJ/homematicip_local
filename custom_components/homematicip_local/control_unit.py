@@ -8,7 +8,7 @@ from functools import partial
 import logging
 import time
 from types import UnionType
-from typing import Any, Final, TypeVar, cast
+from typing import Any, Final, Self, TypeVar, cast
 
 from aiohomematic import __version__ as AIOHM_VERSION
 from aiohomematic.central import CentralConfig, CentralUnit, check_config
@@ -124,7 +124,7 @@ _DATA_POINT_T = TypeVar("_DATA_POINT_T", bound=CallbackDataPoint)
 class BaseControlUnit:
     """Base central point to control a central unit."""
 
-    def __init__(self, *, control_config: ControlConfig) -> None:
+    def __init__(self, *, control_config: ControlConfig, central: CentralUnit) -> None:
         """Init the control unit."""
         self._config: Final = control_config
         self._hass: Final = control_config.hass
@@ -136,7 +136,7 @@ class BaseControlUnit:
         self._enable_sub_devices: Final = control_config.enable_sub_devices
         self._mqtt_prefix: Final = control_config.mqtt_prefix
         self._enable_system_notifications: Final = control_config.enable_system_notifications
-        self._central: Final = control_config.create_central()
+        self._central: Final = central
         self._attr_device_info: Final = DeviceInfo(
             identifiers={
                 (
@@ -151,6 +151,12 @@ class BaseControlUnit:
             sw_version=self._central.version,
         )
         self._unsubscribe_callbacks: Final[list[UnsubscribeCallback]] = []
+
+    @classmethod
+    async def async_create(cls, *, control_config: ControlConfig) -> Self:
+        """Create a new control unit instance asynchronously."""
+        central = await control_config.create_central()
+        return cls(control_config=control_config, central=central)
 
     @property
     def backup_directory(self) -> str:
@@ -211,9 +217,9 @@ class BaseControlUnit:
 class ControlUnit(BaseControlUnit):
     """Unit to control a central unit."""
 
-    def __init__(self, *, control_config: ControlConfig) -> None:
+    def __init__(self, *, control_config: ControlConfig, central: CentralUnit) -> None:
         """Init the control unit."""
-        super().__init__(control_config=control_config)
+        super().__init__(control_config=control_config, central=central)
         self._mqtt_consumer: MQTTConsumer | None = None
         self._auto_confirm_until: Final = control_config.auto_confirm_until
 
@@ -908,11 +914,11 @@ class ControlConfig:
         """Return the interface configuration."""
         return self._interface_config
 
-    def check_config(self) -> None:
+    async def check_config(self) -> None:
         """Check config. Throws BaseHomematicException on failure."""
         if not self._check_instance_name_is_unique():
             raise InvalidConfig("Instance name must be unique.")
-        if config_failures := check_config(
+        if config_failures := await check_config(
             central_name=self.instance_name,
             host=self._host,
             username=self._username,
@@ -925,7 +931,7 @@ class ControlConfig:
             failures = ", ".join(config_failures)
             raise InvalidConfig(failures)
 
-    def create_central(self) -> CentralUnit:
+    async def create_central(self) -> CentralUnit:
         """Create the central unit for ccu callbacks."""
         interface_configs: set[InterfaceConfig] = set()
         for interface_name in self._interface_config:
@@ -940,7 +946,7 @@ class ControlConfig:
             )
         # use last 10 chars of entry_id for central_id uniqueness
         central_id = self.entry_id[-10:]
-        return CentralConfig(
+        return await CentralConfig(
             callback_host=self._callback_host if self._callback_host != IP_ANY_V4 else None,
             callback_port_xml_rpc=self._callback_port_xml_rpc if self._callback_port_xml_rpc != PORT_ANY else None,
             central_id=central_id,
@@ -974,13 +980,13 @@ class ControlConfig:
             verify_tls=self._verify_tls,
         ).create_central()
 
-    def create_control_unit(self) -> ControlUnit:
-        """Identify the used client."""
-        return ControlUnit(control_config=self)
+    async def create_control_unit(self) -> ControlUnit:
+        """Create the control unit asynchronously."""
+        return await ControlUnit.async_create(control_config=self)
 
-    def create_control_unit_temp(self) -> ControlUnitTemp:
-        """Identify the used client."""
-        return ControlUnitTemp(control_config=self._temporary_config)
+    async def create_control_unit_temp(self) -> ControlUnitTemp:
+        """Create a temporary control unit asynchronously."""
+        return await ControlUnitTemp.async_create(control_config=self._temporary_config)
 
     def _check_instance_name_is_unique(self) -> bool:
         """Check if instance_name is unique in HA."""
@@ -1003,7 +1009,7 @@ async def validate_config_and_get_system_information(
     control_config: ControlConfig,
 ) -> SystemInformation | None:
     """Validate the control configuration."""
-    if control_unit := control_config.create_control_unit_temp():
+    if control_unit := await control_config.create_control_unit_temp():
         return await control_unit.central.validate_config_and_get_system_information()
     return None
 

@@ -104,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
             DEFAULT_AUTO_CONFIRM_NEW_DEVICES_TIMEOUT,
         )
 
-    control = ControlConfig(
+    control = await ControlConfig(
         hass=hass,
         entry_id=entry.entry_id,
         data=entry.data,
