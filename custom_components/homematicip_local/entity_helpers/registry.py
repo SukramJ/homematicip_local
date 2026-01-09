@@ -239,16 +239,49 @@ class EntityDescriptionRegistry:
         Validate all registered rules.
 
         Returns a list of warning messages for potential issues.
+        Only warns about truly ambiguous rules - rules with the same key AND
+        identical filtering criteria. Rules with different device filters,
+        priorities, or other criteria are valid overrides.
         """
         warnings: list[str] = []
-        seen_keys: set[str] = set()
 
         for category, rules in self._rules_by_category.items():
+            # Group rules by key
+            rules_by_key: dict[str, list[EntityDescriptionRule]] = {}
             for rule in rules:
                 key = rule.description.key
-                if key in seen_keys:
-                    warnings.append(f"Duplicate description key '{key}' in category {category.name}")
-                seen_keys.add(key)
+                if key not in rules_by_key:
+                    rules_by_key[key] = []
+                rules_by_key[key].append(rule)
+
+            # Check for ambiguous rules (same key, same criteria)
+            for key, key_rules in rules_by_key.items():
+                if len(key_rules) <= 1:
+                    continue
+
+                # Check each pair for true conflicts
+                for i, rule1 in enumerate(key_rules):
+                    for rule2 in key_rules[i + 1 :]:
+                        # Rules with different filtering criteria are valid overrides
+                        if rule1.devices != rule2.devices:
+                            continue
+                        if rule1.unit != rule2.unit:
+                            continue
+                        if rule1.postfix != rule2.postfix:
+                            continue
+                        if rule1.var_name_contains != rule2.var_name_contains:
+                            continue
+                        if rule1.parameters != rule2.parameters:
+                            continue
+                        # Rules with different priorities are intentional overrides
+                        if rule1.priority != rule2.priority:
+                            continue
+
+                        # Same criteria, same priority - this is ambiguous
+                        warnings.append(
+                            f"Ambiguous rules for key '{key}' in category {category.name}: "
+                            f"identical criteria with same priority"
+                        )
 
         return warnings
 

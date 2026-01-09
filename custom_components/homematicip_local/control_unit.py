@@ -806,18 +806,25 @@ class ControlUnit(BaseControlUnit):
         # Issues from aiohomematic
         for issue in event.issues:
             issue_id = f"{self._entry_id}_{issue.issue_id}"
-            # For ping_pong_mismatch issues, delete the issue when mismatch_count drops to 0
-            if issue.issue_type == IntegrationIssueType.PING_PONG_MISMATCH and issue.mismatch_count == 0:
+            # For ping_pong_mismatch issues:
+            # - Delete the issue when mismatch_count drops to 0 (recovery signal)
+            # - Only create repair issues for ERROR severity (above threshold)
+            # - WARNING severity is for telemetry only, not user-facing repair issues
+            if (
+                issue.issue_type == IntegrationIssueType.PING_PONG_MISMATCH
+                and issue.mismatch_count == 0
+                or issue.severity == IntegrationIssueSeverity.WARNING
+            ):
                 async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
-            else:
+                continue
+            # Only create repair issues for ERROR severity
+            if issue.severity == IntegrationIssueSeverity.ERROR:
                 ir.async_create_issue(
                     hass=self._hass,
                     domain=DOMAIN,
                     issue_id=issue_id,
                     is_fixable=False,
-                    severity=ir.IssueSeverity.ERROR
-                    if issue.severity == IntegrationIssueSeverity.ERROR
-                    else ir.IssueSeverity.WARNING,
+                    severity=ir.IssueSeverity.ERROR,
                     translation_key=issue.translation_key,
                     translation_placeholders=issue.translation_placeholders,
                 )
