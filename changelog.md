@@ -6,12 +6,13 @@
 
 - **Fix Unwanted Config Entry Reloads**: Fixed integration restarting whenever a device's availability changed. The device registry's `disabled_by` field was being updated on availability changes, which Home Assistant interprets as requiring a config entry reload. Entity availability is now handled exclusively through the entity's `available` property, which is the correct approach for transient state changes.
 
-## Bump aiohomematic to [2026.1.22](https://github.com/SukramJ/aiohomematic/compare/2026.1.20...2026.1.22)
+## Bump aiohomematic to [2026.1.23](https://github.com/SukramJ/aiohomematic/compare/2026.1.20...2026.1.23)
 
 ### Bug Fixes
 
 - **Fix State Machine Transition Error on Unload**: Allow transition from `FAILED` to `DISCONNECTED` state. This fixes `InvalidStateTransitionError` when unloading the integration while a client is in failed state
 - **Fix Leaked EventBus Subscriptions on Central Stop**: Six internal subscription leaks have been fixed across `HubCoordinator`, `ClientCoordinator`, `CacheCoordinator`, `EventCoordinator`, `CentralUnit`, and various client classes. The number of leaked subscriptions logged at shutdown has been reduced from ~7800 to zero
+- **Fix Empty Device List Treated as Error**: The `initialize_proxy()` method now correctly handles empty device lists from interfaces that don't support RPC callbacks. Previously, an empty device list was incorrectly treated as a connection failure
 
 # Version [2.1.0](https://github.com/SukramJ/homematicip_local/compare/2.0.6...2.1.0) (2026-01-08)
 
