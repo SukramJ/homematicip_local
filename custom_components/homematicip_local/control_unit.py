@@ -803,15 +803,21 @@ class ControlUnit(BaseControlUnit):
 
         # Issues from aiohomematic
         for issue in event.issues:
-            ir.async_create_issue(
-                hass=self._hass,
-                domain=DOMAIN,
-                issue_id=f"{self._entry_id}_{issue.issue_id}",
-                is_fixable=False,
-                severity=ir.IssueSeverity.ERROR if issue.severity == "error" else ir.IssueSeverity.WARNING,
-                translation_key=issue.translation_key,
-                translation_placeholders=dict(issue.translation_placeholders),
-            )
+            issue_placeholders = dict(issue.translation_placeholders)
+            issue_id = f"{self._entry_id}_{issue.issue_id}"
+            # For ping_pong_mismatch issues, delete the issue when mismatch_count drops to 0
+            if issue.translation_key == "ping_pong_mismatch" and issue_placeholders.get("mismatch_count") == "0":
+                async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
+            else:
+                ir.async_create_issue(
+                    hass=self._hass,
+                    domain=DOMAIN,
+                    issue_id=issue_id,
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.ERROR if issue.severity == "error" else ir.IssueSeverity.WARNING,
+                    translation_key=issue.translation_key,
+                    translation_placeholders=issue_placeholders,
+                )
 
 
 class ControlUnitTemp(BaseControlUnit):
