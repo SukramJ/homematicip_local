@@ -7,7 +7,7 @@
 - **Fix Unwanted Config Entry Reloads**: Fixed integration restarting whenever a device's availability changed. The device registry's `disabled_by` field was being updated on availability changes, which Home Assistant interprets as requiring a config entry reload. Entity availability is now handled exclusively through the entity's `available` property, which is the correct approach for transient state changes.
 - **Fix False Positive Duplicate Key Warnings**: Entity description validation no longer warns about rules with the same key when they have different filtering criteria (device filters, priorities, etc.). These are valid override patterns, not duplicates.
 
-## Bump aiohomematic to [2026.1.25](https://github.com/SukramJ/aiohomematic/compare/2026.1.20...2026.1.25)
+## Bump aiohomematic to [2026.1.27](https://github.com/SukramJ/aiohomematic/compare/2026.1.20...2026.1.27)
 
 ### Bug Fixes
 
@@ -16,7 +16,8 @@
 - **Fix Empty Device List Treated as Error**: The `initialize_proxy()` method now correctly handles empty device lists from interfaces that don't support RPC callbacks. Previously, an empty device list was incorrectly treated as a connection failure
 - **Fix Ping/Pong Mismatch Issue Not Clearing**: The `ping_pong_mismatch` repair issue is now correctly removed when the connection recovers (mismatch_count drops to 0). Previously, the issue remained visible even after recovery due to a type comparison mismatch
 - **Clear Stale Issues on Startup**: Transient repair issues (`ping_pong_mismatch`, `pending_pong_mismatch`, `unknown_pong_mismatch`, `fetch_data_failed`, `interface_not_reachable`, `xmlrpc_server_receives_no_events`) are now automatically deleted when the integration starts. These issues from previous sessions are no longer relevant after a restart
-- **Fix Persistent Repair Issues After CCU Restart** ([#2757](https://github.com/SukramJ/aiohomematic/issues/2757)): Fixed central state getting stuck in "recovering" after successful recovery. A race condition in `ConnectionRecoveryCoordinator` caused the state transition check to run before the interface was removed from active recoveries, preventing the transition to "running" state
+- **Fix Persistent Repair Issues After CCU Restart** ([#2757](https://github.com/SukramJ/aiohomematic/issues/2757)): Fixed central state getting stuck in "recovering" after successful recovery. A race condition in `ConnectionRecoveryCoordinator` caused the state transition check to run before the interface was removed from active recoveries, preventing the transition to "running" state. Also adds immediate connection repair notifications when recovery starts and clears them when recovery succeeds
+- **Fix Recovery Stuck in Infinite Retry Loop**: After CCU restart, the XML-RPC proxy's HTTP connection could enter an inconsistent state causing `system.listMethods` calls to fail silently. The proxy transport is now reset before RPC availability checks during recovery
 
 ### Internal
 

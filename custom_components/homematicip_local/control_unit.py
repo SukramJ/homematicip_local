@@ -810,10 +810,8 @@ class ControlUnit(BaseControlUnit):
             # - Delete the issue when mismatch_count drops to 0 (recovery signal)
             # - Only create repair issues for ERROR severity (above threshold)
             # - WARNING severity is for telemetry only, not user-facing repair issues
-            if (
-                issue.issue_type == IntegrationIssueType.PING_PONG_MISMATCH
-                and issue.mismatch_count == 0
-                or issue.severity == IntegrationIssueSeverity.WARNING
+            if issue.issue_type == IntegrationIssueType.PING_PONG_MISMATCH and (
+                issue.mismatch_count == 0 or issue.severity == IntegrationIssueSeverity.WARNING
             ):
                 async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
                 continue
