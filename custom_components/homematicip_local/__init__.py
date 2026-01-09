@@ -19,8 +19,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, __version__ as HA_VERSION_STR
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_registry import async_migrate_entries
+from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
@@ -59,6 +60,26 @@ class HomematicData:
 HM_KEY: HassKey[HomematicData] = HassKey(DOMAIN)
 _LOGGER = logging.getLogger(__name__)
 
+# Issue types that should be cleared on startup as they are transient
+# and not relevant after a restart
+_STALE_ISSUE_TYPES: tuple[str, ...] = (
+    "ping_pong_mismatch",
+    "pending_pong_mismatch",
+    "unknown_pong_mismatch",
+    "fetch_data_failed",
+    "interface_not_reachable",
+    "xmlrpc_server_receives_no_events",
+)
+
+
+def _cleanup_stale_issues(*, hass: HomeAssistant, entry_id: str) -> None:
+    """Delete stale issues from previous sessions for this config entry."""
+    issue_registry = ir.async_get(hass)
+    for (domain, issue_id), issue in list(issue_registry.issues.items()):
+        if domain == DOMAIN and issue_id.startswith(entry_id) and issue.translation_key in _STALE_ISSUE_TYPES:
+            async_delete_issue(hass=hass, domain=DOMAIN, issue_id=issue_id)
+            _LOGGER.debug("Deleted stale issue %s on startup", issue_id)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -> bool:
     """Set up Homematic(IP) Local for OpenCCU from a config entr11y."""
@@ -85,6 +106,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
         )
         _LOGGER.warning("HHomematic(IP) Local for OpenCCU setup blocked")
         return False
+
+    # Clean up stale issues from previous sessions
+    _cleanup_stale_issues(hass=hass, entry_id=entry.entry_id)
 
     hass.data.setdefault(HM_KEY, HomematicData())
     if (default_callback_port_xml_rpc := hass.data[HM_KEY].default_callback_port_xml_rpc) is None:

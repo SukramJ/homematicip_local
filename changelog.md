@@ -14,6 +14,7 @@
 - **Fix Leaked EventBus Subscriptions on Central Stop**: Six internal subscription leaks have been fixed across `HubCoordinator`, `ClientCoordinator`, `CacheCoordinator`, `EventCoordinator`, `CentralUnit`, and various client classes. The number of leaked subscriptions logged at shutdown has been reduced from ~7800 to zero
 - **Fix Empty Device List Treated as Error**: The `initialize_proxy()` method now correctly handles empty device lists from interfaces that don't support RPC callbacks. Previously, an empty device list was incorrectly treated as a connection failure
 - **Fix Ping/Pong Mismatch Issue Not Clearing**: The `ping_pong_mismatch` repair issue is now correctly removed when the connection recovers (mismatch_count drops to 0). Previously, the issue remained visible even after recovery due to a type comparison mismatch
+- **Clear Stale Issues on Startup**: Transient repair issues (`ping_pong_mismatch`, `pending_pong_mismatch`, `unknown_pong_mismatch`, `fetch_data_failed`, `interface_not_reachable`, `xmlrpc_server_receives_no_events`) are now automatically deleted when the integration starts. These issues from previous sessions are no longer relevant after a restart
 
 # Version [2.1.0](https://github.com/SukramJ/homematicip_local/compare/2.0.6...2.1.0) (2026-01-08)
 
