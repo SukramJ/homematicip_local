@@ -6,7 +6,7 @@
 
 - **Fix Unwanted Config Entry Reloads**: Fixed integration restarting whenever a device's availability changed. The device registry's `disabled_by` field was being updated on availability changes, which Home Assistant interprets as requiring a config entry reload. Entity availability is now handled exclusively through the entity's `available` property, which is the correct approach for transient state changes.
 
-## Bump aiohomematic to [2026.1.23](https://github.com/SukramJ/aiohomematic/compare/2026.1.20...2026.1.23)
+## Bump aiohomematic to [2026.1.24](https://github.com/SukramJ/aiohomematic/compare/2026.1.20...2026.1.24)
 
 ### Bug Fixes
 
@@ -15,6 +15,10 @@
 - **Fix Empty Device List Treated as Error**: The `initialize_proxy()` method now correctly handles empty device lists from interfaces that don't support RPC callbacks. Previously, an empty device list was incorrectly treated as a connection failure
 - **Fix Ping/Pong Mismatch Issue Not Clearing**: The `ping_pong_mismatch` repair issue is now correctly removed when the connection recovers (mismatch_count drops to 0). Previously, the issue remained visible even after recovery due to a type comparison mismatch
 - **Clear Stale Issues on Startup**: Transient repair issues (`ping_pong_mismatch`, `pending_pong_mismatch`, `unknown_pong_mismatch`, `fetch_data_failed`, `interface_not_reachable`, `xmlrpc_server_receives_no_events`) are now automatically deleted when the integration starts. These issues from previous sessions are no longer relevant after a restart
+
+### Internal
+
+- **Migrate to Strongly Typed Events**: Updated to use `IntegrationIssueType` and `IntegrationIssueSeverity` enums instead of string comparisons for better type safety and IDE support
 
 # Version [2.1.0](https://github.com/SukramJ/homematicip_local/compare/2.0.6...2.1.0) (2026-01-08)
 

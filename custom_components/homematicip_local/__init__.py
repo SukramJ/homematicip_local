@@ -11,7 +11,12 @@ from typing import TypeAlias
 from awesomeversion import AwesomeVersion
 
 from aiohomematic import __version__ as HAHM_VERSION
-from aiohomematic.const import DEFAULT_ENABLE_SYSVAR_SCAN, DEFAULT_UN_IGNORES, is_interface_default_port
+from aiohomematic.const import (
+    DEFAULT_ENABLE_SYSVAR_SCAN,
+    DEFAULT_UN_IGNORES,
+    IntegrationIssueType,
+    is_interface_default_port,
+)
 from aiohomematic.exceptions import AuthFailure
 from aiohomematic.store.persistent import cleanup_files
 from aiohomematic.support import find_free_port
@@ -63,10 +68,11 @@ _LOGGER = logging.getLogger(__name__)
 # Issue types that should be cleared on startup as they are transient
 # and not relevant after a restart
 _STALE_ISSUE_TYPES: tuple[str, ...] = (
-    "ping_pong_mismatch",
+    IntegrationIssueType.PING_PONG_MISMATCH,
+    IntegrationIssueType.FETCH_DATA_FAILED,
+    # Legacy issue types (may still exist from previous sessions)
     "pending_pong_mismatch",
     "unknown_pong_mismatch",
-    "fetch_data_failed",
     "interface_not_reachable",
     "xmlrpc_server_receives_no_events",
 )
