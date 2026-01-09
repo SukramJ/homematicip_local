@@ -75,8 +75,13 @@ _STALE_ISSUE_TYPES: tuple[str, ...] = (
 def _cleanup_stale_issues(*, hass: HomeAssistant, entry_id: str) -> None:
     """Delete stale issues from previous sessions for this config entry."""
     issue_registry = ir.async_get(hass)
-    for (domain, issue_id), issue in list(issue_registry.issues.items()):
-        if domain == DOMAIN and issue_id.startswith(entry_id) and issue.translation_key in _STALE_ISSUE_TYPES:
+    for (domain, issue_id), _issue in list(issue_registry.issues.items()):
+        if domain != DOMAIN or not issue_id.startswith(entry_id):
+            continue
+        # Check if stale issue type is part of issue_id
+        # (issue_id format: {entry_id}_{issue_type}_{interface_id})
+        # Note: translation_key is not persisted in the issue registry storage
+        if any(f"_{issue_type}_" in issue_id for issue_type in _STALE_ISSUE_TYPES):
             async_delete_issue(hass=hass, domain=DOMAIN, issue_id=issue_id)
             _LOGGER.debug("Deleted stale issue %s on startup", issue_id)
 
