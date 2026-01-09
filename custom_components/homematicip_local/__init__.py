@@ -132,9 +132,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -> bool:
     """Unload a config entry."""
     await async_unload_services(hass)
+    # First unload platforms so entities can unsubscribe from events
+    # (async_will_remove_from_hass is called for each entity)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, HMIP_LOCAL_PLATFORMS)
+    # Then stop the central unit
     if hasattr(entry, "runtime_data") and (control := entry.runtime_data):
         await control.stop_central()
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, HMIP_LOCAL_PLATFORMS)
     if len(async_get_loaded_config_entries(hass=hass)) == 0:
         del hass.data[HM_KEY]
     return unload_ok

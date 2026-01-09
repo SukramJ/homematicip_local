@@ -612,13 +612,10 @@ class ControlUnit(BaseControlUnit):
         elif event.event_type == DeviceLifecycleEventType.AVAILABILITY_CHANGED:
             for device_address, available in event.availability_changes:
                 _LOGGER.debug("Device %s availability: %s", device_address, available)
-                # Update device registry
-                if ha_device := self._async_get_device_entry(device_address=device_address):
-                    device_registry = dr.async_get(self._hass)
-                    device_registry.async_update_device(
-                        device_id=ha_device.id,
-                        disabled_by=None if available else dr.DeviceEntryDisabler.INTEGRATION,
-                    )
+                # Note: We intentionally do NOT update disabled_by in the device registry here.
+                # Setting disabled_by triggers a full config entry reload in Home Assistant,
+                # which is disruptive for transient availability changes.
+                # Entity availability is already handled via the entity's `available` property.
 
     async def _on_device_trigger(self, event: DeviceTriggerEvent) -> None:
         """Handle device trigger event from aiohomematic (Device triggers for HA event bus)."""

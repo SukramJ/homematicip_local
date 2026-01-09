@@ -1,3 +1,18 @@
+# Version [2.1.1](https://github.com/SukramJ/homematicip_local/compare/2.1.0...2.1.1) (2026-01-09)
+
+## What's Changed
+
+### Bug Fixes
+
+- **Fix Unwanted Config Entry Reloads**: Fixed integration restarting whenever a device's availability changed. The device registry's `disabled_by` field was being updated on availability changes, which Home Assistant interprets as requiring a config entry reload. Entity availability is now handled exclusively through the entity's `available` property, which is the correct approach for transient state changes.
+
+## Bump aiohomematic to [2026.1.21](https://github.com/SukramJ/aiohomematic/compare/2026.1.20...2026.1.21)
+
+### Bug Fixes
+
+- **Fix State Machine Transition Error on Unload**: Allow transition from `FAILED` to `DISCONNECTED` state. This fixes `InvalidStateTransitionError` when unloading the integration while a client is in failed state
+- **Fix Leaked EventBus Subscriptions on Central Stop**: Two internal subscription leaks have been fixed. The number of leaked subscriptions logged at shutdown has been reduced from ~7800 to only external subscriptions from the Home Assistant integration
+
 # Version [2.1.0](https://github.com/SukramJ/homematicip_local/compare/2.0.6...2.1.0) (2026-01-08)
 
 ## What's Changed
