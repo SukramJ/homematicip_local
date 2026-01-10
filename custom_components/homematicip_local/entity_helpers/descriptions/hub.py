@@ -3,15 +3,21 @@
 from __future__ import annotations
 
 from aiohomematic.const import (
+    CONNECTIVITY_SENSOR_PREFIX,
     INBOX_SENSOR_NAME,
     METRICS_SENSOR_CONNECTION_LATENCY_NAME,
     METRICS_SENSOR_LAST_EVENT_AGE_NAME,
     METRICS_SENSOR_SYSTEM_HEALTH_NAME,
     DataPointCategory,
 )
-from custom_components.homematicip_local.entity_helpers.base import HmButtonEntityDescription, HmSensorEntityDescription
+from custom_components.homematicip_local.entity_helpers.base import (
+    HmBinarySensorEntityDescription,
+    HmButtonEntityDescription,
+    HmSensorEntityDescription,
+)
 from custom_components.homematicip_local.entity_helpers.factories import diagnostic_sensor
 from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfLength, UnitOfTime
 
@@ -74,6 +80,15 @@ HUB_RULES: list[EntityDescriptionRule] = [
         description=HmSensorEntityDescription(
             key="INBOX",
             translation_key="inbox",
+        ),
+    ),
+    # Hub binary sensors - Interface connectivity
+    EntityDescriptionRule(
+        category=DataPointCategory.HUB_BINARY_SENSOR,
+        var_name_contains=CONNECTIVITY_SENSOR_PREFIX,
+        description=HmBinarySensorEntityDescription(
+            key="CONNECTIVITY_SENSOR",
+            device_class=BinarySensorDeviceClass.CONNECTIVITY,
         ),
     ),
     # Hub sensors - Energy counter (system variables)
