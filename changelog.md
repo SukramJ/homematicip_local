@@ -1,3 +1,11 @@
+# Version [2.1.2](https://github.com/SukramJ/homematicip_local/compare/2.1.1...2.1.2) (2026-01-10)
+
+## What's Changed
+
+### Bug Fixes
+
+- **Fix Translation Error on Duplicate CCU Configuration**: Fixed "The intl string context variable 'serial' was not provided" error when attempting to add a CCU instance that is already configured. The abort message now correctly displays the serial number.
+
 # Version [2.1.1](https://github.com/SukramJ/homematicip_local/compare/2.1.0...2.1.1) (2026-01-09)
 
 ## What's Changed

@@ -1066,7 +1066,11 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         host = cast(str, urlparse(discovery_info.ssdp_location).hostname)
         await self.async_set_unique_id(serial)
 
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={},
+            error="already_configured",
+            description_placeholders={"serial": serial or "unknown"},
+        )
 
         self.data = {CONF_INSTANCE_NAME: instance_name, CONF_HOST: host}
         self.context["title_placeholders"] = {CONF_NAME: instance_name, CONF_HOST: host}
@@ -1168,7 +1172,11 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if system_information is not None:
                 await self.async_set_unique_id(system_information.serial)
-            self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured(
+                    updates={},
+                    error="already_configured",
+                    description_placeholders={"serial": system_information.serial or "unknown"},
+                )
         except AuthFailure:
             errors["base"] = "invalid_auth"
             description_placeholders["invalid_items"] = self.data[CONF_HOST]
