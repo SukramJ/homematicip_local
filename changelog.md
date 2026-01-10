@@ -12,6 +12,14 @@
 - **Migrate to Capabilities Pattern**: Updated all `supports_*` properties to the new unified Capabilities pattern from aiohomematic. Static capabilities now use `capabilities.*` (e.g., `capabilities.brightness`, `capabilities.open`), while dynamic properties use `has_*` (e.g., `has_hs_color`, `has_effects`). This affects light, lock, siren, and MQTT entities.
 - **Config Entry Version 13**: Added migration to remove `action_select_values` from config entry data.
 - **Default Entity Descriptions for Update Entities**: Added default descriptions with `UpdateDeviceClass.FIRMWARE` for `UPDATE` and `HUB_UPDATE` data point categories.
+- **Interface Connectivity Binary Sensors**: Added entity description rule with `BinarySensorDeviceClass.CONNECTIVITY` for the new hub-level interface connectivity sensors.
+
+## Bump aiohomematic to [2026.1.28](https://github.com/SukramJ/aiohomematic/compare/2026.1.27...2026.1.28)
+
+### New Features
+
+- **Faster Connectivity Detection**: Improved connection loss detection from ~240s to ~20s with new `ping_timeout` (10s) and `connectivity_error_threshold` (1). Devices are now marked unavailable immediately when client state changes to DISCONNECTED/FAILED. System health score now correctly shows 0% before connections are established.
+- **Interface Connectivity Binary Sensors**: New hub-level binary sensors showing per-interface connectivity status (HmIP-RF, BidCos-RF, etc.). Shows ON when connected and operational, OFF when disconnected or failed. Always available since its purpose is to show the connection state itself.
 
 # Version [2.1.1](https://github.com/SukramJ/homematicip_local/compare/2.1.0...2.1.1) (2026-01-09)
 
