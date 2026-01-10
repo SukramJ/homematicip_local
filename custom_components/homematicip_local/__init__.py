@@ -30,6 +30,7 @@ from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
+    CONF_ACTION_SELECT_VALUES,
     CONF_ADVANCED_CONFIG,
     CONF_CALLBACK_PORT_XML_RPC,
     CONF_CUSTOM_PORTS,
@@ -318,5 +319,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
         if custom_ports:
             data[CONF_CUSTOM_PORTS] = custom_ports
         hass.config_entries.async_update_entry(entry, version=12, data=data)
+    if entry.version == 12:
+        data = dict(entry.data)
+        # Remove action_select_values from config entry data
+        # Values are now stored in separate storage file to avoid triggering config entry reload
+        with contextlib.suppress(Exception):
+            del data[CONF_ACTION_SELECT_VALUES]
+        hass.config_entries.async_update_entry(entry, version=13, data=data)
     _LOGGER.info("Migration to version %s successful", entry.version)
     return True
