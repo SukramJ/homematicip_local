@@ -172,7 +172,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             attributes[ATTR_OPTIMUM_START_STOP] = optimum_start_stop
 
         # Add schedule attributes if this entity supports schedules
-        if self._data_point.supports_schedule:
+        if self._data_point.has_schedule:
             attributes[ATTR_ACTIVE_PROFILE] = self._current_profile.value
             attributes[ATTR_AVAILABLE_PROFILES] = [
                 profile.value for profile in self._data_point.available_schedule_profiles
@@ -258,7 +258,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         )
-        if self._data_point.supports_profiles:
+        if self._data_point.capabilities.profiles:
             supported_features |= ClimateEntityFeature.PRESET_MODE
         return supported_features
 

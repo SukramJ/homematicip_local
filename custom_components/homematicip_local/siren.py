@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity
-from .services import ATTR_AVAILABLE_SOUNDFILES, ATTR_CURRENT_SOUNDFILE, ATTR_LIGHT, ATTR_SUPPORTS_SOUNDFILES
+from .services import ATTR_AVAILABLE_SOUNDFILES, ATTR_CURRENT_SOUNDFILE, ATTR_HAS_SOUNDFILES, ATTR_LIGHT
 from .support import handle_homematic_errors
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,9 +71,9 @@ class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], Sir
             control_unit=control_unit,
             data_point=data_point,
         )
-        if data_point.supports_tones:
+        if data_point.capabilities.tones:
             self._attr_supported_features |= SirenEntityFeature.TONES
-        if data_point.supports_duration:
+        if data_point.capabilities.duration:
             self._attr_supported_features |= SirenEntityFeature.DURATION
 
     @property
@@ -94,7 +94,7 @@ class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], Sir
         return {
             ATTR_AVAILABLE_SOUNDFILES: self._data_point.available_soundfiles,
             ATTR_CURRENT_SOUNDFILE: self._data_point.current_soundfile,
-            ATTR_SUPPORTS_SOUNDFILES: self._data_point.supports_soundfiles,
+            ATTR_HAS_SOUNDFILES: self._data_point.capabilities.soundfiles,
         }
 
     @property

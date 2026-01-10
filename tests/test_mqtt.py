@@ -24,11 +24,11 @@ class _CentralStub:
             "devices/INTF/ADDR:1/VALUES/STATE",
             "devices/INTF/ADDR:2/VALUES/LEVEL",
         ]
-        # Mock data point with event method and device.client.supports_rpc_callback = False
+        # Mock data point with event method and device.client.capabilities.rpc_callback = False
         self._mock_dp = MagicMock()
         self._mock_dp.event = MagicMock()
         self._mock_dp.device.client.capabilities = MagicMock()
-        self._mock_dp.device.client.capabilities.supports_rpc_callback = False
+        self._mock_dp.device.client.capabilities.rpc_callback = False
 
         # Mock sysvar data point with event method
         self._mock_sv = MagicMock()

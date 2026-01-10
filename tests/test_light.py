@@ -69,10 +69,14 @@ def create_mock_light(
     mock_data_point.effect = effect
     mock_data_point.effects = effects
     mock_data_point.group_brightness = group_brightness
-    mock_data_point.supports_hs_color = supports_hs_color
-    mock_data_point.supports_color_temperature = supports_color_temperature
-    mock_data_point.supports_brightness = supports_brightness
-    mock_data_point.supports_effects = supports_effects
+    # Dynamic properties (can change at runtime)
+    mock_data_point.has_hs_color = supports_hs_color
+    mock_data_point.has_color_temperature = supports_color_temperature
+    mock_data_point.has_effects = supports_effects
+    # Static capabilities
+    mock_capabilities = MagicMock()
+    mock_capabilities.brightness = supports_brightness
+    mock_data_point.capabilities = mock_capabilities
     mock_data_point.turn_on = AsyncMock()
     mock_data_point.turn_off = AsyncMock()
     mock_data_point.set_timer_on_time = Mock()

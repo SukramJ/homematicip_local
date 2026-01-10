@@ -5,6 +5,9 @@
 ### Bug Fixes
 
 - **Fix Translation Error on Duplicate CCU Configuration**: Fixed "The intl string context variable 'serial' was not provided" error when attempting to add a CCU instance that is already configured. The abort message now correctly displays the serial number.
+### Internal
+
+- **Migrate to Capabilities Pattern**: Updated all `supports_*` properties to the new unified Capabilities pattern from aiohomematic. Static capabilities now use `capabilities.*` (e.g., `capabilities.brightness`, `capabilities.open`), while dynamic properties use `has_*` (e.g., `has_hs_color`, `has_effects`). This affects light, lock, siren, and MQTT entities.
 
 # Version [2.1.1](https://github.com/SukramJ/homematicip_local/compare/2.1.0...2.1.1) (2026-01-09)
 

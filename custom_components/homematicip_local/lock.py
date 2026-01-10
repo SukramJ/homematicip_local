@@ -64,7 +64,7 @@ class AioHomematicLock(AioHomematicGenericRestoreEntity[BaseCustomDpLock], LockE
     ) -> None:
         """Initialize the lock entity."""
         super().__init__(control_unit=control_unit, data_point=data_point)
-        if data_point.supports_open:
+        if data_point.capabilities.open:
             self._attr_supported_features = LockEntityFeature.OPEN
 
     @property

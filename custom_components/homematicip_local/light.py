@@ -96,11 +96,11 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
     def color_mode(self) -> ColorMode | None:
         """Return the color mode of the light."""
         if self._data_point.is_valid:
-            if self._data_point.supports_hs_color:
+            if self._data_point.has_hs_color:
                 return ColorMode.HS
-            if self._data_point.supports_color_temperature:
+            if self._data_point.has_color_temperature:
                 return ColorMode.COLOR_TEMP
-            if self._data_point.supports_brightness:
+            if self._data_point.capabilities.brightness:
                 return ColorMode.BRIGHTNESS
         if self.is_restored and self._restored_state:
             return self._restored_state.attributes.get(ATTR_COLOR_MODE)
@@ -188,12 +188,12 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
     def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
         """Flag supported color modes."""
         supported_color_modes: set[ColorMode] = set()
-        if self._data_point.supports_hs_color:
+        if self._data_point.has_hs_color:
             supported_color_modes.add(ColorMode.HS)
-        if self._data_point.supports_color_temperature:
+        if self._data_point.has_color_temperature:
             supported_color_modes.add(ColorMode.COLOR_TEMP)
 
-        if len(supported_color_modes) == 0 and self._data_point.supports_brightness:
+        if len(supported_color_modes) == 0 and self._data_point.capabilities.brightness:
             supported_color_modes.add(ColorMode.BRIGHTNESS)
         if len(supported_color_modes) == 0:
             supported_color_modes.add(ColorMode.ONOFF)
@@ -204,7 +204,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
     def supported_features(self) -> LightEntityFeature:
         """Return the list of supported features."""
         supported_features = LightEntityFeature.TRANSITION
-        if self._data_point.supports_effects:
+        if self._data_point.has_effects:
             supported_features |= LightEntityFeature.EFFECT
         return supported_features
 

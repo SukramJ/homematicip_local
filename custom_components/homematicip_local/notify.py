@@ -24,8 +24,8 @@ from .services import (
     ATTR_AVAILABLE_TEXT_COLORS,
     ATTR_BURST_LIMIT_WARNING,
     ATTR_CURRENT_LINES,
-    ATTR_SUPPORTS_ICONS,
-    ATTR_SUPPORTS_SOUNDS,
+    ATTR_HAS_ICONS,
+    ATTR_HAS_SOUNDS,
 )
 from .support import handle_homematic_errors
 
@@ -101,8 +101,8 @@ class HmipTextDisplayNotifyEntity(AioHomematicGenericEntity[CustomDpTextDisplay]
             ATTR_AVAILABLE_SOUNDS,
             ATTR_AVAILABLE_TEXT_COLORS,
             ATTR_CURRENT_LINES,
-            ATTR_SUPPORTS_ICONS,
-            ATTR_SUPPORTS_SOUNDS,
+            ATTR_HAS_ICONS,
+            ATTR_HAS_SOUNDS,
         }
     )
     _unrecorded_attributes = frozenset(__no_recored_attributes)
@@ -130,8 +130,8 @@ class HmipTextDisplayNotifyEntity(AioHomematicGenericEntity[CustomDpTextDisplay]
             ATTR_AVAILABLE_ALIGNMENTS: self._data_point.available_alignments,
             ATTR_BURST_LIMIT_WARNING: self._data_point.burst_limit_warning,
             # Feature support
-            ATTR_SUPPORTS_ICONS: self._data_point.supports_icons,
-            ATTR_SUPPORTS_SOUNDS: self._data_point.supports_sounds,
+            ATTR_HAS_ICONS: self._data_point.has_icons,
+            ATTR_HAS_SOUNDS: self._data_point.has_sounds,
             # Current state (persisted)
             ATTR_CURRENT_LINES: self._current_state.get("lines", {}),
         }

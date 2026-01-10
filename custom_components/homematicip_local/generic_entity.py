@@ -178,7 +178,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
                 attributes[ATTR_VALUE_STATE] = HmEntityState.NOT_VALID
         if (
             isinstance(self._data_point, CustomDataPointProtocol)
-            and self._data_point.supports_schedule
+            and self._data_point.has_schedule
             and self._data_point.usage == DataPointUsage.CDP_PRIMARY
             and (schedule := self._data_point.schedule) is not None
         ):
