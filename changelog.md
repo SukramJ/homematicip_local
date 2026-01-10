@@ -11,6 +11,7 @@
 
 - **Migrate to Capabilities Pattern**: Updated all `supports_*` properties to the new unified Capabilities pattern from aiohomematic. Static capabilities now use `capabilities.*` (e.g., `capabilities.brightness`, `capabilities.open`), while dynamic properties use `has_*` (e.g., `has_hs_color`, `has_effects`). This affects light, lock, siren, and MQTT entities.
 - **Config Entry Version 13**: Added migration to remove `action_select_values` from config entry data.
+- **Default Entity Descriptions for Update Entities**: Added default descriptions with `UpdateDeviceClass.FIRMWARE` for `UPDATE` and `HUB_UPDATE` data point categories.
 
 # Version [2.1.1](https://github.com/SukramJ/homematicip_local/compare/2.1.0...2.1.1) (2026-01-09)
 

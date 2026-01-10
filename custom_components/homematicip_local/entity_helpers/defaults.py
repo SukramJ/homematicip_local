@@ -7,6 +7,7 @@ from typing import Final
 from aiohomematic.const import DataPointCategory
 from homeassistant.components.select import SelectEntityDescription
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntityDescription
+from homeassistant.components.update import UpdateDeviceClass, UpdateEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import EntityDescription
 
@@ -34,5 +35,13 @@ DEFAULT_DESCRIPTIONS: Final[dict[DataPointCategory, EntityDescription]] = {
     DataPointCategory.HUB_SWITCH: SwitchEntityDescription(
         key="hub_switch_default",
         device_class=SwitchDeviceClass.SWITCH,
+    ),
+    DataPointCategory.UPDATE: UpdateEntityDescription(
+        key="update_default",
+        device_class=UpdateDeviceClass.FIRMWARE,
+    ),
+    DataPointCategory.HUB_UPDATE: UpdateEntityDescription(
+        key="hub_update_default",
+        device_class=UpdateDeviceClass.FIRMWARE,
     ),
 }
