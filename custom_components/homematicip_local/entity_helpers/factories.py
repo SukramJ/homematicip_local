@@ -354,7 +354,7 @@ def number(
     Create a number description.
 
     Example:
-        number("FREQUENCY", device_class=NumberDeviceClass.FREQUENCY, unit="Hz")
+        number("FREQUENCY", device_class=NumberDeviceClass.FREQUENCY, unit=UnitOfFrequency.HERTZ)
 
     """
     return HmNumberEntityDescription(

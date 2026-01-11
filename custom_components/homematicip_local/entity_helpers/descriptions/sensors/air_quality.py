@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    UnitOfPressure,
 )
 
 # Custom units
@@ -136,7 +137,7 @@ AIR_QUALITY_SENSOR_RULES: list[EntityDescriptionRule] = [
         description=measurement_sensor(
             key="AIR_PRESSURE",
             device_class=SensorDeviceClass.PRESSURE,
-            unit="hPa",
+            unit=UnitOfPressure.HECTOPASCAL,
         ),
     ),
     # Dirt level (e.g., vacuum cleaner sensors)
