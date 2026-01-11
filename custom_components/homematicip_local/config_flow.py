@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 import logging
 from pprint import pformat
 from typing import Any, Final, cast
@@ -1204,7 +1205,7 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
         """Initialize Homematic(IP) Local for OpenCCU options flow."""
         self.entry = entry
         self._control_unit: ControlUnit = entry.runtime_data
-        self.data: ConfigType = dict(self.entry.data.items())
+        self.data: ConfigType = deepcopy(dict(self.entry.data))
         self._validation_error: str | None = None
 
     async def async_step_advanced_settings(self, advanced_input: ConfigType | None = None) -> ConfigFlowResult:

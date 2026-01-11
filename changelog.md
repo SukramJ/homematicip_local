@@ -6,6 +6,7 @@
 
 - **Fix Translation Error on Duplicate CCU Configuration**: Fixed "The intl string context variable 'serial' was not provided" error when attempting to add a CCU instance that is already configured. The abort message now correctly displays the serial number.
 - **Fix Unwanted Integration Reload on Action Select Change**: Action select values (e.g., siren tones, light patterns) are now stored in a separate storage file instead of the config entry. Previously, changing an action select value triggered `async_update_entry()` which caused a full integration reload via the `update_listener`. This fix eliminates unnecessary restarts when selecting different tones or patterns. Existing values are automatically migrated from config entry to the new storage file.
+- **Fix Options Flow Not Persisting Changes** ([#2776](https://github.com/SukramJ/aiohomematic/issues/2776)): Configuration changes made in the Options Flow (e.g., enabling SysVar scan) were lost after Home Assistant restart. The issue was caused by a shallow copy of config entry data that shared nested dictionary references with the original. Home Assistant's change detection saw no difference and skipped saving. Now uses `deepcopy` to ensure complete independence.
 
 ### Internal
 
@@ -14,7 +15,14 @@
 - **Default Entity Descriptions for Update Entities**: Added default descriptions with `UpdateDeviceClass.FIRMWARE` for `UPDATE` and `HUB_UPDATE` data point categories.
 - **Interface Connectivity Binary Sensors**: Added entity description rule with `BinarySensorDeviceClass.CONNECTIVITY` for the new hub-level interface connectivity sensors.
 
-## Bump aiohomematic to [2026.1.28](https://github.com/SukramJ/aiohomematic/compare/2026.1.27...2026.1.28)
+## Bump aiohomematic to [2026.1.30](https://github.com/SukramJ/aiohomematic/compare/2026.1.27...2026.1.30)
+
+### Bug Fixes
+
+- **Fix Device Availability Not Reset After CCU Restart** ([#2776](https://github.com/SukramJ/aiohomematic/issues/2776)): All devices remained unavailable after CCU restart because the availability reset only triggered when `old_state` was in `(DISCONNECTED, FAILED, RECONNECTING)`, but the final transition has `old_state=CONNECTING`. Added `CONNECTING` to the list of states that trigger availability reset.
+- **Fix Race Condition in Client State Event Processing** ([#2776](https://github.com/SukramJ/aiohomematic/issues/2776)): Events from the EventBus may be processed out of order (e.g., `disconnected` event processed after `connected` event). Now checks the current client state before marking devices unavailable, preventing incorrect availability changes when the client has already recovered.
+- **Fix Connectivity Sensors Not Updating During CCU Restart**: Interface connectivity binary sensors now subscribe to `ClientStateChangedEvent` for immediate reactive updates instead of only updating during scheduled refresh cycles.
+- **Fix CuXD Devices Not Created When Paramset Descriptions Missing**: When device_descriptions were already cached but paramset_descriptions were missing (e.g., from a previous interrupted run), devices were skipped. Now properly detects missing paramset_descriptions and ensures both caches stay synchronized.
 
 ### New Features
 
