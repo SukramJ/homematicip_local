@@ -7,7 +7,7 @@ from copy import deepcopy
 from functools import wraps
 import logging
 import re
-from typing import Any, TypeAlias, TypeVar, cast
+from typing import Any, TypeAlias, TypeVar
 
 import voluptuous as vol
 
@@ -150,10 +150,20 @@ def is_valid_event(event_data: Mapping[str, Any], schema: vol.Schema) -> bool:
 def get_device_address_at_interface_from_identifiers(
     identifiers: set[tuple[str, str]],
 ) -> tuple[str, str] | None:
-    """Get the device_address from device_info.identifiers."""
+    """
+    Get the device_address and interface_id from device_info.identifiers.
+
+    Handles both regular devices (address@interface_id) and sub-devices
+    (address@interface_id-group_no) by stripping the group suffix.
+    """
     for identifier in identifiers:
         if IDENTIFIER_SEPARATOR in identifier[1]:
-            return cast(tuple[str, str], identifier[1].split(IDENTIFIER_SEPARATOR))
+            parts = identifier[1].split(IDENTIFIER_SEPARATOR, 1)
+            if len(parts) == 2:
+                device_address = parts[0]
+                # Strip any sub-device group suffix (e.g., "-1") from interface_id
+                interface_id = re.sub(r"-\d+$", "", parts[1])
+                return (device_address, interface_id)
     return None
 
 

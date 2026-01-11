@@ -37,7 +37,8 @@
       "Bash(python script/check_flow_translations.py:*)",
       "Bash(git tag:*)",
       "Bash(yamllint:*)",
-      "Bash(gh issue view:*)"
+      "Bash(gh issue view:*)",
+      "WebFetch(domain:objects.githubusercontent.com)"
     ],
     "deny": [],
     "ask": []

@@ -60,14 +60,34 @@ class TestIsValidEvent:
 class TestGetDeviceAddressAtInterfaceFromIdentifiers:
     """Tests for get_device_address_at_interface_from_identifiers function."""
 
-    def test_parses(self) -> None:
-        """It should extract the interface and address from identifiers containing the separator."""
+    def test_parses_regular_device(self) -> None:
+        """Extract address and interface_id from regular device identifier."""
         sep = IDENTIFIER_SEPARATOR
-        good = ("homematicip_local", f"INTF{sep}ADDRESS")
+        good = ("homematicip_local", f"ABC123{sep}HmIP-RF")
         other = ("homematicip_local", "NOSEP")
         result = get_device_address_at_interface_from_identifiers({good, other})
-        # Function currently returns a list from split; accept either list or tuple shape
-        assert tuple(result) == ("INTF", "ADDRESS")
+        assert result == ("ABC123", "HmIP-RF")
+
+    def test_parses_sub_device(self) -> None:
+        """Extract address and interface_id from sub-device identifier, stripping group suffix."""
+        sep = IDENTIFIER_SEPARATOR
+        # Sub-device identifier has -group_no suffix that should be stripped
+        sub_device = ("homematicip_local", f"ABC123{sep}HmIP-RF-1")
+        result = get_device_address_at_interface_from_identifiers({sub_device})
+        assert result == ("ABC123", "HmIP-RF")
+
+    def test_parses_sub_device_multi_digit_group(self) -> None:
+        """Strip multi-digit group suffix from sub-device identifier."""
+        sep = IDENTIFIER_SEPARATOR
+        sub_device = ("homematicip_local", f"000A1B2C3D{sep}BidCos-RF-12")
+        result = get_device_address_at_interface_from_identifiers({sub_device})
+        assert result == ("000A1B2C3D", "BidCos-RF")
+
+    def test_returns_none_without_separator(self) -> None:
+        """Return None when no identifier contains the separator."""
+        no_sep = ("homematicip_local", "NOSEPARATOR")
+        result = get_device_address_at_interface_from_identifiers({no_sep})
+        assert result is None
 
 
 class TestGetDataPoint:
