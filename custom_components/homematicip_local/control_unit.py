@@ -105,6 +105,7 @@ from .const import (
     EVENT_NAME,
     EVENT_PARAMETER,
     EVENT_TITLE,
+    EVENT_UNAVAILABLE,
     EVENT_VALUE,
     FILTER_ERROR_EVENT_PARAMETERS,
 )
@@ -112,6 +113,7 @@ from .mqtt import MQTTConsumer
 from .repairs import REPAIR_CALLBACKS
 from .support import (
     CLICK_EVENT_SCHEMA,
+    DEVICE_AVAILABILITY_EVENT_SCHEMA,
     DEVICE_ERROR_EVENT_SCHEMA,
     InvalidConfig,
     cleanup_click_event_data,
@@ -119,6 +121,9 @@ from .support import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Event type for device availability (not in DeviceTriggerEventType as it comes from DeviceLifecycleEvent)
+EVENT_TYPE_DEVICE_AVAILABILITY: Final = "homematic.device_availability"
 
 _DATA_POINT_T = TypeVar("_DATA_POINT_T", bound=CallbackDataPoint)
 
@@ -418,6 +423,51 @@ class ControlUnit(BaseControlUnit):
                 issue_id=f"{self._entry_id}_callback_{interface_id}",
             )
 
+    @callback
+    def _fire_device_availability_event(self, *, device_address: str, available: bool) -> None:
+        """Fire device availability event to HA event bus."""
+        hm_device = self._central.device_coordinator.get_device(address=device_address)
+        if hm_device is None:
+            _LOGGER.debug("Cannot fire availability event: device %s not found", device_address)
+            return
+
+        # Build base event data
+        event_data: dict[str, Any] = {
+            EVENT_INTERFACE_ID: hm_device.interface_id,
+            EVENT_ADDRESS: device_address,
+            EVENT_CHANNEL_NO: 0,  # Availability is per device, not channel
+            EVENT_MODEL: hm_device.model,
+            EVENT_PARAMETER: "AVAILABILITY",
+        }
+
+        # Lookup device for device_id and name
+        name: str | None = None
+        if device_entry := self._async_get_device_entry(device_address=device_address):
+            name = device_entry.name_by_user or device_entry.name
+            event_data[EVENT_DEVICE_ID] = device_entry.id
+            event_data[EVENT_NAME] = name
+
+        title = f"{DOMAIN.upper()} Device {'Available' if available else 'Unavailable'}"
+        availability_message = (
+            f"{name}/{device_address} on interface {hm_device.interface_id}: "
+            f"{'available' if available else 'unavailable'}"
+        )
+
+        event_data.update(
+            {
+                EVENT_IDENTIFIER: f"{device_address}_availability",
+                EVENT_TITLE: title,
+                EVENT_MESSAGE: availability_message,
+                EVENT_UNAVAILABLE: not available,
+            }
+        )
+
+        if is_valid_event(event_data=event_data, schema=DEVICE_AVAILABILITY_EVENT_SCHEMA):
+            self._hass.bus.async_fire(
+                event_type=EVENT_TYPE_DEVICE_AVAILABILITY,
+                event_data=event_data,
+            )
+
     def _handle_degraded_state(self, event: SystemStatusChangedEvent, issue_id_degraded: str) -> bool:
         """Handle DEGRADED central state. Return True if reauth was triggered."""
         # Check if any degraded interface has an authentication failure
@@ -614,10 +664,12 @@ class ControlUnit(BaseControlUnit):
         elif event.event_type == DeviceLifecycleEventType.AVAILABILITY_CHANGED:
             for device_address, available in event.availability_changes:
                 _LOGGER.debug("Device %s availability: %s", device_address, available)
-                # Note: We intentionally do NOT update disabled_by in the device registry here.
-                # Setting disabled_by triggers a full config entry reload in Home Assistant,
-                # which is disruptive for transient availability changes.
-                # Entity availability is already handled via the entity's `available` property.
+
+                # Fire HA event for automations (e.g., blueprints)
+                self._fire_device_availability_event(
+                    device_address=device_address,
+                    available=available,
+                )
 
     async def _on_device_trigger(self, event: DeviceTriggerEvent) -> None:
         """Handle device trigger event from aiohomematic (Device triggers for HA event bus)."""
