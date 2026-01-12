@@ -71,6 +71,7 @@ _LOGGER = logging.getLogger(__name__)
 _STALE_ISSUE_TYPES: tuple[str, ...] = (
     IntegrationIssueType.PING_PONG_MISMATCH,
     IntegrationIssueType.FETCH_DATA_FAILED,
+    IntegrationIssueType.INCOMPLETE_DEVICE_DATA,
     # Legacy issue types (may still exist from previous sessions)
     "pending_pong_mismatch",
     "unknown_pong_mismatch",

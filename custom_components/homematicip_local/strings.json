@@ -907,6 +907,10 @@
             "description": "Failed to fetch device data from interface **{interface_id}**.\n\nUnable to fetch data using a Rega script. This indicates an issue on your CCU.\n\nThe integration will use a fallback method, which may lead to higher DutyCycle during startup for this interface.", 
             "title": "Failed to fetch device data"
         }, 
+        "incomplete_device_data": {
+            "description": "Device data is incomplete for **{device_count}** device(s) on interface **{interface_id}**.\n\n**Affected devices:** {device_addresses}\n\nThe CCU did not return all required paramsets for these devices. This may indicate:\n- Devices are not fully initialized on the CCU\n- Communication issues between the CCU and devices\n- The devices need to be re-paired\n\nThe affected devices were not created. Try reloading the integration or restarting the CCU.", 
+            "title": "Incomplete device data on {interface_id}"
+        }, 
         "interface_not_reachable": {
             "description": "No connection to interface {interface_id}.\n\nThis Integration tries an automatic reconnect.\n\nCheck the Home Assistant log files for more details", 
             "title": "Interface {interface_id} not reachable"

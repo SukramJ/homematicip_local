@@ -907,6 +907,10 @@
             "description": "Fehler beim Abrufen von Gerätedaten von Interface **{interface_id}**.\n\nDaten können mit einem Rega-Skript nicht abgerufen werden. Dies weist auf ein Problem mit Ihrer CCU hin.\n\nDie Integration verwendet eine Fallback-Methode, die zu einem erhöhten DutyCycle beim Start für dieses Interface führen kann.", 
             "title": "Fehler beim Abrufen von Gerätedaten"
         }, 
+        "incomplete_device_data": {
+            "description": "Gerätedaten sind unvollständig für **{device_count}** Gerät(e) auf Schnittstelle **{interface_id}**.\n\n**Betroffene Geräte:** {device_addresses}\n\nDie CCU hat nicht alle erforderlichen Paramsets für diese Geräte zurückgegeben. Dies kann folgende Ursachen haben:\n- Geräte sind nicht vollständig auf der CCU initialisiert\n- Kommunikationsprobleme zwischen der CCU und den Geräten\n- Die Geräte müssen neu angelernt werden\n\nDie betroffenen Geräte wurden nicht erstellt. Versuche die Integration neu zu laden oder starte die CCU neu.", 
+            "title": "Unvollständige Gerätedaten auf {interface_id}"
+        }, 
         "interface_not_reachable": {
             "description": "Keine Verbindung zu Schnittstelle {interface_id}.\n\nDiese Integration versucht eine automatische Wiederverbindung.\n\nWeitere Informationen findest Du in den Protokolldateien von Home Assistant", 
             "title": "Interface {interface_id} nicht erreichbar"
