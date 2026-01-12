@@ -17,7 +17,7 @@
 - **Default Entity Descriptions for Update Entities**: Added default descriptions with `UpdateDeviceClass.FIRMWARE` for `UPDATE` and `HUB_UPDATE` data point categories.
 - **Interface Connectivity Binary Sensors**: Added entity description rule with `BinarySensorDeviceClass.CONNECTIVITY` for the new hub-level interface connectivity sensors.
 
-## Bump aiohomematic to [2026.1.30](https://github.com/SukramJ/aiohomematic/compare/2026.1.27...2026.1.30)
+## Bump aiohomematic to [2026.1.32](https://github.com/SukramJ/aiohomematic/compare/2026.1.27...2026.1.32)
 
 ### Bug Fixes
 
@@ -25,11 +25,17 @@
 - **Fix Race Condition in Client State Event Processing** ([#2776](https://github.com/SukramJ/aiohomematic/issues/2776)): Events from the EventBus may be processed out of order (e.g., `disconnected` event processed after `connected` event). Now checks the current client state before marking devices unavailable, preventing incorrect availability changes when the client has already recovered.
 - **Fix Connectivity Sensors Not Updating During CCU Restart**: Interface connectivity binary sensors now subscribe to `ClientStateChangedEvent` for immediate reactive updates instead of only updating during scheduled refresh cycles.
 - **Fix CuXD Devices Not Created When Paramset Descriptions Missing**: When device_descriptions were already cached but paramset_descriptions were missing (e.g., from a previous interrupted run), devices were skipped. Now properly detects missing paramset_descriptions and ensures both caches stay synchronized.
+- **Fix Temperature Parameter Formatting in Schedules**: Temperature values in simple weekly schedules were sent as integers to the CCU, causing them to be silently ignored. The CCU requires temperature parameters as floats. Explicit float conversions are now applied to all schedule temperature values.
+- **Fix Cache Persistence Race Condition**: Cache is now automatically persisted when data fetch completes, preventing paramsets from being lost if a shutdown occurs before the scheduled save.
+- **Fix Device Creation with Incomplete Data**: Added validation ensuring all required paramsets exist in cache before device creation proceeds. Incomplete data now triggers an `INCOMPLETE_DEVICE_DATA` integration issue event instead of silently creating broken devices.
+- **Fix Performance Regression in Device Creation**: Fixed severe performance regression causing N cache saves for N devices. The event is now published once after the entire batch completes, reducing startup time from ~210 seconds to ~17 seconds for 397 devices (13x improvement).
+- **Fix Parameter Type Conversion for HM-CC-VG-1**: Fixed TypeError when calling `put_paramset` on HM-CC-VG-1 device. The device returns MIN/MAX values as strings instead of numbers, which now undergo proper numeric conversion before comparison.
 
 ### New Features
 
 - **Faster Connectivity Detection**: Improved connection loss detection from ~240s to ~20s with new `ping_timeout` (10s) and `connectivity_error_threshold` (1). Devices are now marked unavailable immediately when client state changes to DISCONNECTED/FAILED. System health score now correctly shows 0% before connections are established.
 - **Interface Connectivity Binary Sensors**: New hub-level binary sensors showing per-interface connectivity status (HmIP-RF, BidCos-RF, etc.). Shows ON when connected and operational, OFF when disconnected or failed. Always available since its purpose is to show the connection state itself.
+- **Schedule Support for HM-CC-VG-1**: Enabled schedule functionality for the HM-CC-VG-1 virtual group device.
 
 # Version [2.1.1](https://github.com/SukramJ/homematicip_local/compare/2.1.0...2.1.1) (2026-01-09)
 
