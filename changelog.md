@@ -17,10 +17,12 @@
 - **Default Entity Descriptions for Update Entities**: Added default descriptions with `UpdateDeviceClass.FIRMWARE` for `UPDATE` and `HUB_UPDATE` data point categories.
 - **Interface Connectivity Binary Sensors**: Added entity description rule with `BinarySensorDeviceClass.CONNECTIVITY` for the new hub-level interface connectivity sensors.
 
-## Bump aiohomematic to [2026.1.32](https://github.com/SukramJ/aiohomematic/compare/2026.1.27...2026.1.32)
+## Bump aiohomematic to [2026.1.33](https://github.com/SukramJ/aiohomematic/compare/2026.1.27...2026.1.33)
 
 ### Bug Fixes
 
+- **Fix LINK Paramsets Causing False "Incomplete Device Data" Issues**: LINK paramsets are now excluded from paramset fetch operations and completeness checks. LINK paramsets are only relevant for device linking (direct associations) and are fetched dynamically when links are configured. Previously, failed LINK fetches (which occur when no links exist) caused devices to be incorrectly flagged as having incomplete data, triggering unnecessary repair issues.
+- **Fix Empty Paramset Descriptions Not Being Cached**: Fixed issue where paramset descriptions that return an empty dict `{}` (valid response) were incorrectly treated as missing. HmIP base device addresses and some channel types return empty MASTER or VALUES paramsets which is valid behavior. The fix uses `is not None` check instead of truthy check, ensuring empty dicts are properly cached.
 - **Fix Device Availability Not Reset After CCU Restart** ([#2776](https://github.com/SukramJ/aiohomematic/issues/2776)): All devices remained unavailable after CCU restart because the availability reset only triggered when `old_state` was in `(DISCONNECTED, FAILED, RECONNECTING)`, but the final transition has `old_state=CONNECTING`. Added `CONNECTING` to the list of states that trigger availability reset.
 - **Fix Race Condition in Client State Event Processing** ([#2776](https://github.com/SukramJ/aiohomematic/issues/2776)): Events from the EventBus may be processed out of order (e.g., `disconnected` event processed after `connected` event). Now checks the current client state before marking devices unavailable, preventing incorrect availability changes when the client has already recovered.
 - **Fix Connectivity Sensors Not Updating During CCU Restart**: Interface connectivity binary sensors now subscribe to `ClientStateChangedEvent` for immediate reactive updates instead of only updating during scheduled refresh cycles.
