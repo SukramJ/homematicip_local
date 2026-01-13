@@ -924,6 +924,7 @@ async def _async_service_get_device_value(*, hass: HomeAssistant, service: Servi
                     channel_address=f"{hm_device.address}:{channel_no}",
                     paramset_key=ParamsetKey.VALUES,
                     parameter=parameter,
+                    convert_from_pd=True,
                 )
             ) is not None:
                 return {"result": value}
@@ -956,6 +957,7 @@ async def _async_service_get_link_paramset(*, hass: HomeAssistant, service: Serv
                 await hm_device.client.get_paramset(
                     address=receiver_channel_address,
                     paramset_key=sender_channel_address,
+                    convert_from_pd=True,
                 )
             )
         except BaseHomematicException as bhexc:
@@ -975,6 +977,7 @@ async def _async_service_get_paramset(*, hass: HomeAssistant, service: ServiceCa
                 await hm_device.client.get_paramset(
                     address=address,
                     paramset_key=paramset_key,
+                    convert_from_pd=True,
                 )
             )
         except BaseHomematicException as bhexc:

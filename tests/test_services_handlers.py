@@ -407,6 +407,7 @@ class TestServiceGetDeviceValue:
             channel_address="VCU1234567:1",
             paramset_key=ParamsetKey.VALUES,
             parameter="STATE",
+            convert_from_pd=True,
         )
 
 

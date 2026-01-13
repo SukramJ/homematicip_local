@@ -17,12 +17,18 @@
 - **Default Entity Descriptions for Update Entities**: Added default descriptions with `UpdateDeviceClass.FIRMWARE` for `UPDATE` and `HUB_UPDATE` data point categories.
 - **Interface Connectivity Binary Sensors**: Added entity description rule with `BinarySensorDeviceClass.CONNECTIVITY` for the new hub-level interface connectivity sensors.
 
-## Bump aiohomematic to [2026.1.35](https://github.com/SukramJ/aiohomematic/compare/2026.1.27...2026.1.35)
+## Bump aiohomematic to [2026.1.37](https://github.com/SukramJ/aiohomematic/compare/2026.1.27...2026.1.37)
 
 ### Bug Fixes
 
 - **Fix Schedule Validation Error on Device Initialization**: Fixed `ValidationException: Time 360 is invalid` error occurring when heating group devices (VirtualDevices interface) are initialized. The `identify_base_temperature()` function incorrectly assumed all endtime values in the schedule cache are formatted strings ("06:00"), but during initial cache loading they can be raw integers (360 minutes) directly from the CCU. The function now handles both integer and string formats by checking the type before conversion. This fixes climate entity creation failures and recurring errors on Home Assistant startup.
 - **Fix Type Safety for ScheduleSlot**: Updated `ScheduleSlot` TypedDict to correctly declare `endtime: str | int` instead of `endtime: str`. This reflects the actual behavior where the CCU always returns integers (minutes since midnight) while internal conversion may use string format.
+- **Fix Schedule Validation Error for HM-CC-VG-1 Heating Groups**: The CCU sometimes returns ENDTIME values as strings ("360") instead of integers (360). The `convert_raw_to_dict_schedule()` function now handles both formats by checking if string values are numeric before conversion.
+
+### New Features
+
+- **Type Conversion for Read Operations**: New optional `convert_from_pd` parameter across client implementations automatically converts CCU values to correct types (INTEGER, FLOAT, BOOL, ENUM, STRING) based on ParameterDescription.
+- **WeekProfile Automatic Type Conversion**: Both `ClimateWeekProfile` and `DefaultWeekProfile` now use `convert_from_pd=True` when fetching schedules, ensuring ENDTIME values return as integers and TEMPERATURE as floats directly from the client layer.
 - **Fix CUxD/CCU-Jack Unnecessary Reconnects via MQTT**: Fixed false positive connection loss detection for CUxD and CCU-Jack interfaces when used with Homematic(IP) Local MQTT bridge. These interfaces use JSON-RPC without ping/pong support and receive events via MQTT, causing callback timeout checks to incorrectly trigger reconnects every ~4 minutes. Both `is_callback_alive()` and `is_connected()` now check `ping_pong` capability to skip callback timeout validation for MQTT-based interfaces.
 - **Fix Syntax Error in device_ops.py**: Fixed IndentationError in `_validate_and_convert_value()` method that prevented module import. Restored missing value conversion and MIN/MAX validation code block.
 - **Fix LINK Paramsets Causing False "Incomplete Device Data" Issues**: LINK paramsets are now excluded from paramset fetch operations and completeness checks. LINK paramsets are only relevant for device linking (direct associations) and are fetched dynamically when links are configured. Previously, failed LINK fetches (which occur when no links exist) caused devices to be incorrectly flagged as having incomplete data, triggering unnecessary repair issues.
