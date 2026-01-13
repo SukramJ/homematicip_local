@@ -17,10 +17,12 @@
 - **Default Entity Descriptions for Update Entities**: Added default descriptions with `UpdateDeviceClass.FIRMWARE` for `UPDATE` and `HUB_UPDATE` data point categories.
 - **Interface Connectivity Binary Sensors**: Added entity description rule with `BinarySensorDeviceClass.CONNECTIVITY` for the new hub-level interface connectivity sensors.
 
-## Bump aiohomematic to [2026.1.33](https://github.com/SukramJ/aiohomematic/compare/2026.1.27...2026.1.33)
+## Bump aiohomematic to [2026.1.34](https://github.com/SukramJ/aiohomematic/compare/2026.1.27...2026.1.34)
 
 ### Bug Fixes
 
+- **Fix CUxD/CCU-Jack Unnecessary Reconnects via MQTT**: Fixed false positive connection loss detection for CUxD and CCU-Jack interfaces when used with Homematic(IP) Local MQTT bridge. These interfaces use JSON-RPC without ping/pong support and receive events via MQTT, causing callback timeout checks to incorrectly trigger reconnects every ~4 minutes. Both `is_callback_alive()` and `is_connected()` now check `ping_pong` capability to skip callback timeout validation for MQTT-based interfaces.
+- **Fix Syntax Error in device_ops.py**: Fixed IndentationError in `_validate_and_convert_value()` method that prevented module import. Restored missing value conversion and MIN/MAX validation code block.
 - **Fix LINK Paramsets Causing False "Incomplete Device Data" Issues**: LINK paramsets are now excluded from paramset fetch operations and completeness checks. LINK paramsets are only relevant for device linking (direct associations) and are fetched dynamically when links are configured. Previously, failed LINK fetches (which occur when no links exist) caused devices to be incorrectly flagged as having incomplete data, triggering unnecessary repair issues.
 - **Fix Empty Paramset Descriptions Not Being Cached**: Fixed issue where paramset descriptions that return an empty dict `{}` (valid response) were incorrectly treated as missing. HmIP base device addresses and some channel types return empty MASTER or VALUES paramsets which is valid behavior. The fix uses `is not None` check instead of truthy check, ensuring empty dicts are properly cached.
 - **Fix Device Availability Not Reset After CCU Restart** ([#2776](https://github.com/SukramJ/aiohomematic/issues/2776)): All devices remained unavailable after CCU restart because the availability reset only triggered when `old_state` was in `(DISCONNECTED, FAILED, RECONNECTING)`, but the final transition has `old_state=CONNECTING`. Added `CONNECTING` to the list of states that trigger availability reset.
@@ -32,6 +34,10 @@
 - **Fix Device Creation with Incomplete Data**: Added validation ensuring all required paramsets exist in cache before device creation proceeds. Incomplete data now triggers an `INCOMPLETE_DEVICE_DATA` integration issue event instead of silently creating broken devices.
 - **Fix Performance Regression in Device Creation**: Fixed severe performance regression causing N cache saves for N devices. The event is now published once after the entire batch completes, reducing startup time from ~210 seconds to ~17 seconds for 397 devices (13x improvement).
 - **Fix Parameter Type Conversion for HM-CC-VG-1**: Fixed TypeError when calling `put_paramset` on HM-CC-VG-1 device. The device returns MIN/MAX values as strings instead of numbers, which now undergo proper numeric conversion before comparison.
+
+### Changed
+
+- **Schedule Cache Now Uses Pessimistic Update Strategy**: Climate schedule cache (`ClimateWeekProfile` and `DefaultWeekProfile`) is no longer updated optimistically when calling `set_schedule()`, `set_profile()`, or `set_weekday()`. The cache is now updated only after receiving `CONFIG_PENDING = False` from the CCU via `reload_and_cache_schedule()`. This ensures the cache always reflects the actual CCU state, eliminating race conditions and inconsistencies. The cache remains essential for performance (avoiding RPC calls on reads) and event optimization (publishing events only when data changes).
 
 ### New Features
 
