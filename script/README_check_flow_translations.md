@@ -51,9 +51,9 @@ Run the linter directly from the command line:
 python script/check_flow_translations.py
 ```
 
-### Pre-commit Hook
+### Prek Hook
 
-The linter is automatically run as a pre-commit hook when you modify:
+The linter is automatically run as a prek hook when you modify:
 - `custom_components/homematicip_local/config_flow.py`
 - `custom_components/homematicip_local/strings.json`
 - `custom_components/homematicip_local/translations/en.json`
@@ -62,7 +62,7 @@ The linter is automatically run as a pre-commit hook when you modify:
 To run manually:
 
 ```bash
-pre-commit run check-flow-translations --all-files
+prek run check-flow-translations --all-files
 ```
 
 ### CI/CD Integration

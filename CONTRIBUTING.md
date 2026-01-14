@@ -411,7 +411,7 @@ ruff check --fix custom_components/homematicip_local/
 mypy custom_components/homematicip_local/
 
 # Run all quality checks
-pre-commit run --all-files
+prek run --all-files
 
 # Run tests
 pytest --cov=custom_components tests

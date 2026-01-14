@@ -155,7 +155,7 @@ All tests follow this pattern:
 3. **Assert**: Verify exit code and output messages
 
 This approach tests the linter as it would be used in:
-- Pre-commit hooks
+- Prek hooks
 - CI/CD pipelines
 - Manual execution
 
@@ -215,7 +215,7 @@ class TestNewFeature:
 These tests run automatically in CI/CD pipelines when:
 - Pull requests are created
 - Changes are pushed to protected branches
-- Pre-commit hooks are executed
+- Prek hooks are executed
 
 The linter must pass all tests before code can be merged.
 

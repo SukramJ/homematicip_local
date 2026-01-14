@@ -140,12 +140,12 @@ Events fired by the integration:
 - Use existing fixtures from `tests/conftest.py`
 - Aim for 100% coverage on critical files
 
-## Pre-Commit Checks
+## Prek Checks
 
 Before suggesting commits, ensure code passes:
 
 ```bash
-pre-commit run --all-files
+prek run --all-files
 ```
 
 This includes:
@@ -187,7 +187,7 @@ Before submitting a PR:
 
 ```
 □ All tests pass (pytest --cov=custom_components tests)
-□ Pre-commit hooks pass (pre-commit run --all-files)
+□ Prek hooks pass (prek run --all-files)
 □ Type hints complete (mypy strict mode)
 □ Docstrings updated
 □ Translations added (strings.json, en.json, de.json)
