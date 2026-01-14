@@ -186,7 +186,7 @@ SCHEMA_RELOAD_CHANNEL_CONFIG = vol.All(
     cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
     BASE_SCHEMA_DEVICE.extend(
         {
-            vol.Required(CONF_CHANNEL, default=DEFAULT_CHANNEL): haval.channel_no,
+            vol.Optional(CONF_CHANNEL): haval.channel_no,
         }
     ),
 )
@@ -954,10 +954,10 @@ async def _async_service_reload_device_config(*, hass: HomeAssistant, service: S
 
 async def _async_service_reload_channel_config(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to reload channel configuration for a Homematic(IP) Local for OpenCCU device."""
-    channel_no = service.data[CONF_CHANNEL]
+    channel_no = service.data.get(CONF_CHANNEL)
 
     if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
-        channel_address = f"{hm_device.address}:{channel_no}"
+        channel_address = f"{hm_device.address}:{channel_no}" if channel_no is not None else hm_device.address
         try:
             if channel := hm_device.channels.get(channel_address):
                 await channel.reload_channel_config()

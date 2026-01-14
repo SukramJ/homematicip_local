@@ -162,7 +162,7 @@ reload_channel_config:
       selector:
         text:
     channel:
-      required: true
+      required: false
       default: 1
       example: 1
       selector:
