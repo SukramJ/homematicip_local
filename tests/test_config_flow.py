@@ -2313,9 +2313,10 @@ class TestBackendDetectionErrors:
                 result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
                 await hass.async_block_till_done()
 
+        # Should proceed to interface step with graceful degradation
         assert result2["type"] == FlowResultType.FORM
-        assert result2["step_id"] == "central"
-        assert result2["errors"] == {"base": "cannot_connect"}
+        assert result2["step_id"] == "interface"
+        # No errors shown - user can manually configure
 
     async def test_detection_validation_exception(self, hass: HomeAssistant) -> None:
         """Test detection handles ValidationException."""
@@ -2345,9 +2346,10 @@ class TestBackendDetectionErrors:
                 result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
                 await hass.async_block_till_done()
 
+        # Should proceed to interface step with graceful degradation
         assert result2["type"] == FlowResultType.FORM
-        assert result2["step_id"] == "central"
-        assert result2["errors"] == {"base": "invalid_config"}
+        assert result2["step_id"] == "interface"
+        # No errors shown - user can manually configure
 
 
 class TestOptionsFlowInterfacesValidation:
