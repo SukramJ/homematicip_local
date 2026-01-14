@@ -75,8 +75,8 @@ pip install -r requirements_test.txt
 # Or use uv (faster)
 uv pip install -r requirements_test.txt
 
-# Setup pre-commit hooks
-pre-commit install
+# Setup prek hooks
+prek install
 ```
 
 ### Verify Installation
@@ -86,7 +86,7 @@ pre-commit install
 pytest tests/
 
 # Run code quality checks
-pre-commit run --all-files
+prek run --all-files
 ```
 
 ---
@@ -181,9 +181,9 @@ def device_address(self) -> str:
     """Returns the address as a string"""
 ```
 
-### Pre-commit Hooks
+### Prek Hooks
 
-Pre-commit hooks run automatically on every commit. They enforce:
+Prek hooks run automatically on every commit. They enforce:
 
 - Code formatting (ruff)
 - Type checking (mypy)
@@ -195,7 +195,7 @@ Pre-commit hooks run automatically on every commit. They enforce:
 **Run manually:**
 
 ```bash
-pre-commit run --all-files
+prek run --all-files
 ```
 
 **Do NOT bypass** hooks with `--no-verify` unless absolutely necessary.
@@ -267,8 +267,8 @@ open htmlcov/index.html
    # Run tests
    pytest --cov=custom_components tests
 
-   # Run pre-commit hooks
-   pre-commit run --all-files
+   # Run prek hooks
+   prek run --all-files
    ```
 
 5. **Commit your changes**:

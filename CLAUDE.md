@@ -127,7 +127,7 @@ homematicip_local/
 - **mypy** (1.19.1) - Static type checker (strict mode)
 - **pylint** (4.0.4) - Code linting
 - **ruff** (0.14.9) - Fast Python linter and formatter
-- **pre-commit** (4.5.0) - Git hooks manager
+- **prek** (0.2.28) - Git hooks manager (Rust-based pre-commit alternative)
 - **aiohomematic-test-support** (2025.12.41) - Mock test data
 - **async-upnp-client** (0.46.1) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
@@ -168,8 +168,8 @@ homematicip_local/
    # Or use uv (faster)
    uv pip install -r requirements_test.txt
 
-   # Setup pre-commit hooks
-   pre-commit install
+   # Setup prek hooks
+   prek install
    ```
 
 ---
@@ -305,7 +305,7 @@ devices = [d for d in all_devices if d.is_ready]
 - **Target**: Python 3.13
 - **Line Length**: 120 characters
 - **Enabled Rules**: B, C, D, E, F, G, I, LOG, PT, SIM, and more
-- **Auto-fix enabled** in pre-commit
+- **Auto-fix enabled** in prek
 
 ```bash
 # Auto-format all code
@@ -318,7 +318,7 @@ ruff check --fix custom_components/homematicip_local/
 ruff format --check custom_components/homematicip_local/
 ```
 
-### Pre-commit Hooks (Run on Every Commit)
+### Prek Hooks (Run on Every Commit)
 
 The following hooks run automatically before each commit:
 
@@ -336,7 +336,7 @@ The following hooks run automatically before each commit:
 **To run all hooks manually:**
 
 ```bash
-pre-commit run --all-files
+prek run --all-files
 ```
 
 **Bypass hooks** (NOT recommended):
@@ -612,8 +612,8 @@ Events fired by the integration:
 5. **Run quality checks before committing:**
 
    ```bash
-   # Run pre-commit hooks
-   pre-commit run --all-files
+   # Run prek hooks
+   prek run --all-files
 
    # Run tests
    pytest --cov=custom_components tests
@@ -742,7 +742,7 @@ grep -r "2025.12.33" CLAUDE.md README.md docs/
 grep -r "TODO\|FIXME\|XXX" *.md docs/*.md
 
 # Validate markdown formatting
-pre-commit run prettier --all-files
+prek run prettier --all-files
 ```
 
 ---
@@ -791,7 +791,7 @@ Added retry logic with exponential backoff for validation calls.
 
 1. **Create feature branch** from `devel`
 2. **Make changes** with tests
-3. **Run pre-commit hooks**: `pre-commit run --all-files`
+3. **Run prek hooks**: `prek run --all-files`
 4. **Commit changes** with descriptive messages
 5. **Push to remote**: `git push -u origin feature/branch-name`
 6. **Create Pull Request** to `devel` branch
@@ -893,7 +893,7 @@ t6u7v8w Use deepcopy for config entry data modification
 ```
 x9y0z1a Bump aiohomematic to 2025.12.42  ❌ (dependency update, documented in aiohomematic)
 b2c3d4e Update manifest.json requirements  ❌ (maintenance task)
-f5g6h7i Run pre-commit hooks  ❌ (development process, not user-facing)
+f5g6h7i Run prek hooks  ❌ (development process, not user-facing)
 ```
 
 ---
@@ -909,7 +909,7 @@ This section defines mandatory rules for all implementations in this project.
 ```
 □ 1. Clean Code    - No legacy compatibility layers, deprecated aliases, or shims
 □ 2. Tests         - pytest tests/ passes without errors
-□ 3. Linting       - pre-commit run --all-files passes without errors
+□ 3. Linting       - prek run --all-files passes without errors
 □ 4. Documentation - Docstrings, CLAUDE.md, README.md, docs/*.md updated as needed
 □ 5. Changelog     - changelog.md updated with version entry
 ```
@@ -981,8 +981,8 @@ Run these commands before considering any implementation complete:
 # 1. Run all tests
 pytest --cov=custom_components tests
 
-# 2. Run all pre-commit hooks (includes ruff, mypy, pylint, etc.)
-pre-commit run --all-files
+# 2. Run all prek hooks (includes ruff, mypy, pylint, etc.)
+prek run --all-files
 
 # 3. Verify no TODO/FIXME related to migration
 grep -r "TODO.*migration\|FIXME.*migration\|TODO.*remove\|TODO.*deprecated" custom_components/
@@ -1030,7 +1030,7 @@ Config entry migrations (`async_migrate_entry` in `__init__.py`) are **only need
 
 ✅ **Always** include `from __future__ import annotations` at the top of Python files
 ✅ **Always** provide complete type annotations for all functions and methods
-✅ **Always** run pre-commit hooks before committing
+✅ **Always** run prek hooks before committing
 ✅ **Always** write tests for new functionality
 ✅ **Always** update documentation when changing public APIs (see "Updating Documentation")
 ✅ **Always** check and update module/class/method docstrings after code changes
@@ -1045,7 +1045,7 @@ Config entry migrations (`async_migrate_entry` in `__init__.py`) are **only need
 ### Don'ts
 
 ❌ **Never** commit without type annotations
-❌ **Never** skip pre-commit hooks
+❌ **Never** skip prek hooks
 ❌ **Never** commit to `master` or `devel` directly
 ❌ **Never** use `Any` type without justification
 ❌ **Never** use bare `except:` clauses
@@ -1067,7 +1067,7 @@ Config entry migrations (`async_migrate_entry` in `__init__.py`) are **only need
    - All functions need full type annotations
    - Will fail CI if types are missing
 
-3. **Don't ignore pre-commit hooks:**
+3. **Don't ignore prek hooks:**
    - Hooks enforce code quality
    - Fix issues before committing
    - Use `--no-verify` only in emergencies
@@ -1090,7 +1090,7 @@ When performing a refactoring task, follow this workflow:
 3. **Implement**: Make all changes following the exact plan
 4. **Clean**: Remove all legacy code, aliases, and compatibility shims
 5. **Test**: Run `pytest tests/` - all tests must pass
-6. **Lint**: Run `pre-commit run --all-files` - no errors allowed
+6. **Lint**: Run `prek run --all-files` - no errors allowed
 7. **Document**: Update changelog.md
 8. **Verify**: Check for leftover TODOs related to migration
 
@@ -1140,7 +1140,7 @@ ruff check --fix custom_components/homematicip_local/
 mypy custom_components/homematicip_local/
 
 # Run all checks
-pre-commit run --all-files
+prek run --all-files
 
 # Run tests
 pytest --cov=custom_components tests

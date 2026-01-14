@@ -5,7 +5,7 @@ aiohomematic==2026.1.38
 aiohomematic-test-support==2026.1.38
 isal==1.8.0
 mypy==1.19.1
-pre-commit==4.5.1
+prek==0.2.28
 pur==7.3.3
 pylint==4.0.4
 pylint_strict_informational==0.1
