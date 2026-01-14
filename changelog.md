@@ -24,9 +24,18 @@
 - **Default Entity Descriptions for Update Entities**: Added default descriptions with `UpdateDeviceClass.FIRMWARE` for `UPDATE` and `HUB_UPDATE` data point categories.
 - **Interface Connectivity Binary Sensors**: Added entity description rule with `BinarySensorDeviceClass.CONNECTIVITY` for the new hub-level interface connectivity sensors.
 
-## Bump aiohomematic to [2026.1.37](https://github.com/SukramJ/aiohomematic/compare/2026.1.27...2026.1.37)
+## Bump aiohomematic to [2026.1.38](https://github.com/SukramJ/aiohomematic/compare/2026.1.27...2026.1.38)
 
-### Bug Fixes
+### New Features
+
+- **Configurable Backend Detection Timeouts**: Backend detection timeouts are now managed centrally through `TimeoutConfig` instead of hardcoded constants. Two new configurable fields:
+  - `backend_detection_request: float = 5.0` — Timeout for individual XML-RPC/JSON-RPC requests
+  - `backend_detection_total: float = 15.0` — Total timeout for complete detection process
+- **Socket-Level Timeout for XML-RPC Connections**: Added `timeout` parameter to XML-RPC connections to prevent indefinite hangs when connecting to unreachable hosts. Default socket timeout of 5s during detection, while normal RPC operations maintain backward compatibility.
+- **Smart Early Abort on Fatal Connection Errors**: Backend detection now distinguishes fatal errors (ETIMEDOUT, EHOSTUNREACH, ENETUNREACH) from transient errors (ECONNREFUSED). Fatal errors trigger immediate abort, reducing detection time on unreachable hosts from ~30s to ~5s (6× improvement).
+- **Service Methods for Manual Configuration Reload**: New `Device.reload_device_config()` and `Channel.reload_channel_config()` methods enable external cache updates for scenarios where CONFIG_PENDING events are unreliable (particularly for classic BidCos devices).
+
+### Bug Fixes (from 2026.1.37)
 
 - **Fix Schedule Validation Error on Device Initialization**: Fixed `ValidationException: Time 360 is invalid` error occurring when heating group devices (VirtualDevices interface) are initialized. The `identify_base_temperature()` function incorrectly assumed all endtime values in the schedule cache are formatted strings ("06:00"), but during initial cache loading they can be raw integers (360 minutes) directly from the CCU. The function now handles both integer and string formats by checking the type before conversion. This fixes climate entity creation failures and recurring errors on Home Assistant startup.
 - **Fix Type Safety for ScheduleSlot**: Updated `ScheduleSlot` TypedDict to correctly declare `endtime: str | int` instead of `endtime: str`. This reflects the actual behavior where the CCU always returns integers (minutes since midnight) while internal conversion may use string format.
