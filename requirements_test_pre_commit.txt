@@ -3,4 +3,4 @@ codespell==2.4.1
 pre-commit-hooks==v6.0.0
 python-typing-update==v0.8.1
 ruff==0.14.11
-yamllint==1.37.1
+yamllint==1.38.0
