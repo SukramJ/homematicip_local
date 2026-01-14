@@ -1285,19 +1285,51 @@
             "name": "Fetch system variables"
         }, 
         "force_device_availability": {
-            "description": "Force a device to be available, this will override the real state", 
+            "description": "Force a device to be available, this will override the real state",
             "fields": {
                 "device_address": {
-                    "description": "Enter a device address", 
+                    "description": "Enter a device address",
                     "name": "Device address"
-                }, 
+                },
                 "device_id": {
-                    "description": "Select a device", 
+                    "description": "Select a device",
                     "name": "Device"
                 }
-            }, 
+            },
             "name": "Force device availability"
-        }, 
+        },
+        "reload_device_config": {
+            "description": "Reload device configuration from the CCU",
+            "fields": {
+                "device_address": {
+                    "description": "Enter a device address",
+                    "name": "Device address"
+                },
+                "device_id": {
+                    "description": "Select a device",
+                    "name": "Device"
+                }
+            },
+            "name": "Reload device configuration"
+        },
+        "reload_channel_config": {
+            "description": "Reload channel configuration from the CCU",
+            "fields": {
+                "channel": {
+                    "description": "Channel number to reload",
+                    "name": "Channel"
+                },
+                "device_address": {
+                    "description": "Enter a device address",
+                    "name": "Device address"
+                },
+                "device_id": {
+                    "description": "Select a device",
+                    "name": "Device"
+                }
+            },
+            "name": "Reload channel configuration"
+        },
         "get_device_value": {
             "description": "Get a device value on RPC XML interface", 
             "fields": {

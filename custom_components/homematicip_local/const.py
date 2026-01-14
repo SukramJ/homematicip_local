@@ -108,6 +108,8 @@ class HmipLocalServices(StrEnum):
     PUT_LINK_PARAMSET = "put_link_paramset"
     PUT_PARAMSET = "put_paramset"
     RECORD_SESSION = "record_session"
+    RELOAD_CHANNEL_CONFIG = "reload_channel_config"
+    RELOAD_DEVICE_CONFIG = "reload_device_config"
     REMOVE_CENTRAL_LINKS = "remove_central_links"
     REMOVE_LINK = "remove_link"
     SEND_TEXT_DISPLAY = "send_text_display"

@@ -1546,6 +1546,38 @@
             }, 
             "name": "Sitzung aufzeichnen"
         }, 
+        "reload_channel_config": {
+            "description": "Lade die Kanalkonfiguration von der CCU neu", 
+            "fields": {
+                "channel": {
+                    "description": "Kanalnummer zum Neuladen", 
+                    "name": "Kanal"
+                }, 
+                "device_address": {
+                    "description": "Gib die Geräteadresse ein", 
+                    "name": "Geräteadresse"
+                }, 
+                "device_id": {
+                    "description": "Wähle ein Gerät", 
+                    "name": "Gerät"
+                }
+            }, 
+            "name": "Kanalkonfiguration neu laden"
+        }, 
+        "reload_device_config": {
+            "description": "Lade die Gerätekonfiguration von der CCU neu", 
+            "fields": {
+                "device_address": {
+                    "description": "Gib die Geräteadresse ein", 
+                    "name": "Geräteadresse"
+                }, 
+                "device_id": {
+                    "description": "Wähle ein Gerät", 
+                    "name": "Gerät"
+                }
+            }, 
+            "name": "Gerätekonfiguration neu laden"
+        }, 
         "remove_central_links": {
             "description": "Entfernt Verknüpfungen zur Zentrale, um Tastendruck-Ereignisse zu deaktivieren", 
             "fields": {

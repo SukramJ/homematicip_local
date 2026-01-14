@@ -175,6 +175,22 @@ SCHEMA_FORCE_DEVICE_AVAILABILITY = vol.All(
     BASE_SCHEMA_DEVICE,
 )
 
+SCHEMA_RELOAD_DEVICE_CONFIG = vol.All(
+    cv.has_at_least_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    BASE_SCHEMA_DEVICE,
+)
+
+SCHEMA_RELOAD_CHANNEL_CONFIG = vol.All(
+    cv.has_at_least_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    BASE_SCHEMA_DEVICE.extend(
+        {
+            vol.Required(CONF_CHANNEL, default=DEFAULT_CHANNEL): haval.channel_no,
+        }
+    ),
+)
+
 SCHEMA_GET_DEVICE_VALUE = vol.All(
     cv.has_at_least_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
     cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
@@ -324,6 +340,10 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             await _async_service_fetch_system_variables(hass=hass, service=service)
         elif service_name == HmipLocalServices.FORCE_DEVICE_AVAILABILITY:
             await _async_service_force_device_availability(hass=hass, service=service)
+        elif service_name == HmipLocalServices.RELOAD_DEVICE_CONFIG:
+            await _async_service_reload_device_config(hass=hass, service=service)
+        elif service_name == HmipLocalServices.RELOAD_CHANNEL_CONFIG:
+            await _async_service_reload_channel_config(hass=hass, service=service)
         elif service_name == HmipLocalServices.GET_DEVICE_VALUE:
             return await _async_service_get_device_value(hass=hass, service=service)
         elif service_name == HmipLocalServices.GET_LINK_PEERS:
@@ -415,6 +435,22 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         service=HmipLocalServices.FORCE_DEVICE_AVAILABILITY,
         service_func=async_call_hmip_local_service,
         schema=SCHEMA_FORCE_DEVICE_AVAILABILITY,
+    )
+
+    async_register_admin_service(
+        hass=hass,
+        domain=DOMAIN,
+        service=HmipLocalServices.RELOAD_DEVICE_CONFIG,
+        service_func=async_call_hmip_local_service,
+        schema=SCHEMA_RELOAD_DEVICE_CONFIG,
+    )
+
+    async_register_admin_service(
+        hass=hass,
+        domain=DOMAIN,
+        service=HmipLocalServices.RELOAD_CHANNEL_CONFIG,
+        service_func=async_call_hmip_local_service,
+        schema=SCHEMA_RELOAD_CHANNEL_CONFIG,
     )
 
     hass.services.async_register(
@@ -898,6 +934,43 @@ async def _async_service_export_device_definition(*, hass: HomeAssistant, servic
             "Called export_device_definition: %s, %s",
             hm_device.name,
             hm_device.address,
+        )
+
+
+async def _async_service_reload_device_config(*, hass: HomeAssistant, service: ServiceCall) -> None:
+    """Service to reload device configuration for a Homematic(IP) Local for OpenCCU device."""
+    if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
+        try:
+            await hm_device.reload_device_config()
+        except BaseHomematicException as bhexc:
+            raise HomeAssistantError(bhexc) from bhexc
+
+        _LOGGER.debug(
+            "Called reload_device_config: %s, %s",
+            hm_device.name,
+            hm_device.address,
+        )
+
+
+async def _async_service_reload_channel_config(*, hass: HomeAssistant, service: ServiceCall) -> None:
+    """Service to reload channel configuration for a Homematic(IP) Local for OpenCCU device."""
+    channel_no = service.data[CONF_CHANNEL]
+
+    if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
+        channel_address = f"{hm_device.address}:{channel_no}"
+        try:
+            if channel := hm_device.channels.get(channel_address):
+                await channel.reload_channel_config()
+            else:
+                raise HomeAssistantError(f"Channel {channel_no} not found on device {hm_device.address}")
+        except BaseHomematicException as bhexc:
+            raise HomeAssistantError(bhexc) from bhexc
+
+        _LOGGER.debug(
+            "Called reload_channel_config: %s, %s:%d",
+            hm_device.name,
+            hm_device.address,
+            channel_no,
         )
 
 

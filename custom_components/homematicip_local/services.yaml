@@ -136,6 +136,41 @@ force_device_availability:
       selector:
         text:
 
+reload_device_config:
+  fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: homematicip_local
+    device_address:
+      example: "0008789453"
+      required: false
+      selector:
+        text:
+
+reload_channel_config:
+  fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: homematicip_local
+    device_address:
+      example: "0008789453"
+      required: false
+      selector:
+        text:
+    channel:
+      required: true
+      default: 1
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+
 get_device_value:
   fields:
     device_id:

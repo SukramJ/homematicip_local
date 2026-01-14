@@ -1546,6 +1546,38 @@
             }, 
             "name": "Record session"
         }, 
+        "reload_channel_config": {
+            "description": "Reload channel configuration from the CCU", 
+            "fields": {
+                "channel": {
+                    "description": "Channel number to reload", 
+                    "name": "Channel"
+                }, 
+                "device_address": {
+                    "description": "Enter a device address", 
+                    "name": "Device address"
+                }, 
+                "device_id": {
+                    "description": "Select a device", 
+                    "name": "Device"
+                }
+            }, 
+            "name": "Reload channel configuration"
+        }, 
+        "reload_device_config": {
+            "description": "Reload device configuration from the CCU", 
+            "fields": {
+                "device_address": {
+                    "description": "Enter a device address", 
+                    "name": "Device address"
+                }, 
+                "device_id": {
+                    "description": "Select a device", 
+                    "name": "Device"
+                }
+            }, 
+            "name": "Reload device configuration"
+        }, 
         "remove_central_links": {
             "description": "Remove links to the central to disable support key press events", 
             "fields": {

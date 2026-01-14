@@ -2,6 +2,12 @@
 
 ## What's Changed
 
+### New Features
+
+- **New Services for Configuration Reload**: Added two new admin services to reload device and channel configurations from the CCU without restarting Home Assistant:
+  - `reload_device_config`: Reloads device configuration (accepts device_id or device_address)
+  - `reload_channel_config`: Reloads channel configuration (accepts device_id or device_address + channel number)
+
 ### Bug Fixes
 
 - **Fix Backend Detection Hanging with Non-Standard Ports**: Fixed issue where backend detection would hang indefinitely when using non-standard HTTP/HTTPS ports (e.g., port 2080 instead of 80). Added 20-second timeout wrapper with graceful degradation - if detection times out or fails, the config flow now proceeds directly to manual interface configuration instead of blocking. Users can also skip backend detection entirely via new checkbox in the connection step (useful when non-standard ports are known upfront). Resolves [#2804](https://github.com/SukramJ/aiohomematic/issues/2804).
