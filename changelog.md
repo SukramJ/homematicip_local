@@ -1,9 +1,10 @@
-# Version [2.1.2](https://github.com/SukramJ/homematicip_local/compare/2.1.1...2.1.2) (2026-01-10)
+# Version [2.1.2](https://github.com/SukramJ/homematicip_local/compare/2.1.1...2.1.2) (2026-01-14)
 
 ## What's Changed
 
 ### Bug Fixes
 
+- **Fix Backend Detection Hanging with Non-Standard Ports**: Fixed issue where backend detection would hang indefinitely when using non-standard HTTP/HTTPS ports (e.g., port 2080 instead of 80). Added 20-second timeout wrapper with graceful degradation - if detection times out or fails, the config flow now proceeds directly to manual interface configuration instead of blocking. Users can also skip backend detection entirely via new checkbox in the connection step (useful when non-standard ports are known upfront). Resolves [#2804](https://github.com/SukramJ/aiohomematic/issues/2804).
 - **Fix Translation Error on Duplicate CCU Configuration**: Fixed "The intl string context variable 'serial' was not provided" error when attempting to add a CCU instance that is already configured. The abort message now correctly displays the serial number.
 - **Fix Unwanted Integration Reload on Action Select Change**: Action select values (e.g., siren tones, light patterns) are now stored in a separate storage file instead of the config entry. Previously, changing an action select value triggered `async_update_entry()` which caused a full integration reload via the `update_listener`. This fix eliminates unnecessary restarts when selecting different tones or patterns. Existing values are automatically migrated from config entry to the new storage file.
 - **Fix Options Flow Not Persisting Changes**: Configuration changes made in the Options Flow (e.g., enabling SysVar scan) were lost after Home Assistant restart. The issue was caused by a shallow copy of config entry data that shared nested dictionary references with the original. Home Assistant's change detection saw no difference and skipped saving. Now uses `deepcopy` to ensure complete independence.

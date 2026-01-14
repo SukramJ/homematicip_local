@@ -325,20 +325,23 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         """Get a schedule profile."""
         _LOGGER.warning("Service 'get_schedule_profile' is deprecated and will be removed in April 2026. ")
         schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
-        if profile_data := await self._data_point.get_schedule_profile(profile=schedule_profile):
+        if profile_data := await self._data_point.get_schedule_profile(profile=schedule_profile, force_load=True):
             return cast(ServiceResponse, profile_data)
         return None
 
     @handle_homematic_errors
     async def async_get_schedule_simple_profile(self, profile: ScheduleProfile) -> ServiceResponse:
         """Get a schedule simple profile."""
-        return cast(ServiceResponse, await self._data_point.get_schedule_simple_profile(profile=profile))
+        return cast(
+            ServiceResponse, await self._data_point.get_schedule_simple_profile(profile=profile, force_load=True)
+        )
 
     @handle_homematic_errors
     async def async_get_schedule_simple_weekday(self, profile: ScheduleProfile, weekday: WeekdayStr) -> ServiceResponse:
         """Get a schedule simple profile weekday."""
         return cast(
-            ServiceResponse, await self._data_point.get_schedule_simple_weekday(profile=profile, weekday=weekday)
+            ServiceResponse,
+            await self._data_point.get_schedule_simple_weekday(profile=profile, weekday=weekday, force_load=True),
         )
 
     @handle_homematic_errors
@@ -350,7 +353,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
         schedule_weekday = weekday if isinstance(weekday, WeekdayStr) else WeekdayStr(weekday)
         if weekday_data := await self._data_point.get_schedule_weekday(
-            profile=schedule_profile, weekday=schedule_weekday
+            profile=schedule_profile, weekday=schedule_weekday, force_load=True
         ):
             return cast(ServiceResponse, weekday_data)
         return None

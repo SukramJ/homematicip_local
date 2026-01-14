@@ -63,11 +63,13 @@
                     "host": "CCU hostname/IP address", 
                     "instance_name": "Integration instance name", 
                     "password": "CCU password", 
+                    "skip_backend_detection": "Skip automatic backend detection", 
                     "username": "CCU username"
                 }, 
                 "data_description": {
                     "instance_name": "Unique identifier for this Home Assistant installation. Allows multiple Home Assistant instances to connect to the same CCU simultaneously. Has no relation to the CCU hostname/IP. Do not change after setup — entities would be recreated.", 
                     "password": "Case sensitive. Allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
+                    "skip_backend_detection": "Enable this option if you use non-standard ports or if backend detection hangs. You will manually configure interfaces and ports in the next step.", 
                     "username": "Case sensitive. User must have administrator role"
                 }, 
                 "description": "Step {step_current} of {step_total}: Configure CCU connection", 

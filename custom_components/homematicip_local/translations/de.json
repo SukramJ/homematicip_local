@@ -63,11 +63,13 @@
                     "host": "CCU Hostname/IP-Adresse", 
                     "instance_name": "Instanzname der Integration", 
                     "password": "CCU Passwort", 
+                    "skip_backend_detection": "Automatische Backend-Erkennung überspringen", 
                     "username": "CCU Benutzername"
                 }, 
                 "data_description": {
                     "instance_name": "Eindeutiger Bezeichner für diese Home Assistant Installation. Ermöglicht mehreren Home Assistant Instanzen den gleichzeitigen Zugriff auf dieselbe CCU. Hat keine Beziehung zum CCU-Hostnamen/IP. Nach der Einrichtung nicht ändern — Entitäten würden neu erstellt.", 
                     "password": "Groß-/Kleinschreibung beachten. Erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
+                    "skip_backend_detection": "Aktivieren Sie diese Option, wenn Sie nicht-standard Ports verwenden oder wenn die Backend-Erkennung hängt. Sie werden Interfaces und Ports manuell im nächsten Schritt konfigurieren.", 
                     "username": "Groß-/Kleinschreibung beachten. Benutzer muss die Administratorrolle haben"
                 }, 
                 "description": "Schritt {step_current} von {step_total}: CCU-Verbindung konfigurieren", 

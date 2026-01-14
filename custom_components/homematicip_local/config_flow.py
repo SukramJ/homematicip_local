@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from copy import deepcopy
 import logging
 from pprint import pformat
+import time
 from typing import Any, Final, cast
 from urllib.parse import urlparse
 
@@ -71,6 +73,7 @@ from .const import (
     CONF_MQTT_PREFIX,
     CONF_OPTIONAL_SETTINGS,
     CONF_PROGRAM_MARKERS,
+    CONF_SKIP_BACKEND_DETECTION,
     CONF_SYS_SCAN_INTERVAL,
     CONF_SYSVAR_MARKERS,
     CONF_TLS,
@@ -108,6 +111,9 @@ STEP_REAUTH: Final = "1"
 TOTAL_STEPS_REAUTH: Final = "1"
 
 _LOGGER = logging.getLogger(__name__)
+
+# Backend detection timeout (seconds)
+BACKEND_DETECTION_TIMEOUT: Final = 20.0
 
 # Interface enable/disable config keys
 CONF_BIDCOS_RF_PORT: Final = "bidcos_rf_port"
@@ -150,6 +156,9 @@ def get_domain_schema(data: ConfigType) -> Schema:
             vol.Required(CONF_HOST, default=data.get(CONF_HOST)): TEXT_SELECTOR,
             vol.Required(CONF_USERNAME, default=data.get(CONF_USERNAME)): TEXT_SELECTOR,
             vol.Required(CONF_PASSWORD, default=data.get(CONF_PASSWORD)): PASSWORD_SELECTOR,
+            vol.Optional(
+                CONF_SKIP_BACKEND_DETECTION, default=data.get(CONF_SKIP_BACKEND_DETECTION, False)
+            ): BOOLEAN_SELECTOR,
         }
     )
 
@@ -570,6 +579,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         self.serial: str | None = None
         self._detection_result: BackendDetectionResult | None = None
         self._detection_task: asyncio.Task[None] | None = None
+        self._detection_start_time: float | None = None
         self._detection_error: str | None = None
         self._detection_error_detail: str | None = None
         self._validation_error: str | None = None
@@ -603,8 +613,14 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is not None:
             self.data = _get_ccu_data(self.data, user_input=user_input)
+            # Check if user wants to skip backend detection
+            if user_input.get(CONF_SKIP_BACKEND_DETECTION, False):
+                _LOGGER.debug("User skipped backend detection")
+                # Skip directly to interface step without detection
+                return await self.async_step_interface()
             # Start detection task and show progress
             if not self._detection_task:
+                self._detection_start_time = time.monotonic()
                 self._detection_task = self.hass.async_create_task(
                     self._async_run_detection(), "homematicip_local_detect_backend"
                 )
@@ -646,19 +662,49 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_detect(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
         """Handle the backend detection step."""
+        # Wait briefly for task to complete if it's very fast
         if self._detection_task and not self._detection_task.done():
+            with contextlib.suppress(TimeoutError):
+                await asyncio.wait_for(asyncio.shield(self._detection_task), timeout=0.1)
+
+        if self._detection_task and not self._detection_task.done():
+            # Check for timeout
+            if self._detection_start_time is not None:
+                elapsed = time.monotonic() - self._detection_start_time
+                if elapsed > BACKEND_DETECTION_TIMEOUT:
+                    _LOGGER.warning(
+                        "Backend detection timed out after %.1fs for host %s - proceeding with manual configuration",
+                        elapsed,
+                        self.data.get(CONF_HOST, "unknown"),
+                    )
+                    # Cancel the task and proceed with graceful degradation
+                    self._detection_task.cancel()
+                    self._detection_task = None
+                    self._detection_start_time = None
+                    self._detection_result = None
+                    # Continue to interface step for manual configuration
+                    return self.async_show_progress_done(next_step_id="interface")
+
+            # Still running within timeout - show progress
             return self.async_show_progress(
                 step_id="detect",
                 progress_action="detect_backend",
                 progress_task=self._detection_task,
             )
 
-        # Check for errors during detection - show them in central step
+        # Task is done - check for errors during detection
         if self._detection_error:
+            _LOGGER.debug(
+                "Backend detection failed with error '%s' - proceeding to manual configuration",
+                self._detection_error,
+            )
             self._detection_task = None
-            return self.async_show_progress_done(next_step_id="central_error")
+            self._detection_start_time = None
+            # Continue to interface step instead of showing error
+            return self.async_show_progress_done(next_step_id="interface")
 
-        # Detection complete (or was never started), proceed to interface step
+        # Detection complete successfully, proceed to interface step
+        self._detection_start_time = None
         return self.async_show_progress_done(next_step_id="interface")
 
     async def async_step_finish_or_configure(self, user_input: ConfigType | None = None) -> ConfigFlowResult:

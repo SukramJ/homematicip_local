@@ -576,11 +576,10 @@ class TestConfigFlowErrorHandling:
                 result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
                 await hass.async_block_till_done()
 
-        # Should return to central step with auth error
+        # Should proceed to interface step with graceful degradation
         assert result2["type"] == FlowResultType.FORM
-        assert result2["step_id"] == "central"
-        assert result2["errors"] == {"base": "invalid_auth"}
-        assert result2["description_placeholders"]["invalid_items"] == const.HOST
+        assert result2["step_id"] == "interface"
+        # No errors shown on interface page - user can manually configure
 
     async def test_form_detection_no_backend_found(self, hass: HomeAssistant) -> None:
         """Test we handle case when no backend is found (detection failed)."""
@@ -616,10 +615,10 @@ class TestConfigFlowErrorHandling:
                 result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
                 await hass.async_block_till_done()
 
-        # Should return to central step with detection_failed error
+        # Should proceed to interface step with graceful degradation
         assert result2["type"] == FlowResultType.FORM
-        assert result2["step_id"] == "central"
-        assert result2["errors"] == {"base": "detection_failed"}
+        assert result2["step_id"] == "interface"
+        # No errors shown - user can manually configure
 
     async def test_form_detection_no_connection(self, hass: HomeAssistant) -> None:
         """Test we handle connection exception during backend detection."""
@@ -655,10 +654,10 @@ class TestConfigFlowErrorHandling:
                 result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
                 await hass.async_block_till_done()
 
-        # Should return to central step with cannot_connect error
+        # Should proceed to interface step with graceful degradation
         assert result2["type"] == FlowResultType.FORM
-        assert result2["step_id"] == "central"
-        assert result2["errors"] == {"base": "cannot_connect"}
+        assert result2["step_id"] == "interface"
+        # No errors shown - user can manually configure
 
     async def test_form_detection_validation_exception(self, hass: HomeAssistant) -> None:
         """Test we handle validation exception during backend detection."""
@@ -694,10 +693,10 @@ class TestConfigFlowErrorHandling:
                 result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
                 await hass.async_block_till_done()
 
-        # Should return to central step with invalid_config error
+        # Should proceed to interface step with graceful degradation
         assert result2["type"] == FlowResultType.FORM
-        assert result2["step_id"] == "central"
-        assert result2["errors"] == {"base": "invalid_config"}
+        assert result2["step_id"] == "interface"
+        # No errors shown - user can manually configure
 
     async def test_form_invalid_auth(self, hass: HomeAssistant) -> None:
         """Test we handle invalid auth during final validation."""
