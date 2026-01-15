@@ -14,7 +14,6 @@
 
 ### Bug Fixes
 
-- **Fix Patches Not Applied to Channel Paramsets**: Device type comparison is now case-insensitive throughout the codebase, and channel paramsets correctly use `PARENT_TYPE` (root device type) for patch matching instead of channel TYPE.
 - **Cache Schema v3**: Cache schema bumped to v3 with automatic rebuild when the schema version changes.
 
 # Version [2.1.2](https://github.com/SukramJ/homematicip_local/compare/2.1.1...2.1.2) (2026-01-14)
