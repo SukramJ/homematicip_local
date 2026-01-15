@@ -759,6 +759,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                     undetected_names,
                 )
                 placeholders = _get_step_placeholders(STEP_INTERFACE, TOTAL_STEPS_BASIC)
+                placeholders["detected_interfaces"] = "-"
                 if self._detection_result:
                     placeholders["detected_backend"] = self._detection_result.backend.value
                     placeholders["detected_interfaces"] = ", ".join(
@@ -793,6 +794,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("Validation failed, showing error on interface page: %s", ex)
                 error_msg = str(ex) if str(ex) else self.data.get(CONF_HOST, "")
                 placeholders = _get_step_placeholders(STEP_INTERFACE, TOTAL_STEPS_BASIC)
+                placeholders["detected_interfaces"] = "-"
                 if self._detection_result:
                     placeholders["detected_backend"] = self._detection_result.backend.value
                     placeholders["detected_interfaces"] = ", ".join(
@@ -811,6 +813,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("ConfigFlow.step_interface, no user input")
         placeholders = _get_step_placeholders(STEP_INTERFACE, TOTAL_STEPS_BASIC)
+        placeholders["detected_interfaces"] = "-"
         # Add detection result info if available
         if self._detection_result:
             placeholders["detected_backend"] = self._detection_result.backend.value

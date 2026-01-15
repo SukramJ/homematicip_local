@@ -1,3 +1,22 @@
+# Version [2.1.3](https://github.com/SukramJ/homematicip_local/compare/2.1.2...2.1.3) (2026-01-15)
+
+## What's Changed
+
+### Bug Fixes
+
+- **Fix Translation Error When Skipping Backend Detection**: Fixed "The intl string context variable 'detected_interfaces' was not provided" error when using the "Skip automatic backend detection" option in the config flow. The interface step now provides a default placeholder value when detection results are not available.
+
+## Bump aiohomematic to [2026.1.39](https://github.com/SukramJ/aiohomematic/compare/2026.1.38...2026.1.39)
+
+### New Features
+
+- **Paramset Description Patching System**: Added a generic mechanism to correct faulty `paramset_descriptions` from the CCU. The system applies device-specific corrections during data ingestion using declarative patch definitions. Initial patch corrects HM-CC-VG-1 channel 1 `SET_TEMPERATURE` MIN/MAX values (4.5/30.5) instead of the incorrect CCU-provided values.
+
+### Bug Fixes
+
+- **Fix Patches Not Applied to Channel Paramsets**: Device type comparison is now case-insensitive throughout the codebase, and channel paramsets correctly use `PARENT_TYPE` (root device type) for patch matching instead of channel TYPE.
+- **Cache Schema v3**: Cache schema bumped to v3 with automatic rebuild when the schema version changes.
+
 # Version [2.1.2](https://github.com/SukramJ/homematicip_local/compare/2.1.1...2.1.2) (2026-01-14)
 
 ## What's Changed
