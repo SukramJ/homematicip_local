@@ -11,7 +11,7 @@ from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.hub import HmUpdate
 from aiohomematic.model.update import DpUpdate
 from aiohomematic.type_aliases import UnsubscribeCallback
-from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
+from homeassistant.components.update import UpdateDeviceClass, UpdateEntity, UpdateEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -86,6 +86,7 @@ async def async_setup_entry(
 class AioHomematicUpdate(UpdateEntity):
     """Representation of the HomematicIP update entity."""
 
+    _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = UpdateEntityFeature.PROGRESS | UpdateEntityFeature.INSTALL
 
     _attr_has_entity_name = True
@@ -193,6 +194,7 @@ class AioHomematicUpdate(UpdateEntity):
 class AioHomematicHubUpdate(UpdateEntity):
     """Representation of the HomematicIP update entity."""
 
+    _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_entity_registry_enabled_default = True

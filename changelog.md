@@ -1,10 +1,15 @@
-# Version [2.1.3](https://github.com/SukramJ/homematicip_local/compare/2.1.2...2.1.3) (2026-01-15)
+# Version [2.1.3](https://github.com/SukramJ/homematicip_local/compare/2.1.2...2.1.3) (2026-01-16)
 
 ## What's Changed
 
 ### Bug Fixes
 
 - **Fix Translation Error When Skipping Backend Detection**: Fixed "The intl string context variable 'detected_interfaces' was not provided" error when using the "Skip automatic backend detection" option in the config flow. The interface step now provides a default placeholder value when detection results are not available.
+- **Fix Missing device_class for Update Entities**: Update entities for device firmware and hub updates now correctly report `device_class: firmware`. Previously the device_class was not set despite having an entity description rule defined.
+
+### Internal
+
+- **Remove Unused UpdateEntityDescription Defaults**: Removed `UpdateEntityDescription` entries for `UPDATE` and `HUB_UPDATE` from `defaults.py` since Update entities don't use the generic entity helper system. The `device_class` is now set directly on the entity classes.
 
 ## Bump aiohomematic to [2026.1.39](https://github.com/SukramJ/aiohomematic/compare/2026.1.38...2026.1.39)
 
