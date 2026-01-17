@@ -13,15 +13,24 @@
 - **Migrate Event Platform to ChannelEventGroup**: Migrated the event platform from individual `GenericEvent` subscriptions to the new `ChannelEventGroupProtocol` pattern. Event groups are now virtual data points bound to channels, providing unified subscription management via `subscribe_to_data_point_updated()`. This simplifies subscription handling (single subscription per entity instead of one per event type) and aligns with the standard `CallbackDataPointProtocol` pattern.
 - **Config Entry Migration v14**: Added entity registry migration for event entities to update unique_ids from the old channel-based format (`homematicip_local_{channel_unique_id}`) to the new event_group-based format (`homematicip_local_event_group_homematic.keypress_{channel_unique_id}`). This ensures existing event entities are preserved when upgrading from version 2.1.2.
 
-## Bump aiohomematic to [2026.1.39](https://github.com/SukramJ/aiohomematic/compare/2026.1.38...2026.1.39)
+## Bump aiohomematic to [2026.1.40](https://github.com/SukramJ/aiohomematic/compare/2026.1.38...2026.1.40)
 
 ### New Features
 
 - **Paramset Description Patching System**: Added a generic mechanism to correct faulty `paramset_descriptions` from the CCU. The system applies device-specific corrections during data ingestion using declarative patch definitions. Initial patch corrects HM-CC-VG-1 channel 1 `SET_TEMPERATURE` MIN/MAX values (4.5/30.5) instead of the incorrect CCU-provided values.
+- **translation_key for Data Points**: All data point types now provide a consistent `translation_key` property for translations. This includes hub sensors, metrics sensors, inbox, install mode, device/system updates, and calculated data points.
+
+### Changed
+
+- **ChannelEventGroup as Virtual Data Point**: Refactored `ChannelEventGroup` from a helper class to a virtual data point bound to the Channel. Event groups now extend `CallbackDataPoint` and follow the standard subscription pattern with `subscribe_to_data_point_updated()`. See migration guide: `docs/migrations/channel_event_group_migration_2026_01.md`.
 
 ### Bug Fixes
 
 - **Cache Schema v3**: Cache schema bumped to v3 with automatic rebuild when the schema version changes.
+- **Legacy Cache Migration for Climate Schedules**: Fixed `ValidationException: Time 360 is invalid` error when starting with cached schedule data. The issue was old cached `endtime` values stored as numeric strings (`"360"`) instead of integers or time strings. A new helper handles all three formats.
+- **Coordinated Cache Clearing on Version Mismatch**: Fixed issue where only one cache was cleared on schema version change. Now both device and paramset description caches are cleared together, preventing incomplete rebuilds.
+- **Sound Player Soundfile Default Handling**: Fixed `turn_on()` to use the entity's current value or default when `soundfile` is not provided, instead of always defaulting to `"INTERNAL_SOUNDFILE"`.
+- **Backend Detection Timeout Support**: Fixed `TypeError: ServerProxy.__init__() got an unexpected keyword argument 'timeout'`. Introduced custom transport classes for proper socket timeout handling.
 
 # Version [2.1.2](https://github.com/SukramJ/homematicip_local/compare/2.1.1...2.1.2) (2026-01-14)
 
