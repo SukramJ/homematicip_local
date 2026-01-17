@@ -80,7 +80,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         else:
             self._attr_entity_registry_enabled_default = data_point.enabled_default
             if isinstance(data_point, CalculatedDataPointProtocol | GenericDataPointProtocol):
-                self._attr_translation_key = data_point.parameter.lower()
+                self._attr_translation_key = data_point.translation_key
 
         hm_device = data_point.device
         identifier = hm_device.identifier

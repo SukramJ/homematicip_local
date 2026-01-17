@@ -213,6 +213,35 @@ async def update_listener(hass: HomeAssistant, entry: HomematicConfigEntry) -> N
     await hass.config_entries.async_reload(entry.entry_id)
 
 
+async def _async_migrate_event_entity_unique_ids(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:
+    """Migrate event entity unique_ids from channel-based to event_group-based format."""
+
+    @callback
+    def update_event_entity_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+        """Update unique ID of event entity entry."""
+        # Only migrate event platform entities
+        if entity_entry.domain != "event":
+            return None
+        # Check if this is an old-format unique_id (doesn't contain "event_group_")
+        if "event_group_" in entity_entry.unique_id:
+            return None
+        # Extract the channel unique_id part after the domain prefix
+        prefix = f"{DOMAIN}_"
+        if not entity_entry.unique_id.startswith(prefix):
+            return None
+        channel_unique_id = entity_entry.unique_id[len(prefix) :]
+        # Create new unique_id with event_group format (default to keypress)
+        new_unique_id = f"{DOMAIN}_event_group_keypress_{channel_unique_id}"
+        _LOGGER.debug(
+            "Migrating event entity unique_id: %s -> %s",
+            entity_entry.unique_id,
+            new_unique_id,
+        )
+        return {"new_unique_id": new_unique_id}
+
+    await async_migrate_entries(hass, entry.entry_id, update_event_entity_unique_id)
+
+
 async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
@@ -327,5 +356,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
         with contextlib.suppress(Exception):
             del data[CONF_ACTION_SELECT_VALUES]
         hass.config_entries.async_update_entry(entry, version=13, data=data)
+    if entry.version == 13:
+        # Migrate event entity unique_ids from channel-based to event_group-based format
+        await _async_migrate_event_entity_unique_ids(hass=hass, entry=entry)
+        hass.config_entries.async_update_entry(entry, version=14)
     _LOGGER.info("Migration to version %s successful", entry.version)
     return True

@@ -10,6 +10,8 @@
 ### Internal
 
 - **Remove Unused UpdateEntityDescription Defaults**: Removed `UpdateEntityDescription` entries for `UPDATE` and `HUB_UPDATE` from `defaults.py` since Update entities don't use the generic entity helper system. The `device_class` is now set directly on the entity classes.
+- **Migrate Event Platform to ChannelEventGroup**: Migrated the event platform from individual `GenericEvent` subscriptions to the new `ChannelEventGroupProtocol` pattern. Event groups are now virtual data points bound to channels, providing unified subscription management via `subscribe_to_data_point_updated()`. This simplifies subscription handling (single subscription per entity instead of one per event type) and aligns with the standard `CallbackDataPointProtocol` pattern.
+- **Config Entry Migration v14**: Added entity registry migration for event entities to update unique_ids from the old channel-based format (`homematicip_local_{channel_unique_id}`) to the new event_group-based format (`homematicip_local_event_group_homematic.keypress_{channel_unique_id}`). This ensures existing event entities are preserved when upgrading from version 2.1.2.
 
 ## Bump aiohomematic to [2026.1.39](https://github.com/SukramJ/aiohomematic/compare/2026.1.38...2026.1.39)
 

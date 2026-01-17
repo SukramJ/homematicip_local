@@ -570,7 +570,7 @@ async def _async_detect_backend(
 class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the instance flow for Homematic(IP) Local for OpenCCU."""
 
-    VERSION = 13
+    VERSION = 14
     CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
