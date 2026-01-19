@@ -1,4 +1,4 @@
-# Version [2.1.3](https://github.com/SukramJ/homematicip_local/compare/2.1.2...2.1.3) (2026-01-16)
+# Version [2.1.3](https://github.com/SukramJ/homematicip_local/compare/2.1.2...2.1.3) (2026-01-19)
 
 ## What's Changed
 
@@ -13,12 +13,13 @@
 - **Migrate Event Platform to ChannelEventGroup**: Migrated the event platform from individual `GenericEvent` subscriptions to the new `ChannelEventGroupProtocol` pattern. Event groups are now virtual data points bound to channels, providing unified subscription management via `subscribe_to_data_point_updated()`. This simplifies subscription handling (single subscription per entity instead of one per event type) and aligns with the standard `CallbackDataPointProtocol` pattern.
 - **Config Entry Migration v14**: Added entity registry migration for event entities to update unique_ids from the old channel-based format (`homematicip_local_{channel_unique_id}`) to the new event_group-based format (`homematicip_local_event_group_homematic.keypress_{channel_unique_id}`). This ensures existing event entities are preserved when upgrading from version 2.1.2.
 
-## Bump aiohomematic to [2026.1.40](https://github.com/SukramJ/aiohomematic/compare/2026.1.38...2026.1.40)
+## Bump aiohomematic to [2026.1.41](https://github.com/SukramJ/aiohomematic/compare/2026.1.38...2026.1.41)
 
 ### New Features
 
 - **Paramset Description Patching System**: Added a generic mechanism to correct faulty `paramset_descriptions` from the CCU. The system applies device-specific corrections during data ingestion using declarative patch definitions. Initial patch corrects HM-CC-VG-1 channel 1 `SET_TEMPERATURE` MIN/MAX values (4.5/30.5) instead of the incorrect CCU-provided values.
 - **translation_key for Data Points**: All data point types now provide a consistent `translation_key` property for translations. This includes hub sensors, metrics sensors, inbox, install mode, device/system updates, and calculated data points.
+- **Startup Resilience for Authentication Errors**: Added a 3-stage validation approach for improved startup reliability: TCP pre-flight check validates port availability, client creation & RPC validation verifies backend communication, and retry with exponential backoff handles transient errors before failing. New `TimeoutConfig` parameters: `startup_max_init_attempts` (default: 5), `startup_init_retry_delay` (default: 3s), and `startup_max_init_retry_delay` (default: 30s).
 
 ### Changed
 
@@ -26,6 +27,7 @@
 
 ### Bug Fixes
 
+- **Automatic Reconnection After Startup Failures**: Fixed scenarios where the backend was unavailable during Home Assistant startup. The integration previously remained in FAILED state indefinitely. Now the heartbeat timer automatically activates when central transitions to FAILED state during startup, with recovery attempts every 60 seconds (configurable). Port resolution for TCP checks falls back to interface configuration when client doesn't exist.
 - **Cache Schema v3**: Cache schema bumped to v3 with automatic rebuild when the schema version changes.
 - **Legacy Cache Migration for Climate Schedules**: Fixed `ValidationException: Time 360 is invalid` error when starting with cached schedule data. The issue was old cached `endtime` values stored as numeric strings (`"360"`) instead of integers or time strings. A new helper handles all three formats.
 - **Coordinated Cache Clearing on Version Mismatch**: Fixed issue where only one cache was cleared on schema version change. Now both device and paramset description caches are cleared together, preventing incomplete rebuilds.

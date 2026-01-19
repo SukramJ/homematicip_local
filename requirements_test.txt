@@ -5,8 +5,8 @@ aiohomematic==2026.1.40
 aiohomematic-test-support==2026.1.40
 isal==1.8.0
 mypy==1.19.1
-prek==0.2.28
+prek==0.2.30
 pur==7.3.3
 pylint==4.0.4
 pylint_strict_informational==0.1
-pytest-homeassistant-custom-component==0.13.306
+pytest-homeassistant-custom-component==0.13.307

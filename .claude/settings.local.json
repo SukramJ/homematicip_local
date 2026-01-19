@@ -39,7 +39,8 @@
       "Bash(yamllint:*)",
       "Bash(gh issue view:*)",
       "WebFetch(domain:objects.githubusercontent.com)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "WebFetch(domain:api.github.com)"
     ],
     "deny": [],
     "ask": []
