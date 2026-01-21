@@ -1,4 +1,4 @@
-# Version [2.1.3](https://github.com/SukramJ/homematicip_local/compare/2.1.2...2.1.3) (2026-01-19)
+# Version [2.1.3](https://github.com/SukramJ/homematicip_local/compare/2.1.2...2.1.3) (2026-01-21)
 
 ## What's Changed
 
@@ -12,18 +12,21 @@
 - **Remove Unused UpdateEntityDescription Defaults**: Removed `UpdateEntityDescription` entries for `UPDATE` and `HUB_UPDATE` from `defaults.py` since Update entities don't use the generic entity helper system. The `device_class` is now set directly on the entity classes.
 - **Migrate Event Platform to ChannelEventGroup**: Migrated the event platform from individual `GenericEvent` subscriptions to the new `ChannelEventGroupProtocol` pattern. Event groups are now virtual data points bound to channels, providing unified subscription management via `subscribe_to_data_point_updated()`. This simplifies subscription handling (single subscription per entity instead of one per event type) and aligns with the standard `CallbackDataPointProtocol` pattern.
 - **Config Entry Migration v14**: Added entity registry migration for event entities to update unique_ids from the old channel-based format (`homematicip_local_{channel_unique_id}`) to the new event_group-based format (`homematicip_local_event_group_homematic.keypress_{channel_unique_id}`). This ensures existing event entities are preserved when upgrading from version 2.1.2.
+- **Local Validators**: Implemented local voluptuous validators (`validate_channel_no`, `validate_wait_for`, `validate_device_address`, `validate_channel_address`, `validate_paramset_key`) in `support.py` to replace validators removed from aiohomematic after its migration to Pydantic.
 
-## Bump aiohomematic to [2026.1.41](https://github.com/SukramJ/aiohomematic/compare/2026.1.38...2026.1.41)
+## Bump aiohomematic to [2026.1.43](https://github.com/SukramJ/aiohomematic/compare/2026.1.38...2026.1.43)
 
 ### New Features
 
 - **Paramset Description Patching System**: Added a generic mechanism to correct faulty `paramset_descriptions` from the CCU. The system applies device-specific corrections during data ingestion using declarative patch definitions. Initial patch corrects HM-CC-VG-1 channel 1 `SET_TEMPERATURE` MIN/MAX values (4.5/30.5) instead of the incorrect CCU-provided values.
 - **translation_key for Data Points**: All data point types now provide a consistent `translation_key` property for translations. This includes hub sensors, metrics sensors, inbox, install mode, device/system updates, and calculated data points.
 - **Startup Resilience for Authentication Errors**: Added a 3-stage validation approach for improved startup reliability: TCP pre-flight check validates port availability, client creation & RPC validation verifies backend communication, and retry with exponential backoff handles transient errors before failing. New `TimeoutConfig` parameters: `startup_max_init_attempts` (default: 5), `startup_init_retry_delay` (default: 3s), and `startup_max_init_retry_delay` (default: 30s).
+- **Device Availability Events for Forced Availability**: The `force_device_availability` method now fires `DeviceLifecycleEventType.AVAILABILITY_CHANGED` events, ensuring the integration receives proper notifications when device availability is manually changed.
 
 ### Changed
 
 - **ChannelEventGroup as Virtual Data Point**: Refactored `ChannelEventGroup` from a helper class to a virtual data point bound to the Channel. Event groups now extend `CallbackDataPoint` and follow the standard subscription pattern with `subscribe_to_data_point_updated()`. See migration guide: `docs/migrations/channel_event_group_migration_2026_01.md`.
+- **Replace Voluptuous with Pydantic**: Migrated all validation from voluptuous to Pydantic for improved type safety and validation. Address validation patterns (`DEVICE_ADDRESS_PATTERN`, `CHANNEL_ADDRESS_PATTERN`) remain available as compiled regex patterns in `aiohomematic.const`.
 
 ### Bug Fixes
 

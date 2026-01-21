@@ -7,12 +7,11 @@ from copy import deepcopy
 from functools import wraps
 import logging
 import re
-from typing import Any, TypeAlias, TypeVar
+from typing import Any, Final, TypeAlias, TypeVar
 
 import voluptuous as vol
 
-from aiohomematic import validator as val
-from aiohomematic.const import IDENTIFIER_SEPARATOR
+from aiohomematic.const import CHANNEL_ADDRESS_PATTERN, DEVICE_ADDRESS_PATTERN, IDENTIFIER_SEPARATOR, ParamsetKey
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.interfaces import (
     CalculatedDataPointProtocol,
@@ -45,6 +44,77 @@ from .const import (
     EVENT_VALUE,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
+# Validator constants
+_CHANNEL_NO_MIN: Final = 0
+_CHANNEL_NO_MAX: Final = 255
+_WAIT_FOR_MIN: Final = 0
+_WAIT_FOR_MAX: Final = 120
+
+
+def validate_channel_no(value: Any) -> int:
+    """Validate and return channel number."""
+    try:
+        channel = int(value)
+    except (ValueError, TypeError) as err:
+        raise vol.Invalid(f"Channel number must be an integer, got {type(value).__name__}") from err
+
+    if not _CHANNEL_NO_MIN <= channel <= _CHANNEL_NO_MAX:
+        raise vol.Invalid(f"Channel number must be between {_CHANNEL_NO_MIN} and {_CHANNEL_NO_MAX}")
+
+    return channel
+
+
+def validate_wait_for(value: Any) -> int:
+    """Validate and return wait time in seconds."""
+    try:
+        wait_time = int(value)
+    except (ValueError, TypeError) as err:
+        raise vol.Invalid(f"Wait time must be a number, got {type(value).__name__}") from err
+
+    if not _WAIT_FOR_MIN <= wait_time <= _WAIT_FOR_MAX:
+        raise vol.Invalid(f"Wait time must be between {_WAIT_FOR_MIN} and {_WAIT_FOR_MAX} seconds")
+
+    return wait_time
+
+
+def validate_device_address(value: Any) -> str:
+    """Validate and return device address."""
+    if not isinstance(value, str):
+        raise vol.Invalid(f"Device address must be a string, got {type(value).__name__}")
+
+    if DEVICE_ADDRESS_PATTERN.match(value) is None:
+        raise vol.Invalid(f"Invalid device address format: {value}")
+
+    return value
+
+
+def validate_channel_address(value: Any) -> str:
+    """Validate and return channel address."""
+    if not isinstance(value, str):
+        raise vol.Invalid(f"Channel address must be a string, got {type(value).__name__}")
+
+    if CHANNEL_ADDRESS_PATTERN.match(value) is None:
+        raise vol.Invalid(f"Invalid channel address format: {value}")
+
+    return value
+
+
+def validate_paramset_key(value: Any) -> str:
+    """Validate and return paramset key."""
+    if isinstance(value, ParamsetKey):
+        return value.value
+
+    if not isinstance(value, str):
+        raise vol.Invalid(f"Paramset key must be a string, got {type(value).__name__}")
+
+    if value not in [pk.value for pk in ParamsetKey]:
+        raise vol.Invalid(f"Invalid paramset key: {value}. Must be one of: {[pk.value for pk in ParamsetKey]}")
+
+    return value
+
+
 # Union for entity types used as base class for data points
 HmBaseDataPointProtocol: TypeAlias = CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocolAny
 # Generic base type used for data points in Homematic(IP) Local for OpenCCU
@@ -58,8 +128,8 @@ BASE_EVENT_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(EVENT_DEVICE_ID): str,
         vol.Required(EVENT_NAME): str,
-        vol.Required(EVENT_ADDRESS): val.device_address,
-        vol.Required(EVENT_CHANNEL_NO): val.channel_no,
+        vol.Required(EVENT_ADDRESS): validate_device_address,
+        vol.Required(EVENT_CHANNEL_NO): validate_channel_no,
         vol.Required(EVENT_MODEL): str,
         vol.Required(EVENT_INTERFACE_ID): str,
         vol.Required(EVENT_PARAMETER): str,
@@ -95,8 +165,6 @@ DEVICE_ERROR_EVENT_SCHEMA = BASE_EVENT_DATA_SCHEMA.extend(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def handle_homematic_errors[**P, R](
@@ -160,10 +228,10 @@ def get_device_address_at_interface_from_identifiers(
         if IDENTIFIER_SEPARATOR in identifier[1]:
             parts = identifier[1].split(IDENTIFIER_SEPARATOR, 1)
             if len(parts) == 2:
-                device_address = parts[0]
+                dev_address = parts[0]
                 # Strip any sub-device group suffix (e.g., "-1") from interface_id
                 interface_id = re.sub(r"-\d+$", "", parts[1])
-                return (device_address, interface_id)
+                return dev_address, interface_id
     return None
 
 

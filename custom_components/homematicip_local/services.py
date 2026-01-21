@@ -13,7 +13,6 @@ from aiohomematic.const import ForcedDeviceAvailability, ParamsetKey
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.interfaces import DeviceProtocol
 from aiohomematic.support import get_device_address, to_bool
-import aiohomematic.validator as haval
 from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.components.cover.const import DOMAIN as COVER_DOMAIN
@@ -36,7 +35,14 @@ from homeassistant.helpers.service import (
 
 from .const import DOMAIN, HmipLocalServices
 from .control_unit import ControlUnit
-from .support import get_device_address_at_interface_from_identifiers
+from .support import (
+    get_device_address_at_interface_from_identifiers,
+    validate_channel_address,
+    validate_channel_no,
+    validate_device_address,
+    validate_paramset_key,
+    validate_wait_for,
+)
 
 if TYPE_CHECKING:
     from . import HomematicConfigEntry
@@ -115,14 +121,14 @@ DEFAULT_CHANNEL: Final = 1
 BASE_SCHEMA_DEVICE = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_ID): cv.string,
-        vol.Optional(CONF_DEVICE_ADDRESS): haval.device_address,
+        vol.Optional(CONF_DEVICE_ADDRESS): validate_device_address,
     }
 )
 
 SCHEMA_ADD_LINK = vol.All(
     {
-        vol.Required(CONF_RECEIVER_CHANNEL_ADDRESS): haval.channel_address,
-        vol.Required(CONF_SENDER_CHANNEL_ADDRESS): haval.channel_address,
+        vol.Required(CONF_RECEIVER_CHANNEL_ADDRESS): validate_channel_address,
+        vol.Required(CONF_SENDER_CHANNEL_ADDRESS): validate_channel_address,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_DESCRIPTION): cv.string,
     }
@@ -186,7 +192,7 @@ SCHEMA_RELOAD_CHANNEL_CONFIG = vol.All(
     cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
     BASE_SCHEMA_DEVICE.extend(
         {
-            vol.Optional(CONF_CHANNEL): haval.channel_no,
+            vol.Optional(CONF_CHANNEL): validate_channel_no,
         }
     ),
 )
@@ -196,7 +202,7 @@ SCHEMA_GET_DEVICE_VALUE = vol.All(
     cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
     BASE_SCHEMA_DEVICE.extend(
         {
-            vol.Required(CONF_CHANNEL, default=DEFAULT_CHANNEL): haval.channel_no,
+            vol.Required(CONF_CHANNEL, default=DEFAULT_CHANNEL): validate_channel_no,
             vol.Required(CONF_PARAMETER): vol.All(cv.string, vol.Upper),
         }
     ),
@@ -207,15 +213,15 @@ SCHEMA_GET_LINK_PEERS = vol.All(
     cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
     BASE_SCHEMA_DEVICE.extend(
         {
-            vol.Optional(CONF_CHANNEL): haval.channel_no,
+            vol.Optional(CONF_CHANNEL): validate_channel_no,
         }
     ),
 )
 
 SCHEMA_GET_LINK_PARAMSET = vol.All(
     {
-        vol.Optional(CONF_RECEIVER_CHANNEL_ADDRESS): haval.channel_address,
-        vol.Optional(CONF_SENDER_CHANNEL_ADDRESS): haval.channel_address,
+        vol.Optional(CONF_RECEIVER_CHANNEL_ADDRESS): validate_channel_address,
+        vol.Optional(CONF_SENDER_CHANNEL_ADDRESS): validate_channel_address,
     }
 )
 
@@ -224,8 +230,8 @@ SCHEMA_GET_PARAMSET = vol.All(
     cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
     BASE_SCHEMA_DEVICE.extend(
         {
-            vol.Optional(CONF_CHANNEL): haval.channel_no,
-            vol.Required(CONF_PARAMSET_KEY): vol.All(haval.paramset_key, vol.In(["MASTER", "VALUES"])),
+            vol.Optional(CONF_CHANNEL): validate_channel_no,
+            vol.Required(CONF_PARAMSET_KEY): vol.All(validate_paramset_key, vol.In(["MASTER", "VALUES"])),
         }
     ),
 )
@@ -258,8 +264,8 @@ SCHEMA_REMOVE_CENTRAL_LINKS = vol.All(
 
 SCHEMA_REMOVE_LINK = vol.All(
     {
-        vol.Required(CONF_RECEIVER_CHANNEL_ADDRESS): haval.channel_address,
-        vol.Required(CONF_SENDER_CHANNEL_ADDRESS): haval.channel_address,
+        vol.Required(CONF_RECEIVER_CHANNEL_ADDRESS): validate_channel_address,
+        vol.Required(CONF_SENDER_CHANNEL_ADDRESS): validate_channel_address,
     }
 )
 
@@ -276,10 +282,10 @@ SCHEMA_SET_DEVICE_VALUE = vol.All(
     cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
     BASE_SCHEMA_DEVICE.extend(
         {
-            vol.Required(CONF_CHANNEL, default=DEFAULT_CHANNEL): haval.channel_no,
+            vol.Required(CONF_CHANNEL, default=DEFAULT_CHANNEL): validate_channel_no,
             vol.Required(CONF_PARAMETER): vol.All(cv.string, vol.Upper),
             vol.Required(CONF_VALUE): cv.match_all,
-            vol.Optional(CONF_WAIT_FOR_CALLBACK): haval.wait_for,
+            vol.Optional(CONF_WAIT_FOR_CALLBACK): validate_wait_for,
             vol.Optional(CONF_VALUE_TYPE): vol.In(["boolean", "dateTime.iso8601", "double", "int", "string"]),
             vol.Optional(CONF_RX_MODE): vol.All(cv.string, vol.Upper),
         }
@@ -288,8 +294,8 @@ SCHEMA_SET_DEVICE_VALUE = vol.All(
 
 SCHEMA_PUT_LINK_PARAMSET = vol.All(
     {
-        vol.Optional(CONF_RECEIVER_CHANNEL_ADDRESS): haval.channel_address,
-        vol.Optional(CONF_SENDER_CHANNEL_ADDRESS): haval.channel_address,
+        vol.Optional(CONF_RECEIVER_CHANNEL_ADDRESS): validate_channel_address,
+        vol.Optional(CONF_SENDER_CHANNEL_ADDRESS): validate_channel_address,
         vol.Required(CONF_PARAMSET): dict,
         vol.Optional(CONF_RX_MODE): vol.All(cv.string, vol.Upper),
     }
@@ -300,10 +306,10 @@ SCHEMA_PUT_PARAMSET = vol.All(
     cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
     BASE_SCHEMA_DEVICE.extend(
         {
-            vol.Optional(CONF_CHANNEL): haval.channel_no,
-            vol.Required(CONF_PARAMSET_KEY): vol.All(haval.paramset_key, vol.In(["MASTER", "VALUES"])),
+            vol.Optional(CONF_CHANNEL): validate_channel_no,
+            vol.Required(CONF_PARAMSET_KEY): vol.All(validate_paramset_key, vol.In(["MASTER", "VALUES"])),
             vol.Required(CONF_PARAMSET): dict,
-            vol.Optional(CONF_WAIT_FOR_CALLBACK): haval.wait_for,
+            vol.Optional(CONF_WAIT_FOR_CALLBACK): validate_wait_for,
             vol.Optional(CONF_RX_MODE): vol.All(cv.string, vol.Upper),
         }
     ),

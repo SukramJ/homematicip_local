@@ -40,7 +40,8 @@
       "Bash(gh issue view:*)",
       "WebFetch(domain:objects.githubusercontent.com)",
       "Bash(curl:*)",
-      "WebFetch(domain:api.github.com)"
+      "WebFetch(domain:api.github.com)",
+      "Bash(pylint:*)"
     ],
     "deny": [],
     "ask": []
