@@ -1019,7 +1019,7 @@ async def _async_service_get_link_peers(*, hass: HomeAssistant, service: Service
     if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
         address = f"{hm_device.address}:{channel_no}" if channel_no is not None else hm_device.address
         try:
-            return cast(ServiceResponse, {address: await hm_device.client.get_link_peers(address=address)})
+            return cast(ServiceResponse, {address: await hm_device.client.get_link_peers(channel_address=address)})
         except BaseHomematicException as bhexc:
             raise HomeAssistantError(bhexc) from bhexc
     return None
@@ -1034,7 +1034,7 @@ async def _async_service_get_link_paramset(*, hass: HomeAssistant, service: Serv
         try:
             return dict(
                 await hm_device.client.get_paramset(
-                    address=receiver_channel_address,
+                    channel_address=receiver_channel_address,
                     paramset_key=sender_channel_address,
                     convert_from_pd=True,
                 )
@@ -1054,7 +1054,7 @@ async def _async_service_get_paramset(*, hass: HomeAssistant, service: ServiceCa
         try:
             return dict(
                 await hm_device.client.get_paramset(
-                    address=address,
+                    channel_address=address,
                     paramset_key=paramset_key,
                     convert_from_pd=True,
                 )

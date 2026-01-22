@@ -6,7 +6,7 @@ import contextlib
 from dataclasses import dataclass
 import logging
 import time
-from typing import TypeAlias
+from typing import Any, TypeAlias
 
 from awesomeversion import AwesomeVersion
 
@@ -15,6 +15,7 @@ from aiohomematic.const import (
     DEFAULT_ENABLE_SYSVAR_SCAN,
     DEFAULT_UN_IGNORES,
     IntegrationIssueType,
+    OptionalSettings,
     is_interface_default_port,
 )
 from aiohomematic.exceptions import AuthFailure
@@ -39,6 +40,7 @@ from .const import (
     CONF_ENABLE_SYSVAR_SCAN,
     CONF_INSTANCE_NAME,
     CONF_INTERFACE,
+    CONF_OPTIONAL_SETTINGS,
     CONF_SYS_SCAN_INTERVAL,
     CONF_UN_IGNORES,
     DEFAULT_AUTO_CONFIRM_NEW_DEVICES_TIMEOUT,
@@ -242,6 +244,39 @@ async def _async_migrate_event_entity_unique_ids(hass: HomeAssistant, entry: Hom
     await async_migrate_entries(hass, entry.entry_id, update_event_entity_unique_id)
 
 
+def _migrate_v11_extract_custom_ports(*, data: dict[str, Any]) -> dict[str, Any]:
+    """Extract custom (non-default) ports from v11 config entry data."""
+    custom_ports: dict[str, int] = {}
+    if interfaces := data.get(CONF_INTERFACE):
+        for interface_key, interface_config in interfaces.items():
+            if isinstance(interface_config, dict) and CONF_PORT in interface_config:
+                port = interface_config[CONF_PORT]
+                # Get interface name - could be enum or string key
+                interface_name = interface_key.value if hasattr(interface_key, "value") else str(interface_key)
+                # Check if port is non-default (custom)
+                if not is_interface_default_port(interface=interface_name, port=port):
+                    custom_ports[interface_name] = port
+    # Only add CONF_CUSTOM_PORTS if there are custom ports
+    if custom_ports:
+        data[CONF_CUSTOM_PORTS] = custom_ports
+    return data
+
+
+def _migrate_v14_remove_deprecated_optional_settings(*, data: dict[str, Any]) -> dict[str, Any]:
+    """Remove deprecated OptionalSettings values from v14 config entry data."""
+    # Remove deprecated OptionalSettings values that were removed in aiohomematic 2026.1.44
+    # - ENABLE_LINKED_ENTITY_CLIMATE_ACTIVITY (now always enabled)
+    # - USE_INTERFACE_CLIENT (legacy client removed)
+    if CONF_ADVANCED_CONFIG in data and CONF_OPTIONAL_SETTINGS in data[CONF_ADVANCED_CONFIG]:
+        valid_settings = {str(s) for s in OptionalSettings}
+        current_settings = data[CONF_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS]
+        filtered_settings = [s for s in current_settings if s in valid_settings]
+        if filtered_settings != current_settings:
+            data[CONF_ADVANCED_CONFIG] = dict(data[CONF_ADVANCED_CONFIG])
+            data[CONF_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] = filtered_settings
+    return data
+
+
 async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
@@ -333,21 +368,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
                 del data[CONF_ADVANCED_CONFIG]["delay_new_device_creation"]
         hass.config_entries.async_update_entry(entry, version=11, data=data)
     if entry.version == 11:
-        data = dict(entry.data)
-        # Extract custom (non-default) ports to CONF_CUSTOM_PORTS
-        custom_ports: dict[str, int] = {}
-        if interfaces := data.get(CONF_INTERFACE):
-            for interface_key, interface_config in interfaces.items():
-                if isinstance(interface_config, dict) and CONF_PORT in interface_config:
-                    port = interface_config[CONF_PORT]
-                    # Get interface name - could be enum or string key
-                    interface_name = interface_key.value if hasattr(interface_key, "value") else str(interface_key)
-                    # Check if port is non-default (custom)
-                    if not is_interface_default_port(interface=interface_name, port=port):
-                        custom_ports[interface_name] = port
-        # Only add CONF_CUSTOM_PORTS if there are custom ports
-        if custom_ports:
-            data[CONF_CUSTOM_PORTS] = custom_ports
+        data = _migrate_v11_extract_custom_ports(data=dict(entry.data))
         hass.config_entries.async_update_entry(entry, version=12, data=data)
     if entry.version == 12:
         data = dict(entry.data)
@@ -360,5 +381,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
         # Migrate event entity unique_ids from channel-based to event_group-based format
         await _async_migrate_event_entity_unique_ids(hass=hass, entry=entry)
         hass.config_entries.async_update_entry(entry, version=14)
+    if entry.version == 14:
+        data = _migrate_v14_remove_deprecated_optional_settings(data=dict(entry.data))
+        hass.config_entries.async_update_entry(entry, version=15, data=data)
     _LOGGER.info("Migration to version %s successful", entry.version)
     return True

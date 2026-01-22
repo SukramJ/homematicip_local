@@ -1,4 +1,4 @@
-# Version [2.1.3](https://github.com/SukramJ/homematicip_local/compare/2.1.2...2.1.3) (2026-01-21)
+# Version [2.1.3](https://github.com/SukramJ/homematicip_local/compare/2.1.2...2.1.3) (2026-01-22)
 
 ## What's Changed
 
@@ -12,9 +12,10 @@
 - **Remove Unused UpdateEntityDescription Defaults**: Removed `UpdateEntityDescription` entries for `UPDATE` and `HUB_UPDATE` from `defaults.py` since Update entities don't use the generic entity helper system. The `device_class` is now set directly on the entity classes.
 - **Migrate Event Platform to ChannelEventGroup**: Migrated the event platform from individual `GenericEvent` subscriptions to the new `ChannelEventGroupProtocol` pattern. Event groups are now virtual data points bound to channels, providing unified subscription management via `subscribe_to_data_point_updated()`. This simplifies subscription handling (single subscription per entity instead of one per event type) and aligns with the standard `CallbackDataPointProtocol` pattern.
 - **Config Entry Migration v14**: Added entity registry migration for event entities to update unique_ids from the old channel-based format (`homematicip_local_{channel_unique_id}`) to the new event_group-based format (`homematicip_local_event_group_homematic.keypress_{channel_unique_id}`). This ensures existing event entities are preserved when upgrading from version 2.1.2.
+- **Config Entry Migration v15**: Added migration to remove deprecated `OptionalSettings` values from config entry data. Removes `ENABLE_LINKED_ENTITY_CLIMATE_ACTIVITY` (now always enabled) and `USE_INTERFACE_CLIENT` (legacy client removed) that were removed in aiohomematic 2026.1.44.
 - **Local Validators**: Implemented local voluptuous validators (`validate_channel_no`, `validate_wait_for`, `validate_device_address`, `validate_channel_address`, `validate_paramset_key`) in `support.py` to replace validators removed from aiohomematic after its migration to Pydantic.
 
-## Bump aiohomematic to [2026.1.43](https://github.com/SukramJ/aiohomematic/compare/2026.1.38...2026.1.43)
+## Bump aiohomematic to [2026.1.44](https://github.com/SukramJ/aiohomematic/compare/2026.1.38...2026.1.44)
 
 ### New Features
 
@@ -22,11 +23,15 @@
 - **translation_key for Data Points**: All data point types now provide a consistent `translation_key` property for translations. This includes hub sensors, metrics sensors, inbox, install mode, device/system updates, and calculated data points.
 - **Startup Resilience for Authentication Errors**: Added a 3-stage validation approach for improved startup reliability: TCP pre-flight check validates port availability, client creation & RPC validation verifies backend communication, and retry with exponential backoff handles transient errors before failing. New `TimeoutConfig` parameters: `startup_max_init_attempts` (default: 5), `startup_init_retry_delay` (default: 3s), and `startup_max_init_retry_delay` (default: 30s).
 - **Device Availability Events for Forced Availability**: The `force_device_availability` method now fires `DeviceLifecycleEventType.AVAILABILITY_CHANGED` events, ensuring the integration receives proper notifications when device availability is manually changed.
+- **SensorValueMixin**: New mixin class consolidating duplicated value transformation logic between `DpSensor` (generic) and `SysvarDpSensor` (hub). Provides standardized handling for value list lookup, converter functions, and string length validation.
 
 ### Changed
 
 - **ChannelEventGroup as Virtual Data Point**: Refactored `ChannelEventGroup` from a helper class to a virtual data point bound to the Channel. Event groups now extend `CallbackDataPoint` and follow the standard subscription pattern with `subscribe_to_data_point_updated()`. See migration guide: `docs/migrations/channel_event_group_migration_2026_01.md`.
 - **Replace Voluptuous with Pydantic**: Migrated all validation from voluptuous to Pydantic for improved type safety and validation. Address validation patterns (`DEVICE_ADDRESS_PATTERN`, `CHANNEL_ADDRESS_PATTERN`) remain available as compiled regex patterns in `aiohomematic.const`.
+- **Async RPC Server is Now Standard**: The async XML-RPC server (using aiohttp) is now the only RPC server implementation. The legacy thread-based XML-RPC server has been removed along with `OptionalSettings.ASYNC_RPC_SERVER`.
+- **InterfaceClient is Now Standard**: The legacy client implementations (`ClientCCU`, `ClientJsonCCU`, `ClientHomegear`) and handler classes have been removed. `InterfaceClient` with the Backend Strategy Pattern is now the only implementation. `OptionalSettings.USE_INTERFACE_CLIENT` has been removed.
+- **Linked Entity Climate Activity Always Enabled**: The `OptionalSettings.ENABLE_LINKED_ENTITY_CLIMATE_ACTIVITY` feature flag has been removed - linked entity climate activity is now always enabled.
 
 ### Bug Fixes
 

@@ -41,7 +41,9 @@
       "WebFetch(domain:objects.githubusercontent.com)",
       "Bash(curl:*)",
       "WebFetch(domain:api.github.com)",
-      "Bash(pylint:*)"
+      "Bash(pylint:*)",
+      "Bash(gh api:*)",
+      "Bash(prek run:*)"
     ],
     "deny": [],
     "ask": []
