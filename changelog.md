@@ -1,4 +1,4 @@
-# Version [2.1.3](https://github.com/SukramJ/homematicip_local/compare/2.1.2...2.1.3) (2026-01-22)
+# Version [2.2.0](https://github.com/SukramJ/homematicip_local/compare/2.1.2...2.2.0) (2026-01-23)
 
 ## What's Changed
 
@@ -15,10 +15,13 @@
 - **Config Entry Migration v15**: Added migration to remove deprecated `OptionalSettings` values from config entry data. Removes `ENABLE_LINKED_ENTITY_CLIMATE_ACTIVITY` (now always enabled) and `USE_INTERFACE_CLIENT` (legacy client removed) that were removed in aiohomematic 2026.1.44.
 - **Local Validators**: Implemented local voluptuous validators (`validate_channel_no`, `validate_wait_for`, `validate_device_address`, `validate_channel_address`, `validate_paramset_key`) in `support.py` to replace validators removed from aiohomematic after its migration to Pydantic.
 
-## Bump aiohomematic to [2026.1.44](https://github.com/SukramJ/aiohomematic/compare/2026.1.38...2026.1.44)
+## Bump aiohomematic to [2026.1.45](https://github.com/SukramJ/aiohomematic/compare/2026.1.38...2026.1.45)
 
 ### New Features
 
+- **Free-Threaded Python Support**: Added compatibility with Python 3.14 free-threaded builds (no GIL) through a new compatibility module. Includes detection functions and a conditional JSON backend that automatically selects orjson on standard builds while falling back to stdlib json on free-threaded versions.
+- **CentralRegistry for Thread-Safe Instance Management**: New thread-safe registry replaces the previous module-level dictionary for managing CentralUnit instances, employing a copy-on-read pattern safe for both GIL-enabled and free-threaded Python environments.
+- **orjson Now Optional**: orjson is no longer a required dependency. Install via `pip install aiohomematic[fast]` for enhanced JSON serialization on standard Python builds. All JSON operations now use a compatibility module that automatically selects the best available backend.
 - **Paramset Description Patching System**: Added a generic mechanism to correct faulty `paramset_descriptions` from the CCU. The system applies device-specific corrections during data ingestion using declarative patch definitions. Initial patch corrects HM-CC-VG-1 channel 1 `SET_TEMPERATURE` MIN/MAX values (4.5/30.5) instead of the incorrect CCU-provided values.
 - **translation_key for Data Points**: All data point types now provide a consistent `translation_key` property for translations. This includes hub sensors, metrics sensors, inbox, install mode, device/system updates, and calculated data points.
 - **Startup Resilience for Authentication Errors**: Added a 3-stage validation approach for improved startup reliability: TCP pre-flight check validates port availability, client creation & RPC validation verifies backend communication, and retry with exponential backoff handles transient errors before failing. New `TimeoutConfig` parameters: `startup_max_init_attempts` (default: 5), `startup_init_retry_delay` (default: 3s), and `startup_max_init_retry_delay` (default: 30s).
