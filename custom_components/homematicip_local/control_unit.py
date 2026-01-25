@@ -46,6 +46,7 @@ from aiohomematic.const import (
     OptionalSettings,
     ScheduleTimerConfig,
     SystemInformation,
+    get_interface_default_port,
 )
 from aiohomematic.exceptions import AuthFailure, BaseHomematicException
 from aiohomematic.model.data_point import CallbackDataPoint
@@ -999,11 +1000,19 @@ class ControlConfig:
         interface_configs: set[InterfaceConfig] = set()
         for interface_name in self._interface_config:
             interface = self._interface_config[interface_name]
+            interface_type = Interface(interface_name)
+            # Use configured port, fall back to default port, or 0 for JSON-RPC-only interfaces
+            if (configured_port := interface.get(CONF_PORT)) is not None:
+                port = configured_port
+            elif (default_port := get_interface_default_port(interface=interface_type, tls=self._tls)) is not None:
+                port = default_port
+            else:
+                port = 0  # JSON-RPC-only interfaces (CUxD, CCU-Jack)
             interface_configs.add(
                 InterfaceConfig(
                     central_name=self.instance_name,
-                    interface=Interface(interface_name),
-                    port=interface.get(CONF_PORT),
+                    interface=interface_type,
+                    port=port,
                     remote_path=interface.get(CONF_PATH),
                 )
             )

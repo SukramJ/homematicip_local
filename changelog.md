@@ -2,6 +2,10 @@
 
 ## What's Changed
 
+### Bug Fixes
+
+- **Fix Interface Port Resolution**: Interface ports are now correctly resolved using aiohomematic's default port mapping when no port is explicitly configured. Previously, unconfigured ports were passed as `None`, which could cause connection issues. The fix uses the configured port if available, falls back to the interface's default port, or uses port 0 for JSON-RPC-only interfaces (CUxD, CCU-Jack).
+
 ## Bump aiohomematic to [2026.1.49](https://github.com/SukramJ/aiohomematic/compare/2026.1.48...2026.1.49)
 
 ### Bug Fixes
