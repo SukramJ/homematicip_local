@@ -4,16 +4,20 @@
 
 ### Bug Fixes
 
-- **Fix Interface Port Resolution**: Interface ports are now correctly resolved using aiohomematic's default port mapping when no port is explicitly configured. Previously, unconfigured ports were passed as `None`, which could cause connection issues. The fix uses the configured port if available, falls back to the interface's default port, or uses port 0 for JSON-RPC-only interfaces (CUxD, CCU-Jack).
+- **Fix Interface Port Resolution**: Interface ports are now correctly resolved using aiohomematic's default port mapping when no port is explicitly configured. JSON-RPC-only interfaces (CUxD, CCU-Jack) now correctly pass `None` instead of a port number, as they don't use XML-RPC ports.
 
-## Bump aiohomematic to [2026.1.49](https://github.com/SukramJ/aiohomematic/compare/2026.1.48...2026.1.49)
+## Bump aiohomematic to [2026.1.50](https://github.com/SukramJ/aiohomematic/compare/2026.1.48...2026.1.50)
+
+### Changed
+
+- **Port Handling Refactoring for JSON-RPC Interfaces**: `InterfaceConfig.port` changed from `int` to `int | None` for cleaner semantics. JSON-RPC-only interfaces (CUxD, CCU-Jack) now properly use `None` instead of the workaround value `0`. This provides improved type safety and eliminates validation workarounds throughout the codebase.
 
 ### Bug Fixes
 
 - **Fix Hub Data Not Refreshing After Reconnection**: Hub data (System Update, Programs, Sysvars) is now refreshed after successful reconnection. Previously, stale information persisted—for example, "Update available" would display even after the CCU completed firmware updates during disconnection.
 - **Fix Client Recovery for Secondary Interfaces**: Recovery for CUxD and CCU-Jack clients now succeeds when other clients already exist. The issue stemmed from attempting to create all clients simultaneously; the fix creates the specific failing interface client directly instead of recreating all clients.
 - **Fix Clients Stuck in INITIALIZED State**: Clients stuck in `INITIALIZED` state (initialized but never connected) can now recover. The state machine now permits `INITIALIZED → DISCONNECTED` transitions, enabling proper state reset for reconnection attempts.
-- **Fix JSON-RPC Port Handling**: TCP pre-flight checks now skip port 0 (used by JSON-RPC-only interfaces). CUxD and CCU-Jack rely on JSON-RPC via central ports (443/80) rather than individual XML-RPC ports. Additionally, a new JSON-RPC port pre-flight check verifies service availability before client creation.
+- **Fix JSON-RPC Port Handling**: TCP pre-flight checks now correctly skip interfaces with `None` port. CUxD and CCU-Jack rely on JSON-RPC via central ports (443/80) rather than individual XML-RPC ports. A new JSON-RPC port pre-flight check verifies service availability before client creation.
 
 # Version [2.2.1](https://github.com/SukramJ/homematicip_local/compare/2.2.0...2.2.1) (2026-01-25)
 

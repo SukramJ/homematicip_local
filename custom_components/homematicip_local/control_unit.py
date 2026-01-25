@@ -1001,13 +1001,12 @@ class ControlConfig:
         for interface_name in self._interface_config:
             interface = self._interface_config[interface_name]
             interface_type = Interface(interface_name)
-            # Use configured port, fall back to default port, or 0 for JSON-RPC-only interfaces
+            # Use configured port, fall back to default port
+            # JSON-RPC-only interfaces (CUxD, CCU-Jack) don't have an XML-RPC port
             if (configured_port := interface.get(CONF_PORT)) is not None:
-                port = configured_port
-            elif (default_port := get_interface_default_port(interface=interface_type, tls=self._tls)) is not None:
-                port = default_port
+                port: int | None = configured_port
             else:
-                port = 0  # JSON-RPC-only interfaces (CUxD, CCU-Jack)
+                port = get_interface_default_port(interface=interface_type, tls=self._tls)
             interface_configs.add(
                 InterfaceConfig(
                     central_name=self.instance_name,
