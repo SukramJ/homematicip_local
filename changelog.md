@@ -1,3 +1,16 @@
+# Version [2.2.2](https://github.com/SukramJ/homematicip_local/compare/2.2.1...2.2.2) (2026-01-25)
+
+## What's Changed
+
+## Bump aiohomematic to [2026.1.49](https://github.com/SukramJ/aiohomematic/compare/2026.1.48...2026.1.49)
+
+### Bug Fixes
+
+- **Fix Hub Data Not Refreshing After Reconnection**: Hub data (System Update, Programs, Sysvars) is now refreshed after successful reconnection. Previously, stale information persisted—for example, "Update available" would display even after the CCU completed firmware updates during disconnection.
+- **Fix Client Recovery for Secondary Interfaces**: Recovery for CUxD and CCU-Jack clients now succeeds when other clients already exist. The issue stemmed from attempting to create all clients simultaneously; the fix creates the specific failing interface client directly instead of recreating all clients.
+- **Fix Clients Stuck in INITIALIZED State**: Clients stuck in `INITIALIZED` state (initialized but never connected) can now recover. The state machine now permits `INITIALIZED → DISCONNECTED` transitions, enabling proper state reset for reconnection attempts.
+- **Fix JSON-RPC Port Handling**: TCP pre-flight checks now skip port 0 (used by JSON-RPC-only interfaces). CUxD and CCU-Jack rely on JSON-RPC via central ports (443/80) rather than individual XML-RPC ports. Additionally, a new JSON-RPC port pre-flight check verifies service availability before client creation.
+
 # Version [2.2.1](https://github.com/SukramJ/homematicip_local/compare/2.2.0...2.2.1) (2026-01-25)
 
 ## What's Changed
