@@ -2,6 +2,10 @@
 
 ## What's Changed
 
+### Breaking Changes
+
+- **System Update Entity Removed for HA-Addon**: The System Update entity is no longer created for Home Assistant Add-on deployments. Users with existing orphaned entities from previous versions can manually delete them via Home Assistant's entity management.
+
 ### Bug Fixes
 
 - **Fix Translation Error When Skipping Backend Detection**: Fixed "The intl string context variable 'detected_interfaces' was not provided" error when using the "Skip automatic backend detection" option in the config flow. The interface step now provides a default placeholder value when detection results are not available.
@@ -15,10 +19,12 @@
 - **Config Entry Migration v15**: Added migration to remove deprecated `OptionalSettings` values from config entry data. Removes `ENABLE_LINKED_ENTITY_CLIMATE_ACTIVITY` (now always enabled) and `USE_INTERFACE_CLIENT` (legacy client removed) that were removed in aiohomematic 2026.1.44.
 - **Local Validators**: Implemented local voluptuous validators (`validate_channel_no`, `validate_wait_for`, `validate_device_address`, `validate_channel_address`, `validate_paramset_key`) in `support.py` to replace validators removed from aiohomematic after its migration to Pydantic.
 
-## Bump aiohomematic to [2026.1.45](https://github.com/SukramJ/aiohomematic/compare/2026.1.38...2026.1.45)
+## Bump aiohomematic to [2026.1.46](https://github.com/SukramJ/aiohomematic/compare/2026.1.38...2026.1.46)
 
 ### New Features
 
+- **HA-Addon Detection**: Automatically detects when running as a Home Assistant Add-on by checking for `HM_RUNNING_IN_HA` or `SUPERVISOR_TOKEN` environment variables. A new `is_ha_addon` field in `SystemInformation` indicates the backend's execution context.
+- **System Update Handling for HA-Addons**: The `has_system_update` property now returns `False` when operating as an HA-Addon, preventing unnecessary system update entities from being created. The `firmware_update_trigger` capability is similarly disabled, since the HA Supervisor manages all updates within that environment.
 - **Free-Threaded Python Support**: Added compatibility with Python 3.14 free-threaded builds (no GIL) through a new compatibility module. Includes detection functions and a conditional JSON backend that automatically selects orjson on standard builds while falling back to stdlib json on free-threaded versions.
 - **CentralRegistry for Thread-Safe Instance Management**: New thread-safe registry replaces the previous module-level dictionary for managing CentralUnit instances, employing a copy-on-read pattern safe for both GIL-enabled and free-threaded Python environments.
 - **orjson Now Optional**: orjson is no longer a required dependency. Install via `pip install aiohomematic[fast]` for enhanced JSON serialization on standard Python builds. All JSON operations now use a compatibility module that automatically selects the best available backend.
