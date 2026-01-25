@@ -1,3 +1,14 @@
+# Version [2.2.1](https://github.com/SukramJ/homematicip_local/compare/2.2.0...2.2.1) (2026-01-25)
+
+## What's Changed
+
+## Bump aiohomematic to [2026.1.48](https://github.com/SukramJ/aiohomematic/compare/2026.1.46...2026.1.48)
+
+### Bug Fixes
+
+- **Fix XML-RPC Authentication Headers Not Sent with TLS**: Fixed a critical bug where HTTP Basic Authentication headers were not being sent when TLS was enabled. This caused all XML-RPC calls to fail with `ProtocolError: Unauthorized` when CCU authentication was enabled. The fix passes authentication headers directly to the transport classes.
+- **Fix Authentication Check Fails for Non-Admin Users**: Fixed a regression introduced in 2026.1.41 where users without ADMIN rights on the CCU would fail to connect. When `CCU.getAuthEnabled` returns "access denied (ADMIN needed 2)", this proves authentication is enabled (otherwise no permission check would occur). The method now correctly returns `True` instead of propagating the exception.
+
 # Version [2.2.0](https://github.com/SukramJ/homematicip_local/compare/2.1.2...2.2.0) (2026-01-23)
 
 ## What's Changed
