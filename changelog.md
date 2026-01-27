@@ -1,3 +1,23 @@
+# Version [2.2.3](https://github.com/SukramJ/homematicip_local/compare/2.2.2...2.2.3) (2026-01-27)
+
+## What's Changed
+
+## Bump aiohomematic to [2026.1.51](https://github.com/SukramJ/aiohomematic/compare/2026.1.50...2026.1.51)
+
+### New Features
+
+- **Contract Tests for Regression Prevention**: Added extensive contract testing infrastructure with 500+ tests specifically designed to prevent regressions during AI-assisted refactoring. Coverage includes backend capabilities, state machines, connection recovery, event systems, lifecycle methods, enums, configuration classes, exception hierarchies, protocol interfaces, hub entities, subscription APIs, and device/channel protocols.
+
+### Changed
+
+- **Pydantic Model Conversions**: Multiple configuration classes migrated to Pydantic `BaseModel` with frozen immutability including `TimeoutConfig`, `InterfaceConfig`, `CentralConfig`, `DeviceConfig`, `ProfileConfig`, and `BackendCapabilities`.
+- **Type Safety Improvements**: Added `@unique` decorator to 70+ enum classes to prevent accidental duplicate values, `@override` decorator to explicitly mark overridden methods, and `Final` annotations to key constants.
+
+### Bug Fixes
+
+- **Fix Client Reconnection from INITIALIZED State**: Fixed an issue where clients stuck in INITIALIZED state couldn't be reconnected. The state machine now permits `INITIALIZED → DISCONNECTED` transitions enabling recovery.
+- **Fix JSON Parsing Control Characters**: Fixed `JSONDecodeError` by sanitizing JSON-RPC responses, escaping control characters (U+0000 to U+001F) to proper `\uXXXX` sequences.
+
 # Version [2.2.2](https://github.com/SukramJ/homematicip_local/compare/2.2.1...2.2.2) (2026-01-25)
 
 ## What's Changed
