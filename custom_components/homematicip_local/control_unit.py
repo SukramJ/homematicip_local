@@ -1029,7 +1029,7 @@ class ControlConfig:
             listen_ip_addr=IP_ANY_V4 if self._listen_on_all_ip else None,
             default_callback_port_xml_rpc=self._default_callback_port_xml_rpc,
             host=self._host,
-            interface_configs=interface_configs,
+            interface_configs=frozenset(interface_configs),
             interfaces_requiring_periodic_refresh=frozenset(
                 () if self.enable_mqtt else DEFAULT_INTERFACES_REQUIRING_PERIODIC_REFRESH
             ),
@@ -1037,7 +1037,7 @@ class ControlConfig:
             locale=self.hass.config.language,
             max_read_workers=1,
             name=self.instance_name,
-            optional_settings=self._optional_settings,
+            optional_settings=frozenset(self._optional_settings),
             password=self._password,
             program_markers=self._program_markers,
             schedule_timer_config=ScheduleTimerConfig(sys_scan_interval=self._sys_scan_interval),
