@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import BaseCustomDpLock, LockState
@@ -68,11 +68,13 @@ class AioHomematicLock(AioHomematicGenericRestoreEntity[BaseCustomDpLock], LockE
             self._attr_supported_features = LockEntityFeature.OPEN
 
     @property
+    @override
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
         return self._data_point.is_jammed is True
 
     @property
+    @override
     def is_locked(self) -> bool | None:
         """Return true if lock is on."""
         if self._data_point.is_valid:
@@ -90,25 +92,30 @@ class AioHomematicLock(AioHomematicGenericRestoreEntity[BaseCustomDpLock], LockE
         return None
 
     @property
+    @override
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         return self._data_point.is_locking
 
     @property
+    @override
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         return self._data_point.is_unlocking
 
+    @override
     @handle_homematic_errors
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self._data_point.lock()
 
+    @override
     @handle_homematic_errors
     async def async_open(self, **kwargs: Any) -> None:
         """Open the lock."""
         await self._data_point.open()
 
+    @override
     @handle_homematic_errors
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""

@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohomematic.const import DEFAULT_MULTIPLIER, DataPointCategory, HubValueType, ParameterType
 from aiohomematic.model.generic import DpSensor
@@ -109,6 +109,7 @@ class AioHomematicSensor(AioHomematicGenericEntity[DpSensor[Any]], RestoreSensor
             self._attr_options = [item.lower() for item in data_point.values] if data_point.values else None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         attributes = super().extra_state_attributes
@@ -120,25 +121,26 @@ class AioHomematicSensor(AioHomematicGenericEntity[DpSensor[Any]], RestoreSensor
     @property
     def is_restored(self) -> bool:
         """Return if the state is restored."""
-        return not self._data_point.is_valid and self._restored_native_value is not None
+        return (
+            not self._data_point.is_valid or self._data_point.value is None
+        ) and self._restored_native_value is not None
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the native value of the entity."""
-        if self._data_point.is_valid:
+        if self._data_point.is_valid and self._data_point.value is not None:
             if (
-                self._data_point.value is not None
-                and self._data_point.hmtype in (ParameterType.FLOAT, ParameterType.INTEGER)
+                self._data_point.hmtype in (ParameterType.FLOAT, ParameterType.INTEGER)
                 and self._multiplier != DEFAULT_MULTIPLIER
             ):
                 new_value = self._data_point.value * self._multiplier
                 return int(new_value) if self._data_point.hmtype == ParameterType.INTEGER else new_value
             # Strings and enums with custom device class must be lowercase
             # to be translatable.
-            if (
-                self._data_point.value is not None
-                and self.translation_key is not None
-                and self._data_point.hmtype in (ParameterType.ENUM, ParameterType.STRING)
+            if self.translation_key is not None and self._data_point.hmtype in (
+                ParameterType.ENUM,
+                ParameterType.STRING,
             ):
                 return cast(StateType | date | datetime | Decimal, self._data_point.value.lower())
             return cast(StateType | date | datetime | Decimal, self._data_point.value)
@@ -146,10 +148,12 @@ class AioHomematicSensor(AioHomematicGenericEntity[DpSensor[Any]], RestoreSensor
             return cast(StateType | date | datetime | Decimal, self._restored_native_value)
         return None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Check, if state needs to be restored."""
         await super().async_added_to_hass()
-        if not self._data_point.is_valid and (restored_sensor_data := await self.async_get_last_sensor_data()):
+        should_restore = not self._data_point.is_valid or self._data_point.value is None
+        if should_restore and (restored_sensor_data := await self.async_get_last_sensor_data()):
             self._restored_native_value = restored_sensor_data.native_value
 
 
@@ -176,6 +180,7 @@ class AioHomematicSysvarSensor(AioHomematicGenericSysvarEntity[SysvarDpSensor], 
                     self._attr_native_unit_of_measurement = unit
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the native value of the entity."""
         return self._data_point.value  # type: ignore[no-any-return]

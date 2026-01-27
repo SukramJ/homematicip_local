@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import CustomDpIpIrrigationValve
@@ -63,6 +63,7 @@ class AioHomematicValve(AioHomematicGenericRestoreEntity[CustomDpIpIrrigationVal
     """Representation of the HomematicIP valve entity."""
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         attributes = super().extra_state_attributes
@@ -73,6 +74,7 @@ class AioHomematicValve(AioHomematicGenericRestoreEntity[CustomDpIpIrrigationVal
         return attributes
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the valve is closed or not."""
         if self._data_point.is_valid:
@@ -90,20 +92,24 @@ class AioHomematicValve(AioHomematicGenericRestoreEntity[CustomDpIpIrrigationVal
         return None
 
     @property
+    @override
     def reports_position(self) -> bool:
         """Return True if entity reports position, False otherwise."""
         return False
 
     @property
+    @override
     def supported_features(self) -> ValveEntityFeature:
         """Return the list of supported features."""
         return ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
 
+    @override
     @handle_homematic_errors
     async def async_close_valve(self) -> None:
         """Close the valve."""
         await self._data_point.close()
 
+    @override
     @handle_homematic_errors
     async def async_open_valve(self) -> None:
         """Open the valve."""

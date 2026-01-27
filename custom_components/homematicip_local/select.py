@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.generic import DpActionSelect, DpSelect
@@ -168,6 +168,7 @@ class AioHomematicSelect(AioHomematicGenericRestoreEntity[DpSelect], SelectEntit
     """Representation of the HomematicIP select entity."""
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the currently selected option."""
         if self._data_point.is_valid:
@@ -186,12 +187,14 @@ class AioHomematicSelect(AioHomematicGenericRestoreEntity[DpSelect], SelectEntit
         return None
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the options."""
         if options := self._data_point.values:
             return [option.lower() for option in options]
         return []
 
+    @override
     @handle_homematic_errors
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
@@ -202,17 +205,20 @@ class AioHomematicSysvarSelect(AioHomematicGenericSysvarEntity[SysvarDpSelect], 
     """Representation of the HomematicIP hub select entity."""
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the currently selected option."""
         return self._data_point.value  # type: ignore[no-any-return]
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the options."""
         if options := self._data_point.values:
             return list(options)
         return []
 
+    @override
     @handle_homematic_errors
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
@@ -239,6 +245,7 @@ class AioHomematicActionSelect(AioHomematicGenericRestoreEntity[DpActionSelect],
         self._store = store
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the currently selected option."""
         # Priority: 1. aiohomematic value, 2. restored state, 3. default
@@ -259,18 +266,21 @@ class AioHomematicActionSelect(AioHomematicGenericRestoreEntity[DpActionSelect],
         return None
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the available options from values."""
         if values := self._data_point.values:
             return [option.lower() for option in values]
         return []
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to hass."""
         await super().async_added_to_hass()
         # Load persisted value from storage file
         self._load_persisted_value()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """
         Select an option (store locally in DP, don't send to device).

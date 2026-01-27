@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, Final, Generic
+from typing import Any, Final, Generic, override
 
 from aiohomematic.const import CallSource, DataPointUsage
 from aiohomematic.interfaces import (
@@ -150,6 +150,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         return hm_device.name
 
     @property
+    @override
     def available(self) -> bool:
         """Return if data point is available."""
         return self._data_point.available
@@ -160,6 +161,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         return self._data_point
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         attributes: dict[str, Any] = {}
@@ -186,6 +188,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         return attributes
 
     @property
+    @override
     def name(self) -> str | UndefinedType | None:
         """
         Return the name of the entity.
@@ -229,6 +232,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         return entity_name
 
     @property
+    @override
     def use_device_name(self) -> bool:
         """
         Return if this entity does not have its own name.
@@ -237,6 +241,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         """
         return not self.name
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
         if isinstance(self._data_point, CallbackDataPointProtocol):
@@ -270,6 +275,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         ):
             await self._data_point.load_data_point_value(call_source=CallSource.MANUAL_OR_SCHEDULED)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
         # Remove callback from device.
@@ -346,6 +352,7 @@ class AioHomematicGenericRestoreEntity(AioHomematicGenericEntity[HmGenericDataPo
     _restored_state: State | None = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         attributes = super().extra_state_attributes
@@ -362,6 +369,7 @@ class AioHomematicGenericRestoreEntity(AioHomematicGenericEntity[HmGenericDataPo
             and self._restored_state.state is not None
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Check, if state needs to be restored."""
         await super().async_added_to_hass()
@@ -408,11 +416,13 @@ class AioHomematicGenericHubEntity(Entity):
         _LOGGER.debug("init sysvar: Setting up %s", self._data_point.name)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self._data_point.available
 
     @property
+    @override
     def name(self) -> str | UndefinedType | None:
         """
         Return the name of the entity.
@@ -444,6 +454,7 @@ class AioHomematicGenericHubEntity(Entity):
             return None
         return entity_name.replace("_", " ")
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
         if isinstance(self._data_point, CallbackDataPointProtocol):
@@ -457,6 +468,7 @@ class AioHomematicGenericHubEntity(Entity):
                 self._data_point.subscribe_to_device_removed(handler=self._async_hub_device_removed)
             )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip sysvar entity will be removed from hass."""
         # Remove callbacks.
@@ -520,6 +532,7 @@ class AioHomematicGenericProgramEntity(AioHomematicGenericHubEntity, Generic[HmG
         }
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         attributes: dict[str, Any] = {}
@@ -553,6 +566,7 @@ class AioHomematicGenericSysvarEntity(AioHomematicGenericHubEntity, Generic[HmGe
         }
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         attributes: dict[str, Any] = {}

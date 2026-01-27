@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohomematic.const import CCUType, DataPointCategory
 from aiohomematic.exceptions import BaseHomematicException
@@ -112,30 +112,36 @@ class AioHomematicUpdate(UpdateEntity):
         _LOGGER.debug("init: Setting up %s", data_point.full_name)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if data point is available."""
         return self._data_point.available
 
     @property
+    @override
     def in_progress(self) -> bool | None:
         """Update installation progress."""
         return self._data_point.in_progress
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version installed and in use."""
         return self._data_point.firmware
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self._data_point.latest_firmware
 
     @property
+    @override
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
         return self._data_point.name
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
         self._unsubscribe_callbacks.append(
@@ -147,6 +153,7 @@ class AioHomematicUpdate(UpdateEntity):
             self._data_point.subscribe_to_device_removed(handler=self._async_device_removed)
         )
 
+    @override
     async def async_install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
         """Install an update."""
         await self._data_point.update_firmware(refresh_after_update_intervals=(10, 60))
@@ -155,6 +162,7 @@ class AioHomematicUpdate(UpdateEntity):
         """Update entity."""
         await self._data_point.refresh_firmware_data()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
         # Remove callback from device.
@@ -218,30 +226,36 @@ class AioHomematicHubUpdate(UpdateEntity):
         _LOGGER.debug("init: Setting up %s", data_point.full_name)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if data point is available."""
         return self._data_point.available
 
     @property
+    @override
     def in_progress(self) -> bool | None:
         """Update installation progress."""
         return self._data_point.in_progress
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version installed and in use."""
         return self._data_point.current_firmware
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self._data_point.available_firmware or self._data_point.current_firmware
 
     @property
+    @override
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
         return self._data_point.name
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
         self._unsubscribe_callbacks.append(
@@ -253,6 +267,7 @@ class AioHomematicHubUpdate(UpdateEntity):
             self._data_point.subscribe_to_device_removed(handler=self._async_device_removed)
         )
 
+    @override
     async def async_install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
         """Install an update."""
         if backup:
@@ -262,6 +277,7 @@ class AioHomematicHubUpdate(UpdateEntity):
     async def async_update(self) -> None:
         """Update entity."""
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
         # Remove callback from device.

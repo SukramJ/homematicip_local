@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import CustomDpSwitch
@@ -98,6 +98,7 @@ class AioHomematicSwitch(AioHomematicGenericRestoreEntity[CustomDpSwitch | DpSwi
     """Representation of the HomematicIP switch entity."""
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         attributes = super().extra_state_attributes
@@ -108,6 +109,7 @@ class AioHomematicSwitch(AioHomematicGenericRestoreEntity[CustomDpSwitch | DpSwi
         return attributes
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         if self._data_point.is_valid:
@@ -132,11 +134,13 @@ class AioHomematicSwitch(AioHomematicGenericRestoreEntity[CustomDpSwitch | DpSwi
         if isinstance(self._data_point, DpSwitch):
             await self._data_point.set_on_time(on_time=on_time)
 
+    @override
     @handle_homematic_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._data_point.turn_off()
 
+    @override
     @handle_homematic_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -147,15 +151,18 @@ class AioHomematicSysvarSwitch(AioHomematicGenericSysvarEntity[SysvarDpSwitch], 
     """Representation of the HomematicIP sysvar switch entity."""
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return bool(self._data_point.value)
 
+    @override
     @handle_homematic_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._data_point.send_variable(value=False)
 
+    @override
     @handle_homematic_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -178,15 +185,18 @@ class AioHomematicProgramSwitch(AioHomematicGenericProgramEntity[ProgramDpSwitch
         self._data_point: ProgramDpSwitch = data_point
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self._data_point.value is True
 
+    @override
     @handle_homematic_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._data_point.turn_off()
 
+    @override
     @handle_homematic_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Final, TypeVar
+from typing import Any, Final, TypeVar, override
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import CustomDpBlind, CustomDpCover, CustomDpGarage, CustomDpIpBlind
@@ -103,6 +103,7 @@ class AioHomematicBaseCover(AioHomematicGenericRestoreEntity[HmGenericCover], Co
     """Representation of the HomematicIP cover entity."""
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         if self._data_point.is_valid:
@@ -112,6 +113,7 @@ class AioHomematicBaseCover(AioHomematicGenericRestoreEntity[HmGenericCover], Co
         return None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         attributes = super().extra_state_attributes
@@ -124,6 +126,7 @@ class AioHomematicBaseCover(AioHomematicGenericRestoreEntity[HmGenericCover], Co
         return attributes
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._data_point.is_valid:
@@ -141,20 +144,24 @@ class AioHomematicBaseCover(AioHomematicGenericRestoreEntity[HmGenericCover], Co
         return None
 
     @property
+    @override
     def is_closing(self) -> bool | None:
         """Return if the cover is closing."""
         return self._data_point.is_closing
 
     @property
+    @override
     def is_opening(self) -> bool | None:
         """Return if the cover is opening."""
         return self._data_point.is_opening
 
+    @override
     @handle_homematic_errors
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._data_point.close()
 
+    @override
     @handle_homematic_errors
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
@@ -169,6 +176,7 @@ class AioHomematicBaseCover(AioHomematicGenericRestoreEntity[HmGenericCover], Co
         await self._data_point.set_position(position=position, tilt_position=tilt_position, collector=collector)
         await collector.send_data(wait_for_callback=wait_for_callback)
 
+    @override
     @handle_homematic_errors
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -177,6 +185,7 @@ class AioHomematicBaseCover(AioHomematicGenericRestoreEntity[HmGenericCover], Co
             position = int(kwargs[ATTR_POSITION])
             await self._data_point.set_position(position=position)
 
+    @override
     @handle_homematic_errors
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the device if in motion."""
@@ -191,6 +200,7 @@ class AioHomematicBlind(AioHomematicBaseCover[CustomDpBlind | CustomDpIpBlind]):
     """Representation of the HomematicIP blind entity."""
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover."""
         if self._data_point.is_valid:
@@ -200,6 +210,7 @@ class AioHomematicBlind(AioHomematicBaseCover[CustomDpBlind | CustomDpIpBlind]):
         return None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         attributes = super().extra_state_attributes
@@ -208,16 +219,19 @@ class AioHomematicBlind(AioHomematicBaseCover[CustomDpBlind | CustomDpIpBlind]):
 
         return attributes
 
+    @override
     @handle_homematic_errors
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the tilt."""
         await self._data_point.close_tilt()
 
+    @override
     @handle_homematic_errors
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the tilt."""
         await self._data_point.open_tilt()
 
+    @override
     @handle_homematic_errors
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific tilt position."""
@@ -225,6 +239,7 @@ class AioHomematicBlind(AioHomematicBaseCover[CustomDpBlind | CustomDpIpBlind]):
             tilt_position = int(kwargs[ATTR_TILT_POSITION])
             await self._data_point.set_position(tilt_position=tilt_position)
 
+    @override
     @handle_homematic_errors
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the device if in motion."""

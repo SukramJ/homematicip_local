@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import override
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.generic import DpText
@@ -77,6 +78,7 @@ class AioHomematicText(AioHomematicGenericRestoreEntity[DpText], TextEntity):
     """Representation of the HomematicIP text entity."""
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the value reported by the text."""
         if self._data_point.is_valid:
@@ -93,6 +95,7 @@ class AioHomematicText(AioHomematicGenericRestoreEntity[DpText], TextEntity):
             return restored_state
         return None
 
+    @override
     @handle_homematic_errors
     async def async_set_value(self, value: str) -> None:
         """Send the text."""
@@ -103,10 +106,12 @@ class AioHomematicSysvarText(AioHomematicGenericSysvarEntity[SysvarDpText], Text
     """Representation of the HomematicIP hub text entity."""
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the value reported by the text."""
         return self._data_point.value  # type: ignore[no-any-return]
 
+    @override
     @handle_homematic_errors
     async def async_set_value(self, value: str) -> None:
         """Send the text."""

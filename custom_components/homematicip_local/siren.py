@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import BaseCustomDpSiren, CustomDpSoundPlayer, PlaySoundArgs, SirenOnArgs
@@ -82,11 +82,13 @@ class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], Sir
         return self._data_point.available_lights  # type: ignore[return-value]
 
     @property
+    @override
     def available_tones(self) -> list[int | str] | dict[int, str] | None:
         """Return a list of available tones."""
         return self._data_point.available_tones  # type: ignore[return-value]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes for sound player entities."""
         if not isinstance(self._data_point, CustomDpSoundPlayer):
@@ -98,6 +100,7 @@ class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], Sir
         }
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if siren is on."""
         if self._data_point.is_valid:
@@ -158,11 +161,13 @@ class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], Sir
 
         await self._data_point.stop_sound()
 
+    @override
     @handle_homematic_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._data_point.turn_off()
 
+    @override
     @handle_homematic_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

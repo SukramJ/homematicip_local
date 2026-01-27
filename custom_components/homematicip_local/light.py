@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import (
@@ -84,6 +84,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
     _attr_max_color_temp_kelvin = 6500  # 153 Mireds
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         if self._data_point.is_valid:
@@ -93,6 +94,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         return None
 
     @property
+    @override
     def color_mode(self) -> ColorMode | None:
         """Return the color mode of the light."""
         if self._data_point.is_valid:
@@ -108,6 +110,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         return ColorMode.ONOFF
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature in kelvin."""
         if self._data_point.is_valid:
@@ -117,16 +120,19 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         return None
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return the current effect."""
         return self._data_point.effect
 
     @property
+    @override
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return list(self._data_point.effects) if self._data_point.effects else None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         attributes = super().extra_state_attributes
@@ -151,6 +157,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         return attributes
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         if self._data_point.is_valid:
@@ -160,6 +167,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         return None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if dimmer is on."""
         if self._data_point.is_valid:
@@ -185,6 +193,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         return None
 
     @property
+    @override
     def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
         """Flag supported color modes."""
         supported_color_modes: set[ColorMode] = set()
@@ -201,6 +210,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         return supported_color_modes
 
     @property
+    @override
     def supported_features(self) -> LightEntityFeature:
         """Return the list of supported features."""
         supported_features = LightEntityFeature.TRANSITION
@@ -208,6 +218,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
             supported_features |= LightEntityFeature.EFFECT
         return supported_features
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last_brightness from previous state."""
         await super().async_added_to_hass()
@@ -271,6 +282,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         """Set the on time of the light."""
         self._data_point.set_timer_on_time(on_time=on_time)
 
+    @override
     @handle_homematic_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
@@ -280,6 +292,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
             hm_kwargs["ramp_time"] = ramp_time
         await self._data_point.turn_off(**hm_kwargs)
 
+    @override
     @handle_homematic_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""

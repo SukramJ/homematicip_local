@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import override
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.exceptions import BaseHomematicException
@@ -82,6 +83,7 @@ async def async_setup_entry(
 class AioHomematicButton(AioHomematicGenericEntity[DpButton], ButtonEntity):
     """Representation of the Homematic(IP) Local for OpenCCU button."""
 
+    @override
     async def async_press(self) -> None:
         """Execute a button press."""
         await self._data_point.press()
@@ -106,6 +108,7 @@ class AioHomematicProgramButton(AioHomematicGenericHubEntity, ButtonEntity):
             ATTR_DESCRIPTION: self._data_point.description,
         }
 
+    @override
     async def async_press(self) -> None:
         """Execute a button press."""
         await self._data_point.press()
@@ -126,10 +129,12 @@ class HmipLocalCreateBackupButton(ButtonEntity):
         _LOGGER.debug("init: Setting up create backup button for %s", control_unit.central.name)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self._cu.central.available
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         try:

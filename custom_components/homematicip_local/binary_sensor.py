@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import override
 
 from aiohomematic.const import DataPointCategory
 from aiohomematic.model.generic import DpBinarySensor
@@ -71,6 +72,7 @@ class AioHomematicBinarySensor(AioHomematicGenericRestoreEntity[DpBinarySensor],
     """Representation of the Homematic(IP) Local for OpenCCU binary sensor."""
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is active."""
         if self._data_point.is_valid:
@@ -88,6 +90,7 @@ class AioHomematicSysvarBinarySensor(AioHomematicGenericSysvarEntity[SysvarDpBin
     """Representation of the HomematicIP hub binary_sensor entity."""
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the native value of the entity."""
         return bool(self._data_point.value)

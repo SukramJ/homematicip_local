@@ -60,21 +60,21 @@ CONF_CUSTOM_PORTS: Final = "custom_ports"  # Dict of custom interface ports
 CONF_CUSTOM_PORT_CONFIG: Final = "custom_port_config"  # Checkbox for custom port configuration
 CONF_SKIP_BACKEND_DETECTION: Final = "skip_backend_detection"  # Checkbox to skip backend detection
 
-EVENT_ADDRESS = "address"
-EVENT_CHANNEL_NO = "channel_no"
-EVENT_DEVICE_ADDRESS = "device_address"
-EVENT_DEVICE_ID = "device_id"
-EVENT_ERROR = "error"
-EVENT_ERROR_VALUE = "error_value"
-EVENT_IDENTIFIER = "identifier"
-EVENT_INTERFACE_ID = "interface_id"
-EVENT_MESSAGE = "message"
-EVENT_MODEL = "model"
-EVENT_NAME = "name"
-EVENT_PARAMETER = "parameter"
-EVENT_TITLE = "title"
-EVENT_UNAVAILABLE = "unavailable"
-EVENT_VALUE = "value"
+EVENT_ADDRESS: Final = "address"
+EVENT_CHANNEL_NO: Final = "channel_no"
+EVENT_DEVICE_ADDRESS: Final = "device_address"
+EVENT_DEVICE_ID: Final = "device_id"
+EVENT_ERROR: Final = "error"
+EVENT_ERROR_VALUE: Final = "error_value"
+EVENT_IDENTIFIER: Final = "identifier"
+EVENT_INTERFACE_ID: Final = "interface_id"
+EVENT_MESSAGE: Final = "message"
+EVENT_MODEL: Final = "model"
+EVENT_NAME: Final = "name"
+EVENT_PARAMETER: Final = "parameter"
+EVENT_TITLE: Final = "title"
+EVENT_UNAVAILABLE: Final = "unavailable"
+EVENT_VALUE: Final = "value"
 
 
 class HmipLocalServices(StrEnum):

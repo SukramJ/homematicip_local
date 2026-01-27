@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohomematic.const import DataPointCategory, HubValueType
 from aiohomematic.model.generic import BaseDpNumber
@@ -109,6 +109,7 @@ class AioHomematicNumber(AioHomematicGenericEntity[BaseDpNumber[Any]], RestoreNu
             self._attr_native_unit_of_measurement = data_point.unit
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         attributes = super().extra_state_attributes
@@ -122,6 +123,7 @@ class AioHomematicNumber(AioHomematicGenericEntity[BaseDpNumber[Any]], RestoreNu
         return not self._data_point.is_valid and self._restored_native_value is not None
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         if self._data_point.is_valid and self._data_point.value is not None:
@@ -130,12 +132,14 @@ class AioHomematicNumber(AioHomematicGenericEntity[BaseDpNumber[Any]], RestoreNu
             return self._restored_native_value
         return None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Check, if state needs to be restored."""
         await super().async_added_to_hass()
         if not self._data_point.is_valid and (restored_sensor_data := await self.async_get_last_number_data()):
             self._restored_native_value = restored_sensor_data.native_value
 
+    @override
     @handle_homematic_errors
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
@@ -167,12 +171,14 @@ class AioHomematicSysvarNumber(AioHomematicGenericSysvarEntity[SysvarDpNumber], 
             self._attr_native_unit_of_measurement = " "
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         if (value := self._data_point.value) is not None and isinstance(value, (int, float)):
             return float(value)
         return None
 
+    @override
     @handle_homematic_errors
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""

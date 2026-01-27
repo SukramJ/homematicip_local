@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 from aiohomematic.const import (
     ClimateProfileSchedule,
@@ -139,6 +139,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         self._current_profile: ScheduleProfile = ScheduleProfile.P1
 
     @property
+    @override
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         if self._data_point.is_valid:
@@ -148,6 +149,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         return None
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self._data_point.is_valid:
@@ -157,6 +159,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         return None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the climate entity."""
         attributes = super().extra_state_attributes
@@ -183,6 +186,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         return attributes
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the hvac action."""
         if self._data_point.activity and self._data_point.activity in HM_TO_HA_ACTION:
@@ -195,6 +199,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         return None
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
         if self._data_point.is_valid:
@@ -214,21 +219,25 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         return None
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac modes."""
         return [HM_TO_HA_HVAC_MODE[mode] for mode in self._data_point.modes if mode in HM_TO_HA_HVAC_MODE]
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._data_point.max_temp
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._data_point.min_temp
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         if (
@@ -242,6 +251,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         return None
 
     @property
+    @override
     def preset_modes(self) -> list[str]:
         """Return a list of available preset modes incl. hmip profiles."""
         preset_modes = []
@@ -253,6 +263,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         return preset_modes
 
     @property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         supported_features = (
@@ -263,6 +274,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         return supported_features
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._data_point.is_valid:
@@ -369,6 +381,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             self._data_point.custom_id,
         )
 
+    @override
     @handle_homematic_errors
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -377,6 +390,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             return
         await self._data_point.set_mode(mode=HA_TO_HM_HVAC_MODE[hvac_mode])
 
+    @override
     @handle_homematic_errors
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -468,6 +482,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             self._data_point.custom_id,
         )
 
+    @override
     @handle_homematic_errors
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
