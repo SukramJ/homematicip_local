@@ -1,4 +1,4 @@
-# Homematic(IP) Local for OpenCCU
+Extract# Homematic(IP) Local for OpenCCU
 
 [![releasebadge]][release]
 [![License][license-shield]](LICENSE)
@@ -10,13 +10,11 @@ Homematic(IP) Local for OpenCCU is a custom [integration](https://www.home-assis
 
 ## Quick start:
 
-- Installation guide: https://github.com/sukramj/homematicip_local/wiki/Installation
+- Installation: See [Installation](#installation) below
 - Alternative installation by J. Maus (OpenCCU): https://github.com/OpenCCU/OpenCCU/wiki/HomeAssistant-Integration
-- Wiki (additional information): https://github.com/sukramj/aiohomematic/wiki
+- Documentation: [aiohomematic docs](https://github.com/sukramj/aiohomematic/tree/devel/docs)
 - Changelog: [changelog.md](changelog.md)
 - License: [LICENSE](LICENSE)
-
-Please support the community by adding more valuable information to the wiki.
 
 ## Other Homematic related integrations:
 
@@ -31,7 +29,7 @@ To connect locally to your Homematic Home Control Unit (HmIP-HCU1), please use t
 - Installation: HACS recommended; manual installation supported.
 - Auto-discovery: Supported for CCU and compatible hubs.
 - Minimum requirements: Home Assistant 2025.10.0+; for Homematic IP on CCU require at least CCU2 2.53.27 / CCU3 3.53.26.
-- Useful links: [Installation guide](https://github.com/sukramj/homematicip_local/wiki/Installation), [Wiki](https://github.com/sukramj/aiohomematic/wiki), [Issues](https://github.com/sukramj/aiohomematic/issues), [Discussions](https://github.com/sukramj/aiohomematic/discussions), [Changelog](changelog.md).
+- Useful links: [Documentation](https://github.com/sukramj/aiohomematic/tree/devel/docs), [Issues](https://github.com/sukramj/aiohomematic/issues), [Discussions](https://github.com/sukramj/aiohomematic/discussions), [Changelog](changelog.md).
 
 ## Table of contents
 - [Issues and discussions](#issues-and-discussions)
@@ -1942,12 +1940,12 @@ Just copy these files to "your ha-config_dir"/blueprints/automation
 **Getting Help:**
 - **Issues**: Report bugs at https://github.com/sukramj/aiohomematic/issues
 - **Discussions**: Ask questions at https://github.com/sukramj/aiohomematic/discussions
-- **Wiki**: Find additional information at https://github.com/sukramj/aiohomematic/wiki
+- **Documentation**: Find additional information at https://github.com/sukramj/aiohomematic/tree/devel/docs
 
 **Contributing:**
 - **Contributing Guide**: See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development setup, code standards, and workflow
 - **Pull Requests**: Welcome! Please open an issue or discussion first for larger changes
-- **Wiki Contributions**: Help improve documentation at https://github.com/sukramj/aiohomematic/wiki
+- **Documentation**: Help improve docs via PR at https://github.com/sukramj/aiohomematic/tree/devel/docs/user
 
 
 [license-shield]: https://img.shields.io/github/license/SukramJ/homematicip_local.svg?style=for-the-badge

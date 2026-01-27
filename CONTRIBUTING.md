@@ -392,7 +392,6 @@ logger:
 
 - **GitHub Discussions**: For questions and feature discussions
 - **GitHub Issues**: For bug reports
-- **aiohomematic Wiki**: https://github.com/sukramj/aiohomematic/wiki
 
 ---
 

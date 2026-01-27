@@ -1178,7 +1178,6 @@ python script/check_translations.py
 
 - **Main Documentation:** https://github.com/sukramj/homematicip_local
 - **Contributing Guide:** See CONTRIBUTING.md
-- **aiohomematic Wiki:** https://github.com/sukramj/aiohomematic/wiki
 - **Issues:** https://github.com/sukramj/aiohomematic/issues
 - **Discussions:** https://github.com/sukramj/aiohomematic/discussions
 - **Changelog:** [changelog.md](changelog.md)
