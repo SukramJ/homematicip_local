@@ -2,10 +2,6 @@
 
 ## What's Changed
 
-### Bug Fixes
-
-- **Fix State Restoration for Calculated Sensors**: Fixed an issue where calculated sensor entities (e.g., `OPERATING_VOLTAGE_LEVEL`) were not restored after Home Assistant restart. The problem occurred because `CalculatedDataPoint` entities reported `is_valid=True` (source data points refreshed from cache) even when `value=None` (no computed value yet), which prevented state restoration. The restore logic now also triggers when `value is None`, ensuring calculated sensors display their last known value until fresh data arrives.
-
 ### Internal
 
 - **Type Safety Improvements**: Added `@override` decorator to 100+ methods across all entity platforms to explicitly mark methods overriding parent class methods. Added `Final` annotation to 15 `EVENT_*` constants in `const.py`. These changes improve code clarity and enable better static analysis.
