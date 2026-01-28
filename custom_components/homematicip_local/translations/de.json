@@ -249,6 +249,9 @@
             "humidity_alarm": {
                 "name": "Feuchtigkeitsalarm"
             }, 
+            "intrusion_alarm": {
+                "name": "Einbruchalarm"
+            }, 
             "last_passage_direction": {
                 "name": "Letzte Durchgangsrichtung"
             }, 
@@ -291,6 +294,9 @@
             "sabotage_sticky": {
                 "name": "Sabotage festgesetzt"
             }, 
+            "smoke_alarm": {
+                "name": "Rauchalarm"
+            }, 
             "state": {
                 "name": ""
             }, 
@@ -320,6 +326,9 @@
             }, 
             "waterlevel_detected": {
                 "name": "Wasserstand erkannt"
+            }, 
+            "window_open": {
+                "name": "Fensterzustand"
             }, 
             "window_state": {
                 "name": "Fensterzustand"

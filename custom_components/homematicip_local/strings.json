@@ -249,6 +249,9 @@
             "humidity_alarm": {
                 "name": "Humidity Alarm"
             }, 
+            "intrusion_alarm": {
+                "name": "Intrusion Alarm"
+            }, 
             "last_passage_direction": {
                 "name": "Last Passage Direction"
             }, 
@@ -291,6 +294,9 @@
             "sabotage_sticky": {
                 "name": "Sabotage sticky"
             }, 
+            "smoke_alarm": {
+                "name": "Smoke Alarm"
+            }, 
             "state": {
                 "name": ""
             }, 
@@ -320,6 +326,9 @@
             }, 
             "waterlevel_detected": {
                 "name": "Waterlevel Detected"
+            }, 
+            "window_open": {
+                "name": "Window State"
             }, 
             "window_state": {
                 "name": "Window State"

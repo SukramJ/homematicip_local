@@ -258,4 +258,37 @@ BINARY_SENSOR_RULES: list[EntityDescriptionRule] = [
             enabled_default=False,
         ),
     ),
+    # Device-specific: Rotary handle sensors - window open
+    EntityDescriptionRule(
+        category=DataPointCategory.BINARY_SENSOR,
+        parameters=("WINDOW_OPEN",),
+        devices=("HmIP-SRH", "HM-Sec-RHS"),
+        priority=10,
+        description=binary_sensor(
+            key="WINDOW_OPEN",
+            device_class=BinarySensorDeviceClass.WINDOW,
+        ),
+    ),
+    # Device-specific: Smoke/intrusion detector - smoke alarm
+    EntityDescriptionRule(
+        category=DataPointCategory.BINARY_SENSOR,
+        parameters=("SMOKE_ALARM",),
+        devices=("HmIP-SWSD",),
+        priority=10,
+        description=binary_sensor(
+            key="SMOKE_ALARM",
+            device_class=BinarySensorDeviceClass.SMOKE,
+        ),
+    ),
+    # Device-specific: Smoke/intrusion detector - intrusion alarm
+    EntityDescriptionRule(
+        category=DataPointCategory.BINARY_SENSOR,
+        parameters=("INTRUSION_ALARM",),
+        devices=("HmIP-SWSD",),
+        priority=10,
+        description=binary_sensor(
+            key="INTRUSION_ALARM",
+            device_class=BinarySensorDeviceClass.SAFETY,
+        ),
+    ),
 ]
