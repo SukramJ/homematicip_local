@@ -4,13 +4,13 @@
   "after_dependencies": ["mqtt"],
   "codeowners": ["@SukramJ"],
   "config_flow": true,
-  "documentation": "https://sukramj.github.io/aiohomematic/user/homeassistant_integration/",
+  "documentation": "https://github.com/sukramj/homematicip_local",
   "homekit": {},
   "integration_type": "hub",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/sukramj/aiohomematic/issues",
   "loggers": ["aiohomematic"],
-  "requirements": ["aiohomematic==2026.1.53"],
+  "requirements": ["aiohomematic==2026.1.54"],
   "ssdp": [
     {
       "manufacturer": "OpenCCU",

@@ -20,7 +20,7 @@
 
 - **Type Safety Improvements**: Added `@override` decorator to 100+ methods across all entity platforms to explicitly mark methods overriding parent class methods. Added `Final` annotation to 15 `EVENT_*` constants in `const.py`. These changes improve code clarity and enable better static analysis.
 
-## Bump aiohomematic to [2026.1.53](https://github.com/SukramJ/aiohomematic/compare/2026.1.50...2026.1.53)
+## Bump aiohomematic to [2026.1.54](https://github.com/SukramJ/aiohomematic/compare/2026.1.50...2026.1.54)
 
 ### New Features
 
@@ -31,6 +31,7 @@
 
 ### Changed
 
+- **Reduced Validation Logging** (2026.1.54): Log level for data point validation messages (value range min/max and enum index/value checks) reduced from WARNING to DEBUG to reduce log noise.
 - **Pydantic Model Conversions**: Multiple configuration classes migrated to Pydantic `BaseModel` with frozen immutability including `TimeoutConfig`, `InterfaceConfig`, `CentralConfig`, `DeviceConfig`, `ProfileConfig`, and `BackendCapabilities`.
 - **Type Safety Improvements**: Added `@unique` decorator to 70+ enum classes to prevent accidental duplicate values, `@override` decorator to explicitly mark overridden methods, and `Final` annotations to key constants.
 
