@@ -15,10 +15,10 @@ from aiohomematic_test_support.mock import SessionPlayer, get_session_player
 from custom_components.homematicip_local.const import DOMAIN as HMIP_DOMAIN
 from custom_components.homematicip_local.control_unit import ControlConfig, ControlUnit
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info import ssdp
 
 from tests import const, helper
 

@@ -232,7 +232,6 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         return entity_name
 
     @property
-    @override
     def use_device_name(self) -> bool:
         """
         Return if this entity does not have its own name.

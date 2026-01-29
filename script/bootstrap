@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 
 # Check Python version
 PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}' | cut -d. -f1,2)
-REQUIRED_VERSION="3.13"
+REQUIRED_VERSION="3.14"
 
 echo "================================================"
 echo "Homematic(IP) Local - Development Setup"

@@ -194,7 +194,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
 
     @property
     @override
-    def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode] | None:
         """Flag supported color modes."""
         supported_color_modes: set[ColorMode] = set()
         if self._data_point.has_hs_color:

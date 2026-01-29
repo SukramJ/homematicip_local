@@ -1,4 +1,4 @@
-# Version [2.2.3](https://github.com/SukramJ/homematicip_local/compare/2.2.2...2.2.3) (2026-01-28)
+# Version [2.2.3](https://github.com/SukramJ/homematicip_local/compare/2.2.2...2.2.3) (2026-01-29)
 
 ## What's Changed
 
@@ -8,14 +8,23 @@
   - **HmIP-SRH & HM-Sec-RHS**: Added `WINDOW_OPEN` binary sensor for rotary handle sensors (window open detection)
   - **HmIP-SWSD**: Added `SMOKE_ALARM` and `INTRUSION_ALARM` binary sensors for smoke/intrusion detector
 
+### Documentation
+
+- **README Shortened**: Reduced README.md from ~1960 lines to ~140 lines. Detailed documentation moved to the new documentation site at [sukramj.github.io/aiohomematic](https://sukramj.github.io/aiohomematic/). README now contains quick start links, installation instructions, and references to full documentation.
+
+### Bug Fixes
+
+- **Fix SSDP Import for Home Assistant 2025.2+**: Updated `SsdpServiceInfo` import in tests from deprecated `homeassistant.components.ssdp` to new location `homeassistant.helpers.service_info.ssdp`.
+
 ### Internal
 
 - **Type Safety Improvements**: Added `@override` decorator to 100+ methods across all entity platforms to explicitly mark methods overriding parent class methods. Added `Final` annotation to 15 `EVENT_*` constants in `const.py`. These changes improve code clarity and enable better static analysis.
 
-## Bump aiohomematic to [2026.1.52](https://github.com/SukramJ/aiohomematic/compare/2026.1.50...2026.1.52)
+## Bump aiohomematic to [2026.1.53](https://github.com/SukramJ/aiohomematic/compare/2026.1.50...2026.1.53)
 
 ### New Features
 
+- **HmIP-WRC6-230 Support** (2026.1.53): Added support for HmIP-WRC6-230 (Wall-mount Remote Control 6-button 230V) as a fixed color light device.
 - **Derived Binary Sensors** (2026.1.52): A registry-based system now enables creation of binary sensors derived from enum data points. New calculated parameters include `INTRUSION_ALARM`, `SMOKE_ALARM`, and `WINDOW_OPEN`. Examples: HmIP-SRH/HM-Sec-RHS window handle sensors now provide a `WINDOW_OPEN` binary sensor (activated when TILTED or OPEN), and HmIP-SWSD smoke detectors provide `INTRUSION_ALARM` and `SMOKE_ALARM` binary sensors (activated when alarm active).
 - **Enhanced Data Point Validity** (2026.1.52): Comprehensive validation for data points now includes type checking, range validation, and proper None handling. Added `has_valid_value_type` and `is_value_in_range` properties to BaseParameterDataPoint. STATUS parameter events are automatically subscribed and processed. Type-specific validation rules for each parameter type (FLOAT, INTEGER, BOOL, ENUM, etc.) with warning logs for out-of-range values received from CCU.
 - **Contract Tests for Regression Prevention** (2026.1.51): Added extensive contract testing infrastructure with 500+ tests specifically designed to prevent regressions during AI-assisted refactoring. Coverage includes backend capabilities, state machines, connection recovery, event systems, lifecycle methods, enums, configuration classes, exception hierarchies, protocol interfaces, hub entities, subscription APIs, and device/channel protocols.
