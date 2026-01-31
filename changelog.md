@@ -1,3 +1,21 @@
+# Version [2.2.4](https://github.com/SukramJ/homematicip_local/compare/2.2.3...2.2.4) (2026-01-31)
+
+## What's Changed
+
+### Documentation
+
+- **README**: Added "Companion Cards" section featuring the [Climate Schedule Card](https://github.com/SukramJ/homematicip_local_climate_schedule_card) for visual editing of thermostat week profiles.
+
+## Bump aiohomematic to [2026.1.55](https://github.com/SukramJ/aiohomematic/compare/2026.1.54...2026.1.55)
+
+### Bug Fixes
+
+- **OperatingVoltageLevel Battery Calculation**: Fixed battery percentage calculation to use user-configured `LOW_BAT_LIMIT` value instead of default. This fixes incorrect battery readings when users have customized the low battery threshold.
+
+### Test Infrastructure
+
+- **OpenCCU Test Fixtures**: Added comprehensive test infrastructure for VirtualCCU with OpenCCU backend mode support, including device lifecycle event handling and full 397-device central unit tests.
+
 # Version [2.2.3](https://github.com/SukramJ/homematicip_local/compare/2.2.2...2.2.3) (2026-01-29)
 
 ## What's Changed
