@@ -10,10 +10,11 @@
 
 - **README**: Added "Companion Cards" section featuring the [Climate Schedule Card](https://github.com/SukramJ/homematicip_local_climate_schedule_card) for visual editing of thermostat week profiles.
 
-## Bump aiohomematic to [2026.1.56](https://github.com/SukramJ/aiohomematic/compare/2026.1.54...2026.1.56)
+## Bump aiohomematic to [2026.1.57](https://github.com/SukramJ/aiohomematic/compare/2026.1.54...2026.1.57)
 
 ### Bug Fixes
 
+- **CUxD/CCU-Jack Interface Registration** (2026.1.57): Fixed devices incorrectly assigned to `Interface.BIDCOS_RF` instead of their actual interface (e.g., `Interface.CUXD`). This caused `get_data_points(interface=Interface.CUXD)` to filter out all CUxD devices. Interface is now properly registered during device creation.
 - **CUxD/CCU-Jack Data Polling** (2026.1.56): Fixed data not updating after startup for polled interfaces. The `refresh_data_point_data()` method was using hardcoded `CallSource.HM_INIT` which caused data points with `ignore_on_initial_load` to be skipped during periodic polling.
 - **OperatingVoltageLevel Battery Calculation** (2026.1.55): Fixed battery percentage calculation to use user-configured `LOW_BAT_LIMIT` value instead of default. This fixes incorrect battery readings when users have customized the low battery threshold.
 
