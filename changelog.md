@@ -2,19 +2,24 @@
 
 ## What's Changed
 
+### Bug Fixes
+
+- **Program Button Naming**: Fixed regression where CCU program button entities were named "P Taste" instead of the actual program name. The issue was caused by the `HUB_BUTTON` default entity description using a generic translation key that overwrote the program name.
+
 ### Documentation
 
 - **README**: Added "Companion Cards" section featuring the [Climate Schedule Card](https://github.com/SukramJ/homematicip_local_climate_schedule_card) for visual editing of thermostat week profiles.
 
-## Bump aiohomematic to [2026.1.55](https://github.com/SukramJ/aiohomematic/compare/2026.1.54...2026.1.55)
+## Bump aiohomematic to [2026.1.56](https://github.com/SukramJ/aiohomematic/compare/2026.1.54...2026.1.56)
 
 ### Bug Fixes
 
-- **OperatingVoltageLevel Battery Calculation**: Fixed battery percentage calculation to use user-configured `LOW_BAT_LIMIT` value instead of default. This fixes incorrect battery readings when users have customized the low battery threshold.
+- **CUxD/CCU-Jack Data Polling** (2026.1.56): Fixed data not updating after startup for polled interfaces. The `refresh_data_point_data()` method was using hardcoded `CallSource.HM_INIT` which caused data points with `ignore_on_initial_load` to be skipped during periodic polling.
+- **OperatingVoltageLevel Battery Calculation** (2026.1.55): Fixed battery percentage calculation to use user-configured `LOW_BAT_LIMIT` value instead of default. This fixes incorrect battery readings when users have customized the low battery threshold.
 
 ### Test Infrastructure
 
-- **OpenCCU Test Fixtures**: Added comprehensive test infrastructure for VirtualCCU with OpenCCU backend mode support, including device lifecycle event handling and full 397-device central unit tests.
+- **OpenCCU Test Fixtures** (2026.1.55): Added comprehensive test infrastructure for VirtualCCU with OpenCCU backend mode support, including device lifecycle event handling and full 397-device central unit tests.
 
 # Version [2.2.3](https://github.com/SukramJ/homematicip_local/compare/2.2.2...2.2.3) (2026-01-29)
 

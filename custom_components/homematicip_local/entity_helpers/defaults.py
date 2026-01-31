@@ -29,7 +29,6 @@ DEFAULT_DESCRIPTIONS: Final[dict[DataPointCategory, EntityDescription]] = {
     ),
     DataPointCategory.HUB_BUTTON: HmButtonEntityDescription(
         key="hub_button_default",
-        translation_key="button_press",
     ),
     DataPointCategory.HUB_SWITCH: SwitchEntityDescription(
         key="hub_switch_default",
