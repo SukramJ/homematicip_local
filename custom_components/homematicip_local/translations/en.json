@@ -1708,7 +1708,17 @@
                 }
             }, 
             "name": "Set device value"
-        }, 
+        },
+        "set_schedule": {
+            "name": "Set schedule",
+            "description": "Sets the week schedule for non-climate devices (switches, lights, covers, valves).",
+            "fields": {
+                "schedule_data": {
+                    "name": "Schedule data",
+                    "description": "The schedule data dictionary. Structure: {group_no: {field: value, ...}, ...}. See aiohomematic documentation for DefaultWeekProfile format."
+                }
+            }
+        },
         "set_schedule_active_profile": {
             "description": "Set the active schedule profile on a climate device", 
             "fields": {
@@ -1768,7 +1778,7 @@
                 }
             }, 
             "name": "Set simple schedule profile weekday"
-        }, 
+        },
         "set_schedule_weekday": {
             "description": "[DEPRECATED - will be removed April 2026] Use 'set_schedule_simple_weekday' instead. Call to store a schedule on a climate device",
             "fields": {

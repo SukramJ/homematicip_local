@@ -32,6 +32,7 @@ from .support import (
     HmGenericProgramDataPointProtocol,
     HmGenericSysvarDataPointProtocol,
     get_data_point,
+    handle_homematic_errors,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -266,6 +267,30 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
                 "CCU did not provide initial value for %s. See README for more information",
                 self._data_point.full_name,
             )
+
+    @handle_homematic_errors
+    async def async_set_schedule(self, schedule_data: dict[int, dict[Any, Any]]) -> None:
+        """Set the week schedule for non-climate devices."""
+        if not isinstance(self._data_point, CustomDataPointProtocol):
+            _LOGGER.warning(
+                "SET_SCHEDULE: Entity %s does not support schedules",
+                self.entity_id,
+            )
+            return
+        if not self._data_point.has_schedule:
+            _LOGGER.warning(
+                "SET_SCHEDULE: Entity %s has no schedule support",
+                self.entity_id,
+            )
+            return
+        week_profile = self._data_point.device.week_profile
+        if week_profile is None:
+            _LOGGER.warning(
+                "SET_SCHEDULE: Entity %s has no week profile",
+                self.entity_id,
+            )
+            return
+        await week_profile.set_schedule(schedule_data=schedule_data)
 
     async def async_update(self) -> None:
         """Update entities."""

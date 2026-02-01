@@ -1709,6 +1709,16 @@
             }, 
             "name": "Wert eines Geräteparameters schreiben"
         }, 
+        "set_schedule": {
+            "description": "Setzt den Wochenzeitplan für Nicht-Klima-Geräte (Schalter, Lichter, Rollläden, Ventile).", 
+            "fields": {
+                "schedule_data": {
+                    "description": "Das Zeitplan-Daten-Dictionary. Struktur: {group_no: {field: value, ...}, ...}. Siehe aiohomematic Dokumentation für DefaultWeekProfile Format.", 
+                    "name": "Zeitplandaten"
+                }
+            }, 
+            "name": "Zeitplan setzen"
+        }, 
         "set_schedule_active_profile": {
             "description": "Aktiviert ein Profil für eine Zeitplan-Entität", 
             "fields": {

@@ -542,6 +542,21 @@ set_schedule_simple_weekday:
       selector:
         object:
 
+set_schedule:
+  target:
+    entity:
+      domain:
+        - switch
+        - light
+        - cover
+        - valve
+      integration: homematicip_local
+  fields:
+    schedule_data:
+      required: true
+      selector:
+        object:
+
 set_variable_value:
   fields:
     entry_id:

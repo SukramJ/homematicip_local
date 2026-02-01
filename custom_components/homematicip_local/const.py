@@ -115,6 +115,7 @@ class HmipLocalServices(StrEnum):
     SEND_TEXT_DISPLAY = "send_text_display"
     SET_COVER_COMBINED_POSITION = "set_cover_combined_position"
     SET_DEVICE_VALUE = "set_device_value"
+    SET_SCHEDULE = "set_schedule"
     SET_SCHEDULE_PROFILE = "set_schedule_profile"
     SET_SCHEDULE_WEEKDAY = "set_schedule_weekday"
     SET_SCHEDULE_SIMPLE_PROFILE = "set_schedule_simple_profile"
