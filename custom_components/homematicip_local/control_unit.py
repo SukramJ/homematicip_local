@@ -208,8 +208,13 @@ class BaseControlUnit:
         except AuthFailure:
             # Don't catch - let it propagate to trigger reauth
             raise
-        except BaseHomematicException:
-            _LOGGER.warning("START_CENTRAL: Failed to start central unit for %s", self._instance_name)
+        except BaseHomematicException as ex:
+            _LOGGER.warning(
+                "START_CENTRAL: Failed to start central unit for %s: %s",
+                self._instance_name,
+                ex,
+                exc_info=True,
+            )
 
     async def stop_central(self, *args: Any) -> None:
         """Stop the control unit."""
