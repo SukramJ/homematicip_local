@@ -5,6 +5,7 @@
 ### Bug Fixes
 
 - **Program Button Naming**: Fixed regression where CCU program button entities were named "P Taste" instead of the actual program name. The issue was caused by the `HUB_BUTTON` default entity description using a generic translation key that overwrote the program name.
+- **Hub Entity Naming**: Fixed regression where hub entities (sysvars, programs) lost their instance name prefix in entity_id (e.g., `switch.otto_sv_anwesenheit` became `switch.anwesenheit`). The fix ensures hub entities don't use a translation_key, allowing the custom name property to properly add "SV "/"P " prefixes.
 
 ### Documentation
 

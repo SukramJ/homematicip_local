@@ -176,4 +176,6 @@ def _get_name_and_translation_key(
 
         return name, data_point.parameter.lower()
 
-    return name, name.lower()
+    # Hub entities (sysvars/programs): Don't set translation_key
+    # Let the custom name property in generic_entity.py handle naming with prefixes (SV/P)
+    return name, None
