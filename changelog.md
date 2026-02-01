@@ -1,4 +1,4 @@
-# Version [2.2.4](https://github.com/SukramJ/homematicip_local/compare/2.2.3...2.2.4) (2026-01-31)
+# Version [2.2.4](https://github.com/SukramJ/homematicip_local/compare/2.2.3...2.2.4) (2026-02-01)
 
 ## What's Changed
 
@@ -11,10 +11,12 @@
 
 - **README**: Added "Companion Cards" section featuring the [Climate Schedule Card](https://github.com/SukramJ/homematicip_local_climate_schedule_card) for visual editing of thermostat week profiles.
 
-## Bump aiohomematic to [2026.1.57](https://github.com/SukramJ/aiohomematic/compare/2026.1.54...2026.1.57)
+## Bump aiohomematic to [2026.2.0](https://github.com/SukramJ/aiohomematic/compare/2026.1.54...2026.2.0)
 
 ### Bug Fixes
 
+- **Device Re-Pairing** (2026.2.0): Fixed devices not appearing after factory reset and re-pairing. When a device was reset and re-paired with the same address, channel descriptions were not added to cache because only the parent device address was checked.
+- **EventBus Subscription Leak** (2026.2.0): Fixed subscription leak for `DeviceLifecycleEvent` when stopping CentralUnit, eliminating "LEAKED_SUBSCRIPTION" warnings during shutdown.
 - **CUxD/CCU-Jack Interface Registration** (2026.1.57): Fixed devices incorrectly assigned to `Interface.BIDCOS_RF` instead of their actual interface (e.g., `Interface.CUXD`). This caused `get_data_points(interface=Interface.CUXD)` to filter out all CUxD devices. Interface is now properly registered during device creation.
 - **CUxD/CCU-Jack Data Polling** (2026.1.56): Fixed data not updating after startup for polled interfaces. The `refresh_data_point_data()` method was using hardcoded `CallSource.HM_INIT` which caused data points with `ignore_on_initial_load` to be skipped during periodic polling.
 - **OperatingVoltageLevel Battery Calculation** (2026.1.55): Fixed battery percentage calculation to use user-configured `LOW_BAT_LIMIT` value instead of default. This fixes incorrect battery readings when users have customized the low battery threshold.
