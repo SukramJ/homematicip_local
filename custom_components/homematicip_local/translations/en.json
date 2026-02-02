@@ -1415,16 +1415,6 @@
             }, 
             "name": "Get paramset"
         }, 
-        "get_schedule_profile": {
-            "description": "[DEPRECATED - will be removed April 2026] Use 'get_schedule_simple_profile' instead. Call to get a schedule of a climate device",
-            "fields": {
-                "profile": {
-                    "description": "Select a profile",
-                    "name": "Profile"
-                }
-            },
-            "name": "[Deprecated] Get schedule profile"
-        },
         "get_schedule_simple_profile": {
             "description": "Call to get a schedule of a climate device in simplified format",
             "fields": {
@@ -1448,20 +1438,6 @@
                 }
             },
             "name": "Get simple schedule profile weekday"
-        },
-        "get_schedule_weekday": {
-            "description": "[DEPRECATED - will be removed April 2026] Use 'get_schedule_simple_weekday' instead. Call to get a schedule of a climate device",
-            "fields": {
-                "profile": {
-                    "description": "Select a profile",
-                    "name": "Profile"
-                },
-                "weekday": {
-                    "description": "Select a weekday",
-                    "name": "Weekday"
-                }
-            },
-            "name": "[Deprecated] Get schedule profile weekday"
         },
         "get_variable_value": {
             "description": "Read a value of a variable", 
@@ -1729,20 +1705,6 @@
             }, 
             "name": "Set active schedule profile"
         }, 
-        "set_schedule_profile": {
-            "description": "[DEPRECATED - will be removed April 2026] Use 'set_schedule_simple_profile' instead. Call to store a schedule on a climate device",
-            "fields": {
-                "profile": {
-                    "description": "Select a profile",
-                    "name": "Profile"
-                },
-                "profile_data": {
-                    "description": "Data for a profile",
-                    "name": "Profile data"
-                }
-            },
-            "name": "[Deprecated] Set schedule profile"
-        }, 
         "set_schedule_simple_profile": {
             "description": "Call to store a schedule on a climate device",
             "fields": {
@@ -1758,45 +1720,27 @@
             "name": "Set simple schedule profile"
         }, 
         "set_schedule_simple_weekday": {
-            "description": "Call to store a schedule on a climate device", 
+            "description": "Call to store a schedule on a climate device",
             "fields": {
                 "base_temperature": {
-                    "description": "Select a base temperature", 
+                    "description": "Select a base temperature",
                     "name": "Base temperature"
-                }, 
-                "profile": {
-                    "description": "Select a profile", 
-                    "name": "Profile"
-                }, 
-                "simple_weekday_list": {
-                    "description": "Data for a weekday profile", 
-                    "name": "Weekday profile data"
-                }, 
-                "weekday": {
-                    "description": "Select a weekday", 
-                    "name": "Weekday"
-                }
-            }, 
-            "name": "Set simple schedule profile weekday"
-        },
-        "set_schedule_weekday": {
-            "description": "[DEPRECATED - will be removed April 2026] Use 'set_schedule_simple_weekday' instead. Call to store a schedule on a climate device",
-            "fields": {
+                },
                 "profile": {
                     "description": "Select a profile",
                     "name": "Profile"
                 },
+                "simple_weekday_list": {
+                    "description": "Data for a weekday profile",
+                    "name": "Weekday profile data"
+                },
                 "weekday": {
                     "description": "Select a weekday",
                     "name": "Weekday"
-                },
-                "weekday_data": {
-                    "description": "Data for a weekday profile",
-                    "name": "Weekday profile data"
                 }
             },
-            "name": "[Deprecated] Set schedule profile weekday"
-        }, 
+            "name": "Set simple schedule profile weekday"
+        },
         "set_sound_led": {
             "description": "Set LED color and brightness on HmIP-MP3P sound player devices", 
             "fields": {

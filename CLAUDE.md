@@ -1169,10 +1169,10 @@ python script/check_translations.py
 
 ### Version Information
 
-- **Current Version:** 2.2.4
+- **Current Version:** 2.2.5
 - **Minimum HA Version:** 2025.10.0+
 - **Python Target:** 3.13+ (CI tests on 3.13, 3.14)
-- **aiohomematic Version:** 2026.2.0
+- **aiohomematic Version:** 2026.2.1
 
 ### External Resources
 

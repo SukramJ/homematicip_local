@@ -7,16 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Final, cast, override
 
-from aiohomematic.const import (
-    ClimateProfileSchedule,
-    ClimateWeekdaySchedule,
-    DataPointCategory,
-    ScheduleProfile,
-    SimpleProfileSchedule,
-    SimpleSchedulePeriod,
-    SimpleWeekdaySchedule,
-    WeekdayStr,
-)
+from aiohomematic.const import DataPointCategory, ScheduleProfile, WeekdayStr
 from aiohomematic.model.custom import (
     PROFILE_PREFIX,
     BaseCustomDpClimate,
@@ -25,6 +16,7 @@ from aiohomematic.model.custom import (
     ClimateProfile,
     CustomDpIpThermostat,
 )
+from aiohomematic.model.schedule_models import ClimateProfileSchedule, ClimateSchedulePeriod, ClimateWeekdaySchedule
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_HUMIDITY,
@@ -180,7 +172,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             attributes[ATTR_AVAILABLE_PROFILES] = [
                 profile.value for profile in self._data_point.available_schedule_profiles
             ]
-            if schedule_data := self._data_point.simple_schedule.get(self._current_profile):
+            if schedule_data := self._data_point.schedule.get(self._current_profile):
                 attributes[ATTR_SCHEDULE_DATA] = schedule_data
 
         return attributes
@@ -333,42 +325,17 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         await self._data_point.enable_away_mode_by_duration(hours=hours, away_temperature=away_temperature)
 
     @handle_homematic_errors
-    async def async_get_schedule_profile(self, profile: str | ScheduleProfile) -> ServiceResponse:
-        """Get a schedule profile."""
-        _LOGGER.warning("Service 'get_schedule_profile' is deprecated and will be removed in April 2026. ")
-        schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
-        if profile_data := await self._data_point.get_schedule_profile(profile=schedule_profile, force_load=True):
-            return cast(ServiceResponse, profile_data)
-        return None
-
-    @handle_homematic_errors
     async def async_get_schedule_simple_profile(self, profile: ScheduleProfile) -> ServiceResponse:
         """Get a schedule simple profile."""
-        return cast(
-            ServiceResponse, await self._data_point.get_schedule_simple_profile(profile=profile, force_load=True)
-        )
+        return cast(ServiceResponse, await self._data_point.get_schedule_profile(profile=profile, force_load=True))
 
     @handle_homematic_errors
     async def async_get_schedule_simple_weekday(self, profile: ScheduleProfile, weekday: WeekdayStr) -> ServiceResponse:
         """Get a schedule simple profile weekday."""
         return cast(
             ServiceResponse,
-            await self._data_point.get_schedule_simple_weekday(profile=profile, weekday=weekday, force_load=True),
+            await self._data_point.get_schedule_weekday(profile=profile, weekday=weekday, force_load=True),
         )
-
-    @handle_homematic_errors
-    async def async_get_schedule_weekday(
-        self, profile: str | ScheduleProfile, weekday: str | WeekdayStr
-    ) -> ServiceResponse:
-        """Get a schedule profile weekday."""
-        _LOGGER.warning("Service 'get_schedule_weekday' is deprecated and will be removed in April 2026.")
-        schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
-        schedule_weekday = weekday if isinstance(weekday, WeekdayStr) else WeekdayStr(weekday)
-        if weekday_data := await self._data_point.get_schedule_weekday(
-            profile=schedule_profile, weekday=schedule_weekday, force_load=True
-        ):
-            return cast(ServiceResponse, weekday_data)
-        return None
 
     async def async_set_active_profile(self, profile: str | ScheduleProfile) -> None:
         """Set the active profile."""
@@ -404,38 +371,13 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         await self._data_point.set_profile(profile=ClimateProfile(preset_mode))
 
     @handle_homematic_errors
-    async def async_set_schedule_profile(
-        self, profile: str | ScheduleProfile, profile_data: ClimateProfileSchedule
-    ) -> None:
-        """Set a schedule profile."""
-        _LOGGER.warning(
-            "Service 'set_schedule_profile' is deprecated and will be removed in April 2026. "
-            "Please use 'set_schedule_simple_profile' instead"
-        )
-        schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
-        # Convert string keys to WeekdayStr if needed
-        converted_data = {}
-        for weekday_key, weekday_value in profile_data.items():
-            if isinstance(weekday_key, str):
-                weekday_key = WeekdayStr(weekday_key)
-            converted_data[weekday_key] = weekday_value
-
-        await self._data_point.set_schedule_profile(profile=schedule_profile, profile_data=converted_data)
-
-        _LOGGER.debug(
-            "Set schedule profile %s for %s",
-            schedule_profile.value,
-            self._data_point.custom_id,
-        )
-
-    @handle_homematic_errors
     async def async_set_schedule_simple_profile(
-        self, profile: ScheduleProfile, simple_profile_data: SimpleProfileSchedule
+        self, profile: ScheduleProfile, simple_profile_data: ClimateProfileSchedule
     ) -> None:
         """Set the schedule simple profile."""
-        await self._data_point.set_simple_schedule_profile(
+        await self._data_point.set_schedule_profile(
             profile=profile,
-            simple_profile_data=simple_profile_data,
+            profile_data=simple_profile_data.model_dump(),
         )
 
     @handle_homematic_errors
@@ -444,42 +386,17 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         profile: ScheduleProfile,
         weekday: WeekdayStr,
         base_temperature: float,
-        simple_weekday_list: list[SimpleSchedulePeriod],
+        simple_weekday_list: list[ClimateSchedulePeriod],
     ) -> None:
         """Set the schedule simple profile weekday."""
-        simple_weekday_data: SimpleWeekdaySchedule = {
-            "base_temperature": base_temperature,
-            "periods": simple_weekday_list,
-        }
-        await self._data_point.set_simple_schedule_weekday(
+        weekday_data = ClimateWeekdaySchedule(
+            base_temperature=base_temperature,
+            periods=simple_weekday_list,
+        )
+        await self._data_point.set_schedule_weekday(
             profile=profile,
             weekday=weekday,
-            simple_weekday_data=simple_weekday_data,
-        )
-
-    @handle_homematic_errors
-    async def async_set_schedule_weekday(
-        self, profile: str | ScheduleProfile, weekday: str | WeekdayStr, weekday_data: ClimateWeekdaySchedule
-    ) -> None:
-        """Set a schedule profile weekday."""
-        _LOGGER.warning(
-            "Service 'set_schedule_weekday' is deprecated and will be removed in April 2026. "
-            "Please use 'set_schedule_simple_weekday' instead"
-        )
-        schedule_profile = profile if isinstance(profile, ScheduleProfile) else ScheduleProfile(profile)
-        schedule_weekday = weekday if isinstance(weekday, WeekdayStr) else WeekdayStr(weekday)
-
-        await self._data_point.set_schedule_weekday(
-            profile=schedule_profile,
-            weekday=schedule_weekday,
-            weekday_data=weekday_data,
-        )
-
-        _LOGGER.debug(
-            "Set schedule profile weekday %s/%s for %s",
-            schedule_profile.value,
-            weekday,
-            self._data_point.custom_id,
+            weekday_data=weekday_data.model_dump(),
         )
 
     @override

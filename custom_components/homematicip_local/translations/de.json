@@ -1383,16 +1383,6 @@
             }, 
             "name": "Parametersatz von einem Gerät oder Kanal lesen"
         }, 
-        "get_schedule_profile": {
-            "description": "[VERALTET - wird im April 2026 entfernt] Verwende 'get_schedule_simple_profile' stattdessen. Lädt ein Zeitplan-Profil von einer Zeitplan-Entität", 
-            "fields": {
-                "profile": {
-                    "description": "Wählen Sie ein Profil zum Laden", 
-                    "name": "Profil"
-                }
-            }, 
-            "name": "[Veraltet] Zeitplan-Profil abrufen"
-        }, 
         "get_schedule_simple_profile": {
             "description": "Lädt ein Zeitplan-Profil von einer Zeitplan-Entität im vereinfachten Format", 
             "fields": {
@@ -1416,20 +1406,6 @@
                 }
             }, 
             "name": "Einfaches Zeitplan-Profil Wochentag abrufen"
-        }, 
-        "get_schedule_weekday": {
-            "description": "[VERALTET - wird im April 2026 entfernt] Verwende 'get_schedule_simple_weekday' stattdessen. Lädt einen Wochentag eines Zeitplan-Profils", 
-            "fields": {
-                "profile": {
-                    "description": "Wählen Sie ein Profil", 
-                    "name": "Profil"
-                }, 
-                "weekday": {
-                    "description": "Wählen Sie einen Wochentag", 
-                    "name": "Wochentag"
-                }
-            }, 
-            "name": "[Veraltet] Zeitplan-Profil Wochentag abrufen"
         }, 
         "get_variable_value": {
             "description": "Wert einer Homematic Systemvariable lesen", 
@@ -1729,20 +1705,6 @@
             }, 
             "name": "Aktives Zeitplan-Profil setzen"
         }, 
-        "set_schedule_profile": {
-            "description": "[VERALTET - wird April 2026 entfernt] Bitte 'set_schedule_simple_profile' verwenden. Setzt ein Zeitplan-Profil auf einer Zeitplan-Entität", 
-            "fields": {
-                "profile": {
-                    "description": "Wählen Sie ein Profil", 
-                    "name": "Profil"
-                }, 
-                "profile_data": {
-                    "description": "Profil-Daten für alle Wochentage", 
-                    "name": "Profil-Daten"
-                }
-            }, 
-            "name": "[Veraltet] Zeitplan-Profil setzen"
-        }, 
         "set_schedule_simple_profile": {
             "description": "Speichert einen Zeitplan auf einem Thermostat", 
             "fields": {
@@ -1778,24 +1740,6 @@
                 }
             }, 
             "name": "Einfachen Wochentag speichern"
-        }, 
-        "set_schedule_weekday": {
-            "description": "[VERALTET - wird April 2026 entfernt] Bitte 'set_schedule_simple_weekday' verwenden. Setzt einen Wochentag eines Zeitplan-Profils", 
-            "fields": {
-                "profile": {
-                    "description": "Wählen Sie ein Profil", 
-                    "name": "Profil"
-                }, 
-                "weekday": {
-                    "description": "Wählen Sie einen Wochentag", 
-                    "name": "Wochentag"
-                }, 
-                "weekday_data": {
-                    "description": "Zeitplan-Daten für den Wochentag", 
-                    "name": "Wochentag-Daten"
-                }
-            }, 
-            "name": "[Veraltet] Zeitplan-Profil Wochentag setzen"
         }, 
         "set_sound_led": {
             "description": "Setzt LED-Farbe und Helligkeit auf HmIP-MP3P Signalgebern", 

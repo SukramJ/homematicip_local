@@ -1,3 +1,56 @@
+# Version [2.2.5](https://github.com/SukramJ/homematicip_local/compare/2.2.4...2.2.5) (2026-02-02)
+
+## What's Changed
+
+### Removed (Deprecated Services)
+
+The following deprecated climate services have been removed earlier than the announced April 2026 date. Due to the complexity of maintaining both old and new schedule APIs alongside the aiohomematic Pydantic model migration, these services were removed now:
+
+- **get_schedule_profile** → Use `get_schedule_simple_profile` instead
+- **get_schedule_weekday** → Use `get_schedule_simple_weekday` instead
+- **set_schedule_profile** → Use `set_schedule_simple_profile` instead
+- **set_schedule_weekday** → Use `set_schedule_simple_weekday` instead
+
+The "simple" services remain fully backward compatible and continue to work as before.
+
+## Bump aiohomematic to [2026.2.1](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.1)
+
+### Bug Fixes
+
+- **LINK Paramset Validation**: Fixed `put_paramset` with `check_against_pd=True` for LINK paramsets. LINK paramsets are not cached during device initialization, so validation is now automatically skipped to prevent "Parameter not found" errors.
+- **Schedule Pydantic Models JSON Serialization**: Added `_JsonSerializableMixin` to all schedule Pydantic models to support orjson/Home Assistant JSON serialization.
+
+### Breaking Changes (aiohomematic)
+
+- **Climate Schedule API Unified to Pydantic Models**: The old dual-format API (TypedDict + Pydantic) has been removed. All schedule methods now use Pydantic models exclusively.
+
+  **Renamed methods in `BaseCustomDpClimate`:**
+  - `simple_schedule` → `schedule`
+  - `get_schedule_simple_profile()` → removed (use `get_schedule_profile()`)
+  - `get_schedule_simple_schedule()` → `get_schedule()`
+  - `get_schedule_simple_weekday()` → `get_schedule_weekday()`
+  - `set_simple_schedule()` → `set_schedule()`
+  - `set_simple_schedule_profile()` → `set_schedule_profile()`
+  - `set_simple_schedule_weekday()` → `set_schedule_weekday()`
+
+### New Features
+
+- **Schedule Pydantic Models**: New validated Pydantic models for climate device schedules:
+  - `ClimateSchedulePeriod`: Temperature periods with starttime, endtime, temperature
+  - `ClimateWeekdaySchedule`: Daily schedules with base_temperature and periods
+  - `ClimateProfileSchedule`: Weekly schedules (MONDAY-SUNDAY)
+  - `ClimateSchedule`: Complete profiles (P1-P6)
+
+### Validation Improvements
+
+Climate schedule validation now checks:
+- Time format (HH:MM, supports 24:00 for end-of-day)
+- Required fields (starttime, endtime, temperature)
+- Time sequence (start < end)
+- No overlapping periods
+- Valid weekdays (MONDAY-SUNDAY)
+- Valid profiles (P1-P6)
+
 # Version [2.2.4](https://github.com/SukramJ/homematicip_local/compare/2.2.3...2.2.4) (2026-02-01)
 
 ## What's Changed
