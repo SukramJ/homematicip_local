@@ -1,7 +1,7 @@
 """
-Functional tests for set_schedule service.
+Functional tests for schedule services.
 
-Tests the actual behavior of the set_schedule service including:
+Tests the actual behavior of the schedule services including:
 - Service call validation
 - Entity method invocation
 - Error handling
@@ -65,13 +65,16 @@ class TestSetScheduleServiceRegistration:
 
     @pytest.mark.asyncio
     async def test_service_registered_for_all_domains(self, hass: HomeAssistant) -> None:
-        """Test that set_schedule service is registered."""
+        """Test that set_schedule services are registered for all domains."""
         from custom_components.homematicip_local import services
 
         await services.async_setup_services(hass)
 
-        # Verify service is registered
-        assert hass.services.has_service(DOMAIN, HmipLocalServices.SET_SCHEDULE)
+        # Verify services are registered for all domains
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.COVER_SET_SCHEDULE)
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.LIGHT_SET_SCHEDULE)
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.SWITCH_SET_SCHEDULE)
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.VALVE_SET_SCHEDULE)
 
 
 class TestAsyncSetScheduleMethod:
@@ -184,15 +187,18 @@ class TestSetScheduleServiceIntegration:
 
     @pytest.mark.asyncio
     async def test_service_registered_and_callable(self, hass: HomeAssistant) -> None:
-        """Test that service is registered and can be called."""
+        """Test that services are registered and can be called."""
         from custom_components.homematicip_local import services
 
         await services.async_setup_services(hass)
 
-        # Service should be registered and callable
-        assert hass.services.has_service(DOMAIN, HmipLocalServices.SET_SCHEDULE)
+        # Services should be registered and callable for all domains
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.COVER_SET_SCHEDULE)
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.LIGHT_SET_SCHEDULE)
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.SWITCH_SET_SCHEDULE)
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.VALVE_SET_SCHEDULE)
 
-        # The service is platform-specific, so without actual entities it won't do much
+        # The services are platform-specific, so without actual entities they won't do much
         # This test validates registration, not full execution
 
 
@@ -213,6 +219,41 @@ class TestSetScheduleErrorHandling:
 
         # Exception should be wrapped in HomeAssistantError by @handle_homematic_errors decorator
         with pytest.raises(HomeAssistantError):
+            await mock_entity.async_set_schedule(schedule_data=schedule_data)
+
+    @pytest.mark.asyncio
+    async def test_set_schedule_wraps_validation_error(
+        self, mock_entity: AioHomematicGenericEntity, mock_custom_data_point: MagicMock
+    ) -> None:
+        """Test that Pydantic ValidationError is wrapped in HomeAssistantError."""
+        from pydantic import ValidationError
+        from pydantic_core import InitErrorDetails, PydanticCustomError
+
+        # Create a Pydantic ValidationError
+        error = PydanticCustomError("value_error", "Invalid level value")
+        errors: list[InitErrorDetails] = [{"type": error, "loc": ("level",), "input": 2.0}]
+        mock_custom_data_point.set_schedule.side_effect = ValidationError.from_exception_data(
+            "SimpleScheduleEntry", errors
+        )
+
+        schedule_data = {"1": {"time": "06:00", "level": 2.0}}
+
+        # ValidationError should be wrapped in HomeAssistantError
+        with pytest.raises(HomeAssistantError, match="Invalid schedule data"):
+            await mock_entity.async_set_schedule(schedule_data=schedule_data)
+
+    @pytest.mark.asyncio
+    async def test_set_schedule_wraps_value_error(
+        self, mock_entity: AioHomematicGenericEntity, mock_custom_data_point: MagicMock
+    ) -> None:
+        """Test that ValueError from domain-specific validation is wrapped in HomeAssistantError."""
+        # Make set_schedule raise a ValueError (domain-specific validation)
+        mock_custom_data_point.set_schedule.side_effect = ValueError("Switch level must be 0.0 or 1.0")
+
+        schedule_data = {"1": {"time": "06:00", "level": 0.5}}
+
+        # ValueError should be wrapped in HomeAssistantError
+        with pytest.raises(HomeAssistantError, match="Switch level must be 0.0 or 1.0"):
             await mock_entity.async_set_schedule(schedule_data=schedule_data)
 
 
@@ -296,13 +337,16 @@ class TestGetScheduleServiceRegistration:
 
     @pytest.mark.asyncio
     async def test_service_registered_for_all_domains(self, hass: HomeAssistant) -> None:
-        """Test that get_schedule service is registered."""
+        """Test that get_schedule services are registered for all domains."""
         from custom_components.homematicip_local import services
 
         await services.async_setup_services(hass)
 
-        # Verify service is registered
-        assert hass.services.has_service(DOMAIN, HmipLocalServices.GET_SCHEDULE)
+        # Verify services are registered for all domains
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.COVER_GET_SCHEDULE)
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.LIGHT_GET_SCHEDULE)
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.SWITCH_GET_SCHEDULE)
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.VALVE_GET_SCHEDULE)
 
 
 class TestAsyncGetScheduleMethod:
@@ -414,13 +458,293 @@ class TestGetScheduleServiceIntegration:
 
     @pytest.mark.asyncio
     async def test_service_registered_and_callable(self, hass: HomeAssistant) -> None:
-        """Test that service is registered and can be called."""
+        """Test that services are registered and can be called."""
         from custom_components.homematicip_local import services
 
         await services.async_setup_services(hass)
 
-        # Service should be registered and callable
-        assert hass.services.has_service(DOMAIN, HmipLocalServices.GET_SCHEDULE)
+        # Services should be registered and callable for all domains
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.COVER_GET_SCHEDULE)
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.LIGHT_GET_SCHEDULE)
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.SWITCH_GET_SCHEDULE)
+        assert hass.services.has_service(DOMAIN, HmipLocalServices.VALVE_GET_SCHEDULE)
 
-        # The service is platform-specific, so without actual entities it won't do much
+        # The services are platform-specific, so without actual entities they won't do much
         # This test validates registration, not full execution
+
+
+class TestScheduleSchemaValidation:
+    """Test domain-specific Voluptuous schema validation."""
+
+    def test_cover_schema_accepts_level_2(self) -> None:
+        """Test cover schema accepts level_2 field."""
+        import voluptuous as vol
+
+        from custom_components.homematicip_local.services import SCHEMA_COVER_SCHEDULE_DATA
+
+        valid_data = {
+            "schedule_data": {
+                "1": {
+                    "weekdays": ["MONDAY"],
+                    "time": "08:00",
+                    "target_channels": ["1_1"],
+                    "level": 0.5,
+                    "level_2": 0.3,
+                }
+            }
+        }
+
+        # Should not raise
+        result = vol.Schema(SCHEMA_COVER_SCHEDULE_DATA)(valid_data)
+        assert result["schedule_data"]["1"]["level_2"] == 0.3
+
+    def test_cover_schema_rejects_duration(self) -> None:
+        """Test cover schema rejects duration field."""
+        import voluptuous as vol
+
+        from custom_components.homematicip_local.services import SCHEMA_COVER_SCHEDULE_DATA
+
+        invalid_data = {
+            "schedule_data": {
+                "1": {
+                    "weekdays": ["MONDAY"],
+                    "time": "08:00",
+                    "target_channels": ["1_1"],
+                    "level": 0.5,
+                    "duration": "30min",  # Not allowed for cover
+                }
+            }
+        }
+
+        with pytest.raises(vol.Invalid, match="extra keys not allowed"):
+            vol.Schema(SCHEMA_COVER_SCHEDULE_DATA)(invalid_data)
+
+    def test_light_schema_accepts_ramp_time(self) -> None:
+        """Test light schema accepts ramp_time field."""
+        import voluptuous as vol
+
+        from custom_components.homematicip_local.services import SCHEMA_LIGHT_SCHEDULE_DATA
+
+        valid_data = {
+            "schedule_data": {
+                "1": {
+                    "weekdays": ["MONDAY"],
+                    "time": "06:00",
+                    "target_channels": ["1_1"],
+                    "level": 0.8,
+                    "duration": "2h",
+                    "ramp_time": "10s",
+                }
+            }
+        }
+
+        # Should not raise
+        result = vol.Schema(SCHEMA_LIGHT_SCHEDULE_DATA)(valid_data)
+        assert result["schedule_data"]["1"]["ramp_time"] == "10s"
+
+    def test_light_schema_rejects_level_2(self) -> None:
+        """Test light schema rejects level_2 field."""
+        import voluptuous as vol
+
+        from custom_components.homematicip_local.services import SCHEMA_LIGHT_SCHEDULE_DATA
+
+        invalid_data = {
+            "schedule_data": {
+                "1": {
+                    "weekdays": ["MONDAY"],
+                    "time": "06:00",
+                    "target_channels": ["1_1"],
+                    "level": 0.8,
+                    "level_2": 0.5,  # Not allowed for light
+                }
+            }
+        }
+
+        with pytest.raises(vol.Invalid, match="extra keys not allowed"):
+            vol.Schema(SCHEMA_LIGHT_SCHEDULE_DATA)(invalid_data)
+
+    def test_schema_rejects_invalid_entry_number(self) -> None:
+        """Test schema rejects entry number outside 1-24 range."""
+        import voluptuous as vol
+
+        from custom_components.homematicip_local.services import SCHEMA_SWITCH_SCHEDULE_DATA
+
+        invalid_data = {
+            "schedule_data": {
+                "25": {  # Invalid: must be 1-24
+                    "weekdays": ["MONDAY"],
+                    "time": "06:00",
+                    "target_channels": ["1_1"],
+                    "level": 1.0,
+                }
+            }
+        }
+
+        with pytest.raises(vol.Invalid, match="must be 1-24"):
+            vol.Schema(SCHEMA_SWITCH_SCHEDULE_DATA)(invalid_data)
+
+    def test_schema_rejects_invalid_target_channel(self) -> None:
+        """Test schema rejects invalid target_channels format."""
+        import voluptuous as vol
+
+        from custom_components.homematicip_local.services import SCHEMA_SWITCH_SCHEDULE_DATA
+
+        invalid_data = {
+            "schedule_data": {
+                "1": {
+                    "weekdays": ["MONDAY"],
+                    "time": "06:00",
+                    "target_channels": ["invalid"],  # Invalid format
+                    "level": 1.0,
+                }
+            }
+        }
+
+        with pytest.raises(vol.Invalid, match="Invalid channel format"):
+            vol.Schema(SCHEMA_SWITCH_SCHEDULE_DATA)(invalid_data)
+
+    def test_schema_rejects_invalid_time_format(self) -> None:
+        """Test schema rejects invalid time format."""
+        import voluptuous as vol
+
+        from custom_components.homematicip_local.services import SCHEMA_SWITCH_SCHEDULE_DATA
+
+        invalid_data = {
+            "schedule_data": {
+                "1": {
+                    "weekdays": ["MONDAY"],
+                    "time": "25:00",  # Invalid hour
+                    "target_channels": ["1_1"],
+                    "level": 1.0,
+                }
+            }
+        }
+
+        with pytest.raises(vol.Invalid, match="Invalid time format"):
+            vol.Schema(SCHEMA_SWITCH_SCHEDULE_DATA)(invalid_data)
+
+    def test_schema_rejects_invalid_weekday(self) -> None:
+        """Test schema rejects invalid weekday values."""
+        import voluptuous as vol
+
+        from custom_components.homematicip_local.services import SCHEMA_SWITCH_SCHEDULE_DATA
+
+        invalid_data = {
+            "schedule_data": {
+                "1": {
+                    "weekdays": ["INVALID_DAY"],
+                    "time": "06:00",
+                    "target_channels": ["1_1"],
+                    "level": 1.0,
+                }
+            }
+        }
+
+        with pytest.raises(vol.Invalid, match="Invalid weekday"):
+            vol.Schema(SCHEMA_SWITCH_SCHEDULE_DATA)(invalid_data)
+
+    def test_switch_schema_accepts_valid_data(self) -> None:
+        """Test switch schema accepts valid schedule data."""
+        import voluptuous as vol
+
+        from custom_components.homematicip_local.services import SCHEMA_SWITCH_SCHEDULE_DATA
+
+        valid_data = {
+            "schedule_data": {
+                "1": {
+                    "weekdays": ["MONDAY", "TUESDAY"],
+                    "time": "06:00",
+                    "target_channels": ["1_1"],
+                    "level": 1.0,
+                    "duration": "30min",
+                }
+            }
+        }
+
+        # Should not raise
+        result = vol.Schema(SCHEMA_SWITCH_SCHEDULE_DATA)(valid_data)
+        assert result["schedule_data"]["1"]["level"] == 1.0
+
+    def test_switch_schema_rejects_non_binary_level(self) -> None:
+        """Test switch schema rejects level values other than 0.0 or 1.0."""
+        import voluptuous as vol
+
+        from custom_components.homematicip_local.services import SCHEMA_SWITCH_SCHEDULE_DATA
+
+        invalid_data = {
+            "schedule_data": {
+                "1": {
+                    "weekdays": ["MONDAY"],
+                    "time": "06:00",
+                    "target_channels": ["1_1"],
+                    "level": 0.5,  # Invalid for switch
+                }
+            }
+        }
+
+        with pytest.raises(vol.Invalid, match="Switch level must be 0.0 or 1.0"):
+            vol.Schema(SCHEMA_SWITCH_SCHEDULE_DATA)(invalid_data)
+
+    def test_switch_schema_rejects_ramp_time(self) -> None:
+        """Test switch schema rejects ramp_time field."""
+        import voluptuous as vol
+
+        from custom_components.homematicip_local.services import SCHEMA_SWITCH_SCHEDULE_DATA
+
+        invalid_data = {
+            "schedule_data": {
+                "1": {
+                    "weekdays": ["MONDAY"],
+                    "time": "06:00",
+                    "target_channels": ["1_1"],
+                    "level": 1.0,
+                    "ramp_time": "10s",  # Not allowed for switch
+                }
+            }
+        }
+
+        with pytest.raises(vol.Invalid, match="extra keys not allowed"):
+            vol.Schema(SCHEMA_SWITCH_SCHEDULE_DATA)(invalid_data)
+
+    def test_valve_schema_accepts_duration(self) -> None:
+        """Test valve schema accepts duration field."""
+        import voluptuous as vol
+
+        from custom_components.homematicip_local.services import SCHEMA_VALVE_SCHEDULE_DATA
+
+        valid_data = {
+            "schedule_data": {
+                "1": {
+                    "weekdays": ["MONDAY"],
+                    "time": "06:00",
+                    "target_channels": ["1_1"],
+                    "level": 1.0,
+                    "duration": "30min",
+                }
+            }
+        }
+
+        # Should not raise
+        result = vol.Schema(SCHEMA_VALVE_SCHEDULE_DATA)(valid_data)
+        assert result["schedule_data"]["1"]["duration"] == "30min"
+
+    def test_valve_schema_rejects_level_2(self) -> None:
+        """Test valve schema rejects level_2 field."""
+        import voluptuous as vol
+
+        from custom_components.homematicip_local.services import SCHEMA_VALVE_SCHEDULE_DATA
+
+        invalid_data = {
+            "schedule_data": {
+                "1": {
+                    "weekdays": ["MONDAY"],
+                    "time": "06:00",
+                    "target_channels": ["1_1"],
+                    "level": 1.0,
+                    "level_2": 0.5,  # Not allowed for valve
+                }
+            }
+        }
+
+        with pytest.raises(vol.Invalid, match="extra keys not allowed"):
+            vol.Schema(SCHEMA_VALVE_SCHEDULE_DATA)(invalid_data)

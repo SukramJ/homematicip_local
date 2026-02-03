@@ -432,14 +432,16 @@ set_schedule_simple_weekday:
       selector:
         object:
 
-set_schedule:
+cover_get_schedule:
   target:
     entity:
-      domain:
-        - switch
-        - light
-        - cover
-        - valve
+      domain: cover
+      integration: homematicip_local
+
+cover_set_schedule:
+  target:
+    entity:
+      domain: cover
       integration: homematicip_local
   fields:
     schedule_data:
@@ -447,15 +449,56 @@ set_schedule:
       selector:
         object:
 
-get_schedule:
+light_get_schedule:
   target:
     entity:
-      domain:
-        - switch
-        - light
-        - cover
-        - valve
+      domain: light
       integration: homematicip_local
+
+light_set_schedule:
+  target:
+    entity:
+      domain: light
+      integration: homematicip_local
+  fields:
+    schedule_data:
+      required: true
+      selector:
+        object:
+
+switch_get_schedule:
+  target:
+    entity:
+      domain: switch
+      integration: homematicip_local
+
+switch_set_schedule:
+  target:
+    entity:
+      domain: switch
+      integration: homematicip_local
+  fields:
+    schedule_data:
+      required: true
+      selector:
+        object:
+
+valve_get_schedule:
+  target:
+    entity:
+      domain: valve
+      integration: homematicip_local
+
+valve_set_schedule:
+  target:
+    entity:
+      domain: valve
+      integration: homematicip_local
+  fields:
+    schedule_data:
+      required: true
+      selector:
+        object:
 
 set_variable_value:
   fields:

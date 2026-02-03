@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, cast
+import re
+from typing import TYPE_CHECKING, Any, Final, cast
 
 import voluptuous as vol
 
@@ -116,6 +118,166 @@ CONF_VALUE_TYPE: Final = "value_type"
 CONF_WAIT_FOR_CALLBACK: Final = "wait_for_callback"
 
 DEFAULT_CHANNEL: Final = 1
+
+# Schedule field constants
+SCHEDULE_FIELD_WEEKDAYS: Final = "weekdays"
+SCHEDULE_FIELD_TIME: Final = "time"
+SCHEDULE_FIELD_CONDITION: Final = "condition"
+SCHEDULE_FIELD_ASTRO_TYPE: Final = "astro_type"
+SCHEDULE_FIELD_ASTRO_OFFSET_MINUTES: Final = "astro_offset_minutes"
+SCHEDULE_FIELD_TARGET_CHANNELS: Final = "target_channels"
+SCHEDULE_FIELD_LEVEL: Final = "level"
+SCHEDULE_FIELD_LEVEL_2: Final = "level_2"
+SCHEDULE_FIELD_DURATION: Final = "duration"
+SCHEDULE_FIELD_RAMP_TIME: Final = "ramp_time"
+
+# Valid weekday values
+VALID_WEEKDAYS: Final = frozenset({"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"})
+
+# Valid condition values
+VALID_CONDITIONS: Final = frozenset({"fixed_time", "astro", "fixed_if_before_astro", "fixed_if_after_astro"})
+
+# Valid astro types
+VALID_ASTRO_TYPES: Final = frozenset({"sunrise", "sunset"})
+
+
+def _validate_weekdays(value: list[str]) -> list[str]:
+    """Validate weekdays list."""
+    if not value:
+        raise vol.Invalid("At least one weekday is required")
+    for day in value:
+        if day not in VALID_WEEKDAYS:
+            raise vol.Invalid(f"Invalid weekday: {day}. Must be one of {VALID_WEEKDAYS}")
+    return value
+
+
+def _validate_time_format(value: str) -> str:
+    """Validate time format HH:MM."""
+    if not re.match(r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", value):
+        raise vol.Invalid(f"Invalid time format: {value}. Must be HH:MM (00:00-23:59)")
+    return value
+
+
+def _validate_target_channels(value: list[str]) -> list[str]:
+    """Validate target_channels list."""
+    if not value:
+        raise vol.Invalid("At least one target channel is required")
+    for channel in value:
+        if not re.match(r"^[1-8]_[1-3]$", channel):
+            raise vol.Invalid(f"Invalid channel format: {channel}. Must be X_Y (X=1-8, Y=1-3)")
+    return value
+
+
+def _validate_duration_format(value: str) -> str:
+    """Validate duration format (e.g., 10s, 5min, 1h)."""
+    if not re.match(r"^\d+(ms|s|min|h)$", value):
+        raise vol.Invalid(f"Invalid duration format: {value}. Must be number + unit (ms, s, min, h)")
+    return value
+
+
+def _validate_switch_level(value: float) -> float:
+    """Validate switch level (must be 0.0 or 1.0)."""
+    if value not in (0.0, 1.0):
+        raise vol.Invalid(f"Switch level must be 0.0 or 1.0, got {value}")
+    return value
+
+
+# Base schedule entry schema (common fields)
+_SCHEDULE_ENTRY_BASE = {
+    vol.Required(SCHEDULE_FIELD_WEEKDAYS): _validate_weekdays,
+    vol.Required(SCHEDULE_FIELD_TIME): _validate_time_format,
+    vol.Required(SCHEDULE_FIELD_TARGET_CHANNELS): _validate_target_channels,
+    vol.Optional(SCHEDULE_FIELD_CONDITION, default="fixed_time"): vol.In(VALID_CONDITIONS),
+    vol.Optional(SCHEDULE_FIELD_ASTRO_TYPE): vol.Any(None, vol.In(VALID_ASTRO_TYPES)),
+    vol.Optional(SCHEDULE_FIELD_ASTRO_OFFSET_MINUTES, default=0): vol.All(
+        vol.Coerce(int), vol.Range(min=-720, max=720)
+    ),
+}
+
+# Switch schedule entry: level must be 0.0 or 1.0, no level_2, no ramp_time
+SCHEMA_SWITCH_SCHEDULE_ENTRY = vol.Schema(
+    {
+        **_SCHEDULE_ENTRY_BASE,
+        vol.Required(SCHEDULE_FIELD_LEVEL): vol.All(vol.Coerce(float), _validate_switch_level),
+        vol.Optional(SCHEDULE_FIELD_DURATION): _validate_duration_format,
+    }
+)
+
+# Light schedule entry: supports ramp_time, no level_2
+SCHEMA_LIGHT_SCHEDULE_ENTRY = vol.Schema(
+    {
+        **_SCHEDULE_ENTRY_BASE,
+        vol.Required(SCHEDULE_FIELD_LEVEL): vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
+        vol.Optional(SCHEDULE_FIELD_DURATION): _validate_duration_format,
+        vol.Optional(SCHEDULE_FIELD_RAMP_TIME): _validate_duration_format,
+    }
+)
+
+# Cover schedule entry: supports level_2, no duration, no ramp_time
+SCHEMA_COVER_SCHEDULE_ENTRY = vol.Schema(
+    {
+        **_SCHEDULE_ENTRY_BASE,
+        vol.Required(SCHEDULE_FIELD_LEVEL): vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
+        vol.Optional(SCHEDULE_FIELD_LEVEL_2): vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
+    }
+)
+
+# Valve schedule entry: supports duration, no level_2, no ramp_time
+SCHEMA_VALVE_SCHEDULE_ENTRY = vol.Schema(
+    {
+        **_SCHEDULE_ENTRY_BASE,
+        vol.Required(SCHEDULE_FIELD_LEVEL): vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
+        vol.Optional(SCHEDULE_FIELD_DURATION): _validate_duration_format,
+    }
+)
+
+
+def _create_schedule_data_validator(
+    entry_schema: vol.Schema,
+) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Create a schedule_data validator for a specific entry schema."""
+
+    def validate_schedule_data(value: dict[str, Any]) -> dict[str, Any]:
+        """Validate schedule_data dictionary."""
+        if not isinstance(value, dict):
+            raise vol.Invalid("schedule_data must be a dictionary")
+
+        validated: dict[str, Any] = {}
+        for key, entry in value.items():
+            # Keys should be string numbers "1" to "24"
+            if not isinstance(key, str) or not key.isdigit():
+                raise vol.Invalid(f"Schedule entry key must be a string number, got: {key}")
+            entry_num = int(key)
+            if entry_num < 1 or entry_num > 24:
+                raise vol.Invalid(f"Schedule entry number must be 1-24, got: {entry_num}")
+
+            # Validate the entry with the domain-specific schema
+            try:
+                validated[key] = entry_schema(entry)
+            except vol.Invalid as exc:
+                raise vol.Invalid(f"Invalid schedule entry '{key}': {exc.msg}") from exc
+
+        return validated
+
+    return validate_schedule_data
+
+
+# Domain-specific schedule_data schemas
+SCHEMA_SWITCH_SCHEDULE_DATA: dict[vol.Marker | str, Any] = {
+    vol.Required(ATTR_SCHEDULE_DATA): _create_schedule_data_validator(SCHEMA_SWITCH_SCHEDULE_ENTRY)
+}
+
+SCHEMA_LIGHT_SCHEDULE_DATA: dict[vol.Marker | str, Any] = {
+    vol.Required(ATTR_SCHEDULE_DATA): _create_schedule_data_validator(SCHEMA_LIGHT_SCHEDULE_ENTRY)
+}
+
+SCHEMA_COVER_SCHEDULE_DATA: dict[vol.Marker | str, Any] = {
+    vol.Required(ATTR_SCHEDULE_DATA): _create_schedule_data_validator(SCHEMA_COVER_SCHEDULE_ENTRY)
+}
+
+SCHEMA_VALVE_SCHEDULE_DATA: dict[vol.Marker | str, Any] = {
+    vol.Required(ATTR_SCHEDULE_DATA): _create_schedule_data_validator(SCHEMA_VALVE_SCHEDULE_ENTRY)
+}
 
 BASE_SCHEMA_DEVICE = vol.Schema(
     {
@@ -319,56 +481,6 @@ SCHEMA_UPDATE_DEVICE_FIRMWARE_DATA = vol.Schema(
         vol.Required(CONF_ENTRY_ID): cv.string,
     }
 )
-
-
-def _register_set_schedule_services(hass: HomeAssistant) -> None:
-    """Register set_schedule service for non-climate devices."""
-    # TEMPORARY: Register only for light domain to test
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.SET_SCHEDULE,
-        entity_domain=LIGHT_DOMAIN,
-        schema={
-            vol.Required(ATTR_SCHEDULE_DATA): dict,
-        },
-        func="async_set_schedule",
-    )
-    # for entity_domain in (SWITCH_DOMAIN, LIGHT_DOMAIN, COVER_DOMAIN, VALVE_DOMAIN):
-    #     async_register_platform_entity_service(
-    #         hass=hass,
-    #         service_domain=DOMAIN,
-    #         service_name=HmipLocalServices.SET_SCHEDULE,
-    #         entity_domain=entity_domain,
-    #         schema={
-    #             vol.Required(ATTR_SCHEDULE_DATA): dict,
-    #         },
-    #         func="async_set_schedule",
-    #     )
-
-
-def _register_get_schedule_services(hass: HomeAssistant) -> None:
-    """Register get_schedule service for non-climate devices."""
-    # TEMPORARY: Register only for light domain to test
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.GET_SCHEDULE,
-        entity_domain=LIGHT_DOMAIN,
-        schema={},
-        func="async_get_schedule",
-        supports_response=SupportsResponse.OPTIONAL,
-    )
-    # for entity_domain in (SWITCH_DOMAIN, LIGHT_DOMAIN, COVER_DOMAIN, VALVE_DOMAIN):
-    #     async_register_platform_entity_service(
-    #         hass=hass,
-    #         service_domain=DOMAIN,
-    #         service_name=HmipLocalServices.GET_SCHEDULE,
-    #         entity_domain=entity_domain,
-    #         schema={},
-    #         func="async_get_schedule",
-    #         supports_response=SupportsResponse.OPTIONAL,
-    #     )
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
@@ -732,26 +844,85 @@ async def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         func="async_set_schedule_weekday",
     )
 
-    # Set schedule for non-climate devices
-    for domain in (LIGHT_DOMAIN, SWITCH_DOMAIN, COVER_DOMAIN, VALVE_DOMAIN):
-        async_register_platform_entity_service(
-            hass=hass,
-            service_domain=DOMAIN,
-            service_name=HmipLocalServices.SET_SCHEDULE,
-            entity_domain=domain,
-            schema={vol.Required(ATTR_SCHEDULE_DATA): dict},
-            func="async_set_schedule",
-        )
+    # Schedule services for cover
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.COVER_GET_SCHEDULE,
+        entity_domain=COVER_DOMAIN,
+        schema={},
+        func="async_get_schedule",
+        supports_response=SupportsResponse.OPTIONAL,
+    )
 
-        async_register_platform_entity_service(
-            hass=hass,
-            service_domain=DOMAIN,
-            service_name=HmipLocalServices.GET_SCHEDULE,
-            entity_domain=domain,
-            schema={},
-            func="async_get_schedule",
-            supports_response=SupportsResponse.OPTIONAL,
-        )
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.COVER_SET_SCHEDULE,
+        entity_domain=COVER_DOMAIN,
+        schema=SCHEMA_COVER_SCHEDULE_DATA,
+        func="async_set_schedule",
+    )
+
+    # Schedule services for light
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.LIGHT_GET_SCHEDULE,
+        entity_domain=LIGHT_DOMAIN,
+        schema={},
+        func="async_get_schedule",
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.LIGHT_SET_SCHEDULE,
+        entity_domain=LIGHT_DOMAIN,
+        schema=SCHEMA_LIGHT_SCHEDULE_DATA,
+        func="async_set_schedule",
+    )
+
+    # Schedule services for switch
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.SWITCH_GET_SCHEDULE,
+        entity_domain=SWITCH_DOMAIN,
+        schema={},
+        func="async_get_schedule",
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.SWITCH_SET_SCHEDULE,
+        entity_domain=SWITCH_DOMAIN,
+        schema=SCHEMA_SWITCH_SCHEDULE_DATA,
+        func="async_set_schedule",
+    )
+
+    # Schedule services for valve
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.VALVE_GET_SCHEDULE,
+        entity_domain=VALVE_DOMAIN,
+        schema={},
+        func="async_get_schedule",
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.VALVE_SET_SCHEDULE,
+        entity_domain=VALVE_DOMAIN,
+        schema=SCHEMA_VALVE_SCHEDULE_DATA,
+        func="async_set_schedule",
+    )
 
     async_register_platform_entity_service(
         hass=hass,

@@ -9,6 +9,7 @@ import logging
 import re
 from typing import Any, Final, TypeAlias, TypeVar
 
+from pydantic import ValidationError
 import voluptuous as vol
 
 from aiohomematic.const import CHANNEL_ADDRESS_PATTERN, DEVICE_ADDRESS_PATTERN, IDENTIFIER_SEPARATOR, ParamsetKey
@@ -183,6 +184,13 @@ def handle_homematic_errors[**P, R](
         try:
             return await func(*args, **kwargs)
         except BaseHomematicException as exc:
+            raise HomeAssistantError(str(exc)) from exc
+        except ValidationError as exc:
+            # Pydantic validation errors - format user-friendly message
+            errors = "; ".join(e["msg"] for e in exc.errors())
+            raise HomeAssistantError(f"Invalid schedule data: {errors}") from exc
+        except ValueError as exc:
+            # Domain-specific validation errors from aiohomematic
             raise HomeAssistantError(str(exc)) from exc
 
     return wrapper

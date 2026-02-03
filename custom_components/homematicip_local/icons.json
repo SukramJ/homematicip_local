@@ -74,6 +74,8 @@
     "clear_cache": "mdi:trash-can",
     "copy_schedule": "mdi:calendar",
     "copy_schedule_profile": "mdi:calendar",
+    "cover_get_schedule": "mdi:calendar",
+    "cover_set_schedule": "mdi:calendar",
     "create_central_links": "mdi:link",
     "disable_away_mode": "mdi:caravan",
     "enable_away_mode_by_calendar": "mdi:caravan",
@@ -85,7 +87,9 @@
     "get_link_paramset": "mdi:link",
     "get_link_peers": "mdi:link,",
     "get_paramset": "mdi:download-box",
+    "light_get_schedule": "mdi:calendar",
     "light_set_on_time": "mdi:timer-check-outline",
+    "light_set_schedule": "mdi:calendar",
     "put_link_paramset": "mdi:link",
     "put_paramset": "mdi:content-save",
     "remove_central_links": "mdi:link",
@@ -94,8 +98,12 @@
     "set_schedule_simple_profile": "mdi:calendar",
     "set_schedule_simple_weekday": "mdi:calendar",
     "set_variable_value": "mdi:content-save",
+    "switch_get_schedule": "mdi:calendar",
     "switch_set_on_time": "mdi:timer-check-outline",
+    "switch_set_schedule": "mdi:calendar",
     "turn_on_siren": "mdi:alarm",
-    "update_device_firmware_data": "mdi:update"
+    "update_device_firmware_data": "mdi:update",
+    "valve_get_schedule": "mdi:calendar",
+    "valve_set_schedule": "mdi:calendar"
   }
 }

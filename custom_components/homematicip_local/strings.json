@@ -1213,6 +1213,20 @@
             }, 
             "name": "Copy schedule profile"
         }, 
+        "cover_get_schedule": {
+            "description": "Return the week schedule for a cover.", 
+            "name": "Get cover schedule"
+        }, 
+        "cover_set_schedule": {
+            "description": "Set the week schedule for a cover.", 
+            "fields": {
+                "schedule_data": {
+                    "description": "The schedule data dictionary. Structure: {group_no: {field: value, ...}, ...}. See aiohomematic documentation for DefaultWeekProfile format.", 
+                    "name": "Schedule data"
+                }
+            }, 
+            "name": "Set cover schedule"
+        }, 
         "create_ccu_backup": {
             "description": "Create and download a system backup from the CCU. Saves the backup file to the configured backup directory.", 
             "fields": {
@@ -1383,10 +1397,6 @@
             }, 
             "name": "Get paramset"
         }, 
-        "get_schedule": {
-            "description": "Returns the week schedule for non-climate devices (switches, lights, covers, valves).", 
-            "name": "Get schedule"
-        }, 
         "get_schedule_simple_profile": {
             "description": "Call to get a schedule of a climate device in simplified format", 
             "fields": {
@@ -1425,6 +1435,10 @@
             }, 
             "name": "Get variable value"
         }, 
+        "light_get_schedule": {
+            "description": "Return the week schedule for a light.", 
+            "name": "Get light schedule"
+        }, 
         "light_set_on_time": {
             "description": "Set on time for a light entity. Must be followed by a light.turn_on", 
             "fields": {
@@ -1434,6 +1448,16 @@
                 }
             }, 
             "name": "Set light on time"
+        }, 
+        "light_set_schedule": {
+            "description": "Set the week schedule for a light.", 
+            "fields": {
+                "schedule_data": {
+                    "description": "The schedule data dictionary. Structure: {group_no: {field: value, ...}, ...}. See aiohomematic documentation for DefaultWeekProfile format.", 
+                    "name": "Schedule data"
+                }
+            }, 
+            "name": "Set light schedule"
         }, 
         "play_sound": {
             "description": "Play a sound on HmIP-MP3P sound player devices", 
@@ -1689,16 +1713,6 @@
             }, 
             "name": "Set device value"
         }, 
-        "set_schedule": {
-            "description": "Sets the week schedule for non-climate devices (switches, lights, covers, valves).", 
-            "fields": {
-                "schedule_data": {
-                    "description": "The schedule data dictionary. Structure: {group_no: {field: value, ...}, ...}. See aiohomematic documentation for DefaultWeekProfile format.", 
-                    "name": "Schedule data"
-                }
-            }, 
-            "name": "Set schedule"
-        }, 
         "set_schedule_active_profile": {
             "description": "Set the active schedule profile on a climate device", 
             "fields": {
@@ -1797,6 +1811,10 @@
             "description": "Stop sound playback on HmIP-MP3P sound player devices", 
             "name": "Stop sound"
         }, 
+        "switch_get_schedule": {
+            "description": "Return the week schedule for a switch.", 
+            "name": "Get switch schedule"
+        }, 
         "switch_set_on_time": {
             "description": "Set on time for a switch entity. Must be followed by a switch.turn_on", 
             "fields": {
@@ -1806,6 +1824,16 @@
                 }
             }, 
             "name": "Set switch on time"
+        }, 
+        "switch_set_schedule": {
+            "description": "Set the week schedule for a switch.", 
+            "fields": {
+                "schedule_data": {
+                    "description": "The schedule data dictionary. Structure: {group_no: {field: value, ...}, ...}. See aiohomematic documentation for DefaultWeekProfile format.", 
+                    "name": "Schedule data"
+                }
+            }, 
+            "name": "Set switch schedule"
         }, 
         "turn_on_siren": {
             "description": "Turn siren on", 
@@ -1835,6 +1863,10 @@
             }, 
             "name": "Update device firmware data"
         }, 
+        "valve_get_schedule": {
+            "description": "Return the week schedule for a valve.", 
+            "name": "Get valve schedule"
+        }, 
         "valve_set_on_time": {
             "description": "Set on time for a valve entity. Must be followed by a valve.open", 
             "fields": {
@@ -1844,6 +1876,16 @@
                 }
             }, 
             "name": "Set valve on time"
+        }, 
+        "valve_set_schedule": {
+            "description": "Set the week schedule for a valve.", 
+            "fields": {
+                "schedule_data": {
+                    "description": "The schedule data dictionary. Structure: {group_no: {field: value, ...}, ...}. See aiohomematic documentation for DefaultWeekProfile format.", 
+                    "name": "Schedule data"
+                }
+            }, 
+            "name": "Set valve schedule"
         }
     }
 }
