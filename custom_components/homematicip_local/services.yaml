@@ -447,6 +447,16 @@ set_schedule:
       selector:
         object:
 
+get_schedule:
+  target:
+    entity:
+      domain:
+        - switch
+        - light
+        - cover
+        - valve
+      integration: homematicip_local
+
 set_variable_value:
   fields:
     entry_id:

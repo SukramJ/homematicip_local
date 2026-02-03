@@ -1695,6 +1695,10 @@
                 }
             }
         },
+        "get_schedule": {
+            "name": "Get schedule",
+            "description": "Returns the week schedule for non-climate devices (switches, lights, covers, valves)."
+        },
         "set_schedule_active_profile": {
             "description": "Set the active schedule profile on a climate device", 
             "fields": {

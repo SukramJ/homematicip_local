@@ -1383,6 +1383,10 @@
             }, 
             "name": "Get paramset"
         }, 
+        "get_schedule": {
+            "description": "Returns the week schedule for non-climate devices (switches, lights, covers, valves).", 
+            "name": "Get schedule"
+        }, 
         "get_schedule_simple_profile": {
             "description": "Call to get a schedule of a climate device in simplified format", 
             "fields": {

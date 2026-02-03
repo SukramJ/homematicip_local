@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, Final, Generic, override
+from typing import Any, Final, Generic, cast, override
 
 from aiohomematic.const import CallSource, DataPointUsage
 from aiohomematic.interfaces import (
@@ -17,7 +17,7 @@ from aiohomematic.interfaces import (
     GenericSysvarDataPointProtocol,
 )
 from aiohomematic.type_aliases import UnsubscribeCallback
-from homeassistant.core import State, callback
+from homeassistant.core import ServiceResponse, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -269,7 +269,25 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
             )
 
     @handle_homematic_errors
-    async def async_set_schedule(self, schedule_data: dict[int, dict[Any, Any]]) -> None:
+    async def async_get_schedule(self) -> ServiceResponse:
+        """Return the week schedule for non-climate devices."""
+        if not isinstance(self._data_point, CustomDataPointProtocol):
+            _LOGGER.warning(
+                "GET_SCHEDULE: Entity %s does not support schedules",
+                self.entity_id,
+            )
+            return {}
+        if not self._data_point.has_schedule:
+            _LOGGER.warning(
+                "GET_SCHEDULE: Entity %s has no schedule support",
+                self.entity_id,
+            )
+            return {}
+
+        return cast(ServiceResponse, await self._data_point.get_schedule(force_load=True))
+
+    @handle_homematic_errors
+    async def async_set_schedule(self, schedule_data: dict[str, Any]) -> None:
         """Set the week schedule for non-climate devices."""
         if not isinstance(self._data_point, CustomDataPointProtocol):
             _LOGGER.warning(
@@ -283,14 +301,8 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
                 self.entity_id,
             )
             return
-        week_profile = self._data_point.device.week_profile
-        if week_profile is None:
-            _LOGGER.warning(
-                "SET_SCHEDULE: Entity %s has no week profile",
-                self.entity_id,
-            )
-            return
-        await week_profile.set_schedule(schedule_data=schedule_data)
+
+        await self._data_point.set_schedule(schedule_data=schedule_data)
 
     async def async_update(self) -> None:
         """Update entities."""

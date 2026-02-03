@@ -323,21 +323,58 @@ SCHEMA_UPDATE_DEVICE_FIRMWARE_DATA = vol.Schema(
 
 def _register_set_schedule_services(hass: HomeAssistant) -> None:
     """Register set_schedule service for non-climate devices."""
-    for entity_domain in (SWITCH_DOMAIN, LIGHT_DOMAIN, COVER_DOMAIN, VALVE_DOMAIN):
-        async_register_platform_entity_service(
-            hass=hass,
-            service_domain=DOMAIN,
-            service_name=HmipLocalServices.SET_SCHEDULE,
-            entity_domain=entity_domain,
-            schema={
-                vol.Required(ATTR_SCHEDULE_DATA): dict,
-            },
-            func="async_set_schedule",
-        )
+    # TEMPORARY: Register only for light domain to test
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.SET_SCHEDULE,
+        entity_domain=LIGHT_DOMAIN,
+        schema={
+            vol.Required(ATTR_SCHEDULE_DATA): dict,
+        },
+        func="async_set_schedule",
+    )
+    # for entity_domain in (SWITCH_DOMAIN, LIGHT_DOMAIN, COVER_DOMAIN, VALVE_DOMAIN):
+    #     async_register_platform_entity_service(
+    #         hass=hass,
+    #         service_domain=DOMAIN,
+    #         service_name=HmipLocalServices.SET_SCHEDULE,
+    #         entity_domain=entity_domain,
+    #         schema={
+    #             vol.Required(ATTR_SCHEDULE_DATA): dict,
+    #         },
+    #         func="async_set_schedule",
+    #     )
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+def _register_get_schedule_services(hass: HomeAssistant) -> None:
+    """Register get_schedule service for non-climate devices."""
+    # TEMPORARY: Register only for light domain to test
+    async_register_platform_entity_service(
+        hass=hass,
+        service_domain=DOMAIN,
+        service_name=HmipLocalServices.GET_SCHEDULE,
+        entity_domain=LIGHT_DOMAIN,
+        schema={},
+        func="async_get_schedule",
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    # for entity_domain in (SWITCH_DOMAIN, LIGHT_DOMAIN, COVER_DOMAIN, VALVE_DOMAIN):
+    #     async_register_platform_entity_service(
+    #         hass=hass,
+    #         service_domain=DOMAIN,
+    #         service_name=HmipLocalServices.GET_SCHEDULE,
+    #         entity_domain=entity_domain,
+    #         schema={},
+    #         func="async_get_schedule",
+    #         supports_response=SupportsResponse.OPTIONAL,
+    #     )
+
+
+async def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Create the aiohomematic services."""
+    # NOTE: Services may be registered multiple times if multiple config entries exist
+    # This is intentional - Home Assistant handles this gracefully
 
     @verify_domain_control(DOMAIN)
     async def async_call_hmip_local_service(service: ServiceCall) -> ServiceResponse:
@@ -641,7 +678,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         schema={
             vol.Required(ATTR_PROFILE): cv.string,
         },
-        func="async_get_schedule_simple_profile",
+        func="async_get_schedule_profile",
         supports_response=SupportsResponse.OPTIONAL,
     )
 
@@ -654,7 +691,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             vol.Required(ATTR_PROFILE): cv.string,
             vol.Required(ATTR_WEEKDAY): cv.string,
         },
-        func="async_get_schedule_simple_weekday",
+        func="async_get_schedule_weekday",
         supports_response=SupportsResponse.OPTIONAL,
     )
 
@@ -678,7 +715,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             vol.Required(ATTR_PROFILE): cv.string,
             vol.Required(ATTR_SIMPLE_PROFILE_DATA): dict,
         },
-        func="async_set_schedule_simple_profile",
+        func="async_set_schedule_profile",
     )
 
     async_register_platform_entity_service(
@@ -692,11 +729,29 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             vol.Required(ATTR_BASE_TEMPERATURE): cv.positive_float,
             vol.Required(ATTR_SIMPLE_WEEKDAY_LIST): list,
         },
-        func="async_set_schedule_simple_weekday",
+        func="async_set_schedule_weekday",
     )
 
     # Set schedule for non-climate devices
-    _register_set_schedule_services(hass=hass)
+    for domain in (LIGHT_DOMAIN, SWITCH_DOMAIN, COVER_DOMAIN, VALVE_DOMAIN):
+        async_register_platform_entity_service(
+            hass=hass,
+            service_domain=DOMAIN,
+            service_name=HmipLocalServices.SET_SCHEDULE,
+            entity_domain=domain,
+            schema={vol.Required(ATTR_SCHEDULE_DATA): dict},
+            func="async_set_schedule",
+        )
+
+        async_register_platform_entity_service(
+            hass=hass,
+            service_domain=DOMAIN,
+            service_name=HmipLocalServices.GET_SCHEDULE,
+            entity_domain=domain,
+            schema={},
+            func="async_get_schedule",
+            supports_response=SupportsResponse.OPTIONAL,
+        )
 
     async_register_platform_entity_service(
         hass=hass,

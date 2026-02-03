@@ -1383,6 +1383,10 @@
             }, 
             "name": "Parametersatz von einem Gerät oder Kanal lesen"
         }, 
+        "get_schedule": {
+            "description": "Gibt den Wochenzeitplan für Nicht-Klima-Geräte (Schalter, Lichter, Rollläden, Ventile) zurück.", 
+            "name": "Zeitplan abrufen"
+        }, 
         "get_schedule_simple_profile": {
             "description": "Lädt ein Zeitplan-Profil von einer Zeitplan-Entität im vereinfachten Format", 
             "fields": {

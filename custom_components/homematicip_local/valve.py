@@ -9,7 +9,7 @@ from aiohomematic.const import DataPointCategory
 from aiohomematic.model.custom import CustomDpIpIrrigationValve
 from homeassistant.components.valve import ValveEntity, ValveEntityFeature
 from homeassistant.const import STATE_CLOSED, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -109,6 +109,11 @@ class AioHomematicValve(AioHomematicGenericRestoreEntity[CustomDpIpIrrigationVal
         """Close the valve."""
         await self._data_point.close()
 
+    @handle_homematic_errors
+    async def async_get_schedule(self) -> ServiceResponse:
+        """Return the week schedule for the valve."""
+        return await super().async_get_schedule()
+
     @override
     @handle_homematic_errors
     async def async_open_valve(self) -> None:
@@ -118,3 +123,8 @@ class AioHomematicValve(AioHomematicGenericRestoreEntity[CustomDpIpIrrigationVal
     async def async_set_on_time(self, on_time: float) -> None:
         """Set the on time of the light."""
         self._data_point.set_timer_on_time(on_time=on_time)
+
+    @handle_homematic_errors
+    async def async_set_schedule(self, schedule_data: dict[str, Any]) -> None:
+        """Set the week schedule for the valve."""
+        await super().async_set_schedule(schedule_data=schedule_data)

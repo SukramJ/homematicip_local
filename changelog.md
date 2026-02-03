@@ -1,6 +1,11 @@
-# Version [2.2.5](https://github.com/SukramJ/homematicip_local/compare/2.2.4...2.2.5) (2026-02-02)
+# Version [2.3.0](https://github.com/SukramJ/homematicip_local/compare/2.2.4...2.3.0) (2026-02-03)
 
 ## What's Changed
+
+### Added
+
+- **New Service: `set_schedule`**: Generic schedule service for non-climate devices (switch, light, cover, valve). Allows setting week profiles for devices that support scheduling. See [week_profile.md](../../../aiohomematic/docs/user/features/week_profile.md#non-climate-devices-switch-light-cover-valve) for usage examples.
+- **New Service: `get_schedule`**: Companion service to `set_schedule` that retrieves the current week schedule from non-climate devices (switch, light, cover, valve). Returns schedule data in the same format as `set_schedule`. Supports service response for easy automation integration.
 
 ### Removed (Deprecated Services)
 
@@ -17,8 +22,9 @@ The "simple" services remain fully backward compatible and continue to work as b
 
 ### Bug Fixes
 
-- **LINK Paramset Validation**: Fixed `put_paramset` with `check_against_pd=True` for LINK paramsets. LINK paramsets are not cached during device initialization, so validation is now automatically skipped to prevent "Parameter not found" errors.
-- **Schedule Pydantic Models JSON Serialization**: Added `_JsonSerializableMixin` to all schedule Pydantic models to support orjson/Home Assistant JSON serialization.
+- **LINK Paramset Validation**: Fixed `put_paramset` with `check_against_pd=True` for LINK paramsets. LINK paramsets are not cached during device initialization (by design), so validation is now automatically skipped for LINK calls to prevent "Parameter not found" errors.
+- **Schedule Pydantic Models JSON Serialization**: Added `_JsonSerializableMixin` to all schedule Pydantic models (`ClimateSchedule`, `ClimateProfileSchedule`, `ClimateWeekdaySchedule`, `ClimateSchedulePeriod`, `SimpleSchedule`, `SimpleScheduleEntry`) to support orjson/Home Assistant JSON serialization via `__json__()` method.
+- **ClimateWeekProfile Type Signature**: Fixed incorrect type annotation in `convert_dict_to_raw_schedule()` - removed `ClimateSchedule` from union type since the method only accepts 13-slot format.
 
 ### Breaking Changes (aiohomematic)
 
@@ -33,15 +39,26 @@ The "simple" services remain fully backward compatible and continue to work as b
   - `set_simple_schedule_profile()` → `set_schedule_profile()`
   - `set_simple_schedule_weekday()` → `set_schedule_weekday()`
 
-### New Features
+### New Features (aiohomematic)
 
-- **Schedule Pydantic Models**: New validated Pydantic models for climate device schedules:
-  - `ClimateSchedulePeriod`: Temperature periods with starttime, endtime, temperature
-  - `ClimateWeekdaySchedule`: Daily schedules with base_temperature and periods
-  - `ClimateProfileSchedule`: Weekly schedules (MONDAY-SUNDAY)
-  - `ClimateSchedule`: Complete profiles (P1-P6)
+- **Schedule Pydantic Models**: New validated Pydantic models for automatic validation with clear error messages:
 
-### Validation Improvements
+  **Climate devices:**
+  - `ClimateSchedulePeriod`: Validates temperature periods with starttime, endtime, temperature
+  - `ClimateWeekdaySchedule`: Validates daily schedules with base_temperature and periods
+  - `ClimateProfileSchedule`: Validates weekly schedules (MONDAY-SUNDAY)
+  - `ClimateSchedule`: Validates complete profiles (P1-P6)
+
+  **Non-climate devices:**
+  - `SimpleScheduleEntry`: Validated schedule entry with weekdays, time, condition, target_channels, level, duration, ramp_time
+  - `SimpleSchedule`: Container for multiple schedule entries keyed by group number (1-24)
+
+### Changed (aiohomematic)
+
+- **ClimateWeekProfile**: Simple schedule format now uses Pydantic models for automatic validation. The existing user-facing format remains unchanged (no breaking changes), but input validation is now more robust with clear error messages.
+- **DefaultWeekProfile**: Refactored schedule cache to use human-readable Pydantic models (`SimpleSchedule`, `SimpleScheduleEntry`) instead of complex dictionary format. The new format provides automatic validation, clear field names, and better developer experience.
+
+### Validation Improvements (aiohomematic)
 
 Climate schedule validation now checks:
 - Time format (HH:MM, supports 24:00 for end-of-day)
@@ -50,6 +67,14 @@ Climate schedule validation now checks:
 - No overlapping periods
 - Valid weekdays (MONDAY-SUNDAY)
 - Valid profiles (P1-P6)
+
+### Technical Changes (aiohomematic)
+
+- **week_profile.py**: Simplified implementation by using Pydantic models directly instead of manual conversion functions (~2300 lines removed)
+- Added Pydantic mypy plugin to `pyproject.toml` for improved type inference
+- Updated `WeekProfileProtocol` to accept any schedule type
+- Updated type annotations in `Device`, `DeviceWeekProfileProtocol`, and `BaseCustomDataPoint`
+- Added i18n keys for better error messages: `exception.model.schedule.invalid_weekday`, `exception.model.schedule.invalid_profile`
 
 # Version [2.2.4](https://github.com/SukramJ/homematicip_local/compare/2.2.3...2.2.4) (2026-02-01)
 

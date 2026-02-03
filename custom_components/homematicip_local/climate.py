@@ -325,13 +325,13 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         await self._data_point.enable_away_mode_by_duration(hours=hours, away_temperature=away_temperature)
 
     @handle_homematic_errors
-    async def async_get_schedule_simple_profile(self, profile: ScheduleProfile) -> ServiceResponse:
-        """Get a schedule simple profile."""
+    async def async_get_schedule_profile(self, profile: ScheduleProfile) -> ServiceResponse:
+        """Get a schedule profile."""
         return cast(ServiceResponse, await self._data_point.get_schedule_profile(profile=profile, force_load=True))
 
     @handle_homematic_errors
-    async def async_get_schedule_simple_weekday(self, profile: ScheduleProfile, weekday: WeekdayStr) -> ServiceResponse:
-        """Get a schedule simple profile weekday."""
+    async def async_get_schedule_weekday(self, profile: ScheduleProfile, weekday: WeekdayStr) -> ServiceResponse:
+        """Get a schedule profile weekday."""
         return cast(
             ServiceResponse,
             await self._data_point.get_schedule_weekday(profile=profile, weekday=weekday, force_load=True),
@@ -371,24 +371,24 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         await self._data_point.set_profile(profile=ClimateProfile(preset_mode))
 
     @handle_homematic_errors
-    async def async_set_schedule_simple_profile(
+    async def async_set_schedule_profile(
         self, profile: ScheduleProfile, simple_profile_data: ClimateProfileSchedule
     ) -> None:
-        """Set the schedule simple profile."""
+        """Set the schedule profile."""
         await self._data_point.set_schedule_profile(
             profile=profile,
             profile_data=simple_profile_data.model_dump(),
         )
 
     @handle_homematic_errors
-    async def async_set_schedule_simple_weekday(
+    async def async_set_schedule_weekday(
         self,
         profile: ScheduleProfile,
         weekday: WeekdayStr,
         base_temperature: float,
         simple_weekday_list: list[ClimateSchedulePeriod],
     ) -> None:
-        """Set the schedule simple profile weekday."""
+        """Set the schedule profile weekday."""
         weekday_data = ClimateWeekdaySchedule(
             base_temperature=base_temperature,
             periods=simple_weekday_list,

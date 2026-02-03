@@ -26,7 +26,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.light.const import ColorMode, LightEntityFeature
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -234,6 +234,11 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
             self._data_point._dp_level.set_last_non_default_value(value=stored_level)
 
     @handle_homematic_errors
+    async def async_get_schedule(self) -> ServiceResponse:
+        """Return the week schedule for the light."""
+        return await super().async_get_schedule()
+
+    @handle_homematic_errors
     async def async_set_led(
         self,
         *,
@@ -281,6 +286,11 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
     def async_set_on_time(self, on_time: float) -> None:
         """Set the on time of the light."""
         self._data_point.set_timer_on_time(on_time=on_time)
+
+    @handle_homematic_errors
+    async def async_set_schedule(self, schedule_data: dict[str, Any]) -> None:
+        """Set the week schedule for the light."""
+        await super().async_set_schedule(schedule_data=schedule_data)
 
     @override
     @handle_homematic_errors
