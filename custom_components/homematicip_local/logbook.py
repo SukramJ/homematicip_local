@@ -8,7 +8,16 @@ from aiohomematic.const import DeviceTriggerEventType
 from homeassistant.components.logbook.const import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.core import Event, HomeAssistant, callback
 
-from .const import DOMAIN as HMIP_DOMAIN, EVENT_ERROR, EVENT_ERROR_VALUE, EVENT_NAME, EVENT_PARAMETER
+from .const import (
+    DOMAIN as HMIP_DOMAIN,
+    EVENT_ADDRESS,
+    EVENT_ERROR,
+    EVENT_ERROR_VALUE,
+    EVENT_NAME,
+    EVENT_PARAMETER,
+    EVENT_REASON,
+)
+from .control_unit import EVENT_TYPE_OPTIMISTIC_ROLLBACK
 from .support import DEVICE_ERROR_EVENT_SCHEMA, is_valid_event
 
 
@@ -34,8 +43,24 @@ def async_describe_events(
             LOGBOOK_ENTRY_MESSAGE: error_message,
         }
 
+    @callback
+    def async_describe_optimistic_rollback_event(event: Event) -> dict[str, str]:
+        """Describe optimistic rollback logbook event."""
+        parameter = event.data.get(EVENT_PARAMETER, "unknown")
+        reason = event.data.get(EVENT_REASON, "unknown")
+        name = event.data.get(EVENT_NAME, event.data.get(EVENT_ADDRESS, "unknown"))
+        return {
+            LOGBOOK_ENTRY_NAME: name,
+            LOGBOOK_ENTRY_MESSAGE: f"Optimistic update rolled back for {parameter} (reason: {reason})",
+        }
+
     async_describe_event(
         HMIP_DOMAIN,
         DeviceTriggerEventType.DEVICE_ERROR.value,
         async_describe_homematic_device_error_event,
+    )
+    async_describe_event(
+        HMIP_DOMAIN,
+        EVENT_TYPE_OPTIMISTIC_ROLLBACK,
+        async_describe_optimistic_rollback_event,
     )

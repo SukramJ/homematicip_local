@@ -28,4 +28,19 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: Homemat
     diag["metrics"] = metrics.to_dict()
     diag["incident_store"] = await central.cache_coordinator.incident_store.get_diagnostics()
 
+    # Command throttle statistics per interface
+    diag["command_throttle"] = {
+        client.interface_id: {
+            "interval": client.command_throttle.interval,
+            "is_enabled": client.command_throttle.is_enabled,
+            "queue_size": client.command_throttle.queue_size,
+            "throttled_count": client.command_throttle.throttled_count,
+            "critical_count": client.command_throttle.critical_count,
+            "burst_count": client.command_throttle.burst_count,
+            "burst_threshold": client.command_throttle.burst_threshold,
+            "burst_window": client.command_throttle.burst_window,
+        }
+        for client in central.client_coordinator.clients
+    }
+
     return diag

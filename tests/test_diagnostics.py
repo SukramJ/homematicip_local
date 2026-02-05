@@ -72,6 +72,25 @@ class TestAsyncGetConfigEntryDiagnostics:
         mock_cache_coordinator.incident_store = mock_incident_store
         control_unit.central.cache_coordinator = mock_cache_coordinator
 
+        # Mock client_coordinator.clients with command_throttle properties
+        mock_throttle = MagicMock()
+        mock_throttle.interval = 0.5
+        mock_throttle.is_enabled = True
+        mock_throttle.queue_size = 0
+        mock_throttle.throttled_count = 10
+        mock_throttle.critical_count = 2
+        mock_throttle.burst_count = 1
+        mock_throttle.burst_threshold = 5
+        mock_throttle.burst_window = 0.5
+
+        mock_client = MagicMock()
+        mock_client.interface_id = "HmIP-RF"
+        mock_client.command_throttle = mock_throttle
+
+        mock_client_coordinator = MagicMock()
+        mock_client_coordinator.clients = (mock_client,)
+        control_unit.central.client_coordinator = mock_client_coordinator
+
         diag = await async_get_config_entry_diagnostics(hass, entry)
 
         # Config redaction: ensure sensitive fields are not equal to the original ones
@@ -102,3 +121,16 @@ class TestAsyncGetConfigEntryDiagnostics:
         assert "recovery" in diag["metrics"]
         assert "model" in diag["metrics"]
         assert "services" in diag["metrics"]
+
+        # Command throttle statistics present
+        assert "command_throttle" in diag
+        assert "HmIP-RF" in diag["command_throttle"]
+        throttle_data = diag["command_throttle"]["HmIP-RF"]
+        assert throttle_data["interval"] == 0.5
+        assert throttle_data["is_enabled"] is True
+        assert throttle_data["queue_size"] == 0
+        assert throttle_data["throttled_count"] == 10
+        assert throttle_data["critical_count"] == 2
+        assert throttle_data["burst_count"] == 1
+        assert throttle_data["burst_threshold"] == 5
+        assert throttle_data["burst_window"] == 0.5

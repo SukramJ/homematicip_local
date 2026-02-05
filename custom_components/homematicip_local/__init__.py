@@ -34,6 +34,7 @@ from .const import (
     CONF_ACTION_SELECT_VALUES,
     CONF_ADVANCED_CONFIG,
     CONF_CALLBACK_PORT_XML_RPC,
+    CONF_COMMAND_THROTTLE_INTERVAL,
     CONF_CUSTOM_PORTS,
     CONF_ENABLE_PROGRAM_SCAN,
     CONF_ENABLE_SYSTEM_NOTIFICATIONS,
@@ -44,6 +45,7 @@ from .const import (
     CONF_SYS_SCAN_INTERVAL,
     CONF_UN_IGNORES,
     DEFAULT_AUTO_CONFIRM_NEW_DEVICES_TIMEOUT,
+    DEFAULT_COMMAND_THROTTLE_INTERVAL,
     DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS,
     DEFAULT_SYS_SCAN_INTERVAL,
     DOMAIN,
@@ -384,5 +386,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
     if entry.version == 14:
         data = _migrate_v14_remove_deprecated_optional_settings(data=dict(entry.data))
         hass.config_entries.async_update_entry(entry, version=15, data=data)
+    if entry.version == 15:
+        data = dict(entry.data)
+        if CONF_ADVANCED_CONFIG in data:
+            data[CONF_ADVANCED_CONFIG][CONF_COMMAND_THROTTLE_INTERVAL] = DEFAULT_COMMAND_THROTTLE_INTERVAL
+        hass.config_entries.async_update_entry(entry, version=16, data=data)
     _LOGGER.info("Migration to version %s successful", entry.version)
     return True

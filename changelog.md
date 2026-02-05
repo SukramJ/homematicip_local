@@ -1,8 +1,14 @@
-# Version [2.3.0](https://github.com/SukramJ/homematicip_local/compare/2.2.4...2.3.0) (2026-02-03)
+# Version [2.3.0](https://github.com/SukramJ/homematicip_local/compare/2.2.4...2.3.0) (2026-02-05)
 
 ## What's Changed
 
 ### Added
+
+- **Command throttle interval config option**: Added `command_throttle_interval` to Advanced Options (config flow and options flow). Controls the minimum delay between consecutive device commands per RF interface to ensure smooth operation and prevent packet loss during bulk operations. Default: `0.1`s. Set to `0.0` to disable.
+
+- **Optimistic rollback events**: Added `homematicip_local.optimistic_rollback` event and logbook integration. When an optimistic state update is rolled back (e.g. CCU rejects the value or times out), the event is fired and displayed in the logbook with the parameter name and rollback reason.
+
+- **Command throttle diagnostics**: Added per-interface command throttle statistics to the diagnostics export, including interval, queue size, throttled/critical/burst counts, and burst detection thresholds.
 
 - **Domain-specific schedule services**: Replaced generic `set_schedule`/`get_schedule` with domain-specific services for better validation and IDE support:
 
@@ -21,6 +27,10 @@
 
 - **Improved error handling**: Extended `handle_homematic_errors` decorator to catch `ValueError` and `pydantic.ValidationError`, converting them to user-friendly `HomeAssistantError` messages
 
+### Changed
+
+- **Config entry migration v16**: Existing config entries are migrated to include `command_throttle_interval` with the default value
+
 ### Removed (Deprecated Services)
 
 The following deprecated climate services have been removed earlier than the announced April 2026 date. Due to the complexity of maintaining both old and new schedule APIs alongside the aiohomematic Pydantic model migration, these services were removed now:
@@ -32,9 +42,20 @@ The following deprecated climate services have been removed earlier than the ann
 
 The "simple" services remain fully backward compatible and continue to work as before.
 
-## Bump aiohomematic to [2026.2.3](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.3)
+## Bump aiohomematic to [2026.2.5](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.5)
 
 ### New Features (aiohomematic)
+
+- **Optimistic updates** (2026.2.4): Data points immediately update their state when `send_value()` is called, then rollback if the CCU rejects the value or times out. Fires `OptimisticRollbackEvent` on rollback. Configurable via `TimeoutConfig.optimistic_update_timeout` (default: 30s).
+
+- **Command throttle** (2026.2.4): Configurable per-interface rate limiting for outgoing device commands. Enforces a minimum delay between consecutive commands on the same RF interface to ensure smooth operation and prevent packet loss. Configurable via `TimeoutConfig.command_throttle_interval`.
+
+- **Command priority queue** (2026.2.4): Three-tier priority system for command throttling:
+  - **CRITICAL** (priority 0): Security commands (locks, sirens) bypass throttle entirely
+  - **HIGH** (priority 1): Interactive user commands use normal throttle
+  - **LOW** (priority 2): Burst detection automatically downgrades commands when thresholds are exceeded
+
+- **CRITICAL queue purge** (2026.2.4): When a CRITICAL command arrives (e.g. cover STOP), all pending queued commands for the same channel group are purged from the throttle queue, preventing queued movement commands from overriding STOP.
 
 - **Domain-specific schedule validation** (2026.2.3): Added validation for schedule data based on device category (SWITCH, LIGHT, COVER, VALVE). The validation enforces that only appropriate fields are used for each device type. Backward-compatible: validation is only applied when domain context is provided.
 
@@ -52,6 +73,12 @@ The "simple" services remain fully backward compatible and continue to work as b
 
 ### Bug Fixes (aiohomematic)
 
+- **Optimistic mismatch false positives** (2026.2.5): Fixed false `OPTIMISTIC_MISMATCH` warnings when the CCU rounds float values (e.g., optimistic `0.3803…` vs CCU-confirmed `0.38`). Float values are now rounded to 2 decimal places before comparison.
+- **Optimistic burst false rollbacks** (2026.2.5): Fixed false `OptimisticRollbackEvent` and logbook entries during rapid command bursts (e.g., dimming a light through multiple values). Intermediate CCU confirmations are now silently accepted; mismatch is only evaluated on the final confirmation when all pending sends have been acknowledged.
+- **Optimistic mismatch no longer fires rollback events** (2026.2.5): `VALUE_MISMATCH` no longer publishes `OptimisticRollbackEvent`. When the CCU confirms a different value (e.g., clamping to minimum dimming level), the CCU value is silently accepted as authoritative. Rollback events are now only published for actual rollbacks (`TIMEOUT`, `SEND_ERROR`).
+- **i18n format specs** (2026.2.5): Fixed `i18n.tr()` silently dropping format specifiers like `{interval:.3f}`. Placeholders with format specs now render correctly in log messages.
+- **Optimistic updates in collector path** (2026.2.4): Fixed optimistic values interfering with `is_state_change()` checks in parent service methods. Optimistic values are now deferred until `send_data()` when using `CallParameterCollector`.
+- **Cover target levels** (2026.2.4): Fixed `_target_level` and `_target_tilt_level` properties to check for `None` before calling `float()`, preventing type errors.
 - **JSON control character sanitization** (2026.2.2): Fixed `JSONDecodeError` when ReGa scripts return JSON containing unescaped control characters in device names or values. The sanitization is now selective - it only escapes control characters within JSON string values, preserving structural whitespace.
 - **CustomDataPoint schedule conversion** (2026.2.2): Fixed `get_schedule()` and `set_schedule()` methods to correctly convert between `ScheduleDict` and `SimpleSchedule` Pydantic model.
 - **LINK Paramset Validation** (2026.2.1): Fixed `put_paramset` with `check_against_pd=True` for LINK paramsets. Validation is now automatically skipped for LINK calls to prevent "Parameter not found" errors.

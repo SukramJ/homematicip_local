@@ -58,6 +58,7 @@ from .const import (
     CONF_BACKUP_PATH,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
+    CONF_COMMAND_THROTTLE_INTERVAL,
     CONF_CUSTOM_PORT_CONFIG,
     CONF_CUSTOM_PORTS,
     CONF_ENABLE_LIGHT_LAST_BRIGHTNESS,
@@ -81,6 +82,7 @@ from .const import (
     CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE,
     CONF_VERIFY_TLS,
     DEFAULT_BACKUP_PATH,
+    DEFAULT_COMMAND_THROTTLE_INTERVAL,
     DEFAULT_ENABLE_LIGHT_LAST_BRIGHTNESS,
     DEFAULT_ENABLE_MQTT,
     DEFAULT_ENABLE_SUB_DEVICES,
@@ -145,6 +147,12 @@ PORT_SELECTOR_OPTIONAL = vol.All(
 SCAN_INTERVAL_SELECTOR = vol.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=5, step="any", unit_of_measurement="sec")),
     vol.Coerce(int),
+)
+COMMAND_THROTTLE_INTERVAL_SELECTOR = vol.All(
+    NumberSelector(
+        NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0.0, max=5.0, step=0.1, unit_of_measurement="sec")
+    ),
+    vol.Coerce(float),
 )
 
 
@@ -407,6 +415,12 @@ def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_SYS_SCAN_INTERVAL, DEFAULT_SYS_SCAN_INTERVAL),
             ): SCAN_INTERVAL_SELECTOR,
             vol.Required(
+                CONF_COMMAND_THROTTLE_INTERVAL,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(
+                    CONF_COMMAND_THROTTLE_INTERVAL, DEFAULT_COMMAND_THROTTLE_INTERVAL
+                ),
+            ): COMMAND_THROTTLE_INTERVAL_SELECTOR,
+            vol.Required(
                 CONF_ENABLE_SYSTEM_NOTIFICATIONS,
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(
                     CONF_ENABLE_SYSTEM_NOTIFICATIONS, DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS
@@ -499,6 +513,12 @@ def get_advanced_settings_schema(data: ConfigType, all_un_ignore_parameters: lis
                 CONF_MQTT_PREFIX,
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_MQTT_PREFIX, DEFAULT_MQTT_PREFIX),
             ): TEXT_SELECTOR,
+            vol.Required(
+                CONF_COMMAND_THROTTLE_INTERVAL,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(
+                    CONF_COMMAND_THROTTLE_INTERVAL, DEFAULT_COMMAND_THROTTLE_INTERVAL
+                ),
+            ): COMMAND_THROTTLE_INTERVAL_SELECTOR,
             vol.Optional(
                 CONF_UN_IGNORES,
                 default=existing_parameters,
@@ -570,7 +590,7 @@ async def _async_detect_backend(
 class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the instance flow for Homematic(IP) Local for OpenCCU."""
 
-    VERSION = 15
+    VERSION = 16
     CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
@@ -1722,6 +1742,7 @@ def _update_advanced_input(data: ConfigType, advanced_input: ConfigType) -> None
         CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE
     ]
     data[CONF_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] = advanced_input[CONF_OPTIONAL_SETTINGS]
+    data[CONF_ADVANCED_CONFIG][CONF_COMMAND_THROTTLE_INTERVAL] = advanced_input[CONF_COMMAND_THROTTLE_INTERVAL]
 
     if advanced_input.get(CONF_UN_IGNORES):
         data[CONF_ADVANCED_CONFIG][CONF_UN_IGNORES] = advanced_input[CONF_UN_IGNORES]
@@ -1763,6 +1784,7 @@ def _update_advanced_settings_input(data: ConfigType, advanced_input: ConfigType
         CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE
     ]
     data[CONF_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] = advanced_input[CONF_OPTIONAL_SETTINGS]
+    data[CONF_ADVANCED_CONFIG][CONF_COMMAND_THROTTLE_INTERVAL] = advanced_input[CONF_COMMAND_THROTTLE_INTERVAL]
     data[CONF_ADVANCED_CONFIG][CONF_BACKUP_PATH] = advanced_input.get(CONF_BACKUP_PATH, DEFAULT_BACKUP_PATH)
 
     if advanced_input.get(CONF_UN_IGNORES):

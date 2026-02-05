@@ -138,6 +138,7 @@ class TestMigrateEntry:
             assert config_entry.state == ConfigEntryState.LOADED
             assert config_entry.version == DomainConfigFlow.VERSION
             assert config_entry.data[CONF_ADVANCED_CONFIG] == {
+                "command_throttle_interval": 0.1,
                 "enable_system_notifications": True,
                 "program_scan_enabled": False,
                 "sysvar_scan_enabled": False,

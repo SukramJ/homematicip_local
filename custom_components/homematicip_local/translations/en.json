@@ -36,11 +36,13 @@
                     "sysvar_markers": "System variable markers",
                     "sysvar_scan_enabled": "Enable system variable import",
                     "sysvar_scan_interval": "Scan interval (seconds)",
+                    "command_throttle_interval": "Command throttle interval",
                     "use_group_channel_for_cover_state": "Report cover position from group channel"
                 },
                 "data_description": {
                     "callback_host": "IP address for CCU callbacks. Leave empty for auto-detection.",
                     "callback_port_xml_rpc": "Port for XML-RPC callbacks. Leave empty for automatic assignment.",
+                    "command_throttle_interval": "Minimum delay between device commands in seconds. Set to 0 to disable throttling. Ensures smooth operation for large installations.",
                     "enable_system_notifications": "Show notifications for connection issues and device errors in Home Assistant.",
                     "light_last_brightness_enabled": "When enabled, lights will turn on with the last non-zero brightness level instead of default 100%.",
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.",
@@ -963,11 +965,13 @@
                     "optional_settings": "Experimental features",
                     "sub_devices_enabled": "Create sub-device entities",
                     "un_ignore": "UN-IGNORE parameters",
+                    "command_throttle_interval": "Command throttle interval",
                     "use_group_channel_for_cover_state": "Report cover position from group channel"
                 },
                 "data_description": {
                     "callback_host": "IP address for CCU callbacks. Leave empty for auto-detection.",
                     "callback_port_xml_rpc": "Port for XML-RPC callbacks. Leave empty for automatic assignment.",
+                    "command_throttle_interval": "Minimum delay between device commands in seconds. Set to 0 to disable throttling. Ensures smooth operation for large installations.",
                     "enable_system_notifications": "Show notifications for connection issues and device errors in Home Assistant.",
                     "light_last_brightness_enabled": "When enabled, lights will turn on with the last non-zero brightness level instead of default 100%.",
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.",

@@ -24,6 +24,7 @@
                 "data": {
                     "callback_host": "Callback-Host (optional)", 
                     "callback_port_xml_rpc": "Callback-Port (optional)", 
+                    "command_throttle_interval": "Befehlsdrosselung (Intervall)", 
                     "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
                     "light_last_brightness_enabled": "Letzte Helligkeit für Lichter wiederherstellen", 
                     "listen_on_all_ip": "Auf allen Netzwerkschnittstellen lauschen", 
@@ -41,6 +42,7 @@
                 "data_description": {
                     "callback_host": "IP-Adresse für CCU-Callbacks. Leer lassen für automatische Erkennung.", 
                     "callback_port_xml_rpc": "Port für XML-RPC-Callbacks. Leer lassen für automatische Zuweisung.", 
+                    "command_throttle_interval": "Mindestabstand zwischen Gerätebefehlen in Sekunden. Auf 0 setzen um die Drosselung zu deaktivieren. Gewährleistet einen reibungslosen Betrieb bei großen Installationen.", 
                     "enable_system_notifications": "Benachrichtigungen für Verbindungsprobleme und Gerätefehler in Home Assistant anzeigen.", 
                     "light_last_brightness_enabled": "Wenn aktiviert, schalten Lichter mit der letzten Helligkeitsstufe ein, anstatt mit 100%.", 
                     "listen_on_all_ip": "Aktivieren, wenn Home Assistant in Docker oder einer VM läuft. Erforderlich wenn die IP von HA sich von der Host-IP unterscheidet.", 
@@ -955,6 +957,7 @@
                 "data": {
                     "callback_host": "Callback Hostname/IP-Adresse", 
                     "callback_port_xml_rpc": "Callback XML-RPC Port", 
+                    "command_throttle_interval": "Befehlsdrosselung (Intervall)", 
                     "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
                     "light_last_brightness_enabled": "Letzte Helligkeit für Lichter aktivieren", 
                     "listen_on_all_ip": "Auf allen Netzwerkschnittstellen lauschen", 
@@ -968,6 +971,7 @@
                 "data_description": {
                     "callback_host": "IP-Adresse für CCU-Callbacks. Leer lassen für automatische Erkennung.", 
                     "callback_port_xml_rpc": "Port für XML-RPC-Callbacks. Leer lassen für automatische Zuweisung.", 
+                    "command_throttle_interval": "Mindestabstand zwischen Gerätebefehlen in Sekunden. Auf 0 setzen um die Drosselung zu deaktivieren. Gewährleistet einen reibungslosen Betrieb bei großen Installationen.", 
                     "enable_system_notifications": "Persistente Benachrichtigungen für Systemereignisse wie Netzwerkprobleme oder nicht erreichbare Geräte aktivieren.", 
                     "light_last_brightness_enabled": "Wenn aktiviert, schalten Lichter mit der letzten Helligkeitsstufe ein, anstatt mit 100%.", 
                     "listen_on_all_ip": "Aktivieren, wenn Home Assistant in Docker oder einer VM läuft. Erforderlich wenn die IP von HA sich von der Host-IP unterscheidet.", 

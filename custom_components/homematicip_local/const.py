@@ -21,6 +21,7 @@ DEFAULT_ENABLE_LIGHT_LAST_BRIGHTNESS: Final = False
 DEFAULT_ENABLE_MQTT: Final = False
 DEFAULT_MQTT_PREFIX: Final = ""
 DEFAULT_ENABLE_SUB_DEVICES: Final = False
+DEFAULT_COMMAND_THROTTLE_INTERVAL: Final = 0.1
 
 DEFAULT_SYS_SCAN_INTERVAL: Final = 30
 
@@ -28,6 +29,7 @@ LEARN_MORE_URL_XMLRPC_SERVER_RECEIVES_NO_EVENTS: Final = "https://github.com/suk
 LEARN_MORE_URL_PONG_MISMATCH: Final = "https://github.com/sukramj/homematicip_local#what-is-the-meaning-of-pending-pong-mismatch-on-interface--austehende-pong-ereignisse-auf-interface"
 
 CONF_ADVANCED_CONFIG: Final = "advanced_config"
+CONF_COMMAND_THROTTLE_INTERVAL: Final = "command_throttle_interval"
 CONF_BACKUP_PATH: Final = "backup_path"
 CONF_CALLBACK_HOST: Final = "callback_host"
 CONF_CALLBACK_PORT_XML_RPC: Final = "callback_port_xml_rpc"
@@ -75,6 +77,12 @@ EVENT_PARAMETER: Final = "parameter"
 EVENT_TITLE: Final = "title"
 EVENT_UNAVAILABLE: Final = "unavailable"
 EVENT_VALUE: Final = "value"
+
+# Optimistic rollback event constants
+EVENT_AGE_SECONDS: Final = "age_seconds"
+EVENT_REASON: Final = "reason"
+EVENT_RESTORED_VALUE: Final = "restored_value"
+EVENT_ROLLED_BACK_VALUE: Final = "rolled_back_value"
 
 
 class HmipLocalServices(StrEnum):

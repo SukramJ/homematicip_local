@@ -17,6 +17,7 @@ from aiohomematic.central.events import (
     DeviceLifecycleEvent,
     DeviceLifecycleEventType,
     DeviceTriggerEvent,
+    OptimisticRollbackEvent,
     SystemStatusChangedEvent,
 )
 from aiohomematic.client import InterfaceConfig
@@ -46,10 +47,12 @@ from aiohomematic.const import (
     OptionalSettings,
     ScheduleTimerConfig,
     SystemInformation,
+    TimeoutConfig,
     get_interface_default_port,
 )
 from aiohomematic.exceptions import AuthFailure, BaseHomematicException
 from aiohomematic.model.data_point import CallbackDataPoint
+from aiohomematic.support import get_device_address
 from aiohomematic.type_aliases import UnsubscribeCallback
 from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
@@ -65,6 +68,7 @@ from .const import (
     CONF_BACKUP_PATH,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
+    CONF_COMMAND_THROTTLE_INTERVAL,
     CONF_ENABLE_LIGHT_LAST_BRIGHTNESS,
     CONF_ENABLE_MQTT,
     CONF_ENABLE_PROGRAM_SCAN,
@@ -85,6 +89,7 @@ from .const import (
     CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE,
     CONF_VERIFY_TLS,
     DEFAULT_BACKUP_PATH,
+    DEFAULT_COMMAND_THROTTLE_INTERVAL,
     DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK,
     DEFAULT_ENABLE_LIGHT_LAST_BRIGHTNESS,
     DEFAULT_ENABLE_MQTT,
@@ -95,6 +100,7 @@ from .const import (
     DEFAULT_SYS_SCAN_INTERVAL,
     DOMAIN,
     EVENT_ADDRESS,
+    EVENT_AGE_SECONDS,
     EVENT_CHANNEL_NO,
     EVENT_DEVICE_ID,
     EVENT_ERROR,
@@ -105,6 +111,9 @@ from .const import (
     EVENT_MODEL,
     EVENT_NAME,
     EVENT_PARAMETER,
+    EVENT_REASON,
+    EVENT_RESTORED_VALUE,
+    EVENT_ROLLED_BACK_VALUE,
     EVENT_TITLE,
     EVENT_UNAVAILABLE,
     EVENT_VALUE,
@@ -125,6 +134,8 @@ _LOGGER = logging.getLogger(__name__)
 
 # Event type for device availability (not in DeviceTriggerEventType as it comes from DeviceLifecycleEvent)
 EVENT_TYPE_DEVICE_AVAILABILITY: Final = "homematic.device_availability"
+# Event type for optimistic rollback (from OptimisticRollbackEvent)
+EVENT_TYPE_OPTIMISTIC_ROLLBACK: Final = f"{DOMAIN}.optimistic_rollback"
 
 _DATA_POINT_T = TypeVar("_DATA_POINT_T", bound=CallbackDataPoint)
 
@@ -308,7 +319,7 @@ class ControlUnit(BaseControlUnit):
         # (e.g., from PingPong race condition bug fixed in aiohomematic 2026.1.3)
         self._cleanup_callback_issues()
 
-        # Subscribe to integration events (4 focused subscriptions)
+        # Subscribe to integration events (5 focused subscriptions)
         _LOGGER.debug("Subscribing to integration events")
         self._unsubscribe_callbacks.append(
             self._central.event_bus.subscribe(
@@ -336,6 +347,13 @@ class ControlUnit(BaseControlUnit):
                 event_type=DeviceTriggerEvent,
                 event_key=None,
                 handler=self._on_device_trigger,
+            )
+        )
+        self._unsubscribe_callbacks.append(
+            self._central.event_bus.subscribe(
+                event_type=OptimisticRollbackEvent,
+                event_key=None,
+                handler=self._on_optimistic_rollback,
             )
         )
         self._async_add_central_to_device_registry()
@@ -745,6 +763,52 @@ class ControlUnit(BaseControlUnit):
                     event_data=event_data,
                 )
 
+    async def _on_optimistic_rollback(self, event: OptimisticRollbackEvent) -> None:
+        """Handle optimistic rollback event from aiohomematic."""
+        if not self._enable_system_notifications:
+            return
+
+        device_address = get_device_address(address=event.dpk.channel_address)
+
+        # Resolve device name from HA device registry
+        name: str | None = None
+        if device_entry := self._async_get_device_entry(device_address=device_address):
+            name = device_entry.name_by_user or device_entry.name
+
+        display_name = name or device_address
+
+        event_data: dict[str, Any] = {
+            EVENT_INTERFACE_ID: event.dpk.interface_id,
+            EVENT_ADDRESS: device_address,
+            EVENT_PARAMETER: event.dpk.parameter,
+            EVENT_REASON: event.reason,
+            EVENT_ROLLED_BACK_VALUE: event.rolled_back_value,
+            EVENT_RESTORED_VALUE: event.restored_value,
+            EVENT_AGE_SECONDS: event.age_seconds,
+        }
+
+        if device_entry:
+            event_data[EVENT_DEVICE_ID] = device_entry.id
+            event_data[EVENT_NAME] = display_name
+
+        if event.error:
+            event_data[EVENT_ERROR] = event.error
+
+        self._hass.bus.async_fire(
+            event_type=EVENT_TYPE_OPTIMISTIC_ROLLBACK,
+            event_data=event_data,
+        )
+
+        _LOGGER.warning(
+            "Optimistic rollback for %s/%s: %s -> %s (reason=%s, age=%.1fs)",
+            display_name,
+            event.dpk.parameter,
+            event.rolled_back_value,
+            event.restored_value,
+            event.reason,
+            event.age_seconds,
+        )
+
     async def _on_system_status(self, event: SystemStatusChangedEvent) -> None:
         """Handle system status event from aiohomematic (Infrastructure + Lifecycle)."""
         # Central state changes
@@ -952,6 +1016,9 @@ class ControlConfig:
             program_markers if (program_markers := ac.get(CONF_PROGRAM_MARKERS)) else DEFAULT_PROGRAM_MARKERS
         )
         self._sys_scan_interval: Final[int] = ac.get(CONF_SYS_SCAN_INTERVAL, DEFAULT_SYS_SCAN_INTERVAL)
+        self._command_throttle_interval: Final[float] = ac.get(
+            CONF_COMMAND_THROTTLE_INTERVAL, DEFAULT_COMMAND_THROTTLE_INTERVAL
+        )
         self._sysvar_markers: Final[tuple[DescriptionMarker | str, ...]] = (
             sysvar_markers if (sysvar_markers := ac.get(CONF_SYSVAR_MARKERS)) else DEFAULT_SYSVAR_MARKERS
         )
@@ -1046,6 +1113,7 @@ class ControlConfig:
             password=self._password,
             program_markers=self._program_markers,
             schedule_timer_config=ScheduleTimerConfig(sys_scan_interval=self._sys_scan_interval),
+            timeout_config=TimeoutConfig(command_throttle_interval=self._command_throttle_interval),
             start_direct=self._start_direct,
             storage_directory=get_storage_directory(hass=self.hass),
             sysvar_markers=self._sysvar_markers,

@@ -49,6 +49,7 @@ from custom_components.homematicip_local.const import (
     CONF_ADVANCED_CONFIG as CONST_ADVANCED_CONFIG,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
+    CONF_COMMAND_THROTTLE_INTERVAL,
     CONF_ENABLE_LIGHT_LAST_BRIGHTNESS,
     CONF_ENABLE_MQTT,
     CONF_ENABLE_PROGRAM_SCAN,
@@ -67,6 +68,7 @@ from custom_components.homematicip_local.const import (
     CONF_UN_IGNORES,
     CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE,
     CONF_VERIFY_TLS,
+    DEFAULT_COMMAND_THROTTLE_INTERVAL,
     DEFAULT_ENABLE_MQTT,
     DOMAIN as HMIP_DOMAIN,
 )
@@ -1194,6 +1196,7 @@ class TestConfigFlowHelpers:
             CONF_ENABLE_LIGHT_LAST_BRIGHTNESS: True,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: True,
             CONF_OPTIONAL_SETTINGS: ["no_wakeup"],
+            CONF_COMMAND_THROTTLE_INTERVAL: DEFAULT_COMMAND_THROTTLE_INTERVAL,
             CONF_UN_IGNORES: ["A", "B"],
         }
         _update_advanced_input(data=data, advanced_input=adv_input_for_helper)
@@ -2686,6 +2689,7 @@ class TestHelperFunctions:
             CONF_ENABLE_LIGHT_LAST_BRIGHTNESS: False,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
             CONF_OPTIONAL_SETTINGS: [],
+            CONF_COMMAND_THROTTLE_INTERVAL: DEFAULT_COMMAND_THROTTLE_INTERVAL,
         }
 
         _update_advanced_input(data, advanced_input)
@@ -2714,6 +2718,7 @@ class TestHelperFunctions:
             CONF_ENABLE_LIGHT_LAST_BRIGHTNESS: False,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
             CONF_OPTIONAL_SETTINGS: [],
+            CONF_COMMAND_THROTTLE_INTERVAL: DEFAULT_COMMAND_THROTTLE_INTERVAL,
         }
 
         _update_advanced_input(data, advanced_input)
@@ -2746,6 +2751,7 @@ class TestHelperFunctions:
             CONF_ENABLE_LIGHT_LAST_BRIGHTNESS: False,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
             CONF_OPTIONAL_SETTINGS: [],
+            CONF_COMMAND_THROTTLE_INTERVAL: DEFAULT_COMMAND_THROTTLE_INTERVAL,
             CONF_BACKUP_PATH: "",
         }
 
@@ -2770,6 +2776,7 @@ class TestHelperFunctions:
             CONF_ENABLE_LIGHT_LAST_BRIGHTNESS: False,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
             CONF_OPTIONAL_SETTINGS: [],
+            CONF_COMMAND_THROTTLE_INTERVAL: DEFAULT_COMMAND_THROTTLE_INTERVAL,
             CONF_BACKUP_PATH: "",
         }
 
@@ -2792,6 +2799,7 @@ class TestHelperFunctions:
             CONF_ENABLE_LIGHT_LAST_BRIGHTNESS: False,
             CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE: False,
             CONF_OPTIONAL_SETTINGS: [],
+            CONF_COMMAND_THROTTLE_INTERVAL: DEFAULT_COMMAND_THROTTLE_INTERVAL,
             CONF_BACKUP_PATH: "",
             CONF_UN_IGNORES: ["param1", "param2"],
         }
