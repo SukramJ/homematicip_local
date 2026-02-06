@@ -822,6 +822,9 @@
             "water_volume_since_open": {
                 "name": "Wassermenge seit Öffnung"
             }, 
+            "week_profile": {
+                "name": "Wochenprofil"
+            }, 
             "wind_dir": {
                 "name": "Windrichtung"
             }, 
@@ -1190,46 +1193,48 @@
             "name": "Alle verzögerten Geräte bestätigen"
         }, 
         "copy_schedule": {
-            "description": "Kopiert einen Zeitplan zu einem anderen Gerät", 
+            "description": "Kopiere einen kompletten Zeitplan von einem Gerät auf ein anderes", 
             "fields": {
-                "source_entity_id": {
-                    "description": "Klimaentität, von der der Zeitplan kopiert werden soll", 
-                    "name": "Quellentität"
+                "device_address": {
+                    "description": "Geräteadresse eingeben", 
+                    "name": "Geräteadresse"
+                }, 
+                "device_id": {
+                    "description": "Quellgerät auswählen", 
+                    "name": "Quellgerät"
+                }, 
+                "target_device_id": {
+                    "description": "Zielgerät auswählen", 
+                    "name": "Zielgerät"
                 }
             }, 
             "name": "Zeitplan kopieren"
         }, 
         "copy_schedule_profile": {
-            "description": "Kopiert ein Zeitplan-Profil", 
+            "description": "Kopiere ein Zeitplan-Profil innerhalb eines Geräts oder auf ein anderes Gerät", 
             "fields": {
-                "source_entity_id": {
-                    "description": "Quell-Entität zum Kopieren (optional)", 
-                    "name": "Quell-Entität"
+                "device_address": {
+                    "description": "Geräteadresse eingeben", 
+                    "name": "Geräteadresse"
+                }, 
+                "device_id": {
+                    "description": "Gerät auswählen", 
+                    "name": "Gerät"
                 }, 
                 "source_profile": {
-                    "description": "Quell-Profil", 
-                    "name": "Quell-Profil"
+                    "description": "Quellprofil zum Kopieren", 
+                    "name": "Quellprofil"
+                }, 
+                "target_device_id": {
+                    "description": "Zielgerät auswählen (optional, kopiert innerhalb des gleichen Geräts wenn leer)", 
+                    "name": "Zielgerät"
                 }, 
                 "target_profile": {
-                    "description": "Ziel-Profil", 
-                    "name": "Ziel-Profil"
+                    "description": "Zielprofil zum Kopieren", 
+                    "name": "Zielprofil"
                 }
             }, 
             "name": "Zeitplan-Profil kopieren"
-        }, 
-        "cover_get_schedule": {
-            "description": "Gibt den Wochenzeitplan für einen Rollladen zurück.", 
-            "name": "Rollladen-Zeitplan abrufen"
-        }, 
-        "cover_set_schedule": {
-            "description": "Setzt den Wochenzeitplan für einen Rollladen.", 
-            "fields": {
-                "schedule_data": {
-                    "description": "Das Zeitplan-Daten-Dictionary. Struktur: {group_no: {field: value, ...}, ...}. Siehe aiohomematic Dokumentation für DefaultWeekProfile Format.", 
-                    "name": "Zeitplandaten"
-                }
-            }, 
-            "name": "Rollladen-Zeitplan setzen"
         }, 
         "create_ccu_backup": {
             "description": "Erstellt und lädt ein System-Backup von der CCU herunter. Speichert die Backup-Datei im konfigurierten Backup-Verzeichnis.", 
@@ -1401,29 +1406,59 @@
             }, 
             "name": "Parametersatz von einem Gerät oder Kanal lesen"
         }, 
-        "get_schedule_simple_profile": {
-            "description": "Lädt ein Zeitplan-Profil von einer Zeitplan-Entität im vereinfachten Format", 
+        "get_schedule": {
+            "description": "Kompletten Zeitplan eines Geräts abrufen", 
             "fields": {
+                "device_address": {
+                    "description": "Geräteadresse eingeben", 
+                    "name": "Geräteadresse"
+                }, 
+                "device_id": {
+                    "description": "Gerät auswählen", 
+                    "name": "Gerät"
+                }
+            }, 
+            "name": "Zeitplan abrufen"
+        }, 
+        "get_schedule_profile": {
+            "description": "Zeitplan-Profil eines Klimageräts abrufen", 
+            "fields": {
+                "device_address": {
+                    "description": "Geräteadresse eingeben", 
+                    "name": "Geräteadresse"
+                }, 
+                "device_id": {
+                    "description": "Gerät auswählen", 
+                    "name": "Gerät"
+                }, 
                 "profile": {
-                    "description": "Wählen Sie ein Profil zum Laden", 
+                    "description": "Profil auswählen", 
                     "name": "Profil"
                 }
             }, 
-            "name": "Einfaches Zeitplan-Profil abrufen"
+            "name": "Zeitplan-Profil abrufen"
         }, 
-        "get_schedule_simple_weekday": {
-            "description": "Lädt einen Wochentag eines Zeitplan-Profils im vereinfachten Format", 
+        "get_schedule_weekday": {
+            "description": "Zeitplan-Wochentag eines Klimageräts abrufen", 
             "fields": {
+                "device_address": {
+                    "description": "Geräteadresse eingeben", 
+                    "name": "Geräteadresse"
+                }, 
+                "device_id": {
+                    "description": "Gerät auswählen", 
+                    "name": "Gerät"
+                }, 
                 "profile": {
-                    "description": "Wählen Sie ein Profil", 
+                    "description": "Profil auswählen", 
                     "name": "Profil"
                 }, 
                 "weekday": {
-                    "description": "Wählen Sie einen Wochentag", 
+                    "description": "Wochentag auswählen", 
                     "name": "Wochentag"
                 }
             }, 
-            "name": "Einfaches Zeitplan-Profil Wochentag abrufen"
+            "name": "Zeitplan-Wochentag abrufen"
         }, 
         "get_variable_value": {
             "description": "Wert einer Homematic Systemvariable lesen", 
@@ -1439,10 +1474,6 @@
             }, 
             "name": "Wert eines Systemvariable lesen"
         }, 
-        "light_get_schedule": {
-            "description": "Gibt den Wochenzeitplan für ein Licht zurück.", 
-            "name": "Licht-Zeitplan abrufen"
-        }, 
         "light_set_on_time": {
             "description": "Stellt die Einschaltdauer für ein Licht ein. Muss von einem light.turn_on gefolgt werden", 
             "fields": {
@@ -1452,16 +1483,6 @@
                 }
             }, 
             "name": "Stellt die Einschaltdauer eines Lichts ein"
-        }, 
-        "light_set_schedule": {
-            "description": "Setzt den Wochenzeitplan für ein Licht.", 
-            "fields": {
-                "schedule_data": {
-                    "description": "Das Zeitplan-Daten-Dictionary. Struktur: {group_no: {field: value, ...}, ...}. Siehe aiohomematic Dokumentation für DefaultWeekProfile Format.", 
-                    "name": "Zeitplandaten"
-                }
-            }, 
-            "name": "Licht-Zeitplan setzen"
         }, 
         "play_sound": {
             "description": "Spielt einen Sound auf HmIP-MP3P Signalgebern ab", 
@@ -1717,9 +1738,35 @@
             }, 
             "name": "Wert eines Geräteparameters schreiben"
         }, 
-        "set_schedule_active_profile": {
-            "description": "Aktiviert ein Profil für eine Zeitplan-Entität", 
+        "set_schedule": {
+            "description": "Kompletten Zeitplan eines Geräts setzen", 
             "fields": {
+                "device_address": {
+                    "description": "Geräteadresse eingeben", 
+                    "name": "Geräteadresse"
+                }, 
+                "device_id": {
+                    "description": "Gerät auswählen", 
+                    "name": "Gerät"
+                }, 
+                "schedule_data": {
+                    "description": "Zeitplan-Daten als Dictionary", 
+                    "name": "Zeitplan-Daten"
+                }
+            }, 
+            "name": "Zeitplan setzen"
+        }, 
+        "set_schedule_active_profile": {
+            "description": "Aktiviert ein Profil auf einem Klimagerät", 
+            "fields": {
+                "device_address": {
+                    "description": "Geräteadresse eingeben", 
+                    "name": "Geräteadresse"
+                }, 
+                "device_id": {
+                    "description": "Gerät auswählen", 
+                    "name": "Gerät"
+                }, 
                 "profile": {
                     "description": "Wählen Sie ein Profil zum Aktivieren", 
                     "name": "Profil"
@@ -1727,11 +1774,19 @@
             }, 
             "name": "Aktives Zeitplan-Profil setzen"
         }, 
-        "set_schedule_simple_profile": {
-            "description": "Speichert einen Zeitplan auf einem Thermostat", 
+        "set_schedule_profile": {
+            "description": "Zeitplan-Profil eines Klimageräts setzen", 
             "fields": {
+                "device_address": {
+                    "description": "Geräteadresse eingeben", 
+                    "name": "Geräteadresse"
+                }, 
+                "device_id": {
+                    "description": "Gerät auswählen", 
+                    "name": "Gerät"
+                }, 
                 "profile": {
-                    "description": "Wähle ein Profil", 
+                    "description": "Profil auswählen", 
                     "name": "Profil"
                 }, 
                 "simple_profile_data": {
@@ -1739,29 +1794,37 @@
                     "name": "Profildaten"
                 }
             }, 
-            "name": "Einfachen Zeitplan speichern"
+            "name": "Zeitplan-Profil setzen"
         }, 
-        "set_schedule_simple_weekday": {
-            "description": "Speichert einen Zeitplan auf einem Thermostat", 
+        "set_schedule_weekday": {
+            "description": "Zeitplan-Wochentag eines Klimageräts setzen", 
             "fields": {
                 "base_temperature": {
-                    "description": "Wähle die Basistemperatur", 
+                    "description": "Basistemperatur auswählen", 
                     "name": "Basistemperatur"
                 }, 
+                "device_address": {
+                    "description": "Geräteadresse eingeben", 
+                    "name": "Geräteadresse"
+                }, 
+                "device_id": {
+                    "description": "Gerät auswählen", 
+                    "name": "Gerät"
+                }, 
                 "profile": {
-                    "description": "Wähle ein Profil", 
+                    "description": "Profil auswählen", 
                     "name": "Profil"
                 }, 
                 "simple_weekday_list": {
-                    "description": "Daten für ein Profil zu einem Wochentag", 
-                    "name": "Wochentag Profildaten"
+                    "description": "Daten für ein Wochentag-Profil", 
+                    "name": "Wochentag-Profildaten"
                 }, 
                 "weekday": {
-                    "description": "Wähle einen Wochentag", 
+                    "description": "Wochentag auswählen", 
                     "name": "Wochentag"
                 }
             }, 
-            "name": "Einfachen Wochentag speichern"
+            "name": "Zeitplan-Wochentag setzen"
         }, 
         "set_sound_led": {
             "description": "Setzt LED-Farbe und Helligkeit auf HmIP-MP3P Signalgebern", 
@@ -1815,10 +1878,6 @@
             "description": "Stoppt die Soundwiedergabe auf HmIP-MP3P Signalgebern", 
             "name": "Sound stoppen"
         }, 
-        "switch_get_schedule": {
-            "description": "Gibt den Wochenzeitplan für einen Schalter zurück.", 
-            "name": "Schalter-Zeitplan abrufen"
-        }, 
         "switch_set_on_time": {
             "description": "Stellt die Einschaltdauer eines Schalters ein. Muss von einem switch.turn_on gefolgt werden", 
             "fields": {
@@ -1828,16 +1887,6 @@
                 }
             }, 
             "name": "Stellt die Einschaltdauer eines Schalters ein"
-        }, 
-        "switch_set_schedule": {
-            "description": "Setzt den Wochenzeitplan für einen Schalter.", 
-            "fields": {
-                "schedule_data": {
-                    "description": "Das Zeitplan-Daten-Dictionary. Struktur: {group_no: {field: value, ...}, ...}. Siehe aiohomematic Dokumentation für DefaultWeekProfile Format.", 
-                    "name": "Zeitplandaten"
-                }
-            }, 
-            "name": "Schalter-Zeitplan setzen"
         }, 
         "turn_on_siren": {
             "description": "Schaltet die Sirene ein", 
@@ -1867,10 +1916,6 @@
             }, 
             "name": "Aktualisiert die Firmware-Daten des Geräts"
         }, 
-        "valve_get_schedule": {
-            "description": "Gibt den Wochenzeitplan für ein Ventil zurück.", 
-            "name": "Ventil-Zeitplan abrufen"
-        }, 
         "valve_set_on_time": {
             "description": "Stellt die Einschaltdauer eines Ventils ein. Muss von einem valve.open gefolgt werden", 
             "fields": {
@@ -1880,16 +1925,6 @@
                 }
             }, 
             "name": "Stellt die Einschaltdauer eines Ventils ein"
-        }, 
-        "valve_set_schedule": {
-            "description": "Setzt den Wochenzeitplan für ein Ventil.", 
-            "fields": {
-                "schedule_data": {
-                    "description": "Das Zeitplan-Daten-Dictionary. Struktur: {group_no: {field: value, ...}, ...}. Siehe aiohomematic Dokumentation für DefaultWeekProfile Format.", 
-                    "name": "Zeitplandaten"
-                }
-            }, 
-            "name": "Ventil-Zeitplan setzen"
         }
     }
 }

@@ -1,211 +1,368 @@
 """
-End-to-end tests for schedule services with CCU data validation.
+End-to-end tests for device-based schedule services with CCU data validation.
 
 These tests validate the complete data flow:
-1. Service call with documentation examples → CCU put_paramset data
-2. CCU get_paramset data → Entity attributes and service responses
-
-Tests verify what data is actually sent to/received from the CCU.
+1. Service call → device lookup → week_profile_data_point → CCU data
+2. CCU get data → service response
+3. CCU set data → week_profile_data_point.set_schedule
 """
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from custom_components.homematicip_local.generic_entity import AioHomematicGenericEntity
+from aiohomematic.interfaces import ClimateWeekProfileDataPointProtocol, WeekProfileDataPointProtocol
+from homeassistant.exceptions import HomeAssistantError
 
 
 @pytest.fixture
-def mock_week_profile_simple() -> MagicMock:
-    """Create a mock DefaultWeekProfile for non-climate devices."""
-    from aiohomematic.model import week_profile as wp
+def mock_wp_data_point() -> MagicMock:
+    """Create a mock WeekProfileDataPoint for non-climate devices."""
+    wp_dp = MagicMock(spec=WeekProfileDataPointProtocol)
+    wp_dp.schedule_channel_address = "VCU0000001:1"
+    wp_dp.set_schedule = AsyncMock()
+    wp_dp.get_schedule = AsyncMock()
+    wp_dp.schedule = {}
 
-    week_profile = MagicMock(spec=wp.DefaultWeekProfile)
-    week_profile.schedule_channel_address = "VCU0000001:1"
-    week_profile.has_schedule = True
-    week_profile.set_schedule = AsyncMock()
-    week_profile.get_schedule = AsyncMock()
-    week_profile.schedule = {}
-
-    return week_profile
+    return wp_dp
 
 
 @pytest.fixture
-def mock_week_profile_climate() -> MagicMock:
-    """Create a mock ClimateWeekProfile for climate devices."""
-    from aiohomematic.model import week_profile as wp
+def mock_wp_data_point_climate() -> MagicMock:
+    """Create a mock WeekProfileDataPoint for climate devices."""
+    wp_dp = MagicMock(spec=ClimateWeekProfileDataPointProtocol)
+    wp_dp.schedule_channel_address = "VCU0000002:7"
+    wp_dp.set_schedule = AsyncMock()
+    wp_dp.get_schedule = AsyncMock()
+    wp_dp.get_schedule_profile = AsyncMock()
+    wp_dp.get_schedule_weekday = AsyncMock()
+    wp_dp.set_schedule_profile = AsyncMock()
+    wp_dp.set_schedule_weekday = AsyncMock()
+    wp_dp.copy_schedule = AsyncMock()
+    wp_dp.copy_schedule_profile = AsyncMock()
+    wp_dp.schedule = {}
 
-    week_profile = MagicMock(spec=wp.ClimateWeekProfile)
-    week_profile.schedule_channel_address = "VCU0000002:7"
-    week_profile.has_schedule = True
-    week_profile.set_schedule = AsyncMock()
-    week_profile.set_profile = AsyncMock()
-    week_profile.set_weekday = AsyncMock()
-    week_profile.get_schedule = AsyncMock()
-    week_profile.get_profile = AsyncMock()
-    week_profile.get_weekday = AsyncMock()
-    week_profile.schedule = {}
-
-    return week_profile
+    return wp_dp
 
 
 # =============================================================================
-# Test: Non-Climate Devices - Service Call → CCU Data
+# Test: Non-Climate Devices - get_schedule Service → CCU Data
 # =============================================================================
 
 
-class TestNonClimateScheduleCCUToAttributes:
-    """Test how CCU raw data is transformed to entity attributes."""
+class TestNonClimateGetScheduleEndToEnd:
+    """Test get_schedule service end-to-end for non-climate devices."""
 
     @pytest.mark.asyncio
-    async def test_light_dimmer_schedule_loaded_from_ccu(
-        self, mock_control_unit: MagicMock, mock_week_profile_simple: MagicMock
-    ) -> None:
-        """Test that dimmer schedule from CCU is correctly exposed."""
-        from aiohomematic.interfaces import CustomDataPointProtocol
+    async def test_get_schedule_dimmer_values(self, mock_wp_data_point: MagicMock) -> None:
+        """Test that dimmer schedule from CCU is correctly returned."""
+        from custom_components.homematicip_local.services import _async_service_get_schedule
 
-        # Simulate CCU raw data with dimmer values (0-100)
         ccu_schedule_data = {
             0: {"start": "00:00", "end": "06:00", "value": 0},
             1: {"start": "06:00", "end": "22:00", "value": 75},
             2: {"start": "22:00", "end": "00:00", "value": 25},
         }
+        mock_wp_data_point.get_schedule = AsyncMock(return_value=ccu_schedule_data)
 
-        mock_week_profile_simple.schedule = ccu_schedule_data
-        mock_week_profile_simple.get_schedule = AsyncMock(return_value=ccu_schedule_data)
+        mock_device = MagicMock()
+        mock_device.week_profile_data_point = mock_wp_data_point
+        mock_device.name = "Hallway Dimmer"
 
-        data_point = MagicMock(spec=CustomDataPointProtocol)
-        data_point.has_schedule = True
-        data_point.name = "LEVEL"
-        data_point.channel_address = "VCU0000001:1"
+        mock_service = MagicMock()
 
-        device = MagicMock()
-        device.week_profile = mock_week_profile_simple
-        data_point.device = device
+        with patch(
+            "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+            return_value=mock_device,
+        ):
+            result = await _async_service_get_schedule(hass=MagicMock(), service=mock_service)
 
-        entity = AioHomematicGenericEntity(
-            control_unit=mock_control_unit,
-            data_point=data_point,
-        )
-        entity.entity_id = "light.hallway_dimmer"
-
-        # Entity should expose the schedule
-        retrieved_schedule = await mock_week_profile_simple.get_schedule()
-        assert retrieved_schedule == ccu_schedule_data
+        assert result == ccu_schedule_data
 
     @pytest.mark.asyncio
-    async def test_switch_schedule_loaded_from_ccu(
-        self, mock_control_unit: MagicMock, mock_week_profile_simple: MagicMock
-    ) -> None:
-        """
-        Test that switch schedule loaded from CCU is correctly exposed.
+    async def test_get_schedule_returns_ccu_data(self, mock_wp_data_point: MagicMock) -> None:
+        """Test that get_schedule service returns CCU schedule data."""
+        from custom_components.homematicip_local.services import _async_service_get_schedule
 
-        Simulates:
-        1. CCU returns raw schedule data
-        2. Week profile caches it
-        3. Entity exposes it via attributes
-        """
-        from aiohomematic.interfaces import CustomDataPointProtocol
-
-        # Simulate CCU raw data for a switch schedule
         ccu_schedule_data = {
             0: {"start": "06:00", "end": "22:00", "value": True},
             1: {"start": "22:00", "end": "06:00", "value": False},
         }
+        mock_wp_data_point.get_schedule = AsyncMock(return_value=ccu_schedule_data)
 
-        # Mock week_profile to return this schedule
-        mock_week_profile_simple.schedule = ccu_schedule_data
-        mock_week_profile_simple.get_schedule = AsyncMock(return_value=ccu_schedule_data)
+        mock_device = MagicMock()
+        mock_device.week_profile_data_point = mock_wp_data_point
+        mock_device.name = "Test Switch"
 
-        data_point = MagicMock(spec=CustomDataPointProtocol)
-        data_point.has_schedule = True
-        data_point.name = "SWITCH"
-        data_point.channel_address = "VCU0000001:1"
+        mock_service = MagicMock()
 
-        device = MagicMock()
-        device.week_profile = mock_week_profile_simple
-        data_point.device = device
+        with patch(
+            "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+            return_value=mock_device,
+        ):
+            result = await _async_service_get_schedule(hass=MagicMock(), service=mock_service)
 
-        entity = AioHomematicGenericEntity(
-            control_unit=mock_control_unit,
-            data_point=data_point,
-        )
-        entity.entity_id = "switch.garden_pump"
-
-        # Verify that entity can access the schedule
-        assert entity._data_point.device.week_profile.schedule == ccu_schedule_data
+        mock_wp_data_point.get_schedule.assert_awaited_once_with(force_load=True)
+        assert result == ccu_schedule_data
 
 
 # =============================================================================
-# Test: Climate Devices - Service Call → CCU Data
+# Test: Non-Climate Devices - set_schedule Service → CCU Data
 # =============================================================================
 
 
-class TestEntityAttributesExposure:
-    """Test that schedule information is exposed via entity attributes."""
+class TestNonClimateSetScheduleEndToEnd:
+    """Test set_schedule service end-to-end for non-climate devices."""
 
     @pytest.mark.asyncio
-    async def test_has_schedule_attribute_exposed(
-        self, mock_control_unit: MagicMock, mock_week_profile_simple: MagicMock
-    ) -> None:
-        """
-        Test that has_schedule attribute is exposed.
+    async def test_set_schedule_raises_if_no_wp_dp(self) -> None:
+        """Test that set_schedule raises error if device has no week_profile_data_point."""
+        from custom_components.homematicip_local.services import ATTR_SCHEDULE_DATA, _async_service_set_schedule
 
-        Documentation mentions:
-        ```yaml
-        {{ state_attr('switch.garden_pump', 'has_schedule') }}
-        ```
-        """
-        from aiohomematic.interfaces import CustomDataPointProtocol
+        mock_device = MagicMock()
+        mock_device.week_profile_data_point = None
+        mock_device.name = "Unsupported Device"
 
-        data_point = MagicMock(spec=CustomDataPointProtocol)
-        data_point.has_schedule = True
-        data_point.name = "SWITCH"
-        data_point.channel_address = "VCU0000001:1"
+        mock_service = MagicMock()
+        mock_service.data = {ATTR_SCHEDULE_DATA: {}}
 
-        device = MagicMock()
-        device.week_profile = mock_week_profile_simple
-        data_point.device = device
-
-        entity = AioHomematicGenericEntity(
-            control_unit=mock_control_unit,
-            data_point=data_point,
-        )
-        entity.entity_id = "switch.garden_pump"
-
-        # Verify has_schedule is accessible
-        assert entity._data_point.has_schedule is True
+        with (
+            patch(
+                "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+                return_value=mock_device,
+            ),
+            pytest.raises(HomeAssistantError, match="does not support schedules"),
+        ):
+            await _async_service_set_schedule(hass=MagicMock(), service=mock_service)
 
     @pytest.mark.asyncio
-    async def test_schedule_data_accessible_via_week_profile(
-        self, mock_control_unit: MagicMock, mock_week_profile_simple: MagicMock
-    ) -> None:
-        """Test that schedule data is accessible via week_profile."""
-        from aiohomematic.interfaces import CustomDataPointProtocol
+    async def test_set_schedule_sends_data_to_ccu(self, mock_wp_data_point: MagicMock) -> None:
+        """Test that set_schedule service sends schedule data to CCU via week_profile_data_point."""
+        from custom_components.homematicip_local.services import ATTR_SCHEDULE_DATA, _async_service_set_schedule
 
         schedule_data = {
-            0: {"start": "06:00", "end": "22:00", "value": True},
-            1: {"start": "22:00", "end": "06:00", "value": False},
+            "MONDAY": [{"start": "06:00", "end": "22:00", "value": True}],
         }
 
-        mock_week_profile_simple.schedule = schedule_data
+        mock_device = MagicMock()
+        mock_device.week_profile_data_point = mock_wp_data_point
+        mock_device.name = "Test Switch"
 
-        data_point = MagicMock(spec=CustomDataPointProtocol)
-        data_point.has_schedule = True
-        data_point.name = "SWITCH"
-        data_point.channel_address = "VCU0000001:1"
+        mock_service = MagicMock()
+        mock_service.data = {ATTR_SCHEDULE_DATA: schedule_data}
 
-        device = MagicMock()
-        device.week_profile = mock_week_profile_simple
-        data_point.device = device
+        with patch(
+            "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+            return_value=mock_device,
+        ):
+            await _async_service_set_schedule(hass=MagicMock(), service=mock_service)
 
-        entity = AioHomematicGenericEntity(
-            control_unit=mock_control_unit,
-            data_point=data_point,
+        mock_wp_data_point.set_schedule.assert_awaited_once_with(schedule_data=schedule_data)
+
+
+# =============================================================================
+# Test: Climate Devices - Profile Service → CCU Data
+# =============================================================================
+
+
+class TestClimateScheduleProfileEndToEnd:
+    """Test climate schedule profile services end-to-end."""
+
+    @pytest.mark.asyncio
+    async def test_get_schedule_profile_returns_ccu_data(self, mock_wp_data_point_climate: MagicMock) -> None:
+        """Test that get_schedule_profile returns CCU profile data."""
+        from custom_components.homematicip_local.services import ATTR_PROFILE, _async_service_get_schedule_profile
+
+        ccu_profile_data = {
+            "MONDAY": {"base_temperature": 17.0, "periods": [{"starttime": "06:00", "temperature": 21.0}]},
+            "TUESDAY": {"base_temperature": 17.0, "periods": [{"starttime": "07:00", "temperature": 20.0}]},
+        }
+        mock_wp_data_point_climate.get_schedule_profile = AsyncMock(return_value=ccu_profile_data)
+
+        mock_device = MagicMock()
+        mock_device.week_profile_data_point = mock_wp_data_point_climate
+        mock_device.name = "Living Room Thermostat"
+
+        mock_service = MagicMock()
+        mock_service.data = {ATTR_PROFILE: "P1"}
+
+        with patch(
+            "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+            return_value=mock_device,
+        ):
+            result = await _async_service_get_schedule_profile(hass=MagicMock(), service=mock_service)
+
+        mock_wp_data_point_climate.get_schedule_profile.assert_awaited_once()
+        assert result == ccu_profile_data
+
+    @pytest.mark.asyncio
+    async def test_set_schedule_profile_sends_data_to_ccu(self, mock_wp_data_point_climate: MagicMock) -> None:
+        """Test that set_schedule_profile sends profile data to CCU."""
+        from custom_components.homematicip_local.services import (
+            ATTR_PROFILE,
+            ATTR_SIMPLE_PROFILE_DATA,
+            _async_service_set_schedule_profile,
         )
-        entity.entity_id = "switch.garden_pump"
 
-        # Verify schedule is accessible
-        assert entity._data_point.device.week_profile.schedule == schedule_data
+        profile_data = {
+            "MONDAY": {"base_temperature": 17.0, "periods": [{"starttime": "06:00", "temperature": 21.0}]},
+        }
+
+        mock_device = MagicMock()
+        mock_device.week_profile_data_point = mock_wp_data_point_climate
+        mock_device.name = "Living Room Thermostat"
+
+        mock_service = MagicMock()
+        mock_service.data = {ATTR_PROFILE: "P1", ATTR_SIMPLE_PROFILE_DATA: profile_data}
+
+        with patch(
+            "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+            return_value=mock_device,
+        ):
+            await _async_service_set_schedule_profile(hass=MagicMock(), service=mock_service)
+
+        mock_wp_data_point_climate.set_schedule_profile.assert_awaited_once()
+
+
+# =============================================================================
+# Test: Climate Devices - Weekday Service → CCU Data
+# =============================================================================
+
+
+class TestClimateScheduleWeekdayEndToEnd:
+    """Test climate schedule weekday services end-to-end."""
+
+    @pytest.mark.asyncio
+    async def test_get_schedule_weekday_returns_ccu_data(self, mock_wp_data_point_climate: MagicMock) -> None:
+        """Test that get_schedule_weekday returns CCU weekday data."""
+        from custom_components.homematicip_local.services import (
+            ATTR_PROFILE,
+            ATTR_WEEKDAY,
+            _async_service_get_schedule_weekday,
+        )
+
+        ccu_weekday_data = {
+            "base_temperature": 17.0,
+            "periods": [
+                {"starttime": "06:00", "endtime": "08:00", "temperature": 21.0},
+                {"starttime": "16:00", "endtime": "22:00", "temperature": 21.0},
+            ],
+        }
+        mock_wp_data_point_climate.get_schedule_weekday = AsyncMock(return_value=ccu_weekday_data)
+
+        mock_device = MagicMock()
+        mock_device.week_profile_data_point = mock_wp_data_point_climate
+        mock_device.name = "Living Room Thermostat"
+
+        mock_service = MagicMock()
+        mock_service.data = {ATTR_PROFILE: "P1", ATTR_WEEKDAY: "MONDAY"}
+
+        with patch(
+            "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+            return_value=mock_device,
+        ):
+            result = await _async_service_get_schedule_weekday(hass=MagicMock(), service=mock_service)
+
+        mock_wp_data_point_climate.get_schedule_weekday.assert_awaited_once()
+        assert result == ccu_weekday_data
+
+    @pytest.mark.asyncio
+    async def test_set_schedule_weekday_sends_data_to_ccu(self, mock_wp_data_point_climate: MagicMock) -> None:
+        """Test that set_schedule_weekday sends weekday data to CCU."""
+        from custom_components.homematicip_local.services import (
+            ATTR_BASE_TEMPERATURE,
+            ATTR_PROFILE,
+            ATTR_SIMPLE_WEEKDAY_LIST,
+            ATTR_WEEKDAY,
+            _async_service_set_schedule_weekday,
+        )
+
+        mock_device = MagicMock()
+        mock_device.week_profile_data_point = mock_wp_data_point_climate
+        mock_device.name = "Living Room Thermostat"
+
+        mock_service = MagicMock()
+        mock_service.data = {
+            ATTR_PROFILE: "P1",
+            ATTR_WEEKDAY: "MONDAY",
+            ATTR_BASE_TEMPERATURE: 17.0,
+            ATTR_SIMPLE_WEEKDAY_LIST: [
+                {"starttime": "06:00", "endtime": "08:00", "temperature": 21.0},
+                {"starttime": "16:00", "endtime": "22:00", "temperature": 21.0},
+            ],
+        }
+
+        with patch(
+            "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+            return_value=mock_device,
+        ):
+            await _async_service_set_schedule_weekday(hass=MagicMock(), service=mock_service)
+
+        mock_wp_data_point_climate.set_schedule_weekday.assert_awaited_once()
+
+
+# =============================================================================
+# Test: Copy Schedule Service → CCU Data
+# =============================================================================
+
+
+class TestCopyScheduleEndToEnd:
+    """Test copy_schedule service end-to-end."""
+
+    @pytest.mark.asyncio
+    async def test_copy_schedule_between_devices(self, mock_wp_data_point_climate: MagicMock) -> None:
+        """Test that copy_schedule copies from source to target device."""
+        from custom_components.homematicip_local.services import ATTR_TARGET_DEVICE_ID, _async_service_copy_schedule
+
+        target_wp_dp = MagicMock(spec=ClimateWeekProfileDataPointProtocol)
+
+        source_device = MagicMock()
+        source_device.week_profile_data_point = mock_wp_data_point_climate
+        source_device.name = "Source Thermostat"
+
+        target_device = MagicMock()
+        target_device.week_profile_data_point = target_wp_dp
+        target_device.name = "Target Thermostat"
+
+        mock_service = MagicMock()
+        mock_service.data = {ATTR_TARGET_DEVICE_ID: "target_device_id"}
+
+        with (
+            patch(
+                "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+                return_value=source_device,
+            ),
+            patch(
+                "custom_components.homematicip_local.services._asnyc_get_hm_device_by_id",
+                return_value=target_device,
+            ),
+        ):
+            await _async_service_copy_schedule(hass=MagicMock(), service=mock_service)
+
+        mock_wp_data_point_climate.copy_schedule.assert_awaited_once_with(target_data_point=target_wp_dp)
+
+    @pytest.mark.asyncio
+    async def test_copy_schedule_profile_within_device(self, mock_wp_data_point_climate: MagicMock) -> None:
+        """Test that copy_schedule_profile copies between profiles on the same device."""
+        from custom_components.homematicip_local.services import (
+            ATTR_SOURCE_PROFILE,
+            ATTR_TARGET_PROFILE,
+            _async_service_copy_schedule_profile,
+        )
+
+        mock_device = MagicMock()
+        mock_device.week_profile_data_point = mock_wp_data_point_climate
+        mock_device.name = "Living Room Thermostat"
+
+        mock_service = MagicMock()
+        mock_service.data = {ATTR_SOURCE_PROFILE: "P1", ATTR_TARGET_PROFILE: "P2"}
+
+        with patch(
+            "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+            return_value=mock_device,
+        ):
+            await _async_service_copy_schedule_profile(hass=MagicMock(), service=mock_service)
+
+        mock_wp_data_point_climate.copy_schedule_profile.assert_awaited_once()

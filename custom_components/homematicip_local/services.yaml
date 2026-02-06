@@ -58,30 +58,33 @@ create_ccu_backup:
           integration: homematicip_local
 
 copy_schedule:
-  target:
-    entity:
-      domain: climate
-      integration: homematicip_local
   fields:
-    source_entity_id:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: homematicip_local
+    device_address:
+      required: false
+      selector:
+        text:
+    target_device_id:
       required: true
       selector:
-        entity:
-          domain: climate
+        device:
           integration: homematicip_local
 
 copy_schedule_profile:
-  target:
-    entity:
-      domain: climate
-      integration: homematicip_local
   fields:
-    source_entity_id:
+    device_id:
       required: false
       selector:
-        entity:
-          domain: climate
+        device:
           integration: homematicip_local
+    device_address:
+      required: false
+      selector:
+        text:
     source_profile:
       required: true
       example: P1
@@ -106,6 +109,11 @@ copy_schedule_profile:
             - "P4"
             - "P5"
             - "P6"
+    target_device_id:
+      required: false
+      selector:
+        device:
+          integration: homematicip_local
 
 export_device_definition:
   fields:
@@ -254,12 +262,29 @@ get_paramset:
             - "MASTER"
             - "VALUES"
 
-get_schedule_simple_profile:
-  target:
-    entity:
-      domain: climate
-      integration: homematicip_local
+get_schedule:
   fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: homematicip_local
+    device_address:
+      required: false
+      selector:
+        text:
+
+get_schedule_profile:
+  fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: homematicip_local
+    device_address:
+      required: false
+      selector:
+        text:
     profile:
       required: true
       example: P1
@@ -273,12 +298,17 @@ get_schedule_simple_profile:
             - "P5"
             - "P6"
 
-get_schedule_simple_weekday:
-  target:
-    entity:
-      domain: climate
-      integration: homematicip_local
+get_schedule_weekday:
   fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: homematicip_local
+    device_address:
+      required: false
+      selector:
+        text:
     profile:
       required: true
       example: P1
@@ -364,12 +394,33 @@ remove_link:
       selector:
         text:
 
-set_schedule_simple_profile:
-  target:
-    entity:
-      domain: climate
-      integration: homematicip_local
+set_schedule:
   fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: homematicip_local
+    device_address:
+      required: false
+      selector:
+        text:
+    schedule_data:
+      required: true
+      selector:
+        object:
+
+set_schedule_profile:
+  fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: homematicip_local
+    device_address:
+      required: false
+      selector:
+        text:
     profile:
       required: true
       example: P1
@@ -387,12 +438,17 @@ set_schedule_simple_profile:
       selector:
         object:
 
-set_schedule_simple_weekday:
-  target:
-    entity:
-      domain: climate
-      integration: homematicip_local
+set_schedule_weekday:
   fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: homematicip_local
+    device_address:
+      required: false
+      selector:
+        text:
     profile:
       required: true
       example: P1
@@ -428,74 +484,6 @@ set_schedule_simple_weekday:
           step: 0.5
           mode: slider
     simple_weekday_list:
-      required: true
-      selector:
-        object:
-
-cover_get_schedule:
-  target:
-    entity:
-      domain: cover
-      integration: homematicip_local
-
-cover_set_schedule:
-  target:
-    entity:
-      domain: cover
-      integration: homematicip_local
-  fields:
-    schedule_data:
-      required: true
-      selector:
-        object:
-
-light_get_schedule:
-  target:
-    entity:
-      domain: light
-      integration: homematicip_local
-
-light_set_schedule:
-  target:
-    entity:
-      domain: light
-      integration: homematicip_local
-  fields:
-    schedule_data:
-      required: true
-      selector:
-        object:
-
-switch_get_schedule:
-  target:
-    entity:
-      domain: switch
-      integration: homematicip_local
-
-switch_set_schedule:
-  target:
-    entity:
-      domain: switch
-      integration: homematicip_local
-  fields:
-    schedule_data:
-      required: true
-      selector:
-        object:
-
-valve_get_schedule:
-  target:
-    entity:
-      domain: valve
-      integration: homematicip_local
-
-valve_set_schedule:
-  target:
-    entity:
-      domain: valve
-      integration: homematicip_local
-  fields:
-    schedule_data:
       required: true
       selector:
         object:
@@ -638,6 +626,29 @@ put_paramset:
           options:
             - "BURST"
             - "WAKEUP"
+
+set_schedule_active_profile:
+  fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: homematicip_local
+    device_address:
+      required: false
+      selector:
+        text:
+    profile:
+      required: true
+      selector:
+        select:
+          options:
+            - "P1"
+            - "P2"
+            - "P3"
+            - "P4"
+            - "P5"
+            - "P6"
 
 enable_away_mode_by_calendar:
   target:

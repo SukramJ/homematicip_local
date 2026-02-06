@@ -21,6 +21,7 @@ from aiohomematic.interfaces import (
     GenericProgramDataPointProtocol,
     GenericSysvarDataPointProtocol,
 )
+from aiohomematic.model.week_profile_data_point import WeekProfileDataPoint
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -117,7 +118,9 @@ def validate_paramset_key(value: Any) -> str:
 
 
 # Union for entity types used as base class for data points
-HmBaseDataPointProtocol: TypeAlias = CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocolAny
+HmBaseDataPointProtocol: TypeAlias = (
+    CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocolAny | WeekProfileDataPoint
+)
 # Generic base type used for data points in Homematic(IP) Local for OpenCCU
 HmGenericDataPointProtocol = TypeVar("HmGenericDataPointProtocol", bound=HmBaseDataPointProtocol)
 # Generic base type used for sysvar data points in Homematic(IP) Local for OpenCCU

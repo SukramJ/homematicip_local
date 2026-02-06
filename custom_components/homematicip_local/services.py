@@ -2,18 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 import logging
 from pathlib import Path
-import re
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import TYPE_CHECKING, Final, cast
 
+from pydantic import ValidationError
 import voluptuous as vol
 
-from aiohomematic.const import ForcedDeviceAvailability, ParamsetKey
+from aiohomematic.const import ForcedDeviceAvailability, ParamsetKey, ScheduleProfile, WeekdayStr
 from aiohomematic.exceptions import BaseHomematicException
-from aiohomematic.interfaces import DeviceProtocol
+from aiohomematic.interfaces import ClimateWeekProfileDataPointProtocol, DeviceProtocol
+from aiohomematic.model.schedule_models import ClimateWeekdaySchedule
 from aiohomematic.support import get_device_address, to_bool
 from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
@@ -85,11 +86,11 @@ ATTR_SIMPLE_PROFILE_DATA: Final = "simple_profile_data"
 ATTR_SIMPLE_WEEKDAY_LIST: Final = "simple_weekday_list"
 ATTR_SOUND: Final = "sound"
 ATTR_SOUNDFILE: Final = "soundfile"
-ATTR_SOURCE_ENTITY_ID: Final = "source_entity_id"
 ATTR_SOURCE_PROFILE: Final = "source_profile"
 ATTR_HAS_ICONS: Final = "has_icons"
 ATTR_HAS_SOUNDFILES: Final = "has_soundfiles"
 ATTR_HAS_SOUNDS: Final = "has_sounds"
+ATTR_TARGET_DEVICE_ID: Final = "target_device_id"
 ATTR_TARGET_PROFILE: Final = "target_profile"
 ATTR_TEXT: Final = "text"
 ATTR_TEXT_COLOR: Final = "text_color"
@@ -119,171 +120,105 @@ CONF_WAIT_FOR_CALLBACK: Final = "wait_for_callback"
 
 DEFAULT_CHANNEL: Final = 1
 
-# Schedule field constants
-SCHEDULE_FIELD_WEEKDAYS: Final = "weekdays"
-SCHEDULE_FIELD_TIME: Final = "time"
-SCHEDULE_FIELD_CONDITION: Final = "condition"
-SCHEDULE_FIELD_ASTRO_TYPE: Final = "astro_type"
-SCHEDULE_FIELD_ASTRO_OFFSET_MINUTES: Final = "astro_offset_minutes"
-SCHEDULE_FIELD_TARGET_CHANNELS: Final = "target_channels"
-SCHEDULE_FIELD_LEVEL: Final = "level"
-SCHEDULE_FIELD_LEVEL_2: Final = "level_2"
-SCHEDULE_FIELD_DURATION: Final = "duration"
-SCHEDULE_FIELD_RAMP_TIME: Final = "ramp_time"
-
-# Valid weekday values
-VALID_WEEKDAYS: Final = frozenset({"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"})
-
-# Valid condition values
-VALID_CONDITIONS: Final = frozenset({"fixed_time", "astro", "fixed_if_before_astro", "fixed_if_after_astro"})
-
-# Valid astro types
-VALID_ASTRO_TYPES: Final = frozenset({"sunrise", "sunset"})
-
-
-def _validate_weekdays(value: list[str]) -> list[str]:
-    """Validate weekdays list."""
-    if not value:
-        raise vol.Invalid("At least one weekday is required")
-    for day in value:
-        if day not in VALID_WEEKDAYS:
-            raise vol.Invalid(f"Invalid weekday: {day}. Must be one of {VALID_WEEKDAYS}")
-    return value
-
-
-def _validate_time_format(value: str) -> str:
-    """Validate time format HH:MM."""
-    if not re.match(r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", value):
-        raise vol.Invalid(f"Invalid time format: {value}. Must be HH:MM (00:00-23:59)")
-    return value
-
-
-def _validate_target_channels(value: list[str]) -> list[str]:
-    """Validate target_channels list."""
-    if not value:
-        raise vol.Invalid("At least one target channel is required")
-    for channel in value:
-        if not re.match(r"^[1-8]_[1-3]$", channel):
-            raise vol.Invalid(f"Invalid channel format: {channel}. Must be X_Y (X=1-8, Y=1-3)")
-    return value
-
-
-def _validate_duration_format(value: str) -> str:
-    """Validate duration format (e.g., 10s, 5min, 1h)."""
-    if not re.match(r"^\d+(ms|s|min|h)$", value):
-        raise vol.Invalid(f"Invalid duration format: {value}. Must be number + unit (ms, s, min, h)")
-    return value
-
-
-def _validate_switch_level(value: float) -> float:
-    """Validate switch level (must be 0.0 or 1.0)."""
-    if value not in (0.0, 1.0):
-        raise vol.Invalid(f"Switch level must be 0.0 or 1.0, got {value}")
-    return value
-
-
-# Base schedule entry schema (common fields)
-_SCHEDULE_ENTRY_BASE = {
-    vol.Required(SCHEDULE_FIELD_WEEKDAYS): _validate_weekdays,
-    vol.Required(SCHEDULE_FIELD_TIME): _validate_time_format,
-    vol.Required(SCHEDULE_FIELD_TARGET_CHANNELS): _validate_target_channels,
-    vol.Optional(SCHEDULE_FIELD_CONDITION, default="fixed_time"): vol.In(VALID_CONDITIONS),
-    vol.Optional(SCHEDULE_FIELD_ASTRO_TYPE): vol.Any(None, vol.In(VALID_ASTRO_TYPES)),
-    vol.Optional(SCHEDULE_FIELD_ASTRO_OFFSET_MINUTES, default=0): vol.All(
-        vol.Coerce(int), vol.Range(min=-720, max=720)
-    ),
-}
-
-# Switch schedule entry: level must be 0.0 or 1.0, no level_2, no ramp_time
-SCHEMA_SWITCH_SCHEDULE_ENTRY = vol.Schema(
-    {
-        **_SCHEDULE_ENTRY_BASE,
-        vol.Required(SCHEDULE_FIELD_LEVEL): vol.All(vol.Coerce(float), _validate_switch_level),
-        vol.Optional(SCHEDULE_FIELD_DURATION): _validate_duration_format,
-    }
-)
-
-# Light schedule entry: supports ramp_time, no level_2
-SCHEMA_LIGHT_SCHEDULE_ENTRY = vol.Schema(
-    {
-        **_SCHEDULE_ENTRY_BASE,
-        vol.Required(SCHEDULE_FIELD_LEVEL): vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
-        vol.Optional(SCHEDULE_FIELD_DURATION): _validate_duration_format,
-        vol.Optional(SCHEDULE_FIELD_RAMP_TIME): _validate_duration_format,
-    }
-)
-
-# Cover schedule entry: supports level_2, no duration, no ramp_time
-SCHEMA_COVER_SCHEDULE_ENTRY = vol.Schema(
-    {
-        **_SCHEDULE_ENTRY_BASE,
-        vol.Required(SCHEDULE_FIELD_LEVEL): vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
-        vol.Optional(SCHEDULE_FIELD_LEVEL_2): vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
-    }
-)
-
-# Valve schedule entry: supports duration, no level_2, no ramp_time
-SCHEMA_VALVE_SCHEDULE_ENTRY = vol.Schema(
-    {
-        **_SCHEDULE_ENTRY_BASE,
-        vol.Required(SCHEDULE_FIELD_LEVEL): vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
-        vol.Optional(SCHEDULE_FIELD_DURATION): _validate_duration_format,
-    }
-)
-
-
-def _create_schedule_data_validator(
-    entry_schema: vol.Schema,
-) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Create a schedule_data validator for a specific entry schema."""
-
-    def validate_schedule_data(value: dict[str, Any]) -> dict[str, Any]:
-        """Validate schedule_data dictionary."""
-        if not isinstance(value, dict):
-            raise vol.Invalid("schedule_data must be a dictionary")
-
-        validated: dict[str, Any] = {}
-        for key, entry in value.items():
-            # Keys should be string numbers "1" to "24"
-            if not isinstance(key, str) or not key.isdigit():
-                raise vol.Invalid(f"Schedule entry key must be a string number, got: {key}")
-            entry_num = int(key)
-            if entry_num < 1 or entry_num > 24:
-                raise vol.Invalid(f"Schedule entry number must be 1-24, got: {entry_num}")
-
-            # Validate the entry with the domain-specific schema
-            try:
-                validated[key] = entry_schema(entry)
-            except vol.Invalid as exc:
-                raise vol.Invalid(f"Invalid schedule entry '{key}': {exc.msg}") from exc
-
-        return validated
-
-    return validate_schedule_data
-
-
-# Domain-specific schedule_data schemas
-SCHEMA_SWITCH_SCHEDULE_DATA: dict[vol.Marker | str, Any] = {
-    vol.Required(ATTR_SCHEDULE_DATA): _create_schedule_data_validator(SCHEMA_SWITCH_SCHEDULE_ENTRY)
-}
-
-SCHEMA_LIGHT_SCHEDULE_DATA: dict[vol.Marker | str, Any] = {
-    vol.Required(ATTR_SCHEDULE_DATA): _create_schedule_data_validator(SCHEMA_LIGHT_SCHEDULE_ENTRY)
-}
-
-SCHEMA_COVER_SCHEDULE_DATA: dict[vol.Marker | str, Any] = {
-    vol.Required(ATTR_SCHEDULE_DATA): _create_schedule_data_validator(SCHEMA_COVER_SCHEDULE_ENTRY)
-}
-
-SCHEMA_VALVE_SCHEDULE_DATA: dict[vol.Marker | str, Any] = {
-    vol.Required(ATTR_SCHEDULE_DATA): _create_schedule_data_validator(SCHEMA_VALVE_SCHEDULE_ENTRY)
-}
-
 BASE_SCHEMA_DEVICE = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_ID): cv.string,
         vol.Optional(CONF_DEVICE_ADDRESS): validate_device_address,
     }
+)
+
+# Schedule schemas (device-based) — content validation is delegated to aiohomematic Pydantic models
+SCHEMA_GET_SCHEDULE = vol.All(
+    cv.has_at_least_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    BASE_SCHEMA_DEVICE,
+)
+
+SCHEMA_SET_SCHEDULE = vol.All(
+    cv.has_at_least_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    BASE_SCHEMA_DEVICE.extend(
+        {
+            vol.Required(ATTR_SCHEDULE_DATA): dict,
+        }
+    ),
+)
+
+SCHEMA_GET_SCHEDULE_PROFILE = vol.All(
+    cv.has_at_least_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    BASE_SCHEMA_DEVICE.extend(
+        {
+            vol.Required(ATTR_PROFILE): cv.string,
+        }
+    ),
+)
+
+SCHEMA_GET_SCHEDULE_WEEKDAY = vol.All(
+    cv.has_at_least_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    BASE_SCHEMA_DEVICE.extend(
+        {
+            vol.Required(ATTR_PROFILE): cv.string,
+            vol.Required(ATTR_WEEKDAY): cv.string,
+        }
+    ),
+)
+
+SCHEMA_SET_SCHEDULE_PROFILE = vol.All(
+    cv.has_at_least_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    BASE_SCHEMA_DEVICE.extend(
+        {
+            vol.Required(ATTR_PROFILE): cv.string,
+            vol.Required(ATTR_SIMPLE_PROFILE_DATA): dict,
+        }
+    ),
+)
+
+SCHEMA_SET_SCHEDULE_WEEKDAY = vol.All(
+    cv.has_at_least_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    BASE_SCHEMA_DEVICE.extend(
+        {
+            vol.Required(ATTR_PROFILE): cv.string,
+            vol.Required(ATTR_WEEKDAY): cv.string,
+            vol.Required(ATTR_BASE_TEMPERATURE): cv.positive_float,
+            vol.Required(ATTR_SIMPLE_WEEKDAY_LIST): list,
+        }
+    ),
+)
+
+SCHEMA_COPY_SCHEDULE = vol.All(
+    cv.has_at_least_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    BASE_SCHEMA_DEVICE.extend(
+        {
+            vol.Required(ATTR_TARGET_DEVICE_ID): cv.string,
+        }
+    ),
+)
+
+SCHEMA_COPY_SCHEDULE_PROFILE = vol.All(
+    cv.has_at_least_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    BASE_SCHEMA_DEVICE.extend(
+        {
+            vol.Required(ATTR_SOURCE_PROFILE): cv.string,
+            vol.Required(ATTR_TARGET_PROFILE): cv.string,
+            vol.Optional(ATTR_TARGET_DEVICE_ID): cv.string,
+        }
+    ),
+)
+
+SCHEMA_SET_SCHEDULE_ACTIVE_PROFILE = vol.All(
+    cv.has_at_least_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
+    BASE_SCHEMA_DEVICE.extend(
+        {
+            vol.Required(ATTR_PROFILE): cv.string,
+        }
+    ),
 )
 
 SCHEMA_ADD_LINK = vol.All(
@@ -483,62 +418,51 @@ SCHEMA_UPDATE_DEVICE_FIRMWARE_DATA = vol.Schema(
 )
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
+async def async_setup_services(hass: HomeAssistant) -> None:
     """Create the aiohomematic services."""
     # NOTE: Services may be registered multiple times if multiple config entries exist
     # This is intentional - Home Assistant handles this gracefully
 
+    service_dispatch: dict[str, Callable[..., Awaitable[ServiceResponse]]] = {
+        HmipLocalServices.ADD_LINK: _async_service_add_link,
+        HmipLocalServices.CLEAR_CACHE: _async_service_clear_cache,
+        HmipLocalServices.CONFIRM_ALL_DELAYED_DEVICES: _async_service_confirm_all_delayed_devices,
+        HmipLocalServices.COPY_SCHEDULE: _async_service_copy_schedule,
+        HmipLocalServices.COPY_SCHEDULE_PROFILE: _async_service_copy_schedule_profile,
+        HmipLocalServices.CREATE_CCU_BACKUP: _async_service_create_ccu_backup,
+        HmipLocalServices.CREATE_CENTRAL_LINKS: _async_service_create_central_link,
+        HmipLocalServices.EXPORT_DEVICE_DEFINITION: _async_service_export_device_definition,
+        HmipLocalServices.FETCH_SYSTEM_VARIABLES: _async_service_fetch_system_variables,
+        HmipLocalServices.FORCE_DEVICE_AVAILABILITY: _async_service_force_device_availability,
+        HmipLocalServices.GET_DEVICE_VALUE: _async_service_get_device_value,
+        HmipLocalServices.GET_LINK_PARAMSET: _async_service_get_link_paramset,
+        HmipLocalServices.GET_LINK_PEERS: _async_service_get_link_peers,
+        HmipLocalServices.GET_PARAMSET: _async_service_get_paramset,
+        HmipLocalServices.GET_SCHEDULE: _async_service_get_schedule,
+        HmipLocalServices.GET_SCHEDULE_PROFILE: _async_service_get_schedule_profile,
+        HmipLocalServices.GET_SCHEDULE_WEEKDAY: _async_service_get_schedule_weekday,
+        HmipLocalServices.GET_VARIABLE_VALUE: _async_service_get_variable_value,
+        HmipLocalServices.PUT_LINK_PARAMSET: _async_service_put_link_paramset,
+        HmipLocalServices.PUT_PARAMSET: _async_service_put_paramset,
+        HmipLocalServices.RECORD_SESSION: _async_service_record_session,
+        HmipLocalServices.RELOAD_CHANNEL_CONFIG: _async_service_reload_channel_config,
+        HmipLocalServices.RELOAD_DEVICE_CONFIG: _async_service_reload_device_config,
+        HmipLocalServices.REMOVE_CENTRAL_LINKS: _async_service_remove_central_link,
+        HmipLocalServices.REMOVE_LINK: _async_service_remove_link,
+        HmipLocalServices.SET_DEVICE_VALUE: _async_service_set_device_value,
+        HmipLocalServices.SET_SCHEDULE: _async_service_set_schedule,
+        HmipLocalServices.SET_SCHEDULE_ACTIVE_PROFILE: _async_service_set_schedule_active_profile,
+        HmipLocalServices.SET_SCHEDULE_PROFILE: _async_service_set_schedule_profile,
+        HmipLocalServices.SET_SCHEDULE_WEEKDAY: _async_service_set_schedule_weekday,
+        HmipLocalServices.SET_VARIABLE_VALUE: _async_service_set_variable_value,
+        HmipLocalServices.UPDATE_DEVICE_FIRMWARE_DATA: _async_service_update_device_firmware_data,
+    }
+
     @verify_domain_control(DOMAIN)
     async def async_call_hmip_local_service(service: ServiceCall) -> ServiceResponse:
         """Call correct Homematic(IP) Local for OpenCCU service."""
-        service_name = service.service
-
-        if service_name == HmipLocalServices.CREATE_CENTRAL_LINKS:
-            await _async_service_create_central_link(hass=hass, service=service)
-        elif service_name == HmipLocalServices.ADD_LINK:
-            await _async_service_add_link(hass=hass, service=service)
-        elif service_name == HmipLocalServices.CLEAR_CACHE:
-            await _async_service_clear_cache(hass=hass, service=service)
-        elif service_name == HmipLocalServices.CONFIRM_ALL_DELAYED_DEVICES:
-            await _async_service_confirm_all_delayed_devices(hass=hass, service=service)
-        elif service_name == HmipLocalServices.CREATE_CCU_BACKUP:
-            return await _async_service_create_ccu_backup(hass=hass, service=service)
-        elif service_name == HmipLocalServices.EXPORT_DEVICE_DEFINITION:
-            await _async_service_export_device_definition(hass=hass, service=service)
-        elif service_name == HmipLocalServices.FETCH_SYSTEM_VARIABLES:
-            await _async_service_fetch_system_variables(hass=hass, service=service)
-        elif service_name == HmipLocalServices.FORCE_DEVICE_AVAILABILITY:
-            await _async_service_force_device_availability(hass=hass, service=service)
-        elif service_name == HmipLocalServices.RELOAD_DEVICE_CONFIG:
-            await _async_service_reload_device_config(hass=hass, service=service)
-        elif service_name == HmipLocalServices.RELOAD_CHANNEL_CONFIG:
-            await _async_service_reload_channel_config(hass=hass, service=service)
-        elif service_name == HmipLocalServices.GET_DEVICE_VALUE:
-            return await _async_service_get_device_value(hass=hass, service=service)
-        elif service_name == HmipLocalServices.GET_LINK_PEERS:
-            return await _async_service_get_link_peers(hass=hass, service=service)
-        elif service_name == HmipLocalServices.GET_LINK_PARAMSET:
-            return await _async_service_get_link_paramset(hass=hass, service=service)
-        elif service_name == HmipLocalServices.GET_PARAMSET:
-            return await _async_service_get_paramset(hass=hass, service=service)
-        elif service_name == HmipLocalServices.GET_VARIABLE_VALUE:
-            return await _async_service_get_variable_value(hass=hass, service=service)
-        elif service_name == HmipLocalServices.PUT_LINK_PARAMSET:
-            await _async_service_put_link_paramset(hass=hass, service=service)
-        elif service_name == HmipLocalServices.PUT_PARAMSET:
-            await _async_service_put_paramset(hass=hass, service=service)
-        elif service_name == HmipLocalServices.RECORD_SESSION:
-            await _async_service_record_session(hass=hass, service=service)
-        elif service_name == HmipLocalServices.REMOVE_CENTRAL_LINKS:
-            await _async_service_remove_central_link(hass=hass, service=service)
-        elif service_name == HmipLocalServices.REMOVE_LINK:
-            await _async_service_remove_link(hass=hass, service=service)
-        elif service_name == HmipLocalServices.SET_DEVICE_VALUE:
-            await _async_service_set_device_value(hass=hass, service=service)
-        elif service_name == HmipLocalServices.SET_VARIABLE_VALUE:
-            await _async_service_set_variable_value(hass=hass, service=service)
-        elif service_name == HmipLocalServices.UPDATE_DEVICE_FIRMWARE_DATA:
-            await _async_service_update_device_firmware_data(hass=hass, service=service)
+        if handler := service_dispatch.get(service.service):
+            return await handler(hass=hass, service=service)
         return None
 
     async_register_admin_service(
@@ -758,170 +682,71 @@ async def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         func="async_disable_away_mode",
     )
 
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.COPY_SCHEDULE,
-        entity_domain=CLIMATE_DOMAIN,
-        schema={
-            vol.Required(ATTR_SOURCE_ENTITY_ID): cv.string,
-        },
-        func="async_copy_schedule",
-    )
-
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.COPY_SCHEDULE_PROFILE,
-        entity_domain=CLIMATE_DOMAIN,
-        schema={
-            vol.Optional(ATTR_SOURCE_ENTITY_ID): cv.string,
-            vol.Required(ATTR_SOURCE_PROFILE): cv.string,
-            vol.Required(ATTR_TARGET_PROFILE): cv.string,
-        },
-        func="async_copy_schedule_profile",
-    )
-
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.GET_SCHEDULE_SIMPLE_PROFILE,
-        entity_domain=CLIMATE_DOMAIN,
-        schema={
-            vol.Required(ATTR_PROFILE): cv.string,
-        },
-        func="async_get_schedule_profile",
+    # Device-based schedule services
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=HmipLocalServices.GET_SCHEDULE,
+        service_func=async_call_hmip_local_service,
+        schema=SCHEMA_GET_SCHEDULE,
         supports_response=SupportsResponse.OPTIONAL,
     )
 
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.GET_SCHEDULE_SIMPLE_WEEKDAY,
-        entity_domain=CLIMATE_DOMAIN,
-        schema={
-            vol.Required(ATTR_PROFILE): cv.string,
-            vol.Required(ATTR_WEEKDAY): cv.string,
-        },
-        func="async_get_schedule_weekday",
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=HmipLocalServices.SET_SCHEDULE,
+        service_func=async_call_hmip_local_service,
+        schema=SCHEMA_SET_SCHEDULE,
+    )
+
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=HmipLocalServices.GET_SCHEDULE_PROFILE,
+        service_func=async_call_hmip_local_service,
+        schema=SCHEMA_GET_SCHEDULE_PROFILE,
         supports_response=SupportsResponse.OPTIONAL,
     )
 
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.SET_SCHEDULE_ACTIVE_PROFILE,
-        entity_domain=CLIMATE_DOMAIN,
-        schema={
-            vol.Required(ATTR_PROFILE): cv.string,
-        },
-        func="async_set_active_profile",
-    )
-
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.SET_SCHEDULE_SIMPLE_PROFILE,
-        entity_domain=CLIMATE_DOMAIN,
-        schema={
-            vol.Required(ATTR_PROFILE): cv.string,
-            vol.Required(ATTR_SIMPLE_PROFILE_DATA): dict,
-        },
-        func="async_set_schedule_profile",
-    )
-
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.SET_SCHEDULE_SIMPLE_WEEKDAY,
-        entity_domain=CLIMATE_DOMAIN,
-        schema={
-            vol.Required(ATTR_PROFILE): cv.string,
-            vol.Required(ATTR_WEEKDAY): cv.string,
-            vol.Required(ATTR_BASE_TEMPERATURE): cv.positive_float,
-            vol.Required(ATTR_SIMPLE_WEEKDAY_LIST): list,
-        },
-        func="async_set_schedule_weekday",
-    )
-
-    # Schedule services for cover
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.COVER_GET_SCHEDULE,
-        entity_domain=COVER_DOMAIN,
-        schema={},
-        func="async_get_schedule",
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=HmipLocalServices.GET_SCHEDULE_WEEKDAY,
+        service_func=async_call_hmip_local_service,
+        schema=SCHEMA_GET_SCHEDULE_WEEKDAY,
         supports_response=SupportsResponse.OPTIONAL,
     )
 
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.COVER_SET_SCHEDULE,
-        entity_domain=COVER_DOMAIN,
-        schema=SCHEMA_COVER_SCHEDULE_DATA,
-        func="async_set_schedule",
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=HmipLocalServices.SET_SCHEDULE_PROFILE,
+        service_func=async_call_hmip_local_service,
+        schema=SCHEMA_SET_SCHEDULE_PROFILE,
     )
 
-    # Schedule services for light
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.LIGHT_GET_SCHEDULE,
-        entity_domain=LIGHT_DOMAIN,
-        schema={},
-        func="async_get_schedule",
-        supports_response=SupportsResponse.OPTIONAL,
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=HmipLocalServices.SET_SCHEDULE_WEEKDAY,
+        service_func=async_call_hmip_local_service,
+        schema=SCHEMA_SET_SCHEDULE_WEEKDAY,
     )
 
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.LIGHT_SET_SCHEDULE,
-        entity_domain=LIGHT_DOMAIN,
-        schema=SCHEMA_LIGHT_SCHEDULE_DATA,
-        func="async_set_schedule",
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=HmipLocalServices.COPY_SCHEDULE,
+        service_func=async_call_hmip_local_service,
+        schema=SCHEMA_COPY_SCHEDULE,
     )
 
-    # Schedule services for switch
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.SWITCH_GET_SCHEDULE,
-        entity_domain=SWITCH_DOMAIN,
-        schema={},
-        func="async_get_schedule",
-        supports_response=SupportsResponse.OPTIONAL,
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=HmipLocalServices.COPY_SCHEDULE_PROFILE,
+        service_func=async_call_hmip_local_service,
+        schema=SCHEMA_COPY_SCHEDULE_PROFILE,
     )
 
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.SWITCH_SET_SCHEDULE,
-        entity_domain=SWITCH_DOMAIN,
-        schema=SCHEMA_SWITCH_SCHEDULE_DATA,
-        func="async_set_schedule",
-    )
-
-    # Schedule services for valve
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.VALVE_GET_SCHEDULE,
-        entity_domain=VALVE_DOMAIN,
-        schema={},
-        func="async_get_schedule",
-        supports_response=SupportsResponse.OPTIONAL,
-    )
-
-    async_register_platform_entity_service(
-        hass=hass,
-        service_domain=DOMAIN,
-        service_name=HmipLocalServices.VALVE_SET_SCHEDULE,
-        entity_domain=VALVE_DOMAIN,
-        schema=SCHEMA_VALVE_SCHEDULE_DATA,
-        func="async_set_schedule",
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=HmipLocalServices.SET_SCHEDULE_ACTIVE_PROFILE,
+        service_func=async_call_hmip_local_service,
+        schema=SCHEMA_SET_SCHEDULE_ACTIVE_PROFILE,
     )
 
     async_register_platform_entity_service(
@@ -1476,7 +1301,7 @@ def _async_get_control_unit(*, hass: HomeAssistant, entry_id: str) -> ControlUni
 
 
 @callback
-def _async_get_hm_device_by_service_data(*, hass: HomeAssistant, service: ServiceCall) -> DeviceProtocol | None:
+def _async_get_hm_device_by_service_data(*, hass: HomeAssistant, service: ServiceCall) -> DeviceProtocol:
     """Service to force device availability on a Homematic(IP) Local for OpenCCU devices."""
     hm_device: DeviceProtocol | None = None
     message = "No device found"
@@ -1566,3 +1391,169 @@ def _asnyc_get_hm_device_by_id(*, hass: HomeAssistant, device_id: str) -> Device
         ):
             return hm_device
     return None
+
+
+async def _async_service_get_schedule(*, hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
+    """Handle get_schedule service call."""
+    hm_device = _async_get_hm_device_by_service_data(hass=hass, service=service)
+    wp_dp = hm_device.week_profile_data_point
+    if wp_dp is None:
+        raise HomeAssistantError(f"Device {hm_device.name} does not support schedules")
+    try:
+        return cast(ServiceResponse, await wp_dp.get_schedule(force_load=True))
+    except BaseHomematicException as bhexc:
+        raise HomeAssistantError(bhexc) from bhexc
+    except ValidationError as vexc:
+        errors = "; ".join(e["msg"] for e in vexc.errors())
+        raise HomeAssistantError(f"Invalid schedule data: {errors}") from vexc
+
+
+async def _async_service_set_schedule(*, hass: HomeAssistant, service: ServiceCall) -> None:
+    """Handle set_schedule service call."""
+    hm_device = _async_get_hm_device_by_service_data(hass=hass, service=service)
+    wp_dp = hm_device.week_profile_data_point
+    if wp_dp is None:
+        raise HomeAssistantError(f"Device {hm_device.name} does not support schedules")
+    try:
+        await wp_dp.set_schedule(schedule_data=service.data[ATTR_SCHEDULE_DATA])
+    except BaseHomematicException as bhexc:
+        raise HomeAssistantError(bhexc) from bhexc
+    except ValidationError as vexc:
+        errors = "; ".join(e["msg"] for e in vexc.errors())
+        raise HomeAssistantError(f"Invalid schedule data: {errors}") from vexc
+
+
+async def _async_service_set_schedule_active_profile(*, hass: HomeAssistant, service: ServiceCall) -> None:
+    """Handle set_schedule_active_profile service call."""
+    hm_device = _async_get_hm_device_by_service_data(hass=hass, service=service)
+    wp_dp = hm_device.week_profile_data_point
+    if not isinstance(wp_dp, ClimateWeekProfileDataPointProtocol):
+        raise HomeAssistantError(f"Device {hm_device.name} does not support climate schedules")
+    profile = ScheduleProfile(service.data[ATTR_PROFILE])
+    wp_dp.set_active_profile(profile=profile)
+
+
+async def _async_service_get_schedule_profile(*, hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
+    """Handle get_schedule_profile service call."""
+    hm_device = _async_get_hm_device_by_service_data(hass=hass, service=service)
+    wp_dp = hm_device.week_profile_data_point
+    if not isinstance(wp_dp, ClimateWeekProfileDataPointProtocol):
+        raise HomeAssistantError(f"Device {hm_device.name} does not support climate schedules")
+    profile = ScheduleProfile(service.data[ATTR_PROFILE])
+    try:
+        return cast(ServiceResponse, await wp_dp.get_schedule_profile(profile=profile, force_load=True))
+    except BaseHomematicException as bhexc:
+        raise HomeAssistantError(bhexc) from bhexc
+    except ValidationError as vexc:
+        errors = "; ".join(e["msg"] for e in vexc.errors())
+        raise HomeAssistantError(f"Invalid schedule data: {errors}") from vexc
+
+
+async def _async_service_get_schedule_weekday(*, hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
+    """Handle get_schedule_weekday service call."""
+    hm_device = _async_get_hm_device_by_service_data(hass=hass, service=service)
+    wp_dp = hm_device.week_profile_data_point
+    if not isinstance(wp_dp, ClimateWeekProfileDataPointProtocol):
+        raise HomeAssistantError(f"Device {hm_device.name} does not support climate schedules")
+    profile = ScheduleProfile(service.data[ATTR_PROFILE])
+    weekday = WeekdayStr(service.data[ATTR_WEEKDAY])
+    try:
+        return cast(
+            ServiceResponse,
+            await wp_dp.get_schedule_weekday(profile=profile, weekday=weekday, force_load=True),
+        )
+    except BaseHomematicException as bhexc:
+        raise HomeAssistantError(bhexc) from bhexc
+    except ValidationError as vexc:
+        errors = "; ".join(e["msg"] for e in vexc.errors())
+        raise HomeAssistantError(f"Invalid schedule data: {errors}") from vexc
+
+
+async def _async_service_set_schedule_profile(*, hass: HomeAssistant, service: ServiceCall) -> None:
+    """Handle set_schedule_profile service call."""
+    hm_device = _async_get_hm_device_by_service_data(hass=hass, service=service)
+    wp_dp = hm_device.week_profile_data_point
+    if not isinstance(wp_dp, ClimateWeekProfileDataPointProtocol):
+        raise HomeAssistantError(f"Device {hm_device.name} does not support climate schedules")
+    profile = ScheduleProfile(service.data[ATTR_PROFILE])
+    profile_data = service.data[ATTR_SIMPLE_PROFILE_DATA]
+    try:
+        await wp_dp.set_schedule_profile(profile=profile, profile_data=profile_data)
+    except BaseHomematicException as bhexc:
+        raise HomeAssistantError(bhexc) from bhexc
+    except ValidationError as vexc:
+        errors = "; ".join(e["msg"] for e in vexc.errors())
+        raise HomeAssistantError(f"Invalid schedule data: {errors}") from vexc
+
+
+async def _async_service_set_schedule_weekday(*, hass: HomeAssistant, service: ServiceCall) -> None:
+    """Handle set_schedule_weekday service call."""
+    hm_device = _async_get_hm_device_by_service_data(hass=hass, service=service)
+    wp_dp = hm_device.week_profile_data_point
+    if not isinstance(wp_dp, ClimateWeekProfileDataPointProtocol):
+        raise HomeAssistantError(f"Device {hm_device.name} does not support climate schedules")
+    profile = ScheduleProfile(service.data[ATTR_PROFILE])
+    weekday = WeekdayStr(service.data[ATTR_WEEKDAY])
+    base_temperature = float(service.data[ATTR_BASE_TEMPERATURE])
+    simple_weekday_list = service.data[ATTR_SIMPLE_WEEKDAY_LIST]
+    try:
+        weekday_data = ClimateWeekdaySchedule(
+            base_temperature=base_temperature,
+            periods=simple_weekday_list,
+        )
+        await wp_dp.set_schedule_weekday(
+            profile=profile,
+            weekday=weekday,
+            weekday_data=weekday_data.model_dump(),
+        )
+    except BaseHomematicException as bhexc:
+        raise HomeAssistantError(bhexc) from bhexc
+    except ValidationError as vexc:
+        errors = "; ".join(e["msg"] for e in vexc.errors())
+        raise HomeAssistantError(f"Invalid schedule data: {errors}") from vexc
+
+
+async def _async_service_copy_schedule(*, hass: HomeAssistant, service: ServiceCall) -> None:
+    """Handle copy_schedule service call."""
+    source_device = _async_get_hm_device_by_service_data(hass=hass, service=service)
+    source_dp = source_device.week_profile_data_point
+    if not isinstance(source_dp, ClimateWeekProfileDataPointProtocol):
+        raise HomeAssistantError(f"Device {source_device.name} does not support climate schedules")
+    target_device_id = service.data[ATTR_TARGET_DEVICE_ID]
+    target_device = _asnyc_get_hm_device_by_id(hass=hass, device_id=target_device_id)
+    if target_device is None:
+        raise HomeAssistantError(f"Target device {target_device_id} not found")
+    target_dp = target_device.week_profile_data_point
+    if not isinstance(target_dp, ClimateWeekProfileDataPointProtocol):
+        raise HomeAssistantError(f"Target device {target_device.name} does not support climate schedules")
+    try:
+        await source_dp.copy_schedule(target_data_point=target_dp)
+    except BaseHomematicException as bhexc:
+        raise HomeAssistantError(bhexc) from bhexc
+
+
+async def _async_service_copy_schedule_profile(*, hass: HomeAssistant, service: ServiceCall) -> None:
+    """Handle copy_schedule_profile service call."""
+    device = _async_get_hm_device_by_service_data(hass=hass, service=service)
+    dp = device.week_profile_data_point
+    if not isinstance(dp, ClimateWeekProfileDataPointProtocol):
+        raise HomeAssistantError(f"Device {device.name} does not support climate schedules")
+    source_profile = ScheduleProfile(service.data[ATTR_SOURCE_PROFILE])
+    target_profile = ScheduleProfile(service.data[ATTR_TARGET_PROFILE])
+    target_dp: ClimateWeekProfileDataPointProtocol | None = None
+    if target_device_id := service.data.get(ATTR_TARGET_DEVICE_ID):
+        target_device = _asnyc_get_hm_device_by_id(hass=hass, device_id=target_device_id)
+        if target_device is None:
+            raise HomeAssistantError(f"Target device {target_device_id} not found")
+        target_dp_candidate = target_device.week_profile_data_point
+        if not isinstance(target_dp_candidate, ClimateWeekProfileDataPointProtocol):
+            raise HomeAssistantError(f"Target device {target_device.name} does not support climate schedules")
+        target_dp = target_dp_candidate
+    try:
+        await dp.copy_schedule_profile(
+            source_profile=source_profile,
+            target_profile=target_profile,
+            target_data_point=target_dp,
+        )
+    except BaseHomematicException as bhexc:
+        raise HomeAssistantError(bhexc) from bhexc

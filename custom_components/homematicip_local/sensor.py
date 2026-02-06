@@ -5,11 +5,13 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 import logging
-from typing import Any, cast, override
+from typing import Any, Final, cast, override
 
 from aiohomematic.const import DEFAULT_MULTIPLIER, DataPointCategory, HubValueType, ParameterType
+from aiohomematic.interfaces import ClimateWeekProfileDataPointProtocol
 from aiohomematic.model.generic import DpSensor
 from aiohomematic.model.hub import SysvarDpSensor
+from aiohomematic.model.week_profile_data_point import WeekProfileDataPoint
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -20,7 +22,20 @@ from . import HomematicConfigEntry
 from .const import HmEntityState
 from .control_unit import ControlUnit, signal_new_data_point
 from .entity_helpers import HmSensorEntityDescription
-from .generic_entity import ATTR_VALUE_STATE, AioHomematicGenericEntity, AioHomematicGenericSysvarEntity
+from .generic_entity import (
+    ATTR_SCHEDULE_DATA,
+    ATTR_VALUE_STATE,
+    AioHomematicGenericEntity,
+    AioHomematicGenericSysvarEntity,
+)
+
+ATTR_ACTIVE_PROFILE: Final = "active_profile"
+ATTR_AVAILABLE_PROFILES: Final = "available_profiles"
+ATTR_MAX_ENTRIES: Final = "max_entries"
+ATTR_MAX_TEMP: Final = "max_temp"
+ATTR_MIN_TEMP: Final = "min_temp"
+ATTR_SCHEDULE_CHANNEL_ADDRESS: Final = "schedule_channel_address"
+ATTR_SCHEDULE_TYPE: Final = "schedule_type"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +72,20 @@ async def async_setup_entry(
         ]:
             async_add_entities(entities)
 
+    @callback
+    def async_add_week_profile_sensor(data_points: tuple[WeekProfileDataPoint, ...]) -> None:
+        """Add week profile sensor from Homematic(IP) Local for OpenCCU."""
+        _LOGGER.debug("ASYNC_ADD_WEEK_PROFILE_SENSOR: Adding %i data points", len(data_points))
+
+        if entities := [
+            AioHomematicWeekProfileSensor(
+                control_unit=control_unit,
+                data_point=data_point,
+            )
+            for data_point in data_points
+        ]:
+            async_add_entities(entities)
+
     entry.async_on_unload(
         func=async_dispatcher_connect(
             hass=hass,
@@ -71,10 +100,19 @@ async def async_setup_entry(
             target=async_add_hub_sensor,
         )
     )
+    entry.async_on_unload(
+        func=async_dispatcher_connect(
+            hass=hass,
+            signal=signal_new_data_point(entry_id=entry.entry_id, platform=DataPointCategory.WEEK_PROFILE),
+            target=async_add_week_profile_sensor,
+        )
+    )
 
     async_add_sensor(data_points=control_unit.get_new_data_points(data_point_type=DpSensor))
 
     async_add_hub_sensor(data_points=control_unit.get_new_hub_data_points(data_point_type=SysvarDpSensor))
+
+    async_add_week_profile_sensor(data_points=control_unit.get_new_data_points(data_point_type=WeekProfileDataPoint))
 
 
 class AioHomematicSensor(AioHomematicGenericEntity[DpSensor[Any]], RestoreSensor):
@@ -183,3 +221,37 @@ class AioHomematicSysvarSensor(AioHomematicGenericSysvarEntity[SysvarDpSensor], 
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the native value of the entity."""
         return self._data_point.value  # type: ignore[no-any-return]
+
+
+class AioHomematicWeekProfileSensor(AioHomematicGenericEntity[WeekProfileDataPoint], SensorEntity):
+    """Representation of the HomematicIP week profile sensor entity."""
+
+    _attr_translation_key = "week_profile"
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the week profile sensor."""
+        attributes = super().extra_state_attributes
+        attributes[ATTR_SCHEDULE_TYPE] = self._data_point.schedule_type.value
+        attributes[ATTR_MAX_ENTRIES] = self._data_point.max_entries
+        if schedule_channel_address := self._data_point.schedule_channel_address:
+            attributes[ATTR_SCHEDULE_CHANNEL_ADDRESS] = schedule_channel_address
+        if isinstance(self._data_point, ClimateWeekProfileDataPointProtocol):
+            attributes[ATTR_ACTIVE_PROFILE] = self._data_point.active_profile
+            if self._data_point.min_temp is not None:
+                attributes[ATTR_MIN_TEMP] = self._data_point.min_temp
+            if self._data_point.max_temp is not None:
+                attributes[ATTR_MAX_TEMP] = self._data_point.max_temp
+            attributes[ATTR_AVAILABLE_PROFILES] = [profile.value for profile in self._data_point.available_profiles]
+            if schedule := self._data_point.active_schedule:
+                attributes[ATTR_SCHEDULE_DATA] = schedule
+        elif schedule := self._data_point.schedule:
+            attributes[ATTR_SCHEDULE_DATA] = schedule
+
+        return attributes
+
+    @property
+    def native_value(self) -> int:
+        """Return the number of active schedule entries."""
+        return self._data_point.value

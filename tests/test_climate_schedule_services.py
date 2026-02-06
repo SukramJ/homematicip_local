@@ -1,169 +1,229 @@
-"""Tests for climate schedule profile services."""
+"""Tests for climate schedule profile services (device-based)."""
 
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from custom_components.homematicip_local.climate import AioHomematicClimate
-from custom_components.homematicip_local.const import DOMAIN
+from aiohomematic.interfaces import ClimateWeekProfileDataPointProtocol
+from custom_components.homematicip_local.const import HmipLocalServices
+from homeassistant.exceptions import HomeAssistantError
 
 
-@pytest.fixture
-def mock_climate_entity() -> AioHomematicClimate:
-    """Create a mock climate entity for testing."""
-    entity = MagicMock(spec=AioHomematicClimate)
-    entity._data_point = MagicMock()
-    entity._data_point.get_schedule_profile = AsyncMock(return_value={"mock": "profile_data"})
-    entity._data_point.get_schedule_weekday = AsyncMock(return_value={"mock": "weekday_data"})
-    entity._data_point.set_schedule_profile = AsyncMock()
-    entity._data_point.set_schedule_weekday = AsyncMock()
-    return entity
-
-
-class TestClimateScheduleProfileServices:
-    """Test climate schedule profile service methods."""
+class TestGetScheduleProfileHandler:
+    """Test _async_service_get_schedule_profile handler."""
 
     @pytest.mark.asyncio
-    async def test_async_get_schedule_profile(self, mock_climate_entity: AioHomematicClimate) -> None:
-        """Test async_get_schedule_profile method."""
-        # Create a real entity instance but patch handle_homematic_errors
-        with patch("custom_components.homematicip_local.climate.handle_homematic_errors", lambda f: f):
-            entity = AioHomematicClimate(
-                control_unit=MagicMock(),
-                data_point=mock_climate_entity._data_point,
-            )
+    async def test_get_schedule_profile_calls_wp_dp(self) -> None:
+        """Test get_schedule_profile calls week_profile_data_point.get_schedule_profile."""
+        from custom_components.homematicip_local.services import ATTR_PROFILE, _async_service_get_schedule_profile
 
-            # Call the method
-            result = await entity.async_get_schedule_profile(profile="P1")
+        mock_wp_dp = MagicMock(spec=ClimateWeekProfileDataPointProtocol)
+        mock_wp_dp.get_schedule_profile = AsyncMock(return_value={"MONDAY": [{"start": "06:00", "temp": 21.0}]})
 
-            # Verify the data_point method was called correctly
-            mock_climate_entity._data_point.get_schedule_profile.assert_awaited_once_with(profile="P1", force_load=True)
+        mock_device = MagicMock()
+        mock_device.week_profile_data_point = mock_wp_dp
+        mock_device.name = "Test Climate"
 
-            # Verify the result
-            assert result == {"mock": "profile_data"}
+        mock_service = MagicMock()
+        mock_service.data = {ATTR_PROFILE: "P1"}
 
-    @pytest.mark.asyncio
-    async def test_async_get_schedule_weekday(self, mock_climate_entity: AioHomematicClimate) -> None:
-        """Test async_get_schedule_weekday method."""
-        with patch("custom_components.homematicip_local.climate.handle_homematic_errors", lambda f: f):
-            entity = AioHomematicClimate(
-                control_unit=MagicMock(),
-                data_point=mock_climate_entity._data_point,
-            )
+        with patch(
+            "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+            return_value=mock_device,
+        ):
+            result = await _async_service_get_schedule_profile(hass=MagicMock(), service=mock_service)
 
-            # Call the method
-            result = await entity.async_get_schedule_weekday(profile="P1", weekday="MONDAY")
-
-            # Verify the data_point method was called correctly
-            mock_climate_entity._data_point.get_schedule_weekday.assert_awaited_once_with(
-                profile="P1", weekday="MONDAY", force_load=True
-            )
-
-            # Verify the result
-            assert result == {"mock": "weekday_data"}
+        mock_wp_dp.get_schedule_profile.assert_awaited_once()
+        assert result == {"MONDAY": [{"start": "06:00", "temp": 21.0}]}
 
     @pytest.mark.asyncio
-    async def test_async_set_schedule_profile(self, mock_climate_entity: AioHomematicClimate) -> None:
-        """Test async_set_schedule_profile method."""
-        with patch("custom_components.homematicip_local.climate.handle_homematic_errors", lambda f: f):
-            entity = AioHomematicClimate(
-                control_unit=MagicMock(),
-                data_point=mock_climate_entity._data_point,
-            )
+    async def test_get_schedule_profile_raises_if_not_climate(self) -> None:
+        """Test get_schedule_profile raises error if device is not climate."""
+        from aiohomematic.interfaces import WeekProfileDataPointProtocol
+        from custom_components.homematicip_local.services import ATTR_PROFILE, _async_service_get_schedule_profile
 
-            # Mock the ClimateProfileSchedule model
-            profile_data_mock = MagicMock()
-            profile_data_mock.model_dump.return_value = {"base_temperature": 20.0, "periods": []}
+        mock_wp_dp = MagicMock(spec=WeekProfileDataPointProtocol)
 
-            # Call the method
-            await entity.async_set_schedule_profile(profile="P1", simple_profile_data=profile_data_mock)
+        mock_device = MagicMock()
+        mock_device.week_profile_data_point = mock_wp_dp
+        mock_device.name = "Non-Climate Device"
 
-            # Verify the data_point method was called correctly
-            mock_climate_entity._data_point.set_schedule_profile.assert_awaited_once_with(
-                profile="P1",
-                profile_data={"base_temperature": 20.0, "periods": []},
-            )
+        mock_service = MagicMock()
+        mock_service.data = {ATTR_PROFILE: "P1"}
 
-    @pytest.mark.asyncio
-    async def test_async_set_schedule_weekday(self, mock_climate_entity: AioHomematicClimate) -> None:
-        """Test async_set_schedule_weekday method."""
-        # Import the actual Pydantic models
-        from custom_components.homematicip_local.climate import ClimateSchedulePeriod
-
-        with patch("custom_components.homematicip_local.climate.handle_homematic_errors", lambda f: f):
-            entity = AioHomematicClimate(
-                control_unit=MagicMock(),
-                data_point=mock_climate_entity._data_point,
-            )
-
-            # Create a proper Pydantic model instance
-            period = ClimateSchedulePeriod(starttime="06:00", endtime="22:00", temperature=21.0)
-
-            # Call the method
-            await entity.async_set_schedule_weekday(
-                profile="P1",
-                weekday="MONDAY",
-                base_temperature=17.0,
-                simple_weekday_list=[period],
-            )
-
-            # Verify the data_point method was called
-            assert mock_climate_entity._data_point.set_schedule_weekday.await_count == 1
-
-            # Get the call arguments
-            call_args = mock_climate_entity._data_point.set_schedule_weekday.call_args
-            assert call_args.kwargs["profile"] == "P1"
-            assert call_args.kwargs["weekday"] == "MONDAY"
-
-            # Verify the weekday_data structure
-            weekday_data = call_args.kwargs["weekday_data"]
-            assert isinstance(weekday_data, dict)
-            assert "base_temperature" in weekday_data
-            assert weekday_data["base_temperature"] == 17.0
-            assert "periods" in weekday_data
-            assert len(weekday_data["periods"]) == 1
+        with (
+            patch(
+                "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+                return_value=mock_device,
+            ),
+            pytest.raises(HomeAssistantError, match="does not support climate schedules"),
+        ):
+            await _async_service_get_schedule_profile(hass=MagicMock(), service=mock_service)
 
 
-class TestClimateScheduleServiceRegistration:
-    """Test that climate schedule services are properly registered."""
+class TestGetScheduleWeekdayHandler:
+    """Test _async_service_get_schedule_weekday handler."""
 
     @pytest.mark.asyncio
-    async def test_schedule_profile_services_registered(self, hass: Any) -> None:
-        """Test that schedule profile services are registered with correct method names."""
-        # This test verifies that the service registrations in services.py
-        # correctly reference the renamed methods (without "simple" in the name)
+    async def test_get_schedule_weekday_calls_wp_dp(self) -> None:
+        """Test get_schedule_weekday calls week_profile_data_point.get_schedule_weekday."""
+        from custom_components.homematicip_local.services import (
+            ATTR_PROFILE,
+            ATTR_WEEKDAY,
+            _async_service_get_schedule_weekday,
+        )
 
-        # Import here to avoid circular dependencies
+        mock_wp_dp = MagicMock(spec=ClimateWeekProfileDataPointProtocol)
+        mock_wp_dp.get_schedule_weekday = AsyncMock(
+            return_value={"base_temperature": 17.0, "periods": [{"starttime": "06:00", "temperature": 21.0}]}
+        )
 
-        from custom_components.homematicip_local.services import async_setup_services
+        mock_device = MagicMock()
+        mock_device.week_profile_data_point = mock_wp_dp
+        mock_device.name = "Test Climate"
 
-        # Setup services
-        await async_setup_services(hass)
+        mock_service = MagicMock()
+        mock_service.data = {ATTR_PROFILE: "P1", ATTR_WEEKDAY: "MONDAY"}
 
-        # Verify services exist (they should be registered for climate domain)
-        # Note: The actual service names still contain "simple" for backward compatibility
-        assert hass.services.has_service(DOMAIN, "get_schedule_simple_profile")
-        assert hass.services.has_service(DOMAIN, "get_schedule_simple_weekday")
-        assert hass.services.has_service(DOMAIN, "set_schedule_simple_profile")
-        assert hass.services.has_service(DOMAIN, "set_schedule_simple_weekday")
+        with patch(
+            "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+            return_value=mock_device,
+        ):
+            result = await _async_service_get_schedule_weekday(hass=MagicMock(), service=mock_service)
+
+        mock_wp_dp.get_schedule_weekday.assert_awaited_once()
+        assert "base_temperature" in result
 
 
-class TestClimateScheduleMethodNaming:
-    """Test that the method renames are consistent."""
+class TestSetScheduleProfileHandler:
+    """Test _async_service_set_schedule_profile handler."""
 
-    def test_method_names_without_simple(self) -> None:
-        """Verify that climate entity methods no longer contain 'simple' in their names."""
-        # Verify the new method names exist
-        assert hasattr(AioHomematicClimate, "async_get_schedule_profile")
-        assert hasattr(AioHomematicClimate, "async_get_schedule_weekday")
-        assert hasattr(AioHomematicClimate, "async_set_schedule_profile")
-        assert hasattr(AioHomematicClimate, "async_set_schedule_weekday")
+    @pytest.mark.asyncio
+    async def test_set_schedule_profile_calls_wp_dp(self) -> None:
+        """Test set_schedule_profile calls week_profile_data_point.set_schedule_profile."""
+        from custom_components.homematicip_local.services import (
+            ATTR_PROFILE,
+            ATTR_SIMPLE_PROFILE_DATA,
+            _async_service_set_schedule_profile,
+        )
 
-        # Verify the old method names do NOT exist
-        assert not hasattr(AioHomematicClimate, "async_get_schedule_simple_profile")
-        assert not hasattr(AioHomematicClimate, "async_get_schedule_simple_weekday")
-        assert not hasattr(AioHomematicClimate, "async_set_schedule_simple_profile")
-        assert not hasattr(AioHomematicClimate, "async_set_schedule_simple_weekday")
+        mock_wp_dp = MagicMock(spec=ClimateWeekProfileDataPointProtocol)
+        mock_wp_dp.set_schedule_profile = AsyncMock()
+
+        mock_device = MagicMock()
+        mock_device.week_profile_data_point = mock_wp_dp
+        mock_device.name = "Test Climate"
+
+        profile_data = {"MONDAY": {"base_temperature": 17.0, "periods": []}}
+        mock_service = MagicMock()
+        mock_service.data = {ATTR_PROFILE: "P1", ATTR_SIMPLE_PROFILE_DATA: profile_data}
+
+        with patch(
+            "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+            return_value=mock_device,
+        ):
+            await _async_service_set_schedule_profile(hass=MagicMock(), service=mock_service)
+
+        mock_wp_dp.set_schedule_profile.assert_awaited_once()
+
+
+class TestSetScheduleWeekdayHandler:
+    """Test _async_service_set_schedule_weekday handler."""
+
+    @pytest.mark.asyncio
+    async def test_set_schedule_weekday_calls_wp_dp(self) -> None:
+        """Test set_schedule_weekday calls week_profile_data_point.set_schedule_weekday."""
+        from custom_components.homematicip_local.services import (
+            ATTR_BASE_TEMPERATURE,
+            ATTR_PROFILE,
+            ATTR_SIMPLE_WEEKDAY_LIST,
+            ATTR_WEEKDAY,
+            _async_service_set_schedule_weekday,
+        )
+
+        mock_wp_dp = MagicMock(spec=ClimateWeekProfileDataPointProtocol)
+        mock_wp_dp.set_schedule_weekday = AsyncMock()
+
+        mock_device = MagicMock()
+        mock_device.week_profile_data_point = mock_wp_dp
+        mock_device.name = "Test Climate"
+
+        mock_service = MagicMock()
+        mock_service.data = {
+            ATTR_PROFILE: "P1",
+            ATTR_WEEKDAY: "MONDAY",
+            ATTR_BASE_TEMPERATURE: 17.0,
+            ATTR_SIMPLE_WEEKDAY_LIST: [{"starttime": "06:00", "endtime": "22:00", "temperature": 21.0}],
+        }
+
+        with patch(
+            "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+            return_value=mock_device,
+        ):
+            await _async_service_set_schedule_weekday(hass=MagicMock(), service=mock_service)
+
+        mock_wp_dp.set_schedule_weekday.assert_awaited_once()
+
+
+class TestCopyScheduleProfileHandler:
+    """Test _async_service_copy_schedule_profile handler."""
+
+    @pytest.mark.asyncio
+    async def test_copy_schedule_profile_within_device(self) -> None:
+        """Test copy_schedule_profile within the same device."""
+        from custom_components.homematicip_local.services import (
+            ATTR_SOURCE_PROFILE,
+            ATTR_TARGET_PROFILE,
+            _async_service_copy_schedule_profile,
+        )
+
+        mock_wp_dp = MagicMock(spec=ClimateWeekProfileDataPointProtocol)
+        mock_wp_dp.copy_schedule_profile = AsyncMock()
+
+        mock_device = MagicMock()
+        mock_device.week_profile_data_point = mock_wp_dp
+        mock_device.name = "Test Climate"
+
+        mock_service = MagicMock()
+        mock_service.data = {ATTR_SOURCE_PROFILE: "P1", ATTR_TARGET_PROFILE: "P2"}
+
+        with patch(
+            "custom_components.homematicip_local.services._async_get_hm_device_by_service_data",
+            return_value=mock_device,
+        ):
+            await _async_service_copy_schedule_profile(hass=MagicMock(), service=mock_service)
+
+        mock_wp_dp.copy_schedule_profile.assert_awaited_once()
+
+
+class TestScheduleServiceMethodNaming:
+    """Test that the schedule service enum values are correct."""
+
+    def test_new_service_names_exist(self) -> None:
+        """Verify that new device-based service names exist in HmipLocalServices enum."""
+        assert hasattr(HmipLocalServices, "GET_SCHEDULE")
+        assert hasattr(HmipLocalServices, "SET_SCHEDULE")
+        assert hasattr(HmipLocalServices, "GET_SCHEDULE_PROFILE")
+        assert hasattr(HmipLocalServices, "GET_SCHEDULE_WEEKDAY")
+        assert hasattr(HmipLocalServices, "SET_SCHEDULE_PROFILE")
+        assert hasattr(HmipLocalServices, "SET_SCHEDULE_WEEKDAY")
+        assert hasattr(HmipLocalServices, "COPY_SCHEDULE")
+        assert hasattr(HmipLocalServices, "COPY_SCHEDULE_PROFILE")
+        assert hasattr(HmipLocalServices, "SET_SCHEDULE_ACTIVE_PROFILE")
+
+    def test_old_entity_based_service_names_removed(self) -> None:
+        """Verify that old entity-based service names are removed."""
+        assert not hasattr(HmipLocalServices, "COVER_GET_SCHEDULE")
+        assert not hasattr(HmipLocalServices, "COVER_SET_SCHEDULE")
+        assert not hasattr(HmipLocalServices, "LIGHT_GET_SCHEDULE")
+        assert not hasattr(HmipLocalServices, "LIGHT_SET_SCHEDULE")
+        assert not hasattr(HmipLocalServices, "SWITCH_GET_SCHEDULE")
+        assert not hasattr(HmipLocalServices, "SWITCH_SET_SCHEDULE")
+        assert not hasattr(HmipLocalServices, "VALVE_GET_SCHEDULE")
+        assert not hasattr(HmipLocalServices, "VALVE_SET_SCHEDULE")
+        assert not hasattr(HmipLocalServices, "GET_SCHEDULE_SIMPLE_PROFILE")
+        assert not hasattr(HmipLocalServices, "GET_SCHEDULE_SIMPLE_WEEKDAY")
+        assert not hasattr(HmipLocalServices, "SET_SCHEDULE_SIMPLE_PROFILE")
+        assert not hasattr(HmipLocalServices, "SET_SCHEDULE_SIMPLE_WEEKDAY")

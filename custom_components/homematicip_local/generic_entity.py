@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, Final, Generic, cast, override
+from typing import Any, Final, Generic, override
 
 from aiohomematic.const import CallSource, DataPointUsage
 from aiohomematic.interfaces import (
@@ -17,7 +17,7 @@ from aiohomematic.interfaces import (
     GenericSysvarDataPointProtocol,
 )
 from aiohomematic.type_aliases import UnsubscribeCallback
-from homeassistant.core import ServiceResponse, State, callback
+from homeassistant.core import State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -32,7 +32,6 @@ from .support import (
     HmGenericProgramDataPointProtocol,
     HmGenericSysvarDataPointProtocol,
     get_data_point,
-    handle_homematic_errors,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -181,9 +180,9 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
                 attributes[ATTR_VALUE_STATE] = HmEntityState.NOT_VALID
         if (
             isinstance(self._data_point, CustomDataPointProtocol)
-            and self._data_point.has_schedule
             and self._data_point.usage == DataPointUsage.CDP_PRIMARY
-            and (schedule := self._data_point.schedule) is not None
+            and (wp_dp := self._data_point.device.week_profile_data_point) is not None
+            and (schedule := wp_dp.schedule) is not None
         ):
             attributes[ATTR_SCHEDULE_DATA] = schedule
         return attributes
@@ -224,6 +223,17 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
                     self._data_point.name_data.parameter_name.replace("_", " ").title(),
                     translated_name,
                 )
+
+        # For data points not handled above, delegate to HA's translation mechanism.
+        if not isinstance(
+            self._data_point, CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocol
+        ):
+            if not self.platform_data:
+                return self._name_internal(None, {})
+            return self._name_internal(
+                self._device_class_name,
+                self.platform_data.platform_translations,
+            )
 
         if device_name == entity_name:
             entity_name = ""
@@ -267,42 +277,6 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
                 "CCU did not provide initial value for %s. See README for more information",
                 self._data_point.full_name,
             )
-
-    @handle_homematic_errors
-    async def async_get_schedule(self) -> ServiceResponse:
-        """Return the week schedule for non-climate devices."""
-        if not isinstance(self._data_point, CustomDataPointProtocol):
-            _LOGGER.warning(
-                "GET_SCHEDULE: Entity %s does not support schedules",
-                self.entity_id,
-            )
-            return {}
-        if not self._data_point.has_schedule:
-            _LOGGER.warning(
-                "GET_SCHEDULE: Entity %s has no schedule support",
-                self.entity_id,
-            )
-            return {}
-
-        return cast(ServiceResponse, await self._data_point.get_schedule(force_load=True))
-
-    @handle_homematic_errors
-    async def async_set_schedule(self, schedule_data: dict[str, Any]) -> None:
-        """Set the week schedule for non-climate devices."""
-        if not isinstance(self._data_point, CustomDataPointProtocol):
-            _LOGGER.warning(
-                "SET_SCHEDULE: Entity %s does not support schedules",
-                self.entity_id,
-            )
-            return
-        if not self._data_point.has_schedule:
-            _LOGGER.warning(
-                "SET_SCHEDULE: Entity %s has no schedule support",
-                self.entity_id,
-            )
-            return
-
-        await self._data_point.set_schedule(schedule_data=schedule_data)
 
     async def async_update(self) -> None:
         """Update entities."""

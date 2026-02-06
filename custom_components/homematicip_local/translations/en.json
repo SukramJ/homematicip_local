@@ -821,7 +821,10 @@
             }, 
             "water_volume_since_open": {
                 "name": "Water Volume since open"
-            }, 
+            },
+            "week_profile": {
+                "name": "Week profile"
+            },
             "wind_dir": {
                 "name": "Wind Dir"
             }, 
@@ -1190,46 +1193,48 @@
             "name": "Confirm all delayed devices"
         }, 
         "copy_schedule": {
-            "description": "Copy a schedule to another device", 
+            "description": "Copy a complete schedule from one device to another",
             "fields": {
-                "source_entity_id": {
-                    "description": "Climate entity to copy the schedule from", 
-                    "name": "Source entity"
+                "device_address": {
+                    "description": "Enter a device address",
+                    "name": "Device address"
+                },
+                "device_id": {
+                    "description": "Select a source device",
+                    "name": "Source device"
+                },
+                "target_device_id": {
+                    "description": "Select the target device to copy the schedule to",
+                    "name": "Target device"
                 }
-            }, 
+            },
             "name": "Copy schedule"
-        }, 
+        },
         "copy_schedule_profile": {
-            "description": "Copy a schedule profile to another device", 
+            "description": "Copy a schedule profile within the same device or to another device",
             "fields": {
-                "source_entity_id": {
-                    "description": "Climate entity to copy the schedule from", 
-                    "name": "Source entity"
-                }, 
+                "device_address": {
+                    "description": "Enter a device address",
+                    "name": "Device address"
+                },
+                "device_id": {
+                    "description": "Select a device",
+                    "name": "Device"
+                },
                 "source_profile": {
-                    "description": "Source profile to copy from", 
+                    "description": "Source profile to copy from",
                     "name": "Source profile"
-                }, 
+                },
+                "target_device_id": {
+                    "description": "Select the target device (optional, copies within same device if omitted)",
+                    "name": "Target device"
+                },
                 "target_profile": {
-                    "description": "Target profile to copy to", 
+                    "description": "Target profile to copy to",
                     "name": "Target profile"
                 }
-            }, 
+            },
             "name": "Copy schedule profile"
-        },
-        "cover_get_schedule": {
-            "name": "Get cover schedule",
-            "description": "Return the week schedule for a cover."
-        },
-        "cover_set_schedule": {
-            "name": "Set cover schedule",
-            "description": "Set the week schedule for a cover.",
-            "fields": {
-                "schedule_data": {
-                    "name": "Schedule data",
-                    "description": "The schedule data dictionary. Structure: {group_no: {field: value, ...}, ...}. See aiohomematic documentation for DefaultWeekProfile format."
-                }
-            }
         },
         "create_ccu_backup": {
             "description": "Create and download a system backup from the CCU. Saves the backup file to the configured backup directory.", 
@@ -1433,19 +1438,49 @@
             }, 
             "name": "Get paramset"
         }, 
-        "get_schedule_simple_profile": {
-            "description": "Call to get a schedule of a climate device in simplified format",
+        "get_schedule": {
+            "description": "Return the complete schedule for a device",
             "fields": {
+                "device_address": {
+                    "description": "Enter a device address",
+                    "name": "Device address"
+                },
+                "device_id": {
+                    "description": "Select a device",
+                    "name": "Device"
+                }
+            },
+            "name": "Get schedule"
+        },
+        "get_schedule_profile": {
+            "description": "Return a schedule profile for a climate device",
+            "fields": {
+                "device_address": {
+                    "description": "Enter a device address",
+                    "name": "Device address"
+                },
+                "device_id": {
+                    "description": "Select a device",
+                    "name": "Device"
+                },
                 "profile": {
                     "description": "Select a profile",
                     "name": "Profile"
                 }
             },
-            "name": "Get simple schedule profile"
+            "name": "Get schedule profile"
         },
-        "get_schedule_simple_weekday": {
-            "description": "Call to get a schedule of a climate device for a weekday in simplified format",
+        "get_schedule_weekday": {
+            "description": "Return a schedule weekday for a climate device",
             "fields": {
+                "device_address": {
+                    "description": "Enter a device address",
+                    "name": "Device address"
+                },
+                "device_id": {
+                    "description": "Select a device",
+                    "name": "Device"
+                },
                 "profile": {
                     "description": "Select a profile",
                     "name": "Profile"
@@ -1455,7 +1490,7 @@
                     "name": "Weekday"
                 }
             },
-            "name": "Get simple schedule profile weekday"
+            "name": "Get schedule weekday"
         },
         "get_variable_value": {
             "description": "Read a value of a variable", 
@@ -1480,20 +1515,6 @@
                 }
             }, 
             "name": "Set light on time"
-        },
-        "light_get_schedule": {
-            "name": "Get light schedule",
-            "description": "Return the week schedule for a light."
-        },
-        "light_set_schedule": {
-            "name": "Set light schedule",
-            "description": "Set the week schedule for a light.",
-            "fields": {
-                "schedule_data": {
-                    "name": "Schedule data",
-                    "description": "The schedule data dictionary. Structure: {group_no: {field: value, ...}, ...}. See aiohomematic documentation for DefaultWeekProfile format."
-                }
-            }
         },
         "play_sound": {
             "description": "Play a sound on HmIP-MP3P sound player devices", 
@@ -1718,18 +1739,52 @@
             "name": "Set device value"
         },
         "set_schedule_active_profile": {
-            "description": "Set the active schedule profile on a climate device", 
+            "description": "Set the active schedule profile on a climate device",
             "fields": {
+                "device_address": {
+                    "description": "Enter a device address",
+                    "name": "Device address"
+                },
+                "device_id": {
+                    "description": "Select a device",
+                    "name": "Device"
+                },
                 "profile": {
-                    "description": "Select a profile to activate (P1-P6)", 
+                    "description": "Select a profile to activate (P1-P6)",
                     "name": "Profile"
                 }
-            }, 
+            },
             "name": "Set active schedule profile"
-        }, 
-        "set_schedule_simple_profile": {
-            "description": "Call to store a schedule on a climate device",
+        },
+        "set_schedule": {
+            "description": "Set the complete schedule for a device",
             "fields": {
+                "device_address": {
+                    "description": "Enter a device address",
+                    "name": "Device address"
+                },
+                "device_id": {
+                    "description": "Select a device",
+                    "name": "Device"
+                },
+                "schedule_data": {
+                    "description": "The schedule data dictionary",
+                    "name": "Schedule data"
+                }
+            },
+            "name": "Set schedule"
+        },
+        "set_schedule_profile": {
+            "description": "Set a schedule profile on a climate device",
+            "fields": {
+                "device_address": {
+                    "description": "Enter a device address",
+                    "name": "Device address"
+                },
+                "device_id": {
+                    "description": "Select a device",
+                    "name": "Device"
+                },
                 "profile": {
                     "description": "Select a profile",
                     "name": "Profile"
@@ -1739,14 +1794,22 @@
                     "name": "Profile data"
                 }
             },
-            "name": "Set simple schedule profile"
-        }, 
-        "set_schedule_simple_weekday": {
-            "description": "Call to store a schedule on a climate device",
+            "name": "Set schedule profile"
+        },
+        "set_schedule_weekday": {
+            "description": "Set a schedule weekday on a climate device",
             "fields": {
                 "base_temperature": {
                     "description": "Select a base temperature",
                     "name": "Base temperature"
+                },
+                "device_address": {
+                    "description": "Enter a device address",
+                    "name": "Device address"
+                },
+                "device_id": {
+                    "description": "Select a device",
+                    "name": "Device"
                 },
                 "profile": {
                     "description": "Select a profile",
@@ -1761,7 +1824,7 @@
                     "name": "Weekday"
                 }
             },
-            "name": "Set simple schedule profile weekday"
+            "name": "Set schedule weekday"
         },
         "set_sound_led": {
             "description": "Set LED color and brightness on HmIP-MP3P sound player devices", 
@@ -1825,20 +1888,6 @@
             }, 
             "name": "Set switch on time"
         },
-        "switch_get_schedule": {
-            "name": "Get switch schedule",
-            "description": "Return the week schedule for a switch."
-        },
-        "switch_set_schedule": {
-            "name": "Set switch schedule",
-            "description": "Set the week schedule for a switch.",
-            "fields": {
-                "schedule_data": {
-                    "name": "Schedule data",
-                    "description": "The schedule data dictionary. Structure: {group_no: {field: value, ...}, ...}. See aiohomematic documentation for DefaultWeekProfile format."
-                }
-            }
-        },
         "turn_on_siren": {
             "description": "Turn siren on", 
             "fields": {
@@ -1876,20 +1925,6 @@
                 }
             }, 
             "name": "Set valve on time"
-        },
-        "valve_get_schedule": {
-            "name": "Get valve schedule",
-            "description": "Return the week schedule for a valve."
-        },
-        "valve_set_schedule": {
-            "name": "Set valve schedule",
-            "description": "Set the week schedule for a valve.",
-            "fields": {
-                "schedule_data": {
-                    "name": "Schedule data",
-                    "description": "The schedule data dictionary. Structure: {group_no: {field: value, ...}, ...}. See aiohomematic documentation for DefaultWeekProfile format."
-                }
-            }
         }
     }
 }
