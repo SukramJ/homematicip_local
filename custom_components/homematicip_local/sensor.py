@@ -29,9 +29,10 @@ from .generic_entity import (
     AioHomematicGenericSysvarEntity,
 )
 
-ATTR_ACTIVE_PROFILE: Final = "active_profile"
+ATTR_CURRENT_SCHEDULE_PROFILE: Final = "active_profile"
 ATTR_AVAILABLE_PROFILES: Final = "available_profiles"
 ATTR_AVAILABLE_TARGET_CHANNELS: Final = "available_target_channels"
+ATTR_DEVICE_ACTIVE_PROFILE_INDEX: Final = "device_active_profile_index"
 ATTR_MAX_ENTRIES: Final = "max_entries"
 ATTR_MAX_TEMP: Final = "max_temp"
 ATTR_MIN_TEMP: Final = "min_temp"
@@ -233,9 +234,10 @@ class AioHomematicWeekProfileSensor(AioHomematicGenericEntity[WeekProfileDataPoi
     __no_recored_attributes = AioHomematicGenericEntity.NO_RECORDED_ATTRIBUTES
     __no_recored_attributes.update(
         {
-            ATTR_ACTIVE_PROFILE,
+            ATTR_CURRENT_SCHEDULE_PROFILE,
             ATTR_AVAILABLE_PROFILES,
             ATTR_AVAILABLE_TARGET_CHANNELS,
+            ATTR_DEVICE_ACTIVE_PROFILE_INDEX,
             ATTR_MAX_ENTRIES,
             ATTR_MAX_TEMP,
             ATTR_MIN_TEMP,
@@ -256,14 +258,15 @@ class AioHomematicWeekProfileSensor(AioHomematicGenericEntity[WeekProfileDataPoi
         if schedule_channel_address := self._data_point.schedule_channel_address:
             attributes[ATTR_SCHEDULE_CHANNEL_ADDRESS] = schedule_channel_address
         if isinstance(self._data_point, ClimateWeekProfileDataPointProtocol):
+            attributes[ATTR_AVAILABLE_PROFILES] = [profile.value for profile in self._data_point.available_profiles]
+            attributes[ATTR_CURRENT_SCHEDULE_PROFILE] = self._data_point.current_schedule_profile
+            attributes[ATTR_DEVICE_ACTIVE_PROFILE_INDEX] = self._data_point.device_active_profile_index
             attributes[ATTR_SCHEDULE_API_VERSION] = CLIMATE_SCHEDULE_API_VERSION
-            attributes[ATTR_ACTIVE_PROFILE] = self._data_point.active_profile
             if self._data_point.min_temp is not None:
                 attributes[ATTR_MIN_TEMP] = self._data_point.min_temp
             if self._data_point.max_temp is not None:
                 attributes[ATTR_MAX_TEMP] = self._data_point.max_temp
-            attributes[ATTR_AVAILABLE_PROFILES] = [profile.value for profile in self._data_point.available_profiles]
-            if schedule := self._data_point.active_schedule:
+            if schedule := self._data_point.current_profile_schedule:
                 attributes[ATTR_SCHEDULE_DATA] = schedule
         elif schedule := self._data_point.schedule:
             attributes[ATTR_SCHEDULE_API_VERSION] = SCHEDULE_API_VERSION

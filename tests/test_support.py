@@ -23,6 +23,7 @@ from custom_components.homematicip_local.support import (
     get_data_point,
     get_device_address_at_interface_from_identifiers,
     is_valid_event,
+    validate_device_address,
 )
 
 
@@ -88,6 +89,29 @@ class TestGetDeviceAddressAtInterfaceFromIdentifiers:
         no_sep = ("homematicip_local", "NOSEPARATOR")
         result = get_device_address_at_interface_from_identifiers({no_sep})
         assert result is None
+
+
+class TestValidateDeviceAddress:
+    """Tests for validate_device_address function."""
+
+    def test_channel_address_extracts_device_part(self) -> None:
+        """Extract device part from a channel address."""
+        assert validate_device_address("FED00000123:3") == "FED00000123"
+        assert validate_device_address("ABC1234567:0") == "ABC1234567"
+        assert validate_device_address("HmIP-RF-12345:12") == "HmIP-RF-12345"
+
+    def test_invalid_format_raises(self) -> None:
+        """Reject values that are neither device nor channel address."""
+        import pytest
+
+        with pytest.raises(vol.Invalid, match="Invalid device address format"):
+            validate_device_address("invalid!")
+        with pytest.raises(vol.Invalid, match="must be a string"):
+            validate_device_address(12345)
+
+    def test_valid_device_address(self) -> None:
+        """Accept a plain device address."""
+        assert validate_device_address("FED00000123") == "FED00000123"
 
 
 class TestGetDataPoint:

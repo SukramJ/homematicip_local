@@ -22,6 +22,7 @@ from aiohomematic.interfaces import (
     GenericSysvarDataPointProtocol,
 )
 from aiohomematic.model.week_profile_data_point import WeekProfileDataPoint
+from aiohomematic.support import get_device_address
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -82,14 +83,17 @@ def validate_wait_for(value: Any) -> int:
 
 
 def validate_device_address(value: Any) -> str:
-    """Validate and return device address."""
+    """Validate and return device address. Accept channel addresses and extract the device part."""
     if not isinstance(value, str):
         raise vol.Invalid(f"Device address must be a string, got {type(value).__name__}")
 
-    if DEVICE_ADDRESS_PATTERN.match(value) is None:
-        raise vol.Invalid(f"Invalid device address format: {value}")
+    if DEVICE_ADDRESS_PATTERN.match(value) is not None:
+        return value
 
-    return value
+    if CHANNEL_ADDRESS_PATTERN.match(value) is not None:
+        return get_device_address(address=value)
+
+    raise vol.Invalid(f"Invalid device address format: {value}")
 
 
 def validate_channel_address(value: Any) -> str:

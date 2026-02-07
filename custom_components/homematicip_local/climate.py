@@ -44,11 +44,12 @@ from .support import handle_homematic_errors
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_SCHEDULE_API_VERSION: Final = "schedule_api_version"
-ATTR_OPTIMUM_START_STOP: Final = "optimum_start_stop"
-ATTR_TEMPERATURE_OFFSET: Final = "temperature_offset"
-ATTR_ACTIVE_PROFILE: Final = "active_profile"
+ATTR_CURRENT_SCHEDULE_PROFILE: Final = "current_schedule_profile"
+ATTR_DEVICE_ACTIVE_PROFILE_INDEX: Final = "device_active_profile_index"
 ATTR_AVAILABLE_PROFILES: Final = "available_profiles"
+ATTR_OPTIMUM_START_STOP: Final = "optimum_start_stop"
+ATTR_SCHEDULE_API_VERSION: Final = "schedule_api_version"
+ATTR_TEMPERATURE_OFFSET: Final = "temperature_offset"
 
 SUPPORTED_HA_PRESET_MODES: Final = [
     PRESET_AWAY,
@@ -114,7 +115,9 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
     _attr_translation_key = "hmip_climate"
     _enable_turn_on_off_backwards_compatibility: bool = False
     __no_recored_attributes = AioHomematicGenericEntity.NO_RECORDED_ATTRIBUTES
-    __no_recored_attributes.update({ATTR_AVAILABLE_PROFILES, ATTR_OPTIMUM_START_STOP, ATTR_TEMPERATURE_OFFSET})
+    __no_recored_attributes.update(
+        {ATTR_AVAILABLE_PROFILES, ATTR_DEVICE_ACTIVE_PROFILE_INDEX, ATTR_OPTIMUM_START_STOP, ATTR_TEMPERATURE_OFFSET}
+    )
     _unrecorded_attributes = frozenset(__no_recored_attributes)
 
     def __init__(
@@ -129,6 +132,11 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         )
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_target_temperature_step = data_point.target_temperature_step
+        self._week_profile_data_point: ClimateWeekProfileDataPointProtocol | None = None
+        if (wp_dp := self._data_point.device.week_profile_data_point) is not None and isinstance(
+            wp_dp, ClimateWeekProfileDataPointProtocol
+        ):
+            self._week_profile_data_point = wp_dp
 
     @property
     @override
@@ -167,13 +175,12 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             attributes[ATTR_OPTIMUM_START_STOP] = optimum_start_stop
 
         # Add schedule attributes if this entity supports schedules
-        if (wp_dp := self._data_point.device.week_profile_data_point) is not None and isinstance(
-            wp_dp, ClimateWeekProfileDataPointProtocol
-        ):
-            attributes[ATTR_SCHEDULE_API_VERSION] = CLIMATE_SCHEDULE_API_VERSION
-            attributes[ATTR_ACTIVE_PROFILE] = wp_dp.active_profile
+        if (wp_dp := self._week_profile_data_point) is not None:
             attributes[ATTR_AVAILABLE_PROFILES] = [profile.value for profile in wp_dp.available_profiles]
-            if schedule_data := wp_dp.active_schedule:
+            attributes[ATTR_CURRENT_SCHEDULE_PROFILE] = wp_dp.current_schedule_profile
+            attributes[ATTR_DEVICE_ACTIVE_PROFILE_INDEX] = wp_dp.device_active_profile_index
+            attributes[ATTR_SCHEDULE_API_VERSION] = CLIMATE_SCHEDULE_API_VERSION
+            if schedule_data := wp_dp.current_profile_schedule:
                 attributes[ATTR_SCHEDULE_DATA] = schedule_data
 
         return attributes

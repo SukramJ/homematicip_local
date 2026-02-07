@@ -49,8 +49,8 @@ def _create_mock_data_point(
         mock_dp.min_temp = min_temp
         mock_dp.max_temp = max_temp
         mock_dp.available_profiles = available_profiles
-        mock_dp.active_schedule = active_schedule
-        mock_dp.active_profile = active_profile
+        mock_dp.current_profile_schedule = active_schedule
+        mock_dp.current_schedule_profile = active_profile
         mock_dp.schedule_type = ScheduleType.CLIMATE
     else:
         mock_dp = MagicMock(spec=WeekProfileDataPointProtocol)

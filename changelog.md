@@ -13,6 +13,11 @@
   - `set_simple_schedule` → `set_schedule`
   - `set_simple_schedule_profile` → `set_schedule_profile`
   - `set_simple_schedule_weekday` → `set_schedule_weekday`
+  - `set_schedule_active_profile` → `set_current_schedule_profile`
+
+- **Renamed entity attributes (Climate & Week Profile Sensor):**
+  - `active_profile` → `current_schedule_profile`
+
 ### Added
 
 - **Week profile sensor entity**: New `AioHomematicWeekProfileSensor` entity for every device with schedule support. Exposes schedule metadata (schedule type, max entries, schedule data) as state attributes. Climate devices additionally expose temperature bounds and available profiles (P1-P6).
@@ -27,6 +32,14 @@
 
 - **Improved error handling**: Extended `handle_homematic_errors` decorator to catch `ValueError` and `pydantic.ValidationError`, converting them to user-friendly `HomeAssistantError` messages
 
+- **`device_active_profile_index` attribute**: Climate and week profile sensor entities now expose the 1-based profile index as reported by the device hardware. This value is automatically synced from the device's `ACTIVE_PROFILE` (IP) or `WEEK_PROGRAM_POINTER` (RF) parameter.
+
+- **`current_schedule_profile` attribute**: Climate and week profile sensor entities expose the currently selected schedule profile (P1–P6). Automatically synchronized with the device's active profile parameter.
+
+- **Climate entity subscribes to week profile changes**: The climate entity now subscribes to `device.week_profile_data_point` updates, ensuring schedule attributes (`schedule_data`, `current_schedule_profile`, `available_profiles`) update in real-time when the schedule changes on the device.
+
+- **Database recording optimization**: Added `_unrecorded_attributes` to light, cover, switch, valve, siren, and week profile sensor entities. Static metadata attributes (e.g. available colors, channel positions, available soundfiles, schedule metadata) are now excluded from the HA recorder database, reducing storage usage.
+
 ### Changed
 
 - **Config entry migration v16**: Existing config entries are migrated to include `command_throttle_interval` with the default value
@@ -38,6 +51,12 @@
 ### New Features (aiohomematic)
 
 - **WeekProfileDataPoint** (2026.2.6): Device-level data points that serve as the central interface for schedule data — both for climate and non-climate devices. One data point per device exposes schedule metadata, target channel mappings, and delegates read/write operations to the underlying WeekProfile. Schedule access has been removed from custom data points (`BaseCustomDpClimate`, `CustomDataPoint`) and is now exclusively available via `device.week_profile_data_point`.
+
+- **Automatic profile sync from device** (2026.2.6): `ClimateWeekProfileDataPoint` now binds the device's `ACTIVE_PROFILE` (IP) or `WEEK_PROGRAM_POINTER` (RF) generic data point. `current_schedule_profile` updates automatically when the thermostat switches profiles.
+
+- **Climate CDP notification on schedule change** (2026.2.6): When schedule data changes (e.g., after `CONFIG_PENDING=False` reload), the linked Climate CDP is automatically notified via an internal subscription, causing the HA Climate Entity to update.
+
+- **`device_active_profile_index` property** (2026.2.6): Returns the 1-based profile index from the device parameter (`int | None`). RF values are normalised from 0-based to 1-based.
 
 - **Optimistic updates** (2026.2.4): Data points immediately update their state when `send_value()` is called, then rollback if the CCU rejects the value or times out. Fires `OptimisticRollbackEvent` on rollback. Configurable via `TimeoutConfig.optimistic_update_timeout` (default: 30s).
 
@@ -75,6 +94,8 @@
 ### Breaking Changes (aiohomematic)
 
 - **Schedule access moved to WeekProfileDataPoint** (2026.2.6): All schedule methods and properties removed from `BaseCustomDpClimate` and `CustomDataPoint`. Schedule operations are now exclusively available via `device.week_profile_data_point`.
+
+- **Climate profile property renames** (2026.2.6): On `ClimateWeekProfileDataPointProtocol`, `active_profile` → `current_schedule_profile`, `active_schedule` → `current_profile_schedule`, `set_active_profile()` → `set_current_schedule_profile()`. This avoids a naming conflict with the device parameter `ACTIVE_PROFILE`. `copy_schedule` and `copy_schedule_profile` parameter renamed from `target_climate_data_point` to `target_data_point`.
 
 - **HA-Addon renamed to HA-App** (2026.2.6): `SystemInformation.is_ha_addon` renamed to `is_ha_app`.
 

@@ -627,7 +627,7 @@ put_paramset:
             - "BURST"
             - "WAKEUP"
 
-set_schedule_active_profile:
+set_current_schedule_profile:
   fields:
     device_id:
       required: false

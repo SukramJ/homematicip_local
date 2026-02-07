@@ -1738,7 +1738,7 @@
             }, 
             "name": "Set device value"
         },
-        "set_schedule_active_profile": {
+        "set_current_schedule_profile": {
             "description": "Set the active schedule profile on a climate device",
             "fields": {
                 "device_address": {

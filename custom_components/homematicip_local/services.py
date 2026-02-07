@@ -211,7 +211,7 @@ SCHEMA_COPY_SCHEDULE_PROFILE = vol.All(
     ),
 )
 
-SCHEMA_SET_SCHEDULE_ACTIVE_PROFILE = vol.All(
+SCHEMA_SET_CURRENT_SCHEDULE_PROFILE = vol.All(
     cv.has_at_least_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
     cv.has_at_most_one_key(CONF_DEVICE_ID, CONF_DEVICE_ADDRESS),
     BASE_SCHEMA_DEVICE.extend(
@@ -451,7 +451,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         HmipLocalServices.REMOVE_LINK: _async_service_remove_link,
         HmipLocalServices.SET_DEVICE_VALUE: _async_service_set_device_value,
         HmipLocalServices.SET_SCHEDULE: _async_service_set_schedule,
-        HmipLocalServices.SET_SCHEDULE_ACTIVE_PROFILE: _async_service_set_schedule_active_profile,
+        HmipLocalServices.SET_CURRENT_SCHEDULE_PROFILE: _async_service_set_current_schedule_profile,
         HmipLocalServices.SET_SCHEDULE_PROFILE: _async_service_set_schedule_profile,
         HmipLocalServices.SET_SCHEDULE_WEEKDAY: _async_service_set_schedule_weekday,
         HmipLocalServices.SET_VARIABLE_VALUE: _async_service_set_variable_value,
@@ -744,9 +744,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         domain=DOMAIN,
-        service=HmipLocalServices.SET_SCHEDULE_ACTIVE_PROFILE,
+        service=HmipLocalServices.SET_CURRENT_SCHEDULE_PROFILE,
         service_func=async_call_hmip_local_service,
-        schema=SCHEMA_SET_SCHEDULE_ACTIVE_PROFILE,
+        schema=SCHEMA_SET_CURRENT_SCHEDULE_PROFILE,
     )
 
     async_register_platform_entity_service(
@@ -1423,14 +1423,14 @@ async def _async_service_set_schedule(*, hass: HomeAssistant, service: ServiceCa
         raise HomeAssistantError(f"Invalid schedule data: {errors}") from vexc
 
 
-async def _async_service_set_schedule_active_profile(*, hass: HomeAssistant, service: ServiceCall) -> None:
-    """Handle set_schedule_active_profile service call."""
+async def _async_service_set_current_schedule_profile(*, hass: HomeAssistant, service: ServiceCall) -> None:
+    """Handle set_current_schedule_profile service call."""
     hm_device = _async_get_hm_device_by_service_data(hass=hass, service=service)
     wp_dp = hm_device.week_profile_data_point
     if not isinstance(wp_dp, ClimateWeekProfileDataPointProtocol):
         raise HomeAssistantError(f"Device {hm_device.name} does not support climate schedules")
     profile = ScheduleProfile(service.data[ATTR_PROFILE])
-    wp_dp.set_active_profile(profile=profile)
+    wp_dp.set_current_schedule_profile(profile=profile)
 
 
 async def _async_service_get_schedule_profile(*, hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
