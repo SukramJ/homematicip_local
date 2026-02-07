@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
-from .generic_entity import AioHomematicGenericRestoreEntity
+from .generic_entity import AioHomematicGenericEntity, AioHomematicGenericRestoreEntity
 from .support import handle_homematic_errors
 
 ATTR_CHANNEL_POSITION: Final = "channel_position"
@@ -101,6 +101,10 @@ async def async_setup_entry(
 
 class AioHomematicBaseCover(AioHomematicGenericRestoreEntity[HmGenericCover], CoverEntity):
     """Representation of the HomematicIP cover entity."""
+
+    __no_recored_attributes = AioHomematicGenericEntity.NO_RECORDED_ATTRIBUTES
+    __no_recored_attributes.update({ATTR_CHANNEL_POSITION, ATTR_CHANNEL_TILT_POSITION})
+    _unrecorded_attributes = frozenset(__no_recored_attributes)
 
     @property
     @override

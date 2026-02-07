@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
-from .generic_entity import AioHomematicGenericRestoreEntity
+from .generic_entity import AioHomematicGenericEntity, AioHomematicGenericRestoreEntity
 from .services import ATTR_AVAILABLE_SOUNDFILES, ATTR_CURRENT_SOUNDFILE, ATTR_HAS_SOUNDFILES, ATTR_LIGHT
 from .support import handle_homematic_errors
 
@@ -60,6 +60,10 @@ class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], Sir
     """Representation of the HomematicIP siren entity."""
 
     _attr_supported_features = SirenEntityFeature.TURN_OFF | SirenEntityFeature.TURN_ON
+
+    __no_recored_attributes = AioHomematicGenericEntity.NO_RECORDED_ATTRIBUTES
+    __no_recored_attributes.update({ATTR_AVAILABLE_SOUNDFILES, ATTR_CURRENT_SOUNDFILE, ATTR_HAS_SOUNDFILES})
+    _unrecorded_attributes = frozenset(__no_recored_attributes)
 
     def __init__(
         self,

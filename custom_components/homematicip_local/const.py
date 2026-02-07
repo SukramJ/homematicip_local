@@ -11,6 +11,8 @@ from homeassistant.const import Platform
 DOMAIN: Final = "homematicip_local"
 HMIP_LOCAL_MIN_HA_VERSION: Final = "2025.10.0"
 ENABLE_EXPERIMENTAL_FEATURES: Final = False
+CLIMATE_SCHEDULE_API_VERSION: Final = "v2.0"
+SCHEDULE_API_VERSION: Final = "v1.0"
 
 DEFAULT_AUTO_CONFIRM_NEW_DEVICES_TIMEOUT: Final = 600  # 10 minutes in seconds
 DEFAULT_BACKUP_PATH: Final = "backup"

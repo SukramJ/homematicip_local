@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import HomematicConfigEntry
-from .const import HmEntityState
+from .const import CLIMATE_SCHEDULE_API_VERSION, SCHEDULE_API_VERSION, HmEntityState
 from .control_unit import ControlUnit, signal_new_data_point
 from .entity_helpers import HmSensorEntityDescription
 from .generic_entity import (
@@ -31,9 +31,11 @@ from .generic_entity import (
 
 ATTR_ACTIVE_PROFILE: Final = "active_profile"
 ATTR_AVAILABLE_PROFILES: Final = "available_profiles"
+ATTR_AVAILABLE_TARGET_CHANNELS: Final = "available_target_channels"
 ATTR_MAX_ENTRIES: Final = "max_entries"
 ATTR_MAX_TEMP: Final = "max_temp"
 ATTR_MIN_TEMP: Final = "min_temp"
+ATTR_SCHEDULE_API_VERSION: Final = "schedule_api_version"
 ATTR_SCHEDULE_CHANNEL_ADDRESS: Final = "schedule_channel_address"
 ATTR_SCHEDULE_TYPE: Final = "schedule_type"
 
@@ -228,6 +230,22 @@ class AioHomematicWeekProfileSensor(AioHomematicGenericEntity[WeekProfileDataPoi
 
     _attr_translation_key = "week_profile"
 
+    __no_recored_attributes = AioHomematicGenericEntity.NO_RECORDED_ATTRIBUTES
+    __no_recored_attributes.update(
+        {
+            ATTR_ACTIVE_PROFILE,
+            ATTR_AVAILABLE_PROFILES,
+            ATTR_AVAILABLE_TARGET_CHANNELS,
+            ATTR_MAX_ENTRIES,
+            ATTR_MAX_TEMP,
+            ATTR_MIN_TEMP,
+            ATTR_SCHEDULE_API_VERSION,
+            ATTR_SCHEDULE_CHANNEL_ADDRESS,
+            ATTR_SCHEDULE_TYPE,
+        }
+    )
+    _unrecorded_attributes = frozenset(__no_recored_attributes)
+
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -238,6 +256,7 @@ class AioHomematicWeekProfileSensor(AioHomematicGenericEntity[WeekProfileDataPoi
         if schedule_channel_address := self._data_point.schedule_channel_address:
             attributes[ATTR_SCHEDULE_CHANNEL_ADDRESS] = schedule_channel_address
         if isinstance(self._data_point, ClimateWeekProfileDataPointProtocol):
+            attributes[ATTR_SCHEDULE_API_VERSION] = CLIMATE_SCHEDULE_API_VERSION
             attributes[ATTR_ACTIVE_PROFILE] = self._data_point.active_profile
             if self._data_point.min_temp is not None:
                 attributes[ATTR_MIN_TEMP] = self._data_point.min_temp
@@ -247,6 +266,9 @@ class AioHomematicWeekProfileSensor(AioHomematicGenericEntity[WeekProfileDataPoi
             if schedule := self._data_point.active_schedule:
                 attributes[ATTR_SCHEDULE_DATA] = schedule
         elif schedule := self._data_point.schedule:
+            attributes[ATTR_SCHEDULE_API_VERSION] = SCHEDULE_API_VERSION
+            if target_channels := self._data_point.available_target_channels:
+                attributes[ATTR_AVAILABLE_TARGET_CHANNELS] = target_channels
             attributes[ATTR_SCHEDULE_DATA] = schedule
 
         return attributes

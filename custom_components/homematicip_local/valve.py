@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
-from .generic_entity import AioHomematicGenericRestoreEntity
+from .generic_entity import AioHomematicGenericEntity, AioHomematicGenericRestoreEntity
 from .support import handle_homematic_errors
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,6 +61,10 @@ async def async_setup_entry(
 
 class AioHomematicValve(AioHomematicGenericRestoreEntity[CustomDpIpIrrigationValve], ValveEntity):
     """Representation of the HomematicIP valve entity."""
+
+    __no_recored_attributes = AioHomematicGenericEntity.NO_RECORDED_ATTRIBUTES
+    __no_recored_attributes.update({ATTR_CHANNEL_STATE})
+    _unrecorded_attributes = frozenset(__no_recored_attributes)
 
     @property
     @override

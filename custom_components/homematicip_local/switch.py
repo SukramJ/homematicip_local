@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import (
+    AioHomematicGenericEntity,
     AioHomematicGenericProgramEntity,
     AioHomematicGenericRestoreEntity,
     AioHomematicGenericSysvarEntity,
@@ -96,6 +97,10 @@ async def async_setup_entry(
 
 class AioHomematicSwitch(AioHomematicGenericRestoreEntity[CustomDpSwitch | DpSwitch], SwitchEntity):
     """Representation of the HomematicIP switch entity."""
+
+    __no_recored_attributes = AioHomematicGenericEntity.NO_RECORDED_ATTRIBUTES
+    __no_recored_attributes.update({ATTR_CHANNEL_STATE})
+    _unrecorded_attributes = frozenset(__no_recored_attributes)
 
     @property
     @override

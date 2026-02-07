@@ -37,12 +37,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
+from .const import CLIMATE_SCHEDULE_API_VERSION
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import ATTR_SCHEDULE_DATA, AioHomematicGenericEntity, AioHomematicGenericRestoreEntity
 from .support import handle_homematic_errors
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_SCHEDULE_API_VERSION: Final = "schedule_api_version"
 ATTR_OPTIMUM_START_STOP: Final = "optimum_start_stop"
 ATTR_TEMPERATURE_OFFSET: Final = "temperature_offset"
 ATTR_ACTIVE_PROFILE: Final = "active_profile"
@@ -168,6 +170,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         if (wp_dp := self._data_point.device.week_profile_data_point) is not None and isinstance(
             wp_dp, ClimateWeekProfileDataPointProtocol
         ):
+            attributes[ATTR_SCHEDULE_API_VERSION] = CLIMATE_SCHEDULE_API_VERSION
             attributes[ATTR_ACTIVE_PROFILE] = wp_dp.active_profile
             attributes[ATTR_AVAILABLE_PROFILES] = [profile.value for profile in wp_dp.available_profiles]
             if schedule_data := wp_dp.active_schedule:

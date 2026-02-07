@@ -32,7 +32,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
 from .control_unit import ControlUnit, signal_new_data_point
-from .generic_entity import AioHomematicGenericRestoreEntity
+from .generic_entity import AioHomematicGenericEntity, AioHomematicGenericRestoreEntity
 from .services import ATTR_AVAILABLE_COLORS
 from .support import handle_homematic_errors
 
@@ -82,6 +82,12 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
 
     _attr_min_color_temp_kelvin = 2000  # 500 Mireds
     _attr_max_color_temp_kelvin = 6500  # 153 Mireds
+
+    __no_recored_attributes = AioHomematicGenericEntity.NO_RECORDED_ATTRIBUTES
+    __no_recored_attributes.update(
+        {ATTR_AVAILABLE_COLORS, ATTR_CHANNEL_BRIGHTNESS, ATTR_CHANNEL_COLOR, ATTR_COLOR, ATTR_LAST_BRIGHTNESS}
+    )
+    _unrecorded_attributes = frozenset(__no_recored_attributes)
 
     @property
     @override

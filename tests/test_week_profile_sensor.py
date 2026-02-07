@@ -37,16 +37,20 @@ def _create_mock_data_point(
     max_entries: int = 24,
     schedule_channel_address: str | None = "ABC1234567:1",
     schedule: dict | None = None,
+    active_schedule: dict | None = None,
+    active_profile: ScheduleProfile = ScheduleProfile.P1,
     min_temp: float | None = None,
     max_temp: float | None = None,
-    available_schedule_profiles: tuple[ScheduleProfile, ...] = (),
+    available_profiles: tuple[ScheduleProfile, ...] = (),
 ) -> MagicMock:
     """Create a mock week profile data point."""
     if is_climate:
         mock_dp = MagicMock(spec=ClimateWeekProfileDataPointProtocol)
         mock_dp.min_temp = min_temp
         mock_dp.max_temp = max_temp
-        mock_dp.available_schedule_profiles = available_schedule_profiles
+        mock_dp.available_profiles = available_profiles
+        mock_dp.active_schedule = active_schedule
+        mock_dp.active_profile = active_profile
         mock_dp.schedule_type = ScheduleType.CLIMATE
     else:
         mock_dp = MagicMock(spec=WeekProfileDataPointProtocol)
@@ -137,8 +141,8 @@ class TestWeekProfileSensor:
             schedule_channel_address="ABC1234567:1",
             min_temp=4.5,
             max_temp=30.5,
-            available_schedule_profiles=(ScheduleProfile.P1, ScheduleProfile.P2, ScheduleProfile.P3),
-            schedule={"P1": {"MONDAY": [{"start": "06:00", "temp": 21.0}]}},
+            available_profiles=(ScheduleProfile.P1, ScheduleProfile.P2, ScheduleProfile.P3),
+            active_schedule={"MONDAY": [{"start": "06:00", "temp": 21.0}]},
         )
         mock_cu = _create_mock_control_unit()
 
@@ -156,8 +160,8 @@ class TestWeekProfileSensor:
         assert attrs["max_entries"] == 546
         assert attrs["min_temp"] == 4.5
         assert attrs["max_temp"] == 30.5
-        assert attrs["available_schedule_profiles"] == ["P1", "P2", "P3"]
-        assert attrs["schedule_data"] == {"P1": {"MONDAY": [{"start": "06:00", "temp": 21.0}]}}
+        assert attrs["available_profiles"] == ["P1", "P2", "P3"]
+        assert attrs["schedule_data"] == {"MONDAY": [{"start": "06:00", "temp": 21.0}]}
 
     def test_extra_state_attributes_climate_no_temp(self) -> None:
         """Test extra_state_attributes for climate with None temps."""
@@ -165,7 +169,7 @@ class TestWeekProfileSensor:
             is_climate=True,
             min_temp=None,
             max_temp=None,
-            available_schedule_profiles=(ScheduleProfile.P1,),
+            available_profiles=(ScheduleProfile.P1,),
         )
         mock_cu = _create_mock_control_unit()
 
@@ -181,7 +185,7 @@ class TestWeekProfileSensor:
         attrs = entity.extra_state_attributes
         assert "min_temp" not in attrs
         assert "max_temp" not in attrs
-        assert attrs["available_schedule_profiles"] == ["P1"]
+        assert attrs["available_profiles"] == ["P1"]
 
     def test_extra_state_attributes_default(self) -> None:
         """Test extra_state_attributes for default schedule type."""
