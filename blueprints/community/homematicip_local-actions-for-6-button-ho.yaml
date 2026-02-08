@@ -6,7 +6,9 @@ blueprint:
     to your configured minimum duration for long press. This can be configured in
     your CCU.
     Tested with HmIP-WRC6. Should work with other device too.
-    v2022-10-28
+    This variant of the original blueprint supports multiple devices, and alerting the user or skipping execution if there is a conflicting direct device connection in the CCU.
+    by @hosswald
+    v2026-02-08
   domain: automation
   source_url: https://github.com/sukramj/homematicip_local/blob/devel/blueprints/automation/homematicip_local-actions-for-6-button.yaml
   input:
