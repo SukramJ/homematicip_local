@@ -932,7 +932,7 @@
             "title": "Interface {interface_id} not reachable"
         }, 
         "paramset_inconsistency": {
-            "description": "{device_count} device(s) have parameters in the schema that are not present in the actual MASTER paramset. This indicates stale device files in the HmIPServer (crRFD) after a firmware update.\n\n**Affected devices:** {device_addresses}\n\n**Missing parameters ({parameter_count}):** {missing_parameters}\n\n**Resolution:** Perform a factory reset on the affected device(s) via the CCU WebUI. This will force the HmIPServer to refresh its device data.\n\nFor more information, see: https://homematic-forum.de/forum/viewtopic.php?t=77531", 
+            "description": "{device_count} device(s) have parameters in the schema that are not present in the actual MASTER paramset. This indicates stale device files in the HmIPServer (crRFD) after a firmware update.\n\n**Affected devices:** {device_addresses}\n\n**Missing parameters ({parameter_count}):** {missing_parameters}\n\n**Resolution:** Perform a factory reset on the affected device(s) via the CCU WebUI. This will force the HmIPServer to refresh its device data.", 
             "title": "Device paramset inconsistency detected on {interface_id}"
         }, 
         "pending_pong_mismatch": {

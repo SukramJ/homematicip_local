@@ -932,7 +932,7 @@
             "title": "Interface {interface_id} nicht erreichbar"
         }, 
         "paramset_inconsistency": {
-            "description": "{device_count} Gerät(e) haben Parameter im Schema, die nicht im tatsächlichen MASTER-Paramset vorhanden sind. Dies deutet auf veraltete Gerätedateien im HmIPServer (crRFD) nach einem Firmware-Update hin.\n\n**Betroffene Geräte:** {device_addresses}\n\n**Fehlende Parameter ({parameter_count}):** {missing_parameters}\n\n**Lösung:** Führe einen Werksreset auf dem/den betroffenen Gerät(en) über die CCU-WebUI durch. Dadurch wird der HmIPServer gezwungen, seine Gerätedaten zu aktualisieren.\n\nWeitere Informationen: https://homematic-forum.de/forum/viewtopic.php?t=77531", 
+            "description": "{device_count} Gerät(e) haben Parameter im Schema, die nicht im tatsächlichen MASTER-Paramset vorhanden sind. Dies deutet auf veraltete Gerätedateien im HmIPServer (crRFD) nach einem Firmware-Update hin.\n\n**Betroffene Geräte:** {device_addresses}\n\n**Fehlende Parameter ({parameter_count}):** {missing_parameters}\n\n**Lösung:** Führe einen Werksreset auf dem/den betroffenen Gerät(en) über die CCU-WebUI durch. Dadurch wird der HmIPServer gezwungen, seine Gerätedaten zu aktualisieren.", 
             "title": "Inkonsistenz bei Geräte-Paramsets erkannt auf {interface_id}"
         }, 
         "pending_pong_mismatch": {
