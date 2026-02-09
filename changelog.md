@@ -1,4 +1,4 @@
-# Version [2.3.0](https://github.com/SukramJ/homematicip_local/compare/2.2.4...2.3.0) (2026-02-06)
+# Version [2.3.0](https://github.com/SukramJ/homematicip_local/compare/2.2.4...2.3.0) (2026-02-09)
 
 ## What's Changed
 
@@ -40,15 +40,21 @@
 
 - **Database recording optimization**: Added `_unrecorded_attributes` to light, cover, switch, valve, siren, and week profile sensor entities. Static metadata attributes (e.g. available colors, channel positions, available soundfiles, schedule metadata) are now excluded from the HA recorder database, reducing storage usage.
 
+- **Paramset inconsistency repair issue**: Displays a Home Assistant repair issue when aiohomematic detects missing parameters on HmIP/HmIPW devices after firmware updates. Informs the user about affected devices and recommends a factory reset via the CCU WebUI.
+
+- **WRC6 Blueprint**: Community blueprint for 6-button wall remote (HmIP-WRC6) now supports multiple devices and includes optional direct connection collision checks. **Not backwards compatible** — existing automations using this blueprint need to be reconfigured.
+
 ### Changed
 
 - **Config entry migration v16**: Existing config entries are migrated to include `command_throttle_interval` with the default value
 
 **Migration example:**
 
-## Bump aiohomematic to [2026.2.6](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.6)
+## Bump aiohomematic to [2026.2.7](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.7)
 
 ### New Features (aiohomematic)
+
+- **Paramset consistency checker** (2026.2.7): Automatically detects missing parameters on HmIP/HmIPW devices after firmware updates. The HmIPServer (crRFD) on the CCU sometimes fails to refresh its stored parameter data, creating a mismatch between `getParamsetDescription()` (schema) and `getParamset()` (actual values). Reports inconsistencies via `IntegrationIssue` events, log warnings, and diagnostics data.
 
 - **WeekProfileDataPoint** (2026.2.6): Device-level data points that serve as the central interface for schedule data — both for climate and non-climate devices. One data point per device exposes schedule metadata, target channel mappings, and delegates read/write operations to the underlying WeekProfile. Schedule access has been removed from custom data points (`BaseCustomDpClimate`, `CustomDataPoint`) and is now exclusively available via `device.week_profile_data_point`.
 
@@ -85,6 +91,8 @@
 
 ### Bug Fixes (aiohomematic)
 
+- **XML-RPC server race condition on multi-hub startup** (2026.2.7): Fixed a race condition in `AsyncXmlRpcServer.start()` that caused "address in use" errors when multiple central units started concurrently. The singleton server is now protected by an `asyncio.Lock`.
+- **Optimistic rollback now clears unconfirmed value** (2026.2.7): `_rollback_optimistic_value()` now properly clears the unconfirmed value before restoring the previous confirmed value, preventing the unconfirmed value from undermining the rollback.
 - **CallbackDataPoint ownership reset on unsubscribe** (2026.2.6): When the owning `custom_id` fully unsubscribes from a data point, `_custom_id` is now reset to `None`. This allows re-registration with a different `custom_id` (e.g. after an entity_id rename in Home Assistant), preventing `AioHomematicException` on resubscription.
 - **i18n format specs** (2026.2.5): Fixed `i18n.tr()` silently dropping format specifiers like `{interval:.3f}`. Placeholders with format specs now render correctly in log messages.
 - **JSON control character sanitization** (2026.2.2): Fixed `JSONDecodeError` when ReGa scripts return JSON containing unescaped control characters in device names or values. The sanitization is now selective - it only escapes control characters within JSON string values, preserving structural whitespace.
@@ -103,6 +111,7 @@
 
 ### Changed (aiohomematic)
 
+- **Rename `_temporary_value` to `_unconfirmed_value`** (2026.2.7): All internal references renamed to clarify the role of the second value tier in the three-tier resolution model (optimistic → unconfirmed → confirmed).
 - **DelegatedProperty expansion** (2026.2.6): Replaced 56 boilerplate `@property` methods with `DelegatedProperty` descriptors across 23 files. Reduces repetitive delegation code while preserving runtime behavior.
 - **ClimateWeekProfile**: Simple schedule format now uses Pydantic models for automatic validation. The existing user-facing format remains unchanged, but input validation is now more robust with clear error messages.
 - **DefaultWeekProfile**: Refactored schedule cache to use human-readable Pydantic models (`SimpleSchedule`, `SimpleScheduleEntry`) instead of complex dictionary format.

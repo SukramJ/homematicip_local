@@ -928,9 +928,13 @@
             "title": "Incomplete device data on {interface_id}"
         },
         "interface_not_reachable": {
-            "description": "No connection to interface {interface_id}.\n\nThis Integration tries an automatic reconnect.\n\nCheck the Home Assistant log files for more details", 
+            "description": "No connection to interface {interface_id}.\n\nThis Integration tries an automatic reconnect.\n\nCheck the Home Assistant log files for more details",
             "title": "Interface {interface_id} not reachable"
-        }, 
+        },
+        "paramset_inconsistency": {
+            "description": "{device_count} device(s) have parameters in the schema that are not present in the actual MASTER paramset. This indicates stale device files in the HmIPServer (crRFD) after a firmware update.\n\n**Affected devices:** {device_addresses}\n\n**Missing parameters ({parameter_count}):** {missing_parameters}\n\n**Resolution:** Perform a factory reset on the affected device(s) via the CCU WebUI. This will force the HmIPServer to refresh its device data.\n\nFor more information, see: https://homematic-forum.de/forum/viewtopic.php?t=77531",
+            "title": "Device paramset inconsistency detected on {interface_id}"
+        },
         "pending_pong_mismatch": {
             "description": "There is a mismatch between send ping events and received pong events for HA instance {instance_name}.\n\nPossible reasons:\n - You are running multiple instances of HA with the same instance name configured for this integration. Re-add one instance! Otherwise this HA instance will not receive update events from your CCU.\n - Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a restart.\n - Your setup is misconfigured and HA is not able to receive events from the CCU", 
             "title": "Pending Pong mismatch on interface {interface_id}"

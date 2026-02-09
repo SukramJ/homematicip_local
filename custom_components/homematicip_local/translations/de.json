@@ -931,6 +931,10 @@
             "description": "Keine Verbindung zu Schnittstelle {interface_id}.\n\nDiese Integration versucht eine automatische Wiederverbindung.\n\nWeitere Informationen findest Du in den Protokolldateien von Home Assistant", 
             "title": "Interface {interface_id} nicht erreichbar"
         }, 
+        "paramset_inconsistency": {
+            "description": "{device_count} Gerät(e) haben Parameter im Schema, die nicht im tatsächlichen MASTER-Paramset vorhanden sind. Dies deutet auf veraltete Gerätedateien im HmIPServer (crRFD) nach einem Firmware-Update hin.\n\n**Betroffene Geräte:** {device_addresses}\n\n**Fehlende Parameter ({parameter_count}):** {missing_parameters}\n\n**Lösung:** Führe einen Werksreset auf dem/den betroffenen Gerät(en) über die CCU-WebUI durch. Dadurch wird der HmIPServer gezwungen, seine Gerätedaten zu aktualisieren.\n\nWeitere Informationen: https://homematic-forum.de/forum/viewtopic.php?t=77531", 
+            "title": "Inkonsistenz bei Geräte-Paramsets erkannt auf {interface_id}"
+        }, 
         "pending_pong_mismatch": {
             "description": "Es besteht eine Differenz zwischen gesendeten Ping-Ereignissen und empfangenen Pong-Ereignissen für die HA-Instanz {instance_name}.\n\nMögliche Gründe:\n - Du führst mehrere Instanzen von HA mit demselben Instanznamen aus, der für diese Integration konfiguriert ist. Füge eine Instanz erneut hinzu! Andernfalls empfängt diese HA-Instanz keine Aktualisierungsereignisse von Ihrer CCU.\n - Etwas hängt in der CCU oder wurde nicht bereinigt, also versuche einen CCU Neustart.\n - Ihr Setup ist falsch konfiguriert und HA kann keine Ereignisse von der CCU empfangen", 
             "title": "Austehende Pong Ereignisse auf Interface {interface_id}"

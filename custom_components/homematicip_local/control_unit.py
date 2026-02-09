@@ -937,6 +937,19 @@ class ControlUnit(BaseControlUnit):
             ):
                 async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
                 continue
+            # PARAMSET_INCONSISTENCY issues are WARNING severity but should create repair issues
+            # to inform users about potential device problems after firmware updates
+            if issue.issue_type == IntegrationIssueType.PARAMSET_INCONSISTENCY:
+                ir.async_create_issue(
+                    hass=self._hass,
+                    domain=DOMAIN,
+                    issue_id=issue_id,
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key=issue.translation_key,
+                    translation_placeholders=issue.translation_placeholders,
+                )
+                continue
             # Only create repair issues for ERROR severity
             if issue.severity == IntegrationIssueSeverity.ERROR:
                 ir.async_create_issue(
