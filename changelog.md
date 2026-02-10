@@ -44,8 +44,6 @@
 
 - **WRC6 Blueprint**: Community blueprint for 6-button wall remote (HmIP-WRC6) now supports multiple devices and includes optional direct connection collision checks. **Not backwards compatible** — existing automations using this blueprint need to be reconfigured.
 
-- **Native HA backup integration**: Added `backup.py` platform so that CCU configuration is automatically backed up when a Home Assistant backup is created (Settings > System > Backups). For each available CCU, a backup is downloaded and saved to the configured backup directory before the HA backup starts. Unavailable CCUs are gracefully skipped with a warning.
-
 - **Translated interface display names**: Interface names in config flow error messages and detection info now use translated, user-friendly names (e.g. "Homematic IP" instead of "HmIP-RF") with full German translation support. Warning messages for undetected interfaces are also translated.
 
 ### Changed
