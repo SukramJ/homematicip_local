@@ -30,6 +30,7 @@ from homeassistant.helpers.entity_registry import async_migrate_entries
 from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.util.hass_dict import HassKey
 
+from .backup import async_notify_backup_listeners
 from .const import (
     CONF_ACTION_SELECT_VALUES,
     CONF_ADVANCED_CONFIG,
@@ -180,6 +181,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
     # Register on HA stop event to gracefully shutdown Homematic(IP) Local connection
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, control.stop_central)
     entry.async_on_unload(entry.add_update_listener(update_listener))
+    async_notify_backup_listeners(hass)
     return True
 
 
@@ -195,6 +197,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -
     if len(async_get_loaded_config_entries(hass=hass)) == 0:
         async_unregister_panel(hass)
         del hass.data[HM_KEY]
+    async_notify_backup_listeners(hass)
     return unload_ok
 
 

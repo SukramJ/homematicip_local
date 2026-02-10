@@ -66,6 +66,8 @@
 
 - **Configuration panel: Deep-linking**: Navigate directly to a device, channel config, or link view via URL hash parameters. Supports browser back/forward navigation.
 
+- **CCU backup agent**: New `LocalBackupAgent` that appears in the HA backup UI as a backup storage location. HA backups can be stored in the CCU backup directory and managed (list, download, delete) via the standard backup UI. One agent is registered per CCU config entry (multi-CCU capable). Existing CCU `.sbk` pre/post-backup hooks are unchanged.
+
 ### Changed
 
 - **Entity names from backend translations**: Removed redundant local entity translations (binary_sensor, button, lock, number, select, sensor, switch, valve) from strings.json and translation files. Entity names are now provided by the backend CCU translation system via `translated_name`. Only climate (preset modes) and event (keypress types) translations remain local.
