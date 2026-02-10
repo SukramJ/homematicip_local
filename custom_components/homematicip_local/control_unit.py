@@ -52,7 +52,7 @@ from aiohomematic.const import (
 )
 from aiohomematic.exceptions import AuthFailure, BaseHomematicException
 from aiohomematic.model.data_point import CallbackDataPoint
-from aiohomematic.support import get_device_address
+from aiohomematic.support.address import get_device_address
 from aiohomematic.type_aliases import UnsubscribeCallback
 from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
@@ -292,7 +292,7 @@ class ControlUnit(BaseControlUnit):
         )
         return cast(
             tuple[_DATA_POINT_T, ...],
-            self.central.get_data_points(
+            self.central.query_facade.get_data_points(
                 category=category,
                 exclude_no_create=True,
                 registered=False,

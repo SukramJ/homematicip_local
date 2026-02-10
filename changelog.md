@@ -44,13 +44,21 @@
 
 - **WRC6 Blueprint**: Community blueprint for 6-button wall remote (HmIP-WRC6) now supports multiple devices and includes optional direct connection collision checks. **Not backwards compatible** — existing automations using this blueprint need to be reconfigured.
 
+- **Native HA backup integration**: Added `backup.py` platform so that CCU configuration is automatically backed up when a Home Assistant backup is created (Settings > System > Backups). For each available CCU, a backup is downloaded and saved to the configured backup directory before the HA backup starts. Unavailable CCUs are gracefully skipped with a warning.
+
+- **Translated interface display names**: Interface names in config flow error messages and detection info now use translated, user-friendly names (e.g. "Homematic IP" instead of "HmIP-RF") with full German translation support. Warning messages for undetected interfaces are also translated.
+
 ### Changed
 
 - **Config entry migration v16**: Existing config entries are migrated to include `command_throttle_interval` with the default value
 
 **Migration example:**
 
-## Bump aiohomematic to [2026.2.7](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.7)
+## Bump aiohomematic to [2026.2.8](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.8)
+
+### Architecture (aiohomematic)
+
+- **Architecture cleanup** (2026.2.8): Query methods extracted from `CentralUnit` to `DeviceQueryFacade` (`central.query_facade`). Support module split into submodules (`support.address`, `support.file_ops`, `support.mixins`). Protocol hierarchy reorganized with new `interfaces.central` and `interfaces.model` modules. Optimistic update logic extracted to `model.optimistic`.
 
 ### New Features (aiohomematic)
 

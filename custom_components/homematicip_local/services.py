@@ -15,7 +15,8 @@ from aiohomematic.const import ForcedDeviceAvailability, ParamsetKey, SchedulePr
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.interfaces import ClimateWeekProfileDataPointProtocol, DeviceProtocol
 from aiohomematic.model.schedule_models import ClimateWeekdaySchedule
-from aiohomematic.support import get_device_address, to_bool
+from aiohomematic.support import to_bool
+from aiohomematic.support.address import get_device_address
 from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.components.cover.const import DOMAIN as COVER_DOMAIN

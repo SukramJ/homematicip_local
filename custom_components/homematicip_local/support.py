@@ -22,7 +22,7 @@ from aiohomematic.interfaces import (
     GenericSysvarDataPointProtocol,
 )
 from aiohomematic.model.week_profile_data_point import WeekProfileDataPoint
-from aiohomematic.support import get_device_address
+from aiohomematic.support.address import get_device_address
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError

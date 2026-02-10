@@ -54,7 +54,9 @@ async def async_setup_entry(
     )
 
     for event_type in DATA_POINT_EVENTS:
-        async_add_event(event_groups=control_unit.central.get_event_groups(event_type=event_type, registered=False))
+        async_add_event(
+            event_groups=control_unit.central.query_facade.get_event_groups(event_type=event_type, registered=False)
+        )
 
 
 class AioHomematicEvent(EventEntity):

@@ -127,7 +127,7 @@ def get_and_check_state(hass: HomeAssistant, control: ControlUnit, entity_id: st
 
 def get_data_point(control: ControlUnit, entity_id: str):
     """Get the data point by entity id."""
-    for dp in control.central.get_data_points():
+    for dp in control.central.query_facade.get_data_points():
         if dp.custom_id == entity_id:
             return dp
     for dp in control.central.hub_coordinator.get_hub_data_points():

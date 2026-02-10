@@ -16,11 +16,25 @@ import pytest
 from custom_components.homematicip_local.mqtt import MQTTConsumer
 
 
+class _QueryFacadeStub:
+    """Query facade stub exposing methods moved from CentralUnit."""
+
+    def __init__(self, mock_dp: MagicMock, paths: list[str]) -> None:
+        self._mock_dp = mock_dp
+        self._paths = paths
+
+    def get_generic_data_point(self, state_path: str):  # noqa: ARG002
+        return self._mock_dp
+
+    def get_state_paths(self, rpc_callback_supported: bool = True) -> list[str]:  # noqa: ARG002
+        return list(self._paths)
+
+
 class _CentralStub:
     """Very small central stub exposing only methods used by MQTTConsumer."""
 
     def __init__(self) -> None:
-        self._paths = [
+        paths = [
             "devices/INTF/ADDR:1/VALUES/STATE",
             "devices/INTF/ADDR:2/VALUES/LEVEL",
         ]
@@ -38,11 +52,8 @@ class _CentralStub:
         self.hub_coordinator = MagicMock()
         self.hub_coordinator.get_sysvar_data_point = MagicMock(return_value=self._mock_sv)
 
-    def get_generic_data_point(self, state_path: str):  # noqa: ARG002
-        return self._mock_dp
-
-    def get_state_paths(self, rpc_callback_supported: bool = True) -> list[str]:  # noqa: ARG002
-        return list(self._paths)
+        # Query facade
+        self.query_facade = _QueryFacadeStub(mock_dp=self._mock_dp, paths=paths)
 
 
 def _msg(topic: str, payload: str):

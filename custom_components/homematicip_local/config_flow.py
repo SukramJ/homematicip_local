@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 import contextlib
 from copy import deepcopy
 import logging
@@ -133,6 +134,36 @@ CONF_RESET_PORT_DEFAULTS: Final = "reset_port_defaults"
 
 # VirtualDevices path constant
 IF_VIRTUAL_DEVICES_PATH: Final = "/groups"
+
+# User-friendly interface display names (brand names are language-independent)
+_INTERFACE_DISPLAY_NAMES: Final[dict[Interface, str]] = {
+    Interface.BIDCOS_RF: "Homematic",
+    Interface.BIDCOS_WIRED: "Homematic Wired",
+    Interface.CCU_JACK: "CCU-Jack",
+    Interface.CUXD: "CUxD",
+    Interface.HMIP_RF: "Homematic IP",
+    Interface.VIRTUAL_DEVICES: "Groups (Heating Groups)",
+}
+
+# Language-specific overrides for non-brand names
+_INTERFACE_DISPLAY_NAMES_OVERRIDES: Final[dict[str, dict[Interface, str]]] = {
+    "de": {
+        Interface.VIRTUAL_DEVICES: "Heizgruppen",
+    },
+}
+
+_UNDETECTED_WARNING_TEMPLATES: Final[dict[str, str]] = {
+    "de": (
+        "\n\n**Warnung:** Die folgenden Schnittstellen wurden aktiviert, aber nicht auf der CCU erkannt: "
+        "{interface_names}. Diese Schnittstellen funktionieren möglicherweise nicht korrekt."
+    ),
+}
+
+_UNDETECTED_WARNING_DEFAULT: Final = (
+    "\n\n**Warning:** The following interfaces were enabled but not detected "
+    "on the CCU: {interface_names}. These interfaces may not work correctly."
+)
+
 TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 BOOLEAN_SELECTOR = BooleanSelector()
@@ -209,6 +240,26 @@ def _get_step_placeholders(step: str, total: str) -> dict[str, str]:
         "step_current": step,
         "step_total": total,
     }
+
+
+def _get_interface_display_names(
+    *,
+    hass: HomeAssistant,
+    interfaces: Iterable[Interface],
+) -> str:
+    """Return comma-separated translated display names for interfaces."""
+    overrides = _INTERFACE_DISPLAY_NAMES_OVERRIDES.get(hass.config.language, {})
+    return ", ".join(overrides.get(i, _INTERFACE_DISPLAY_NAMES.get(i, i.value)) for i in interfaces)
+
+
+def _get_undetected_warning(
+    *,
+    hass: HomeAssistant,
+    interface_names: str,
+) -> str:
+    """Return translated warning message for undetected interfaces."""
+    template = _UNDETECTED_WARNING_TEMPLATES.get(hass.config.language, _UNDETECTED_WARNING_DEFAULT)
+    return template.format(interface_names=interface_names)
 
 
 def _get_retry_hint(error_type: str) -> str:
@@ -734,10 +785,9 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         # Check for undetected interfaces and add warning if necessary
         self._undetected_interfaces = self._get_undetected_interfaces()
         if self._undetected_interfaces:
-            undetected_names = ", ".join(i.value for i in self._undetected_interfaces)
-            description_placeholders["undetected_interfaces_warning"] = (
-                f"\n\n**Warning:** The following interfaces were enabled but not detected "
-                f"on the CCU: {undetected_names}. These interfaces may not work correctly."
+            undetected_names = _get_interface_display_names(hass=self.hass, interfaces=self._undetected_interfaces)
+            description_placeholders["undetected_interfaces_warning"] = _get_undetected_warning(
+                hass=self.hass, interface_names=undetected_names
             )
             _LOGGER.warning(
                 "The following interfaces were enabled but not detected on the CCU: %s",
@@ -773,7 +823,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             # Check for undetected interfaces BEFORE validation
             undetected = self._get_undetected_interfaces()
             if undetected:
-                undetected_names = ", ".join(i.value for i in undetected)
+                undetected_names = _get_interface_display_names(hass=self.hass, interfaces=undetected)
                 _LOGGER.warning(
                     "User enabled interfaces that were not detected on the CCU: %s",
                     undetected_names,
@@ -782,8 +832,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 placeholders["detected_interfaces"] = "-"
                 if self._detection_result:
                     placeholders["detected_backend"] = self._detection_result.backend.value
-                    placeholders["detected_interfaces"] = ", ".join(
-                        i.value for i in self._detection_result.available_interfaces
+                    placeholders["detected_interfaces"] = _get_interface_display_names(
+                        hass=self.hass, interfaces=self._detection_result.available_interfaces
                     )
                     placeholders["detected_tls"] = str(
                         self._detection_result.tls or self._detection_result.https_redirect_enabled
@@ -817,8 +867,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 placeholders["detected_interfaces"] = "-"
                 if self._detection_result:
                     placeholders["detected_backend"] = self._detection_result.backend.value
-                    placeholders["detected_interfaces"] = ", ".join(
-                        i.value for i in self._detection_result.available_interfaces
+                    placeholders["detected_interfaces"] = _get_interface_display_names(
+                        hass=self.hass, interfaces=self._detection_result.available_interfaces
                     )
                     placeholders["detected_tls"] = str(
                         self._detection_result.tls or self._detection_result.https_redirect_enabled
@@ -837,8 +887,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         # Add detection result info if available
         if self._detection_result:
             placeholders["detected_backend"] = self._detection_result.backend.value
-            placeholders["detected_interfaces"] = ", ".join(
-                i.value for i in self._detection_result.available_interfaces
+            placeholders["detected_interfaces"] = _get_interface_display_names(
+                hass=self.hass, interfaces=self._detection_result.available_interfaces
             )
             placeholders["detected_tls"] = str(
                 self._detection_result.tls or self._detection_result.https_redirect_enabled
@@ -1309,7 +1359,9 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
             step_id="advanced_settings",
             data_schema=get_advanced_settings_schema(
                 data=self.data,
-                all_un_ignore_parameters=self._control_unit.central.get_un_ignore_candidates(include_master=True),
+                all_un_ignore_parameters=self._control_unit.central.query_facade.get_un_ignore_candidates(
+                    include_master=True
+                ),
             ),
             errors=errors,
             description_placeholders=description_placeholders,

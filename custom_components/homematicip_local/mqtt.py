@@ -49,7 +49,7 @@ class MQTTConsumer:
     def _get_topics(self) -> dict[str, dict[str, Any]]:
         """Return the topics for the central."""
         topics: dict[str, dict[str, Any]] = {}
-        for state_path in self._central.get_state_paths(rpc_callback_supported=False):
+        for state_path in self._central.query_facade.get_state_paths(rpc_callback_supported=False):
             topics[state_path.replace("/", "_")] = {
                 "topic": f"{self._mqtt_prefix}{state_path}",
                 "msg_callback": lambda msg: self._on_device_mqtt_msg_receive(msg=msg),
@@ -75,7 +75,7 @@ class MQTTConsumer:
         payload_dict = json_loads(msg.payload)
         if (
             (payload_value := cast(dict[str, Any], payload_dict).get("v")) is not None
-            and (dp := self._central.get_generic_data_point(state_path=state_path))
+            and (dp := self._central.query_facade.get_generic_data_point(state_path=state_path))
             and not dp.device.client.capabilities.rpc_callback
         ):
             self._hass.create_task(

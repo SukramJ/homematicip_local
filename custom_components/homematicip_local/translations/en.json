@@ -15,7 +15,7 @@
             "invalid_config": "Invalid configuration: [{invalid_items}]. Please check the entered values and try again.",
             "unknown": "An unexpected error occurred. Please check the Home Assistant logs for more details."
         }, 
-        "flow_title": "{name}/{host}", 
+        "flow_title": "{name}/{host}",
         "progress": {
             "detect_backend": "Detecting backend type and available interfaces..."
         }, 
@@ -193,7 +193,7 @@
                 "title": "Port configuration"
             }
         }
-    }, 
+    },
     "device_automation": {
         "action_type": {
             "press_long": "Long press Button \"{subtype}\"", 
