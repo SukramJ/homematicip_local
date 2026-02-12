@@ -489,7 +489,7 @@ voluptuous = "vol"
 required-imports = ["from __future__ import annotations"]
 force-sort-within-sections = true
 known-first-party = [
-    "homeassistant", "aiohomematic"
+    "homeassistant", "aiohomematic", "aiohomematic_config"
 ]
 combine-as-imports = true
 split-on-trailing-comma = false

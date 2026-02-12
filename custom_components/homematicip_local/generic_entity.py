@@ -198,7 +198,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         and the second part is the english named parameter that must be translated.
         This translated parameter will be used in the combined name.
         """
-        entity_name = self._data_point.name
+        entity_name = self._data_point.translated_name
         device_name = self._ha_device_name
 
         if isinstance(self._data_point, CalculatedDataPointProtocol | GenericDataPointProtocol) and entity_name:

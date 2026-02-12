@@ -22,8 +22,8 @@ class TestSensor:
     @pytest.mark.asyncio
     async def test_sensor_to_trans(self, factory_homegear: Factory) -> None:
         """Test sensor without translation."""
-        entity_id = "sensor.hb_uni_sensor1_vcu7837366_abs_luftfeuchte"
-        entity_name = "HB-UNI-Sensor1_VCU7837366 Abs Luftfeuchte"
+        entity_id = "sensor.hb_uni_sensor1_vcu7837366_absolute_humidity"
+        entity_name = "HB-UNI-Sensor1_VCU7837366 Absolute Humidity"
 
         hass, control = await factory_homegear.setup_environment(TEST_DEVICES)
         ha_state, data_point = helper.get_and_check_state(

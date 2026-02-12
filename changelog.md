@@ -38,6 +38,10 @@
 
 - **Climate entity subscribes to week profile changes**: The climate entity now subscribes to `device.week_profile_data_point` updates, ensuring schedule attributes (`schedule_data`, `current_schedule_profile`, `available_profiles`) update in real-time when the schedule changes on the device.
 
+- **Device configuration panel**: New sidebar panel for editing Homematic device MASTER parameters directly from the Home Assistant UI. Provides a form-based interface with per-channel configuration, validation, and reset-to-defaults. Enable via Advanced Options in the integration config flow. Requires `aiohomematic-config`.
+
+- **Panel translations**: The configuration panel UI (sidebar title, section headers, parameter labels, enum values, toggle labels) is fully translated based on the Home Assistant language setting (German and English). Parameter filtering matches the CCU WebUI easymode behavior — only parameters with known translations are shown.
+
 - **Database recording optimization**: Added `_unrecorded_attributes` to light, cover, switch, valve, siren, and week profile sensor entities. Static metadata attributes (e.g. available colors, channel positions, available soundfiles, schedule metadata) are now excluded from the HA recorder database, reducing storage usage.
 
 - **Paramset inconsistency repair issue**: Displays a Home Assistant repair issue when aiohomematic detects missing parameters on HmIP/HmIPW devices after firmware updates. Informs the user about affected devices and recommends a factory reset via the CCU WebUI.
@@ -50,15 +54,27 @@
 
 - **Config entry migration v16**: Existing config entries are migrated to include `command_throttle_interval` with the default value
 
-**Migration example:**
-
-## Bump aiohomematic to [2026.2.8](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.8)
+## Bump aiohomematic to [2026.2.13](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.13)
 
 ### Architecture (aiohomematic)
 
 - **Architecture cleanup** (2026.2.8): Query methods extracted from `CentralUnit` to `DeviceQueryFacade` (`central.query_facade`). Support module split into submodules (`support.address`, `support.file_ops`, `support.mixins`). Protocol hierarchy reorganized with new `interfaces.central` and `interfaces.model` modules. Optimistic update logic extracted to `model.optimistic`.
 
 ### New Features (aiohomematic)
+
+- **CCU translation extraction** (2026.2.10): New script (`script/extract_ccu_translations.py`) that extracts human-readable translations from the OpenCCU/RaspberryMatic WebUI for channel types, device models, parameter names, and parameter enum values. Supports local OCCU checkout and remote CCU fetch. Resolves two-level stringtable indirection, URL-decodes Latin-1 characters, and strips HTML from values. 2500+ translation entries across 8 JSON files (4 categories x 2 locales).
+
+- **CCU translations loader module** (2026.2.10): New module (`aiohomematic/ccu_translations.py`) providing typed lookup functions for CCU-sourced translations: `get_channel_type_translation()`, `get_device_model_description()`, `get_parameter_translation()`, `get_parameter_value_translation()`. All lookups are thread-safe and asyncio event loop safe (lazy initialization, then pure dict reads with zero I/O).
+
+- **Translated data point names** (2026.2.11): Data points now expose translated `name_label` and `name_label_with_index` properties via the CCU translation system. Provides human-readable parameter names (e.g. "Temperature Offset" instead of "TEMPERATURE_OFFSET") for UI rendering.
+
+- **Value-only translation fallback** (2026.2.13): `get_parameter_value_translation` now has a three-tier lookup: channel-specific → parameter-specific → value-only. The new value-only fallback builds an index of standalone enum values mapped to their shortest (most generic) translation, so shared values like weekday names resolve even for unknown parameters.
+
+- **Configurable channel filtering** (2026.2.13): `get_configurable_channels` now applies CCU-compatible filtering rules: channels must have the VISIBLE flag set and must not have the INTERNAL flag. WEEK_PROGRAM channels are excluded as they are handled by schedule cards.
+
+- **`parameter_tools` module** (2026.2.9): New standalone module providing pure-function utilities for working with parameter descriptions, independent of DataPoint instances. Includes `ParameterHelper` (flag/operation checks, enum resolution, step size calculation), `ParameterValidator` (value validation, type coercion), and `ParamsetDiff` (type-aware paramset comparison).
+
+- **`ConfigurationCoordinator`** (2026.2.9): New high-level facade for device configuration operations, exposed as `central.configuration`. Provides `get_paramset_description()`, `get_all_paramset_descriptions()`, `get_paramset()`, `put_paramset()`, `get_configurable_channels()`, and `get_parameter_data()`.
 
 - **Paramset consistency checker** (2026.2.7): Automatically detects missing parameters on HmIP/HmIPW devices after firmware updates. The HmIPServer (crRFD) on the CCU sometimes fails to refresh its stored parameter data, creating a mismatch between `getParamsetDescription()` (schema) and `getParamset()` (actual values). Reports inconsistencies via `IntegrationIssue` events, log warnings, and diagnostics data.
 
@@ -95,6 +111,14 @@
   - `SimpleScheduleEntry`: Validated schedule entry with weekdays, time, condition, target_channels, level, duration, ramp_time
   - `SimpleSchedule`: Container for multiple schedule entries keyed by group number (1-24)
 
+### Improved (aiohomematic)
+
+- **CCU translation loading via pkgutil** (2026.2.12): Replaced `Path.read_text()` with `pkgutil.get_data()` for loading CCU translation files. Avoids blocking file I/O detection in Home Assistant's event loop. Translations are eagerly initialized at import time.
+
+- **Robust JSON parsing with stdlib fallback** (2026.2.11): When `orjson` fails to parse JSON from CCU Rega scripts (e.g., due to non-standard literals like `NaN` or `Infinity`), the parser now falls through to Python's stdlib `json` module. Extended control character sanitization to include DEL (U+007F). Diagnostic logging for JSON parse errors now includes exact codepoint, position, and surrounding context.
+
+- **Extraction script improvements** (2026.2.13): Added PNAME.txt and easymode TCL file parsing, improved HTML entity decoding. Parameters: 841 → 1029 (+188), parameter values: 1256 → 1326 (+70). Removed 17 redundant custom translation entries now covered by improved extraction.
+
 ### Bug Fixes (aiohomematic)
 
 - **XML-RPC server race condition on multi-hub startup** (2026.2.7): Fixed a race condition in `AsyncXmlRpcServer.start()` that caused "address in use" errors when multiple central units started concurrently. The singleton server is now protected by an `asyncio.Lock`.
@@ -121,6 +145,20 @@
 - **DelegatedProperty expansion** (2026.2.6): Replaced 56 boilerplate `@property` methods with `DelegatedProperty` descriptors across 23 files. Reduces repetitive delegation code while preserving runtime behavior.
 - **ClimateWeekProfile**: Simple schedule format now uses Pydantic models for automatic validation. The existing user-facing format remains unchanged, but input validation is now more robust with clear error messages.
 - **DefaultWeekProfile**: Refactored schedule cache to use human-readable Pydantic models (`SimpleSchedule`, `SimpleScheduleEntry`) instead of complex dictionary format.
+
+## Bump aiohomematic-config to [2026.2.4](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.1...2026.2.4)
+
+New companion library providing device configuration utilities for the integration.
+
+- **FormSchemaGenerator**: Generate UI form schemas from paramset descriptions
+- **ParameterGrouper**: Group parameters into logical sections with locale-aware section titles (German translations)
+- **LabelResolver**: Translate parameter IDs to human-readable labels using upstream CCU translations from aiohomematic. Includes `has_translation()` check for filtering parameters without known translations.
+- **ConfigSession**: Change tracking with undo/redo and validation
+- **ConfigExporter**: Export/import device configurations as JSON
+- **WidgetType mapping**: Type-aware widget selection
+- **option_labels**: VALUE_LIST parameters always include `option_labels` with translated enum values and humanized fallback
+- **FormSchema metadata**: `model_description` and `channel_type_label` fields for translated device/channel names
+- **CCU-compatible parameter filtering**: Only parameters with known CCU translations are shown, matching CCU WebUI easymode behavior
 
 # Version [2.2.4](https://github.com/SukramJ/homematicip_local/compare/2.2.3...2.2.4) (2026-02-01)
 

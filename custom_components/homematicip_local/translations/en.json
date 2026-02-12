@@ -32,6 +32,7 @@
                     "optional_settings": "Experimental features",
                     "program_markers": "Program markers",
                     "program_scan_enabled": "Enable program import",
+                    "enable_config_panel": "Device configuration panel",
                     "sub_devices_enabled": "Create sub-device entities",
                     "sysvar_markers": "System variable markers",
                     "sysvar_scan_enabled": "Enable system variable import",
@@ -43,6 +44,7 @@
                     "callback_host": "IP address for CCU callbacks. Leave empty for auto-detection.",
                     "callback_port_xml_rpc": "Port for XML-RPC callbacks. Leave empty for automatic assignment.",
                     "command_throttle_interval": "Minimum delay between device commands in seconds. Set to 0 to disable throttling. Ensures smooth operation for large installations.",
+                    "enable_config_panel": "Show a panel in the sidebar for editing Homematic device MASTER parameters.",
                     "enable_system_notifications": "Show notifications for connection issues and device errors in Home Assistant.",
                     "light_last_brightness_enabled": "When enabled, lights will turn on with the last non-zero brightness level instead of default 100%.",
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.",
@@ -216,7 +218,7 @@
                 "name": "Acoustic Alarm Active"
             }, 
             "alarmstate": {
-                "name": "Alarmstate"
+                "name": "Alarm State"
             }, 
             "blocked_permanent": {
                 "name": "Blocked permanent"
@@ -225,7 +227,7 @@
                 "name": "Blocked temporary"
             }, 
             "burst_limit_warning": {
-                "name": "Burst-Limit-Warnung"
+                "name": "Burst Limit Warning"
             }, 
             "current_passage_direction": {
                 "name": "Passage Direction"
@@ -969,6 +971,7 @@
                     "listen_on_all_ip": "Listen on all network interfaces",
                     "mqtt_enabled": "Enable MQTT",
                     "mqtt_prefix": "MQTT prefix",
+                    "enable_config_panel": "Device configuration panel",
                     "optional_settings": "Experimental features",
                     "sub_devices_enabled": "Create sub-device entities",
                     "un_ignore": "UN-IGNORE parameters",
@@ -979,6 +982,7 @@
                     "callback_host": "IP address for CCU callbacks. Leave empty for auto-detection.",
                     "callback_port_xml_rpc": "Port for XML-RPC callbacks. Leave empty for automatic assignment.",
                     "command_throttle_interval": "Minimum delay between device commands in seconds. Set to 0 to disable throttling. Ensures smooth operation for large installations.",
+                    "enable_config_panel": "Show a panel in the sidebar for editing Homematic device MASTER parameters.",
                     "enable_system_notifications": "Show notifications for connection issues and device errors in Home Assistant.",
                     "light_last_brightness_enabled": "When enabled, lights will turn on with the last non-zero brightness level instead of default 100%.",
                     "listen_on_all_ip": "Enable if Home Assistant runs in Docker or a VM. Required when HA's IP differs from the host IP.",

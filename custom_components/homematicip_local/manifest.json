@@ -1,7 +1,7 @@
 {
   "domain": "homematicip_local",
   "name": "Homematic(IP) Local for OpenCCU",
-  "after_dependencies": ["mqtt"],
+  "after_dependencies": ["http", "mqtt"],
   "codeowners": ["@SukramJ"],
   "config_flow": true,
   "documentation": "https://github.com/sukramj/homematicip_local",
@@ -10,7 +10,7 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/sukramj/aiohomematic/issues",
   "loggers": ["aiohomematic"],
-  "requirements": ["aiohomematic==2026.2.8"],
+  "requirements": ["aiohomematic==2026.2.13", "aiohomematic-config==2026.2.4"],
   "ssdp": [
     {
       "manufacturer": "OpenCCU",

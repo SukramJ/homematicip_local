@@ -36,6 +36,7 @@ from .const import (
     CONF_CALLBACK_PORT_XML_RPC,
     CONF_COMMAND_THROTTLE_INTERVAL,
     CONF_CUSTOM_PORTS,
+    CONF_ENABLE_CONFIG_PANEL,
     CONF_ENABLE_PROGRAM_SCAN,
     CONF_ENABLE_SYSTEM_NOTIFICATIONS,
     CONF_ENABLE_SYSVAR_SCAN,
@@ -46,6 +47,7 @@ from .const import (
     CONF_UN_IGNORES,
     DEFAULT_AUTO_CONFIRM_NEW_DEVICES_TIMEOUT,
     DEFAULT_COMMAND_THROTTLE_INTERVAL,
+    DEFAULT_ENABLE_CONFIG_PANEL,
     DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS,
     DEFAULT_SYS_SCAN_INTERVAL,
     DOMAIN,
@@ -53,8 +55,10 @@ from .const import (
     HMIP_LOCAL_PLATFORMS,
 )
 from .control_unit import ControlConfig, ControlUnit, get_storage_directory
+from .panel import async_register_panel, async_unregister_panel
 from .services import async_get_loaded_config_entries, async_setup_services, async_unload_services
 from .support import get_aiohomematic_version, get_device_address_at_interface_from_identifiers
+from .websocket_api import async_register_websocket_commands
 
 HA_VERSION = AwesomeVersion(HA_VERSION_STR)
 HomematicConfigEntry: TypeAlias = ConfigEntry[ControlUnit]
@@ -164,6 +168,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
         raise ConfigEntryAuthFailed("Authentication failed") from err
     await async_setup_services(hass)
 
+    # Register WebSocket commands (idempotent — needed regardless of panel setting)
+    async_register_websocket_commands(hass)
+
+    # Register or unregister panel based on config entry setting
+    if entry.data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_ENABLE_CONFIG_PANEL, DEFAULT_ENABLE_CONFIG_PANEL):
+        await async_register_panel(hass)
+    else:
+        async_unregister_panel(hass)
+
     # Register on HA stop event to gracefully shutdown Homematic(IP) Local connection
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, control.stop_central)
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -180,6 +193,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -
     if hasattr(entry, "runtime_data") and (control := entry.runtime_data):
         await control.stop_central()
     if len(async_get_loaded_config_entries(hass=hass)) == 0:
+        async_unregister_panel(hass)
         del hass.data[HM_KEY]
     return unload_ok
 

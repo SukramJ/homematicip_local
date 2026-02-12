@@ -10,6 +10,7 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.plugins import enable_custom_integrations  # noqa: F401
 
+from aiohomematic.i18n import _reset_locale_for_testing
 from aiohomematic_test_support.const import FULL_SESSION_RANDOMIZED_CCU, FULL_SESSION_RANDOMIZED_PYDEVCCU
 from aiohomematic_test_support.mock import SessionPlayer, get_session_player
 from custom_components.homematicip_local.const import DOMAIN as HMIP_DOMAIN
@@ -30,6 +31,12 @@ pytest_plugins = "pytest_homeassistant_custom_component"  # pylint: disable=inva
 def teardown():
     """Clean up."""
     patch.stopall()
+
+
+@pytest.fixture(autouse=True)
+def _reset_i18n():
+    """Reset aiohomematic i18n state so set_locale() can be called in each test."""
+    _reset_locale_for_testing()
 
 
 @pytest.fixture(autouse=True)

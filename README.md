@@ -100,6 +100,28 @@ The complete documentation is available at **[sukramj.github.io/aiohomematic](ht
 - **Contributing Guide**: See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and contribution guidelines
 - **Local Naming Documentation**: See [docs/naming.md](docs/naming.md)
 
+## Device Configuration Panel
+
+A built-in sidebar panel for editing Homematic device **MASTER parameters** directly from the Home Assistant UI.
+
+### Features
+
+- Browse all configurable devices grouped by interface
+- View device details including reachability, RSSI, and firmware
+- Edit MASTER paramset values per channel with auto-generated forms (sliders, toggles, dropdowns)
+- Validate changes before writing to the device
+- Reset parameters to factory defaults
+
+### Enabling the Panel
+
+1. Go to **Settings → Devices & Services → Homematic(IP) Local**
+2. Click **Configure** on your integration entry
+3. Navigate to **Advanced Options**
+4. Enable **Device configuration panel**
+5. The panel appears in the sidebar as **Homematic Config**
+
+> **Note:** The panel requires admin access and is not visible to non-admin users.
+
 ## Blueprints
 
 Ready-to-use automation blueprints are available in the [blueprints/automation](blueprints/automation) directory:

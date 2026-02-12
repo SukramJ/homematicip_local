@@ -61,6 +61,7 @@ from .const import (
     CONF_COMMAND_THROTTLE_INTERVAL,
     CONF_CUSTOM_PORT_CONFIG,
     CONF_CUSTOM_PORTS,
+    CONF_ENABLE_CONFIG_PANEL,
     CONF_ENABLE_LIGHT_LAST_BRIGHTNESS,
     CONF_ENABLE_MQTT,
     CONF_ENABLE_PROGRAM_SCAN,
@@ -83,6 +84,7 @@ from .const import (
     CONF_VERIFY_TLS,
     DEFAULT_BACKUP_PATH,
     DEFAULT_COMMAND_THROTTLE_INTERVAL,
+    DEFAULT_ENABLE_CONFIG_PANEL,
     DEFAULT_ENABLE_LIGHT_LAST_BRIGHTNESS,
     DEFAULT_ENABLE_MQTT,
     DEFAULT_ENABLE_SUB_DEVICES,
@@ -451,6 +453,10 @@ def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_ENABLE_SUB_DEVICES, DEFAULT_ENABLE_SUB_DEVICES),
             ): BOOLEAN_SELECTOR,
             vol.Optional(
+                CONF_ENABLE_CONFIG_PANEL,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_ENABLE_CONFIG_PANEL, DEFAULT_ENABLE_CONFIG_PANEL),
+            ): BOOLEAN_SELECTOR,
+            vol.Optional(
                 CONF_ENABLE_LIGHT_LAST_BRIGHTNESS,
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(
                     CONF_ENABLE_LIGHT_LAST_BRIGHTNESS, DEFAULT_ENABLE_LIGHT_LAST_BRIGHTNESS
@@ -533,6 +539,10 @@ def get_advanced_settings_schema(data: ConfigType, all_un_ignore_parameters: lis
             vol.Optional(
                 CONF_ENABLE_SUB_DEVICES,
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_ENABLE_SUB_DEVICES, DEFAULT_ENABLE_SUB_DEVICES),
+            ): BOOLEAN_SELECTOR,
+            vol.Optional(
+                CONF_ENABLE_CONFIG_PANEL,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_ENABLE_CONFIG_PANEL, DEFAULT_ENABLE_CONFIG_PANEL),
             ): BOOLEAN_SELECTOR,
             vol.Optional(
                 CONF_ENABLE_LIGHT_LAST_BRIGHTNESS,
@@ -1739,6 +1749,7 @@ def _update_advanced_input(data: ConfigType, advanced_input: ConfigType) -> None
     data[CONF_ADVANCED_CONFIG][CONF_ENABLE_MQTT] = advanced_input[CONF_ENABLE_MQTT]
     data[CONF_ADVANCED_CONFIG][CONF_MQTT_PREFIX] = advanced_input[CONF_MQTT_PREFIX]
     data[CONF_ADVANCED_CONFIG][CONF_ENABLE_SUB_DEVICES] = advanced_input[CONF_ENABLE_SUB_DEVICES]
+    data[CONF_ADVANCED_CONFIG][CONF_ENABLE_CONFIG_PANEL] = advanced_input[CONF_ENABLE_CONFIG_PANEL]
     data[CONF_ADVANCED_CONFIG][CONF_ENABLE_LIGHT_LAST_BRIGHTNESS] = advanced_input[CONF_ENABLE_LIGHT_LAST_BRIGHTNESS]
     data[CONF_ADVANCED_CONFIG][CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE] = advanced_input[
         CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE
@@ -1781,6 +1792,7 @@ def _update_advanced_settings_input(data: ConfigType, advanced_input: ConfigType
     data[CONF_ADVANCED_CONFIG][CONF_ENABLE_MQTT] = advanced_input[CONF_ENABLE_MQTT]
     data[CONF_ADVANCED_CONFIG][CONF_MQTT_PREFIX] = advanced_input[CONF_MQTT_PREFIX]
     data[CONF_ADVANCED_CONFIG][CONF_ENABLE_SUB_DEVICES] = advanced_input[CONF_ENABLE_SUB_DEVICES]
+    data[CONF_ADVANCED_CONFIG][CONF_ENABLE_CONFIG_PANEL] = advanced_input[CONF_ENABLE_CONFIG_PANEL]
     data[CONF_ADVANCED_CONFIG][CONF_ENABLE_LIGHT_LAST_BRIGHTNESS] = advanced_input[CONF_ENABLE_LIGHT_LAST_BRIGHTNESS]
     data[CONF_ADVANCED_CONFIG][CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE] = advanced_input[
         CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE
