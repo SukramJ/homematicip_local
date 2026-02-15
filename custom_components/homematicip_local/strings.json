@@ -214,137 +214,11 @@
     }, 
     "entity": {
         "binary_sensor": {
-            "acoustic_alarm_active": {
-                "name": "Acoustic Alarm Active"
-            }, 
-            "alarmstate": {
-                "name": "Alarm State"
-            }, 
-            "blocked_permanent": {
-                "name": "Blocked permanent"
-            }, 
-            "blocked_temporary": {
-                "name": "Blocked temporary"
-            }, 
-            "burst_limit_warning": {
-                "name": "Burst Limit Warning"
-            }, 
-            "current_passage_direction": {
-                "name": "Passage Direction"
-            }, 
-            "dew_point_alarm": {
-                "name": "Dew Point Alarm"
-            }, 
-            "duty_cycle": {
-                "name": "Duty Cycle"
-            }, 
-            "dutycycle": {
-                "name": "Duty Cycle"
-            }, 
-            "emergency_operation": {
-                "name": "Emergency Operation"
-            }, 
-            "error_jammed": {
-                "name": "Error Jammed"
-            }, 
-            "heater_state": {
-                "name": "Heater State"
-            }, 
-            "humidity_alarm": {
-                "name": "Humidity Alarm"
-            }, 
-            "intrusion_alarm": {
-                "name": "Intrusion Alarm"
-            }, 
-            "last_passage_direction": {
-                "name": "Last Passage Direction"
-            }, 
-            "low_bat": {
-                "name": "Battery"
-            }, 
-            "lowbat": {
-                "name": "Battery"
-            }, 
-            "lowbat_sensor": {
-                "name": "Battery"
-            }, 
-            "moisture_detected": {
-                "name": "Moisture Detected"
-            }, 
-            "motion": {
-                "name": "Motion"
-            }, 
-            "optical_alarm_active": {
-                "name": "Optical Alarm Active"
-            }, 
-            "power_mains_failure": {
-                "name": "Power Mains Failure"
-            }, 
-            "presence": {
-                "name": "Presence"
-            }, 
-            "presence_detection_state": {
-                "name": "Presence Detection State"
-            }, 
-            "process": {
-                "name": "Process"
-            }, 
-            "raining": {
-                "name": "Raining"
-            }, 
-            "sabotage": {
-                "name": "Sabotage"
-            }, 
-            "sabotage_sticky": {
-                "name": "Sabotage sticky"
-            }, 
-            "smoke_alarm": {
-                "name": "Smoke Alarm"
-            }, 
             "state": {
                 "name": ""
-            }, 
-            "user_authorization_01": {
-                "name": "User authorization 1"
-            }, 
-            "user_authorization_02": {
-                "name": "User authorization 2"
-            }, 
-            "user_authorization_03": {
-                "name": "User authorization 3"
-            }, 
-            "user_authorization_04": {
-                "name": "User authorization 4"
-            }, 
-            "user_authorization_05": {
-                "name": "User authorization 5"
-            }, 
-            "user_authorization_06": {
-                "name": "User authorization 6"
-            }, 
-            "user_authorization_07": {
-                "name": "User authorization 7"
-            }, 
-            "user_authorization_08": {
-                "name": "User authorization 8"
-            }, 
-            "waterlevel_detected": {
-                "name": "Waterlevel Detected"
-            }, 
-            "window_open": {
-                "name": "Window State"
-            }, 
-            "window_state": {
-                "name": "Window State"
-            }, 
-            "working": {
-                "name": "Working"
             }
         }, 
         "button": {
-            "button_press": {
-                "name": "Button"
-            }, 
             "create_backup": {
                 "name": "Create Backup"
             }, 
@@ -353,21 +227,6 @@
             }, 
             "install_mode_hmip_button": {
                 "name": "Activate install Mode HmIP-RF"
-            }, 
-            "press": {
-                "name": "Key Press"
-            }, 
-            "press_long": {
-                "name": "Key Press Long"
-            }, 
-            "press_short": {
-                "name": "Key Press Short"
-            }, 
-            "reset_motion": {
-                "name": "Reset Motion"
-            }, 
-            "reset_presence": {
-                "name": "Reset Presence"
             }
         }, 
         "climate": {
@@ -402,28 +261,6 @@
                         }
                     }
                 }
-            }
-        }, 
-        "lock": {
-            "button_lock": {
-                "name": "Button Lock"
-            }
-        }, 
-        "number": {
-            "frequency": {
-                "name": "Frequency"
-            }, 
-            "level": {
-                "name": "Level"
-            }, 
-            "level_2": {
-                "name": "Level 2"
-            }, 
-            "pipe_level": {
-                "name": "valve opening"
-            }, 
-            "temperature_offset": {
-                "name": "temperature offset"
             }
         }, 
         "select": {
@@ -469,68 +306,17 @@
                     "double_flashing_repeating": "Double flashing (repeating)", 
                     "flashing_both_repeating": "Flashing both (repeating)"
                 }
-            }, 
-            "temperature_offset": {
-                "name": "temperature offset"
             }
         }, 
         "sensor": {
-            "activity_state": {
-                "name": "Activity State"
-            }, 
-            "actual_humidity": {
-                "name": "Humidity"
-            }, 
-            "actual_temperature": {
-                "name": "Temperature"
-            }, 
-            "air_pressure": {
-                "name": "Air Pressure"
-            }, 
             "alarm_messages": {
                 "name": "AlarmMessages"
-            }, 
-            "apparent_temperature": {
-                "name": "Apparent Temperature"
-            }, 
-            "average_illumination": {
-                "name": "Average Illumination"
-            }, 
-            "battery_state": {
-                "name": "Battery State"
-            }, 
-            "brightness": {
-                "name": "Brightness"
             }, 
             "carrier_sense_level": {
                 "name": "Carrier Sense Level"
             }, 
-            "color": {
-                "name": "Color"
-            }, 
-            "concentration": {
-                "name": "Concentration"
-            }, 
             "connection_latency": {
                 "name": "Connection Latency"
-            }, 
-            "cover_level": {
-                "name": "Position"
-            }, 
-            "cover_tilt": {
-                "name": "Slat level"
-            }, 
-            "current": {
-                "name": "Current"
-            }, 
-            "current_illumination": {
-                "name": "Illumination"
-            }, 
-            "dew_point": {
-                "name": "Dew point"
-            }, 
-            "dew_point_spread": {
-                "name": "Dew point spread"
             }, 
             "direction": {
                 "name": "Direction", 
@@ -540,9 +326,6 @@
                     "undefined": "Undefined", 
                     "up": "Up"
                 }
-            }, 
-            "dirt_level": {
-                "name": "Dirt Level"
             }, 
             "door_state": {
                 "name": "Door State", 
@@ -556,59 +339,11 @@
             "duty_cycle_level": {
                 "name": "Duty Cycle Level"
             }, 
-            "energy_counter": {
-                "name": "Energy Counter"
-            }, 
-            "energy_counter_feed_in": {
-                "name": "Energy Counter feed in"
-            }, 
             "energy_counter_feed_in_total": {
                 "name": "Energy Counter feed in Total"
             }, 
             "energy_counter_total": {
                 "name": "Energy Counter Total"
-            }, 
-            "enthalpy": {
-                "name": "Enthalpy"
-            }, 
-            "error": {
-                "name": "Error"
-            }, 
-            "filling_level": {
-                "name": "Filling Level"
-            }, 
-            "frequency": {
-                "name": "Frequency"
-            }, 
-            "frost_point": {
-                "name": "Frost point"
-            }, 
-            "gas_energy_counter": {
-                "name": "Gas Energy Counter"
-            }, 
-            "gas_flow": {
-                "name": "Gas Flow"
-            }, 
-            "gas_power": {
-                "name": "Gas Power"
-            }, 
-            "gas_volume": {
-                "name": "Gas Volume"
-            }, 
-            "highest_illumination": {
-                "name": "Highest Illumination"
-            }, 
-            "humidity": {
-                "name": "Humidity"
-            }, 
-            "iec_energy_counter": {
-                "name": "IEC Energy Counter"
-            }, 
-            "iec_power": {
-                "name": "IEC Power"
-            }, 
-            "illumination": {
-                "name": "Illumination"
             }, 
             "inbox": {
                 "name": "Inbox"
@@ -625,15 +360,6 @@
             "last_event_age": {
                 "name": "Last Event Age"
             }, 
-            "level": {
-                "name": "Level"
-            }, 
-            "level_2": {
-                "name": "Level 2"
-            }, 
-            "light_level": {
-                "name": "Brighness"
-            }, 
             "lock_state": {
                 "name": "Lock State", 
                 "state": {
@@ -641,54 +367,6 @@
                     "unknown": "Unknown", 
                     "unlocked": "Unlocked"
                 }
-            }, 
-            "lowest_illumination": {
-                "name": "Lowest Illumination"
-            }, 
-            "lux": {
-                "name": "Lux"
-            }, 
-            "mass_concentration_pm_1": {
-                "name": "Mass Concentration PM 1"
-            }, 
-            "mass_concentration_pm_10": {
-                "name": "Mass Concentration PM 10"
-            }, 
-            "mass_concentration_pm_10_24h_average": {
-                "name": "Mass Concentration PM 10 24h Average"
-            }, 
-            "mass_concentration_pm_1_24h_average": {
-                "name": "Mass Concentration PM 1 24h Average"
-            }, 
-            "mass_concentration_pm_2_5": {
-                "name": "Mass Concentration PM 2.5"
-            }, 
-            "mass_concentration_pm_2_5_24h_average": {
-                "name": "Mass Concentration PM 2.5 24h Average"
-            }, 
-            "number_concentration_pm_1": {
-                "name": "Number Concentration PM 1"
-            }, 
-            "number_concentration_pm_10": {
-                "name": "Number Concentration PM 10"
-            }, 
-            "number_concentration_pm_2_5": {
-                "name": "Number Concentration PM 2.5"
-            }, 
-            "operating_voltage": {
-                "name": "Operating Voltage"
-            }, 
-            "operating_voltage_level": {
-                "name": "Operating Voltage Level"
-            }, 
-            "passage_counter_value": {
-                "name": "Passage Counter Value"
-            }, 
-            "pipe_level": {
-                "name": "Valve opening degree"
-            }, 
-            "power": {
-                "name": "Power"
             }, 
             "rain_counter_today": {
                 "name": "Rain Counter Today"
@@ -698,12 +376,6 @@
             }, 
             "rain_counter_yesterday": {
                 "name": "Rain Counter Yesterday"
-            }, 
-            "rssi_device": {
-                "name": "RSSI Device"
-            }, 
-            "rssi_peer": {
-                "name": "RSSI Peer"
             }, 
             "sec_direction": {
                 "name": "Direction", 
@@ -759,9 +431,6 @@
                     "secondary_alarm": "Secondary alarm"
                 }
             }, 
-            "smoke_level": {
-                "name": "Smoke Level"
-            }, 
             "state": {
                 "name": ""
             }, 
@@ -777,20 +446,8 @@
             "sunshine_counter_yesterday": {
                 "name": "Sunshine Counter Yesterday"
             }, 
-            "sunshine_duration": {
-                "name": "Sunshine Duration"
-            }, 
             "system_health": {
                 "name": "System Health"
-            }, 
-            "taupunkt": {
-                "name": "dew point"
-            }, 
-            "temperature": {
-                "name": "Temperature"
-            }, 
-            "time_of_operation": {
-                "name": "Time of Operation"
             }, 
             "tri_state": {
                 "name": "", 
@@ -800,47 +457,8 @@
                     "tilted": "Tilted"
                 }
             }, 
-            "typical_particle_size": {
-                "name": "Typical Particle Size"
-            }, 
-            "value": {
-                "name": "Value"
-            }, 
-            "valve_state": {
-                "name": "Valve State"
-            }, 
-            "vapor_concentration": {
-                "name": "Vapor Concentration"
-            }, 
-            "voltage": {
-                "name": "Voltage"
-            }, 
-            "water_flow": {
-                "name": "Water Flow"
-            }, 
-            "water_volume": {
-                "name": "Water Volume"
-            }, 
-            "water_volume_since_open": {
-                "name": "Water Volume since open"
-            }, 
             "week_profile": {
                 "name": "Week profile"
-            }, 
-            "wind_dir": {
-                "name": "Wind Dir"
-            }, 
-            "wind_dir_range": {
-                "name": "Wind Dir Range"
-            }, 
-            "wind_direction": {
-                "name": "Wind Direction"
-            }, 
-            "wind_direction_range": {
-                "name": "Wind Direction Range"
-            }, 
-            "wind_speed": {
-                "name": "Wind Speed"
             }, 
             "wkp_code_state": {
                 "name": "Code Status", 
@@ -852,22 +470,8 @@
             }
         }, 
         "switch": {
-            "inhibit": {
-                "name": "Inhibit"
-            }, 
-            "motion_detection_active": {
-                "name": "Motion Detection Active"
-            }, 
-            "presence_detection_active": {
-                "name": "Presence Detection Active"
-            }, 
             "state": {
                 "name": ""
-            }
-        }, 
-        "valve": {
-            "irrigation_valve": {
-                "name": "Irrigation Valve"
             }
         }
     }, 

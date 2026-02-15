@@ -24,7 +24,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UndefinedType
 
-from .const import DOMAIN, HmEntityState
+from .const import DOMAIN, ENTITY_TRANSLATION_KEYS, HmEntityState
 from .control_unit import ControlUnit
 from .entity_helpers import get_entity_description
 from .support import (
@@ -79,7 +79,10 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
             self.entity_description = entity_description
         else:
             self._attr_entity_registry_enabled_default = data_point.enabled_default
-            if isinstance(data_point, CalculatedDataPointProtocol | GenericDataPointProtocol):
+            if (
+                isinstance(data_point, CalculatedDataPointProtocol | GenericDataPointProtocol)
+                and data_point.translation_key in ENTITY_TRANSLATION_KEYS
+            ):
                 self._attr_translation_key = data_point.translation_key
 
         hm_device = data_point.device

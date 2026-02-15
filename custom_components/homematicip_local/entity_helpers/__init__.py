@@ -12,6 +12,7 @@ from aiohomematic.interfaces import (
     GenericDataPointProtocol,
     GenericHubDataPointProtocol,
 )
+from custom_components.homematicip_local.const import ENTITY_TRANSLATION_KEYS
 from custom_components.homematicip_local.entity_helpers.base import (
     HmBinarySensorEntityDescription,
     HmButtonEntityDescription,
@@ -164,7 +165,7 @@ def _get_name_and_translation_key(
     """Get the name and translation_key for an entity."""
     name = data_point.name
 
-    if entity_desc.translation_key:
+    if entity_desc.translation_key and entity_desc.translation_key in ENTITY_TRANSLATION_KEYS:
         return name, entity_desc.translation_key
 
     if isinstance(data_point, (CalculatedDataPointProtocol, GenericDataPointProtocol)):
@@ -174,7 +175,8 @@ def _get_name_and_translation_key(
             if entity_desc.name_source == HmNameSource.DEVICE_CLASS:
                 return UNDEFINED, None
 
-        return name, data_point.parameter.lower()
+        tk = data_point.parameter.lower()
+        return name, tk if tk in ENTITY_TRANSLATION_KEYS else None
 
     # Hub entities (sysvars/programs): Don't set translation_key
     # Let the custom name property in generic_entity.py handle naming with prefixes (SV/P)

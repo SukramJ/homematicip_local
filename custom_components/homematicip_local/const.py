@@ -152,6 +152,48 @@ class HmEntityState(StrEnum):
     VALID = "valid"
 
 
+ENTITY_TRANSLATION_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        # Empty-name entries → entity_id stability (suppress suffix)
+        "state",  # binary_sensor, sensor, switch
+        "status",  # sensor
+        # Sensor state value translations
+        "direction",
+        "door_state",
+        "lock_state",
+        "sec_direction",
+        "sec_key_error",
+        "sec_wds_state",
+        "sec_win_error",
+        "sec_win_status",
+        "smoke_detector_alarm_status",
+        "tri_state",
+        "wkp_code_state",
+        # Select state/option translations
+        "acoustic_alarm_selection",
+        "heating_cooling",
+        "optical_alarm_selection",
+        # Hub button translations
+        "install_mode_bidcos_button",
+        "install_mode_hmip_button",
+        # Hub sensor translations (entity descriptions)
+        "connection_latency",
+        "energy_counter_feed_in_total",
+        "energy_counter_total",
+        "inbox",
+        "install_mode_bidcos",
+        "install_mode_hmip",
+        "last_event_age",
+        "rain_counter_today",
+        "rain_counter_total",
+        "rain_counter_yesterday",
+        "sunshine_counter_today",
+        "sunshine_counter_total",
+        "sunshine_counter_yesterday",
+        "system_health",
+    }
+)
+
 BLOCKED_CATEGORIES: Final[tuple[str, ...]] = ()
 
 # DpActionSelect whitelist - defines which parameter names should be exposed as InputHelper entities

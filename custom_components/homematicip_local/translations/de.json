@@ -214,137 +214,11 @@
     }, 
     "entity": {
         "binary_sensor": {
-            "acoustic_alarm_active": {
-                "name": "Akustischer Alarm aktiv"
-            }, 
-            "alarmstate": {
-                "name": "Alarmzustand"
-            }, 
-            "blocked_permanent": {
-                "name": "Dauerhaft gesperrt"
-            }, 
-            "blocked_temporary": {
-                "name": "Vorübergehend gesperrt"
-            }, 
-            "burst_limit_warning": {
-                "name": "Burst-Limit-Warnung"
-            }, 
-            "current_passage_direction": {
-                "name": "Durchgangsrichtung"
-            }, 
-            "dew_point_alarm": {
-                "name": "Taupunktalarm"
-            }, 
-            "duty_cycle": {
-                "name": "Duty Cycle"
-            }, 
-            "dutycycle": {
-                "name": "Duty Cycle"
-            }, 
-            "emergency_operation": {
-                "name": "Notfallbetrieb"
-            }, 
-            "error_jammed": {
-                "name": "Blockiert"
-            }, 
-            "heater_state": {
-                "name": "Heizungszustand"
-            }, 
-            "humidity_alarm": {
-                "name": "Feuchtigkeitsalarm"
-            }, 
-            "intrusion_alarm": {
-                "name": "Einbruchalarm"
-            }, 
-            "last_passage_direction": {
-                "name": "Letzte Durchgangsrichtung"
-            }, 
-            "low_bat": {
-                "name": "Batterie"
-            }, 
-            "lowbat": {
-                "name": "Batterie"
-            }, 
-            "lowbat_sensor": {
-                "name": "Batterie"
-            }, 
-            "moisture_detected": {
-                "name": "Feuchtigkeit erkannt"
-            }, 
-            "motion": {
-                "name": "Bewegung"
-            }, 
-            "optical_alarm_active": {
-                "name": "Optischer Alarm aktiv"
-            }, 
-            "power_mains_failure": {
-                "name": "Stromnetzausfall"
-            }, 
-            "presence": {
-                "name": "Anwesenheit"
-            }, 
-            "presence_detection_state": {
-                "name": "Anwesenheit"
-            }, 
-            "process": {
-                "name": "Arbeitet"
-            }, 
-            "raining": {
-                "name": "Regen"
-            }, 
-            "sabotage": {
-                "name": "Sabotage"
-            }, 
-            "sabotage_sticky": {
-                "name": "Sabotage festgesetzt"
-            }, 
-            "smoke_alarm": {
-                "name": "Rauchalarm"
-            }, 
             "state": {
                 "name": ""
-            }, 
-            "user_authorization_01": {
-                "name": "Benutzerautorisierung 1"
-            }, 
-            "user_authorization_02": {
-                "name": "Benutzerautorisierung 2"
-            }, 
-            "user_authorization_03": {
-                "name": "Benutzerautorisierung 3"
-            }, 
-            "user_authorization_04": {
-                "name": "Benutzerautorisierung 4"
-            }, 
-            "user_authorization_05": {
-                "name": "Benutzerautorisierung 5"
-            }, 
-            "user_authorization_06": {
-                "name": "Benutzerautorisierung 6"
-            }, 
-            "user_authorization_07": {
-                "name": "Benutzerautorisierung 7"
-            }, 
-            "user_authorization_08": {
-                "name": "Benutzerautorisierung 8"
-            }, 
-            "waterlevel_detected": {
-                "name": "Wasserstand erkannt"
-            }, 
-            "window_open": {
-                "name": "Fensterzustand"
-            }, 
-            "window_state": {
-                "name": "Fensterzustand"
-            }, 
-            "working": {
-                "name": "Arbeitet"
             }
         }, 
         "button": {
-            "button_press": {
-                "name": "Taste"
-            }, 
             "create_backup": {
                 "name": "Backup erstellen"
             }, 
@@ -353,21 +227,6 @@
             }, 
             "install_mode_hmip_button": {
                 "name": "Anlernmodus HmIP-RF aktivieren"
-            }, 
-            "press": {
-                "name": "Tastendruck"
-            }, 
-            "press_long": {
-                "name": "Tastendruck lang"
-            }, 
-            "press_short": {
-                "name": "Tastendruck kurz"
-            }, 
-            "reset_motion": {
-                "name": "Bewegung zurücksetzen"
-            }, 
-            "reset_presence": {
-                "name": "Anwesenheit zurücksetzen"
             }
         }, 
         "climate": {
@@ -402,28 +261,6 @@
                         }
                     }
                 }
-            }
-        }, 
-        "lock": {
-            "button_lock": {
-                "name": "Bediensperre"
-            }
-        }, 
-        "number": {
-            "frequency": {
-                "name": "Frequenz"
-            }, 
-            "level": {
-                "name": "Level"
-            }, 
-            "level_2": {
-                "name": "Level 2"
-            }, 
-            "pipe_level": {
-                "name": "Ventilöffnung"
-            }, 
-            "temperature_offset": {
-                "name": "Temperaturverschiebung"
             }
         }, 
         "select": {
@@ -469,68 +306,17 @@
                     "double_flashing_repeating": "Doppelblitz (wiederholend)", 
                     "flashing_both_repeating": "Beide blitzend (wiederholend)"
                 }
-            }, 
-            "temperature_offset": {
-                "name": "Temperaturverschiebung"
             }
         }, 
         "sensor": {
-            "activity_state": {
-                "name": "Aktivitätszustand"
-            }, 
-            "actual_humidity": {
-                "name": "Luftfeuchtigkeit"
-            }, 
-            "actual_temperature": {
-                "name": "Temperatur"
-            }, 
-            "air_pressure": {
-                "name": "Luftdruck"
-            }, 
             "alarm_messages": {
                 "name": "Alarmmeldungen"
-            }, 
-            "apparent_temperature": {
-                "name": "Gefühlte Temperatur"
-            }, 
-            "average_illumination": {
-                "name": "Durchschnittliche Beleuchtungsstärke"
-            }, 
-            "battery_state": {
-                "name": "Batteriezustand"
-            }, 
-            "brightness": {
-                "name": "Helligkeit"
             }, 
             "carrier_sense_level": {
                 "name": "Carrier Sense Level"
             }, 
-            "color": {
-                "name": "Farbe"
-            }, 
-            "concentration": {
-                "name": "Konzentration"
-            }, 
             "connection_latency": {
                 "name": "Verbindungslatenz"
-            }, 
-            "cover_level": {
-                "name": "Position"
-            }, 
-            "cover_tilt": {
-                "name": "Lamellenposition"
-            }, 
-            "current": {
-                "name": "Strom"
-            }, 
-            "current_illumination": {
-                "name": "Beleuchtungsstärke"
-            }, 
-            "dew_point": {
-                "name": "Taupunkt"
-            }, 
-            "dew_point_spread": {
-                "name": "Taupunkt Spreizung"
             }, 
             "direction": {
                 "name": "Richtung", 
@@ -540,9 +326,6 @@
                     "undefined": "Nicht definiert", 
                     "up": "Hoch"
                 }
-            }, 
-            "dirt_level": {
-                "name": "Verschmutzungsgrad"
             }, 
             "door_state": {
                 "name": "Türzustand", 
@@ -556,59 +339,11 @@
             "duty_cycle_level": {
                 "name": "Duty Cycle Level"
             }, 
-            "energy_counter": {
-                "name": "Energiezähler"
-            }, 
-            "energy_counter_feed_in": {
-                "name": "Energiezähler Einspeisung"
-            }, 
             "energy_counter_feed_in_total": {
                 "name": "Energiezähler Einspeisung Gesamt"
             }, 
             "energy_counter_total": {
                 "name": "Energiezähler Gesamt"
-            }, 
-            "enthalpy": {
-                "name": "Enthalpie"
-            }, 
-            "error": {
-                "name": "Fehler"
-            }, 
-            "filling_level": {
-                "name": "Füllstand"
-            }, 
-            "frequency": {
-                "name": "Frequenz"
-            }, 
-            "frost_point": {
-                "name": "Frostpunkt"
-            }, 
-            "gas_energy_counter": {
-                "name": "Gas-Energiezähler"
-            }, 
-            "gas_flow": {
-                "name": "Gas-Fluss"
-            }, 
-            "gas_power": {
-                "name": "Gas-Leistung"
-            }, 
-            "gas_volume": {
-                "name": "Gas-Volumen"
-            }, 
-            "highest_illumination": {
-                "name": "Höchste Beleuchtungsstärke"
-            }, 
-            "humidity": {
-                "name": "Luftfeuchtigkeit"
-            }, 
-            "iec_energy_counter": {
-                "name": "IEC Energiezähler"
-            }, 
-            "iec_power": {
-                "name": "IEC Leistung"
-            }, 
-            "illumination": {
-                "name": "Beleuchtungsstärke"
             }, 
             "inbox": {
                 "name": "Posteingang"
@@ -625,15 +360,6 @@
             "last_event_age": {
                 "name": "Alter letztes Ereignis"
             }, 
-            "level": {
-                "name": "Level"
-            }, 
-            "level_2": {
-                "name": "Level 2"
-            }, 
-            "light_level": {
-                "name": "Helligkeit"
-            }, 
             "lock_state": {
                 "name": "Schließzustand", 
                 "state": {
@@ -641,54 +367,6 @@
                     "unknown": "Unbekannt", 
                     "unlocked": "Unverriegelt"
                 }
-            }, 
-            "lowest_illumination": {
-                "name": "Niedrigste Beleuchtungsstärke"
-            }, 
-            "lux": {
-                "name": "Lux"
-            }, 
-            "mass_concentration_pm_1": {
-                "name": "Masse-Konzentration PM 1"
-            }, 
-            "mass_concentration_pm_10": {
-                "name": "Masse-Konzentration PM 10"
-            }, 
-            "mass_concentration_pm_10_24h_average": {
-                "name": "Masse-Konzentration PM 10 24h Durchschnitt"
-            }, 
-            "mass_concentration_pm_1_24h_average": {
-                "name": "Masse-Konzentration PM 1 24h Durchschnitt"
-            }, 
-            "mass_concentration_pm_2_5": {
-                "name": "Masse-Konzentration PM 2.5"
-            }, 
-            "mass_concentration_pm_2_5_24h_average": {
-                "name": "Masse-Konzentration PM 2.5 24h Durchschnitt"
-            }, 
-            "number_concentration_pm_1": {
-                "name": "Numerische Konzentration PM 1"
-            }, 
-            "number_concentration_pm_10": {
-                "name": "Numerische Konzentration PM 10"
-            }, 
-            "number_concentration_pm_2_5": {
-                "name": "Numerische Konzentration PM 2.5"
-            }, 
-            "operating_voltage": {
-                "name": "Betriebsspannung"
-            }, 
-            "operating_voltage_level": {
-                "name": "Betriebsspannungspegel"
-            }, 
-            "passage_counter_value": {
-                "name": "Durchgangszählerwert"
-            }, 
-            "pipe_level": {
-                "name": "Ventil-Öffnungsgrad"
-            }, 
-            "power": {
-                "name": "Leistung"
             }, 
             "rain_counter_today": {
                 "name": "Regenzähler Heute"
@@ -698,12 +376,6 @@
             }, 
             "rain_counter_yesterday": {
                 "name": "Regenzähler Gestern"
-            }, 
-            "rssi_device": {
-                "name": "RSSI Gerät"
-            }, 
-            "rssi_peer": {
-                "name": "RSSI Peer"
             }, 
             "sec_direction": {
                 "name": "Richtung", 
@@ -759,9 +431,6 @@
                     "secondary_alarm": "Sekundär-Alarm"
                 }
             }, 
-            "smoke_level": {
-                "name": "Rauchpegel"
-            }, 
             "state": {
                 "name": ""
             }, 
@@ -777,20 +446,8 @@
             "sunshine_counter_yesterday": {
                 "name": "Sonnenscheinzähler Gestern"
             }, 
-            "sunshine_duration": {
-                "name": "Sonnenscheindauer"
-            }, 
             "system_health": {
                 "name": "Systemzustand"
-            }, 
-            "taupunkt": {
-                "name": "Taupunkt"
-            }, 
-            "temperature": {
-                "name": "Temperatur"
-            }, 
-            "time_of_operation": {
-                "name": "Betriebszeit"
             }, 
             "tri_state": {
                 "name": "", 
@@ -800,47 +457,8 @@
                     "tilted": "Gekippt"
                 }
             }, 
-            "typical_particle_size": {
-                "name": "Typische Partikelgröße"
-            }, 
-            "value": {
-                "name": "Wert"
-            }, 
-            "valve_state": {
-                "name": "Ventilzustand"
-            }, 
-            "vapor_concentration": {
-                "name": "Dampfkonzentration"
-            }, 
-            "voltage": {
-                "name": "Spannung"
-            }, 
-            "water_flow": {
-                "name": "Wasser Durchfluss"
-            }, 
-            "water_volume": {
-                "name": "Wassermenge"
-            }, 
-            "water_volume_since_open": {
-                "name": "Wassermenge seit Öffnung"
-            }, 
             "week_profile": {
                 "name": "Wochenprofil"
-            }, 
-            "wind_dir": {
-                "name": "Windrichtung"
-            }, 
-            "wind_dir_range": {
-                "name": "Windrichtungsbereich"
-            }, 
-            "wind_direction": {
-                "name": "Windrichtung"
-            }, 
-            "wind_direction_range": {
-                "name": "Windrichtungsbereich"
-            }, 
-            "wind_speed": {
-                "name": "Windgeschwindigkeit"
             }, 
             "wkp_code_state": {
                 "name": "Code Status", 
@@ -852,22 +470,8 @@
             }
         }, 
         "switch": {
-            "inhibit": {
-                "name": "Sperre"
-            }, 
-            "motion_detection_active": {
-                "name": "Bewegungserkennung aktiv"
-            }, 
-            "presence_detection_active": {
-                "name": "Anwesenheitserkennung aktiv"
-            }, 
             "state": {
                 "name": ""
-            }
-        }, 
-        "valve": {
-            "irrigation_valve": {
-                "name": "Bewässerungsventil"
             }
         }
     }, 

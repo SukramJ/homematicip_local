@@ -178,10 +178,9 @@ class AioHomematicSensor(AioHomematicGenericEntity[DpSensor[Any]], RestoreSensor
                 return int(new_value) if self._data_point.hmtype == ParameterType.INTEGER else new_value
             # Strings and enums with custom device class must be lowercase
             # to be translatable.
-            if (
-                self._data_point.value is not None
-                and self.translation_key is not None
-                and self._data_point.hmtype in (ParameterType.ENUM, ParameterType.STRING)
+            if self._data_point.value is not None and self._data_point.hmtype in (
+                ParameterType.ENUM,
+                ParameterType.STRING,
             ):
                 return cast(StateType | date | datetime | Decimal, self._data_point.value.lower())
             return cast(StateType | date | datetime | Decimal, self._data_point.value)
