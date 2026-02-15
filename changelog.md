@@ -52,9 +52,11 @@
 
 ### Changed
 
+- **Entity names from backend translations**: Removed redundant local entity translations (binary_sensor, button, lock, number, select, sensor, switch, valve) from strings.json and translation files. Entity names are now provided by the backend CCU translation system via `translated_name`. Only climate (preset modes) and event (keypress types) translations remain local.
+
 - **Config entry migration v16**: Existing config entries are migrated to include `command_throttle_interval` with the default value
 
-## Bump aiohomematic to [2026.2.13](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.13)
+## Bump aiohomematic to [2026.2.14](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.14)
 
 ### Architecture (aiohomematic)
 
@@ -118,6 +120,8 @@
 - **Robust JSON parsing with stdlib fallback** (2026.2.11): When `orjson` fails to parse JSON from CCU Rega scripts (e.g., due to non-standard literals like `NaN` or `Infinity`), the parser now falls through to Python's stdlib `json` module. Extended control character sanitization to include DEL (U+007F). Diagnostic logging for JSON parse errors now includes exact codepoint, position, and surrounding context.
 
 - **Extraction script improvements** (2026.2.13): Added PNAME.txt and easymode TCL file parsing, improved HTML entity decoding. Parameters: 841 → 1029 (+188), parameter values: 1256 → 1326 (+70). Removed 17 redundant custom translation entries now covered by improved extraction.
+
+- **Empty parameter translation suppresses parameter name** (2026.2.14): When a CCU parameter translation resolves to an empty string (`""`), the parameter name is now omitted from `translated_name` and `translated_full_name`. This allows translations to explicitly suppress redundant parameter names when the channel name already conveys the meaning. `None` (no translation found) still falls back to the original untranslated name.
 
 ### Bug Fixes (aiohomematic)
 
