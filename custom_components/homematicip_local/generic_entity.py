@@ -205,18 +205,19 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         device_name = self._ha_device_name
 
         if isinstance(self._data_point, CalculatedDataPointProtocol | GenericDataPointProtocol) and entity_name:
-            if self._cu.enable_sub_devices and self._data_point.channel.device.has_sub_devices:
-                entity_name = self._data_point.name_data.parameter_name or ""
+            if entity_name.startswith(device_name):
+                entity_name = entity_name.removeprefix(device_name).strip()
             translated_name = super().name
             if self._do_remove_name():
                 translated_name = ""
             if isinstance(translated_name, str) and translated_name != entity_name:
                 param = self._data_point.parameter.replace("_", " ").title()
-                entity_name = entity_name.replace(param, translated_name)
+                if param != translated_name:
+                    entity_name = entity_name.replace(param, translated_name)
 
         if isinstance(self._data_point, CustomDataPointProtocol) and entity_name:
             if entity_name.startswith(device_name):
-                entity_name = entity_name.replace(device_name, "").strip()
+                entity_name = entity_name.removeprefix(device_name).strip()
 
             translated_name = super().name
             if self._do_remove_name():

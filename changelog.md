@@ -1,4 +1,4 @@
-# Version [2.3.0](https://github.com/SukramJ/homematicip_local/compare/2.2.4...2.3.0) (2026-02-15)
+# Version [2.3.0](https://github.com/SukramJ/homematicip_local/compare/2.2.4...2.3.0) (2026-02-16)
 
 ## What's Changed
 
@@ -56,7 +56,11 @@
 
 - **Config entry migration v16**: Existing config entries are migrated to include `command_throttle_interval` with the default value
 
-## Bump aiohomematic to [2026.2.15](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.15)
+### Bug Fixes
+
+- **Sub-device entity name deduplication**: Fixed entity_id duplication when sub-devices are enabled. When the HA device name (channel group name) was a prefix of the backend's `translated_name`, the device name appeared twice in the entity_id (e.g. `binary_sensor.atbm_terrasse_atbm_terrasse_schaltausgang`). The device name prefix is now stripped from the entity name, producing the correct entity_id (e.g. `binary_sensor.atbm_terrasse_schaltausgang`).
+
+## Bump aiohomematic to [2026.2.16](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.16)
 
 ### Architecture (aiohomematic)
 
@@ -122,6 +126,8 @@
 - **Extraction script improvements** (2026.2.13): Added PNAME.txt and easymode TCL file parsing, improved HTML entity decoding. Parameters: 841 → 1029 (+188), parameter values: 1256 → 1326 (+70). Removed 17 redundant custom translation entries now covered by improved extraction.
 
 - **Empty parameter translation suppresses parameter name** (2026.2.14): When a CCU parameter translation resolves to an empty string (`""`), the parameter name is now omitted from `translated_name` and `translated_full_name`. This allows translations to explicitly suppress redundant parameter names when the channel name already conveys the meaning. `None` (no translation found) still falls back to the original untranslated name.
+
+- **Custom data point postfix translation** (2026.2.16): Custom data points now translate their `data_point_name_postfix` via the CCU translation system, providing localized names (e.g. translating parameter postfixes like `BUTTON_LOCK`) consistent with generic data points.
 
 ### Bug Fixes (aiohomematic)
 
