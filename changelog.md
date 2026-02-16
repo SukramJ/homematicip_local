@@ -50,6 +50,20 @@
 
 - **Translated interface display names**: Interface names in config flow error messages and detection info now use translated, user-friendly names (e.g. "Homematic IP" instead of "HmIP-RF") with full German translation support. Warning messages for undetected interfaces are also translated.
 
+- **Configuration panel: Session management**: New server-side `ConfigSession` with undo/redo support. Changes are tracked in-memory before writing to the device, enabling safe editing with validation feedback.
+
+- **Configuration panel: Export/Import**: Export channel paramset configurations as JSON and import them to same-model devices. Enables configuration backup and transfer between identical devices.
+
+- **Configuration panel: Copy paramset**: Copy configuration between same-model device channels. Automatically filters to writable parameters present in the target.
+
+- **Configuration panel: Change history**: Persistent log of all paramset writes (manual, import, copy) with old/new value diffs. Stored via HA `Store` with a 500-entry FIFO limit. Retrievable and clearable per config entry.
+
+- **Configuration panel: Enhanced device list**: Device list now includes cached maintenance data (UNREACH, LOW_BAT, RSSI_DEVICE, RSSI_PEER, DUTYCYCLE, CONFIG_PENDING) from channel 0, enabling the frontend to display device health without additional roundtrips.
+
+- **Configuration panel: Direct links (Direktverknüpfungen)**: Browse, create, configure, and remove direct device-to-device links (peerings) for BidCos-RF, BidCos-Wired, and HmIP-RF interfaces. Includes link overview grouped by channel, link paramset editing via form schema, and a 3-step wizard for creating new links with compatible channel filtering.
+
+- **Configuration panel: Deep-linking**: Navigate directly to a device, channel config, or link view via URL hash parameters. Supports browser back/forward navigation.
+
 ### Changed
 
 - **Entity names from backend translations**: Removed redundant local entity translations (binary_sensor, button, lock, number, select, sensor, switch, valve) from strings.json and translation files. Entity names are now provided by the backend CCU translation system via `translated_name`. Only climate (preset modes) and event (keypress types) translations remain local.
@@ -60,7 +74,7 @@
 
 - **Sub-device entity name deduplication**: Fixed entity_id duplication when sub-devices are enabled. When the HA device name (channel group name) was a prefix of the backend's `translated_name`, the device name appeared twice in the entity_id (e.g. `binary_sensor.atbm_terrasse_atbm_terrasse_schaltausgang`). The device name prefix is now stripped from the entity name, producing the correct entity_id (e.g. `binary_sensor.atbm_terrasse_schaltausgang`).
 
-## Bump aiohomematic to [2026.2.16](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.16)
+## Bump aiohomematic to [2026.2.17](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.17)
 
 ### Architecture (aiohomematic)
 
@@ -131,6 +145,7 @@
 
 ### Bug Fixes (aiohomematic)
 
+- **Preserve channel postfix when translation suppresses parameter name** (2026.2.17): When a parameter translation resolves to an empty string for a multi-channel data point, the channel disambiguation postfix (e.g. `ch13`) was lost because the truthiness check treated `""` the same as `None`. Changed to an identity check (`is not None`) so that an empty translation correctly yields `translated_name="ch13"` instead of removing the name entirely.
 - **i18n: Allow multiple CentralUnit instances** (2026.2.15): `set_locale()` is now idempotent — calling it again with the same locale is a no-op. When called with a different locale, it logs a message and keeps the original. Previously, creating a second `CentralUnit` raised `RuntimeError` because `set_locale()` was strictly one-shot.
 - **XML-RPC server race condition on multi-hub startup** (2026.2.7): Fixed a race condition in `AsyncXmlRpcServer.start()` that caused "address in use" errors when multiple central units started concurrently. The singleton server is now protected by an `asyncio.Lock`.
 - **Optimistic rollback now clears unconfirmed value** (2026.2.7): `_rollback_optimistic_value()` now properly clears the unconfirmed value before restoring the previous confirmed value, preventing the unconfirmed value from undermining the rollback.
@@ -148,10 +163,9 @@
 
 - **HA-Addon renamed to HA-App** (2026.2.6): `SystemInformation.is_ha_addon` renamed to `is_ha_app`.
 
-- **Climate Schedule API Unified to Pydantic Models** (2026.2.1): The old dual-format API (TypedDict + Pydantic) has been removed. All schedule methods now use Pydantic models exclusively.
-
 ### Changed (aiohomematic)
 
+- **Climate Schedule API unified to Pydantic models** (2026.2.1): The old dual-format API (TypedDict + Pydantic) has been removed. All schedule methods now use Pydantic models exclusively.
 - **Rename `_temporary_value` to `_unconfirmed_value`** (2026.2.7): All internal references renamed to clarify the role of the second value tier in the three-tier resolution model (optimistic → unconfirmed → confirmed).
 - **DelegatedProperty expansion** (2026.2.6): Replaced 56 boilerplate `@property` methods with `DelegatedProperty` descriptors across 23 files. Reduces repetitive delegation code while preserving runtime behavior.
 - **ClimateWeekProfile**: Simple schedule format now uses Pydantic models for automatic validation. The existing user-facing format remains unchanged, but input validation is now more robust with clear error messages.
@@ -161,15 +175,9 @@
 
 New companion library providing device configuration utilities for the integration.
 
-- **FormSchemaGenerator**: Generate UI form schemas from paramset descriptions
-- **ParameterGrouper**: Group parameters into logical sections with locale-aware section titles (German translations)
-- **LabelResolver**: Translate parameter IDs to human-readable labels using upstream CCU translations from aiohomematic. Includes `has_translation()` check for filtering parameters without known translations.
-- **ConfigSession**: Change tracking with undo/redo and validation
-- **ConfigExporter**: Export/import device configurations as JSON
-- **WidgetType mapping**: Type-aware widget selection
-- **option_labels**: VALUE_LIST parameters always include `option_labels` with translated enum values and humanized fallback
-- **FormSchema metadata**: `model_description` and `channel_type_label` fields for translated device/channel names
-- **CCU-compatible parameter filtering**: Only parameters with known CCU translations are shown, matching CCU WebUI easymode behavior
+- **Initial release** (2026.2.1): `FormSchemaGenerator` for UI form schemas, `ParameterGrouper` for logical sections, `LabelResolver` for i18n labels, `ConfigSession` for undo/redo change tracking, `ConfigExporter` for JSON export/import, `WidgetType` mapping.
+- **Upstream CCU translations** (2026.2.3): Replaced local translation files with CCU translations from aiohomematic. Added `channel_type` parameter to `LabelResolver.resolve()`, `option_labels` on `FormParameter`, `model_description`/`channel_type_label` on `FormSchema`, `model`/`sub_model` parameters to `FormSchemaGenerator.generate()`.
+- **Parameter filtering and section titles** (2026.2.4): Locale-aware section titles in `ParameterGrouper` (German translations). Parameters without CCU translation are filtered (matches CCU WebUI easymode behavior). VALUE_LIST parameters always get `option_labels` with humanized fallback.
 
 # Version [2.2.4](https://github.com/SukramJ/homematicip_local/compare/2.2.3...2.2.4) (2026-02-01)
 

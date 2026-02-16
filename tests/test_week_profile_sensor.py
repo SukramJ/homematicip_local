@@ -74,6 +74,7 @@ def _create_mock_data_point(
     mock_device.identifier = "TEST_DEVICE"
     mock_device.manufacturer = "eQ-3"
     mock_device.model = "HmIP-eTRV-2"
+    mock_device.model_description = "Radiator Thermostat"
     mock_device.address = "ABC1234567"
     mock_device.firmware = "1.0.0"
     mock_device.room = "Living Room"

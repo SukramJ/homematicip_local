@@ -105,6 +105,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
             identifiers={(DOMAIN, identifier)},
             manufacturer=hm_device.manufacturer,
             model=hm_device.model,
+            model_id=hm_device.model_description,
             name=self._ha_device_name,
             serial_number=hm_device.address,
             sw_version=hm_device.firmware,
