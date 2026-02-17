@@ -13,7 +13,14 @@ from aiohomematic.const import LINKABLE_INTERFACES, ParamsetKey
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.parameter_tools import is_parameter_internal, is_parameter_visible, is_parameter_writable
 from aiohomematic.support.address import get_device_address
-from aiohomematic_config import ConfigSession, FormSchemaGenerator, export_configuration, import_configuration
+from aiohomematic_config import (
+    ConfigSession,
+    FormSchemaGenerator,
+    LabelResolver,
+    ProfileStore,
+    export_configuration,
+    import_configuration,
+)
 from homeassistant.components.websocket_api import async_register_command
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.decorators import async_response, require_admin, websocket_command
@@ -26,7 +33,22 @@ if TYPE_CHECKING:
 
 _LOGGER: Final = logging.getLogger(__name__)
 
+
+class _LinkLabelResolver(LabelResolver):
+    """
+    LabelResolver that accepts all parameters as having translations.
+
+    LINK paramsets often contain parameters without CCU translations.
+    This resolver ensures those parameters are not filtered out.
+    """
+
+    def has_translation(self, *, parameter_id: str, channel_type: str = "") -> bool:
+        """Return True for any parameter."""
+        return True
+
+
 SESSIONS_KEY: HassKey[dict[str, ConfigSession]] = HassKey("homematicip_local_config_sessions")
+PROFILE_STORE_KEY: HassKey[ProfileStore] = HassKey("homematicip_local_profile_store")
 HISTORY_STORE_KEY: Final = "homematicip_local.config_changes"
 HISTORY_MAX_ENTRIES: Final = 500
 
@@ -144,6 +166,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     async_register_command(hass, ws_clear_change_history)
     async_register_command(hass, ws_list_device_links)
     async_register_command(hass, ws_get_link_form_schema)
+    async_register_command(hass, ws_get_link_profiles)
     async_register_command(hass, ws_get_link_paramset)
     async_register_command(hass, ws_put_link_paramset)
     async_register_command(hass, ws_add_link)
@@ -166,6 +189,13 @@ def _get_sessions(hass: HomeAssistant) -> dict[str, ConfigSession]:
     if SESSIONS_KEY not in hass.data:
         hass.data[SESSIONS_KEY] = {}
     return hass.data[SESSIONS_KEY]
+
+
+def _get_profile_store(hass: HomeAssistant) -> ProfileStore:
+    """Return the shared ProfileStore instance, creating it if needed."""
+    if PROFILE_STORE_KEY not in hass.data:
+        hass.data[PROFILE_STORE_KEY] = ProfileStore()
+    return hass.data[PROFILE_STORE_KEY]
 
 
 # ---------------------------------------------------------------------------
@@ -1131,6 +1161,7 @@ async def ws_list_device_links(
         return
 
     central = control.central
+    locale = hass.config.language
     device = central.device_coordinator.get_device(address=msg["device_address"])
     if device is None:
         connection.send_error(msg["id"], "device_not_found", "Device not found")
@@ -1172,6 +1203,15 @@ async def ws_list_device_links(
             peer_device_addr = get_device_address(address=peer_addr)
             peer_device = central.device_coordinator.get_device(address=peer_device_addr)
 
+            # Resolve sender and receiver channels for type info
+            sender_device_addr = get_device_address(address=sender_addr)
+            sender_dev = device if sender_device_addr == device.address else peer_device
+            sender_channel = sender_dev.get_channel(channel_address=sender_addr) if sender_dev else None
+
+            receiver_device_addr = get_device_address(address=receiver_addr)
+            receiver_dev = device if receiver_device_addr == device.address else peer_device
+            receiver_channel = receiver_dev.get_channel(channel_address=receiver_addr) if receiver_dev else None
+
             links.append(
                 {
                     "sender_address": sender_addr,
@@ -1183,12 +1223,26 @@ async def ws_list_device_links(
                         device.name if is_sender else (peer_device.name if peer_device else peer_device_addr)
                     ),
                     "sender_device_model": (device.model if is_sender else (peer_device.model if peer_device else "")),
+                    "sender_channel_type": sender_channel.type_name if sender_channel else "",
+                    "sender_channel_type_label": (
+                        get_channel_type_translation(channel_type=sender_channel.type_name, locale=locale)
+                        or sender_channel.type_name
+                    )
+                    if sender_channel
+                    else "",
                     "receiver_device_name": (
                         device.name if not is_sender else (peer_device.name if peer_device else peer_device_addr)
                     ),
                     "receiver_device_model": (
                         device.model if not is_sender else (peer_device.model if peer_device else "")
                     ),
+                    "receiver_channel_type": receiver_channel.type_name if receiver_channel else "",
+                    "receiver_channel_type_label": (
+                        get_channel_type_translation(channel_type=receiver_channel.type_name, locale=locale)
+                        or receiver_channel.type_name
+                    )
+                    if receiver_channel
+                    else "",
                     "peer_address": peer_addr,
                     "peer_device_name": peer_device.name if peer_device else peer_device_addr,
                     "peer_device_model": peer_device.model if peer_device else "",
@@ -1220,24 +1274,32 @@ async def ws_get_link_form_schema(
         connection.send_error(msg["id"], "not_found", "Config entry not found")
         return
 
-    facade = control.central.configuration
     sender_addr = msg["sender_channel_address"]
     receiver_addr = msg["receiver_channel_address"]
 
-    # Paramset description for LINK type
-    descriptions = facade.get_paramset_description(
-        interface_id=msg["interface_id"],
-        channel_address=receiver_addr,
-        paramset_key=ParamsetKey.LINK,
-    )
-
-    # Current values for this specific link (sender address as paramset key)
     device_addr = get_device_address(address=receiver_addr)
     device = control.central.device_coordinator.get_device(address=device_addr)
     if device is None:
         connection.send_error(msg["id"], "device_not_found", "Receiver device not found")
         return
 
+    # The public get_paramset_descriptions() explicitly skips LINK paramsets
+    # (they are not needed during normal device operation). We use the private
+    # _get_paramset_description() to fetch a single LINK paramset description
+    # directly from the backend on demand.
+    try:
+        descriptions = (
+            await device.client._get_paramset_description(  # type: ignore[attr-defined]  # pylint: disable=protected-access
+                address=receiver_addr,
+                paramset_key=ParamsetKey.LINK,
+            )
+            or {}
+        )
+    except BaseHomematicException as err:
+        connection.send_error(msg["id"], "read_failed", str(err))
+        return
+
+    # Current values for this specific link (sender address as paramset key)
     try:
         current_values = await device.client.get_paramset(
             channel_address=receiver_addr,
@@ -1249,7 +1311,8 @@ async def ws_get_link_form_schema(
         return
 
     channel = device.get_channel(channel_address=receiver_addr)
-    generator = FormSchemaGenerator(locale=hass.config.language)
+    locale = hass.config.language
+    generator = FormSchemaGenerator(label_resolver=_LinkLabelResolver(locale=locale))
     schema = generator.generate(
         descriptions=descriptions,
         current_values=current_values,
@@ -1257,9 +1320,92 @@ async def ws_get_link_form_schema(
         channel_type=channel.type_name if channel else "",
         model=device.model,
         sub_model=device.sub_model,
+        enrich_link_metadata=True,
     )
 
     connection.send_result(msg["id"], schema.model_dump())
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/config/get_link_profiles",
+        vol.Required("entry_id"): str,
+        vol.Required("interface_id"): str,
+        vol.Required("sender_channel_address"): str,
+        vol.Required("receiver_channel_address"): str,
+    }
+)
+@async_response
+async def ws_get_link_profiles(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return available easymode profiles for a link."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    sender_addr = msg["sender_channel_address"]
+    receiver_addr = msg["receiver_channel_address"]
+
+    # Resolve receiver device and channel
+    receiver_device_addr = get_device_address(address=receiver_addr)
+    receiver_device = control.central.device_coordinator.get_device(address=receiver_device_addr)
+    if receiver_device is None:
+        connection.send_error(msg["id"], "device_not_found", "Receiver device not found")
+        return
+
+    receiver_channel = receiver_device.get_channel(channel_address=receiver_addr)
+    receiver_channel_type = receiver_channel.type_name if receiver_channel else ""
+
+    # Resolve sender device and channel
+    sender_device_addr = get_device_address(address=sender_addr)
+    sender_device = control.central.device_coordinator.get_device(address=sender_device_addr)
+    sender_channel = sender_device.get_channel(channel_address=sender_addr) if sender_device else None
+    sender_channel_type = sender_channel.type_name if sender_channel else ""
+
+    if not receiver_channel_type or not sender_channel_type:
+        connection.send_result(msg["id"], {"profiles": None, "active_profile_id": 0})
+        return
+
+    profile_store = _get_profile_store(hass)
+    locale = hass.config.language
+
+    profiles = profile_store.get_profiles(
+        receiver_channel_type=receiver_channel_type,
+        sender_channel_type=sender_channel_type,
+        locale=locale,
+    )
+
+    if profiles is None:
+        connection.send_result(msg["id"], {"profiles": None, "active_profile_id": 0})
+        return
+
+    # Load current values to match active profile
+    try:
+        current_values = await receiver_device.client.get_paramset(
+            channel_address=receiver_addr,
+            paramset_key=sender_addr,
+            convert_from_pd=True,
+        )
+    except BaseHomematicException:
+        current_values = {}
+
+    active_profile_id = profile_store.match_active_profile(
+        receiver_channel_type=receiver_channel_type,
+        sender_channel_type=sender_channel_type,
+        current_values=current_values,
+    )
+
+    connection.send_result(
+        msg["id"],
+        {
+            "profiles": [p.model_dump() for p in profiles],
+            "active_profile_id": active_profile_id,
+        },
+    )
 
 
 @require_admin
@@ -1489,6 +1635,7 @@ async def ws_get_linkable_channels(
     interface_id = msg["interface_id"]
     source_channel_addr = msg["channel_address"]
     role = msg["role"]
+    locale = hass.config.language
 
     candidates: list[dict[str, Any]] = []
 
@@ -1520,6 +1667,11 @@ async def ws_get_linkable_channels(
                 {
                     "address": channel.address,
                     "channel_type": channel.type_name,
+                    "channel_type_label": get_channel_type_translation(
+                        channel_type=channel.type_name,
+                        locale=locale,
+                    )
+                    or channel.type_name,
                     "device_address": device.address,
                     "device_name": device.name or device.address,
                     "device_model": device.model,

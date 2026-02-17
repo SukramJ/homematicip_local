@@ -62,6 +62,8 @@
 
 - **Configuration panel: Direct links (Direktverknüpfungen)**: Browse, create, configure, and remove direct device-to-device links (peerings) for BidCos-RF, BidCos-Wired, and HmIP-RF interfaces. Includes link overview grouped by channel, link paramset editing via form schema, and a 3-step wizard for creating new links with compatible channel filtering.
 
+- **Configuration panel: Link profiles & UX**: Profile-based link configuration with easymode profiles from CCU (Expert, Dimmer ein/aus, Treppenlicht, etc.). Combined time selector for TIME_BASE/TIME_FACTOR pairs, SHORT/LONG keypress tabs, percent slider for LEVEL parameters with "Last value" support, and hidden jump targets/condition transitions in profile mode. Fully translated panel UI (EN/DE).
+
 - **Configuration panel: Deep-linking**: Navigate directly to a device, channel config, or link view via URL hash parameters. Supports browser back/forward navigation.
 
 ### Changed
@@ -74,7 +76,7 @@
 
 - **Sub-device entity name deduplication**: Fixed entity_id duplication when sub-devices are enabled. When the HA device name (channel group name) was a prefix of the backend's `translated_name`, the device name appeared twice in the entity_id (e.g. `binary_sensor.atbm_terrasse_atbm_terrasse_schaltausgang`). The device name prefix is now stripped from the entity name, producing the correct entity_id (e.g. `binary_sensor.atbm_terrasse_schaltausgang`).
 
-## Bump aiohomematic to [2026.2.17](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.17)
+## Bump aiohomematic to [2026.2.18](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.18)
 
 ### Architecture (aiohomematic)
 
@@ -145,6 +147,7 @@
 
 ### Bug Fixes (aiohomematic)
 
+- **LINK paramset parameter translations** (2026.2.18): `get_parameter_translation()` and `get_parameter_value_translation()` now strip `SHORT_`/`LONG_` prefixes and retry the base name, resolving translations for link parameters (e.g. `SHORT_ON_LEVEL` → "Einschalthelligkeit (kurz)"). Added 138 parameter translations and 1158 value translations for link-specific parameters.
 - **Preserve channel postfix when translation suppresses parameter name** (2026.2.17): When a parameter translation resolves to an empty string for a multi-channel data point, the channel disambiguation postfix (e.g. `ch13`) was lost because the truthiness check treated `""` the same as `None`. Changed to an identity check (`is not None`) so that an empty translation correctly yields `translated_name="ch13"` instead of removing the name entirely.
 - **i18n: Allow multiple CentralUnit instances** (2026.2.15): `set_locale()` is now idempotent — calling it again with the same locale is a no-op. When called with a different locale, it logs a message and keeps the original. Previously, creating a second `CentralUnit` raised `RuntimeError` because `set_locale()` was strictly one-shot.
 - **XML-RPC server race condition on multi-hub startup** (2026.2.7): Fixed a race condition in `AsyncXmlRpcServer.start()` that caused "address in use" errors when multiple central units started concurrently. The singleton server is now protected by an `asyncio.Lock`.
@@ -171,13 +174,14 @@
 - **ClimateWeekProfile**: Simple schedule format now uses Pydantic models for automatic validation. The existing user-facing format remains unchanged, but input validation is now more robust with clear error messages.
 - **DefaultWeekProfile**: Refactored schedule cache to use human-readable Pydantic models (`SimpleSchedule`, `SimpleScheduleEntry`) instead of complex dictionary format.
 
-## Bump aiohomematic-config to [2026.2.4](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.1...2026.2.4)
+## Bump aiohomematic-config to [2026.2.5](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.1...2026.2.5)
 
 New companion library providing device configuration utilities for the integration.
 
 - **Initial release** (2026.2.1): `FormSchemaGenerator` for UI form schemas, `ParameterGrouper` for logical sections, `LabelResolver` for i18n labels, `ConfigSession` for undo/redo change tracking, `ConfigExporter` for JSON export/import, `WidgetType` mapping.
 - **Upstream CCU translations** (2026.2.3): Replaced local translation files with CCU translations from aiohomematic. Added `channel_type` parameter to `LabelResolver.resolve()`, `option_labels` on `FormParameter`, `model_description`/`channel_type_label` on `FormSchema`, `model`/`sub_model` parameters to `FormSchemaGenerator.generate()`.
 - **Parameter filtering and section titles** (2026.2.4): Locale-aware section titles in `ParameterGrouper` (German translations). Parameters without CCU translation are filtered (matches CCU WebUI easymode behavior). VALUE_LIST parameters always get `option_labels` with humanized fallback.
+- **Link parameter metadata & profiles** (2026.2.5): `link_param_metadata` module for classifying LINK parameters (SHORT/LONG grouping, time pair detection, category classification). `ProfileStore` for loading easymode profile definitions from CCU-extracted JSON. `FormSchemaGenerator` enriches LINK parameters with metadata via `enrich_link_metadata` flag. Time preset tables for on/off, delay, and ramp durations.
 
 # Version [2.2.4](https://github.com/SukramJ/homematicip_local/compare/2.2.3...2.2.4) (2026-02-01)
 

@@ -2165,6 +2165,7 @@ class TestWsDirectLinks:
         device.model = "HmIP-BSM"
         device.name = "Test Switch"
         device.channels = {"VCU0000001:1": ch1}
+        device.get_channel = lambda *, channel_address: {"VCU0000001:1": ch1}.get(channel_address)
         device.client = Mock()
         device.client.get_links = AsyncMock(
             return_value=[
@@ -2178,10 +2179,12 @@ class TestWsDirectLinks:
             ]
         )
 
+        peer_ch1 = MockChannel(address="VCU0000002:1", type_name="SWITCH_VIRTUAL_RECEIVER")
         peer_device = Mock()
         peer_device.address = "VCU0000002"
         peer_device.name = "Peer Switch"
         peer_device.model = "HmIP-BSM"
+        peer_device.get_channel = lambda *, channel_address: {"VCU0000002:1": peer_ch1}.get(channel_address)
 
         devices_map = {"VCU0000001": device, "VCU0000002": peer_device}
         control.central.device_coordinator.get_device = lambda *, address: devices_map.get(address)
@@ -2209,6 +2212,10 @@ class TestWsDirectLinks:
         assert link["peer_device_name"] == "Peer Switch"
         assert link["peer_device_model"] == "HmIP-BSM"
         assert link["name"] == "Test Link"
+        assert link["sender_channel_type"] == "SWITCH"
+        assert link["sender_channel_type_label"] != ""
+        assert link["receiver_channel_type"] == "SWITCH_VIRTUAL_RECEIVER"
+        assert link["receiver_channel_type_label"] != ""
 
     async def test_list_device_links_deduplicates(
         self,
@@ -2231,6 +2238,7 @@ class TestWsDirectLinks:
         device.model = "HmIP-BSM"
         device.name = "Test Switch"
         device.channels = {"VCU0000001:1": ch1, "VCU0000001:2": ch2}
+        device.get_channel = lambda *, channel_address: {"VCU0000001:1": ch1, "VCU0000001:2": ch2}.get(channel_address)
         device.client = Mock()
         same_link = {
             "SENDER": "VCU0000001:1",
@@ -2330,6 +2338,7 @@ class TestWsDirectLinks:
         device.model = "HmIP-BSM"
         device.name = "Test Switch"
         device.channels = {"VCU0000001:1": ch1}
+        device.get_channel = lambda *, channel_address: {"VCU0000001:1": ch1}.get(channel_address)
         device.client = Mock()
         device.client.get_links = AsyncMock(
             return_value=[
@@ -2343,10 +2352,12 @@ class TestWsDirectLinks:
             ]
         )
 
+        peer_ch1 = MockChannel(address="VCU0000002:1", type_name="KEY_TRANSCEIVER")
         peer_device = Mock()
         peer_device.address = "VCU0000002"
         peer_device.name = "Remote"
         peer_device.model = "HmIP-WRC2"
+        peer_device.get_channel = lambda *, channel_address: {"VCU0000002:1": peer_ch1}.get(channel_address)
 
         devices_map = {"VCU0000001": device, "VCU0000002": peer_device}
         control.central.device_coordinator.get_device = lambda *, address: devices_map.get(address)
@@ -2371,6 +2382,8 @@ class TestWsDirectLinks:
         assert link["peer_address"] == "VCU0000002:1"
         assert link["sender_device_name"] == "Remote"
         assert link["receiver_device_name"] == "Test Switch"
+        assert link["sender_channel_type"] == "KEY_TRANSCEIVER"
+        assert link["receiver_channel_type"] == "SWITCH"
 
     async def test_list_device_links_non_linkable_interface(
         self,
@@ -2683,3 +2696,255 @@ class TestWsDirectLinks:
         response = await client.receive_json()
         assert response["success"] is False
         assert response["error"]["code"] == "remove_link_failed"
+
+
+class TestWsGetLinkProfiles:
+    """Tests for the ws_get_link_profiles command."""
+
+    async def test_get_link_profiles(
+        self,
+        hass: HomeAssistant,
+        mock_loaded_config_entry: MockConfigEntry,
+        hass_ws_client: Any,
+    ) -> None:
+        """Test getting link profiles for a known channel type pair."""
+        control: ControlUnit = mock_loaded_config_entry.runtime_data
+
+        receiver_ch = MockChannel(address="VCU0000002:1", type_name="DIMMER_VIRTUAL_RECEIVER")
+        sender_ch = MockChannel(address="VCU0000001:1", type_name="SWITCH_TRANSCEIVER")
+
+        receiver_device = Mock()
+        receiver_device.get_channel = Mock(return_value=receiver_ch)
+        receiver_device.client = Mock()
+        receiver_device.client.get_paramset = AsyncMock(
+            return_value={
+                "SHORT_PROFILE_ACTION_TYPE": 1,
+                "SHORT_ON_LEVEL": 1.0,
+                "SHORT_ON_TIME_BASE": 7,
+                "SHORT_ON_TIME_FACTOR": 31,
+                "SHORT_JT_ON": 3,
+                "SHORT_JT_OFF": 3,
+                "LONG_PROFILE_ACTION_TYPE": 3,
+                "LONG_DIM_MAX_LEVEL": 1.0,
+            }
+        )
+
+        sender_device = Mock()
+        sender_device.get_channel = Mock(return_value=sender_ch)
+
+        def _get_device(*, address: str) -> Mock | None:
+            if address == "VCU0000002":
+                return receiver_device
+            if address == "VCU0000001":
+                return sender_device
+            return None
+
+        control.central.device_coordinator.get_device = Mock(side_effect=_get_device)
+
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "homematicip_local/config/get_link_profiles",
+                "entry_id": mock_loaded_config_entry.entry_id,
+                "interface_id": "hmip_local-VCU0000001",
+                "sender_channel_address": "VCU0000001:1",
+                "receiver_channel_address": "VCU0000002:1",
+            }
+        )
+
+        response = await client.receive_json()
+        assert response["success"] is True
+        result = response["result"]
+        assert result["profiles"] is not None
+        assert len(result["profiles"]) >= 2
+        assert result["active_profile_id"] == 1
+        # Verify Expert profile is first
+        assert result["profiles"][0]["id"] == 0
+        assert result["profiles"][0]["name"] == "Expert"
+
+    async def test_get_link_profiles_device_not_found(
+        self,
+        hass: HomeAssistant,
+        mock_loaded_config_entry: MockConfigEntry,
+        hass_ws_client: Any,
+    ) -> None:
+        """Test get link profiles when receiver device not found."""
+        control: ControlUnit = mock_loaded_config_entry.runtime_data
+        control.central.device_coordinator.get_device = Mock(return_value=None)
+
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "homematicip_local/config/get_link_profiles",
+                "entry_id": mock_loaded_config_entry.entry_id,
+                "interface_id": "hmip_local-VCU0000001",
+                "sender_channel_address": "VCU0000001:1",
+                "receiver_channel_address": "VCU0000002:1",
+            }
+        )
+
+        response = await client.receive_json()
+        assert response["success"] is False
+        assert response["error"]["code"] == "device_not_found"
+
+    async def test_get_link_profiles_entry_not_found(
+        self,
+        hass: HomeAssistant,
+        mock_loaded_config_entry: MockConfigEntry,
+        hass_ws_client: Any,
+    ) -> None:
+        """Test get link profiles with invalid entry_id."""
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "homematicip_local/config/get_link_profiles",
+                "entry_id": "nonexistent_entry",
+                "interface_id": "hmip_local-VCU0000001",
+                "sender_channel_address": "VCU0000001:1",
+                "receiver_channel_address": "VCU0000002:1",
+            }
+        )
+
+        response = await client.receive_json()
+        assert response["success"] is False
+        assert response["error"]["code"] == "not_found"
+
+    async def test_get_link_profiles_missing_channel_type(
+        self,
+        hass: HomeAssistant,
+        mock_loaded_config_entry: MockConfigEntry,
+        hass_ws_client: Any,
+    ) -> None:
+        """Test returning null when channel type cannot be resolved."""
+        control: ControlUnit = mock_loaded_config_entry.runtime_data
+
+        receiver_device = Mock()
+        receiver_device.get_channel = Mock(return_value=None)
+
+        sender_device = Mock()
+        sender_device.get_channel = Mock(return_value=None)
+
+        def _get_device(*, address: str) -> Mock | None:
+            if address == "VCU0000002":
+                return receiver_device
+            if address == "VCU0000001":
+                return sender_device
+            return None
+
+        control.central.device_coordinator.get_device = Mock(side_effect=_get_device)
+
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "homematicip_local/config/get_link_profiles",
+                "entry_id": mock_loaded_config_entry.entry_id,
+                "interface_id": "hmip_local-VCU0000001",
+                "sender_channel_address": "VCU0000001:1",
+                "receiver_channel_address": "VCU0000002:1",
+            }
+        )
+
+        response = await client.receive_json()
+        assert response["success"] is True
+        result = response["result"]
+        assert result["profiles"] is None
+        assert result["active_profile_id"] == 0
+
+    async def test_get_link_profiles_no_profiles_available(
+        self,
+        hass: HomeAssistant,
+        mock_loaded_config_entry: MockConfigEntry,
+        hass_ws_client: Any,
+    ) -> None:
+        """Test returning null profiles for unknown channel types."""
+        control: ControlUnit = mock_loaded_config_entry.runtime_data
+
+        receiver_ch = MockChannel(address="VCU0000002:1", type_name="UNKNOWN_RECEIVER")
+        sender_ch = MockChannel(address="VCU0000001:1", type_name="UNKNOWN_SENDER")
+
+        receiver_device = Mock()
+        receiver_device.get_channel = Mock(return_value=receiver_ch)
+        receiver_device.client = Mock()
+        receiver_device.client.get_paramset = AsyncMock(return_value={})
+
+        sender_device = Mock()
+        sender_device.get_channel = Mock(return_value=sender_ch)
+
+        def _get_device(*, address: str) -> Mock | None:
+            if address == "VCU0000002":
+                return receiver_device
+            if address == "VCU0000001":
+                return sender_device
+            return None
+
+        control.central.device_coordinator.get_device = Mock(side_effect=_get_device)
+
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "homematicip_local/config/get_link_profiles",
+                "entry_id": mock_loaded_config_entry.entry_id,
+                "interface_id": "hmip_local-VCU0000001",
+                "sender_channel_address": "VCU0000001:1",
+                "receiver_channel_address": "VCU0000002:1",
+            }
+        )
+
+        response = await client.receive_json()
+        assert response["success"] is True
+        result = response["result"]
+        assert result["profiles"] is None
+        assert result["active_profile_id"] == 0
+
+    async def test_get_link_profiles_paramset_read_failure(
+        self,
+        hass: HomeAssistant,
+        mock_loaded_config_entry: MockConfigEntry,
+        hass_ws_client: Any,
+    ) -> None:
+        """Test graceful handling when paramset read fails."""
+        control: ControlUnit = mock_loaded_config_entry.runtime_data
+
+        receiver_ch = MockChannel(address="VCU0000002:1", type_name="DIMMER_VIRTUAL_RECEIVER")
+        sender_ch = MockChannel(address="VCU0000001:1", type_name="SWITCH_TRANSCEIVER")
+
+        receiver_device = Mock()
+        receiver_device.get_channel = Mock(return_value=receiver_ch)
+        receiver_device.client = Mock()
+        receiver_device.client.get_paramset = AsyncMock(side_effect=BaseHomematicException("read failed"))
+
+        sender_device = Mock()
+        sender_device.get_channel = Mock(return_value=sender_ch)
+
+        def _get_device(*, address: str) -> Mock | None:
+            if address == "VCU0000002":
+                return receiver_device
+            if address == "VCU0000001":
+                return sender_device
+            return None
+
+        control.central.device_coordinator.get_device = Mock(side_effect=_get_device)
+
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "homematicip_local/config/get_link_profiles",
+                "entry_id": mock_loaded_config_entry.entry_id,
+                "interface_id": "hmip_local-VCU0000001",
+                "sender_channel_address": "VCU0000001:1",
+                "receiver_channel_address": "VCU0000002:1",
+            }
+        )
+
+        response = await client.receive_json()
+        assert response["success"] is True
+        result = response["result"]
+        # Profiles should still be returned, just with fallback active_profile_id=0
+        assert result["profiles"] is not None
+        assert result["active_profile_id"] == 0

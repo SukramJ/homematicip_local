@@ -1,14 +1,14 @@
 function e(e, t, i, s) {
-  var n,
-    r = arguments.length,
+  var r,
+    n = arguments.length,
     a =
-      r < 3 ? t : null === s ? (s = Object.getOwnPropertyDescriptor(t, i)) : s;
+      n < 3 ? t : null === s ? (s = Object.getOwnPropertyDescriptor(t, i)) : s;
   if ("object" == typeof Reflect && "function" == typeof Reflect.decorate)
     a = Reflect.decorate(e, t, i, s);
   else
     for (var o = e.length - 1; o >= 0; o--)
-      (n = e[o]) && (a = (r < 3 ? n(a) : r > 3 ? n(t, i, a) : n(t, i)) || a);
-  return r > 3 && a && Object.defineProperty(t, i, a), a;
+      (r = e[o]) && (a = (n < 3 ? r(a) : n > 3 ? r(t, i, a) : r(t, i)) || a);
+  return n > 3 && a && Object.defineProperty(t, i, a), a;
 }
 "function" == typeof SuppressedError && SuppressedError;
 const t = globalThis,
@@ -18,8 +18,8 @@ const t = globalThis,
     "adoptedStyleSheets" in Document.prototype &&
     "replace" in CSSStyleSheet.prototype,
   s = Symbol(),
-  n = new WeakMap();
-let r = class {
+  r = new WeakMap();
+let n = class {
   constructor(e, t, i) {
     if (((this._$cssResult$ = !0), i !== s))
       throw Error(
@@ -32,10 +32,10 @@ let r = class {
     const t = this.t;
     if (i && void 0 === e) {
       const i = void 0 !== t && 1 === t.length;
-      i && (e = n.get(t)),
+      i && (e = r.get(t)),
         void 0 === e &&
           ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText),
-          i && n.set(t, e));
+          i && r.set(t, e));
     }
     return e;
   }
@@ -62,7 +62,7 @@ const a = (e, ...t) => {
               e[s + 1],
             e[0],
           );
-    return new r(i, e, s);
+    return new n(i, e, s);
   },
   o = i
     ? (e) => e
@@ -72,7 +72,7 @@ const a = (e, ...t) => {
               let t = "";
               for (const i of e.cssRules) t += i.cssText;
               return ((e) =>
-                new r("string" == typeof e ? e : e + "", void 0, s))(t);
+                new n("string" == typeof e ? e : e + "", void 0, s))(t);
             })(e)
           : e,
   {
@@ -85,14 +85,14 @@ const a = (e, ...t) => {
   } = Object,
   v = globalThis,
   u = v.trustedTypes,
-  g = u ? u.emptyScript : "",
-  f = v.reactiveElementPolyfillSupport,
-  m = (e, t) => e,
+  m = u ? u.emptyScript : "",
+  g = v.reactiveElementPolyfillSupport,
+  f = (e, t) => e,
   y = {
     toAttribute(e, t) {
       switch (t) {
         case Boolean:
-          e = e ? g : null;
+          e = e ? m : null;
           break;
         case Object:
         case Array:
@@ -152,7 +152,7 @@ let $ = class extends HTMLElement {
     }
   }
   static getPropertyDescriptor(e, t, i) {
-    const { get: s, set: n } = l(this.prototype, e) ?? {
+    const { get: s, set: r } = l(this.prototype, e) ?? {
       get() {
         return this[t];
       },
@@ -163,8 +163,8 @@ let $ = class extends HTMLElement {
     return {
       get: s,
       set(t) {
-        const r = s?.call(this);
-        n?.call(this, t), this.requestUpdate(e, r, i);
+        const n = s?.call(this);
+        r?.call(this, t), this.requestUpdate(e, n, i);
       },
       configurable: !0,
       enumerable: !0,
@@ -174,16 +174,16 @@ let $ = class extends HTMLElement {
     return this.elementProperties.get(e) ?? x;
   }
   static _$Ei() {
-    if (this.hasOwnProperty(m("elementProperties"))) return;
+    if (this.hasOwnProperty(f("elementProperties"))) return;
     const e = _(this);
     e.finalize(),
       void 0 !== e.l && (this.l = [...e.l]),
       (this.elementProperties = new Map(e.elementProperties));
   }
   static finalize() {
-    if (this.hasOwnProperty(m("finalized"))) return;
+    if (this.hasOwnProperty(f("finalized"))) return;
     if (
-      ((this.finalized = !0), this._$Ei(), this.hasOwnProperty(m("properties")))
+      ((this.finalized = !0), this._$Ei(), this.hasOwnProperty(f("properties")))
     ) {
       const e = this.properties,
         t = [...h(e), ...p(e)];
@@ -261,8 +261,8 @@ let $ = class extends HTMLElement {
         else
           for (const i of s) {
             const s = document.createElement("style"),
-              n = t.litNonce;
-            void 0 !== n && s.setAttribute("nonce", n),
+              r = t.litNonce;
+            void 0 !== r && s.setAttribute("nonce", r),
               (s.textContent = i.cssText),
               e.appendChild(s);
           }
@@ -286,11 +286,11 @@ let $ = class extends HTMLElement {
     const i = this.constructor.elementProperties.get(e),
       s = this.constructor._$Eu(e, i);
     if (void 0 !== s && !0 === i.reflect) {
-      const n = (
+      const r = (
         void 0 !== i.converter?.toAttribute ? i.converter : y
       ).toAttribute(t, i.type);
       (this._$Em = e),
-        null == n ? this.removeAttribute(s) : this.setAttribute(s, n),
+        null == r ? this.removeAttribute(s) : this.setAttribute(s, r),
         (this._$Em = null);
     }
   }
@@ -299,29 +299,29 @@ let $ = class extends HTMLElement {
       s = i._$Eh.get(e);
     if (void 0 !== s && this._$Em !== s) {
       const e = i.getPropertyOptions(s),
-        n =
+        r =
           "function" == typeof e.converter
             ? { fromAttribute: e.converter }
             : void 0 !== e.converter?.fromAttribute
               ? e.converter
               : y;
       this._$Em = s;
-      const r = n.fromAttribute(t, e.type);
-      (this[s] = r ?? this._$Ej?.get(s) ?? r), (this._$Em = null);
+      const n = r.fromAttribute(t, e.type);
+      (this[s] = n ?? this._$Ej?.get(s) ?? n), (this._$Em = null);
     }
   }
-  requestUpdate(e, t, i, s = !1, n) {
+  requestUpdate(e, t, i, s = !1, r) {
     if (void 0 !== e) {
-      const r = this.constructor;
+      const n = this.constructor;
       if (
-        (!1 === s && (n = this[e]),
-        (i ??= r.getPropertyOptions(e)),
+        (!1 === s && (r = this[e]),
+        (i ??= n.getPropertyOptions(e)),
         !(
-          (i.hasChanged ?? b)(n, t) ||
+          (i.hasChanged ?? b)(r, t) ||
           (i.useDefault &&
             i.reflect &&
-            n === this._$Ej?.get(e) &&
-            !this.hasAttribute(r._$Eu(e, i)))
+            r === this._$Ej?.get(e) &&
+            !this.hasAttribute(n._$Eu(e, i)))
         ))
       )
         return;
@@ -329,10 +329,10 @@ let $ = class extends HTMLElement {
     }
     !1 === this.isUpdatePending && (this._$ES = this._$EP());
   }
-  C(e, t, { useDefault: i, reflect: s, wrapped: n }, r) {
+  C(e, t, { useDefault: i, reflect: s, wrapped: r }, n) {
     (i &&
       !(this._$Ej ??= new Map()).has(e) &&
-      (this._$Ej.set(e, r ?? t ?? this[e]), !0 !== n || void 0 !== r)) ||
+      (this._$Ej.set(e, n ?? t ?? this[e]), !0 !== r || void 0 !== n)) ||
       (this._$AL.has(e) ||
         (this.hasUpdated || i || (t = void 0), this._$AL.set(e, t)),
       !0 === s && this._$Em !== e && (this._$Eq ??= new Set()).add(e));
@@ -409,51 +409,51 @@ let $ = class extends HTMLElement {
 };
 ($.elementStyles = []),
   ($.shadowRootOptions = { mode: "open" }),
-  ($[m("elementProperties")] = new Map()),
-  ($[m("finalized")] = new Map()),
-  f?.({ ReactiveElement: $ }),
+  ($[f("elementProperties")] = new Map()),
+  ($[f("finalized")] = new Map()),
+  g?.({ ReactiveElement: $ }),
   (v.reactiveElementVersions ??= []).push("2.1.2");
 const k = globalThis,
   w = (e) => e,
   C = k.trustedTypes,
-  A = C ? C.createPolicy("lit-html", { createHTML: (e) => e }) : void 0,
-  S = "$lit$",
+  S = C ? C.createPolicy("lit-html", { createHTML: (e) => e }) : void 0,
+  A = "$lit$",
   E = `lit$${Math.random().toFixed(9).slice(2)}$`,
   I = "?" + E,
-  T = `<${I}>`,
-  R = document,
-  z = () => R.createComment(""),
-  D = (e) => null === e || ("object" != typeof e && "function" != typeof e),
-  P = Array.isArray,
-  M = "[ \t\n\f\r]",
+  P = `<${I}>`,
+  D = document,
+  T = () => D.createComment(""),
+  R = (e) => null === e || ("object" != typeof e && "function" != typeof e),
+  M = Array.isArray,
+  z = "[ \t\n\f\r]",
   N = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,
-  U = /-->/g,
-  L = />/g,
-  O = RegExp(
-    `>|${M}(?:([^\\s"'>=/]+)(${M}*=${M}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,
+  L = /-->/g,
+  U = />/g,
+  V = RegExp(
+    `>|${z}(?:([^\\s"'>=/]+)(${z}*=${z}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,
     "g",
   ),
   K = /'/g,
-  H = /"/g,
-  j = /^(?:script|style|textarea|title)$/i,
-  B = (
+  O = /"/g,
+  B = /^(?:script|style|textarea|title)$/i,
+  j = (
     (e) =>
     (t, ...i) => ({ _$litType$: e, strings: t, values: i })
   )(1),
-  V = Symbol.for("lit-noChange"),
+  H = Symbol.for("lit-noChange"),
   W = Symbol.for("lit-nothing"),
   F = new WeakMap(),
-  G = R.createTreeWalker(R, 129);
+  G = D.createTreeWalker(D, 129);
 function Q(e, t) {
-  if (!P(e) || !e.hasOwnProperty("raw"))
+  if (!M(e) || !e.hasOwnProperty("raw"))
     throw Error("invalid template strings array");
-  return void 0 !== A ? A.createHTML(t) : t;
+  return void 0 !== S ? S.createHTML(t) : t;
 }
 const q = (e, t) => {
   const i = e.length - 1,
     s = [];
-  let n,
-    r = 2 === t ? "<svg>" : 3 === t ? "<math>" : "",
+  let r,
+    n = 2 === t ? "<svg>" : 3 === t ? "<math>" : "",
     a = N;
   for (let t = 0; t < i; t++) {
     const i = e[t];
@@ -465,49 +465,49 @@ const q = (e, t) => {
       (l = a.lastIndex),
         a === N
           ? "!--" === d[1]
-            ? (a = U)
+            ? (a = L)
             : void 0 !== d[1]
-              ? (a = L)
+              ? (a = U)
               : void 0 !== d[2]
-                ? (j.test(d[2]) && (n = RegExp("</" + d[2], "g")), (a = O))
-                : void 0 !== d[3] && (a = O)
-          : a === O
+                ? (B.test(d[2]) && (r = RegExp("</" + d[2], "g")), (a = V))
+                : void 0 !== d[3] && (a = V)
+          : a === V
             ? ">" === d[0]
-              ? ((a = n ?? N), (c = -1))
+              ? ((a = r ?? N), (c = -1))
               : void 0 === d[1]
                 ? (c = -2)
                 : ((c = a.lastIndex - d[2].length),
                   (o = d[1]),
-                  (a = void 0 === d[3] ? O : '"' === d[3] ? H : K))
-            : a === H || a === K
-              ? (a = O)
-              : a === U || a === L
+                  (a = void 0 === d[3] ? V : '"' === d[3] ? O : K))
+            : a === O || a === K
+              ? (a = V)
+              : a === L || a === U
                 ? (a = N)
-                : ((a = O), (n = void 0));
-    const h = a === O && e[t + 1].startsWith("/>") ? " " : "";
-    r +=
+                : ((a = V), (r = void 0));
+    const h = a === V && e[t + 1].startsWith("/>") ? " " : "";
+    n +=
       a === N
-        ? i + T
+        ? i + P
         : c >= 0
-          ? (s.push(o), i.slice(0, c) + S + i.slice(c) + E + h)
+          ? (s.push(o), i.slice(0, c) + A + i.slice(c) + E + h)
           : i + E + (-2 === c ? t : h);
   }
   return [
-    Q(e, r + (e[i] || "<?>") + (2 === t ? "</svg>" : 3 === t ? "</math>" : "")),
+    Q(e, n + (e[i] || "<?>") + (2 === t ? "</svg>" : 3 === t ? "</math>" : "")),
     s,
   ];
 };
-class Y {
+class J {
   constructor({ strings: e, _$litType$: t }, i) {
     let s;
     this.parts = [];
-    let n = 0,
-      r = 0;
+    let r = 0,
+      n = 0;
     const a = e.length - 1,
       o = this.parts,
       [d, c] = q(e, t);
     if (
-      ((this.el = Y.createElement(d, i)),
+      ((this.el = J.createElement(d, i)),
       (G.currentNode = this.el.content),
       2 === t || 3 === t)
     ) {
@@ -518,13 +518,13 @@ class Y {
       if (1 === s.nodeType) {
         if (s.hasAttributes())
           for (const e of s.getAttributeNames())
-            if (e.endsWith(S)) {
-              const t = c[r++],
+            if (e.endsWith(A)) {
+              const t = c[n++],
                 i = s.getAttribute(e).split(E),
                 a = /([.?@])?(.*)/.exec(t);
               o.push({
                 type: 1,
-                index: n,
+                index: r,
                 name: a[2],
                 strings: i,
                 ctor:
@@ -539,44 +539,44 @@ class Y {
                 s.removeAttribute(e);
             } else
               e.startsWith(E) &&
-                (o.push({ type: 6, index: n }), s.removeAttribute(e));
-        if (j.test(s.tagName)) {
+                (o.push({ type: 6, index: r }), s.removeAttribute(e));
+        if (B.test(s.tagName)) {
           const e = s.textContent.split(E),
             t = e.length - 1;
           if (t > 0) {
             s.textContent = C ? C.emptyScript : "";
             for (let i = 0; i < t; i++)
-              s.append(e[i], z()),
+              s.append(e[i], T()),
                 G.nextNode(),
-                o.push({ type: 2, index: ++n });
-            s.append(e[t], z());
+                o.push({ type: 2, index: ++r });
+            s.append(e[t], T());
           }
         }
       } else if (8 === s.nodeType)
-        if (s.data === I) o.push({ type: 2, index: n });
+        if (s.data === I) o.push({ type: 2, index: r });
         else {
           let e = -1;
           for (; -1 !== (e = s.data.indexOf(E, e + 1)); )
-            o.push({ type: 7, index: n }), (e += E.length - 1);
+            o.push({ type: 7, index: r }), (e += E.length - 1);
         }
-      n++;
+      r++;
     }
   }
   static createElement(e, t) {
-    const i = R.createElement("template");
+    const i = D.createElement("template");
     return (i.innerHTML = e), i;
   }
 }
-function J(e, t, i = e, s) {
-  if (t === V) return t;
-  let n = void 0 !== s ? i._$Co?.[s] : i._$Cl;
-  const r = D(t) ? void 0 : t._$litDirective$;
+function Y(e, t, i = e, s) {
+  if (t === H) return t;
+  let r = void 0 !== s ? i._$Co?.[s] : i._$Cl;
+  const n = R(t) ? void 0 : t._$litDirective$;
   return (
-    n?.constructor !== r &&
-      (n?._$AO?.(!1),
-      void 0 === r ? (n = void 0) : ((n = new r(e)), n._$AT(e, i, s)),
-      void 0 !== s ? ((i._$Co ??= [])[s] = n) : (i._$Cl = n)),
-    void 0 !== n && (t = J(e, n._$AS(e, t.values), n, s)),
+    r?.constructor !== n &&
+      (r?._$AO?.(!1),
+      void 0 === n ? (r = void 0) : ((r = new n(e)), r._$AT(e, i, s)),
+      void 0 !== s ? ((i._$Co ??= [])[s] = r) : (i._$Cl = r)),
+    void 0 !== r && (t = Y(e, r._$AS(e, t.values), r, s)),
     t
   );
 }
@@ -595,26 +595,26 @@ class Z {
         el: { content: t },
         parts: i,
       } = this._$AD,
-      s = (e?.creationScope ?? R).importNode(t, !0);
+      s = (e?.creationScope ?? D).importNode(t, !0);
     G.currentNode = s;
-    let n = G.nextNode(),
-      r = 0,
+    let r = G.nextNode(),
+      n = 0,
       a = 0,
       o = i[0];
     for (; void 0 !== o; ) {
-      if (r === o.index) {
+      if (n === o.index) {
         let t;
         2 === o.type
-          ? (t = new X(n, n.nextSibling, this, e))
+          ? (t = new X(r, r.nextSibling, this, e))
           : 1 === o.type
-            ? (t = new o.ctor(n, o.name, o.strings, this, e))
-            : 6 === o.type && (t = new ne(n, this, e)),
+            ? (t = new o.ctor(r, o.name, o.strings, this, e))
+            : 6 === o.type && (t = new re(r, this, e)),
           this._$AV.push(t),
           (o = i[++a]);
       }
-      r !== o?.index && ((n = G.nextNode()), r++);
+      n !== o?.index && ((r = G.nextNode()), n++);
     }
-    return (G.currentNode = R), s;
+    return (G.currentNode = D), s;
   }
   p(e) {
     let t = 0;
@@ -652,16 +652,16 @@ class X {
     return this._$AB;
   }
   _$AI(e, t = this) {
-    (e = J(this, e, t)),
-      D(e)
+    (e = Y(this, e, t)),
+      R(e)
         ? e === W || null == e || "" === e
           ? (this._$AH !== W && this._$AR(), (this._$AH = W))
-          : e !== this._$AH && e !== V && this._(e)
+          : e !== this._$AH && e !== H && this._(e)
         : void 0 !== e._$litType$
           ? this.$(e)
           : void 0 !== e.nodeType
             ? this.T(e)
-            : ((e) => P(e) || "function" == typeof e?.[Symbol.iterator])(e)
+            : ((e) => M(e) || "function" == typeof e?.[Symbol.iterator])(e)
               ? this.k(e)
               : this._(e);
   }
@@ -672,9 +672,9 @@ class X {
     this._$AH !== e && (this._$AR(), (this._$AH = this.O(e)));
   }
   _(e) {
-    this._$AH !== W && D(this._$AH)
+    this._$AH !== W && R(this._$AH)
       ? (this._$AA.nextSibling.data = e)
-      : this.T(R.createTextNode(e)),
+      : this.T(D.createTextNode(e)),
       (this._$AH = e);
   }
   $(e) {
@@ -683,7 +683,7 @@ class X {
         "number" == typeof i
           ? this._$AC(e)
           : (void 0 === i.el &&
-              (i.el = Y.createElement(Q(i.h, i.h[0]), this.options)),
+              (i.el = J.createElement(Q(i.h, i.h[0]), this.options)),
             i);
     if (this._$AH?._$AD === s) this._$AH.p(t);
     else {
@@ -694,18 +694,18 @@ class X {
   }
   _$AC(e) {
     let t = F.get(e.strings);
-    return void 0 === t && F.set(e.strings, (t = new Y(e))), t;
+    return void 0 === t && F.set(e.strings, (t = new J(e))), t;
   }
   k(e) {
-    P(this._$AH) || ((this._$AH = []), this._$AR());
+    M(this._$AH) || ((this._$AH = []), this._$AR());
     const t = this._$AH;
     let i,
       s = 0;
-    for (const n of e)
+    for (const r of e)
       s === t.length
-        ? t.push((i = new X(this.O(z()), this.O(z()), this, this.options)))
+        ? t.push((i = new X(this.O(T()), this.O(T()), this, this.options)))
         : (i = t[s]),
-        i._$AI(n),
+        i._$AI(r),
         s++;
     s < t.length && (this._$AR(i && i._$AB.nextSibling, s), (t.length = s));
   }
@@ -726,37 +726,37 @@ class ee {
   get _$AU() {
     return this._$AM._$AU;
   }
-  constructor(e, t, i, s, n) {
+  constructor(e, t, i, s, r) {
     (this.type = 1),
       (this._$AH = W),
       (this._$AN = void 0),
       (this.element = e),
       (this.name = t),
       (this._$AM = s),
-      (this.options = n),
+      (this.options = r),
       i.length > 2 || "" !== i[0] || "" !== i[1]
         ? ((this._$AH = Array(i.length - 1).fill(new String())),
           (this.strings = i))
         : (this._$AH = W);
   }
   _$AI(e, t = this, i, s) {
-    const n = this.strings;
-    let r = !1;
-    if (void 0 === n)
-      (e = J(this, e, t, 0)),
-        (r = !D(e) || (e !== this._$AH && e !== V)),
-        r && (this._$AH = e);
+    const r = this.strings;
+    let n = !1;
+    if (void 0 === r)
+      (e = Y(this, e, t, 0)),
+        (n = !R(e) || (e !== this._$AH && e !== H)),
+        n && (this._$AH = e);
     else {
       const s = e;
       let a, o;
-      for (e = n[0], a = 0; a < n.length - 1; a++)
-        (o = J(this, s[i + a], t, a)),
-          o === V && (o = this._$AH[a]),
-          (r ||= !D(o) || o !== this._$AH[a]),
-          o === W ? (e = W) : e !== W && (e += (o ?? "") + n[a + 1]),
+      for (e = r[0], a = 0; a < r.length - 1; a++)
+        (o = Y(this, s[i + a], t, a)),
+          o === H && (o = this._$AH[a]),
+          (n ||= !R(o) || o !== this._$AH[a]),
+          o === W ? (e = W) : e !== W && (e += (o ?? "") + r[a + 1]),
           (this._$AH[a] = o);
     }
-    r && !s && this.j(e);
+    n && !s && this.j(e);
   }
   j(e) {
     e === W
@@ -781,20 +781,20 @@ class ie extends ee {
   }
 }
 class se extends ee {
-  constructor(e, t, i, s, n) {
-    super(e, t, i, s, n), (this.type = 5);
+  constructor(e, t, i, s, r) {
+    super(e, t, i, s, r), (this.type = 5);
   }
   _$AI(e, t = this) {
-    if ((e = J(this, e, t, 0) ?? W) === V) return;
+    if ((e = Y(this, e, t, 0) ?? W) === H) return;
     const i = this._$AH,
       s =
         (e === W && i !== W) ||
         e.capture !== i.capture ||
         e.once !== i.once ||
         e.passive !== i.passive,
-      n = e !== W && (i === W || s);
+      r = e !== W && (i === W || s);
     s && this.element.removeEventListener(this.name, this, i),
-      n && this.element.addEventListener(this.name, this, e),
+      r && this.element.addEventListener(this.name, this, e),
       (this._$AH = e);
   }
   handleEvent(e) {
@@ -803,7 +803,7 @@ class se extends ee {
       : this._$AH.handleEvent(e);
   }
 }
-class ne {
+class re {
   constructor(e, t, i) {
     (this.element = e),
       (this.type = 6),
@@ -815,11 +815,11 @@ class ne {
     return this._$AM._$AU;
   }
   _$AI(e) {
-    J(this, e);
+    Y(this, e);
   }
 }
-const re = k.litHtmlPolyfillSupport;
-re?.(Y, X), (k.litHtmlVersions ??= []).push("3.3.2");
+const ne = k.litHtmlPolyfillSupport;
+ne?.(J, X), (k.litHtmlVersions ??= []).push("3.3.2");
 const ae = globalThis;
 class oe extends $ {
   constructor() {
@@ -837,12 +837,12 @@ class oe extends $ {
       super.update(e),
       (this._$Do = ((e, t, i) => {
         const s = i?.renderBefore ?? t;
-        let n = s._$litPart$;
-        if (void 0 === n) {
+        let r = s._$litPart$;
+        if (void 0 === r) {
           const e = i?.renderBefore ?? null;
-          s._$litPart$ = n = new X(t.insertBefore(z(), e), e, void 0, i ?? {});
+          s._$litPart$ = r = new X(t.insertBefore(T(), e), e, void 0, i ?? {});
         }
-        return n._$AI(e), n;
+        return r._$AI(e), r;
       })(t, this.renderRoot, this.renderOptions));
   }
   connectedCallback() {
@@ -852,7 +852,7 @@ class oe extends $ {
     super.disconnectedCallback(), this._$Do?.setConnected(!1);
   }
   render() {
-    return V;
+    return H;
   }
 }
 (oe._$litElement$ = !0),
@@ -868,19 +868,19 @@ const ce = {
     hasChanged: b,
   },
   le = (e = ce, t, i) => {
-    const { kind: s, metadata: n } = i;
-    let r = globalThis.litPropertyMetadata.get(n);
+    const { kind: s, metadata: r } = i;
+    let n = globalThis.litPropertyMetadata.get(r);
     if (
-      (void 0 === r && globalThis.litPropertyMetadata.set(n, (r = new Map())),
+      (void 0 === n && globalThis.litPropertyMetadata.set(r, (n = new Map())),
       "setter" === s && ((e = Object.create(e)).wrapped = !0),
-      r.set(i.name, e),
+      n.set(i.name, e),
       "accessor" === s)
     ) {
       const { name: s } = i;
       return {
         set(i) {
-          const n = t.get.call(this);
-          t.set.call(this, i), this.requestUpdate(s, n, e, !0, i);
+          const r = t.get.call(this);
+          t.set.call(this, i), this.requestUpdate(s, r, e, !0, i);
         },
         init(t) {
           return void 0 !== t && this.C(s, void 0, e, t), t;
@@ -890,8 +890,8 @@ const ce = {
     if ("setter" === s) {
       const { name: s } = i;
       return function (i) {
-        const n = this[s];
-        t.call(this, i), this.requestUpdate(s, n, e, !0, i);
+        const r = this[s];
+        t.call(this, i), this.requestUpdate(s, r, e, !0, i);
       };
     }
     throw Error("Unsupported decorator location: " + s);
@@ -1077,7 +1077,7 @@ const ve = a`
   }
 `,
   ue = new Set(["BidCos-RF", "BidCos-Wired", "HmIP-RF"]);
-async function ge(e, t) {
+async function me(e, t) {
   return (
     await e.callWS({
       type: "homematicip_local/config/list_devices",
@@ -1085,23 +1085,23 @@ async function ge(e, t) {
     })
   ).devices;
 }
-async function fe(e, t, i, s, n = "", r = "MASTER") {
+async function ge(e, t, i, s, r = "", n = "MASTER") {
   return e.callWS({
     type: "homematicip_local/config/get_form_schema",
     entry_id: t,
     interface_id: i,
     channel_address: s,
-    channel_type: n,
-    paramset_key: r,
+    channel_type: r,
+    paramset_key: n,
   });
 }
-async function me(e, t, i, s, n = "MASTER") {
+async function fe(e, t, i, s, r = "MASTER") {
   return e.callWS({
     type: "homematicip_local/config/session_open",
     entry_id: t,
     interface_id: i,
     channel_address: s,
-    paramset_key: n,
+    paramset_key: r,
   });
 }
 async function ye(e, t, i, s = "MASTER") {
@@ -1112,7 +1112,39 @@ async function ye(e, t, i, s = "MASTER") {
     paramset_key: s,
   });
 }
-const be = {
+async function be(e, t, i, s, r) {
+  return e.callWS({
+    type: "homematicip_local/config/get_link_form_schema",
+    entry_id: t,
+    interface_id: i,
+    sender_channel_address: s,
+    receiver_channel_address: r,
+  });
+}
+async function xe(e, t, i, s, r, n) {
+  return e.callWS({
+    type: "homematicip_local/config/put_link_paramset",
+    entry_id: t,
+    interface_id: i,
+    sender_channel_address: s,
+    receiver_channel_address: r,
+    values: n,
+  });
+}
+async function $e(e, t, i, s, r) {
+  try {
+    return await e.callWS({
+      type: "homematicip_local/config/get_link_profiles",
+      entry_id: t,
+      interface_id: i,
+      sender_channel_address: s,
+      receiver_channel_address: r,
+    });
+  } catch {
+    return null;
+  }
+}
+const ke = {
   en: {
     common: {
       back: "Back",
@@ -1158,7 +1190,15 @@ const be = {
       import_validation_failed: "Import validation failed.",
       show_history: "Change History",
       show_links: "Direct Links",
+      rssi_device: "RSSI Device",
+      rssi_peer: "RSSI Peer",
+      dutycycle: "Duty Cycle",
+      low_bat: "Low Battery",
+      unreach: "Reachability",
+      config_pending_label: "Config Pending",
     },
+    form_parameter: { toggle_on: "On", toggle_off: "Off" },
+    time_selector: { base: "Base", factor: "Factor" },
     channel_config: {
       save: "Save",
       saving: "Saving...",
@@ -1214,6 +1254,14 @@ const be = {
       confirm_save_text: "Apply {count} change(s) to this link?",
       unsaved_title: "Unsaved Changes",
       unsaved_warning: "You have unsaved changes. Discard them and go back?",
+      receiver_params: "Receiver Parameters",
+      sender_params: "Sender Parameters",
+      no_params: "No configurable parameters for this link.",
+      profile: "Profile",
+      short_keypress: "Short keypress",
+      long_keypress: "Long keypress",
+      last_value: "Last value",
+      custom_time: "Custom",
     },
     add_link: {
       title: "New Direct Link",
@@ -1279,7 +1327,15 @@ const be = {
       import_validation_failed: "Import-Validierung fehlgeschlagen.",
       show_history: "Änderungsverlauf",
       show_links: "Direktverknüpfungen",
+      rssi_device: "RSSI Gerät",
+      rssi_peer: "RSSI Peer",
+      dutycycle: "Duty Cycle",
+      low_bat: "Batterie schwach",
+      unreach: "Erreichbarkeit",
+      config_pending_label: "Konfig. ausstehend",
     },
+    form_parameter: { toggle_on: "Ein", toggle_off: "Aus" },
+    time_selector: { base: "Basis", factor: "Faktor" },
     channel_config: {
       save: "Speichern",
       saving: "Speichern...",
@@ -1338,6 +1394,14 @@ const be = {
       unsaved_title: "Ungespeicherte Änderungen",
       unsaved_warning:
         "Es gibt ungespeicherte Änderungen. Verwerfen und zurückgehen?",
+      receiver_params: "Empfänger-Parameter",
+      sender_params: "Sender-Parameter",
+      no_params: "Keine konfigurierbaren Parameter für diese Verknüpfung.",
+      profile: "Profil",
+      short_keypress: "Kurzer Tastendruck",
+      long_keypress: "Langer Tastendruck",
+      last_value: "Letzter Wert",
+      custom_time: "Benutzerdefiniert",
     },
     add_link: {
       title: "Neue Direktverknüpfung",
@@ -1359,30 +1423,30 @@ const be = {
     },
   },
 };
-function xe(e, t = "") {
+function we(e, t = "") {
   const i = {};
-  for (const [s, n] of Object.entries(e)) {
+  for (const [s, r] of Object.entries(e)) {
     const e = t ? `${t}.${s}` : s;
-    "string" == typeof n
-      ? (i[e] = n)
-      : "object" == typeof n && null !== n && Object.assign(i, xe(n, e));
+    "string" == typeof r
+      ? (i[e] = r)
+      : "object" == typeof r && null !== r && Object.assign(i, we(r, e));
   }
   return i;
 }
-const $e = new Map();
-function ke(e) {
-  if ($e.has(e)) return $e.get(e);
-  const t = xe(be[e] ?? be.en);
-  return $e.set(e, t), t;
+const Ce = new Map();
+function Se(e) {
+  if (Ce.has(e)) return Ce.get(e);
+  const t = we(ke[e] ?? ke.en);
+  return Ce.set(e, t), t;
 }
-function we(e, t, i) {
-  const s = ke(e.config.language ?? "en");
-  let n = s[t] ?? s[t.replace(/^panel\./, "")] ?? t;
+function Ae(e, t, i) {
+  const s = Se(e.config.language ?? "en");
+  let r = s[t] ?? s[t.replace(/^panel\./, "")] ?? t;
   if (i)
-    for (const [e, t] of Object.entries(i)) n = n.replace(`{${e}}`, String(t));
-  return n;
+    for (const [e, t] of Object.entries(i)) r = r.replace(`{${e}}`, String(t));
+  return r;
 }
-let Ce = class extends oe {
+let Ee = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -1399,7 +1463,7 @@ let Ce = class extends oe {
     if (this.entryId) {
       (this._loading = !0), (this._error = "");
       try {
-        this._devices = await ge(this.hass, this.entryId);
+        this._devices = await me(this.hass, this.entryId);
       } catch (e) {
         (this._error = String(e)), (this._devices = []);
       } finally {
@@ -1408,7 +1472,7 @@ let Ce = class extends oe {
     }
   }
   _l(e, t) {
-    return we(this.hass, e, t);
+    return Ae(this.hass, e, t);
   }
   get _filteredDevices() {
     if (!this._searchQuery) return this._devices;
@@ -1452,29 +1516,29 @@ let Ce = class extends oe {
   }
   _renderMaintenanceIcons(e) {
     return e && 0 !== Object.keys(e).length
-      ? B`
+      ? j`
       <div class="device-status">
         ${
           !0 === e.unreach
-            ? B`<span class="status-badge unreachable" title="${this._l(
+            ? j`<span class="status-badge unreachable" title="${this._l(
                 "device_list.unreachable",
               )}">&#x274C;</span>`
             : !1 === e.unreach
-              ? B`<span class="status-badge reachable" title="${this._l(
+              ? j`<span class="status-badge reachable" title="${this._l(
                   "device_list.reachable",
                 )}">&#x2705;</span>`
               : W
         }
         ${
           !0 === e.low_bat
-            ? B`<span class="status-badge low-bat" title="${this._l(
+            ? j`<span class="status-badge low-bat" title="${this._l(
                 "device_list.low_battery",
               )}">&#x1F50B;</span>`
             : W
         }
         ${
           !0 === e.config_pending
-            ? B`<span class="status-badge config-pending" title="${this._l(
+            ? j`<span class="status-badge config-pending" title="${this._l(
                 "device_list.config_pending",
               )}">&#x23F3;</span>`
             : W
@@ -1484,14 +1548,14 @@ let Ce = class extends oe {
       : W;
   }
   render() {
-    return B`
+    return j`
       <div class="panel-header">
         <h1>${this._l("device_list.title")}</h1>
       </div>
 
       ${
         this.entries.length > 1
-          ? B`
+          ? j`
             <div class="entry-selector">
               <label>${this._l("device_list.select_ccu")}</label>
               <select @change=${this._handleEntryChanged}>
@@ -1499,7 +1563,7 @@ let Ce = class extends oe {
                   ${this._l("device_list.select_placeholder")}
                 </option>
                 ${this.entries.map(
-                  (e) => B`
+                  (e) => j`
                     <option
                       value=${e.entry_id}
                       ?selected=${e.entry_id === this.entryId}
@@ -1516,7 +1580,7 @@ let Ce = class extends oe {
 
       ${
         this.entryId
-          ? B`
+          ? j`
             <div class="search-bar">
               <input
                 type="text"
@@ -1533,31 +1597,31 @@ let Ce = class extends oe {
 
       ${
         this._loading
-          ? B`<div class="loading"><span>${this._l(
+          ? j`<div class="loading"><span>${this._l(
               "common.loading",
             )}</span></div>`
           : this._error
-            ? B`<div class="error">${this._error}</div>`
+            ? j`<div class="error">${this._error}</div>`
             : this.entryId
               ? 0 === this._filteredDevices.length
-                ? B`<div class="empty-state">${this._l(
+                ? j`<div class="empty-state">${this._l(
                     "device_list.no_devices",
                   )}</div>`
                 : this._renderDeviceGroups()
-              : B`<div class="empty-state">${this._l(
+              : j`<div class="empty-state">${this._l(
                   "device_list.no_entry_selected",
                 )}</div>`
       }
     `;
   }
   _renderDeviceGroups() {
-    return B`
+    return j`
       ${Array.from(this._groupedDevices.entries()).map(
-        ([e, t]) => B`
+        ([e, t]) => j`
           <div class="interface-group">
             <div class="interface-header">${e}</div>
             ${t.map(
-              (e) => B`
+              (e) => j`
                 <div
                   class="device-card"
                   @click=${() => this._handleDeviceClick(e)}
@@ -1717,7 +1781,7 @@ let Ce = class extends oe {
     ];
   }
 };
-function Ae(e, t) {
+function Ie(e, t) {
   return new Promise((i) => {
     const s = new CustomEvent("hass-dialog", {
       bubbles: !0,
@@ -1731,7 +1795,7 @@ function Ae(e, t) {
     e.dispatchEvent(s);
   });
 }
-function Se(e, t) {
+function Pe(e, t) {
   const i = new CustomEvent("hass-notification", {
     bubbles: !0,
     composed: !0,
@@ -1739,15 +1803,15 @@ function Se(e, t) {
   });
   e.dispatchEvent(i);
 }
-e([he({ attribute: !1 })], Ce.prototype, "hass", void 0),
-  e([he()], Ce.prototype, "entryId", void 0),
-  e([he({ attribute: !1 })], Ce.prototype, "entries", void 0),
-  e([pe()], Ce.prototype, "_devices", void 0),
-  e([pe()], Ce.prototype, "_loading", void 0),
-  e([pe()], Ce.prototype, "_searchQuery", void 0),
-  e([pe()], Ce.prototype, "_error", void 0),
-  (Ce = e([_e("hm-device-list")], Ce));
-let Ee = class extends oe {
+e([he({ attribute: !1 })], Ee.prototype, "hass", void 0),
+  e([he()], Ee.prototype, "entryId", void 0),
+  e([he({ attribute: !1 })], Ee.prototype, "entries", void 0),
+  e([pe()], Ee.prototype, "_devices", void 0),
+  e([pe()], Ee.prototype, "_loading", void 0),
+  e([pe()], Ee.prototype, "_searchQuery", void 0),
+  e([pe()], Ee.prototype, "_error", void 0),
+  (Ee = e([_e("hm-device-list")], Ee));
+let De = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -1766,7 +1830,7 @@ let Ee = class extends oe {
   async _fetchDevice() {
     (this._loading = !0), (this._error = "");
     try {
-      const e = await ge(this.hass, this.entryId);
+      const e = await me(this.hass, this.entryId);
       this._device = e.find((e) => e.address === this.deviceAddress) ?? null;
     } catch (e) {
       this._error = String(e);
@@ -1775,7 +1839,7 @@ let Ee = class extends oe {
     }
   }
   _l(e, t) {
-    return we(this.hass, e, t);
+    return Ae(this.hass, e, t);
   }
   _handleBack() {
     this.dispatchEvent(new CustomEvent("back", { bubbles: !0, composed: !0 }));
@@ -1819,25 +1883,25 @@ let Ee = class extends oe {
   }
   async _handleExport(e) {
     try {
-      const t = await (async function (e, t, i, s, n = "MASTER") {
+      const t = await (async function (e, t, i, s, r = "MASTER") {
           return e.callWS({
             type: "homematicip_local/config/export_paramset",
             entry_id: t,
             interface_id: i,
             channel_address: s,
-            paramset_key: n,
+            paramset_key: r,
           });
         })(this.hass, this.entryId, this.interfaceId, e.address, "MASTER"),
         i = new Blob([t.json_data], { type: "application/json" }),
         s = URL.createObjectURL(i),
-        n = document.createElement("a");
-      (n.href = s),
-        (n.download = `${e.address.replace(/:/g, "_")}_MASTER.json`),
-        n.click(),
+        r = document.createElement("a");
+      (r.href = s),
+        (r.download = `${e.address.replace(/:/g, "_")}_MASTER.json`),
+        r.click(),
         URL.revokeObjectURL(s),
-        Se(this, { message: this._l("device_detail.export_success") });
+        Pe(this, { message: this._l("device_detail.export_success") });
     } catch {
-      Se(this, { message: this._l("device_detail.export_failed") });
+      Pe(this, { message: this._l("device_detail.export_failed") });
     }
   }
   async _handleImport(e) {
@@ -1850,7 +1914,7 @@ let Ee = class extends oe {
           try {
             const t = await i.text();
             if (
-              !(await Ae(this, {
+              !(await Ie(this, {
                 title: this._l("device_detail.import_confirm_title"),
                 text: this._l("device_detail.import_confirm_text", {
                   channel: e.address,
@@ -1860,14 +1924,14 @@ let Ee = class extends oe {
               }))
             )
               return;
-            const s = await (async function (e, t, i, s, n, r = "MASTER") {
+            const s = await (async function (e, t, i, s, r, n = "MASTER") {
               return e.callWS({
                 type: "homematicip_local/config/import_paramset",
                 entry_id: t,
                 interface_id: i,
                 channel_address: s,
-                json_data: n,
-                paramset_key: r,
+                json_data: r,
+                paramset_key: n,
               });
             })(
               this.hass,
@@ -1878,28 +1942,28 @@ let Ee = class extends oe {
               "MASTER",
             );
             s.success
-              ? Se(this, { message: this._l("device_detail.import_success") })
-              : Se(this, {
+              ? Pe(this, { message: this._l("device_detail.import_success") })
+              : Pe(this, {
                   message: this._l("device_detail.import_validation_failed"),
                 });
           } catch {
-            Se(this, { message: this._l("device_detail.import_failed") });
+            Pe(this, { message: this._l("device_detail.import_failed") });
           }
       }),
       t.click();
   }
   render() {
     if (this._loading)
-      return B`<div class="loading">${this._l("common.loading")}</div>`;
-    if (this._error) return B`<div class="error">${this._error}</div>`;
+      return j`<div class="loading">${this._l("common.loading")}</div>`;
+    if (this._error) return j`<div class="error">${this._error}</div>`;
     if (!this._device)
-      return B`<div class="empty-state">${this._l(
+      return j`<div class="empty-state">${this._l(
         "device_detail.not_found",
       )}</div>`;
     const e = this._device,
       t = e.channels.find((e) => e.address.endsWith(":0")),
       i = e.channels.filter((e) => !e.address.endsWith(":0"));
-    return B`
+    return j`
       <button class="back-button" @click=${this._handleBack}>
         \u25C2 ${this._l("common.back")}
       </button>
@@ -1913,7 +1977,7 @@ let Ee = class extends oe {
         <div class="header-actions">
           ${
             ue.has(e.interface)
-              ? B`
+              ? j`
                 <button class="history-button" @click=${this._handleShowLinks}>
                   ${this._l("device_detail.show_links")}
                 </button>
@@ -1933,15 +1997,15 @@ let Ee = class extends oe {
   _renderMaintenanceChannel(e, t) {
     const i = t && Object.keys(t).length > 0,
       s = e.paramset_keys.includes("MASTER");
-    return B`
+    return j`
       <div class="channel-card maintenance">
         <div class="channel-header">
-          ${this._l("device_detail.channel")} 0: ${e.channel_type}
+          ${this._l("device_detail.channel")} 0: ${e.channel_type_label}
         </div>
         ${i ? this._renderStatusSummary(t) : W}
         ${
           s
-            ? B`
+            ? j`
               <div class="channel-actions">
                 <button
                   class="configure-button"
@@ -1973,17 +2037,25 @@ let Ee = class extends oe {
     return (
       void 0 !== e.rssi_device &&
         t.push({
-          label: "RSSI DEVICE",
+          label: this._l("device_detail.rssi_device"),
           value: `${e.rssi_device} dBm`,
           icon: "📶",
         }),
       void 0 !== e.rssi_peer &&
-        t.push({ label: "RSSI PEER", value: `${e.rssi_peer} dBm`, icon: "📶" }),
+        t.push({
+          label: this._l("device_detail.rssi_peer"),
+          value: `${e.rssi_peer} dBm`,
+          icon: "📶",
+        }),
       void 0 !== e.dutycycle &&
-        t.push({ label: "DUTYCYCLE", value: String(e.dutycycle), icon: "⏱" }),
+        t.push({
+          label: this._l("device_detail.dutycycle"),
+          value: String(e.dutycycle),
+          icon: "⏱",
+        }),
       void 0 !== e.low_bat &&
         t.push({
-          label: "LOW BAT",
+          label: this._l("device_detail.low_bat"),
           value: e.low_bat
             ? this._l("device_detail.yes")
             : this._l("device_detail.no"),
@@ -1991,7 +2063,7 @@ let Ee = class extends oe {
         }),
       void 0 !== e.unreach &&
         t.push({
-          label: "UNREACH",
+          label: this._l("device_detail.unreach"),
           value: e.unreach
             ? this._l("device_detail.unreachable")
             : this._l("device_detail.reachable"),
@@ -1999,7 +2071,7 @@ let Ee = class extends oe {
         }),
       void 0 !== e.config_pending &&
         t.push({
-          label: "CONFIG PENDING",
+          label: this._l("device_detail.config_pending_label"),
           value: e.config_pending
             ? this._l("device_detail.yes")
             : this._l("device_detail.no"),
@@ -2007,10 +2079,10 @@ let Ee = class extends oe {
         }),
       0 === t.length
         ? W
-        : B`
+        : j`
       <div class="status-grid">
         ${t.map(
-          (e) => B`
+          (e) => j`
             <div class="status-item">
               <span class="status-icon">${e.icon}</span>
               <span>${e.label}: ${e.value}</span>
@@ -2024,14 +2096,14 @@ let Ee = class extends oe {
   _renderChannel(e) {
     const t = e.address.split(":").pop() ?? "",
       i = e.paramset_keys.includes("MASTER");
-    return B`
+    return j`
       <div class="channel-card">
         <div class="channel-header">
-          ${this._l("device_detail.channel")} ${t}: ${e.channel_type}
+          ${this._l("device_detail.channel")} ${t}: ${e.channel_type_label}
         </div>
         ${
           i
-            ? B`
+            ? j`
               <div class="channel-actions">
                 <button
                   class="configure-button"
@@ -2053,7 +2125,7 @@ let Ee = class extends oe {
                 </button>
               </div>
             `
-            : B`
+            : j`
               <div class="channel-no-config">
                 ${this._l("device_detail.no_master_config")}
               </div>
@@ -2149,15 +2221,15 @@ let Ee = class extends oe {
     ];
   }
 };
-e([he({ attribute: !1 })], Ee.prototype, "hass", void 0),
-  e([he()], Ee.prototype, "entryId", void 0),
-  e([he()], Ee.prototype, "interfaceId", void 0),
-  e([he()], Ee.prototype, "deviceAddress", void 0),
-  e([pe()], Ee.prototype, "_device", void 0),
-  e([pe()], Ee.prototype, "_loading", void 0),
-  e([pe()], Ee.prototype, "_error", void 0),
-  (Ee = e([_e("hm-device-detail")], Ee));
-let Ie = class extends oe {
+e([he({ attribute: !1 })], De.prototype, "hass", void 0),
+  e([he()], De.prototype, "entryId", void 0),
+  e([he()], De.prototype, "interfaceId", void 0),
+  e([he()], De.prototype, "deviceAddress", void 0),
+  e([pe()], De.prototype, "_device", void 0),
+  e([pe()], De.prototype, "_loading", void 0),
+  e([pe()], De.prototype, "_error", void 0),
+  (De = e([_e("hm-device-detail")], De));
+let Te = class extends oe {
   constructor() {
     super(...arguments),
       (this.value = null),
@@ -2180,12 +2252,12 @@ let Ie = class extends oe {
   render() {
     const e = this.parameter,
       t = !e.writable;
-    return B`
+    return j`
       <div class="parameter-row ${t ? "read-only" : ""}">
         <div class="parameter-label">
           ${e.label}
-          ${e.unit ? B`<span class="parameter-unit">(${e.unit})</span>` : W}
-          ${this.modified ? B`<span class="modified-dot"></span>` : W}
+          ${e.unit ? j`<span class="parameter-unit">(${e.unit})</span>` : W}
+          ${this.modified ? j`<span class="modified-dot"></span>` : W}
         </div>
         <div class="parameter-control">
           ${this._renderWidget(e, t)}
@@ -2193,7 +2265,7 @@ let Ie = class extends oe {
       </div>
       ${
         this.validationError
-          ? B`<div class="validation-error">${this.validationError}</div>`
+          ? j`<div class="validation-error">${this.validationError}</div>`
           : W
       }
     `;
@@ -2201,7 +2273,7 @@ let Ie = class extends oe {
   _renderWidget(e, t) {
     switch (e.widget) {
       case "toggle":
-        return B`
+        return j`
           <label class="toggle">
             <input
               type="checkbox"
@@ -2211,11 +2283,15 @@ let Ie = class extends oe {
                 this._emitChange(e.target.checked);
               }}
             />
-            <span class="toggle-label">${this.value ? "On" : "Off"}</span>
+            <span class="toggle-label">${
+              this.value
+                ? Ae(this.hass, "form_parameter.toggle_on")
+                : Ae(this.hass, "form_parameter.toggle_off")
+            }</span>
           </label>
         `;
       case "slider_with_input":
-        return B`
+        return j`
           <div class="slider-group">
             <input
               type="range"
@@ -2245,7 +2321,7 @@ let Ie = class extends oe {
           </div>
         `;
       case "number_input":
-        return B`
+        return j`
           <input
             type="number"
             class="number-input"
@@ -2261,7 +2337,7 @@ let Ie = class extends oe {
           />
         `;
       case "dropdown":
-        return B`
+        return j`
           <select
             ?disabled=${t}
             @change=${(e) => {
@@ -2270,17 +2346,17 @@ let Ie = class extends oe {
             }}
           >
             ${(e.options ?? []).map(
-              (e, t) => B`
+              (e, t) => j`
                 <option value=${t} ?selected=${this.value === t}>${e}</option>
               `,
             )}
           </select>
         `;
       case "radio_group":
-        return B`
+        return j`
           <div class="radio-group">
             ${(e.options ?? []).map(
-              (i, s) => B`
+              (i, s) => j`
                 <label class="radio-item">
                   <input
                     type="radio"
@@ -2296,7 +2372,7 @@ let Ie = class extends oe {
           </div>
         `;
       case "text_input":
-        return B`
+        return j`
           <input
             type="text"
             .value=${String(this.value ?? "")}
@@ -2307,7 +2383,7 @@ let Ie = class extends oe {
           />
         `;
       case "button":
-        return B`
+        return j`
           <button
             class="action-button"
             ?disabled=${t}
@@ -2317,7 +2393,7 @@ let Ie = class extends oe {
           </button>
         `;
       default:
-        return B`<span class="read-only-value">${String(
+        return j`<span class="read-only-value">${String(
           this.value ?? "",
         )}</span>`;
     }
@@ -2436,13 +2512,13 @@ let Ie = class extends oe {
     ];
   }
 };
-e([he({ attribute: !1 })], Ie.prototype, "hass", void 0),
-  e([he({ attribute: !1 })], Ie.prototype, "parameter", void 0),
-  e([he()], Ie.prototype, "value", void 0),
-  e([he({ type: Boolean })], Ie.prototype, "modified", void 0),
-  e([he()], Ie.prototype, "validationError", void 0),
-  (Ie = e([_e("hm-form-parameter")], Ie));
-let Te = class extends oe {
+e([he({ attribute: !1 })], Te.prototype, "hass", void 0),
+  e([he({ attribute: !1 })], Te.prototype, "parameter", void 0),
+  e([he()], Te.prototype, "value", void 0),
+  e([he({ type: Boolean })], Te.prototype, "modified", void 0),
+  e([he()], Te.prototype, "validationError", void 0),
+  (Te = e([_e("hm-form-parameter")], Te));
+let Re = class extends oe {
   constructor() {
     super(...arguments),
       (this.pendingChanges = new Map()),
@@ -2458,13 +2534,13 @@ let Te = class extends oe {
   }
   render() {
     return this.schema && this.schema.sections
-      ? B`
+      ? j`
       ${this.schema.sections.map(
-        (e) => B`
+        (e) => j`
           <div class="form-section">
             <div class="section-header">${e.title}</div>
             ${e.parameters.map(
-              (e) => B`
+              (e) => j`
                 <hm-form-parameter
                   .hass=${this.hass}
                   .parameter=${e}
@@ -2501,12 +2577,12 @@ let Te = class extends oe {
     ];
   }
 };
-e([he({ attribute: !1 })], Te.prototype, "hass", void 0),
-  e([he({ attribute: !1 })], Te.prototype, "schema", void 0),
-  e([he({ attribute: !1 })], Te.prototype, "pendingChanges", void 0),
-  e([he({ attribute: !1 })], Te.prototype, "validationErrors", void 0),
-  (Te = e([_e("hm-config-form")], Te));
-let Re = class extends oe {
+e([he({ attribute: !1 })], Re.prototype, "hass", void 0),
+  e([he({ attribute: !1 })], Re.prototype, "schema", void 0),
+  e([he({ attribute: !1 })], Re.prototype, "pendingChanges", void 0),
+  e([he({ attribute: !1 })], Re.prototype, "validationErrors", void 0),
+  (Re = e([_e("hm-config-form")], Re));
+let Me = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -2539,7 +2615,7 @@ let Re = class extends oe {
       (this._canUndo = !1),
       (this._canRedo = !1);
     try {
-      (this._schema = await fe(
+      (this._schema = await ge(
         this.hass,
         this.entryId,
         this.interfaceId,
@@ -2547,7 +2623,7 @@ let Re = class extends oe {
         this.channelType,
         this.paramsetKey,
       )),
-        await me(
+        await fe(
           this.hass,
           this.entryId,
           this.interfaceId,
@@ -2562,7 +2638,7 @@ let Re = class extends oe {
     }
   }
   _l(e, t) {
-    return we(this.hass, e, t);
+    return Ae(this.hass, e, t);
   }
   get _isDirty() {
     return this._pendingChanges.size > 0;
@@ -2577,14 +2653,14 @@ let Re = class extends oe {
       this._sessionActive)
     )
       try {
-        const e = await (async function (e, t, i, s, n, r = "MASTER") {
+        const e = await (async function (e, t, i, s, r, n = "MASTER") {
           return e.callWS({
             type: "homematicip_local/config/session_set",
             entry_id: t,
             channel_address: i,
             parameter: s,
-            value: n,
-            paramset_key: r,
+            value: r,
+            paramset_key: n,
           });
         })(
           this.hass,
@@ -2637,7 +2713,7 @@ let Re = class extends oe {
   }
   async _refreshSchemaValues() {
     try {
-      (this._schema = await fe(
+      (this._schema = await ge(
         this.hass,
         this.entryId,
         this.interfaceId,
@@ -2659,7 +2735,7 @@ let Re = class extends oe {
             () => (
               (this._canUndo = !1),
               (this._canRedo = !1),
-              me(
+              fe(
                 this.hass,
                 this.entryId,
                 this.interfaceId,
@@ -2692,7 +2768,7 @@ let Re = class extends oe {
         })
         .join("\n");
     if (
-      await Ae(this, {
+      await Ie(this, {
         title: this._l("channel_config.confirm_save_title"),
         text: `${this._l("channel_config.confirm_save_text", {
           count: e,
@@ -2704,13 +2780,13 @@ let Re = class extends oe {
       (this._saving = !0), (this._validationErrors = {});
       try {
         if (this._sessionActive) {
-          const e = await (async function (e, t, i, s, n = "MASTER") {
+          const e = await (async function (e, t, i, s, r = "MASTER") {
             return e.callWS({
               type: "homematicip_local/config/session_save",
               entry_id: t,
               interface_id: i,
               channel_address: s,
-              paramset_key: n,
+              paramset_key: r,
             });
           })(
             this.hass,
@@ -2722,23 +2798,23 @@ let Re = class extends oe {
           e.success
             ? ((this._pendingChanges = new Map()),
               (this._sessionActive = !1),
-              Se(this, { message: this._l("channel_config.save_success") }),
+              Pe(this, { message: this._l("channel_config.save_success") }),
               await this._fetchSchema())
             : Object.keys(e.validation_errors).length > 0 &&
               ((this._validationErrors = e.validation_errors),
-              Se(this, {
+              Pe(this, {
                 message: this._l("channel_config.validation_failed"),
               }));
         } else {
           const e = Object.fromEntries(this._pendingChanges),
-            t = await (async function (e, t, i, s, n, r = "MASTER", a = !0) {
+            t = await (async function (e, t, i, s, r, n = "MASTER", a = !0) {
               return e.callWS({
                 type: "homematicip_local/config/put_paramset",
                 entry_id: t,
                 interface_id: i,
                 channel_address: s,
-                paramset_key: r,
-                values: n,
+                paramset_key: n,
+                values: r,
                 validate: a,
               });
             })(
@@ -2751,17 +2827,17 @@ let Re = class extends oe {
             );
           t.success
             ? ((this._pendingChanges = new Map()),
-              Se(this, { message: this._l("channel_config.save_success") }),
+              Pe(this, { message: this._l("channel_config.save_success") }),
               await this._fetchSchema())
             : Object.keys(t.validation_errors).length > 0 &&
               ((this._validationErrors = t.validation_errors),
-              Se(this, {
+              Pe(this, {
                 message: this._l("channel_config.validation_failed"),
               }));
         }
       } catch (e) {
         (this._error = String(e)),
-          Se(this, { message: this._l("channel_config.save_failed") });
+          Pe(this, { message: this._l("channel_config.save_failed") });
       } finally {
         this._saving = !1;
       }
@@ -2777,7 +2853,7 @@ let Re = class extends oe {
   async _handleBack() {
     if (this._isDirty) {
       if (
-        !(await Ae(this, {
+        !(await Ie(this, {
           title: this._l("channel_config.unsaved_title"),
           text: this._l("channel_config.unsaved_warning"),
           confirmText: this._l("channel_config.discard"),
@@ -2802,28 +2878,28 @@ let Re = class extends oe {
   }
   render() {
     return this._loading
-      ? B`<div class="loading">${this._l("common.loading")}</div>`
+      ? j`<div class="loading">${this._l("common.loading")}</div>`
       : this._error && !this._schema
-        ? B`<div class="error">${this._error}</div>`
-        : B`
+        ? j`<div class="error">${this._error}</div>`
+        : j`
       <button class="back-button" @click=${this._handleBack}>
         \u25C2 ${this._l("common.back")}
       </button>
 
       <div class="config-header">
-        ${this.deviceName ? B`<h2>${this.deviceName}</h2>` : W}
+        ${this.deviceName ? j`<h2>${this.deviceName}</h2>` : W}
         <div class="device-info">
           ${this.channelAddress} \u2014 ${
-            this._schema?.channel_type ?? ""
+            this._schema?.channel_type_label || this._schema?.channel_type || ""
           } \u2014 ${this.paramsetKey}
         </div>
       </div>
 
-      ${this._error ? B`<div class="error">${this._error}</div>` : W}
+      ${this._error ? j`<div class="error">${this._error}</div>` : W}
 
       ${
         this._schema
-          ? B`
+          ? j`
             <hm-config-form
               .hass=${this.hass}
               .schema=${this._schema}
@@ -2989,23 +3065,23 @@ let Re = class extends oe {
     ];
   }
 };
-e([he({ attribute: !1 })], Re.prototype, "hass", void 0),
-  e([he()], Re.prototype, "entryId", void 0),
-  e([he()], Re.prototype, "interfaceId", void 0),
-  e([he()], Re.prototype, "channelAddress", void 0),
-  e([he()], Re.prototype, "channelType", void 0),
-  e([he()], Re.prototype, "paramsetKey", void 0),
-  e([he()], Re.prototype, "deviceName", void 0),
-  e([pe()], Re.prototype, "_schema", void 0),
-  e([pe()], Re.prototype, "_pendingChanges", void 0),
-  e([pe()], Re.prototype, "_loading", void 0),
-  e([pe()], Re.prototype, "_saving", void 0),
-  e([pe()], Re.prototype, "_error", void 0),
-  e([pe()], Re.prototype, "_validationErrors", void 0),
-  e([pe()], Re.prototype, "_sessionActive", void 0),
-  e([pe()], Re.prototype, "_canUndo", void 0),
-  e([pe()], Re.prototype, "_canRedo", void 0),
-  (Re = e([_e("hm-channel-config")], Re));
+e([he({ attribute: !1 })], Me.prototype, "hass", void 0),
+  e([he()], Me.prototype, "entryId", void 0),
+  e([he()], Me.prototype, "interfaceId", void 0),
+  e([he()], Me.prototype, "channelAddress", void 0),
+  e([he()], Me.prototype, "channelType", void 0),
+  e([he()], Me.prototype, "paramsetKey", void 0),
+  e([he()], Me.prototype, "deviceName", void 0),
+  e([pe()], Me.prototype, "_schema", void 0),
+  e([pe()], Me.prototype, "_pendingChanges", void 0),
+  e([pe()], Me.prototype, "_loading", void 0),
+  e([pe()], Me.prototype, "_saving", void 0),
+  e([pe()], Me.prototype, "_error", void 0),
+  e([pe()], Me.prototype, "_validationErrors", void 0),
+  e([pe()], Me.prototype, "_sessionActive", void 0),
+  e([pe()], Me.prototype, "_canUndo", void 0),
+  e([pe()], Me.prototype, "_canRedo", void 0),
+  (Me = e([_e("hm-channel-config")], Me));
 let ze = class extends oe {
   constructor() {
     super(...arguments),
@@ -3041,7 +3117,7 @@ let ze = class extends oe {
     }
   }
   _l(e, t) {
-    return we(this.hass, e, t);
+    return Ae(this.hass, e, t);
   }
   _handleBack() {
     this.dispatchEvent(new CustomEvent("back", { bubbles: !0, composed: !0 }));
@@ -3052,7 +3128,7 @@ let ze = class extends oe {
   }
   async _handleClear() {
     if (
-      await Ae(this, {
+      await Ie(this, {
         title: this._l("change_history.clear_confirm_title"),
         text: this._l("change_history.clear_confirm_text"),
         confirmText: this._l("change_history.clear"),
@@ -3068,7 +3144,7 @@ let ze = class extends oe {
           });
         })(this.hass, this.entryId);
         e.success &&
-          (Se(this, {
+          (Pe(this, {
             message: this._l("change_history.clear_success", {
               count: e.cleared,
             }),
@@ -3076,7 +3152,7 @@ let ze = class extends oe {
           (this._entries = []),
           (this._total = 0));
       } catch {
-        Se(this, { message: this._l("channel_config.save_failed") });
+        Pe(this, { message: this._l("channel_config.save_failed") });
       }
   }
   _formatTimestamp(e) {
@@ -3099,7 +3175,7 @@ let ze = class extends oe {
     }
   }
   render() {
-    return B`
+    return j`
       <button class="back-button" @click=${this._handleBack}>
         \u25C2 ${this._l("common.back")}
       </button>
@@ -3110,11 +3186,11 @@ let ze = class extends oe {
 
       ${
         this._loading
-          ? B`<div class="loading">${this._l("common.loading")}</div>`
+          ? j`<div class="loading">${this._l("common.loading")}</div>`
           : this._error
-            ? B`<div class="error">${this._error}</div>`
+            ? j`<div class="error">${this._error}</div>`
             : 0 === this._entries.length
-              ? B`<div class="empty-state">${this._l(
+              ? j`<div class="empty-state">${this._l(
                   "change_history.empty",
                 )}</div>`
               : this._renderEntries()
@@ -3122,7 +3198,7 @@ let ze = class extends oe {
 
       ${
         !this._loading && this._entries.length > 0
-          ? B`
+          ? j`
             <div class="action-bar">
               <button class="btn btn-secondary destructive" @click=${
                 this._handleClear
@@ -3136,13 +3212,13 @@ let ze = class extends oe {
     `;
   }
   _renderEntries() {
-    return B`
+    return j`
       <div class="history-list">
         ${this._entries.map((e, t) => {
           const i = `${e.timestamp}-${t}`,
             s = this._expandedEntries.has(i),
-            n = Object.keys(e.changes).length;
-          return B`
+            r = Object.keys(e.changes).length;
+          return j`
             <div class="history-entry">
               <div
                 class="history-entry-header"
@@ -3158,7 +3234,7 @@ let ze = class extends oe {
                   </div>
                   <div class="history-entry-meta">
                     ${this._l("change_history.parameters_changed", {
-                      count: n,
+                      count: r,
                     })}
                   </div>
                 </div>
@@ -3171,10 +3247,10 @@ let ze = class extends oe {
               </div>
               ${
                 s
-                  ? B`
+                  ? j`
                     <div class="history-details">
                       ${Object.entries(e.changes).map(
-                        ([e, t]) => B`
+                        ([e, t]) => j`
                           <div class="change-row">
                             <span class="change-param">${e}</span>
                             <span class="change-values">
@@ -3371,7 +3447,7 @@ e([he({ attribute: !1 })], ze.prototype, "hass", void 0),
   e([pe()], ze.prototype, "_error", void 0),
   e([pe()], ze.prototype, "_expandedEntries", void 0),
   (ze = e([_e("hm-change-history")], ze));
-let De = class extends oe {
+let Ne = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -3409,7 +3485,7 @@ let De = class extends oe {
     }
   }
   _l(e, t) {
-    return we(this.hass, e, t);
+    return Ae(this.hass, e, t);
   }
   _handleBack() {
     this.dispatchEvent(new CustomEvent("back", { bubbles: !0, composed: !0 }));
@@ -3433,6 +3509,12 @@ let De = class extends oe {
           senderAddress: e.sender_address,
           receiverAddress: e.receiver_address,
           interfaceId: this.interfaceId,
+          senderDeviceName: e.sender_device_name,
+          senderDeviceModel: e.sender_device_model,
+          senderChannelTypeLabel: e.sender_channel_type_label,
+          receiverDeviceName: e.receiver_device_name,
+          receiverDeviceModel: e.receiver_device_model,
+          receiverChannelTypeLabel: e.receiver_channel_type_label,
         },
         bubbles: !0,
         composed: !0,
@@ -3441,7 +3523,7 @@ let De = class extends oe {
   }
   async _handleDelete(e) {
     if (
-      await Ae(this, {
+      await Ie(this, {
         title: this._l("device_links.delete_confirm_title"),
         text: this._l("device_links.delete_confirm_text", {
           sender: e.sender_address,
@@ -3461,10 +3543,10 @@ let De = class extends oe {
             receiver_channel_address: s,
           });
         })(this.hass, this.entryId, e.sender_address, e.receiver_address),
-          Se(this, { message: this._l("device_links.delete_success") }),
+          Pe(this, { message: this._l("device_links.delete_success") }),
           await this._fetchLinks();
       } catch {
-        Se(this, { message: this._l("device_links.delete_failed") });
+        Pe(this, { message: this._l("device_links.delete_failed") });
       }
   }
   _groupByChannel() {
@@ -3482,7 +3564,7 @@ let De = class extends oe {
     return e;
   }
   render() {
-    return B`
+    return j`
       <button class="back-button" @click=${this._handleBack}>
         \u25C2 ${this._l("common.back")}
       </button>
@@ -3504,11 +3586,11 @@ let De = class extends oe {
 
       ${
         this._loading
-          ? B`<div class="loading">${this._l("common.loading")}</div>`
+          ? j`<div class="loading">${this._l("common.loading")}</div>`
           : this._error
-            ? B`<div class="error">${this._error}</div>`
+            ? j`<div class="error">${this._error}</div>`
             : 0 === this._links.length
-              ? B`<div class="empty-state">${this._l(
+              ? j`<div class="empty-state">${this._l(
                   "device_links.empty",
                 )}</div>`
               : this._renderGroupedLinks()
@@ -3518,10 +3600,10 @@ let De = class extends oe {
   _renderGroupedLinks() {
     const e = this._groupByChannel(),
       t = [...e.keys()].sort((e, t) => parseInt(e) - parseInt(t));
-    return B`
+    return j`
       ${t.map((t) => {
         const i = e.get(t);
-        return B`
+        return j`
           <div class="link-channel-group">
             <div class="link-channel-header">
               ${this._l("device_links.channel_group", { channel: t })}
@@ -3534,7 +3616,7 @@ let De = class extends oe {
   }
   _renderLinkCard(e) {
     const t = "outgoing" === e.direction;
-    return B`
+    return j`
       <div class="link-card ${t ? "outgoing" : "incoming"}">
         <div class="link-direction">
           <span class="direction-badge ${e.direction}">
@@ -3546,17 +3628,32 @@ let De = class extends oe {
           </span>
         </div>
         <div class="link-info">
-          <div class="link-addresses">
-            <span class="link-sender">${e.sender_address}</span>
+          <div class="link-endpoints">
+            <div class="link-endpoint-info">
+              <span class="link-device-name">${e.sender_device_name}</span>
+              <span class="link-device-detail">
+                ${e.sender_device_model}${
+                  e.sender_channel_type_label
+                    ? j` · ${e.sender_channel_type_label}`
+                    : W
+                }
+              </span>
+              <span class="link-endpoint-address">${e.sender_address}</span>
+            </div>
             <span class="link-arrow">\u2192</span>
-            <span class="link-receiver">${e.receiver_address}</span>
+            <div class="link-endpoint-info">
+              <span class="link-device-name">${e.receiver_device_name}</span>
+              <span class="link-device-detail">
+                ${e.receiver_device_model}${
+                  e.receiver_channel_type_label
+                    ? j` · ${e.receiver_channel_type_label}`
+                    : W
+                }
+              </span>
+              <span class="link-endpoint-address">${e.receiver_address}</span>
+            </div>
           </div>
-          <div class="link-devices">
-            ${e.sender_device_name} (${e.sender_device_model})
-            \u2192
-            ${e.receiver_device_name} (${e.receiver_device_model})
-          </div>
-          ${e.name ? B`<div class="link-name">"${e.name}"</div>` : W}
+          ${e.name ? j`<div class="link-name">"${e.name}"</div>` : W}
         </div>
         <div class="link-actions">
           <button
@@ -3657,22 +3754,43 @@ let De = class extends oe {
         color: #fff;
       }
 
-      .link-addresses {
-        font-family: monospace;
-        font-size: 13px;
+      .link-endpoints {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 12px;
         margin: 8px 0 4px;
+      }
+
+      .link-endpoint-info {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        min-width: 0;
+      }
+
+      .link-device-name {
+        font-size: 14px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .link-device-detail {
+        font-size: 12px;
+        color: var(--secondary-text-color);
+      }
+
+      .link-endpoint-address {
+        font-family: monospace;
+        font-size: 12px;
+        color: var(--secondary-text-color);
       }
 
       .link-arrow {
         color: var(--secondary-text-color);
-      }
-
-      .link-devices {
-        font-size: 13px;
-        color: var(--secondary-text-color);
+        font-size: 16px;
+        flex-shrink: 0;
       }
 
       .link-name {
@@ -3717,14 +3835,14 @@ let De = class extends oe {
       }
 
       @media (max-width: 600px) {
-        .link-addresses {
+        .link-endpoints {
           flex-direction: column;
           align-items: flex-start;
-          gap: 2px;
+          gap: 4px;
         }
 
         .link-arrow {
-          display: none;
+          align-self: center;
         }
 
         .link-actions {
@@ -3740,57 +3858,258 @@ let De = class extends oe {
     ];
   }
 };
-e([he({ attribute: !1 })], De.prototype, "hass", void 0),
-  e([he()], De.prototype, "entryId", void 0),
-  e([he()], De.prototype, "interfaceId", void 0),
-  e([he()], De.prototype, "deviceAddress", void 0),
-  e([he()], De.prototype, "deviceName", void 0),
-  e([pe()], De.prototype, "_links", void 0),
-  e([pe()], De.prototype, "_loading", void 0),
-  e([pe()], De.prototype, "_error", void 0),
-  (De = e([_e("hm-device-links")], De));
-let Pe = class extends oe {
+e([he({ attribute: !1 })], Ne.prototype, "hass", void 0),
+  e([he()], Ne.prototype, "entryId", void 0),
+  e([he()], Ne.prototype, "interfaceId", void 0),
+  e([he()], Ne.prototype, "deviceAddress", void 0),
+  e([he()], Ne.prototype, "deviceName", void 0),
+  e([pe()], Ne.prototype, "_links", void 0),
+  e([pe()], Ne.prototype, "_loading", void 0),
+  e([pe()], Ne.prototype, "_error", void 0),
+  (Ne = e([_e("hm-device-links")], Ne));
+let Le = class extends oe {
+  constructor() {
+    super(...arguments),
+      (this.baseValue = 0),
+      (this.factorValue = 0),
+      (this.presets = []),
+      (this.modified = !1),
+      (this._isCustom = !1);
+  }
+  _l(e) {
+    return Ae(this.hass, e);
+  }
+  get _matchesPreset() {
+    return this.presets.some(
+      (e) => e.base === this.baseValue && e.factor === this.factorValue,
+    );
+  }
+  _emitChange(e, t, i) {
+    this.dispatchEvent(
+      new CustomEvent("value-changed", {
+        detail: { parameterId: e, value: t, currentValue: i },
+        bubbles: !0,
+        composed: !0,
+      }),
+    );
+  }
+  _handlePresetChange(e) {
+    const t = e.target.value;
+    if ("custom" === t) return void (this._isCustom = !0);
+    this._isCustom = !1;
+    const [i, s] = t.split("-"),
+      r = Number(i),
+      n = Number(s);
+    this._emitChange(this.baseParam.id, r, this.baseParam.current_value),
+      this._emitChange(this.factorParam.id, n, this.factorParam.current_value);
+  }
+  _handleBaseChange(e) {
+    const t = Number(e.target.value);
+    this._emitChange(this.baseParam.id, t, this.baseParam.current_value);
+  }
+  _handleFactorChange(e) {
+    const t = Number(e.target.value);
+    this._emitChange(this.factorParam.id, t, this.factorParam.current_value);
+  }
+  render() {
+    const e = this.baseParam.label.replace(/ Base$/, "").replace(/ Basis$/, ""),
+      t = this._matchesPreset,
+      i = this._isCustom && !t;
+    return j`
+      <div class="time-selector">
+        <div class="parameter-row">
+          <div class="parameter-label">
+            ${e}
+            ${this.modified ? j`<span class="modified-dot"></span>` : W}
+          </div>
+          <div class="parameter-control">
+            <select @change=${this._handlePresetChange}>
+              ${this.presets.map(
+                (e) => j`
+                  <option
+                    value="${e.base}-${e.factor}"
+                    ?selected=${
+                      e.base === this.baseValue && e.factor === this.factorValue
+                    }
+                  >
+                    ${e.label}
+                  </option>
+                `,
+              )}
+              <option value="custom" ?selected=${!t}>
+                ${this._l("link_config.custom_time")}
+              </option>
+            </select>
+          </div>
+        </div>
+        ${
+          i || !t
+            ? j`
+              <div class="custom-time-inputs">
+                <label>
+                  ${this._l("time_selector.base")}:
+                  <input
+                    type="number"
+                    min="0"
+                    max="7"
+                    .value=${String(this.baseValue)}
+                    @change=${this._handleBaseChange}
+                  />
+                </label>
+                <label>
+                  ${this._l("time_selector.factor")}:
+                  <input
+                    type="number"
+                    min="0"
+                    max="31"
+                    .value=${String(this.factorValue)}
+                    @change=${this._handleFactorChange}
+                  />
+                </label>
+              </div>
+            `
+            : W
+        }
+      </div>
+    `;
+  }
+  static {
+    this.styles = [
+      ve,
+      a`
+      .time-selector {
+        margin-bottom: 4px;
+      }
+
+      select {
+        padding: 6px 8px;
+        border: 1px solid var(--divider-color, #e0e0e0);
+        border-radius: 4px;
+        font-size: 14px;
+        background: var(--card-background-color, #fff);
+        color: var(--primary-text-color);
+        min-width: 120px;
+      }
+
+      select:focus {
+        outline: none;
+        border-color: var(--primary-color, #03a9f4);
+      }
+
+      .custom-time-inputs {
+        display: flex;
+        gap: 12px;
+        padding: 8px 0 4px;
+        margin-left: 16px;
+      }
+
+      .custom-time-inputs label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--secondary-text-color);
+      }
+
+      .custom-time-inputs input[type="number"] {
+        width: 60px;
+        padding: 4px 8px;
+        border: 1px solid var(--divider-color, #e0e0e0);
+        border-radius: 4px;
+        font-size: 14px;
+        background: var(--card-background-color, #fff);
+        color: var(--primary-text-color);
+      }
+
+      @media (max-width: 600px) {
+        select {
+          width: 100%;
+          box-sizing: border-box;
+        }
+      }
+    `,
+    ];
+  }
+};
+e([he({ attribute: !1 })], Le.prototype, "hass", void 0),
+  e([he({ attribute: !1 })], Le.prototype, "baseParam", void 0),
+  e([he({ attribute: !1 })], Le.prototype, "factorParam", void 0),
+  e([he({ type: Number })], Le.prototype, "baseValue", void 0),
+  e([he({ type: Number })], Le.prototype, "factorValue", void 0),
+  e([he({ attribute: !1 })], Le.prototype, "presets", void 0),
+  e([he({ type: Boolean })], Le.prototype, "modified", void 0),
+  e([pe()], Le.prototype, "_isCustom", void 0),
+  (Le = e([_e("hm-time-selector")], Le));
+let Ue = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
       (this.interfaceId = ""),
       (this.senderAddress = ""),
       (this.receiverAddress = ""),
-      (this._schema = null),
-      (this._pendingChanges = new Map()),
+      (this.senderDeviceName = ""),
+      (this.senderDeviceModel = ""),
+      (this.senderChannelTypeLabel = ""),
+      (this.receiverDeviceName = ""),
+      (this.receiverDeviceModel = ""),
+      (this.receiverChannelTypeLabel = ""),
+      (this._receiverSchema = null),
+      (this._senderSchema = null),
+      (this._receiverPendingChanges = new Map()),
+      (this._senderPendingChanges = new Map()),
       (this._loading = !0),
       (this._saving = !1),
       (this._error = ""),
-      (this._validationErrors = {});
+      (this._validationErrors = {}),
+      (this._senderValidationErrors = {}),
+      (this._profiles = null),
+      (this._activeProfileId = 0),
+      (this._selectedProfileId = 0),
+      (this._activeKeypressTab = "short");
   }
   updated(e) {
     (e.has("senderAddress") || e.has("receiverAddress") || e.has("entryId")) &&
       this.entryId &&
       this.senderAddress &&
       this.receiverAddress &&
-      this._fetchSchema();
+      this._fetchSchemas();
   }
-  async _fetchSchema() {
+  async _fetchSchemas() {
     (this._loading = !0),
       (this._error = ""),
-      (this._pendingChanges = new Map()),
-      (this._validationErrors = {});
+      (this._receiverPendingChanges = new Map()),
+      (this._senderPendingChanges = new Map()),
+      (this._validationErrors = {}),
+      (this._senderValidationErrors = {});
     try {
-      this._schema = await (async function (e, t, i, s, n) {
-        return e.callWS({
-          type: "homematicip_local/config/get_link_form_schema",
-          entry_id: t,
-          interface_id: i,
-          sender_channel_address: s,
-          receiver_channel_address: n,
-        });
-      })(
-        this.hass,
-        this.entryId,
-        this.interfaceId,
-        this.senderAddress,
-        this.receiverAddress,
-      );
+      const [e, t, i] = await Promise.all([
+        be(
+          this.hass,
+          this.entryId,
+          this.interfaceId,
+          this.senderAddress,
+          this.receiverAddress,
+        ),
+        be(
+          this.hass,
+          this.entryId,
+          this.interfaceId,
+          this.receiverAddress,
+          this.senderAddress,
+        ).catch(() => null),
+        $e(
+          this.hass,
+          this.entryId,
+          this.interfaceId,
+          this.senderAddress,
+          this.receiverAddress,
+        ),
+      ]);
+      (this._receiverSchema = e),
+        (this._senderSchema = t),
+        (this._profiles = i?.profiles ?? null),
+        (this._activeProfileId = i?.active_profile_id ?? 0),
+        (this._selectedProfileId = this._activeProfileId);
     } catch (e) {
       this._error = String(e);
     } finally {
@@ -3798,81 +4117,174 @@ let Pe = class extends oe {
     }
   }
   _l(e, t) {
-    return we(this.hass, e, t);
+    return Ae(this.hass, e, t);
   }
   get _isDirty() {
-    return this._pendingChanges.size > 0;
+    return (
+      this._receiverPendingChanges.size > 0 ||
+      this._senderPendingChanges.size > 0
+    );
   }
-  _handleValueChanged(e) {
+  get _filteredReceiverSchema() {
+    if (
+      !this._receiverSchema ||
+      !this._profiles ||
+      0 === this._selectedProfileId
+    )
+      return this._receiverSchema;
+    const e = this._profiles.find((e) => e.id === this._selectedProfileId);
+    if (!e) return this._receiverSchema;
+    const t = new Set(e.editable_params),
+      i = this._receiverSchema.sections
+        .map((e) => ({
+          ...e,
+          parameters: e.parameters.filter((e) => t.has(e.id)),
+        }))
+        .filter((e) => e.parameters.length > 0);
+    return { ...this._receiverSchema, sections: i };
+  }
+  get _groupedReceiverParams() {
+    const e = this._filteredReceiverSchema;
+    if (!e) return null;
+    const t = e.sections.flatMap((e) => e.parameters);
+    return t.some((e) => e.keypress_group)
+      ? {
+          short: t.filter((e) => "short" === e.keypress_group),
+          long: t.filter((e) => "long" === e.keypress_group),
+          common: t.filter(
+            (e) => "common" === e.keypress_group || !e.keypress_group,
+          ),
+        }
+      : null;
+  }
+  _getEffectiveValue(e) {
+    return this._receiverPendingChanges.has(e.id)
+      ? this._receiverPendingChanges.get(e.id)
+      : e.current_value;
+  }
+  _isModified(e) {
+    return this._receiverPendingChanges.has(e.id);
+  }
+  _emitReceiverChange(e, t) {
+    const i = this._findParameter(e),
+      s = i?.current_value;
+    t === s
+      ? this._receiverPendingChanges.delete(e)
+      : this._receiverPendingChanges.set(e, t),
+      (this._receiverPendingChanges = new Map(this._receiverPendingChanges));
+  }
+  _handleProfileChange(e) {
+    const t = parseInt(e.target.value, 10);
+    if (((this._selectedProfileId = t), 0 === t || !this._profiles)) return;
+    const i = this._profiles.find((e) => e.id === t);
+    if (!i) return;
+    const s = new Map();
+    for (const [e, t] of Object.entries(i.fixed_params)) {
+      const i = this._findParameter(e);
+      i && i.current_value !== t && s.set(e, t);
+    }
+    for (const [e, t] of Object.entries(i.default_values)) {
+      const i = this._findParameter(e);
+      i && i.current_value !== t && s.set(e, t);
+    }
+    this._receiverPendingChanges = s;
+  }
+  _handleReceiverValueChanged(e) {
     const { parameterId: t, value: i, currentValue: s } = e.detail;
-    i === s ? this._pendingChanges.delete(t) : this._pendingChanges.set(t, i),
-      (this._pendingChanges = new Map(this._pendingChanges));
+    i === s
+      ? this._receiverPendingChanges.delete(t)
+      : this._receiverPendingChanges.set(t, i),
+      (this._receiverPendingChanges = new Map(this._receiverPendingChanges));
+  }
+  _handleSenderValueChanged(e) {
+    const { parameterId: t, value: i, currentValue: s } = e.detail;
+    i === s
+      ? this._senderPendingChanges.delete(t)
+      : this._senderPendingChanges.set(t, i),
+      (this._senderPendingChanges = new Map(this._senderPendingChanges));
   }
   _handleDiscard() {
-    (this._pendingChanges = new Map()), (this._validationErrors = {});
+    (this._receiverPendingChanges = new Map()),
+      (this._senderPendingChanges = new Map()),
+      (this._validationErrors = {}),
+      (this._senderValidationErrors = {}),
+      (this._selectedProfileId = this._activeProfileId);
   }
   async _handleSave() {
     if (!this._isDirty || this._saving) return;
-    const e = this._pendingChanges.size,
-      t = [...this._pendingChanges.entries()]
+    const e = [
+        ...this._receiverPendingChanges.entries(),
+        ...this._senderPendingChanges.entries(),
+      ],
+      t = e.length,
+      i = e
         .map(([e, t]) => {
           const i = this._findParameter(e);
           return `${i?.label ?? e}: ${i?.current_value ?? "?"} → ${t}`;
         })
         .join("\n");
     if (
-      await Ae(this, {
+      await Ie(this, {
         title: this._l("link_config.confirm_save_title"),
         text: `${this._l("link_config.confirm_save_text", {
-          count: e,
-        })}\n\n${t}`,
+          count: t,
+        })}\n\n${i}`,
         confirmText: this._l("common.save"),
         dismissText: this._l("common.cancel"),
       })
     ) {
-      (this._saving = !0), (this._validationErrors = {});
+      (this._saving = !0),
+        (this._validationErrors = {}),
+        (this._senderValidationErrors = {});
       try {
-        (
-          await (async function (e, t, i, s, n, r) {
-            return e.callWS({
-              type: "homematicip_local/config/put_link_paramset",
-              entry_id: t,
-              interface_id: i,
-              sender_channel_address: s,
-              receiver_channel_address: n,
-              values: r,
-            });
-          })(
-            this.hass,
-            this.entryId,
-            this.interfaceId,
-            this.senderAddress,
-            this.receiverAddress,
-            Object.fromEntries(this._pendingChanges),
-          )
-        ).success &&
-          ((this._pendingChanges = new Map()),
-          Se(this, { message: this._l("link_config.save_success") }),
-          await this._fetchSchema());
+        const e = [];
+        this._receiverPendingChanges.size > 0 &&
+          e.push(
+            xe(
+              this.hass,
+              this.entryId,
+              this.interfaceId,
+              this.senderAddress,
+              this.receiverAddress,
+              Object.fromEntries(this._receiverPendingChanges),
+            ),
+          ),
+          this._senderPendingChanges.size > 0 &&
+            e.push(
+              xe(
+                this.hass,
+                this.entryId,
+                this.interfaceId,
+                this.receiverAddress,
+                this.senderAddress,
+                Object.fromEntries(this._senderPendingChanges),
+              ),
+            ),
+          await Promise.all(e),
+          (this._receiverPendingChanges = new Map()),
+          (this._senderPendingChanges = new Map()),
+          Pe(this, { message: this._l("link_config.save_success") }),
+          await this._fetchSchemas();
       } catch (e) {
         (this._error = String(e)),
-          Se(this, { message: this._l("link_config.save_failed") });
+          Pe(this, { message: this._l("link_config.save_failed") });
       } finally {
         this._saving = !1;
       }
     }
   }
   _findParameter(e) {
-    if (this._schema)
-      for (const t of this._schema.sections) {
-        const i = t.parameters.find((t) => t.id === e);
-        if (i) return i;
-      }
+    for (const t of [this._receiverSchema, this._senderSchema])
+      if (t)
+        for (const i of t.sections) {
+          const t = i.parameters.find((t) => t.id === e);
+          if (t) return t;
+        }
   }
   async _handleBack() {
     if (this._isDirty) {
       if (
-        !(await Ae(this, {
+        !(await Ie(this, {
           title: this._l("link_config.unsaved_title"),
           text: this._l("link_config.unsaved_warning"),
           confirmText: this._l("link_config.discard"),
@@ -3884,12 +4296,209 @@ let Pe = class extends oe {
     }
     this.dispatchEvent(new CustomEvent("back", { bubbles: !0, composed: !0 }));
   }
+  _hasReceiverParams() {
+    return (this._filteredReceiverSchema?.sections.length ?? 0) > 0;
+  }
+  _hasSenderParams() {
+    return (this._senderSchema?.sections.length ?? 0) > 0;
+  }
+  _renderProfileSelector() {
+    if (!this._profiles) return W;
+    const e = this._profiles.find((e) => e.id === this._selectedProfileId),
+      t = e?.description || "";
+    return j`
+      <div class="profile-selector">
+        <label class="profile-label"
+          >${this._l("link_config.profile")}</label
+        >
+        <select
+          class="profile-select"
+          @change=${this._handleProfileChange}
+        >
+          ${this._profiles.map(
+            (e) =>
+              j`<option value=${e.id} ?selected=${
+                e.id === this._selectedProfileId
+              }>${e.name}</option>`,
+          )}
+        </select>
+        ${t ? j`<p class="profile-description">${t}</p>` : W}
+      </div>
+    `;
+  }
+  _renderParamList(e) {
+    const t = new Map(),
+      i = [];
+    for (const s of e)
+      if (s.time_pair_id && s.id.toUpperCase().endsWith("_TIME_BASE")) {
+        const e = t.get(s.time_pair_id) ?? {};
+        (e.base = s), t.set(s.time_pair_id, e);
+      } else if (
+        s.time_pair_id &&
+        s.id.toUpperCase().endsWith("_TIME_FACTOR")
+      ) {
+        const e = t.get(s.time_pair_id) ?? {};
+        (e.factor = s), t.set(s.time_pair_id, e);
+      } else
+        (s.hidden_by_default && 0 !== this._selectedProfileId) || i.push(s);
+    return j`
+      ${[...t.entries()].map(([, e]) =>
+        e.base && e.factor
+          ? j`
+              <hm-time-selector
+                .hass=${this.hass}
+                .baseParam=${e.base}
+                .factorParam=${e.factor}
+                .baseValue=${this._getEffectiveValue(e.base)}
+                .factorValue=${this._getEffectiveValue(e.factor)}
+                .presets=${e.base.time_presets ?? []}
+                .modified=${
+                  this._isModified(e.base) || this._isModified(e.factor)
+                }
+                @value-changed=${this._handleReceiverValueChanged}
+              ></hm-time-selector>
+            `
+          : W,
+      )}
+      ${i.map((e) =>
+        e.display_as_percent && e.has_last_value
+          ? this._renderLevelParam(e)
+          : j`
+              <hm-form-parameter
+                .hass=${this.hass}
+                .parameter=${e}
+                .value=${this._getEffectiveValue(e)}
+                .modified=${this._isModified(e)}
+                @value-changed=${this._handleReceiverValueChanged}
+              ></hm-form-parameter>
+            `,
+      )}
+    `;
+  }
+  _renderLevelParam(e) {
+    const t = this._getEffectiveValue(e),
+      i = t > 1,
+      s = i ? 100 : Math.round(100 * t);
+    return j`
+      <div class="level-param">
+        <div class="parameter-row">
+          <div class="parameter-label">
+            ${e.label}
+            ${this._isModified(e) ? j`<span class="modified-dot"></span>` : W}
+          </div>
+          <div class="parameter-control level-controls">
+            <label class="last-value-toggle">
+              <input
+                type="checkbox"
+                .checked=${i}
+                @change=${(t) => {
+                  const i = t.target.checked;
+                  this._emitReceiverChange(e.id, i ? 1.005 : 1);
+                }}
+              />
+              ${this._l("link_config.last_value")}
+            </label>
+            ${
+              i
+                ? W
+                : j`
+                  <div class="slider-group">
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      .value=${String(s)}
+                      @input=${(t) => {
+                        const i = Number(t.target.value);
+                        this._emitReceiverChange(e.id, i / 100);
+                      }}
+                    />
+                    <span class="percent-display">${s}%</span>
+                  </div>
+                `
+            }
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  _renderReceiverParams() {
+    const e = this._groupedReceiverParams;
+    if (e) {
+      const t = e.short.length > 0,
+        i = e.long.length > 0,
+        s = t && i;
+      return j`
+        <div class="param-section">
+          <h3>${this._l("link_config.receiver_params")}</h3>
+          ${
+            s
+              ? j`
+                <div class="keypress-tabs">
+                  <button
+                    class="tab ${
+                      "short" === this._activeKeypressTab ? "active" : ""
+                    }"
+                    @click=${() => {
+                      this._activeKeypressTab = "short";
+                    }}
+                  >
+                    ${this._l("link_config.short_keypress")}
+                  </button>
+                  <button
+                    class="tab ${
+                      "long" === this._activeKeypressTab ? "active" : ""
+                    }"
+                    @click=${() => {
+                      this._activeKeypressTab = "long";
+                    }}
+                  >
+                    ${this._l("link_config.long_keypress")}
+                  </button>
+                </div>
+                <div class="keypress-params">
+                  ${this._renderParamList(
+                    "short" === this._activeKeypressTab ? e.short : e.long,
+                  )}
+                </div>
+              `
+              : t
+                ? this._renderParamList(e.short)
+                : i
+                  ? this._renderParamList(e.long)
+                  : W
+          }
+          ${
+            e.common.length > 0
+              ? j`
+                <div class="common-params">
+                  ${this._renderParamList(e.common)}
+                </div>
+              `
+              : W
+          }
+        </div>
+      `;
+    }
+    return j`
+      <div class="param-section">
+        <h3>${this._l("link_config.receiver_params")}</h3>
+        <hm-config-form
+          .hass=${this.hass}
+          .schema=${this._filteredReceiverSchema}
+          .pendingChanges=${this._receiverPendingChanges}
+          .validationErrors=${this._validationErrors}
+          @value-changed=${this._handleReceiverValueChanged}
+        ></hm-config-form>
+      </div>
+    `;
+  }
   render() {
     return this._loading
-      ? B`<div class="loading">${this._l("common.loading")}</div>`
-      : this._error && !this._schema
-        ? B`<div class="error">${this._error}</div>`
-        : B`
+      ? j`<div class="loading">${this._l("common.loading")}</div>`
+      : !this._error || this._receiverSchema || this._senderSchema
+        ? j`
       <button class="back-button" @click=${this._handleBack}>
         \u25C2 ${this._l("common.back")}
       </button>
@@ -3899,30 +4508,77 @@ let Pe = class extends oe {
         <div class="link-info-bar">
           <div class="link-endpoint">
             <span class="link-label">${this._l("link_config.sender")}</span>
+            ${
+              this.senderDeviceName
+                ? j`<span class="link-device-name">${this.senderDeviceName}</span>`
+                : W
+            }
+            ${
+              this.senderDeviceModel || this.senderChannelTypeLabel
+                ? j`<span class="link-device-detail">
+                  ${this.senderDeviceModel}${
+                    this.senderChannelTypeLabel
+                      ? j` &middot; ${this.senderChannelTypeLabel}`
+                      : W
+                  }
+                </span>`
+                : W
+            }
             <span class="link-address">${this.senderAddress}</span>
           </div>
           <span class="link-direction-arrow">\u2192</span>
           <div class="link-endpoint">
             <span class="link-label">${this._l("link_config.receiver")}</span>
+            ${
+              this.receiverDeviceName
+                ? j`<span class="link-device-name">${this.receiverDeviceName}</span>`
+                : W
+            }
+            ${
+              this.receiverDeviceModel || this.receiverChannelTypeLabel
+                ? j`<span class="link-device-detail">
+                  ${this.receiverDeviceModel}${
+                    this.receiverChannelTypeLabel
+                      ? j` &middot; ${this.receiverChannelTypeLabel}`
+                      : W
+                  }
+                </span>`
+                : W
+            }
             <span class="link-address">${this.receiverAddress}</span>
           </div>
         </div>
       </div>
 
-      ${this._error ? B`<div class="error">${this._error}</div>` : W}
+      ${this._error ? j`<div class="error">${this._error}</div>` : W}
+
+      ${this._renderProfileSelector()}
+
+      ${this._hasReceiverParams() ? this._renderReceiverParams() : W}
 
       ${
-        this._schema
-          ? B`
-            <hm-config-form
-              .hass=${this.hass}
-              .schema=${this._schema}
-              .pendingChanges=${this._pendingChanges}
-              .validationErrors=${this._validationErrors}
-              @value-changed=${this._handleValueChanged}
-            ></hm-config-form>
+        this._hasSenderParams()
+          ? j`
+            <div class="param-section">
+              <h3>${this._l("link_config.sender_params")}</h3>
+              <hm-config-form
+                .hass=${this.hass}
+                .schema=${this._senderSchema}
+                .pendingChanges=${this._senderPendingChanges}
+                .validationErrors=${this._senderValidationErrors}
+                @value-changed=${this._handleSenderValueChanged}
+              ></hm-config-form>
+            </div>
           `
           : W
+      }
+
+      ${
+        this._hasReceiverParams() || this._hasSenderParams()
+          ? W
+          : j`<div class="empty-state">${this._l(
+              "link_config.no_params",
+            )}</div>`
       }
 
       <div class="action-bar">
@@ -3945,7 +4601,8 @@ let Pe = class extends oe {
           }
         </button>
       </div>
-    `;
+    `
+        : j`<div class="error">${this._error}</div>`;
   }
   static {
     this.styles = [
@@ -3984,15 +4641,84 @@ let Pe = class extends oe {
         font-weight: 500;
       }
 
+      .link-device-name {
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .link-device-detail {
+        font-size: 12px;
+        color: var(--secondary-text-color);
+      }
+
       .link-address {
         font-family: monospace;
-        font-size: 14px;
+        font-size: 13px;
+        color: var(--secondary-text-color);
       }
 
       .link-direction-arrow {
         font-size: 20px;
         color: var(--primary-color, #03a9f4);
         flex-shrink: 0;
+      }
+
+      .profile-selector {
+        margin: 16px 0;
+        padding: 12px;
+        background: var(--secondary-background-color, #fafafa);
+        border-radius: 8px;
+      }
+
+      .profile-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+        color: var(--secondary-text-color);
+        margin-bottom: 6px;
+      }
+
+      .profile-select {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 14px;
+        font-family: inherit;
+        border: 1px solid var(--divider-color, #e0e0e0);
+        border-radius: 4px;
+        background: var(--card-background-color, #fff);
+        color: var(--primary-text-color);
+        cursor: pointer;
+      }
+
+      .profile-select:focus {
+        outline: none;
+        border-color: var(--primary-color, #03a9f4);
+      }
+
+      .profile-description {
+        margin: 8px 0 0;
+        font-size: 13px;
+        color: var(--secondary-text-color);
+        line-height: 1.4;
+      }
+
+      .param-section {
+        margin-bottom: 24px;
+      }
+
+      .param-section h3 {
+        font-size: 16px;
+        font-weight: 500;
+        margin: 16px 0 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--divider-color, #e0e0e0);
+      }
+
+      .empty-state {
+        padding: 24px;
+        text-align: center;
+        color: var(--secondary-text-color);
       }
 
       .btn {
@@ -4029,6 +4755,86 @@ let Pe = class extends oe {
         background: var(--secondary-background-color, #f5f5f5);
       }
 
+      /* Keypress tabs */
+      .keypress-tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 16px;
+        border-bottom: 2px solid var(--divider-color, #e0e0e0);
+      }
+
+      .tab {
+        padding: 10px 20px;
+        font-size: 14px;
+        font-family: inherit;
+        font-weight: 500;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        cursor: pointer;
+        color: var(--secondary-text-color);
+        transition: color 0.2s, border-color 0.2s;
+      }
+
+      .tab:hover {
+        color: var(--primary-text-color);
+      }
+
+      .tab.active {
+        color: var(--primary-color, #03a9f4);
+        border-bottom-color: var(--primary-color, #03a9f4);
+      }
+
+      .keypress-params {
+        padding: 4px 0;
+      }
+
+      .common-params {
+        margin-top: 16px;
+        padding-top: 12px;
+        border-top: 1px solid var(--divider-color, #e0e0e0);
+      }
+
+      /* Level parameter */
+      .level-param .level-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: none;
+      }
+
+      .last-value-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      .last-value-toggle input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+      }
+
+      .slider-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .slider-group input[type="range"] {
+        flex: 1;
+        min-width: 80px;
+      }
+
+      .percent-display {
+        font-size: 14px;
+        font-weight: 500;
+        min-width: 40px;
+        text-align: right;
+      }
+
       @media (max-width: 600px) {
         .link-info-bar {
           flex-direction: column;
@@ -4039,24 +4845,46 @@ let Pe = class extends oe {
         .link-direction-arrow {
           align-self: center;
         }
+
+        .keypress-tabs {
+          width: 100%;
+        }
+
+        .tab {
+          flex: 1;
+          text-align: center;
+        }
       }
     `,
     ];
   }
 };
-e([he({ attribute: !1 })], Pe.prototype, "hass", void 0),
-  e([he()], Pe.prototype, "entryId", void 0),
-  e([he()], Pe.prototype, "interfaceId", void 0),
-  e([he()], Pe.prototype, "senderAddress", void 0),
-  e([he()], Pe.prototype, "receiverAddress", void 0),
-  e([pe()], Pe.prototype, "_schema", void 0),
-  e([pe()], Pe.prototype, "_pendingChanges", void 0),
-  e([pe()], Pe.prototype, "_loading", void 0),
-  e([pe()], Pe.prototype, "_saving", void 0),
-  e([pe()], Pe.prototype, "_error", void 0),
-  e([pe()], Pe.prototype, "_validationErrors", void 0),
-  (Pe = e([_e("hm-link-config")], Pe));
-let Me = class extends oe {
+e([he({ attribute: !1 })], Ue.prototype, "hass", void 0),
+  e([he()], Ue.prototype, "entryId", void 0),
+  e([he()], Ue.prototype, "interfaceId", void 0),
+  e([he()], Ue.prototype, "senderAddress", void 0),
+  e([he()], Ue.prototype, "receiverAddress", void 0),
+  e([he()], Ue.prototype, "senderDeviceName", void 0),
+  e([he()], Ue.prototype, "senderDeviceModel", void 0),
+  e([he()], Ue.prototype, "senderChannelTypeLabel", void 0),
+  e([he()], Ue.prototype, "receiverDeviceName", void 0),
+  e([he()], Ue.prototype, "receiverDeviceModel", void 0),
+  e([he()], Ue.prototype, "receiverChannelTypeLabel", void 0),
+  e([pe()], Ue.prototype, "_receiverSchema", void 0),
+  e([pe()], Ue.prototype, "_senderSchema", void 0),
+  e([pe()], Ue.prototype, "_receiverPendingChanges", void 0),
+  e([pe()], Ue.prototype, "_senderPendingChanges", void 0),
+  e([pe()], Ue.prototype, "_loading", void 0),
+  e([pe()], Ue.prototype, "_saving", void 0),
+  e([pe()], Ue.prototype, "_error", void 0),
+  e([pe()], Ue.prototype, "_validationErrors", void 0),
+  e([pe()], Ue.prototype, "_senderValidationErrors", void 0),
+  e([pe()], Ue.prototype, "_profiles", void 0),
+  e([pe()], Ue.prototype, "_activeProfileId", void 0),
+  e([pe()], Ue.prototype, "_selectedProfileId", void 0),
+  e([pe()], Ue.prototype, "_activeKeypressTab", void 0),
+  (Ue = e([_e("hm-link-config")], Ue));
+let Ve = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -4083,7 +4911,7 @@ let Me = class extends oe {
   async _fetchDevice() {
     this._loading = !0;
     try {
-      const e = await ge(this.hass, this.entryId);
+      const e = await me(this.hass, this.entryId);
       this._device = e.find((e) => e.address === this.deviceAddress) ?? null;
     } catch (e) {
       this._error = String(e);
@@ -4092,7 +4920,7 @@ let Me = class extends oe {
     }
   }
   _l(e, t) {
-    return we(this.hass, e, t);
+    return Ae(this.hass, e, t);
   }
   _handleBack() {
     if ("select-peer" === this._step)
@@ -4130,14 +4958,14 @@ let Me = class extends oe {
       (this._filteredChannels = []),
       (this._searchQuery = "");
     try {
-      (this._linkableChannels = await (async function (e, t, i, s, n) {
+      (this._linkableChannels = await (async function (e, t, i, s, r) {
         return (
           await e.callWS({
             type: "homematicip_local/config/get_linkable_channels",
             entry_id: t,
             interface_id: i,
             channel_address: s,
-            role: n,
+            role: r,
           })
         ).channels;
       })(
@@ -4189,30 +5017,30 @@ let Me = class extends oe {
           "sender" === this._selectedRole
             ? this._selectedPeer
             : this._selectedChannel;
-      await (async function (e, t, i, s, n, r) {
+      await (async function (e, t, i, s, r, n) {
         return e.callWS({
           type: "homematicip_local/config/add_link",
           entry_id: t,
           sender_channel_address: i,
           receiver_channel_address: s,
-          ...(n && { name: n }),
-          ...r,
+          ...(r && { name: r }),
+          ...n,
         });
       })(this.hass, this.entryId, e, t, this._linkName || void 0),
-        Se(this, { message: this._l("add_link.create_success") }),
+        Pe(this, { message: this._l("add_link.create_success") }),
         this.dispatchEvent(
           new CustomEvent("link-created", { bubbles: !0, composed: !0 }),
         );
     } catch {
-      Se(this, { message: this._l("add_link.create_failed") });
+      Pe(this, { message: this._l("add_link.create_failed") });
     } finally {
       this._loading = !1;
     }
   }
   render() {
     return this._loading && !this._device
-      ? B`<div class="loading">${this._l("common.loading")}</div>`
-      : B`
+      ? j`<div class="loading">${this._l("common.loading")}</div>`
+      : j`
       <button class="back-button" @click=${this._handleBack}>
         \u25C2 ${
           "select-channel" === this._step
@@ -4225,7 +5053,7 @@ let Me = class extends oe {
         <h2>${this._l("add_link.title")}</h2>
       </div>
 
-      ${this._error ? B`<div class="error">${this._error}</div>` : W}
+      ${this._error ? j`<div class="error">${this._error}</div>` : W}
 
       ${
         "select-channel" === this._step
@@ -4238,7 +5066,7 @@ let Me = class extends oe {
   }
   _renderStepChannel() {
     const e = this._getLinkableChannels();
-    return B`
+    return j`
       <div class="wizard-step">
         <div class="step-indicator">${this._l("add_link.step_channel")}</div>
         <div class="step-description">
@@ -4248,13 +5076,13 @@ let Me = class extends oe {
         <div class="radio-list">
           ${
             0 === e.length
-              ? B`<div class="empty-state">${this._l(
+              ? j`<div class="empty-state">${this._l(
                   "add_link.no_compatible",
                 )}</div>`
               : e.map((e) => {
                   const t = e.address.split(":").pop() ?? "",
                     i = this._selectedChannel === e.address;
-                  return B`
+                  return j`
                   <div
                     class="radio-option ${i ? "selected" : ""}"
                     @click=${() => this._handleSelectChannel(e.address)}
@@ -4267,7 +5095,7 @@ let Me = class extends oe {
                     <div class="radio-content">
                       <div class="radio-title">
                         ${this._l("device_detail.channel")} ${t}: ${
-                          e.channel_type
+                          e.channel_type_label
                         }
                       </div>
                       <div class="radio-subtitle">${e.address}</div>
@@ -4280,7 +5108,7 @@ let Me = class extends oe {
 
         ${
           e.length > 0
-            ? B`
+            ? j`
               <div class="wizard-actions">
                 <button
                   class="btn btn-primary"
@@ -4297,7 +5125,7 @@ let Me = class extends oe {
     `;
   }
   _renderStepPeer() {
-    return B`
+    return j`
       <div class="wizard-step">
         <div class="step-indicator">${this._l("add_link.step_peer")}</div>
 
@@ -4325,8 +5153,8 @@ let Me = class extends oe {
 
         ${
           this._loading
-            ? B`<div class="loading">${this._l("common.loading")}</div>`
-            : B`
+            ? j`<div class="loading">${this._l("common.loading")}</div>`
+            : j`
               <div class="search-box">
                 <input
                   type="text"
@@ -4339,12 +5167,12 @@ let Me = class extends oe {
               <div class="radio-list">
                 ${
                   0 === this._filteredChannels.length
-                    ? B`<div class="empty-state">${this._l(
+                    ? j`<div class="empty-state">${this._l(
                         "add_link.no_compatible",
                       )}</div>`
                     : this._filteredChannels.map((e) => {
                         const t = this._selectedPeer === e.address;
-                        return B`
+                        return j`
                         <div
                           class="radio-option ${t ? "selected" : ""}"
                           @click=${() => this._handleSelectPeer(e.address)}
@@ -4359,7 +5187,7 @@ let Me = class extends oe {
                               ${e.device_name} (${e.device_model})
                             </div>
                             <div class="radio-subtitle">
-                              ${e.address} \u2014 ${e.channel_type}
+                              ${e.address} \u2014 ${e.channel_type_label}
                             </div>
                           </div>
                         </div>
@@ -4370,7 +5198,7 @@ let Me = class extends oe {
 
               ${
                 this._filteredChannels.length > 0
-                  ? B`
+                  ? j`
                     <div class="wizard-actions">
                       <button
                         class="btn btn-primary"
@@ -4399,7 +5227,7 @@ let Me = class extends oe {
           : this._selectedChannel,
       i = this._resolveName(e),
       s = this._resolveName(t);
-    return B`
+    return j`
       <div class="wizard-step">
         <div class="step-indicator">${this._l("add_link.step_confirm")}</div>
 
@@ -4709,23 +5537,23 @@ let Me = class extends oe {
     ];
   }
 };
-e([he({ attribute: !1 })], Me.prototype, "hass", void 0),
-  e([he()], Me.prototype, "entryId", void 0),
-  e([he()], Me.prototype, "interfaceId", void 0),
-  e([he()], Me.prototype, "deviceAddress", void 0),
-  e([pe()], Me.prototype, "_step", void 0),
-  e([pe()], Me.prototype, "_device", void 0),
-  e([pe()], Me.prototype, "_selectedChannel", void 0),
-  e([pe()], Me.prototype, "_selectedRole", void 0),
-  e([pe()], Me.prototype, "_selectedPeer", void 0),
-  e([pe()], Me.prototype, "_linkName", void 0),
-  e([pe()], Me.prototype, "_linkableChannels", void 0),
-  e([pe()], Me.prototype, "_filteredChannels", void 0),
-  e([pe()], Me.prototype, "_searchQuery", void 0),
-  e([pe()], Me.prototype, "_loading", void 0),
-  e([pe()], Me.prototype, "_error", void 0),
-  (Me = e([_e("hm-add-link")], Me));
-let Ne = class extends oe {
+e([he({ attribute: !1 })], Ve.prototype, "hass", void 0),
+  e([he()], Ve.prototype, "entryId", void 0),
+  e([he()], Ve.prototype, "interfaceId", void 0),
+  e([he()], Ve.prototype, "deviceAddress", void 0),
+  e([pe()], Ve.prototype, "_step", void 0),
+  e([pe()], Ve.prototype, "_device", void 0),
+  e([pe()], Ve.prototype, "_selectedChannel", void 0),
+  e([pe()], Ve.prototype, "_selectedRole", void 0),
+  e([pe()], Ve.prototype, "_selectedPeer", void 0),
+  e([pe()], Ve.prototype, "_linkName", void 0),
+  e([pe()], Ve.prototype, "_linkableChannels", void 0),
+  e([pe()], Ve.prototype, "_filteredChannels", void 0),
+  e([pe()], Ve.prototype, "_searchQuery", void 0),
+  e([pe()], Ve.prototype, "_loading", void 0),
+  e([pe()], Ve.prototype, "_error", void 0),
+  (Ve = e([_e("hm-add-link")], Ve));
+let Ke = class extends oe {
   constructor() {
     super(...arguments),
       (this.narrow = !1),
@@ -4740,6 +5568,12 @@ let Ne = class extends oe {
       (this._selectedDeviceName = ""),
       (this._selectedSenderAddress = ""),
       (this._selectedReceiverAddress = ""),
+      (this._senderDeviceName = ""),
+      (this._senderDeviceModel = ""),
+      (this._senderChannelTypeLabel = ""),
+      (this._receiverDeviceName = ""),
+      (this._receiverDeviceModel = ""),
+      (this._receiverChannelTypeLabel = ""),
       (this._onPopState = () => {
         this._parseUrlHash();
       });
@@ -4759,8 +5593,8 @@ let Ne = class extends oe {
     const t = new URLSearchParams(e),
       i = t.get("view"),
       s = t.get("entry") || this._entryId,
-      n = t.get("device") || "",
-      r = t.get("interface") || "",
+      r = t.get("device") || "",
+      n = t.get("interface") || "",
       a = t.get("channel") || "",
       o = t.get("channel_type") || "",
       d = t.get("paramset") || "MASTER",
@@ -4769,8 +5603,8 @@ let Ne = class extends oe {
     s && (this._entryId = s),
       i &&
         this._navigateTo(i, {
-          device: n,
-          interfaceId: r,
+          device: r,
+          interfaceId: n,
           channel: a,
           channelType: o,
           paramsetKey: d,
@@ -4825,12 +5659,24 @@ let Ne = class extends oe {
         (this._selectedSenderAddress = t.senderAddress),
       void 0 !== t?.receiverAddress &&
         (this._selectedReceiverAddress = t.receiverAddress),
+      void 0 !== t?.senderDeviceName &&
+        (this._senderDeviceName = t.senderDeviceName),
+      void 0 !== t?.senderDeviceModel &&
+        (this._senderDeviceModel = t.senderDeviceModel),
+      void 0 !== t?.senderChannelTypeLabel &&
+        (this._senderChannelTypeLabel = t.senderChannelTypeLabel),
+      void 0 !== t?.receiverDeviceName &&
+        (this._receiverDeviceName = t.receiverDeviceName),
+      void 0 !== t?.receiverDeviceModel &&
+        (this._receiverDeviceModel = t.receiverDeviceModel),
+      void 0 !== t?.receiverChannelTypeLabel &&
+        (this._receiverChannelTypeLabel = t.receiverChannelTypeLabel),
       this._updateUrlHash();
   }
   render() {
     switch (this._view) {
       case "device-list":
-        return B`
+        return j`
           <hm-device-list
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -4843,7 +5689,7 @@ let Ne = class extends oe {
           ></hm-device-list>
         `;
       case "device-detail":
-        return B`
+        return j`
           <hm-device-detail
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -4857,7 +5703,7 @@ let Ne = class extends oe {
           ></hm-device-detail>
         `;
       case "channel-config":
-        return B`
+        return j`
           <hm-channel-config
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -4874,7 +5720,7 @@ let Ne = class extends oe {
           ></hm-channel-config>
         `;
       case "change-history":
-        return B`
+        return j`
           <hm-change-history
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -4892,7 +5738,7 @@ let Ne = class extends oe {
           ></hm-change-history>
         `;
       case "device-links":
-        return B`
+        return j`
           <hm-device-links
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -4909,13 +5755,19 @@ let Ne = class extends oe {
           ></hm-device-links>
         `;
       case "link-config":
-        return B`
+        return j`
           <hm-link-config
             .hass=${this.hass}
             .entryId=${this._entryId}
             .interfaceId=${this._selectedInterfaceId}
             .senderAddress=${this._selectedSenderAddress}
             .receiverAddress=${this._selectedReceiverAddress}
+            .senderDeviceName=${this._senderDeviceName}
+            .senderDeviceModel=${this._senderDeviceModel}
+            .senderChannelTypeLabel=${this._senderChannelTypeLabel}
+            .receiverDeviceName=${this._receiverDeviceName}
+            .receiverDeviceModel=${this._receiverDeviceModel}
+            .receiverChannelTypeLabel=${this._receiverChannelTypeLabel}
             @back=${() =>
               this._navigateTo("device-links", {
                 device: this._selectedDevice,
@@ -4924,7 +5776,7 @@ let Ne = class extends oe {
           ></hm-link-config>
         `;
       case "add-link":
-        return B`
+        return j`
           <hm-add-link
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -4964,19 +5816,25 @@ let Ne = class extends oe {
   `;
   }
 };
-e([he({ attribute: !1 })], Ne.prototype, "hass", void 0),
-  e([he({ attribute: !1 })], Ne.prototype, "panel", void 0),
-  e([he({ type: Boolean, reflect: !0 })], Ne.prototype, "narrow", void 0),
-  e([pe()], Ne.prototype, "_view", void 0),
-  e([pe()], Ne.prototype, "_entryId", void 0),
-  e([pe()], Ne.prototype, "_entries", void 0),
-  e([pe()], Ne.prototype, "_selectedDevice", void 0),
-  e([pe()], Ne.prototype, "_selectedInterfaceId", void 0),
-  e([pe()], Ne.prototype, "_selectedChannel", void 0),
-  e([pe()], Ne.prototype, "_selectedChannelType", void 0),
-  e([pe()], Ne.prototype, "_selectedParamsetKey", void 0),
-  e([pe()], Ne.prototype, "_selectedDeviceName", void 0),
-  e([pe()], Ne.prototype, "_selectedSenderAddress", void 0),
-  e([pe()], Ne.prototype, "_selectedReceiverAddress", void 0),
-  (Ne = e([_e("homematic-config")], Ne));
-export { Ne as HomematicConfigPanel };
+e([he({ attribute: !1 })], Ke.prototype, "hass", void 0),
+  e([he({ attribute: !1 })], Ke.prototype, "panel", void 0),
+  e([he({ type: Boolean, reflect: !0 })], Ke.prototype, "narrow", void 0),
+  e([pe()], Ke.prototype, "_view", void 0),
+  e([pe()], Ke.prototype, "_entryId", void 0),
+  e([pe()], Ke.prototype, "_entries", void 0),
+  e([pe()], Ke.prototype, "_selectedDevice", void 0),
+  e([pe()], Ke.prototype, "_selectedInterfaceId", void 0),
+  e([pe()], Ke.prototype, "_selectedChannel", void 0),
+  e([pe()], Ke.prototype, "_selectedChannelType", void 0),
+  e([pe()], Ke.prototype, "_selectedParamsetKey", void 0),
+  e([pe()], Ke.prototype, "_selectedDeviceName", void 0),
+  e([pe()], Ke.prototype, "_selectedSenderAddress", void 0),
+  e([pe()], Ke.prototype, "_selectedReceiverAddress", void 0),
+  e([pe()], Ke.prototype, "_senderDeviceName", void 0),
+  e([pe()], Ke.prototype, "_senderDeviceModel", void 0),
+  e([pe()], Ke.prototype, "_senderChannelTypeLabel", void 0),
+  e([pe()], Ke.prototype, "_receiverDeviceName", void 0),
+  e([pe()], Ke.prototype, "_receiverDeviceModel", void 0),
+  e([pe()], Ke.prototype, "_receiverChannelTypeLabel", void 0),
+  (Ke = e([_e("homematic-config")], Ke));
+export { Ke as HomematicConfigPanel };
