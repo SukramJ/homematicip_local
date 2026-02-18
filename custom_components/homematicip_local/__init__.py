@@ -169,8 +169,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
         raise ConfigEntryAuthFailed("Authentication failed") from err
     await async_setup_services(hass)
 
-    # Register WebSocket commands (idempotent — needed regardless of panel setting)
-    async_register_websocket_commands(hass)
+    # Register WebSocket commands once (HA raises on duplicate registration)
+    if not hass.data.get("homematicip_local_ws_registered"):
+        async_register_websocket_commands(hass)
+        hass.data["homematicip_local_ws_registered"] = True
 
     # Register or unregister panel based on config entry setting
     if entry.data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_ENABLE_CONFIG_PANEL, DEFAULT_ENABLE_CONFIG_PANEL):

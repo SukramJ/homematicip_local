@@ -78,6 +78,10 @@
 
 - **Sub-device entity name deduplication**: Fixed entity_id duplication when sub-devices are enabled. When the HA device name (channel group name) was a prefix of the backend's `translated_name`, the device name appeared twice in the entity_id (e.g. `binary_sensor.atbm_terrasse_atbm_terrasse_schaltausgang`). The device name prefix is now stripped from the entity name, producing the correct entity_id (e.g. `binary_sensor.atbm_terrasse_schaltausgang`).
 
+- **Multi-instance WebSocket registration**: Fixed duplicate WebSocket command registration error when multiple integration instances (config entries) are set up. Commands are now registered only once.
+
+- **Link profile matching on read failure**: Fixed active profile detection when link paramset read fails. Now correctly falls back to Expert (profile 0) instead of vacuously matching the first profile.
+
 ## Bump aiohomematic to [2026.2.18](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.18)
 
 ### Architecture (aiohomematic)
