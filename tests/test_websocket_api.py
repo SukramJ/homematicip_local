@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+import pytest_socket
 
 from aiohomematic.const import LINKABLE_INTERFACES, ParamsetKey
 from aiohomematic.exceptions import BaseHomematicException
@@ -85,6 +86,9 @@ async def mock_loaded_config_entry(
     mock_control_unit: ControlUnit,
 ) -> MockConfigEntry:
     """Create mock running control unit with version patch."""
+    # Enable sockets before config entry setup because the setup triggers
+    # the http component (via repairs), which needs socket.socket access.
+    pytest_socket.enable_socket()
     with (
         patch("custom_components.homematicip_local.find_free_port", return_value=8765),
         patch(
@@ -1664,6 +1668,9 @@ class TestWsDirectLinks:
         ch = MockChannel(address="VCU0000002:1", type_name="SWITCH")
         device.get_channel = Mock(return_value=ch)
         device.client = Mock()
+        device.client._get_paramset_description = AsyncMock(
+            return_value={"LONG_PRESS_TIME": {"TYPE": "FLOAT", "MIN": 0, "MAX": 10, "DEFAULT": 0, "OPERATIONS": 5}}
+        )
         device.client.get_paramset = AsyncMock(return_value={"LONG_PRESS_TIME": 1.0})
         control.central.device_coordinator.get_device = Mock(return_value=device)
 
@@ -1765,6 +1772,7 @@ class TestWsDirectLinks:
         device.model = "HmIP-BSM"
         device.sub_model = None
         device.client = Mock()
+        device.client._get_paramset_description = AsyncMock(side_effect=BaseHomematicException("read error"))
         device.client.get_paramset = AsyncMock(side_effect=BaseHomematicException("read error"))
         control.central.device_coordinator.get_device = Mock(return_value=device)
 
@@ -2249,9 +2257,11 @@ class TestWsDirectLinks:
         }
         device.client.get_links = AsyncMock(return_value=[same_link])
 
+        peer_ch = MockChannel(address="VCU0000002:1", type_name="SWITCH")
         peer_device = Mock()
         peer_device.name = "Peer"
         peer_device.model = "HmIP-BSM"
+        peer_device.get_channel = lambda *, channel_address: {"VCU0000002:1": peer_ch}.get(channel_address)
 
         devices_map = {"VCU0000001": device, "VCU0000002": peer_device}
         control.central.device_coordinator.get_device = lambda *, address: devices_map.get(address)
@@ -2723,7 +2733,7 @@ class TestWsGetLinkProfiles:
                 "SHORT_ON_TIME_BASE": 7,
                 "SHORT_ON_TIME_FACTOR": 31,
                 "SHORT_JT_ON": 3,
-                "SHORT_JT_OFF": 3,
+                "SHORT_JT_OFF": 1,
                 "LONG_PROFILE_ACTION_TYPE": 3,
                 "LONG_DIM_MAX_LEVEL": 1.0,
             }

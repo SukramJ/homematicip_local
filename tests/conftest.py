@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.plugins import enable_custom_integrations  # noqa: F401
+import pytest_socket
 
 from aiohomematic.i18n import _reset_locale_for_testing
 from aiohomematic_test_support.const import FULL_SESSION_RANDOMIZED_CCU, FULL_SESSION_RANDOMIZED_PYDEVCCU
@@ -207,6 +208,9 @@ async def mock_loaded_config_entry(
     mock_control_unit: ControlUnit,
 ) -> ControlUnit:
     """Create mock running control unit."""
+    # Enable sockets before config entry setup because the setup triggers
+    # the http component (via repairs), which needs socket.socket access.
+    pytest_socket.enable_socket()
     with (
         patch("custom_components.homematicip_local.find_free_port", return_value=8765),
         patch(

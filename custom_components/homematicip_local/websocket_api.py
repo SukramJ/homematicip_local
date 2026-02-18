@@ -1391,13 +1391,13 @@ async def ws_get_link_profiles(
             convert_from_pd=True,
         )
     except BaseHomematicException:
-        current_values = {}
-
-    active_profile_id = profile_store.match_active_profile(
-        receiver_channel_type=receiver_channel_type,
-        sender_channel_type=sender_channel_type,
-        current_values=current_values,
-    )
+        active_profile_id = 0
+    else:
+        active_profile_id = profile_store.match_active_profile(
+            receiver_channel_type=receiver_channel_type,
+            sender_channel_type=sender_channel_type,
+            current_values=current_values,
+        )
 
     connection.send_result(
         msg["id"],
