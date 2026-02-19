@@ -11,22 +11,21 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 import pytest_socket
 
-from aiohomematic.const import LINKABLE_INTERFACES, ParamsetKey
+from aiohomematic.central.coordinators import (
+    ConfigurableDevice,
+    ConfigurableDeviceChannel,
+    CopyParamsetResult,
+    DeviceLink,
+    LinkableChannel,
+    MaintenanceData,
+)
+from aiohomematic.const import ParamsetKey
 from aiohomematic.exceptions import BaseHomematicException
 from custom_components.homematicip_local import HAHM_VERSION
 from custom_components.homematicip_local.control_unit import ControlUnit
 from custom_components.homematicip_local.websocket_api import SESSIONS_KEY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-
-@dataclass(frozen=True, slots=True)
-class MockConfigurableChannel:
-    """Mock configurable channel."""
-
-    address: str
-    channel_type: str
-    paramset_keys: tuple[ParamsetKey, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,15 +49,6 @@ class MockChannel:
 
 
 @dataclass(frozen=True, slots=True)
-class MockDataPoint:
-    """Mock data point for maintenance testing."""
-
-    parameter: str
-    value: Any
-    channel: MockChannel
-
-
-@dataclass(frozen=True, slots=True)
 class MockDevice:
     """Mock device for testing."""
 
@@ -69,7 +59,6 @@ class MockDevice:
     firmware: str
     interface: str = "HmIP-RF"
     model_description: str = ""
-    generic_data_points: tuple[MockDataPoint, ...] = ()
     channels: dict[str, MockChannel] | None = None
 
     def get_channel(self, *, channel_address: str) -> MockChannel | None:
@@ -111,17 +100,31 @@ async def mock_loaded_config_entry(
 def mock_facade() -> Mock:
     """Create a mock configuration facade."""
     facade = Mock()
-    facade.get_configurable_channels = Mock(
+    facade.get_configurable_devices = Mock(
         return_value=(
-            MockConfigurableChannel(
-                address="VCU0000001:0",
-                channel_type="MAINTENANCE",
-                paramset_keys=(ParamsetKey.MASTER,),
-            ),
-            MockConfigurableChannel(
-                address="VCU0000001:1",
-                channel_type="SWITCH",
-                paramset_keys=(ParamsetKey.MASTER, ParamsetKey.VALUES),
+            ConfigurableDevice(
+                address="VCU0000001",
+                interface="HmIP-RF",
+                interface_id="hmip_local-VCU0000001",
+                model="HmIP-BSM",
+                model_description="",
+                name="Test Switch",
+                firmware="1.0.0",
+                channels=(
+                    ConfigurableDeviceChannel(
+                        address="VCU0000001:0",
+                        channel_type="MAINTENANCE",
+                        channel_type_label="Maintenance",
+                        paramset_keys=("MASTER",),
+                    ),
+                    ConfigurableDeviceChannel(
+                        address="VCU0000001:1",
+                        channel_type="SWITCH",
+                        channel_type_label="Switch",
+                        paramset_keys=("MASTER", "VALUES"),
+                    ),
+                ),
+                maintenance=MaintenanceData(),
             ),
         )
     )
@@ -148,46 +151,21 @@ def mock_facade() -> Mock:
 
 
 @pytest.fixture
-def mock_devices() -> list[MockDevice]:
-    """Create mock devices."""
-    return [
-        MockDevice(
-            address="VCU0000001",
-            interface_id="hmip_local-VCU0000001",
-            model="HmIP-BSM",
-            name="Test Switch",
-            firmware="1.0.0",
-        ),
-    ]
-
-
-@pytest.fixture
-def mock_devices_with_maintenance() -> list[MockDevice]:
-    """Create mock devices with maintenance data points."""
+def mock_device_with_maintenance() -> MockDevice:
+    """Create mock device with channel data for export tests."""
     ch0 = MockChannel(address="VCU0000001:0", type_name="MAINTENANCE")
     ch1 = MockChannel(address="VCU0000001:1", type_name="SWITCH")
-    return [
-        MockDevice(
-            address="VCU0000001",
-            interface_id="hmip_local-VCU0000001",
-            model="HmIP-BSM",
-            name="Test Switch",
-            firmware="1.0.0",
-            generic_data_points=(
-                MockDataPoint(parameter="UNREACH", value=False, channel=ch0),
-                MockDataPoint(parameter="LOW_BAT", value=True, channel=ch0),
-                MockDataPoint(parameter="RSSI_DEVICE", value=-65, channel=ch0),
-                MockDataPoint(parameter="RSSI_PEER", value=-70, channel=ch0),
-                MockDataPoint(parameter="DUTYCYCLE", value=False, channel=ch0),
-                MockDataPoint(parameter="CONFIG_PENDING", value=False, channel=ch0),
-                MockDataPoint(parameter="STATE", value=True, channel=ch1),
-            ),
-            channels={
-                "VCU0000001:0": ch0,
-                "VCU0000001:1": ch1,
-            },
-        ),
-    ]
+    return MockDevice(
+        address="VCU0000001",
+        interface_id="hmip_local-VCU0000001",
+        model="HmIP-BSM",
+        name="Test Switch",
+        firmware="1.0.0",
+        channels={
+            "VCU0000001:0": ch0,
+            "VCU0000001:1": ch1,
+        },
+    )
 
 
 class TestWsListDevices:
@@ -199,12 +177,10 @@ class TestWsListDevices:
         mock_loaded_config_entry: MockConfigEntry,
         hass_ws_client: Any,
         mock_facade: Mock,
-        mock_devices: list[MockDevice],
     ) -> None:
         """Test listing devices with configurable channels."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
         control.central.configuration = mock_facade
-        control.central.devices = mock_devices
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -226,9 +202,8 @@ class TestWsListDevices:
         assert len(device["channels"]) == 2
         assert device["channels"][0]["address"] == "VCU0000001:0"
         assert device["channels"][0]["channel_type"] == "MAINTENANCE"
-        # Maintenance data should be present (empty for device with no data points)
+        # Maintenance data should be present (defaults are None)
         assert "maintenance" in device
-        assert device["maintenance"] == {}
 
     async def test_list_devices_entry_not_found(
         self,
@@ -256,12 +231,39 @@ class TestWsListDevices:
         mock_loaded_config_entry: MockConfigEntry,
         hass_ws_client: Any,
         mock_facade: Mock,
-        mock_devices_with_maintenance: list[MockDevice],
     ) -> None:
         """Test listing devices includes maintenance data from channel 0."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
+        mock_facade.get_configurable_devices = Mock(
+            return_value=(
+                ConfigurableDevice(
+                    address="VCU0000001",
+                    interface="HmIP-RF",
+                    interface_id="hmip_local-VCU0000001",
+                    model="HmIP-BSM",
+                    model_description="",
+                    name="Test Switch",
+                    firmware="1.0.0",
+                    channels=(
+                        ConfigurableDeviceChannel(
+                            address="VCU0000001:1",
+                            channel_type="SWITCH",
+                            channel_type_label="Switch",
+                            paramset_keys=("MASTER",),
+                        ),
+                    ),
+                    maintenance=MaintenanceData(
+                        unreach=False,
+                        low_bat=True,
+                        rssi_device=-65,
+                        rssi_peer=-70,
+                        dutycycle=False,
+                        config_pending=False,
+                    ),
+                ),
+            )
+        )
         control.central.configuration = mock_facade
-        control.central.devices = mock_devices_with_maintenance
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -282,8 +284,6 @@ class TestWsListDevices:
         assert maint["rssi_peer"] == -70
         assert maint["dutycycle"] is False
         assert maint["config_pending"] is False
-        # STATE from channel :1 should NOT be in maintenance
-        assert "state" not in maint
 
 
 class TestWsGetFormSchema:
@@ -1021,12 +1021,12 @@ class TestWsExportImport:
         mock_loaded_config_entry: MockConfigEntry,
         hass_ws_client: Any,
         mock_facade: Mock,
-        mock_devices_with_maintenance: list[MockDevice],
+        mock_device_with_maintenance: MockDevice,
     ) -> None:
         """Test export followed by import round-trip."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
         control.central.configuration = mock_facade
-        control.central.device_coordinator.get_device = Mock(return_value=mock_devices_with_maintenance[0])
+        control.central.device_coordinator.get_device = Mock(return_value=mock_device_with_maintenance)
 
         client = await hass_ws_client(hass)
 
@@ -1067,12 +1067,12 @@ class TestWsExportImport:
         mock_loaded_config_entry: MockConfigEntry,
         hass_ws_client: Any,
         mock_facade: Mock,
-        mock_devices_with_maintenance: list[MockDevice],
+        mock_device_with_maintenance: MockDevice,
     ) -> None:
         """Test exporting a paramset as JSON."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
         control.central.configuration = mock_facade
-        control.central.device_coordinator.get_device = Mock(return_value=mock_devices_with_maintenance[0])
+        control.central.device_coordinator.get_device = Mock(return_value=mock_device_with_maintenance)
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -1210,18 +1210,18 @@ class TestWsCopyParamset:
         """Test copying paramset between compatible channels."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
         control.central.configuration = mock_facade
-        mock_facade.get_paramset = AsyncMock(return_value={"DUTY_CYCLE_LIMIT": 50, "READONLY_PARAM": 1})
-        mock_facade.get_paramset_description = Mock(
-            return_value={
-                "DUTY_CYCLE_LIMIT": {
-                    "TYPE": "INTEGER",
-                    "MIN": 0,
-                    "MAX": 100,
-                    "DEFAULT": 0,
-                    "OPERATIONS": 7,  # READ + WRITE + EVENT
-                },
-                # READONLY_PARAM not in target description → skipped
-            }
+        mock_facade.copy_paramset = AsyncMock(
+            return_value=(
+                CopyParamsetResult(
+                    success=True,
+                    validated=True,
+                    validation_errors={},
+                    parameters_copied=1,
+                    parameters_skipped=1,
+                ),
+                {"DUTY_CYCLE_LIMIT": 0},
+                {"DUTY_CYCLE_LIMIT": 50},
+            )
         )
         mock_device = MockDevice(
             address="VCU0000002",
@@ -1286,9 +1286,19 @@ class TestWsCopyParamset:
         """Test copy when no parameters are writable in target."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
         control.central.configuration = mock_facade
-        mock_facade.get_paramset = AsyncMock(return_value={"SOME_PARAM": 10})
-        # Target has no matching parameters
-        mock_facade.get_paramset_description = Mock(return_value={})
+        mock_facade.copy_paramset = AsyncMock(
+            return_value=(
+                CopyParamsetResult(
+                    success=True,
+                    validated=True,
+                    validation_errors={},
+                    parameters_copied=0,
+                    parameters_skipped=1,
+                ),
+                {},
+                {},
+            )
+        )
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -1318,7 +1328,7 @@ class TestWsCopyParamset:
         """Test copy fails when source read fails."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
         control.central.configuration = mock_facade
-        mock_facade.get_paramset = AsyncMock(side_effect=BaseHomematicException("read error"))
+        mock_facade.copy_paramset = AsyncMock(side_effect=BaseHomematicException("read error"))
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -1515,10 +1525,8 @@ class TestWsDirectLinks:
     ) -> None:
         """Test creating a new direct link."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        device = Mock()
-        device.client = Mock()
-        device.client.add_link = AsyncMock()
-        control.central.device_coordinator.get_device = Mock(return_value=device)
+        control.central.link = Mock()
+        control.central.link.add_link = AsyncMock(return_value=True)
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -1536,9 +1544,9 @@ class TestWsDirectLinks:
         response = await client.receive_json()
         assert response["success"] is True
         assert response["result"]["success"] is True
-        device.client.add_link.assert_called_once_with(
-            sender_address="VCU0000001:1",
-            receiver_address="VCU0000002:1",
+        control.central.link.add_link.assert_called_once_with(
+            sender_channel_address="VCU0000001:1",
+            receiver_channel_address="VCU0000002:1",
             name="My Link",
             description="test link",
         )
@@ -1549,12 +1557,10 @@ class TestWsDirectLinks:
         mock_loaded_config_entry: MockConfigEntry,
         hass_ws_client: Any,
     ) -> None:
-        """Test add link uses default name when none provided."""
+        """Test add link passes empty name to coordinator (default generation is internal)."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        device = Mock()
-        device.client = Mock()
-        device.client.add_link = AsyncMock()
-        control.central.device_coordinator.get_device = Mock(return_value=device)
+        control.central.link = Mock()
+        control.central.link.add_link = AsyncMock(return_value=True)
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -1569,10 +1575,10 @@ class TestWsDirectLinks:
 
         response = await client.receive_json()
         assert response["success"] is True
-        device.client.add_link.assert_called_once_with(
-            sender_address="VCU0000001:1",
-            receiver_address="VCU0000002:1",
-            name="VCU0000001:1 -> VCU0000002:1",
+        control.central.link.add_link.assert_called_once_with(
+            sender_channel_address="VCU0000001:1",
+            receiver_channel_address="VCU0000002:1",
+            name="",
             description="created by HA",
         )
 
@@ -1582,9 +1588,10 @@ class TestWsDirectLinks:
         mock_loaded_config_entry: MockConfigEntry,
         hass_ws_client: Any,
     ) -> None:
-        """Test add link when sender device not found."""
+        """Test add link when coordinator returns failure (e.g. device not found)."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        control.central.device_coordinator.get_device = Mock(return_value=None)
+        control.central.link = Mock()
+        control.central.link.add_link = AsyncMock(return_value=False)
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -1599,7 +1606,7 @@ class TestWsDirectLinks:
 
         response = await client.receive_json()
         assert response["success"] is False
-        assert response["error"]["code"] == "device_not_found"
+        assert response["error"]["code"] == "add_link_failed"
 
     async def test_add_link_entry_not_found(
         self,
@@ -1629,12 +1636,10 @@ class TestWsDirectLinks:
         mock_loaded_config_entry: MockConfigEntry,
         hass_ws_client: Any,
     ) -> None:
-        """Test add link when backend fails."""
+        """Test add link when coordinator returns failure."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        device = Mock()
-        device.client = Mock()
-        device.client.add_link = AsyncMock(side_effect=BaseHomematicException("add failed"))
-        control.central.device_coordinator.get_device = Mock(return_value=device)
+        control.central.link = Mock()
+        control.central.link.add_link = AsyncMock(return_value=False)
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -1668,11 +1673,12 @@ class TestWsDirectLinks:
         ch = MockChannel(address="VCU0000002:1", type_name="SWITCH")
         device.get_channel = Mock(return_value=ch)
         device.client = Mock()
-        device.client._get_paramset_description = AsyncMock(
-            return_value={"LONG_PRESS_TIME": {"TYPE": "FLOAT", "MIN": 0, "MAX": 10, "DEFAULT": 0, "OPERATIONS": 5}}
-        )
         device.client.get_paramset = AsyncMock(return_value={"LONG_PRESS_TIME": 1.0})
         control.central.device_coordinator.get_device = Mock(return_value=device)
+
+        mock_facade.get_link_paramset_description = AsyncMock(
+            return_value={"LONG_PRESS_TIME": {"TYPE": "FLOAT", "MIN": 0, "MAX": 10, "DEFAULT": 0, "OPERATIONS": 5}}
+        )
 
         mock_schema = Mock()
         mock_schema.model_dump.return_value = {
@@ -1772,9 +1778,10 @@ class TestWsDirectLinks:
         device.model = "HmIP-BSM"
         device.sub_model = None
         device.client = Mock()
-        device.client._get_paramset_description = AsyncMock(side_effect=BaseHomematicException("read error"))
         device.client.get_paramset = AsyncMock(side_effect=BaseHomematicException("read error"))
         control.central.device_coordinator.get_device = Mock(return_value=device)
+
+        mock_facade.get_link_paramset_description = AsyncMock(side_effect=BaseHomematicException("read error"))
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -1932,23 +1939,8 @@ class TestWsDirectLinks:
     ) -> None:
         """Test that the source channel is excluded from results."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        linkable_iface = next(iter(LINKABLE_INTERFACES))
-
-        ch_self = MockChannel(
-            address="VCU0000001:1",
-            type_name="SWITCH",
-            paramset_keys=(ParamsetKey.LINK,),
-            link_peer_target_categories=frozenset({"SWITCH"}),
-        )
-        device = Mock()
-        device.address = "VCU0000001"
-        device.interface_id = "hmip_local-VCU0000001"
-        device.interface = linkable_iface
-        device.model = "HmIP-BSM"
-        device.name = "Self"
-        device.channels = {"VCU0000001:1": ch_self}
-
-        control.central.devices = [device]
+        control.central.link = Mock()
+        control.central.link.get_linkable_channels = Mock(return_value=())
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -1974,23 +1966,8 @@ class TestWsDirectLinks:
     ) -> None:
         """Test that only devices with matching interface_id are included."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        linkable_iface = next(iter(LINKABLE_INTERFACES))
-
-        ch = MockChannel(
-            address="VCU0000002:1",
-            type_name="SWITCH",
-            paramset_keys=(ParamsetKey.LINK,),
-            link_peer_target_categories=frozenset({"SWITCH"}),
-        )
-        device = Mock()
-        device.address = "VCU0000002"
-        device.interface_id = "other_interface"
-        device.interface = linkable_iface
-        device.model = "HmIP-BSM"
-        device.name = "Other"
-        device.channels = {"VCU0000002:1": ch}
-
-        control.central.devices = [device]
+        control.central.link = Mock()
+        control.central.link.get_linkable_channels = Mock(return_value=())
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -2007,6 +1984,7 @@ class TestWsDirectLinks:
         response = await client.receive_json()
         assert response["success"] is True
         assert len(response["result"]["channels"]) == 0
+        control.central.link.get_linkable_channels.assert_called_once()
 
     async def test_get_linkable_channels_non_linkable_excluded(
         self,
@@ -2014,24 +1992,10 @@ class TestWsDirectLinks:
         mock_loaded_config_entry: MockConfigEntry,
         hass_ws_client: Any,
     ) -> None:
-        """Test that devices with non-linkable interfaces are excluded."""
+        """Test that devices with non-linkable interfaces are excluded (handled by coordinator)."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-
-        ch = MockChannel(
-            address="VCU0000002:1",
-            type_name="SWITCH",
-            paramset_keys=(ParamsetKey.LINK,),
-            link_peer_target_categories=frozenset({"SWITCH"}),
-        )
-        device = Mock()
-        device.address = "VCU0000002"
-        device.interface_id = "hmip_local-VCU0000001"
-        device.interface = "NON_LINKABLE"
-        device.model = "HmIP-BSM"
-        device.name = "Non Linkable"
-        device.channels = {"VCU0000002:1": ch}
-
-        control.central.devices = [device]
+        control.central.link = Mock()
+        control.central.link.get_linkable_channels = Mock(return_value=())
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -2057,23 +2021,19 @@ class TestWsDirectLinks:
     ) -> None:
         """Test getting linkable channels when source is receiver."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        linkable_iface = next(iter(LINKABLE_INTERFACES))
-
-        ch_source = MockChannel(
-            address="VCU0000002:1",
-            type_name="KEY",
-            paramset_keys=(ParamsetKey.LINK,),
-            link_peer_source_categories=frozenset({"KEY"}),
+        control.central.link = Mock()
+        control.central.link.get_linkable_channels = Mock(
+            return_value=(
+                LinkableChannel(
+                    address="VCU0000002:1",
+                    channel_type="KEY",
+                    channel_type_label="Key",
+                    device_address="VCU0000002",
+                    device_name="Wall Switch",
+                    device_model="HmIP-WRC2",
+                ),
+            )
         )
-        device2 = Mock()
-        device2.address = "VCU0000002"
-        device2.interface_id = "hmip_local-VCU0000001"
-        device2.interface = linkable_iface
-        device2.model = "HmIP-WRC2"
-        device2.name = "Wall Switch"
-        device2.channels = {"VCU0000002:1": ch_source}
-
-        control.central.devices = [device2]
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -2102,36 +2062,19 @@ class TestWsDirectLinks:
     ) -> None:
         """Test getting linkable channels when source is sender."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        linkable_iface = next(iter(LINKABLE_INTERFACES))
-
-        ch_target = MockChannel(
-            address="VCU0000002:1",
-            type_name="SWITCH",
-            paramset_keys=(ParamsetKey.LINK,),
-            link_peer_target_categories=frozenset({"SWITCH"}),
+        control.central.link = Mock()
+        control.central.link.get_linkable_channels = Mock(
+            return_value=(
+                LinkableChannel(
+                    address="VCU0000002:1",
+                    channel_type="SWITCH",
+                    channel_type_label="Switch",
+                    device_address="VCU0000002",
+                    device_name="Switch 2",
+                    device_model="HmIP-BSM",
+                ),
+            )
         )
-        device2 = Mock()
-        device2.address = "VCU0000002"
-        device2.interface_id = "hmip_local-VCU0000001"
-        device2.interface = linkable_iface
-        device2.model = "HmIP-BSM"
-        device2.name = "Switch 2"
-        device2.channels = {"VCU0000002:1": ch_target}
-
-        ch_no_link = MockChannel(
-            address="VCU0000003:1",
-            type_name="SENSOR",
-            paramset_keys=(ParamsetKey.MASTER,),
-        )
-        device3 = Mock()
-        device3.address = "VCU0000003"
-        device3.interface_id = "hmip_local-VCU0000001"
-        device3.interface = linkable_iface
-        device3.model = "HmIP-STE"
-        device3.name = "Sensor"
-        device3.channels = {"VCU0000003:1": ch_no_link}
-
-        control.central.devices = [device2, device3]
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -2158,44 +2101,33 @@ class TestWsDirectLinks:
         hass: HomeAssistant,
         mock_loaded_config_entry: MockConfigEntry,
         hass_ws_client: Any,
-        mock_facade: Mock,
     ) -> None:
         """Test listing links for a device."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        control.central.configuration = mock_facade
-
-        linkable_iface = next(iter(LINKABLE_INTERFACES))
-        ch1 = MockChannel(address="VCU0000001:1", type_name="SWITCH")
-        device = Mock()
-        device.address = "VCU0000001"
-        device.interface_id = "hmip_local-VCU0000001"
-        device.interface = linkable_iface
-        device.model = "HmIP-BSM"
-        device.name = "Test Switch"
-        device.channels = {"VCU0000001:1": ch1}
-        device.get_channel = lambda *, channel_address: {"VCU0000001:1": ch1}.get(channel_address)
-        device.client = Mock()
-        device.client.get_links = AsyncMock(
-            return_value=[
-                {
-                    "SENDER": "VCU0000001:1",
-                    "RECEIVER": "VCU0000002:1",
-                    "NAME": "Test Link",
-                    "DESCRIPTION": "test",
-                    "FLAGS": 0,
-                }
-            ]
+        control.central.link = Mock()
+        control.central.link.get_device_links = AsyncMock(
+            return_value=(
+                DeviceLink(
+                    sender_address="VCU0000001:1",
+                    receiver_address="VCU0000002:1",
+                    name="Test Link",
+                    description="test",
+                    flags=0,
+                    sender_device_name="Test Switch",
+                    sender_device_model="HmIP-BSM",
+                    sender_channel_type="SWITCH",
+                    sender_channel_type_label="Switch",
+                    receiver_device_name="Peer Switch",
+                    receiver_device_model="HmIP-BSM",
+                    receiver_channel_type="SWITCH_VIRTUAL_RECEIVER",
+                    receiver_channel_type_label="Switch Virtual Receiver",
+                    peer_address="VCU0000002:1",
+                    peer_device_name="Peer Switch",
+                    peer_device_model="HmIP-BSM",
+                    direction="outgoing",
+                ),
+            )
         )
-
-        peer_ch1 = MockChannel(address="VCU0000002:1", type_name="SWITCH_VIRTUAL_RECEIVER")
-        peer_device = Mock()
-        peer_device.address = "VCU0000002"
-        peer_device.name = "Peer Switch"
-        peer_device.model = "HmIP-BSM"
-        peer_device.get_channel = lambda *, channel_address: {"VCU0000002:1": peer_ch1}.get(channel_address)
-
-        devices_map = {"VCU0000001": device, "VCU0000002": peer_device}
-        control.central.device_coordinator.get_device = lambda *, address: devices_map.get(address)
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -2230,41 +2162,33 @@ class TestWsDirectLinks:
         hass: HomeAssistant,
         mock_loaded_config_entry: MockConfigEntry,
         hass_ws_client: Any,
-        mock_facade: Mock,
     ) -> None:
-        """Test that duplicate links are deduplicated."""
+        """Test that duplicate links are deduplicated (handled by coordinator)."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        control.central.configuration = mock_facade
-
-        linkable_iface = next(iter(LINKABLE_INTERFACES))
-        ch1 = MockChannel(address="VCU0000001:1", type_name="SWITCH")
-        ch2 = MockChannel(address="VCU0000001:2", type_name="SWITCH")
-        device = Mock()
-        device.address = "VCU0000001"
-        device.interface_id = "hmip_local-VCU0000001"
-        device.interface = linkable_iface
-        device.model = "HmIP-BSM"
-        device.name = "Test Switch"
-        device.channels = {"VCU0000001:1": ch1, "VCU0000001:2": ch2}
-        device.get_channel = lambda *, channel_address: {"VCU0000001:1": ch1, "VCU0000001:2": ch2}.get(channel_address)
-        device.client = Mock()
-        same_link = {
-            "SENDER": "VCU0000001:1",
-            "RECEIVER": "VCU0000002:1",
-            "NAME": "Link",
-            "DESCRIPTION": "",
-            "FLAGS": 0,
-        }
-        device.client.get_links = AsyncMock(return_value=[same_link])
-
-        peer_ch = MockChannel(address="VCU0000002:1", type_name="SWITCH")
-        peer_device = Mock()
-        peer_device.name = "Peer"
-        peer_device.model = "HmIP-BSM"
-        peer_device.get_channel = lambda *, channel_address: {"VCU0000002:1": peer_ch}.get(channel_address)
-
-        devices_map = {"VCU0000001": device, "VCU0000002": peer_device}
-        control.central.device_coordinator.get_device = lambda *, address: devices_map.get(address)
+        control.central.link = Mock()
+        control.central.link.get_device_links = AsyncMock(
+            return_value=(
+                DeviceLink(
+                    sender_address="VCU0000001:1",
+                    receiver_address="VCU0000002:1",
+                    name="Link",
+                    description="",
+                    flags=0,
+                    sender_device_name="Test Switch",
+                    sender_device_model="HmIP-BSM",
+                    sender_channel_type="SWITCH",
+                    sender_channel_type_label="Switch",
+                    receiver_device_name="Peer",
+                    receiver_device_model="HmIP-BSM",
+                    receiver_channel_type="SWITCH",
+                    receiver_channel_type_label="Switch",
+                    peer_address="VCU0000002:1",
+                    peer_device_name="Peer",
+                    peer_device_model="HmIP-BSM",
+                    direction="outgoing",
+                ),
+            )
+        )
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -2287,9 +2211,10 @@ class TestWsDirectLinks:
         mock_loaded_config_entry: MockConfigEntry,
         hass_ws_client: Any,
     ) -> None:
-        """Test list links when device not found."""
+        """Test list links when device not found returns empty list."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        control.central.device_coordinator.get_device = Mock(return_value=None)
+        control.central.link = Mock()
+        control.central.link.get_device_links = AsyncMock(return_value=())
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -2303,8 +2228,8 @@ class TestWsDirectLinks:
         )
 
         response = await client.receive_json()
-        assert response["success"] is False
-        assert response["error"]["code"] == "device_not_found"
+        assert response["success"] is True
+        assert response["result"]["links"] == []
 
     async def test_list_device_links_entry_not_found(
         self,
@@ -2333,44 +2258,33 @@ class TestWsDirectLinks:
         hass: HomeAssistant,
         mock_loaded_config_entry: MockConfigEntry,
         hass_ws_client: Any,
-        mock_facade: Mock,
     ) -> None:
         """Test listing an incoming link for a device."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        control.central.configuration = mock_facade
-
-        linkable_iface = next(iter(LINKABLE_INTERFACES))
-        ch1 = MockChannel(address="VCU0000001:1", type_name="SWITCH")
-        device = Mock()
-        device.address = "VCU0000001"
-        device.interface_id = "hmip_local-VCU0000001"
-        device.interface = linkable_iface
-        device.model = "HmIP-BSM"
-        device.name = "Test Switch"
-        device.channels = {"VCU0000001:1": ch1}
-        device.get_channel = lambda *, channel_address: {"VCU0000001:1": ch1}.get(channel_address)
-        device.client = Mock()
-        device.client.get_links = AsyncMock(
-            return_value=[
-                {
-                    "SENDER": "VCU0000002:1",
-                    "RECEIVER": "VCU0000001:1",
-                    "NAME": "Incoming Link",
-                    "DESCRIPTION": "",
-                    "FLAGS": 0,
-                }
-            ]
+        control.central.link = Mock()
+        control.central.link.get_device_links = AsyncMock(
+            return_value=(
+                DeviceLink(
+                    sender_address="VCU0000002:1",
+                    receiver_address="VCU0000001:1",
+                    name="Incoming Link",
+                    description="",
+                    flags=0,
+                    sender_device_name="Remote",
+                    sender_device_model="HmIP-WRC2",
+                    sender_channel_type="KEY_TRANSCEIVER",
+                    sender_channel_type_label="Key Transceiver",
+                    receiver_device_name="Test Switch",
+                    receiver_device_model="HmIP-BSM",
+                    receiver_channel_type="SWITCH",
+                    receiver_channel_type_label="Switch",
+                    peer_address="VCU0000002:1",
+                    peer_device_name="Remote",
+                    peer_device_model="HmIP-WRC2",
+                    direction="incoming",
+                ),
+            )
         )
-
-        peer_ch1 = MockChannel(address="VCU0000002:1", type_name="KEY_TRANSCEIVER")
-        peer_device = Mock()
-        peer_device.address = "VCU0000002"
-        peer_device.name = "Remote"
-        peer_device.model = "HmIP-WRC2"
-        peer_device.get_channel = lambda *, channel_address: {"VCU0000002:1": peer_ch1}.get(channel_address)
-
-        devices_map = {"VCU0000001": device, "VCU0000002": peer_device}
-        control.central.device_coordinator.get_device = lambda *, address: devices_map.get(address)
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -2401,11 +2315,10 @@ class TestWsDirectLinks:
         mock_loaded_config_entry: MockConfigEntry,
         hass_ws_client: Any,
     ) -> None:
-        """Test list links for non-linkable interface returns empty."""
+        """Test list links for non-linkable interface returns empty (handled by coordinator)."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        device = Mock()
-        device.interface = "NON_LINKABLE"
-        control.central.device_coordinator.get_device = Mock(return_value=device)
+        control.central.link = Mock()
+        control.central.link.get_device_links = AsyncMock(return_value=())
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -2608,10 +2521,8 @@ class TestWsDirectLinks:
     ) -> None:
         """Test removing a direct link."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        device = Mock()
-        device.client = Mock()
-        device.client.remove_link = AsyncMock()
-        control.central.device_coordinator.get_device = Mock(return_value=device)
+        control.central.link = Mock()
+        control.central.link.remove_link = AsyncMock(return_value=True)
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -2627,9 +2538,9 @@ class TestWsDirectLinks:
         response = await client.receive_json()
         assert response["success"] is True
         assert response["result"]["success"] is True
-        device.client.remove_link.assert_called_once_with(
-            sender_address="VCU0000001:1",
-            receiver_address="VCU0000002:1",
+        control.central.link.remove_link.assert_called_once_with(
+            sender_channel_address="VCU0000001:1",
+            receiver_channel_address="VCU0000002:1",
         )
 
     async def test_remove_link_device_not_found(
@@ -2638,9 +2549,10 @@ class TestWsDirectLinks:
         mock_loaded_config_entry: MockConfigEntry,
         hass_ws_client: Any,
     ) -> None:
-        """Test remove link when sender device not found."""
+        """Test remove link when coordinator returns failure (e.g. device not found)."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        control.central.device_coordinator.get_device = Mock(return_value=None)
+        control.central.link = Mock()
+        control.central.link.remove_link = AsyncMock(return_value=False)
 
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -2655,7 +2567,7 @@ class TestWsDirectLinks:
 
         response = await client.receive_json()
         assert response["success"] is False
-        assert response["error"]["code"] == "device_not_found"
+        assert response["error"]["code"] == "remove_link_failed"
 
     async def test_remove_link_entry_not_found(
         self,
@@ -2685,12 +2597,10 @@ class TestWsDirectLinks:
         mock_loaded_config_entry: MockConfigEntry,
         hass_ws_client: Any,
     ) -> None:
-        """Test remove link when backend fails."""
+        """Test remove link when coordinator returns failure."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
-        device = Mock()
-        device.client = Mock()
-        device.client.remove_link = AsyncMock(side_effect=BaseHomematicException("remove failed"))
-        control.central.device_coordinator.get_device = Mock(return_value=device)
+        control.central.link = Mock()
+        control.central.link.remove_link = AsyncMock(return_value=False)
 
         client = await hass_ws_client(hass)
         await client.send_json(

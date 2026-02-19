@@ -193,8 +193,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
     @property
     def last_brightness(self) -> int | None:
         """Return the last non-off brightness value (0-255)."""
-        # pylint: disable=protected-access
-        if (last_level := self._data_point._dp_level.last_non_default_value) is not None and last_level > 0:
+        if (last_level := self._data_point.last_level) is not None and last_level > 0:
             return self._data_point.level_to_brightness(last_level)
         return None
 
@@ -230,14 +229,13 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         await super().async_added_to_hass()
 
         # Restore last_non_default_value from HA state for persistence across restarts
-        # pylint: disable=protected-access
         if (
             self._restored_state is not None
             and (stored := self._restored_state.attributes.get(ATTR_LAST_BRIGHTNESS)) is not None
-            and self._data_point._dp_level.last_non_default_value is None
+            and self._data_point.last_level is None
         ):
             stored_level = self._data_point.brightness_to_level(int(stored))
-            self._data_point._dp_level.set_last_non_default_value(value=stored_level)
+            self._data_point.set_last_level(value=stored_level)
 
     @handle_homematic_errors
     async def async_set_led(

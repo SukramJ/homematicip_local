@@ -2,22 +2,21 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+import dataclasses
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
 import voluptuous as vol
 
-from aiohomematic.ccu_translations import get_channel_type_translation
-from aiohomematic.const import LINKABLE_INTERFACES, ParamsetKey
+from aiohomematic.const import ParamsetKey
 from aiohomematic.exceptions import BaseHomematicException
-from aiohomematic.parameter_tools import is_parameter_internal, is_parameter_visible, is_parameter_writable
 from aiohomematic.support.address import get_device_address
 from aiohomematic_config import (
+    ConfigChangeLog,
     ConfigSession,
     FormSchemaGenerator,
-    LabelResolver,
     ProfileStore,
+    build_change_diff,
     export_configuration,
     import_configuration,
 )
@@ -34,34 +33,10 @@ if TYPE_CHECKING:
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-class _LinkLabelResolver(LabelResolver):
-    """
-    LabelResolver that accepts all parameters as having translations.
-
-    LINK paramsets often contain parameters without CCU translations.
-    This resolver ensures those parameters are not filtered out.
-    """
-
-    def has_translation(self, *, parameter_id: str, channel_type: str = "") -> bool:
-        """Return True for any parameter."""
-        return True
-
-
 SESSIONS_KEY: HassKey[dict[str, ConfigSession]] = HassKey("homematicip_local_config_sessions")
 PROFILE_STORE_KEY: HassKey[ProfileStore] = HassKey("homematicip_local_profile_store")
+CHANGE_LOG_KEY: HassKey[ConfigChangeLog] = HassKey("homematicip_local_change_log")
 HISTORY_STORE_KEY: Final = "homematicip_local.config_changes"
-HISTORY_MAX_ENTRIES: Final = 500
-
-_MAINTENANCE_PARAMS: Final[frozenset[str]] = frozenset(
-    {
-        "UNREACH",
-        "LOW_BAT",
-        "RSSI_DEVICE",
-        "RSSI_PEER",
-        "DUTYCYCLE",
-        "CONFIG_PENDING",
-    }
-)
 
 
 def _get_session_key(*, entry_id: str, channel_address: str, paramset_key: str) -> str:
@@ -69,68 +44,26 @@ def _get_session_key(*, entry_id: str, channel_address: str, paramset_key: str) 
     return f"{entry_id}_{channel_address}_{paramset_key}"
 
 
-def _get_maintenance_data(*, device: Any) -> dict[str, Any]:
-    """Return cached maintenance data from device channel 0."""
-    result: dict[str, Any] = {}
-    for dp in device.generic_data_points:
-        if dp.channel.address.endswith(":0") and dp.parameter in _MAINTENANCE_PARAMS:
-            result[dp.parameter.lower()] = dp.value
-    return result
-
-
 def _get_history_store(hass: HomeAssistant) -> Store[list[dict[str, Any]]]:
     """Return the change history store."""
     return Store[list[dict[str, Any]]](hass, 1, HISTORY_STORE_KEY)
 
 
-async def _log_config_change(
-    hass: HomeAssistant,
-    *,
-    entry_id: str,
-    interface_id: str,
-    channel_address: str,
-    device_name: str,
-    device_model: str,
-    paramset_key: str,
-    changes: dict[str, dict[str, Any]],
-    source: str,
-) -> None:
-    """Log a configuration change to persistent storage."""
+async def _get_change_log(hass: HomeAssistant) -> ConfigChangeLog:
+    """Return the shared ConfigChangeLog, loading from store if needed."""
+    if CHANGE_LOG_KEY not in hass.data:
+        store = _get_history_store(hass)
+        data: list[dict[str, Any]] = await store.async_load() or []
+        log = ConfigChangeLog()
+        log.load_entries(raw_entries=data)
+        hass.data[CHANGE_LOG_KEY] = log
+    return hass.data[CHANGE_LOG_KEY]
+
+
+async def _persist_change_log(hass: HomeAssistant, *, log: ConfigChangeLog) -> None:
+    """Persist the change log to HA Store."""
     store = _get_history_store(hass)
-    data: list[dict[str, Any]] = await store.async_load() or []
-
-    entry: dict[str, Any] = {
-        "timestamp": datetime.now(tz=UTC).isoformat(),
-        "entry_id": entry_id,
-        "interface_id": interface_id,
-        "channel_address": channel_address,
-        "device_name": device_name,
-        "device_model": device_model,
-        "paramset_key": paramset_key,
-        "changes": changes,
-        "source": source,
-    }
-    data.append(entry)
-
-    # FIFO: keep only the most recent entries
-    if len(data) > HISTORY_MAX_ENTRIES:
-        data = data[-HISTORY_MAX_ENTRIES:]
-
-    await store.async_save(data)
-
-
-def _build_change_diff(
-    *,
-    old_values: dict[str, Any],
-    new_values: dict[str, Any],
-) -> dict[str, dict[str, Any]]:
-    """Build a change diff between old and new paramset values."""
-    changes: dict[str, dict[str, Any]] = {}
-    for param, new_val in new_values.items():
-        old_val = old_values.get(param)
-        if old_val != new_val:
-            changes[param] = {"old": old_val, "new": new_val}
-    return changes
+    await store.async_save(log.to_dicts())
 
 
 def _get_device_info(
@@ -221,72 +154,8 @@ async def ws_list_devices(
         connection.send_error(msg["id"], "not_found", "Config entry not found")
         return
 
-    central = control.central
-    facade = central.configuration
-    locale = hass.config.language
-    devices: list[dict[str, Any]] = []
-
-    for device in central.devices:
-        try:
-            channels = facade.get_configurable_channels(
-                interface_id=device.interface_id,
-                device_address=device.address,
-            )
-        except BaseHomematicException:
-            continue
-        if not channels:
-            continue
-
-        channel_list: list[dict[str, Any]] = []
-        for ch in channels:
-            # Only advertise MASTER if it has writable visible parameters
-            effective_keys: list[str] = []
-            for pk in ch.paramset_keys:
-                if pk == ParamsetKey.MASTER:
-                    descriptions = facade.get_paramset_description(
-                        interface_id=device.interface_id,
-                        channel_address=ch.address,
-                        paramset_key=pk,
-                    )
-                    has_writable = any(
-                        is_parameter_visible(parameter_data=pd)
-                        and not is_parameter_internal(parameter_data=pd)
-                        and is_parameter_writable(parameter_data=pd)
-                        for pd in descriptions.values()
-                    )
-                    if has_writable:
-                        effective_keys.append(pk.value)
-                else:
-                    effective_keys.append(pk.value)
-
-            channel_list.append(
-                {
-                    "address": ch.address,
-                    "channel_type": ch.channel_type,
-                    "channel_type_label": get_channel_type_translation(
-                        channel_type=ch.channel_type,
-                        locale=locale,
-                    )
-                    or ch.channel_type,
-                    "paramset_keys": effective_keys,
-                }
-            )
-
-        devices.append(
-            {
-                "address": device.address,
-                "interface": str(device.interface),
-                "interface_id": device.interface_id,
-                "model": device.model,
-                "model_description": device.model_description or "",
-                "name": device.name or device.address,
-                "firmware": device.firmware,
-                "channels": channel_list,
-                "maintenance": _get_maintenance_data(device=device),
-            }
-        )
-
-    connection.send_result(msg["id"], {"devices": devices})
+    devices = control.central.configuration.get_configurable_devices(locale=hass.config.language)
+    connection.send_result(msg["id"], {"devices": [dataclasses.asdict(d) for d in devices]})
 
 
 @require_admin
@@ -427,14 +296,14 @@ async def ws_put_paramset(
 
     # Log to change history on success
     if result.success:
-        changes = _build_change_diff(old_values=old_values, new_values=msg["values"])
+        changes = build_change_diff(old_values=old_values, new_values=msg["values"])
         if changes:
             device_name, device_model = _get_device_info(
                 control=control,
                 channel_address=msg["channel_address"],
             )
-            await _log_config_change(
-                hass,
+            log = await _get_change_log(hass)
+            log.add(
                 entry_id=msg["entry_id"],
                 interface_id=msg["interface_id"],
                 channel_address=msg["channel_address"],
@@ -444,6 +313,7 @@ async def ws_put_paramset(
                 changes=changes,
                 source="manual",
             )
+            await _persist_change_log(hass, log=log)
 
     connection.send_result(
         msg["id"],
@@ -723,14 +593,14 @@ async def ws_session_save(
 
     if result.success:
         # Log to change history and remove session
-        change_diff = _build_change_diff(old_values=old_values, new_values=changes)
+        change_diff = build_change_diff(old_values=old_values, new_values=changes)
         if change_diff:
             device_name, device_model = _get_device_info(
                 control=control,
                 channel_address=msg["channel_address"],
             )
-            await _log_config_change(
-                hass,
+            log = await _get_change_log(hass)
+            log.add(
                 entry_id=msg["entry_id"],
                 interface_id=msg["interface_id"],
                 channel_address=msg["channel_address"],
@@ -740,6 +610,7 @@ async def ws_session_save(
                 changes=change_diff,
                 source="manual",
             )
+            await _persist_change_log(hass, log=log)
         sessions.pop(session_key, None)
 
     connection.send_result(
@@ -915,14 +786,14 @@ async def ws_import_paramset(
         return
 
     if result.success:
-        change_diff = _build_change_diff(old_values=old_values, new_values=imported.values)
+        change_diff = build_change_diff(old_values=old_values, new_values=imported.values)
         if change_diff:
             device_name, device_model = _get_device_info(
                 control=control,
                 channel_address=msg["channel_address"],
             )
-            await _log_config_change(
-                hass,
+            log = await _get_change_log(hass)
+            log.add(
                 entry_id=msg["entry_id"],
                 interface_id=msg["interface_id"],
                 channel_address=msg["channel_address"],
@@ -932,6 +803,7 @@ async def ws_import_paramset(
                 changes=change_diff,
                 source="import",
             )
+            await _persist_change_log(hass, log=log)
 
     connection.send_result(
         msg["id"],
@@ -976,97 +848,39 @@ async def ws_copy_paramset(
     facade = control.central.configuration
     paramset_key = ParamsetKey(msg["paramset_key"])
 
-    # Read source values
     try:
-        source_values = await facade.get_paramset(
-            interface_id=msg["source_interface_id"],
-            channel_address=msg["source_channel_address"],
+        result, old_values, copied_values = await facade.copy_paramset(
+            source_interface_id=msg["source_interface_id"],
+            source_channel_address=msg["source_channel_address"],
+            target_interface_id=msg["target_interface_id"],
+            target_channel_address=msg["target_channel_address"],
             paramset_key=paramset_key,
         )
     except BaseHomematicException as err:
-        connection.send_error(msg["id"], "read_failed", f"Failed to read source: {err}")
+        connection.send_error(msg["id"], "read_failed", str(err))
         return
 
-    # Read target description to filter writable parameters
-    target_descriptions = facade.get_paramset_description(
-        interface_id=msg["target_interface_id"],
-        channel_address=msg["target_channel_address"],
-        paramset_key=paramset_key,
-    )
-
-    # Filter: only parameters present in target description AND writable
-    filtered_values: dict[str, Any] = {}
-    skipped = 0
-    for param, value in source_values.items():
-        if param in target_descriptions and is_parameter_writable(parameter_data=target_descriptions[param]):
-            filtered_values[param] = value
-        else:
-            skipped += 1
-
-    if not filtered_values:
-        connection.send_result(
-            msg["id"],
-            {
-                "success": True,
-                "validated": True,
-                "validation_errors": {},
-                "parameters_copied": 0,
-                "parameters_skipped": skipped,
-            },
-        )
-        return
-
-    # Read old target values for change history
-    try:
-        old_values = await facade.get_paramset(
-            interface_id=msg["target_interface_id"],
-            channel_address=msg["target_channel_address"],
-            paramset_key=paramset_key,
-        )
-    except BaseHomematicException:
-        old_values = {}
-
-    try:
-        result = await facade.put_paramset(
-            interface_id=msg["target_interface_id"],
-            channel_address=msg["target_channel_address"],
-            paramset_key=paramset_key,
-            values=filtered_values,
-            validate=True,
-        )
-    except BaseHomematicException as err:
-        connection.send_error(msg["id"], "write_failed", str(err))
-        return
-
-    if result.success:
-        change_diff = _build_change_diff(old_values=old_values, new_values=filtered_values)
-        if change_diff:
+    if result.success and copied_values:
+        changes = build_change_diff(old_values=old_values, new_values=copied_values)
+        if changes:
             device_name, device_model = _get_device_info(
                 control=control,
                 channel_address=msg["target_channel_address"],
             )
-            await _log_config_change(
-                hass,
+            log = await _get_change_log(hass)
+            log.add(
                 entry_id=msg["entry_id"],
                 interface_id=msg["target_interface_id"],
                 channel_address=msg["target_channel_address"],
                 device_name=device_name,
                 device_model=device_model,
                 paramset_key=msg["paramset_key"],
-                changes=change_diff,
+                changes=changes,
                 source="copy",
             )
+            await _persist_change_log(hass, log=log)
 
-    connection.send_result(
-        msg["id"],
-        {
-            "success": result.success,
-            "validated": result.validated,
-            "validation_errors": dict(result.validation_errors),
-            "parameters_copied": len(filtered_values) if result.success else 0,
-            "parameters_skipped": skipped,
-        },
-    )
+    connection.send_result(msg["id"], dataclasses.asdict(result))
 
 
 # ---------------------------------------------------------------------------
@@ -1090,23 +904,16 @@ async def ws_get_change_history(
     msg: dict[str, Any],
 ) -> None:
     """Return change history entries."""
-    store = _get_history_store(hass)
-    data: list[dict[str, Any]] = await store.async_load() or []
-
-    # Filter by entry_id
-    filtered = [e for e in data if e.get("entry_id") == msg["entry_id"]]
-
-    # Optionally filter by channel_address
-    channel_address: str = msg.get("channel_address", "")
-    if channel_address:
-        filtered = [e for e in filtered if e.get("channel_address") == channel_address]
-
-    total = len(filtered)
-    # Return most recent entries first, limited
-    limit: int = msg.get("limit", 50)
-    entries = list(reversed(filtered[-limit:]))
-
-    connection.send_result(msg["id"], {"entries": entries, "total": total})
+    log = await _get_change_log(hass)
+    entries, total = log.get_entries(
+        entry_id=msg["entry_id"],
+        channel_address=msg.get("channel_address", ""),
+        limit=msg.get("limit", 50),
+    )
+    connection.send_result(
+        msg["id"],
+        {"entries": [dataclasses.asdict(e) for e in entries], "total": total},
+    )
 
 
 @require_admin
@@ -1123,15 +930,9 @@ async def ws_clear_change_history(
     msg: dict[str, Any],
 ) -> None:
     """Clear all change history entries for an entry."""
-    store = _get_history_store(hass)
-    data: list[dict[str, Any]] = await store.async_load() or []
-
-    original_count = len(data)
-    data = [e for e in data if e.get("entry_id") != msg["entry_id"]]
-    cleared = original_count - len(data)
-
-    await store.async_save(data)
-
+    log = await _get_change_log(hass)
+    cleared = log.clear_by_entry_id(entry_id=msg["entry_id"])
+    await _persist_change_log(hass, log=log)
     connection.send_result(msg["id"], {"success": True, "cleared": cleared})
 
 
@@ -1160,97 +961,11 @@ async def ws_list_device_links(
         connection.send_error(msg["id"], "not_found", "Config entry not found")
         return
 
-    central = control.central
-    locale = hass.config.language
-    device = central.device_coordinator.get_device(address=msg["device_address"])
-    if device is None:
-        connection.send_error(msg["id"], "device_not_found", "Device not found")
-        return
-
-    if device.interface not in LINKABLE_INTERFACES:
-        connection.send_result(msg["id"], {"links": []})
-        return
-
-    links: list[dict[str, Any]] = []
-    seen: set[tuple[str, str]] = set()
-
-    for channel in device.channels.values():
-        try:
-            raw_links: Any = await device.client.get_links(channel_address=channel.address, flags=0)
-        except BaseHomematicException:
-            continue
-
-        if not isinstance(raw_links, list):
-            continue
-
-        for link_info in raw_links:
-            sender_addr: str = link_info.get("SENDER", "")
-            receiver_addr: str = link_info.get("RECEIVER", "")
-            if not sender_addr or not receiver_addr:
-                continue
-
-            # Deduplicate
-            key = (sender_addr, receiver_addr)
-            if key in seen:
-                continue
-            seen.add(key)
-
-            # Determine direction relative to current device
-            is_sender = sender_addr.startswith(msg["device_address"])
-
-            # Resolve peer device
-            peer_addr = receiver_addr if is_sender else sender_addr
-            peer_device_addr = get_device_address(address=peer_addr)
-            peer_device = central.device_coordinator.get_device(address=peer_device_addr)
-
-            # Resolve sender and receiver channels for type info
-            sender_device_addr = get_device_address(address=sender_addr)
-            sender_dev = device if sender_device_addr == device.address else peer_device
-            sender_channel = sender_dev.get_channel(channel_address=sender_addr) if sender_dev else None
-
-            receiver_device_addr = get_device_address(address=receiver_addr)
-            receiver_dev = device if receiver_device_addr == device.address else peer_device
-            receiver_channel = receiver_dev.get_channel(channel_address=receiver_addr) if receiver_dev else None
-
-            links.append(
-                {
-                    "sender_address": sender_addr,
-                    "receiver_address": receiver_addr,
-                    "name": link_info.get("NAME", ""),
-                    "description": link_info.get("DESCRIPTION", ""),
-                    "flags": link_info.get("FLAGS", 0),
-                    "sender_device_name": (
-                        device.name if is_sender else (peer_device.name if peer_device else peer_device_addr)
-                    ),
-                    "sender_device_model": (device.model if is_sender else (peer_device.model if peer_device else "")),
-                    "sender_channel_type": sender_channel.type_name if sender_channel else "",
-                    "sender_channel_type_label": (
-                        get_channel_type_translation(channel_type=sender_channel.type_name, locale=locale)
-                        or sender_channel.type_name
-                    )
-                    if sender_channel
-                    else "",
-                    "receiver_device_name": (
-                        device.name if not is_sender else (peer_device.name if peer_device else peer_device_addr)
-                    ),
-                    "receiver_device_model": (
-                        device.model if not is_sender else (peer_device.model if peer_device else "")
-                    ),
-                    "receiver_channel_type": receiver_channel.type_name if receiver_channel else "",
-                    "receiver_channel_type_label": (
-                        get_channel_type_translation(channel_type=receiver_channel.type_name, locale=locale)
-                        or receiver_channel.type_name
-                    )
-                    if receiver_channel
-                    else "",
-                    "peer_address": peer_addr,
-                    "peer_device_name": peer_device.name if peer_device else peer_device_addr,
-                    "peer_device_model": peer_device.model if peer_device else "",
-                    "direction": "outgoing" if is_sender else "incoming",
-                }
-            )
-
-    connection.send_result(msg["id"], {"links": links})
+    device_links = await control.central.link.get_device_links(
+        device_address=msg["device_address"],
+        locale=hass.config.language,
+    )
+    connection.send_result(msg["id"], {"links": [dataclasses.asdict(dl) for dl in device_links]})
 
 
 @require_admin
@@ -1283,17 +998,10 @@ async def ws_get_link_form_schema(
         connection.send_error(msg["id"], "device_not_found", "Receiver device not found")
         return
 
-    # The public get_paramset_descriptions() explicitly skips LINK paramsets
-    # (they are not needed during normal device operation). We use the private
-    # _get_paramset_description() to fetch a single LINK paramset description
-    # directly from the backend on demand.
     try:
-        descriptions = (
-            await device.client._get_paramset_description(  # type: ignore[attr-defined]  # pylint: disable=protected-access
-                address=receiver_addr,
-                paramset_key=ParamsetKey.LINK,
-            )
-            or {}
+        descriptions = await control.central.configuration.get_link_paramset_description(
+            interface_id=msg["interface_id"],
+            channel_address=receiver_addr,
         )
     except BaseHomematicException as err:
         connection.send_error(msg["id"], "read_failed", str(err))
@@ -1311,8 +1019,7 @@ async def ws_get_link_form_schema(
         return
 
     channel = device.get_channel(channel_address=receiver_addr)
-    locale = hass.config.language
-    generator = FormSchemaGenerator(label_resolver=_LinkLabelResolver(locale=locale))
+    generator = FormSchemaGenerator(locale=hass.config.language)
     schema = generator.generate(
         descriptions=descriptions,
         current_values=current_values,
@@ -1320,6 +1027,7 @@ async def ws_get_link_form_schema(
         channel_type=channel.type_name if channel else "",
         model=device.model,
         sub_model=device.sub_model,
+        require_translation=False,
         enrich_link_metadata=True,
     )
 
@@ -1373,7 +1081,7 @@ async def ws_get_link_profiles(
     profile_store = _get_profile_store(hass)
     locale = hass.config.language
 
-    profiles = profile_store.get_profiles(
+    profiles = await profile_store.get_profiles(
         receiver_channel_type=receiver_channel_type,
         sender_channel_type=sender_channel_type,
         locale=locale,
@@ -1393,7 +1101,7 @@ async def ws_get_link_profiles(
     except BaseHomematicException:
         active_profile_id = 0
     else:
-        active_profile_id = profile_store.match_active_profile(
+        active_profile_id = await profile_store.match_active_profile(
             receiver_channel_type=receiver_channel_type,
             sender_channel_type=sender_channel_type,
             current_values=current_values,
@@ -1502,14 +1210,14 @@ async def ws_put_link_paramset(
         return
 
     # Log to change history
-    changes = _build_change_diff(old_values=old_values, new_values=msg["values"])
+    changes = build_change_diff(old_values=old_values, new_values=msg["values"])
     if changes:
         device_name, device_model = _get_device_info(
             control=control,
             channel_address=receiver_addr,
         )
-        await _log_config_change(
-            hass,
+        log = await _get_change_log(hass)
+        log.add(
             entry_id=msg["entry_id"],
             interface_id=msg["interface_id"],
             channel_address=f"{sender_addr} -> {receiver_addr}",
@@ -1519,6 +1227,7 @@ async def ws_put_link_paramset(
             changes=changes,
             source="manual",
         )
+        await _persist_change_log(hass, log=log)
 
     connection.send_result(msg["id"], {"success": True})
 
@@ -1545,26 +1254,14 @@ async def ws_add_link(
         connection.send_error(msg["id"], "not_found", "Config entry not found")
         return
 
-    sender_addr = msg["sender_channel_address"]
-    receiver_addr = msg["receiver_channel_address"]
-    sender_device_addr = get_device_address(address=sender_addr)
-    device = control.central.device_coordinator.get_device(address=sender_device_addr)
-    if device is None:
-        connection.send_error(msg["id"], "device_not_found", "Sender device not found")
-        return
-
-    name = msg.get("name") or f"{sender_addr} -> {receiver_addr}"
-    description = msg.get("description", "created by HA")
-
-    try:
-        await device.client.add_link(
-            sender_address=sender_addr,
-            receiver_address=receiver_addr,
-            name=name,
-            description=description,
-        )
-    except BaseHomematicException as err:
-        connection.send_error(msg["id"], "add_link_failed", str(err))
+    success = await control.central.link.add_link(
+        sender_channel_address=msg["sender_channel_address"],
+        receiver_channel_address=msg["receiver_channel_address"],
+        name=msg.get("name", ""),
+        description=msg.get("description", "created by HA"),
+    )
+    if not success:
+        connection.send_error(msg["id"], "add_link_failed", "Failed to add link")
         return
 
     connection.send_result(msg["id"], {"success": True})
@@ -1590,21 +1287,12 @@ async def ws_remove_link(
         connection.send_error(msg["id"], "not_found", "Config entry not found")
         return
 
-    sender_addr = msg["sender_channel_address"]
-    receiver_addr = msg["receiver_channel_address"]
-    sender_device_addr = get_device_address(address=sender_addr)
-    device = control.central.device_coordinator.get_device(address=sender_device_addr)
-    if device is None:
-        connection.send_error(msg["id"], "device_not_found", "Sender device not found")
-        return
-
-    try:
-        await device.client.remove_link(
-            sender_address=sender_addr,
-            receiver_address=receiver_addr,
-        )
-    except BaseHomematicException as err:
-        connection.send_error(msg["id"], "remove_link_failed", str(err))
+    success = await control.central.link.remove_link(
+        sender_channel_address=msg["sender_channel_address"],
+        receiver_channel_address=msg["receiver_channel_address"],
+    )
+    if not success:
+        connection.send_error(msg["id"], "remove_link_failed", "Failed to remove link")
         return
 
     connection.send_result(msg["id"], {"success": True})
@@ -1631,51 +1319,10 @@ async def ws_get_linkable_channels(
         connection.send_error(msg["id"], "not_found", "Config entry not found")
         return
 
-    central = control.central
-    interface_id = msg["interface_id"]
-    source_channel_addr = msg["channel_address"]
-    role = msg["role"]
-    locale = hass.config.language
-
-    candidates: list[dict[str, Any]] = []
-
-    for device in central.devices:
-        if device.interface_id != interface_id:
-            continue
-        if device.interface not in LINKABLE_INTERFACES:
-            continue
-
-        for channel in device.channels.values():
-            # Skip the source channel itself
-            if channel.address == source_channel_addr:
-                continue
-
-            # Check if this channel has LINK in its paramset keys
-            has_link = any(pk == ParamsetKey.LINK for pk in channel.paramset_keys)
-            if not has_link:
-                continue
-
-            if role == "sender":
-                # Source is sender — look for receivers (channels with target roles)
-                if not getattr(channel, "link_peer_target_categories", ()):
-                    continue
-            elif not getattr(channel, "link_peer_source_categories", ()):
-                # Source is receiver — look for senders (channels with source roles)
-                continue
-
-            candidates.append(
-                {
-                    "address": channel.address,
-                    "channel_type": channel.type_name,
-                    "channel_type_label": get_channel_type_translation(
-                        channel_type=channel.type_name,
-                        locale=locale,
-                    )
-                    or channel.type_name,
-                    "device_address": device.address,
-                    "device_name": device.name or device.address,
-                    "device_model": device.model,
-                }
-            )
-
-    connection.send_result(msg["id"], {"channels": candidates})
+    channels = control.central.link.get_linkable_channels(
+        interface_id=msg["interface_id"],
+        source_channel_address=msg["channel_address"],
+        role=msg["role"],
+        locale=hass.config.language,
+    )
+    connection.send_result(msg["id"], {"channels": [dataclasses.asdict(ch) for ch in channels]})

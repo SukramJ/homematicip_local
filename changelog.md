@@ -74,6 +74,12 @@
 
 - **Config entry migration v16**: Existing config entries are migrated to include `command_throttle_interval` with the default value
 
+- **Configuration panel: Business logic extraction**: Moved reusable logic from `websocket_api.py` to aiohomematic / aiohomematic-config:
+  - Device listing now delegates to `ConfigurationCoordinator.get_configurable_devices()` (was ~70 LOC inline)
+  - Paramset copy now delegates to `ConfigurationCoordinator.copy_paramset()` (was ~80 LOC inline)
+  - Change history tracking now uses `ConfigChangeLog` from aiohomematic-config (was custom inline implementation)
+  - Removed `_LinkLabelResolver` workaround in favor of `FormSchemaGenerator(require_translation=False)`
+
 ### Bug Fixes
 
 - **Sub-device entity name deduplication**: Fixed entity_id duplication when sub-devices are enabled. When the HA device name (channel group name) was a prefix of the backend's `translated_name`, the device name appeared twice in the entity_id (e.g. `binary_sensor.atbm_terrasse_atbm_terrasse_schaltausgang`). The device name prefix is now stripped from the entity name, producing the correct entity_id (e.g. `binary_sensor.atbm_terrasse_schaltausgang`).
@@ -82,7 +88,7 @@
 
 - **Link profile matching on read failure**: Fixed active profile detection when link paramset read fails. Now correctly falls back to Expert (profile 0) instead of vacuously matching the first profile.
 
-## Bump aiohomematic to [2026.2.18](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.18)
+## Bump aiohomematic to [2026.2.20](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.20)
 
 ### Architecture (aiohomematic)
 
@@ -99,6 +105,16 @@
 - **Value-only translation fallback** (2026.2.13): `get_parameter_value_translation` now has a three-tier lookup: channel-specific → parameter-specific → value-only. The new value-only fallback builds an index of standalone enum values mapped to their shortest (most generic) translation, so shared values like weekday names resolve even for unknown parameters.
 
 - **Configurable channel filtering** (2026.2.13): `get_configurable_channels` now applies CCU-compatible filtering rules: channels must have the VISIBLE flag set and must not have the INTERNAL flag. WEEK_PROGRAM channels are excluded as they are handled by schedule cards.
+
+- **On-demand LINK paramset description fetching** (2026.2.19): `get_paramset_description_on_demand` on `InterfaceClient` and `get_link_paramset_description` on `ConfigurationCoordinator` for fetching LINK paramset descriptions directly from the backend when needed. LINK paramsets are not cached during device discovery, so this API enables direct link configuration without requiring a full device reload.
+
+- **LinkCoordinator for device direct link management** (2026.2.20): `LinkCoordinator` as a high-level facade for listing, creating, and removing direct links between device channels. Includes `DeviceLink` and `LinkableChannel` dataclasses for enriched link data with translated channel type labels, device metadata, and link direction. Provides linkable channel discovery with role-based filtering. Exposed via `LinkFacadeProtocol` on `CentralUnit.link`.
+
+- **Dimmer last-level tracking** (2026.2.20): `last_level` property and `set_last_level` method on `CustomDpDimmer` for tracking the last non-default brightness level, enabling restore-to-previous-brightness workflows.
+
+- **Configurable device listing** (2026.2.20): `get_configurable_devices` on `ConfigurationCoordinator` returning `ConfigurableDevice` dataclasses with resolved channel type labels, effective paramset keys (MASTER excluded when no writable visible parameters exist), and `MaintenanceData` from channel 0. Exposed via `ConfigurationFacadeProtocol`.
+
+- **Paramset copy operation** (2026.2.20): `copy_paramset` on `ConfigurationCoordinator` for copying writable paramset values from a source channel to a target channel. Filters non-writable and missing parameters, returns `CopyParamsetResult` with copy/skip counts and old target values for change tracking.
 
 - **`parameter_tools` module** (2026.2.9): New standalone module providing pure-function utilities for working with parameter descriptions, independent of DataPoint instances. Includes `ParameterHelper` (flag/operation checks, enum resolution, step size calculation), `ParameterValidator` (value validation, type coercion), and `ParamsetDiff` (type-aware paramset comparison).
 
@@ -154,6 +170,7 @@
 ### Bug Fixes (aiohomematic)
 
 - **LINK paramset parameter translations** (2026.2.18): `get_parameter_translation()` and `get_parameter_value_translation()` now strip `SHORT_`/`LONG_` prefixes and retry the base name, resolving translations for link parameters (e.g. `SHORT_ON_LEVEL` → "Einschalthelligkeit (kurz)"). Added 138 parameter translations and 1158 value translations for link-specific parameters.
+- **Fix delayed device creation failing on multi-interface devices** (2026.2.18): When a new HmIP device was paired, the CCU sends `newDevices` on multiple interfaces (e.g. HmIP-RF and VirtualDevices) with the same device address. `_delayed_device_descriptions` was keyed by device address only, causing the first call to consume descriptions from all interfaces. Fixed by making `_delayed_device_descriptions` interface-aware.
 - **Preserve channel postfix when translation suppresses parameter name** (2026.2.17): When a parameter translation resolves to an empty string for a multi-channel data point, the channel disambiguation postfix (e.g. `ch13`) was lost because the truthiness check treated `""` the same as `None`. Changed to an identity check (`is not None`) so that an empty translation correctly yields `translated_name="ch13"` instead of removing the name entirely.
 - **i18n: Allow multiple CentralUnit instances** (2026.2.15): `set_locale()` is now idempotent — calling it again with the same locale is a no-op. When called with a different locale, it logs a message and keeps the original. Previously, creating a second `CentralUnit` raised `RuntimeError` because `set_locale()` was strictly one-shot.
 - **XML-RPC server race condition on multi-hub startup** (2026.2.7): Fixed a race condition in `AsyncXmlRpcServer.start()` that caused "address in use" errors when multiple central units started concurrently. The singleton server is now protected by an `asyncio.Lock`.
@@ -180,7 +197,7 @@
 - **ClimateWeekProfile**: Simple schedule format now uses Pydantic models for automatic validation. The existing user-facing format remains unchanged, but input validation is now more robust with clear error messages.
 - **DefaultWeekProfile**: Refactored schedule cache to use human-readable Pydantic models (`SimpleSchedule`, `SimpleScheduleEntry`) instead of complex dictionary format.
 
-## Bump aiohomematic-config to [2026.2.5](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.1...2026.2.5)
+## Bump aiohomematic-config to [2026.2.6](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.1...2026.2.6)
 
 New companion library providing device configuration utilities for the integration.
 
@@ -188,6 +205,7 @@ New companion library providing device configuration utilities for the integrati
 - **Upstream CCU translations** (2026.2.3): Replaced local translation files with CCU translations from aiohomematic. Added `channel_type` parameter to `LabelResolver.resolve()`, `option_labels` on `FormParameter`, `model_description`/`channel_type_label` on `FormSchema`, `model`/`sub_model` parameters to `FormSchemaGenerator.generate()`.
 - **Parameter filtering and section titles** (2026.2.4): Locale-aware section titles in `ParameterGrouper` (German translations). Parameters without CCU translation are filtered (matches CCU WebUI easymode behavior). VALUE_LIST parameters always get `option_labels` with humanized fallback.
 - **Link parameter metadata & profiles** (2026.2.5): `link_param_metadata` module for classifying LINK parameters (SHORT/LONG grouping, time pair detection, category classification). `ProfileStore` for loading easymode profile definitions from CCU-extracted JSON. `FormSchemaGenerator` enriches LINK parameters with metadata via `enrich_link_metadata` flag. Time preset tables for on/off, delay, and ramp durations.
+- **Change history module** (2026.2.6): `ConfigChangeLog` class with FIFO-capped storage, filtering, and serialization. `ConfigChangeEntry` frozen dataclass for immutable change records. `build_change_diff()` helper for computing old/new value diffs.
 
 # Version [2.2.4](https://github.com/SukramJ/homematicip_local/compare/2.2.3...2.2.4) (2026-02-01)
 

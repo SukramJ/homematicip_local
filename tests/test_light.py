@@ -81,11 +81,9 @@ def create_mock_light(
     mock_data_point.turn_off = AsyncMock()
     mock_data_point.set_timer_on_time = Mock()
 
-    # Mock _dp_level for last_brightness support
-    mock_dp_level = MagicMock()
-    mock_dp_level.last_non_default_value = last_non_default_value
-    mock_dp_level.set_last_non_default_value = Mock()
-    mock_data_point._dp_level = mock_dp_level
+    # Mock public API for last_brightness support
+    mock_data_point.last_level = last_non_default_value
+    mock_data_point.set_last_level = Mock()
     mock_data_point.level_to_brightness = Mock(side_effect=lambda x: int(x * 255))
     mock_data_point.brightness_to_level = Mock(side_effect=lambda x: x / 255)
 
@@ -749,10 +747,10 @@ class TestAioHomematicLightRestoreLastBrightness:
         ):
             await light.async_added_to_hass()
 
-        # Verify set_last_non_default_value was called with converted level
+        # Verify set_last_level was called with converted level
         # brightness_to_level(127) = 127 / 255 ≈ 0.498
-        light._data_point._dp_level.set_last_non_default_value.assert_called_once()
-        call_kwargs = light._data_point._dp_level.set_last_non_default_value.call_args.kwargs
+        light._data_point.set_last_level.assert_called_once()
+        call_kwargs = light._data_point.set_last_level.call_args.kwargs
         assert abs(call_kwargs["value"] - 0.498) < 0.01
 
     @pytest.mark.asyncio
@@ -772,8 +770,8 @@ class TestAioHomematicLightRestoreLastBrightness:
         ):
             await light.async_added_to_hass()
 
-        # Verify set_last_non_default_value was NOT called
-        light._data_point._dp_level.set_last_non_default_value.assert_not_called()
+        # Verify set_last_level was NOT called
+        light._data_point.set_last_level.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_restore_last_brightness_skipped_when_no_stored_value(self) -> None:
@@ -796,8 +794,8 @@ class TestAioHomematicLightRestoreLastBrightness:
         ):
             await light.async_added_to_hass()
 
-        # Verify set_last_non_default_value was NOT called
-        light._data_point._dp_level.set_last_non_default_value.assert_not_called()
+        # Verify set_last_level was NOT called
+        light._data_point.set_last_level.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_restore_last_brightness_skipped_when_value_exists(self) -> None:
@@ -820,8 +818,8 @@ class TestAioHomematicLightRestoreLastBrightness:
         ):
             await light.async_added_to_hass()
 
-        # Verify set_last_non_default_value was NOT called
-        light._data_point._dp_level.set_last_non_default_value.assert_not_called()
+        # Verify set_last_level was NOT called
+        light._data_point.set_last_level.assert_not_called()
 
 
 class TestAioHomematicLightTurnOnLastBrightnessFallback:
