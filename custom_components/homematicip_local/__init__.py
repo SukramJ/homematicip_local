@@ -103,6 +103,14 @@ def _cleanup_stale_issues(*, hass: HomeAssistant, entry_id: str) -> None:
             _LOGGER.debug("Deleted stale issue %s on startup", issue_id)
 
 
+def _any_entry_has_panel_enabled(*, hass: HomeAssistant) -> bool:
+    """Return True if any loaded config entry has the config panel enabled."""
+    return any(
+        entry.data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_ENABLE_CONFIG_PANEL, DEFAULT_ENABLE_CONFIG_PANEL)
+        for entry in hass.config_entries.async_entries(domain=DOMAIN, include_ignore=False, include_disabled=False)
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -> bool:
     """Set up Homematic(IP) Local for OpenCCU from a config entr11y."""
     expected_version = await get_aiohomematic_version(hass=hass, domain=entry.domain, package_name="aiohomematic")
@@ -174,8 +182,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
         async_register_websocket_commands(hass)
         hass.data["homematicip_local_ws_registered"] = True
 
-    # Register or unregister panel based on config entry setting
-    if entry.data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_ENABLE_CONFIG_PANEL, DEFAULT_ENABLE_CONFIG_PANEL):
+    # Register or unregister panel based on config entry settings.
+    # Only unregister if no loaded config entry has the panel enabled.
+    if _any_entry_has_panel_enabled(hass=hass):
         await async_register_panel(hass)
     else:
         async_unregister_panel(hass)

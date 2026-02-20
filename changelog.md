@@ -88,6 +88,10 @@
 
 - **Link profile matching on read failure**: Fixed active profile detection when link paramset read fails. Now correctly falls back to Expert (profile 0) instead of vacuously matching the first profile.
 
+- **Configuration panel: Fix delete direct connection**: Fixed deletion of direct device-to-device links (Direktverknüpfungen) not working correctly in the configuration panel frontend.
+
+- **Multi-instance panel registration**: Fixed the configuration panel disappearing when multiple CCU instances are configured and not all have the panel enabled. The panel is now kept registered as long as at least one config entry has it enabled, instead of letting the last-loaded entry's setting override all others.
+
 ## Bump aiohomematic to [2026.2.20](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.20)
 
 ### Architecture (aiohomematic)
