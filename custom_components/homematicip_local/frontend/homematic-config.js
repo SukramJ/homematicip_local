@@ -861,21 +861,14 @@ let oe = class extends k {
   ne.litElementHydrateSupport?.({ LitElement: oe });
 const de = ne.litElementPolyfillSupport;
 de?.({ LitElement: oe }), (ne.litElementVersions ??= []).push("4.2.2");
-const le = (e) => (t, i) => {
-    void 0 !== i
-      ? i.addInitializer(() => {
-          customElements.define(e, t);
-        })
-      : customElements.define(e, t);
-  },
-  ce = {
+const le = {
     attribute: !0,
     type: String,
     converter: y,
     reflect: !1,
     hasChanged: b,
   },
-  he = (e = ce, t, i) => {
+  ce = (e = le, t, i) => {
     const { kind: s, metadata: r } = i;
     let a = globalThis.litPropertyMetadata.get(r);
     if (
@@ -904,10 +897,10 @@ const le = (e) => (t, i) => {
     }
     throw Error("Unsupported decorator location: " + s);
   };
-function pe(e) {
+function he(e) {
   return (t, i) =>
     "object" == typeof i
-      ? he(e, t, i)
+      ? ce(e, t, i)
       : ((e, t, i) => {
           const s = t.hasOwnProperty(i);
           return (
@@ -916,13 +909,13 @@ function pe(e) {
           );
         })(e, t, i);
 }
-function _e(e) {
-  return pe({ ...e, state: !0, attribute: !1 });
+function pe(e) {
+  return he({ ...e, state: !0, attribute: !1 });
 }
-function ue(e) {
+function _e(e) {
   return (t) => (customElements.get(e) || customElements.define(e, t), t);
 }
-const ve = n`
+const ue = n`
   :host {
     display: block;
     font-family: var(--paper-font-body1_-_font-family, "Roboto", sans-serif);
@@ -1084,8 +1077,8 @@ const ve = n`
     }
   }
 `,
-  me = new Set(["BidCos-RF", "BidCos-Wired", "HmIP-RF"]);
-async function ge(e, t) {
+  ve = new Set(["BidCos-RF", "BidCos-Wired", "HmIP-RF"]);
+async function me(e, t) {
   return (
     await e.callWS({
       type: "homematicip_local/config/list_devices",
@@ -1093,7 +1086,7 @@ async function ge(e, t) {
     })
   ).devices;
 }
-async function fe(e, t, i, s, r = "", a = "MASTER") {
+async function ge(e, t, i, s, r = "", a = "MASTER") {
   return e.callWS({
     type: "homematicip_local/config/get_form_schema",
     entry_id: t,
@@ -1103,7 +1096,7 @@ async function fe(e, t, i, s, r = "", a = "MASTER") {
     paramset_key: a,
   });
 }
-async function ye(e, t, i, s, r = "MASTER") {
+async function fe(e, t, i, s, r = "MASTER") {
   return e.callWS({
     type: "homematicip_local/config/session_open",
     entry_id: t,
@@ -1112,7 +1105,7 @@ async function ye(e, t, i, s, r = "MASTER") {
     paramset_key: r,
   });
 }
-async function be(e, t, i, s = "MASTER") {
+async function ye(e, t, i, s = "MASTER") {
   return e.callWS({
     type: "homematicip_local/config/session_discard",
     entry_id: t,
@@ -1120,7 +1113,7 @@ async function be(e, t, i, s = "MASTER") {
     paramset_key: s,
   });
 }
-async function xe(e, t, i, s, r) {
+async function be(e, t, i, s, r) {
   return e.callWS({
     type: "homematicip_local/config/get_link_form_schema",
     entry_id: t,
@@ -1129,7 +1122,7 @@ async function xe(e, t, i, s, r) {
     receiver_channel_address: r,
   });
 }
-async function ke(e, t, i, s, r, a) {
+async function xe(e, t, i, s, r, a) {
   return e.callWS({
     type: "homematicip_local/config/put_link_paramset",
     entry_id: t,
@@ -1139,7 +1132,7 @@ async function ke(e, t, i, s, r, a) {
     values: a,
   });
 }
-async function $e(e, t) {
+async function ke(e, t) {
   return (
     await e.callWS({
       type: "homematicip_local/config/list_schedule_devices",
@@ -1147,7 +1140,7 @@ async function $e(e, t) {
     })
   ).devices;
 }
-async function we(e, t, i, s, r, a, n) {
+async function $e(e, t, i, s, r, a, n) {
   return e.callWS({
     type: "homematicip_local/config/set_climate_schedule_weekday",
     entry_id: t,
@@ -1158,7 +1151,7 @@ async function we(e, t, i, s, r, a, n) {
     simple_weekday_list: n,
   });
 }
-async function Se(e, t, i, s) {
+async function we(e, t, i, s) {
   return e.callWS({
     type: "homematicip_local/config/set_device_schedule",
     entry_id: t,
@@ -1166,7 +1159,7 @@ async function Se(e, t, i, s) {
     schedule_data: s,
   });
 }
-async function Ee(e, t, i, s, r) {
+async function Se(e, t, i, s, r) {
   try {
     return await e.callWS({
       type: "homematicip_local/config/get_link_profiles",
@@ -1179,7 +1172,7 @@ async function Ee(e, t, i, s, r) {
     return null;
   }
 }
-const Ce = {
+const Ee = {
   en: {
     common: {
       back: "Back",
@@ -1666,30 +1659,30 @@ const Ce = {
     },
   },
 };
-function Ae(e, t = "") {
+function Ce(e, t = "") {
   const i = {};
   for (const [s, r] of Object.entries(e)) {
     const e = t ? `${t}.${s}` : s;
     "string" == typeof r
       ? (i[e] = r)
-      : "object" == typeof r && null !== r && Object.assign(i, Ae(r, e));
+      : "object" == typeof r && null !== r && Object.assign(i, Ce(r, e));
   }
   return i;
 }
-const De = new Map();
-function Te(e) {
-  if (De.has(e)) return De.get(e);
-  const t = Ae(Ce[e] ?? Ce.en);
-  return De.set(e, t), t;
+const Ae = new Map();
+function De(e) {
+  if (Ae.has(e)) return Ae.get(e);
+  const t = Ce(Ee[e] ?? Ee.en);
+  return Ae.set(e, t), t;
 }
-function Ie(e, t, i) {
-  const s = Te(e.config.language ?? "en");
+function Te(e, t, i) {
+  const s = De(e.config.language ?? "en");
   let r = s[t] ?? s[t.replace(/^panel\./, "")] ?? t;
   if (i)
     for (const [e, t] of Object.entries(i)) r = r.replace(`{${e}}`, String(t));
   return r;
 }
-let Me = class extends oe {
+let Ie = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -1706,7 +1699,7 @@ let Me = class extends oe {
     if (this.entryId) {
       (this._loading = !0), (this._error = "");
       try {
-        this._devices = await ge(this.hass, this.entryId);
+        this._devices = await me(this.hass, this.entryId);
       } catch (e) {
         (this._error = String(e)), (this._devices = []);
       } finally {
@@ -1715,7 +1708,7 @@ let Me = class extends oe {
     }
   }
   _l(e, t) {
-    return Ie(this.hass, e, t);
+    return Te(this.hass, e, t);
   }
   get _filteredDevices() {
     if (!this._searchQuery) return this._devices;
@@ -1893,7 +1886,7 @@ let Me = class extends oe {
   }
   static {
     this.styles = [
-      ve,
+      ue,
       n`
       .panel-header h1 {
         margin: 0 0 16px;
@@ -2026,7 +2019,7 @@ let Me = class extends oe {
     ];
   }
 };
-function Pe(e, t) {
+function Me(e, t) {
   return new Promise((i) => {
     const s = new CustomEvent("hass-dialog", {
       bubbles: !0,
@@ -2040,7 +2033,7 @@ function Pe(e, t) {
     e.dispatchEvent(s);
   });
 }
-function ze(e, t) {
+function Pe(e, t) {
   const i = new CustomEvent("hass-notification", {
     bubbles: !0,
     composed: !0,
@@ -2048,15 +2041,15 @@ function ze(e, t) {
   });
   e.dispatchEvent(i);
 }
-e([pe({ attribute: !1 })], Me.prototype, "hass", void 0),
-  e([pe()], Me.prototype, "entryId", void 0),
-  e([pe({ attribute: !1 })], Me.prototype, "entries", void 0),
-  e([_e()], Me.prototype, "_devices", void 0),
-  e([_e()], Me.prototype, "_loading", void 0),
-  e([_e()], Me.prototype, "_searchQuery", void 0),
-  e([_e()], Me.prototype, "_error", void 0),
-  (Me = e([ue("hm-device-list")], Me));
-let Ne = class extends oe {
+e([he({ attribute: !1 })], Ie.prototype, "hass", void 0),
+  e([he()], Ie.prototype, "entryId", void 0),
+  e([he({ attribute: !1 })], Ie.prototype, "entries", void 0),
+  e([pe()], Ie.prototype, "_devices", void 0),
+  e([pe()], Ie.prototype, "_loading", void 0),
+  e([pe()], Ie.prototype, "_searchQuery", void 0),
+  e([pe()], Ie.prototype, "_error", void 0),
+  (Ie = e([_e("hm-device-list")], Ie));
+let ze = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -2077,8 +2070,8 @@ let Ne = class extends oe {
     (this._loading = !0), (this._error = "");
     try {
       const [e, t] = await Promise.all([
-        ge(this.hass, this.entryId),
-        $e(this.hass, this.entryId).catch(() => []),
+        me(this.hass, this.entryId),
+        ke(this.hass, this.entryId).catch(() => []),
       ]);
       (this._device = e.find((e) => e.address === this.deviceAddress) ?? null),
         (this._hasSchedule = t.some((e) => e.address === this.deviceAddress));
@@ -2089,7 +2082,7 @@ let Ne = class extends oe {
     }
   }
   _l(e, t) {
-    return Ie(this.hass, e, t);
+    return Te(this.hass, e, t);
   }
   _handleBack() {
     this.dispatchEvent(new CustomEvent("back", { bubbles: !0, composed: !0 }));
@@ -2162,9 +2155,9 @@ let Ne = class extends oe {
         (r.download = `${e.address.replace(/:/g, "_")}_MASTER.json`),
         r.click(),
         URL.revokeObjectURL(s),
-        ze(this, { message: this._l("device_detail.export_success") });
+        Pe(this, { message: this._l("device_detail.export_success") });
     } catch {
-      ze(this, { message: this._l("device_detail.export_failed") });
+      Pe(this, { message: this._l("device_detail.export_failed") });
     }
   }
   async _handleImport(e) {
@@ -2177,7 +2170,7 @@ let Ne = class extends oe {
           try {
             const t = await i.text();
             if (
-              !(await Pe(this, {
+              !(await Me(this, {
                 title: this._l("device_detail.import_confirm_title"),
                 text: this._l("device_detail.import_confirm_text", {
                   channel: e.address,
@@ -2204,7 +2197,7 @@ let Ne = class extends oe {
               t,
               "MASTER",
             );
-            ze(
+            Pe(
               this,
               s.success
                 ? { message: this._l("device_detail.import_success") }
@@ -2213,7 +2206,7 @@ let Ne = class extends oe {
                   },
             );
           } catch {
-            ze(this, { message: this._l("device_detail.import_failed") });
+            Pe(this, { message: this._l("device_detail.import_failed") });
           }
       }),
       t.click();
@@ -2242,7 +2235,7 @@ let Ne = class extends oe {
         </div>
         <div class="header-actions">
           ${
-            me.has(e.interface)
+            ve.has(e.interface)
               ? F`
                 <button class="history-button" @click=${this._handleShowLinks}>
                   ${this._l("device_detail.show_links")}
@@ -2399,7 +2392,7 @@ let Ne = class extends oe {
   }
   static {
     this.styles = [
-      ve,
+      ue,
       n`
       .device-header {
         margin-bottom: 16px;
@@ -2484,16 +2477,16 @@ let Ne = class extends oe {
     ];
   }
 };
-e([pe({ attribute: !1 })], Ne.prototype, "hass", void 0),
-  e([pe()], Ne.prototype, "entryId", void 0),
-  e([pe()], Ne.prototype, "interfaceId", void 0),
-  e([pe()], Ne.prototype, "deviceAddress", void 0),
-  e([_e()], Ne.prototype, "_device", void 0),
-  e([_e()], Ne.prototype, "_hasSchedule", void 0),
-  e([_e()], Ne.prototype, "_loading", void 0),
-  e([_e()], Ne.prototype, "_error", void 0),
-  (Ne = e([ue("hm-device-detail")], Ne));
-let Re = class extends oe {
+e([he({ attribute: !1 })], ze.prototype, "hass", void 0),
+  e([he()], ze.prototype, "entryId", void 0),
+  e([he()], ze.prototype, "interfaceId", void 0),
+  e([he()], ze.prototype, "deviceAddress", void 0),
+  e([pe()], ze.prototype, "_device", void 0),
+  e([pe()], ze.prototype, "_hasSchedule", void 0),
+  e([pe()], ze.prototype, "_loading", void 0),
+  e([pe()], ze.prototype, "_error", void 0),
+  (ze = e([_e("hm-device-detail")], ze));
+let Ne = class extends oe {
   constructor() {
     super(...arguments),
       (this.value = null),
@@ -2546,7 +2539,7 @@ let Re = class extends oe {
               }}
             />
             <span class="toggle-label"
-              >${Ie(
+              >${Te(
                 this.hass,
                 this.value
                   ? "form_parameter.toggle_on"
@@ -2665,7 +2658,7 @@ let Re = class extends oe {
   }
   static {
     this.styles = [
-      ve,
+      ue,
       n`
       .read-only {
         opacity: 0.7;
@@ -2777,13 +2770,13 @@ let Re = class extends oe {
     ];
   }
 };
-e([pe({ attribute: !1 })], Re.prototype, "hass", void 0),
-  e([pe({ attribute: !1 })], Re.prototype, "parameter", void 0),
-  e([pe()], Re.prototype, "value", void 0),
-  e([pe({ type: Boolean })], Re.prototype, "modified", void 0),
-  e([pe()], Re.prototype, "validationError", void 0),
-  (Re = e([ue("hm-form-parameter")], Re));
-let Be = class extends oe {
+e([he({ attribute: !1 })], Ne.prototype, "hass", void 0),
+  e([he({ attribute: !1 })], Ne.prototype, "parameter", void 0),
+  e([he()], Ne.prototype, "value", void 0),
+  e([he({ type: Boolean })], Ne.prototype, "modified", void 0),
+  e([he()], Ne.prototype, "validationError", void 0),
+  (Ne = e([_e("hm-form-parameter")], Ne));
+let Re = class extends oe {
   constructor() {
     super(...arguments),
       (this.pendingChanges = new Map()),
@@ -2833,7 +2826,7 @@ let Be = class extends oe {
   }
   static {
     this.styles = [
-      ve,
+      ue,
       n`
       .form-section {
         margin-bottom: 16px;
@@ -2842,12 +2835,12 @@ let Be = class extends oe {
     ];
   }
 };
-e([pe({ attribute: !1 })], Be.prototype, "hass", void 0),
-  e([pe({ attribute: !1 })], Be.prototype, "schema", void 0),
-  e([pe({ attribute: !1 })], Be.prototype, "pendingChanges", void 0),
-  e([pe({ attribute: !1 })], Be.prototype, "validationErrors", void 0),
-  (Be = e([ue("hm-config-form")], Be));
-let Le = class extends oe {
+e([he({ attribute: !1 })], Re.prototype, "hass", void 0),
+  e([he({ attribute: !1 })], Re.prototype, "schema", void 0),
+  e([he({ attribute: !1 })], Re.prototype, "pendingChanges", void 0),
+  e([he({ attribute: !1 })], Re.prototype, "validationErrors", void 0),
+  (Re = e([_e("hm-config-form")], Re));
+let Be = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -2880,7 +2873,7 @@ let Le = class extends oe {
       (this._canUndo = !1),
       (this._canRedo = !1);
     try {
-      (this._schema = await fe(
+      (this._schema = await ge(
         this.hass,
         this.entryId,
         this.interfaceId,
@@ -2888,7 +2881,7 @@ let Le = class extends oe {
         this.channelType,
         this.paramsetKey,
       )),
-        await ye(
+        await fe(
           this.hass,
           this.entryId,
           this.interfaceId,
@@ -2903,7 +2896,7 @@ let Le = class extends oe {
     }
   }
   _l(e, t) {
-    return Ie(this.hass, e, t);
+    return Te(this.hass, e, t);
   }
   get _isDirty() {
     return this._pendingChanges.size > 0;
@@ -2978,7 +2971,7 @@ let Le = class extends oe {
   }
   async _refreshSchemaValues() {
     try {
-      (this._schema = await fe(
+      (this._schema = await ge(
         this.hass,
         this.entryId,
         this.interfaceId,
@@ -2995,12 +2988,12 @@ let Le = class extends oe {
     (this._pendingChanges = new Map()),
       (this._validationErrors = {}),
       this._sessionActive &&
-        be(this.hass, this.entryId, this.channelAddress, this.paramsetKey)
+        ye(this.hass, this.entryId, this.channelAddress, this.paramsetKey)
           .then(
             () => (
               (this._canUndo = !1),
               (this._canRedo = !1),
-              ye(
+              fe(
                 this.hass,
                 this.entryId,
                 this.interfaceId,
@@ -3033,7 +3026,7 @@ let Le = class extends oe {
         })
         .join("\n");
     if (
-      await Pe(this, {
+      await Me(this, {
         title: this._l("channel_config.confirm_save_title"),
         text: `${this._l("channel_config.confirm_save_text", {
           count: e,
@@ -3063,11 +3056,11 @@ let Le = class extends oe {
           e.success
             ? ((this._pendingChanges = new Map()),
               (this._sessionActive = !1),
-              ze(this, { message: this._l("channel_config.save_success") }),
+              Pe(this, { message: this._l("channel_config.save_success") }),
               await this._fetchSchema())
             : Object.keys(e.validation_errors).length > 0 &&
               ((this._validationErrors = e.validation_errors),
-              ze(this, {
+              Pe(this, {
                 message: this._l("channel_config.validation_failed"),
               }));
         } else {
@@ -3092,17 +3085,17 @@ let Le = class extends oe {
             );
           t.success
             ? ((this._pendingChanges = new Map()),
-              ze(this, { message: this._l("channel_config.save_success") }),
+              Pe(this, { message: this._l("channel_config.save_success") }),
               await this._fetchSchema())
             : Object.keys(t.validation_errors).length > 0 &&
               ((this._validationErrors = t.validation_errors),
-              ze(this, {
+              Pe(this, {
                 message: this._l("channel_config.validation_failed"),
               }));
         }
       } catch (e) {
         (this._error = String(e)),
-          ze(this, { message: this._l("channel_config.save_failed") });
+          Pe(this, { message: this._l("channel_config.save_failed") });
       } finally {
         this._saving = !1;
       }
@@ -3118,7 +3111,7 @@ let Le = class extends oe {
   async _handleBack() {
     if (
       !this._isDirty ||
-      (await Pe(this, {
+      (await Me(this, {
         title: this._l("channel_config.unsaved_title"),
         text: this._l("channel_config.unsaved_warning"),
         confirmText: this._l("channel_config.discard"),
@@ -3128,7 +3121,7 @@ let Le = class extends oe {
     ) {
       if (this._sessionActive) {
         try {
-          await be(
+          await ye(
             this.hass,
             this.entryId,
             this.channelAddress,
@@ -3227,7 +3220,7 @@ let Le = class extends oe {
   }
   static {
     this.styles = [
-      ve,
+      ue,
       n`
       .config-header {
         margin-bottom: 16px;
@@ -3330,24 +3323,24 @@ let Le = class extends oe {
     ];
   }
 };
-e([pe({ attribute: !1 })], Le.prototype, "hass", void 0),
-  e([pe()], Le.prototype, "entryId", void 0),
-  e([pe()], Le.prototype, "interfaceId", void 0),
-  e([pe()], Le.prototype, "channelAddress", void 0),
-  e([pe()], Le.prototype, "channelType", void 0),
-  e([pe()], Le.prototype, "paramsetKey", void 0),
-  e([pe()], Le.prototype, "deviceName", void 0),
-  e([_e()], Le.prototype, "_schema", void 0),
-  e([_e()], Le.prototype, "_pendingChanges", void 0),
-  e([_e()], Le.prototype, "_loading", void 0),
-  e([_e()], Le.prototype, "_saving", void 0),
-  e([_e()], Le.prototype, "_error", void 0),
-  e([_e()], Le.prototype, "_validationErrors", void 0),
-  e([_e()], Le.prototype, "_sessionActive", void 0),
-  e([_e()], Le.prototype, "_canUndo", void 0),
-  e([_e()], Le.prototype, "_canRedo", void 0),
-  (Le = e([ue("hm-channel-config")], Le));
-let Ue = class extends oe {
+e([he({ attribute: !1 })], Be.prototype, "hass", void 0),
+  e([he()], Be.prototype, "entryId", void 0),
+  e([he()], Be.prototype, "interfaceId", void 0),
+  e([he()], Be.prototype, "channelAddress", void 0),
+  e([he()], Be.prototype, "channelType", void 0),
+  e([he()], Be.prototype, "paramsetKey", void 0),
+  e([he()], Be.prototype, "deviceName", void 0),
+  e([pe()], Be.prototype, "_schema", void 0),
+  e([pe()], Be.prototype, "_pendingChanges", void 0),
+  e([pe()], Be.prototype, "_loading", void 0),
+  e([pe()], Be.prototype, "_saving", void 0),
+  e([pe()], Be.prototype, "_error", void 0),
+  e([pe()], Be.prototype, "_validationErrors", void 0),
+  e([pe()], Be.prototype, "_sessionActive", void 0),
+  e([pe()], Be.prototype, "_canUndo", void 0),
+  e([pe()], Be.prototype, "_canRedo", void 0),
+  (Be = e([_e("hm-channel-config")], Be));
+let Le = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -3382,7 +3375,7 @@ let Ue = class extends oe {
     }
   }
   _l(e, t) {
-    return Ie(this.hass, e, t);
+    return Te(this.hass, e, t);
   }
   _handleBack() {
     this.dispatchEvent(new CustomEvent("back", { bubbles: !0, composed: !0 }));
@@ -3393,7 +3386,7 @@ let Ue = class extends oe {
   }
   async _handleClear() {
     if (
-      await Pe(this, {
+      await Me(this, {
         title: this._l("change_history.clear_confirm_title"),
         text: this._l("change_history.clear_confirm_text"),
         confirmText: this._l("change_history.clear"),
@@ -3409,7 +3402,7 @@ let Ue = class extends oe {
           });
         })(this.hass, this.entryId);
         e.success &&
-          (ze(this, {
+          (Pe(this, {
             message: this._l("change_history.clear_success", {
               count: e.cleared,
             }),
@@ -3417,7 +3410,7 @@ let Ue = class extends oe {
           (this._entries = []),
           (this._total = 0));
       } catch {
-        ze(this, { message: this._l("channel_config.save_failed") });
+        Pe(this, { message: this._l("channel_config.save_failed") });
       }
   }
   _formatTimestamp(e) {
@@ -3534,7 +3527,7 @@ let Ue = class extends oe {
   }
   static {
     this.styles = [
-      ve,
+      ue,
       n`
       .history-header-bar {
         margin-bottom: 16px;
@@ -3699,16 +3692,16 @@ let Ue = class extends oe {
     ];
   }
 };
-e([pe({ attribute: !1 })], Ue.prototype, "hass", void 0),
-  e([pe()], Ue.prototype, "entryId", void 0),
-  e([pe()], Ue.prototype, "filterDevice", void 0),
-  e([_e()], Ue.prototype, "_entries", void 0),
-  e([_e()], Ue.prototype, "_total", void 0),
-  e([_e()], Ue.prototype, "_loading", void 0),
-  e([_e()], Ue.prototype, "_error", void 0),
-  e([_e()], Ue.prototype, "_expandedEntries", void 0),
-  (Ue = e([ue("hm-change-history")], Ue));
-let Oe = class extends oe {
+e([he({ attribute: !1 })], Le.prototype, "hass", void 0),
+  e([he()], Le.prototype, "entryId", void 0),
+  e([he()], Le.prototype, "filterDevice", void 0),
+  e([pe()], Le.prototype, "_entries", void 0),
+  e([pe()], Le.prototype, "_total", void 0),
+  e([pe()], Le.prototype, "_loading", void 0),
+  e([pe()], Le.prototype, "_error", void 0),
+  e([pe()], Le.prototype, "_expandedEntries", void 0),
+  (Le = e([_e("hm-change-history")], Le));
+let Ue = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -3746,7 +3739,7 @@ let Oe = class extends oe {
     }
   }
   _l(e, t) {
-    return Ie(this.hass, e, t);
+    return Te(this.hass, e, t);
   }
   _handleBack() {
     this.dispatchEvent(new CustomEvent("back", { bubbles: !0, composed: !0 }));
@@ -3784,7 +3777,7 @@ let Oe = class extends oe {
   }
   async _handleDelete(e) {
     if (
-      await Pe(this, {
+      await Me(this, {
         title: this._l("device_links.delete_confirm_title"),
         text: this._l("device_links.delete_confirm_text", {
           sender: e.sender_address,
@@ -3804,10 +3797,10 @@ let Oe = class extends oe {
             receiver_channel_address: s,
           });
         })(this.hass, this.entryId, e.sender_address, e.receiver_address),
-          ze(this, { message: this._l("device_links.delete_success") }),
+          Pe(this, { message: this._l("device_links.delete_success") }),
           await this._fetchLinks();
       } catch {
-        ze(this, { message: this._l("device_links.delete_failed") });
+        Pe(this, { message: this._l("device_links.delete_failed") });
       }
   }
   _groupByChannel() {
@@ -3927,7 +3920,7 @@ let Oe = class extends oe {
   }
   static {
     this.styles = [
-      ve,
+      ue,
       n`
       .links-header {
         margin-bottom: 16px;
@@ -4111,16 +4104,16 @@ let Oe = class extends oe {
     ];
   }
 };
-e([pe({ attribute: !1 })], Oe.prototype, "hass", void 0),
-  e([pe()], Oe.prototype, "entryId", void 0),
-  e([pe()], Oe.prototype, "interfaceId", void 0),
-  e([pe()], Oe.prototype, "deviceAddress", void 0),
-  e([pe()], Oe.prototype, "deviceName", void 0),
-  e([_e()], Oe.prototype, "_links", void 0),
-  e([_e()], Oe.prototype, "_loading", void 0),
-  e([_e()], Oe.prototype, "_error", void 0),
-  (Oe = e([ue("hm-device-links")], Oe));
-let We = class extends oe {
+e([he({ attribute: !1 })], Ue.prototype, "hass", void 0),
+  e([he()], Ue.prototype, "entryId", void 0),
+  e([he()], Ue.prototype, "interfaceId", void 0),
+  e([he()], Ue.prototype, "deviceAddress", void 0),
+  e([he()], Ue.prototype, "deviceName", void 0),
+  e([pe()], Ue.prototype, "_links", void 0),
+  e([pe()], Ue.prototype, "_loading", void 0),
+  e([pe()], Ue.prototype, "_error", void 0),
+  (Ue = e([_e("hm-device-links")], Ue));
+let Oe = class extends oe {
   constructor() {
     super(...arguments),
       (this.baseValue = 0),
@@ -4130,7 +4123,7 @@ let We = class extends oe {
       (this._isCustom = !1);
   }
   _l(e) {
-    return Ie(this.hass, e);
+    return Te(this.hass, e);
   }
   get _matchesPreset() {
     return this.presets.some(
@@ -4227,7 +4220,7 @@ let We = class extends oe {
   }
   static {
     this.styles = [
-      ve,
+      ue,
       n`
       .time-selector {
         margin-bottom: 4px;
@@ -4283,16 +4276,16 @@ let We = class extends oe {
     ];
   }
 };
-e([pe({ attribute: !1 })], We.prototype, "hass", void 0),
-  e([pe({ attribute: !1 })], We.prototype, "baseParam", void 0),
-  e([pe({ attribute: !1 })], We.prototype, "factorParam", void 0),
-  e([pe({ type: Number })], We.prototype, "baseValue", void 0),
-  e([pe({ type: Number })], We.prototype, "factorValue", void 0),
-  e([pe({ attribute: !1 })], We.prototype, "presets", void 0),
-  e([pe({ type: Boolean })], We.prototype, "modified", void 0),
-  e([_e()], We.prototype, "_isCustom", void 0),
-  (We = e([ue("hm-time-selector")], We));
-let je = class extends oe {
+e([he({ attribute: !1 })], Oe.prototype, "hass", void 0),
+  e([he({ attribute: !1 })], Oe.prototype, "baseParam", void 0),
+  e([he({ attribute: !1 })], Oe.prototype, "factorParam", void 0),
+  e([he({ type: Number })], Oe.prototype, "baseValue", void 0),
+  e([he({ type: Number })], Oe.prototype, "factorValue", void 0),
+  e([he({ attribute: !1 })], Oe.prototype, "presets", void 0),
+  e([he({ type: Boolean })], Oe.prototype, "modified", void 0),
+  e([pe()], Oe.prototype, "_isCustom", void 0),
+  (Oe = e([_e("hm-time-selector")], Oe));
+let We = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -4335,21 +4328,21 @@ let je = class extends oe {
       (this._senderValidationErrors = {});
     try {
       const [e, t, i] = await Promise.all([
-        xe(
+        be(
           this.hass,
           this.entryId,
           this.interfaceId,
           this.senderAddress,
           this.receiverAddress,
         ),
-        xe(
+        be(
           this.hass,
           this.entryId,
           this.interfaceId,
           this.receiverAddress,
           this.senderAddress,
         ).catch(() => null),
-        Ee(
+        Se(
           this.hass,
           this.entryId,
           this.interfaceId,
@@ -4369,7 +4362,7 @@ let je = class extends oe {
     }
   }
   _l(e, t) {
-    return Ie(this.hass, e, t);
+    return Te(this.hass, e, t);
   }
   get _isDirty() {
     return (
@@ -4476,7 +4469,7 @@ let je = class extends oe {
         })
         .join("\n");
     if (
-      await Pe(this, {
+      await Me(this, {
         title: this._l("link_config.confirm_save_title"),
         text: `${this._l("link_config.confirm_save_text", {
           count: t,
@@ -4492,7 +4485,7 @@ let je = class extends oe {
         const e = [];
         this._receiverPendingChanges.size > 0 &&
           e.push(
-            ke(
+            xe(
               this.hass,
               this.entryId,
               this.interfaceId,
@@ -4503,7 +4496,7 @@ let je = class extends oe {
           ),
           this._senderPendingChanges.size > 0 &&
             e.push(
-              ke(
+              xe(
                 this.hass,
                 this.entryId,
                 this.interfaceId,
@@ -4515,11 +4508,11 @@ let je = class extends oe {
           await Promise.all(e),
           (this._receiverPendingChanges = new Map()),
           (this._senderPendingChanges = new Map()),
-          ze(this, { message: this._l("link_config.save_success") }),
+          Pe(this, { message: this._l("link_config.save_success") }),
           await this._fetchSchemas();
       } catch (e) {
         (this._error = String(e)),
-          ze(this, { message: this._l("link_config.save_failed") });
+          Pe(this, { message: this._l("link_config.save_failed") });
       } finally {
         this._saving = !1;
       }
@@ -4535,7 +4528,7 @@ let je = class extends oe {
   }
   async _handleBack() {
     (this._isDirty &&
-      !(await Pe(this, {
+      !(await Me(this, {
         title: this._l("link_config.unsaved_title"),
         text: this._l("link_config.unsaved_warning"),
         confirmText: this._l("link_config.discard"),
@@ -4841,7 +4834,7 @@ let je = class extends oe {
   }
   static {
     this.styles = [
-      ve,
+      ue,
       n`
       .config-header {
         margin-bottom: 16px;
@@ -5096,32 +5089,32 @@ let je = class extends oe {
     ];
   }
 };
-e([pe({ attribute: !1 })], je.prototype, "hass", void 0),
-  e([pe()], je.prototype, "entryId", void 0),
-  e([pe()], je.prototype, "interfaceId", void 0),
-  e([pe()], je.prototype, "senderAddress", void 0),
-  e([pe()], je.prototype, "receiverAddress", void 0),
-  e([pe()], je.prototype, "senderDeviceName", void 0),
-  e([pe()], je.prototype, "senderDeviceModel", void 0),
-  e([pe()], je.prototype, "senderChannelTypeLabel", void 0),
-  e([pe()], je.prototype, "receiverDeviceName", void 0),
-  e([pe()], je.prototype, "receiverDeviceModel", void 0),
-  e([pe()], je.prototype, "receiverChannelTypeLabel", void 0),
-  e([_e()], je.prototype, "_receiverSchema", void 0),
-  e([_e()], je.prototype, "_senderSchema", void 0),
-  e([_e()], je.prototype, "_receiverPendingChanges", void 0),
-  e([_e()], je.prototype, "_senderPendingChanges", void 0),
-  e([_e()], je.prototype, "_loading", void 0),
-  e([_e()], je.prototype, "_saving", void 0),
-  e([_e()], je.prototype, "_error", void 0),
-  e([_e()], je.prototype, "_validationErrors", void 0),
-  e([_e()], je.prototype, "_senderValidationErrors", void 0),
-  e([_e()], je.prototype, "_profiles", void 0),
-  e([_e()], je.prototype, "_activeProfileId", void 0),
-  e([_e()], je.prototype, "_selectedProfileId", void 0),
-  e([_e()], je.prototype, "_activeKeypressTab", void 0),
-  (je = e([ue("hm-link-config")], je));
-let Fe = class extends oe {
+e([he({ attribute: !1 })], We.prototype, "hass", void 0),
+  e([he()], We.prototype, "entryId", void 0),
+  e([he()], We.prototype, "interfaceId", void 0),
+  e([he()], We.prototype, "senderAddress", void 0),
+  e([he()], We.prototype, "receiverAddress", void 0),
+  e([he()], We.prototype, "senderDeviceName", void 0),
+  e([he()], We.prototype, "senderDeviceModel", void 0),
+  e([he()], We.prototype, "senderChannelTypeLabel", void 0),
+  e([he()], We.prototype, "receiverDeviceName", void 0),
+  e([he()], We.prototype, "receiverDeviceModel", void 0),
+  e([he()], We.prototype, "receiverChannelTypeLabel", void 0),
+  e([pe()], We.prototype, "_receiverSchema", void 0),
+  e([pe()], We.prototype, "_senderSchema", void 0),
+  e([pe()], We.prototype, "_receiverPendingChanges", void 0),
+  e([pe()], We.prototype, "_senderPendingChanges", void 0),
+  e([pe()], We.prototype, "_loading", void 0),
+  e([pe()], We.prototype, "_saving", void 0),
+  e([pe()], We.prototype, "_error", void 0),
+  e([pe()], We.prototype, "_validationErrors", void 0),
+  e([pe()], We.prototype, "_senderValidationErrors", void 0),
+  e([pe()], We.prototype, "_profiles", void 0),
+  e([pe()], We.prototype, "_activeProfileId", void 0),
+  e([pe()], We.prototype, "_selectedProfileId", void 0),
+  e([pe()], We.prototype, "_activeKeypressTab", void 0),
+  (We = e([_e("hm-link-config")], We));
+let je = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -5148,7 +5141,7 @@ let Fe = class extends oe {
   async _fetchDevice() {
     this._loading = !0;
     try {
-      const e = await ge(this.hass, this.entryId);
+      const e = await me(this.hass, this.entryId);
       this._device = e.find((e) => e.address === this.deviceAddress) ?? null;
     } catch (e) {
       this._error = String(e);
@@ -5157,7 +5150,7 @@ let Fe = class extends oe {
     }
   }
   _l(e, t) {
-    return Ie(this.hass, e, t);
+    return Te(this.hass, e, t);
   }
   _handleBack() {
     if ("select-peer" === this._step)
@@ -5263,12 +5256,12 @@ let Fe = class extends oe {
           ...(r && { name: r }),
         });
       })(this.hass, this.entryId, e, t, this._linkName || void 0),
-        ze(this, { message: this._l("add_link.create_success") }),
+        Pe(this, { message: this._l("add_link.create_success") }),
         this.dispatchEvent(
           new CustomEvent("link-created", { bubbles: !0, composed: !0 }),
         );
     } catch {
-      ze(this, { message: this._l("add_link.create_failed") });
+      Pe(this, { message: this._l("add_link.create_failed") });
     } finally {
       this._loading = !1;
     }
@@ -5508,7 +5501,7 @@ let Fe = class extends oe {
   }
   static {
     this.styles = [
-      ve,
+      ue,
       n`
       .wizard-header {
         margin-bottom: 16px;
@@ -5756,22 +5749,25 @@ let Fe = class extends oe {
     ];
   }
 };
-e([pe({ attribute: !1 })], Fe.prototype, "hass", void 0),
-  e([pe()], Fe.prototype, "entryId", void 0),
-  e([pe()], Fe.prototype, "interfaceId", void 0),
-  e([pe()], Fe.prototype, "deviceAddress", void 0),
-  e([_e()], Fe.prototype, "_step", void 0),
-  e([_e()], Fe.prototype, "_device", void 0),
-  e([_e()], Fe.prototype, "_selectedChannel", void 0),
-  e([_e()], Fe.prototype, "_selectedRole", void 0),
-  e([_e()], Fe.prototype, "_selectedPeer", void 0),
-  e([_e()], Fe.prototype, "_linkName", void 0),
-  e([_e()], Fe.prototype, "_linkableChannels", void 0),
-  e([_e()], Fe.prototype, "_filteredChannels", void 0),
-  e([_e()], Fe.prototype, "_searchQuery", void 0),
-  e([_e()], Fe.prototype, "_loading", void 0),
-  e([_e()], Fe.prototype, "_error", void 0),
-  (Fe = e([ue("hm-add-link")], Fe));
+function Fe(e) {
+  return (t) => (customElements.get(e) || customElements.define(e, t), t);
+}
+e([he({ attribute: !1 })], je.prototype, "hass", void 0),
+  e([he()], je.prototype, "entryId", void 0),
+  e([he()], je.prototype, "interfaceId", void 0),
+  e([he()], je.prototype, "deviceAddress", void 0),
+  e([pe()], je.prototype, "_step", void 0),
+  e([pe()], je.prototype, "_device", void 0),
+  e([pe()], je.prototype, "_selectedChannel", void 0),
+  e([pe()], je.prototype, "_selectedRole", void 0),
+  e([pe()], je.prototype, "_selectedPeer", void 0),
+  e([pe()], je.prototype, "_linkName", void 0),
+  e([pe()], je.prototype, "_linkableChannels", void 0),
+  e([pe()], je.prototype, "_filteredChannels", void 0),
+  e([pe()], je.prototype, "_searchQuery", void 0),
+  e([pe()], je.prototype, "_loading", void 0),
+  e([pe()], je.prototype, "_error", void 0),
+  (je = e([_e("hm-add-link")], je));
 let Ve = class {
   constructor(e) {}
   get _$AU() {
@@ -6819,21 +6815,21 @@ let St = class extends oe {
     this.styles = $t;
   }
 };
-wt([pe({ attribute: !1 })], St.prototype, "scheduleData", void 0),
-  wt([pe({ type: Boolean })], St.prototype, "editable", void 0),
-  wt([pe({ type: Boolean })], St.prototype, "showTemperature", void 0),
-  wt([pe({ type: Boolean })], St.prototype, "showGradient", void 0),
-  wt([pe({ type: String })], St.prototype, "temperatureUnit", void 0),
-  wt([pe({ type: String })], St.prototype, "hourFormat", void 0),
-  wt([pe({ attribute: !1 })], St.prototype, "translations", void 0),
-  wt([pe({ type: String })], St.prototype, "copiedWeekday", void 0),
-  wt([pe({ type: Boolean })], St.prototype, "editorOpen", void 0),
-  wt([pe({ type: String })], St.prototype, "currentProfile", void 0),
-  wt([pe({ type: String })], St.prototype, "scheduleDataHash", void 0),
-  wt([_e()], St.prototype, "_currentTimePercent", void 0),
-  wt([_e()], St.prototype, "_currentTimeMinutes", void 0),
-  wt([_e()], St.prototype, "_currentWeekday", void 0),
-  (St = wt([le("hmip-schedule-grid")], St));
+wt([he({ attribute: !1 })], St.prototype, "scheduleData", void 0),
+  wt([he({ type: Boolean })], St.prototype, "editable", void 0),
+  wt([he({ type: Boolean })], St.prototype, "showTemperature", void 0),
+  wt([he({ type: Boolean })], St.prototype, "showGradient", void 0),
+  wt([he({ type: String })], St.prototype, "temperatureUnit", void 0),
+  wt([he({ type: String })], St.prototype, "hourFormat", void 0),
+  wt([he({ attribute: !1 })], St.prototype, "translations", void 0),
+  wt([he({ type: String })], St.prototype, "copiedWeekday", void 0),
+  wt([he({ type: Boolean })], St.prototype, "editorOpen", void 0),
+  wt([he({ type: String })], St.prototype, "currentProfile", void 0),
+  wt([he({ type: String })], St.prototype, "scheduleDataHash", void 0),
+  wt([pe()], St.prototype, "_currentTimePercent", void 0),
+  wt([pe()], St.prototype, "_currentTimeMinutes", void 0),
+  wt([pe()], St.prototype, "_currentWeekday", void 0),
+  (St = wt([Fe("hmip-schedule-grid")], St));
 const Et = n`
   :host {
     display: block;
@@ -8065,22 +8061,22 @@ let At = class extends oe {
     this.styles = Et;
   }
 };
-Ct([pe({ type: Boolean })], At.prototype, "open", void 0),
-  Ct([pe({ type: String })], At.prototype, "weekday", void 0),
-  Ct([pe({ attribute: !1 })], At.prototype, "scheduleData", void 0),
-  Ct([pe({ type: Number })], At.prototype, "minTemp", void 0),
-  Ct([pe({ type: Number })], At.prototype, "maxTemp", void 0),
-  Ct([pe({ type: Number })], At.prototype, "tempStep", void 0),
-  Ct([pe({ type: String })], At.prototype, "temperatureUnit", void 0),
-  Ct([pe({ type: String })], At.prototype, "hourFormat", void 0),
-  Ct([pe({ attribute: !1 })], At.prototype, "translations", void 0),
-  Ct([_e()], At.prototype, "_editingWeekday", void 0),
-  Ct([_e()], At.prototype, "_editingBlocks", void 0),
-  Ct([_e()], At.prototype, "_editingBaseTemperature", void 0),
-  Ct([_e()], At.prototype, "_validationWarnings", void 0),
-  Ct([_e()], At.prototype, "_editingSlotIndex", void 0),
-  Ct([_e()], At.prototype, "_editingSlotData", void 0),
-  (At = Ct([le("hmip-schedule-editor")], At));
+Ct([he({ type: Boolean })], At.prototype, "open", void 0),
+  Ct([he({ type: String })], At.prototype, "weekday", void 0),
+  Ct([he({ attribute: !1 })], At.prototype, "scheduleData", void 0),
+  Ct([he({ type: Number })], At.prototype, "minTemp", void 0),
+  Ct([he({ type: Number })], At.prototype, "maxTemp", void 0),
+  Ct([he({ type: Number })], At.prototype, "tempStep", void 0),
+  Ct([he({ type: String })], At.prototype, "temperatureUnit", void 0),
+  Ct([he({ type: String })], At.prototype, "hourFormat", void 0),
+  Ct([he({ attribute: !1 })], At.prototype, "translations", void 0),
+  Ct([pe()], At.prototype, "_editingWeekday", void 0),
+  Ct([pe()], At.prototype, "_editingBlocks", void 0),
+  Ct([pe()], At.prototype, "_editingBaseTemperature", void 0),
+  Ct([pe()], At.prototype, "_validationWarnings", void 0),
+  Ct([pe()], At.prototype, "_editingSlotIndex", void 0),
+  Ct([pe()], At.prototype, "_editingSlotData", void 0),
+  (At = Ct([Fe("hmip-schedule-editor")], At));
 const Dt = n`
   :host {
     display: block;
@@ -8481,11 +8477,11 @@ let It = class extends oe {
     `;
   }
 };
-Tt([pe({ attribute: !1 })], It.prototype, "scheduleData", void 0),
-  Tt([pe({ attribute: !1 })], It.prototype, "domain", void 0),
-  Tt([pe({ type: Boolean })], It.prototype, "editable", void 0),
-  Tt([pe({ attribute: !1 })], It.prototype, "translations", void 0),
-  (It = Tt([le("hmip-device-schedule-list")], It));
+Tt([he({ attribute: !1 })], It.prototype, "scheduleData", void 0),
+  Tt([he({ attribute: !1 })], It.prototype, "domain", void 0),
+  Tt([he({ type: Boolean })], It.prototype, "editable", void 0),
+  Tt([he({ attribute: !1 })], It.prototype, "translations", void 0),
+  (It = Tt([Fe("hmip-device-schedule-list")], It));
 const Mt = n`
   :host {
     display: block;
@@ -9187,16 +9183,16 @@ let zt = class extends oe {
       : F``;
   }
 };
-Pt([pe({ type: Boolean })], zt.prototype, "open", void 0),
-  Pt([pe({ attribute: !1 })], zt.prototype, "entry", void 0),
-  Pt([pe()], zt.prototype, "groupNo", void 0),
-  Pt([pe({ type: Boolean })], zt.prototype, "isNewEvent", void 0),
-  Pt([pe({ attribute: !1 })], zt.prototype, "domain", void 0),
-  Pt([pe({ attribute: !1 })], zt.prototype, "availableTargetChannels", void 0),
-  Pt([pe({ attribute: !1 })], zt.prototype, "translations", void 0),
-  Pt([_e()], zt.prototype, "_editingEntry", void 0),
-  Pt([_e()], zt.prototype, "_validationErrors", void 0),
-  (zt = Pt([le("hmip-device-schedule-editor")], zt));
+Pt([he({ type: Boolean })], zt.prototype, "open", void 0),
+  Pt([he({ attribute: !1 })], zt.prototype, "entry", void 0),
+  Pt([he()], zt.prototype, "groupNo", void 0),
+  Pt([he({ type: Boolean })], zt.prototype, "isNewEvent", void 0),
+  Pt([he({ attribute: !1 })], zt.prototype, "domain", void 0),
+  Pt([he({ attribute: !1 })], zt.prototype, "availableTargetChannels", void 0),
+  Pt([he({ attribute: !1 })], zt.prototype, "translations", void 0),
+  Pt([pe()], zt.prototype, "_editingEntry", void 0),
+  Pt([pe()], zt.prototype, "_validationErrors", void 0),
+  (zt = Pt([Fe("hmip-device-schedule-editor")], zt));
 let Nt = class extends oe {
   constructor() {
     super(...arguments),
@@ -9223,7 +9219,7 @@ let Nt = class extends oe {
     (this._loading = !0), (this._error = "");
     try {
       if (
-        ((this._devices = await $e(this.hass, this.entryId)),
+        ((this._devices = await ke(this.hass, this.entryId)),
         this.deviceAddress)
       ) {
         const e = this._devices.find((e) => e.address === this.deviceAddress);
@@ -9267,7 +9263,7 @@ let Nt = class extends oe {
     }
   }
   _l(e, t) {
-    return Ie(this.hass, e, t);
+    return Te(this.hass, e, t);
   }
   _handleBack() {
     this.dispatchEvent(new CustomEvent("back", { bubbles: !0, composed: !0 }));
@@ -9312,9 +9308,9 @@ let Nt = class extends oe {
               ...this._climateData,
               active_profile: this._selectedProfile,
             }),
-          ze(this, { message: this._l("device_schedule.save_success") });
+          Pe(this, { message: this._l("device_schedule.save_success") });
       } catch {
-        ze(this, { message: this._l("device_schedule.save_failed") });
+        Pe(this, { message: this._l("device_schedule.save_failed") });
       }
   }
   _onWeekdayClick(e) {
@@ -9355,12 +9351,12 @@ let Nt = class extends oe {
     if (
       kt(s, this._climateData.min_temp ?? 5, this._climateData.max_temp ?? 30.5)
     )
-      ze(this, { message: this._l("device_schedule.invalid_schedule") });
+      Pe(this, { message: this._l("device_schedule.invalid_schedule") });
     else {
       this._saving = !0;
       try {
         const { base_temperature: e, periods: i } = s;
-        await we(
+        await $e(
           this.hass,
           this.entryId,
           this._selectedDevice.address,
@@ -9369,10 +9365,10 @@ let Nt = class extends oe {
           e,
           i.map((e) => ({ ...e })),
         ),
-          ze(this, { message: this._l("device_schedule.save_success") }),
+          Pe(this, { message: this._l("device_schedule.save_success") }),
           await this._loadSchedule(this._selectedDevice);
       } catch {
-        ze(this, { message: this._l("device_schedule.save_failed") });
+        Pe(this, { message: this._l("device_schedule.save_failed") });
       } finally {
         this._saving = !1;
       }
@@ -9385,12 +9381,12 @@ let Nt = class extends oe {
     if (
       kt(r, this._climateData.min_temp ?? 5, this._climateData.max_temp ?? 30.5)
     )
-      ze(this, { message: this._l("device_schedule.invalid_schedule") });
+      Pe(this, { message: this._l("device_schedule.invalid_schedule") });
     else {
       this._saving = !0;
       try {
         const { base_temperature: e, periods: i } = r;
-        await we(
+        await $e(
           this.hass,
           this.entryId,
           this._selectedDevice.address,
@@ -9399,18 +9395,18 @@ let Nt = class extends oe {
           e,
           i.map((e) => ({ ...e })),
         ),
-          ze(this, { message: this._l("device_schedule.save_success") }),
+          Pe(this, { message: this._l("device_schedule.save_success") }),
           (this._editingWeekday = void 0),
           await this._loadSchedule(this._selectedDevice);
       } catch {
-        ze(this, { message: this._l("device_schedule.save_failed") });
+        Pe(this, { message: this._l("device_schedule.save_failed") });
       } finally {
         this._saving = !1;
       }
     }
   }
   _onValidationFailed(e) {
-    ze(this, {
+    Pe(this, {
       message: this._l("device_schedule.invalid_schedule", {
         error: e.detail.error,
       }),
@@ -9429,10 +9425,10 @@ let Nt = class extends oe {
             device_address: i,
           });
         })(this.hass, this.entryId, this._selectedDevice.address),
-          ze(this, { message: this._l("device_schedule.reload_success") }),
+          Pe(this, { message: this._l("device_schedule.reload_success") }),
           await this._loadSchedule(this._selectedDevice);
       } catch {
-        ze(this, { message: this._l("device_schedule.reload_failed") });
+        Pe(this, { message: this._l("device_schedule.reload_failed") });
       }
   }
   async _handleExport() {
@@ -9458,7 +9454,7 @@ let Nt = class extends oe {
             const e = await t.text(),
               i = JSON.parse(e);
             if (
-              !(await Pe(this, {
+              !(await Me(this, {
                 title: this._l("device_schedule.import_confirm_title"),
                 text: this._l("device_schedule.import_confirm_text"),
                 confirmText: this._l("device_schedule.import"),
@@ -9471,21 +9467,21 @@ let Nt = class extends oe {
                   ...this._climateData,
                   schedule_data: i,
                 }),
-                ze(this, {
+                Pe(this, {
                   message: this._l("device_schedule.import_success"),
                 }))
-              : (await Se(
+              : (await we(
                   this.hass,
                   this.entryId,
                   this._selectedDevice.address,
                   i,
                 ),
-                ze(this, {
+                Pe(this, {
                   message: this._l("device_schedule.import_success"),
                 }),
                 await this._loadSchedule(this._selectedDevice));
           } catch {
-            ze(this, { message: this._l("device_schedule.import_failed") });
+            Pe(this, { message: this._l("device_schedule.import_failed") });
           }
       }),
       e.click();
@@ -9744,7 +9740,7 @@ let Nt = class extends oe {
     const e = this._deviceData.schedule_data?.entries ?? {},
       t = this._deviceData.max_entries;
     if (t && Object.keys(e).length >= t)
-      return void ze(this, {
+      return void Pe(this, {
         message: this._l("device_schedule.max_entries", { max: t }),
       });
     const i = (function (e) {
@@ -9787,13 +9783,13 @@ let Nt = class extends oe {
     const t = { ...(this._deviceData.schedule_data?.entries ?? {}) };
     delete t[e.detail.entry.groupNo], (this._saving = !0);
     try {
-      await Se(this.hass, this.entryId, this._selectedDevice.address, {
+      await we(this.hass, this.entryId, this._selectedDevice.address, {
         entries: xt(t),
       }),
-        ze(this, { message: this._l("device_schedule.save_success") }),
+        Pe(this, { message: this._l("device_schedule.save_success") }),
         await this._loadSchedule(this._selectedDevice);
     } catch {
-      ze(this, { message: this._l("device_schedule.save_failed") });
+      Pe(this, { message: this._l("device_schedule.save_failed") });
     } finally {
       this._saving = !1;
     }
@@ -9808,13 +9804,13 @@ let Nt = class extends oe {
       (this._deviceEditingGroupNo = void 0),
       (this._deviceIsNewEvent = !1);
     try {
-      await Se(this.hass, this.entryId, this._selectedDevice.address, {
+      await we(this.hass, this.entryId, this._selectedDevice.address, {
         entries: xt(s),
       }),
-        ze(this, { message: this._l("device_schedule.save_success") }),
+        Pe(this, { message: this._l("device_schedule.save_success") }),
         await this._loadSchedule(this._selectedDevice);
     } catch {
-      ze(this, { message: this._l("device_schedule.save_failed") });
+      Pe(this, { message: this._l("device_schedule.save_failed") });
     } finally {
       this._saving = !1;
     }
@@ -9961,7 +9957,7 @@ let Nt = class extends oe {
   }
   static {
     this.styles = [
-      ve,
+      ue,
       n`
       .schedule-header {
         margin-bottom: 16px;
@@ -10096,25 +10092,25 @@ let Nt = class extends oe {
     ];
   }
 };
-e([pe({ attribute: !1 })], Nt.prototype, "hass", void 0),
-  e([pe()], Nt.prototype, "entryId", void 0),
-  e([pe()], Nt.prototype, "deviceAddress", void 0),
-  e([pe()], Nt.prototype, "deviceName", void 0),
-  e([_e()], Nt.prototype, "_devices", void 0),
-  e([_e()], Nt.prototype, "_selectedDevice", void 0),
-  e([_e()], Nt.prototype, "_climateData", void 0),
-  e([_e()], Nt.prototype, "_deviceData", void 0),
-  e([_e()], Nt.prototype, "_selectedProfile", void 0),
-  e([_e()], Nt.prototype, "_editingWeekday", void 0),
-  e([_e()], Nt.prototype, "_copiedSchedule", void 0),
-  e([_e()], Nt.prototype, "_loading", void 0),
-  e([_e()], Nt.prototype, "_saving", void 0),
-  e([_e()], Nt.prototype, "_error", void 0),
-  e([_e()], Nt.prototype, "_deviceEditingEntry", void 0),
-  e([_e()], Nt.prototype, "_deviceEditingGroupNo", void 0),
-  e([_e()], Nt.prototype, "_deviceShowEditor", void 0),
-  e([_e()], Nt.prototype, "_deviceIsNewEvent", void 0),
-  (Nt = e([ue("hm-device-schedule")], Nt));
+e([he({ attribute: !1 })], Nt.prototype, "hass", void 0),
+  e([he()], Nt.prototype, "entryId", void 0),
+  e([he()], Nt.prototype, "deviceAddress", void 0),
+  e([he()], Nt.prototype, "deviceName", void 0),
+  e([pe()], Nt.prototype, "_devices", void 0),
+  e([pe()], Nt.prototype, "_selectedDevice", void 0),
+  e([pe()], Nt.prototype, "_climateData", void 0),
+  e([pe()], Nt.prototype, "_deviceData", void 0),
+  e([pe()], Nt.prototype, "_selectedProfile", void 0),
+  e([pe()], Nt.prototype, "_editingWeekday", void 0),
+  e([pe()], Nt.prototype, "_copiedSchedule", void 0),
+  e([pe()], Nt.prototype, "_loading", void 0),
+  e([pe()], Nt.prototype, "_saving", void 0),
+  e([pe()], Nt.prototype, "_error", void 0),
+  e([pe()], Nt.prototype, "_deviceEditingEntry", void 0),
+  e([pe()], Nt.prototype, "_deviceEditingGroupNo", void 0),
+  e([pe()], Nt.prototype, "_deviceShowEditor", void 0),
+  e([pe()], Nt.prototype, "_deviceIsNewEvent", void 0),
+  (Nt = e([_e("hm-device-schedule")], Nt));
 let Rt = class extends oe {
   constructor() {
     super(...arguments),
@@ -10399,25 +10395,25 @@ let Rt = class extends oe {
   `;
   }
 };
-e([pe({ attribute: !1 })], Rt.prototype, "hass", void 0),
-  e([pe({ attribute: !1 })], Rt.prototype, "panel", void 0),
-  e([pe({ type: Boolean, reflect: !0 })], Rt.prototype, "narrow", void 0),
-  e([_e()], Rt.prototype, "_view", void 0),
-  e([_e()], Rt.prototype, "_entryId", void 0),
-  e([_e()], Rt.prototype, "_entries", void 0),
-  e([_e()], Rt.prototype, "_selectedDevice", void 0),
-  e([_e()], Rt.prototype, "_selectedInterfaceId", void 0),
-  e([_e()], Rt.prototype, "_selectedChannel", void 0),
-  e([_e()], Rt.prototype, "_selectedChannelType", void 0),
-  e([_e()], Rt.prototype, "_selectedParamsetKey", void 0),
-  e([_e()], Rt.prototype, "_selectedDeviceName", void 0),
-  e([_e()], Rt.prototype, "_selectedSenderAddress", void 0),
-  e([_e()], Rt.prototype, "_selectedReceiverAddress", void 0),
-  e([_e()], Rt.prototype, "_senderDeviceName", void 0),
-  e([_e()], Rt.prototype, "_senderDeviceModel", void 0),
-  e([_e()], Rt.prototype, "_senderChannelTypeLabel", void 0),
-  e([_e()], Rt.prototype, "_receiverDeviceName", void 0),
-  e([_e()], Rt.prototype, "_receiverDeviceModel", void 0),
-  e([_e()], Rt.prototype, "_receiverChannelTypeLabel", void 0),
-  (Rt = e([ue("homematic-config")], Rt));
+e([he({ attribute: !1 })], Rt.prototype, "hass", void 0),
+  e([he({ attribute: !1 })], Rt.prototype, "panel", void 0),
+  e([he({ type: Boolean, reflect: !0 })], Rt.prototype, "narrow", void 0),
+  e([pe()], Rt.prototype, "_view", void 0),
+  e([pe()], Rt.prototype, "_entryId", void 0),
+  e([pe()], Rt.prototype, "_entries", void 0),
+  e([pe()], Rt.prototype, "_selectedDevice", void 0),
+  e([pe()], Rt.prototype, "_selectedInterfaceId", void 0),
+  e([pe()], Rt.prototype, "_selectedChannel", void 0),
+  e([pe()], Rt.prototype, "_selectedChannelType", void 0),
+  e([pe()], Rt.prototype, "_selectedParamsetKey", void 0),
+  e([pe()], Rt.prototype, "_selectedDeviceName", void 0),
+  e([pe()], Rt.prototype, "_selectedSenderAddress", void 0),
+  e([pe()], Rt.prototype, "_selectedReceiverAddress", void 0),
+  e([pe()], Rt.prototype, "_senderDeviceName", void 0),
+  e([pe()], Rt.prototype, "_senderDeviceModel", void 0),
+  e([pe()], Rt.prototype, "_senderChannelTypeLabel", void 0),
+  e([pe()], Rt.prototype, "_receiverDeviceName", void 0),
+  e([pe()], Rt.prototype, "_receiverDeviceModel", void 0),
+  e([pe()], Rt.prototype, "_receiverChannelTypeLabel", void 0),
+  (Rt = e([_e("homematic-config")], Rt));
 export { Rt as HomematicConfigPanel };
