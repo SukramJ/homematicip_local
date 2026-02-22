@@ -77,17 +77,17 @@ const n = (e, ...t) => {
           : e,
   {
     is: d,
-    defineProperty: c,
-    getOwnPropertyDescriptor: l,
+    defineProperty: l,
+    getOwnPropertyDescriptor: c,
     getOwnPropertyNames: h,
     getOwnPropertySymbols: p,
     getPrototypeOf: _,
   } = Object,
-  v = globalThis,
-  u = v.trustedTypes,
-  m = u ? u.emptyScript : "",
-  f = v.reactiveElementPolyfillSupport,
-  g = (e, t) => e,
+  u = globalThis,
+  v = u.trustedTypes,
+  m = v ? v.emptyScript : "",
+  g = u.reactiveElementPolyfillSupport,
+  f = (e, t) => e,
   y = {
     toAttribute(e, t) {
       switch (t) {
@@ -130,8 +130,8 @@ const n = (e, ...t) => {
     hasChanged: b,
   };
 (Symbol.metadata ??= Symbol("metadata")),
-  (v.litPropertyMetadata ??= new WeakMap());
-let $ = class extends HTMLElement {
+  (u.litPropertyMetadata ??= new WeakMap());
+let k = class extends HTMLElement {
   static addInitializer(e) {
     this._$Ei(), (this.l ??= []).push(e);
   }
@@ -148,11 +148,11 @@ let $ = class extends HTMLElement {
     ) {
       const i = Symbol(),
         s = this.getPropertyDescriptor(e, i, t);
-      void 0 !== s && c(this.prototype, e, s);
+      void 0 !== s && l(this.prototype, e, s);
     }
   }
   static getPropertyDescriptor(e, t, i) {
-    const { get: s, set: r } = l(this.prototype, e) ?? {
+    const { get: s, set: r } = c(this.prototype, e) ?? {
       get() {
         return this[t];
       },
@@ -174,16 +174,16 @@ let $ = class extends HTMLElement {
     return this.elementProperties.get(e) ?? x;
   }
   static _$Ei() {
-    if (this.hasOwnProperty(g("elementProperties"))) return;
+    if (this.hasOwnProperty(f("elementProperties"))) return;
     const e = _(this);
     e.finalize(),
       void 0 !== e.l && (this.l = [...e.l]),
       (this.elementProperties = new Map(e.elementProperties));
   }
   static finalize() {
-    if (this.hasOwnProperty(g("finalized"))) return;
+    if (this.hasOwnProperty(f("finalized"))) return;
     if (
-      ((this.finalized = !0), this._$Ei(), this.hasOwnProperty(g("properties")))
+      ((this.finalized = !0), this._$Ei(), this.hasOwnProperty(f("properties")))
     ) {
       const e = this.properties,
         t = [...h(e), ...p(e)];
@@ -407,94 +407,46 @@ let $ = class extends HTMLElement {
   updated(e) {}
   firstUpdated(e) {}
 };
-($.elementStyles = []),
-  ($.shadowRootOptions = { mode: "open" }),
-  ($[g("elementProperties")] = new Map()),
-  ($[g("finalized")] = new Map()),
-  f?.({ ReactiveElement: $ }),
-  (v.reactiveElementVersions ??= []).push("2.1.2");
-const k = globalThis,
+(k.elementStyles = []),
+  (k.shadowRootOptions = { mode: "open" }),
+  (k[f("elementProperties")] = new Map()),
+  (k[f("finalized")] = new Map()),
+  g?.({ ReactiveElement: k }),
+  (u.reactiveElementVersions ??= []).push("2.1.2");
+const $ = globalThis,
   w = (e) => e,
-  C = k.trustedTypes,
-  S = C ? C.createPolicy("lit-html", { createHTML: (e) => e }) : void 0,
-  A = "$lit$",
-  E = `lit$${Math.random().toFixed(9).slice(2)}$`,
-  I = "?" + E,
-  D = `<${I}>`,
-  P = document,
-  T = () => P.createComment(""),
-  z = (e) => null === e || ("object" != typeof e && "function" != typeof e),
-  R = Array.isArray,
-  M = "[ \t\n\f\r]",
-  N = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,
-  L = /-->/g,
-  U = />/g,
-  O = RegExp(
-    `>|${M}(?:([^\\s"'>=/]+)(${M}*=${M}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,
+  S = $.trustedTypes,
+  E = S ? S.createPolicy("lit-html", { createHTML: (e) => e }) : void 0,
+  C = "$lit$",
+  A = `lit$${Math.random().toFixed(9).slice(2)}$`,
+  D = "?" + A,
+  T = `<${D}>`,
+  I = document,
+  M = () => I.createComment(""),
+  P = (e) => null === e || ("object" != typeof e && "function" != typeof e),
+  z = Array.isArray,
+  N = "[ \t\n\f\r]",
+  R = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,
+  B = /-->/g,
+  L = />/g,
+  U = RegExp(
+    `>|${N}(?:([^\\s"'>=/]+)(${N}*=${N}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,
     "g",
   ),
-  W = /'/g,
-  B = /"/g,
-  V = /^(?:script|style|textarea|title)$/i,
-  K = (e, ...t) => ({ _$litType$: 1, strings: e, values: t }),
-  j = Symbol.for("lit-noChange"),
-  H = Symbol.for("lit-nothing"),
-  F = new WeakMap(),
-  G = P.createTreeWalker(P, 129);
-function Z(e, t) {
-  if (!R(e) || !e.hasOwnProperty("raw"))
+  O = /'/g,
+  W = /"/g,
+  j = /^(?:script|style|textarea|title)$/i,
+  F = (e, ...t) => ({ _$litType$: 1, strings: e, values: t }),
+  V = Symbol.for("lit-noChange"),
+  K = Symbol.for("lit-nothing"),
+  H = new WeakMap(),
+  Y = I.createTreeWalker(I, 129);
+function G(e, t) {
+  if (!z(e) || !e.hasOwnProperty("raw"))
     throw Error("invalid template strings array");
-  return void 0 !== S ? S.createHTML(t) : t;
+  return void 0 !== E ? E.createHTML(t) : t;
 }
-const Y = (e, t) => {
-  const i = e.length - 1,
-    s = [];
-  let r,
-    a = 2 === t ? "<svg>" : 3 === t ? "<math>" : "",
-    n = N;
-  for (let t = 0; t < i; t++) {
-    const i = e[t];
-    let o,
-      d,
-      c = -1,
-      l = 0;
-    for (; l < i.length && ((n.lastIndex = l), (d = n.exec(i)), null !== d); )
-      (l = n.lastIndex),
-        n === N
-          ? "!--" === d[1]
-            ? (n = L)
-            : void 0 !== d[1]
-              ? (n = U)
-              : void 0 !== d[2]
-                ? (V.test(d[2]) && (r = RegExp("</" + d[2], "g")), (n = O))
-                : void 0 !== d[3] && (n = O)
-          : n === O
-            ? ">" === d[0]
-              ? ((n = r ?? N), (c = -1))
-              : void 0 === d[1]
-                ? (c = -2)
-                : ((c = n.lastIndex - d[2].length),
-                  (o = d[1]),
-                  (n = void 0 === d[3] ? O : '"' === d[3] ? B : W))
-            : n === B || n === W
-              ? (n = O)
-              : n === L || n === U
-                ? (n = N)
-                : ((n = O), (r = void 0));
-    const h = n === O && e[t + 1].startsWith("/>") ? " " : "";
-    a +=
-      n === N
-        ? i + D
-        : c >= 0
-          ? (s.push(o), i.slice(0, c) + A + i.slice(c) + E + h)
-          : i + E + (-2 === c ? t : h);
-  }
-  return [
-    Z(e, a + (e[i] || "<?>") + (2 === t ? "</svg>" : 3 === t ? "</math>" : "")),
-    s,
-  ];
-};
-class Q {
+class Z {
   constructor({ strings: e, _$litType$: t }, i) {
     let s;
     this.parts = [];
@@ -502,22 +454,79 @@ class Q {
       a = 0;
     const n = e.length - 1,
       o = this.parts,
-      [d, c] = Y(e, t);
+      [d, l] = ((e, t) => {
+        const i = e.length - 1,
+          s = [];
+        let r,
+          a = 2 === t ? "<svg>" : 3 === t ? "<math>" : "",
+          n = R;
+        for (let t = 0; t < i; t++) {
+          const i = e[t];
+          let o,
+            d,
+            l = -1,
+            c = 0;
+          for (
+            ;
+            c < i.length && ((n.lastIndex = c), (d = n.exec(i)), null !== d);
+
+          )
+            (c = n.lastIndex),
+              n === R
+                ? "!--" === d[1]
+                  ? (n = B)
+                  : void 0 !== d[1]
+                    ? (n = L)
+                    : void 0 !== d[2]
+                      ? (j.test(d[2]) && (r = RegExp("</" + d[2], "g")),
+                        (n = U))
+                      : void 0 !== d[3] && (n = U)
+                : n === U
+                  ? ">" === d[0]
+                    ? ((n = r ?? R), (l = -1))
+                    : void 0 === d[1]
+                      ? (l = -2)
+                      : ((l = n.lastIndex - d[2].length),
+                        (o = d[1]),
+                        (n = void 0 === d[3] ? U : '"' === d[3] ? W : O))
+                  : n === W || n === O
+                    ? (n = U)
+                    : n === B || n === L
+                      ? (n = R)
+                      : ((n = U), (r = void 0));
+          const h = n === U && e[t + 1].startsWith("/>") ? " " : "";
+          a +=
+            n === R
+              ? i + T
+              : l >= 0
+                ? (s.push(o), i.slice(0, l) + C + i.slice(l) + A + h)
+                : i + A + (-2 === l ? t : h);
+        }
+        return [
+          G(
+            e,
+            a +
+              (e[i] || "<?>") +
+              (2 === t ? "</svg>" : 3 === t ? "</math>" : ""),
+          ),
+          s,
+        ];
+      })(e, t);
     if (
-      ((this.el = Q.createElement(d, i)),
-      (G.currentNode = this.el.content),
+      ((this.el = Z.createElement(d, i)),
+      (Y.currentNode = this.el.content),
       2 === t || 3 === t)
     ) {
       const e = this.el.content.firstChild;
       e.replaceWith(...e.childNodes);
     }
-    for (; null !== (s = G.nextNode()) && o.length < n; ) {
+    for (; null !== (s = Y.nextNode()) && o.length < n; ) {
       if (1 === s.nodeType) {
         if (s.hasAttributes())
           for (const e of s.getAttributeNames())
-            if (e.endsWith(A)) {
-              const t = c[a++],
-                i = s.getAttribute(e).split(E),
+            if (e.endsWith(C)) {
+              const t = l[a++],
+                i = s.getAttribute(e).split(A),
                 n = /([.?@])?(.*)/.exec(t);
               o.push({
                 type: 1,
@@ -525,59 +534,53 @@ class Q {
                 name: n[2],
                 strings: i,
                 ctor:
-                  "." === n[1]
-                    ? te
-                    : "?" === n[1]
-                      ? ie
-                      : "@" === n[1]
-                        ? se
-                        : ee,
+                  "." === n[1] ? ee : "?" === n[1] ? te : "@" === n[1] ? ie : X,
               }),
                 s.removeAttribute(e);
             } else
-              e.startsWith(E) &&
+              e.startsWith(A) &&
                 (o.push({ type: 6, index: r }), s.removeAttribute(e));
-        if (V.test(s.tagName)) {
-          const e = s.textContent.split(E),
+        if (j.test(s.tagName)) {
+          const e = s.textContent.split(A),
             t = e.length - 1;
           if (t > 0) {
-            s.textContent = C ? C.emptyScript : "";
+            s.textContent = S ? S.emptyScript : "";
             for (let i = 0; i < t; i++)
-              s.append(e[i], T()),
-                G.nextNode(),
+              s.append(e[i], M()),
+                Y.nextNode(),
                 o.push({ type: 2, index: ++r });
-            s.append(e[t], T());
+            s.append(e[t], M());
           }
         }
       } else if (8 === s.nodeType)
-        if (s.data === I) o.push({ type: 2, index: r });
+        if (s.data === D) o.push({ type: 2, index: r });
         else {
           let e = -1;
-          for (; -1 !== (e = s.data.indexOf(E, e + 1)); )
-            o.push({ type: 7, index: r }), (e += E.length - 1);
+          for (; -1 !== (e = s.data.indexOf(A, e + 1)); )
+            o.push({ type: 7, index: r }), (e += A.length - 1);
         }
       r++;
     }
   }
   static createElement(e, t) {
-    const i = P.createElement("template");
+    const i = I.createElement("template");
     return (i.innerHTML = e), i;
   }
 }
-function q(e, t, i = e, s) {
-  if (t === j) return t;
+function J(e, t, i = e, s) {
+  if (t === V) return t;
   let r = void 0 !== s ? i._$Co?.[s] : i._$Cl;
-  const a = z(t) ? void 0 : t._$litDirective$;
+  const a = P(t) ? void 0 : t._$litDirective$;
   return (
     r?.constructor !== a &&
       (r?._$AO?.(!1),
       void 0 === a ? (r = void 0) : ((r = new a(e)), r._$AT(e, i, s)),
       void 0 !== s ? ((i._$Co ??= [])[s] = r) : (i._$Cl = r)),
-    void 0 !== r && (t = q(e, r._$AS(e, t.values), r, s)),
+    void 0 !== r && (t = J(e, r._$AS(e, t.values), r, s)),
     t
   );
 }
-class J {
+class q {
   constructor(e, t) {
     (this._$AV = []), (this._$AN = void 0), (this._$AD = e), (this._$AM = t);
   }
@@ -592,9 +595,9 @@ class J {
         el: { content: t },
         parts: i,
       } = this._$AD,
-      s = (e?.creationScope ?? P).importNode(t, !0);
-    G.currentNode = s;
-    let r = G.nextNode(),
+      s = (e?.creationScope ?? I).importNode(t, !0);
+    Y.currentNode = s;
+    let r = Y.nextNode(),
       a = 0,
       n = 0,
       o = i[0];
@@ -602,16 +605,16 @@ class J {
       if (a === o.index) {
         let t;
         2 === o.type
-          ? (t = new X(r, r.nextSibling, this, e))
+          ? (t = new Q(r, r.nextSibling, this, e))
           : 1 === o.type
             ? (t = new o.ctor(r, o.name, o.strings, this, e))
-            : 6 === o.type && (t = new re(r, this, e)),
+            : 6 === o.type && (t = new se(r, this, e)),
           this._$AV.push(t),
           (o = i[++n]);
       }
-      a !== o?.index && ((r = G.nextNode()), a++);
+      a !== o?.index && ((r = Y.nextNode()), a++);
     }
-    return (G.currentNode = P), s;
+    return (Y.currentNode = I), s;
   }
   p(e) {
     let t = 0;
@@ -623,13 +626,13 @@ class J {
         t++;
   }
 }
-class X {
+class Q {
   get _$AU() {
     return this._$AM?._$AU ?? this._$Cv;
   }
   constructor(e, t, i, s) {
     (this.type = 2),
-      (this._$AH = H),
+      (this._$AH = K),
       (this._$AN = void 0),
       (this._$AA = e),
       (this._$AB = t),
@@ -649,16 +652,16 @@ class X {
     return this._$AB;
   }
   _$AI(e, t = this) {
-    (e = q(this, e, t)),
-      z(e)
-        ? e === H || null == e || "" === e
-          ? (this._$AH !== H && this._$AR(), (this._$AH = H))
-          : e !== this._$AH && e !== j && this._(e)
+    (e = J(this, e, t)),
+      P(e)
+        ? e === K || null == e || "" === e
+          ? (this._$AH !== K && this._$AR(), (this._$AH = K))
+          : e !== this._$AH && e !== V && this._(e)
         : void 0 !== e._$litType$
           ? this.$(e)
           : void 0 !== e.nodeType
             ? this.T(e)
-            : ((e) => R(e) || "function" == typeof e?.[Symbol.iterator])(e)
+            : ((e) => z(e) || "function" == typeof e?.[Symbol.iterator])(e)
               ? this.k(e)
               : this._(e);
   }
@@ -669,9 +672,9 @@ class X {
     this._$AH !== e && (this._$AR(), (this._$AH = this.O(e)));
   }
   _(e) {
-    this._$AH !== H && z(this._$AH)
+    this._$AH !== K && P(this._$AH)
       ? (this._$AA.nextSibling.data = e)
-      : this.T(P.createTextNode(e)),
+      : this.T(I.createTextNode(e)),
       (this._$AH = e);
   }
   $(e) {
@@ -680,27 +683,27 @@ class X {
         "number" == typeof i
           ? this._$AC(e)
           : (void 0 === i.el &&
-              (i.el = Q.createElement(Z(i.h, i.h[0]), this.options)),
+              (i.el = Z.createElement(G(i.h, i.h[0]), this.options)),
             i);
     if (this._$AH?._$AD === s) this._$AH.p(t);
     else {
-      const e = new J(s, this),
+      const e = new q(s, this),
         i = e.u(this.options);
       e.p(t), this.T(i), (this._$AH = e);
     }
   }
   _$AC(e) {
-    let t = F.get(e.strings);
-    return void 0 === t && F.set(e.strings, (t = new Q(e))), t;
+    let t = H.get(e.strings);
+    return void 0 === t && H.set(e.strings, (t = new Z(e))), t;
   }
   k(e) {
-    R(this._$AH) || ((this._$AH = []), this._$AR());
+    z(this._$AH) || ((this._$AH = []), this._$AR());
     const t = this._$AH;
     let i,
       s = 0;
     for (const r of e)
       s === t.length
-        ? t.push((i = new X(this.O(T()), this.O(T()), this, this.options)))
+        ? t.push((i = new Q(this.O(M()), this.O(M()), this, this.options)))
         : (i = t[s]),
         i._$AI(r),
         s++;
@@ -716,7 +719,7 @@ class X {
     void 0 === this._$AM && ((this._$Cv = e), this._$AP?.(e));
   }
 }
-class ee {
+class X {
   get tagName() {
     return this.element.tagName;
   }
@@ -725,7 +728,7 @@ class ee {
   }
   constructor(e, t, i, s, r) {
     (this.type = 1),
-      (this._$AH = H),
+      (this._$AH = K),
       (this._$AN = void 0),
       (this.element = e),
       (this.name = t),
@@ -734,62 +737,62 @@ class ee {
       i.length > 2 || "" !== i[0] || "" !== i[1]
         ? ((this._$AH = Array(i.length - 1).fill(new String())),
           (this.strings = i))
-        : (this._$AH = H);
+        : (this._$AH = K);
   }
   _$AI(e, t = this, i, s) {
     const r = this.strings;
     let a = !1;
     if (void 0 === r)
-      (e = q(this, e, t, 0)),
-        (a = !z(e) || (e !== this._$AH && e !== j)),
+      (e = J(this, e, t, 0)),
+        (a = !P(e) || (e !== this._$AH && e !== V)),
         a && (this._$AH = e);
     else {
       const s = e;
       let n, o;
       for (e = r[0], n = 0; n < r.length - 1; n++)
-        (o = q(this, s[i + n], t, n)),
-          o === j && (o = this._$AH[n]),
-          (a ||= !z(o) || o !== this._$AH[n]),
-          o === H ? (e = H) : e !== H && (e += (o ?? "") + r[n + 1]),
+        (o = J(this, s[i + n], t, n)),
+          o === V && (o = this._$AH[n]),
+          (a ||= !P(o) || o !== this._$AH[n]),
+          o === K ? (e = K) : e !== K && (e += (o ?? "") + r[n + 1]),
           (this._$AH[n] = o);
     }
     a && !s && this.j(e);
   }
   j(e) {
-    e === H
+    e === K
       ? this.element.removeAttribute(this.name)
       : this.element.setAttribute(this.name, e ?? "");
   }
 }
-class te extends ee {
+class ee extends X {
   constructor() {
     super(...arguments), (this.type = 3);
   }
   j(e) {
-    this.element[this.name] = e === H ? void 0 : e;
+    this.element[this.name] = e === K ? void 0 : e;
   }
 }
-class ie extends ee {
+class te extends X {
   constructor() {
     super(...arguments), (this.type = 4);
   }
   j(e) {
-    this.element.toggleAttribute(this.name, !!e && e !== H);
+    this.element.toggleAttribute(this.name, !!e && e !== K);
   }
 }
-class se extends ee {
+class ie extends X {
   constructor(e, t, i, s, r) {
     super(e, t, i, s, r), (this.type = 5);
   }
   _$AI(e, t = this) {
-    if ((e = q(this, e, t, 0) ?? H) === j) return;
+    if ((e = J(this, e, t, 0) ?? K) === V) return;
     const i = this._$AH,
       s =
-        (e === H && i !== H) ||
+        (e === K && i !== K) ||
         e.capture !== i.capture ||
         e.once !== i.once ||
         e.passive !== i.passive,
-      r = e !== H && (i === H || s);
+      r = e !== K && (i === K || s);
     s && this.element.removeEventListener(this.name, this, i),
       r && this.element.addEventListener(this.name, this, e),
       (this._$AH = e);
@@ -800,7 +803,7 @@ class se extends ee {
       : this._$AH.handleEvent(e);
   }
 }
-class re {
+class se {
   constructor(e, t, i) {
     (this.element = e),
       (this.type = 6),
@@ -812,13 +815,14 @@ class re {
     return this._$AM._$AU;
   }
   _$AI(e) {
-    q(this, e);
+    J(this, e);
   }
 }
-const ae = k.litHtmlPolyfillSupport;
-ae?.(Q, X), (k.litHtmlVersions ??= []).push("3.3.2");
+const re = { I: Q },
+  ae = $.litHtmlPolyfillSupport;
+ae?.(Z, Q), ($.litHtmlVersions ??= []).push("3.3.2");
 const ne = globalThis;
-class oe extends $ {
+let oe = class extends k {
   constructor() {
     super(...arguments),
       (this.renderOptions = { host: this }),
@@ -837,7 +841,7 @@ class oe extends $ {
         let r = s._$litPart$;
         if (void 0 === r) {
           const e = i?.renderBefore ?? null;
-          s._$litPart$ = r = new X(t.insertBefore(T(), e), e, void 0, i ?? {});
+          s._$litPart$ = r = new Q(t.insertBefore(M(), e), e, void 0, i ?? {});
         }
         return r._$AI(e), r;
       })(t, this.renderRoot, this.renderOptions));
@@ -849,22 +853,29 @@ class oe extends $ {
     super.disconnectedCallback(), this._$Do?.setConnected(!1);
   }
   render() {
-    return j;
+    return V;
   }
-}
+};
 (oe._$litElement$ = !0),
   (oe.finalized = !0),
   ne.litElementHydrateSupport?.({ LitElement: oe });
 const de = ne.litElementPolyfillSupport;
 de?.({ LitElement: oe }), (ne.litElementVersions ??= []).push("4.2.2");
-const ce = {
+const le = (e) => (t, i) => {
+    void 0 !== i
+      ? i.addInitializer(() => {
+          customElements.define(e, t);
+        })
+      : customElements.define(e, t);
+  },
+  ce = {
     attribute: !0,
     type: String,
     converter: y,
     reflect: !1,
     hasChanged: b,
   },
-  le = (e = ce, t, i) => {
+  he = (e = ce, t, i) => {
     const { kind: s, metadata: r } = i;
     let a = globalThis.litPropertyMetadata.get(r);
     if (
@@ -893,10 +904,10 @@ const ce = {
     }
     throw Error("Unsupported decorator location: " + s);
   };
-function he(e) {
+function pe(e) {
   return (t, i) =>
     "object" == typeof i
-      ? le(e, t, i)
+      ? he(e, t, i)
       : ((e, t, i) => {
           const s = t.hasOwnProperty(i);
           return (
@@ -905,10 +916,10 @@ function he(e) {
           );
         })(e, t, i);
 }
-function pe(e) {
-  return he({ ...e, state: !0, attribute: !1 });
-}
 function _e(e) {
+  return pe({ ...e, state: !0, attribute: !1 });
+}
+function ue(e) {
   return (t) => (customElements.get(e) || customElements.define(e, t), t);
 }
 const ve = n`
@@ -1073,8 +1084,8 @@ const ve = n`
     }
   }
 `,
-  ue = new Set(["BidCos-RF", "BidCos-Wired", "HmIP-RF"]);
-async function me(e, t) {
+  me = new Set(["BidCos-RF", "BidCos-Wired", "HmIP-RF"]);
+async function ge(e, t) {
   return (
     await e.callWS({
       type: "homematicip_local/config/list_devices",
@@ -1092,7 +1103,7 @@ async function fe(e, t, i, s, r = "", a = "MASTER") {
     paramset_key: a,
   });
 }
-async function ge(e, t, i, s, r = "MASTER") {
+async function ye(e, t, i, s, r = "MASTER") {
   return e.callWS({
     type: "homematicip_local/config/session_open",
     entry_id: t,
@@ -1101,7 +1112,7 @@ async function ge(e, t, i, s, r = "MASTER") {
     paramset_key: r,
   });
 }
-async function ye(e, t, i, s = "MASTER") {
+async function be(e, t, i, s = "MASTER") {
   return e.callWS({
     type: "homematicip_local/config/session_discard",
     entry_id: t,
@@ -1109,7 +1120,7 @@ async function ye(e, t, i, s = "MASTER") {
     paramset_key: s,
   });
 }
-async function be(e, t, i, s, r) {
+async function xe(e, t, i, s, r) {
   return e.callWS({
     type: "homematicip_local/config/get_link_form_schema",
     entry_id: t,
@@ -1118,7 +1129,7 @@ async function be(e, t, i, s, r) {
     receiver_channel_address: r,
   });
 }
-async function xe(e, t, i, s, r, a) {
+async function ke(e, t, i, s, r, a) {
   return e.callWS({
     type: "homematicip_local/config/put_link_paramset",
     entry_id: t,
@@ -1136,7 +1147,18 @@ async function $e(e, t) {
     })
   ).devices;
 }
-async function ke(e, t, i, s) {
+async function we(e, t, i, s, r, a, n) {
+  return e.callWS({
+    type: "homematicip_local/config/set_climate_schedule_weekday",
+    entry_id: t,
+    device_address: i,
+    profile: s,
+    weekday: r,
+    base_temperature: a,
+    simple_weekday_list: n,
+  });
+}
+async function Se(e, t, i, s) {
   return e.callWS({
     type: "homematicip_local/config/set_device_schedule",
     entry_id: t,
@@ -1144,7 +1166,7 @@ async function ke(e, t, i, s) {
     schedule_data: s,
   });
 }
-async function we(e, t, i, s, r) {
+async function Ee(e, t, i, s, r) {
   try {
     return await e.callWS({
       type: "homematicip_local/config/get_link_profiles",
@@ -1316,12 +1338,67 @@ const Ce = {
       import_success: "Schedule imported.",
       import_failed: "Failed to import schedule.",
       no_schedule_data: "No schedule data available.",
+      click_to_edit: "Click on a time slot to edit the schedule",
+      copy_schedule: "Copy schedule",
+      paste_schedule: "Paste schedule",
+      edit: "Edit {weekday}",
+      add_time_block: "+ Add Time Block",
+      edit_slot: "Edit",
+      save_slot: "Save",
+      cancel_slot_edit: "Cancel",
+      undo_shortcut: "Undo (Ctrl+Z)",
+      redo_shortcut: "Redo (Ctrl+Y)",
+      warnings_title: "Validation Warnings",
+      base_temperature_description: "Temperature for unscheduled periods",
+      temperature_periods: "Temperature Periods",
+      invalid_schedule: "Invalid schedule: {error}",
+      validation_block_end_before_start:
+        "Block {block}: End time is before start time",
+      validation_block_zero_duration: "Block {block}: Block has zero duration",
+      validation_invalid_start_time: "Block {block}: Invalid start time",
+      validation_invalid_end_time: "Block {block}: Invalid end time",
+      validation_temp_out_of_range:
+        "Block {block}: Temperature out of range ({min}-{max}°C)",
+      validation_invalid_slot_count:
+        "Invalid number of slots: {count} (expected 13)",
+      validation_invalid_slot_key:
+        "Invalid slot key: {key} (must be integer 1-13)",
+      validation_missing_slot: "Missing slot {slot}",
+      validation_slot_missing_values:
+        "Slot {slot} missing ENDTIME or TEMPERATURE",
+      validation_slot_time_backwards: "Slot {slot} time goes backwards: {time}",
+      validation_slot_time_exceeds_day:
+        "Slot {slot} time exceeds 24:00: {time}",
+      validation_last_slot_must_end: "Last slot must end at 24:00",
+      validation_schedule_must_be_object: "Schedule data must be an object",
+      validation_missing_weekday: "Missing weekday: {weekday}",
+      validation_invalid_weekday_data: "Invalid data for {weekday}",
+      validation_weekday_error: "{weekday}: {details}",
       entries: "{count} entries",
       max_entries: "Max entries: {max}",
       level: "Level",
       duration: "Duration",
       condition: "Condition",
       target_channel: "Target channel",
+      add_event: "Add Event",
+      edit_event: "Edit Event",
+      confirm_delete: "Are you sure you want to delete this event?",
+      weekdays_label: "Weekdays",
+      level_on: "On",
+      level_off: "Off",
+      slat: "Slat Position",
+      ramp_time: "Ramp Time",
+      astro_sunrise: "Sunrise",
+      astro_sunset: "Sunset",
+      astro_offset: "Astro Offset (min)",
+      condition_fixed_time: "Fixed Time",
+      condition_astro: "Astro",
+      condition_fixed_if_before_astro: "Fixed if before Astro",
+      condition_astro_if_before_fixed: "Astro if before Fixed",
+      condition_fixed_if_after_astro: "Fixed if after Astro",
+      condition_astro_if_after_fixed: "Astro if after Fixed",
+      condition_earliest: "Earliest",
+      condition_latest: "Latest",
     },
     add_link: {
       title: "New Direct Link",
@@ -1503,12 +1580,71 @@ const Ce = {
       import_success: "Zeitplan importiert.",
       import_failed: "Fehler beim Importieren des Zeitplans.",
       no_schedule_data: "Keine Zeitplan-Daten verfügbar.",
+      click_to_edit:
+        "Klicken Sie auf einen Zeitabschnitt, um den Zeitplan zu bearbeiten",
+      copy_schedule: "Zeitplan kopieren",
+      paste_schedule: "Zeitplan einfügen",
+      edit: "{weekday} bearbeiten",
+      add_time_block: "+ Zeitblock hinzufügen",
+      edit_slot: "Bearbeiten",
+      save_slot: "Speichern",
+      cancel_slot_edit: "Abbrechen",
+      undo_shortcut: "Rückgängig (Strg+Z)",
+      redo_shortcut: "Wiederholen (Strg+Y)",
+      warnings_title: "Validierungswarnungen",
+      base_temperature_description: "Temperatur für nicht geplante Zeiträume",
+      temperature_periods: "Temperaturperioden",
+      invalid_schedule: "Ungültiger Zeitplan: {error}",
+      validation_block_end_before_start:
+        "Block {block}: Die Endzeit liegt vor der Startzeit",
+      validation_block_zero_duration:
+        "Block {block}: Der Block hat keine Dauer",
+      validation_invalid_start_time: "Block {block}: Ungültige Startzeit",
+      validation_invalid_end_time: "Block {block}: Ungültige Endzeit",
+      validation_temp_out_of_range:
+        "Block {block}: Temperatur außerhalb des Bereichs ({min}-{max}°C)",
+      validation_invalid_slot_count:
+        "Ungültige Anzahl an Slots: {count} (erwartet 13)",
+      validation_invalid_slot_key:
+        "Ungültiger Slot-Schlüssel: {key} (muss eine Ganzzahl 1-13 sein)",
+      validation_missing_slot: "Slot {slot} fehlt",
+      validation_slot_missing_values:
+        "Slot {slot} fehlt ENDTIME oder TEMPERATURE",
+      validation_slot_time_backwards:
+        "Slot {slot}: Zeit läuft rückwärts: {time}",
+      validation_slot_time_exceeds_day:
+        "Slot {slot}: Zeit überschreitet 24:00: {time}",
+      validation_last_slot_must_end: "Der letzte Slot muss um 24:00 enden",
+      validation_schedule_must_be_object:
+        "Zeitplandaten müssen ein Objekt sein",
+      validation_missing_weekday: "Fehlender Wochentag: {weekday}",
+      validation_invalid_weekday_data: "Ungültige Daten für {weekday}",
+      validation_weekday_error: "{weekday}: {details}",
       entries: "{count} Einträge",
       max_entries: "Max. Einträge: {max}",
       level: "Wert",
       duration: "Dauer",
       condition: "Bedingung",
       target_channel: "Zielkanal",
+      add_event: "Ereignis hinzufügen",
+      edit_event: "Ereignis bearbeiten",
+      confirm_delete: "Möchten Sie dieses Ereignis wirklich löschen?",
+      weekdays_label: "Wochentage",
+      level_on: "Ein",
+      level_off: "Aus",
+      slat: "Lamellenposition",
+      ramp_time: "Rampenzeit",
+      astro_sunrise: "Sonnenaufgang",
+      astro_sunset: "Sonnenuntergang",
+      astro_offset: "Astro-Offset (Min.)",
+      condition_fixed_time: "Feste Zeit",
+      condition_astro: "Astro",
+      condition_fixed_if_before_astro: "Fest wenn vor Astro",
+      condition_astro_if_before_fixed: "Astro wenn vor Fest",
+      condition_fixed_if_after_astro: "Fest wenn nach Astro",
+      condition_astro_if_after_fixed: "Astro wenn nach Fest",
+      condition_earliest: "Frühester",
+      condition_latest: "Spätester",
     },
     add_link: {
       title: "Neue Direktverknüpfung",
@@ -1530,30 +1666,30 @@ const Ce = {
     },
   },
 };
-function Se(e, t = "") {
+function Ae(e, t = "") {
   const i = {};
   for (const [s, r] of Object.entries(e)) {
     const e = t ? `${t}.${s}` : s;
     "string" == typeof r
       ? (i[e] = r)
-      : "object" == typeof r && null !== r && Object.assign(i, Se(r, e));
+      : "object" == typeof r && null !== r && Object.assign(i, Ae(r, e));
   }
   return i;
 }
-const Ae = new Map();
-function Ee(e) {
-  if (Ae.has(e)) return Ae.get(e);
-  const t = Se(Ce[e] ?? Ce.en);
-  return Ae.set(e, t), t;
+const De = new Map();
+function Te(e) {
+  if (De.has(e)) return De.get(e);
+  const t = Ae(Ce[e] ?? Ce.en);
+  return De.set(e, t), t;
 }
 function Ie(e, t, i) {
-  const s = Ee(e.config.language ?? "en");
+  const s = Te(e.config.language ?? "en");
   let r = s[t] ?? s[t.replace(/^panel\./, "")] ?? t;
   if (i)
     for (const [e, t] of Object.entries(i)) r = r.replace(`{${e}}`, String(t));
   return r;
 }
-let De = class extends oe {
+let Me = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -1570,7 +1706,7 @@ let De = class extends oe {
     if (this.entryId) {
       (this._loading = !0), (this._error = "");
       try {
-        this._devices = await me(this.hass, this.entryId);
+        this._devices = await ge(this.hass, this.entryId);
       } catch (e) {
         (this._error = String(e)), (this._devices = []);
       } finally {
@@ -1622,54 +1758,54 @@ let De = class extends oe {
   }
   _renderMaintenanceIcons(e) {
     return e && 0 !== Object.keys(e).length
-      ? K`
+      ? F`
       <div class="device-status">
         ${
           !0 === e.unreach
-            ? K`<span
+            ? F`<span
               class="status-badge unreachable"
               title="${this._l("device_list.unreachable")}"
               >&#x274C;</span
             >`
             : !1 === e.unreach
-              ? K`<span class="status-badge reachable" title="${this._l(
+              ? F`<span class="status-badge reachable" title="${this._l(
                   "device_list.reachable",
                 )}"
                 >&#x2705;</span
               >`
-              : H
+              : K
         }
         ${
           !0 === e.low_bat
-            ? K`<span class="status-badge low-bat" title="${this._l(
+            ? F`<span class="status-badge low-bat" title="${this._l(
                 "device_list.low_battery",
               )}"
               >&#x1F50B;</span
             >`
-            : H
+            : K
         }
         ${
           !0 === e.config_pending
-            ? K`<span
+            ? F`<span
               class="status-badge config-pending"
               title="${this._l("device_list.config_pending")}"
               >&#x23F3;</span
             >`
-            : H
+            : K
         }
       </div>
     `
-      : H;
+      : K;
   }
   render() {
-    return K`
+    return F`
       <div class="panel-header">
         <h1>${this._l("device_list.title")}</h1>
       </div>
 
       ${
         this.entries.length > 1
-          ? K`
+          ? F`
             <div class="entry-selector">
               <label>${this._l("device_list.select_ccu")}</label>
               <select @change=${this._handleEntryChanged}>
@@ -1677,7 +1813,7 @@ let De = class extends oe {
                   ${this._l("device_list.select_placeholder")}
                 </option>
                 ${this.entries.map(
-                  (e) => K`
+                  (e) => F`
                     <option value=${e.entry_id} ?selected=${
                       e.entry_id === this.entryId
                     }>
@@ -1688,11 +1824,11 @@ let De = class extends oe {
               </select>
             </div>
           `
-          : H
+          : K
       }
       ${
         this.entryId
-          ? K`
+          ? F`
             <div class="search-bar">
               <input
                 type="text"
@@ -1704,35 +1840,35 @@ let De = class extends oe {
               />
             </div>
           `
-          : H
+          : K
       }
       ${
         this._loading
-          ? K`<div class="loading"><span>${this._l(
+          ? F`<div class="loading"><span>${this._l(
               "common.loading",
             )}</span></div>`
           : this._error
-            ? K`<div class="error">${this._error}</div>`
+            ? F`<div class="error">${this._error}</div>`
             : this.entryId
               ? 0 === this._filteredDevices.length
-                ? K`<div class="empty-state">${this._l(
+                ? F`<div class="empty-state">${this._l(
                     "device_list.no_devices",
                   )}</div>`
                 : this._renderDeviceGroups()
-              : K`<div class="empty-state">${this._l(
+              : F`<div class="empty-state">${this._l(
                   "device_list.no_entry_selected",
                 )}</div>`
       }
     `;
   }
   _renderDeviceGroups() {
-    return K`
+    return F`
       ${Array.from(this._groupedDevices.entries()).map(
-        ([e, t]) => K`
+        ([e, t]) => F`
           <div class="interface-group">
             <div class="interface-header">${e}</div>
             ${t.map(
-              (e) => K`
+              (e) => F`
                 <div class="device-card" @click=${() =>
                   this._handleDeviceClick(e)}>
                   <div class="device-main">
@@ -1904,7 +2040,7 @@ function Pe(e, t) {
     e.dispatchEvent(s);
   });
 }
-function Te(e, t) {
+function ze(e, t) {
   const i = new CustomEvent("hass-notification", {
     bubbles: !0,
     composed: !0,
@@ -1912,15 +2048,15 @@ function Te(e, t) {
   });
   e.dispatchEvent(i);
 }
-e([he({ attribute: !1 })], De.prototype, "hass", void 0),
-  e([he()], De.prototype, "entryId", void 0),
-  e([he({ attribute: !1 })], De.prototype, "entries", void 0),
-  e([pe()], De.prototype, "_devices", void 0),
-  e([pe()], De.prototype, "_loading", void 0),
-  e([pe()], De.prototype, "_searchQuery", void 0),
-  e([pe()], De.prototype, "_error", void 0),
-  (De = e([_e("hm-device-list")], De));
-let ze = class extends oe {
+e([pe({ attribute: !1 })], Me.prototype, "hass", void 0),
+  e([pe()], Me.prototype, "entryId", void 0),
+  e([pe({ attribute: !1 })], Me.prototype, "entries", void 0),
+  e([_e()], Me.prototype, "_devices", void 0),
+  e([_e()], Me.prototype, "_loading", void 0),
+  e([_e()], Me.prototype, "_searchQuery", void 0),
+  e([_e()], Me.prototype, "_error", void 0),
+  (Me = e([ue("hm-device-list")], Me));
+let Ne = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -1941,7 +2077,7 @@ let ze = class extends oe {
     (this._loading = !0), (this._error = "");
     try {
       const [e, t] = await Promise.all([
-        me(this.hass, this.entryId),
+        ge(this.hass, this.entryId),
         $e(this.hass, this.entryId).catch(() => []),
       ]);
       (this._device = e.find((e) => e.address === this.deviceAddress) ?? null),
@@ -2026,9 +2162,9 @@ let ze = class extends oe {
         (r.download = `${e.address.replace(/:/g, "_")}_MASTER.json`),
         r.click(),
         URL.revokeObjectURL(s),
-        Te(this, { message: this._l("device_detail.export_success") });
+        ze(this, { message: this._l("device_detail.export_success") });
     } catch {
-      Te(this, { message: this._l("device_detail.export_failed") });
+      ze(this, { message: this._l("device_detail.export_failed") });
     }
   }
   async _handleImport(e) {
@@ -2068,7 +2204,7 @@ let ze = class extends oe {
               t,
               "MASTER",
             );
-            Te(
+            ze(
               this,
               s.success
                 ? { message: this._l("device_detail.import_success") }
@@ -2077,23 +2213,23 @@ let ze = class extends oe {
                   },
             );
           } catch {
-            Te(this, { message: this._l("device_detail.import_failed") });
+            ze(this, { message: this._l("device_detail.import_failed") });
           }
       }),
       t.click();
   }
   render() {
     if (this._loading)
-      return K`<div class="loading">${this._l("common.loading")}</div>`;
-    if (this._error) return K`<div class="error">${this._error}</div>`;
+      return F`<div class="loading">${this._l("common.loading")}</div>`;
+    if (this._error) return F`<div class="error">${this._error}</div>`;
     if (!this._device)
-      return K`<div class="empty-state">${this._l(
+      return F`<div class="empty-state">${this._l(
         "device_detail.not_found",
       )}</div>`;
     const e = this._device,
       t = e.channels.find((e) => e.address.endsWith(":0")),
       i = e.channels.filter((e) => !e.address.endsWith(":0"));
-    return K`
+    return F`
       <button class="back-button" @click=${this._handleBack}>◂ ${this._l(
         "common.back",
       )}</button>
@@ -2106,24 +2242,24 @@ let ze = class extends oe {
         </div>
         <div class="header-actions">
           ${
-            ue.has(e.interface)
-              ? K`
+            me.has(e.interface)
+              ? F`
                 <button class="history-button" @click=${this._handleShowLinks}>
                   ${this._l("device_detail.show_links")}
                 </button>
               `
-              : H
+              : K
           }
           ${
             this._hasSchedule
-              ? K`
+              ? F`
                 <button class="history-button" @click=${
                   this._handleShowSchedules
                 }>
                   ${this._l("device_detail.show_schedules")}
                 </button>
               `
-              : H
+              : K
           }
           <button class="history-button" @click=${this._handleShowHistory}>
             ${this._l("device_detail.show_history")}
@@ -2131,22 +2267,22 @@ let ze = class extends oe {
         </div>
       </div>
 
-      ${t ? this._renderMaintenanceChannel(t, e.maintenance) : H}
+      ${t ? this._renderMaintenanceChannel(t, e.maintenance) : K}
       ${i.map((e) => this._renderChannel(e))}
     `;
   }
   _renderMaintenanceChannel(e, t) {
     const i = t && Object.keys(t).length > 0,
       s = e.paramset_keys.includes("MASTER");
-    return K`
+    return F`
       <div class="channel-card maintenance">
         <div class="channel-header">
           ${this._l("device_detail.channel")} 0: ${e.channel_type_label}
         </div>
-        ${i ? this._renderStatusSummary(t) : H}
+        ${i ? this._renderStatusSummary(t) : K}
         ${
           s
-            ? K`
+            ? F`
               <div class="channel-actions">
                 <button class="configure-button" @click=${() =>
                   this._handleChannelClick(e)}>
@@ -2162,7 +2298,7 @@ let ze = class extends oe {
                 </button>
               </div>
             `
-            : H
+            : K
         }
       </div>
     `;
@@ -2211,11 +2347,11 @@ let ze = class extends oe {
           icon: "ℹ️",
         }),
       0 === t.length
-        ? H
-        : K`
+        ? K
+        : F`
       <div class="status-grid">
         ${t.map(
-          (e) => K`
+          (e) => F`
             <div class="status-item">
               <span class="status-icon">${e.icon}</span>
               <span>${e.label}: ${e.value}</span>
@@ -2229,14 +2365,14 @@ let ze = class extends oe {
   _renderChannel(e) {
     const t = e.address.split(":").pop() ?? "",
       i = e.paramset_keys.includes("MASTER");
-    return K`
+    return F`
       <div class="channel-card">
         <div class="channel-header">
           ${this._l("device_detail.channel")} ${t}: ${e.channel_type_label}
         </div>
         ${
           i
-            ? K`
+            ? F`
               <div class="channel-actions">
                 <button class="configure-button" @click=${() =>
                   this._handleChannelClick(e)}>
@@ -2252,7 +2388,7 @@ let ze = class extends oe {
                 </button>
               </div>
             `
-            : K`
+            : F`
               <div class="channel-no-config">${this._l(
                 "device_detail.no_master_config",
               )}</div>
@@ -2348,15 +2484,15 @@ let ze = class extends oe {
     ];
   }
 };
-e([he({ attribute: !1 })], ze.prototype, "hass", void 0),
-  e([he()], ze.prototype, "entryId", void 0),
-  e([he()], ze.prototype, "interfaceId", void 0),
-  e([he()], ze.prototype, "deviceAddress", void 0),
-  e([pe()], ze.prototype, "_device", void 0),
-  e([pe()], ze.prototype, "_hasSchedule", void 0),
-  e([pe()], ze.prototype, "_loading", void 0),
-  e([pe()], ze.prototype, "_error", void 0),
-  (ze = e([_e("hm-device-detail")], ze));
+e([pe({ attribute: !1 })], Ne.prototype, "hass", void 0),
+  e([pe()], Ne.prototype, "entryId", void 0),
+  e([pe()], Ne.prototype, "interfaceId", void 0),
+  e([pe()], Ne.prototype, "deviceAddress", void 0),
+  e([_e()], Ne.prototype, "_device", void 0),
+  e([_e()], Ne.prototype, "_hasSchedule", void 0),
+  e([_e()], Ne.prototype, "_loading", void 0),
+  e([_e()], Ne.prototype, "_error", void 0),
+  (Ne = e([ue("hm-device-detail")], Ne));
 let Re = class extends oe {
   constructor() {
     super(...arguments),
@@ -2380,26 +2516,26 @@ let Re = class extends oe {
   render() {
     const e = this.parameter,
       t = !e.writable;
-    return K`
+    return F`
       <div class="parameter-row ${t ? "read-only" : ""}">
         <div class="parameter-label">
           ${e.label}
-          ${e.unit ? K`<span class="parameter-unit">(${e.unit})</span>` : H}
-          ${this.modified ? K`<span class="modified-dot"></span>` : H}
+          ${e.unit ? F`<span class="parameter-unit">(${e.unit})</span>` : K}
+          ${this.modified ? F`<span class="modified-dot"></span>` : K}
         </div>
         <div class="parameter-control">${this._renderWidget(e, t)}</div>
       </div>
       ${
         this.validationError
-          ? K`<div class="validation-error">${this.validationError}</div>`
-          : H
+          ? F`<div class="validation-error">${this.validationError}</div>`
+          : K
       }
     `;
   }
   _renderWidget(e, t) {
     switch (e.widget) {
       case "toggle":
-        return K`
+        return F`
           <label class="toggle">
             <input
               type="checkbox"
@@ -2420,7 +2556,7 @@ let Re = class extends oe {
           </label>
         `;
       case "slider_with_input":
-        return K`
+        return F`
           <div class="slider-group">
             <input
               type="range"
@@ -2450,7 +2586,7 @@ let Re = class extends oe {
           </div>
         `;
       case "number_input":
-        return K`
+        return F`
           <input
             type="number"
             class="number-input"
@@ -2466,7 +2602,7 @@ let Re = class extends oe {
           />
         `;
       case "dropdown":
-        return K`
+        return F`
           <select
             ?disabled=${t}
             @change=${(e) => {
@@ -2475,17 +2611,17 @@ let Re = class extends oe {
           >
             ${(e.options ?? []).map(
               (e, t) =>
-                K` <option value=${t} ?selected=${
+                F` <option value=${t} ?selected=${
                   this.value === t
                 }>${e}</option> `,
             )}
           </select>
         `;
       case "radio_group":
-        return K`
+        return F`
           <div class="radio-group">
             ${(e.options ?? []).map(
-              (i, s) => K`
+              (i, s) => F`
                 <label class="radio-item">
                   <input
                     type="radio"
@@ -2501,7 +2637,7 @@ let Re = class extends oe {
           </div>
         `;
       case "text_input":
-        return K`
+        return F`
           <input
             type="text"
             .value=${String(this.value ?? "")}
@@ -2512,7 +2648,7 @@ let Re = class extends oe {
           />
         `;
       case "button":
-        return K`
+        return F`
           <button
             class="action-button"
             ?disabled=${t}
@@ -2522,7 +2658,7 @@ let Re = class extends oe {
           </button>
         `;
       default:
-        return K`<span class="read-only-value">${String(
+        return F`<span class="read-only-value">${String(
           this.value ?? "",
         )}</span>`;
     }
@@ -2641,13 +2777,13 @@ let Re = class extends oe {
     ];
   }
 };
-e([he({ attribute: !1 })], Re.prototype, "hass", void 0),
-  e([he({ attribute: !1 })], Re.prototype, "parameter", void 0),
-  e([he()], Re.prototype, "value", void 0),
-  e([he({ type: Boolean })], Re.prototype, "modified", void 0),
-  e([he()], Re.prototype, "validationError", void 0),
-  (Re = e([_e("hm-form-parameter")], Re));
-let Me = class extends oe {
+e([pe({ attribute: !1 })], Re.prototype, "hass", void 0),
+  e([pe({ attribute: !1 })], Re.prototype, "parameter", void 0),
+  e([pe()], Re.prototype, "value", void 0),
+  e([pe({ type: Boolean })], Re.prototype, "modified", void 0),
+  e([pe()], Re.prototype, "validationError", void 0),
+  (Re = e([ue("hm-form-parameter")], Re));
+let Be = class extends oe {
   constructor() {
     super(...arguments),
       (this.pendingChanges = new Map()),
@@ -2663,13 +2799,13 @@ let Me = class extends oe {
   }
   render() {
     return this.schema && this.schema.sections
-      ? K`
+      ? F`
       ${this.schema.sections.map(
-        (e) => K`
+        (e) => F`
           <div class="form-section">
             <div class="section-header">${e.title}</div>
             ${e.parameters.map(
-              (e) => K`
+              (e) => F`
                 <hm-form-parameter
                   .hass=${this.hass}
                   .parameter=${e}
@@ -2684,7 +2820,7 @@ let Me = class extends oe {
         `,
       )}
     `
-      : H;
+      : K;
   }
   _handleValueChanged(e) {
     this.dispatchEvent(
@@ -2706,12 +2842,12 @@ let Me = class extends oe {
     ];
   }
 };
-e([he({ attribute: !1 })], Me.prototype, "hass", void 0),
-  e([he({ attribute: !1 })], Me.prototype, "schema", void 0),
-  e([he({ attribute: !1 })], Me.prototype, "pendingChanges", void 0),
-  e([he({ attribute: !1 })], Me.prototype, "validationErrors", void 0),
-  (Me = e([_e("hm-config-form")], Me));
-let Ne = class extends oe {
+e([pe({ attribute: !1 })], Be.prototype, "hass", void 0),
+  e([pe({ attribute: !1 })], Be.prototype, "schema", void 0),
+  e([pe({ attribute: !1 })], Be.prototype, "pendingChanges", void 0),
+  e([pe({ attribute: !1 })], Be.prototype, "validationErrors", void 0),
+  (Be = e([ue("hm-config-form")], Be));
+let Le = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -2752,7 +2888,7 @@ let Ne = class extends oe {
         this.channelType,
         this.paramsetKey,
       )),
-        await ge(
+        await ye(
           this.hass,
           this.entryId,
           this.interfaceId,
@@ -2859,12 +2995,12 @@ let Ne = class extends oe {
     (this._pendingChanges = new Map()),
       (this._validationErrors = {}),
       this._sessionActive &&
-        ye(this.hass, this.entryId, this.channelAddress, this.paramsetKey)
+        be(this.hass, this.entryId, this.channelAddress, this.paramsetKey)
           .then(
             () => (
               (this._canUndo = !1),
               (this._canRedo = !1),
-              ge(
+              ye(
                 this.hass,
                 this.entryId,
                 this.interfaceId,
@@ -2927,11 +3063,11 @@ let Ne = class extends oe {
           e.success
             ? ((this._pendingChanges = new Map()),
               (this._sessionActive = !1),
-              Te(this, { message: this._l("channel_config.save_success") }),
+              ze(this, { message: this._l("channel_config.save_success") }),
               await this._fetchSchema())
             : Object.keys(e.validation_errors).length > 0 &&
               ((this._validationErrors = e.validation_errors),
-              Te(this, {
+              ze(this, {
                 message: this._l("channel_config.validation_failed"),
               }));
         } else {
@@ -2956,17 +3092,17 @@ let Ne = class extends oe {
             );
           t.success
             ? ((this._pendingChanges = new Map()),
-              Te(this, { message: this._l("channel_config.save_success") }),
+              ze(this, { message: this._l("channel_config.save_success") }),
               await this._fetchSchema())
             : Object.keys(t.validation_errors).length > 0 &&
               ((this._validationErrors = t.validation_errors),
-              Te(this, {
+              ze(this, {
                 message: this._l("channel_config.validation_failed"),
               }));
         }
       } catch (e) {
         (this._error = String(e)),
-          Te(this, { message: this._l("channel_config.save_failed") });
+          ze(this, { message: this._l("channel_config.save_failed") });
       } finally {
         this._saving = !1;
       }
@@ -2992,7 +3128,7 @@ let Ne = class extends oe {
     ) {
       if (this._sessionActive) {
         try {
-          await ye(
+          await be(
             this.hass,
             this.entryId,
             this.channelAddress,
@@ -3008,16 +3144,16 @@ let Ne = class extends oe {
   }
   render() {
     return this._loading
-      ? K`<div class="loading">${this._l("common.loading")}</div>`
+      ? F`<div class="loading">${this._l("common.loading")}</div>`
       : this._error && !this._schema
-        ? K`<div class="error">${this._error}</div>`
-        : K`
+        ? F`<div class="error">${this._error}</div>`
+        : F`
       <button class="back-button" @click=${this._handleBack}>◂ ${this._l(
         "common.back",
       )}</button>
 
       <div class="config-header">
-        ${this.deviceName ? K`<h2>${this.deviceName}</h2>` : H}
+        ${this.deviceName ? F`<h2>${this.deviceName}</h2>` : K}
         <div class="device-info">
           ${this.channelAddress} —
           ${
@@ -3027,10 +3163,10 @@ let Ne = class extends oe {
         </div>
       </div>
 
-      ${this._error ? K`<div class="error">${this._error}</div>` : H}
+      ${this._error ? F`<div class="error">${this._error}</div>` : K}
       ${
         this._schema
-          ? K`
+          ? F`
             <hm-config-form
               .hass=${this.hass}
               .schema=${this._schema}
@@ -3039,7 +3175,7 @@ let Ne = class extends oe {
               @value-changed=${this._handleValueChanged}
             ></hm-config-form>
           `
-          : H
+          : K
       }
 
       <div class="action-bar-split">
@@ -3194,24 +3330,24 @@ let Ne = class extends oe {
     ];
   }
 };
-e([he({ attribute: !1 })], Ne.prototype, "hass", void 0),
-  e([he()], Ne.prototype, "entryId", void 0),
-  e([he()], Ne.prototype, "interfaceId", void 0),
-  e([he()], Ne.prototype, "channelAddress", void 0),
-  e([he()], Ne.prototype, "channelType", void 0),
-  e([he()], Ne.prototype, "paramsetKey", void 0),
-  e([he()], Ne.prototype, "deviceName", void 0),
-  e([pe()], Ne.prototype, "_schema", void 0),
-  e([pe()], Ne.prototype, "_pendingChanges", void 0),
-  e([pe()], Ne.prototype, "_loading", void 0),
-  e([pe()], Ne.prototype, "_saving", void 0),
-  e([pe()], Ne.prototype, "_error", void 0),
-  e([pe()], Ne.prototype, "_validationErrors", void 0),
-  e([pe()], Ne.prototype, "_sessionActive", void 0),
-  e([pe()], Ne.prototype, "_canUndo", void 0),
-  e([pe()], Ne.prototype, "_canRedo", void 0),
-  (Ne = e([_e("hm-channel-config")], Ne));
-let Le = class extends oe {
+e([pe({ attribute: !1 })], Le.prototype, "hass", void 0),
+  e([pe()], Le.prototype, "entryId", void 0),
+  e([pe()], Le.prototype, "interfaceId", void 0),
+  e([pe()], Le.prototype, "channelAddress", void 0),
+  e([pe()], Le.prototype, "channelType", void 0),
+  e([pe()], Le.prototype, "paramsetKey", void 0),
+  e([pe()], Le.prototype, "deviceName", void 0),
+  e([_e()], Le.prototype, "_schema", void 0),
+  e([_e()], Le.prototype, "_pendingChanges", void 0),
+  e([_e()], Le.prototype, "_loading", void 0),
+  e([_e()], Le.prototype, "_saving", void 0),
+  e([_e()], Le.prototype, "_error", void 0),
+  e([_e()], Le.prototype, "_validationErrors", void 0),
+  e([_e()], Le.prototype, "_sessionActive", void 0),
+  e([_e()], Le.prototype, "_canUndo", void 0),
+  e([_e()], Le.prototype, "_canRedo", void 0),
+  (Le = e([ue("hm-channel-config")], Le));
+let Ue = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -3273,7 +3409,7 @@ let Le = class extends oe {
           });
         })(this.hass, this.entryId);
         e.success &&
-          (Te(this, {
+          (ze(this, {
             message: this._l("change_history.clear_success", {
               count: e.cleared,
             }),
@@ -3281,7 +3417,7 @@ let Le = class extends oe {
           (this._entries = []),
           (this._total = 0));
       } catch {
-        Te(this, { message: this._l("channel_config.save_failed") });
+        ze(this, { message: this._l("channel_config.save_failed") });
       }
   }
   _formatTimestamp(e) {
@@ -3304,7 +3440,7 @@ let Le = class extends oe {
     }
   }
   render() {
-    return K`
+    return F`
       <button class="back-button" @click=${this._handleBack}>◂ ${this._l(
         "common.back",
       )}</button>
@@ -3315,18 +3451,18 @@ let Le = class extends oe {
 
       ${
         this._loading
-          ? K`<div class="loading">${this._l("common.loading")}</div>`
+          ? F`<div class="loading">${this._l("common.loading")}</div>`
           : this._error
-            ? K`<div class="error">${this._error}</div>`
+            ? F`<div class="error">${this._error}</div>`
             : 0 === this._entries.length
-              ? K`<div class="empty-state">${this._l(
+              ? F`<div class="empty-state">${this._l(
                   "change_history.empty",
                 )}</div>`
               : this._renderEntries()
       }
       ${
         !this._loading && this._entries.length > 0
-          ? K`
+          ? F`
             <div class="action-bar">
               <button class="btn btn-secondary destructive" @click=${
                 this._handleClear
@@ -3335,18 +3471,18 @@ let Le = class extends oe {
               </button>
             </div>
           `
-          : H
+          : K
       }
     `;
   }
   _renderEntries() {
-    return K`
+    return F`
       <div class="history-list">
         ${this._entries.map((e, t) => {
           const i = `${e.timestamp}-${t}`,
             s = this._expandedEntries.has(i),
             r = Object.keys(e.changes).length;
-          return K`
+          return F`
             <div class="history-entry">
               <div class="history-entry-header" @click=${() =>
                 this._toggleEntry(i)}>
@@ -3372,10 +3508,10 @@ let Le = class extends oe {
               </div>
               ${
                 s
-                  ? K`
+                  ? F`
                     <div class="history-details">
                       ${Object.entries(e.changes).map(
-                        ([e, t]) => K`
+                        ([e, t]) => F`
                           <div class="change-row">
                             <span class="change-param">${e}</span>
                             <span class="change-values">
@@ -3388,7 +3524,7 @@ let Le = class extends oe {
                       )}
                     </div>
                   `
-                  : H
+                  : K
               }
             </div>
           `;
@@ -3563,16 +3699,16 @@ let Le = class extends oe {
     ];
   }
 };
-e([he({ attribute: !1 })], Le.prototype, "hass", void 0),
-  e([he()], Le.prototype, "entryId", void 0),
-  e([he()], Le.prototype, "filterDevice", void 0),
-  e([pe()], Le.prototype, "_entries", void 0),
-  e([pe()], Le.prototype, "_total", void 0),
-  e([pe()], Le.prototype, "_loading", void 0),
-  e([pe()], Le.prototype, "_error", void 0),
-  e([pe()], Le.prototype, "_expandedEntries", void 0),
-  (Le = e([_e("hm-change-history")], Le));
-let Ue = class extends oe {
+e([pe({ attribute: !1 })], Ue.prototype, "hass", void 0),
+  e([pe()], Ue.prototype, "entryId", void 0),
+  e([pe()], Ue.prototype, "filterDevice", void 0),
+  e([_e()], Ue.prototype, "_entries", void 0),
+  e([_e()], Ue.prototype, "_total", void 0),
+  e([_e()], Ue.prototype, "_loading", void 0),
+  e([_e()], Ue.prototype, "_error", void 0),
+  e([_e()], Ue.prototype, "_expandedEntries", void 0),
+  (Ue = e([ue("hm-change-history")], Ue));
+let Oe = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -3668,10 +3804,10 @@ let Ue = class extends oe {
             receiver_channel_address: s,
           });
         })(this.hass, this.entryId, e.sender_address, e.receiver_address),
-          Te(this, { message: this._l("device_links.delete_success") }),
+          ze(this, { message: this._l("device_links.delete_success") }),
           await this._fetchLinks();
       } catch {
-        Te(this, { message: this._l("device_links.delete_failed") });
+        ze(this, { message: this._l("device_links.delete_failed") });
       }
   }
   _groupByChannel() {
@@ -3689,7 +3825,7 @@ let Ue = class extends oe {
     return e;
   }
   render() {
-    return K`
+    return F`
       <button class="back-button" @click=${this._handleBack}>◂ ${this._l(
         "common.back",
       )}</button>
@@ -3711,11 +3847,11 @@ let Ue = class extends oe {
 
       ${
         this._loading
-          ? K`<div class="loading">${this._l("common.loading")}</div>`
+          ? F`<div class="loading">${this._l("common.loading")}</div>`
           : this._error
-            ? K`<div class="error">${this._error}</div>`
+            ? F`<div class="error">${this._error}</div>`
             : 0 === this._links.length
-              ? K`<div class="empty-state">${this._l(
+              ? F`<div class="empty-state">${this._l(
                   "device_links.empty",
                 )}</div>`
               : this._renderGroupedLinks()
@@ -3725,10 +3861,10 @@ let Ue = class extends oe {
   _renderGroupedLinks() {
     const e = this._groupByChannel(),
       t = [...e.keys()].sort((e, t) => parseInt(e) - parseInt(t));
-    return K`
+    return F`
       ${t.map((t) => {
         const i = e.get(t);
-        return K`
+        return F`
           <div class="link-channel-group">
             <div class="link-channel-header">
               ${this._l("device_links.channel_group", { channel: t })}
@@ -3741,7 +3877,7 @@ let Ue = class extends oe {
   }
   _renderLinkCard(e) {
     const t = "outgoing" === e.direction;
-    return K`
+    return F`
       <div class="link-card ${t ? "outgoing" : "incoming"}">
         <div class="link-direction">
           <span class="direction-badge ${e.direction}">
@@ -3755,8 +3891,8 @@ let Ue = class extends oe {
               <span class="link-device-detail">
                 ${e.sender_device_model}${
                   e.sender_channel_type_label
-                    ? K` · ${e.sender_channel_type_label}`
-                    : H
+                    ? F` · ${e.sender_channel_type_label}`
+                    : K
                 }
               </span>
               <span class="link-endpoint-address">${e.sender_address}</span>
@@ -3767,14 +3903,14 @@ let Ue = class extends oe {
               <span class="link-device-detail">
                 ${e.receiver_device_model}${
                   e.receiver_channel_type_label
-                    ? K` · ${e.receiver_channel_type_label}`
-                    : H
+                    ? F` · ${e.receiver_channel_type_label}`
+                    : K
                 }
               </span>
               <span class="link-endpoint-address">${e.receiver_address}</span>
             </div>
           </div>
-          ${e.name ? K`<div class="link-name">"${e.name}"</div>` : H}
+          ${e.name ? F`<div class="link-name">"${e.name}"</div>` : K}
         </div>
         <div class="link-actions">
           <button class="configure-button" @click=${() =>
@@ -3975,16 +4111,16 @@ let Ue = class extends oe {
     ];
   }
 };
-e([he({ attribute: !1 })], Ue.prototype, "hass", void 0),
-  e([he()], Ue.prototype, "entryId", void 0),
-  e([he()], Ue.prototype, "interfaceId", void 0),
-  e([he()], Ue.prototype, "deviceAddress", void 0),
-  e([he()], Ue.prototype, "deviceName", void 0),
-  e([pe()], Ue.prototype, "_links", void 0),
-  e([pe()], Ue.prototype, "_loading", void 0),
-  e([pe()], Ue.prototype, "_error", void 0),
-  (Ue = e([_e("hm-device-links")], Ue));
-let Oe = class extends oe {
+e([pe({ attribute: !1 })], Oe.prototype, "hass", void 0),
+  e([pe()], Oe.prototype, "entryId", void 0),
+  e([pe()], Oe.prototype, "interfaceId", void 0),
+  e([pe()], Oe.prototype, "deviceAddress", void 0),
+  e([pe()], Oe.prototype, "deviceName", void 0),
+  e([_e()], Oe.prototype, "_links", void 0),
+  e([_e()], Oe.prototype, "_loading", void 0),
+  e([_e()], Oe.prototype, "_error", void 0),
+  (Oe = e([ue("hm-device-links")], Oe));
+let We = class extends oe {
   constructor() {
     super(...arguments),
       (this.baseValue = 0),
@@ -4032,16 +4168,16 @@ let Oe = class extends oe {
     const e = this.baseParam.label.replace(/ Base$/, "").replace(/ Basis$/, ""),
       t = this._matchesPreset,
       i = this._isCustom && !t;
-    return K`
+    return F`
       <div class="time-selector">
         <div class="parameter-row">
           <div class="parameter-label">
-            ${e} ${this.modified ? K`<span class="modified-dot"></span>` : H}
+            ${e} ${this.modified ? F`<span class="modified-dot"></span>` : K}
           </div>
           <div class="parameter-control">
             <select @change=${this._handlePresetChange}>
               ${this.presets.map(
-                (e) => K`
+                (e) => F`
                   <option
                     value="${e.base}-${e.factor}"
                     ?selected=${
@@ -4060,7 +4196,7 @@ let Oe = class extends oe {
         </div>
         ${
           i || !t
-            ? K`
+            ? F`
               <div class="custom-time-inputs">
                 <label>
                   ${this._l("time_selector.base")}:
@@ -4084,7 +4220,7 @@ let Oe = class extends oe {
                 </label>
               </div>
             `
-            : H
+            : K
         }
       </div>
     `;
@@ -4147,16 +4283,16 @@ let Oe = class extends oe {
     ];
   }
 };
-e([he({ attribute: !1 })], Oe.prototype, "hass", void 0),
-  e([he({ attribute: !1 })], Oe.prototype, "baseParam", void 0),
-  e([he({ attribute: !1 })], Oe.prototype, "factorParam", void 0),
-  e([he({ type: Number })], Oe.prototype, "baseValue", void 0),
-  e([he({ type: Number })], Oe.prototype, "factorValue", void 0),
-  e([he({ attribute: !1 })], Oe.prototype, "presets", void 0),
-  e([he({ type: Boolean })], Oe.prototype, "modified", void 0),
-  e([pe()], Oe.prototype, "_isCustom", void 0),
-  (Oe = e([_e("hm-time-selector")], Oe));
-let We = class extends oe {
+e([pe({ attribute: !1 })], We.prototype, "hass", void 0),
+  e([pe({ attribute: !1 })], We.prototype, "baseParam", void 0),
+  e([pe({ attribute: !1 })], We.prototype, "factorParam", void 0),
+  e([pe({ type: Number })], We.prototype, "baseValue", void 0),
+  e([pe({ type: Number })], We.prototype, "factorValue", void 0),
+  e([pe({ attribute: !1 })], We.prototype, "presets", void 0),
+  e([pe({ type: Boolean })], We.prototype, "modified", void 0),
+  e([_e()], We.prototype, "_isCustom", void 0),
+  (We = e([ue("hm-time-selector")], We));
+let je = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -4199,21 +4335,21 @@ let We = class extends oe {
       (this._senderValidationErrors = {});
     try {
       const [e, t, i] = await Promise.all([
-        be(
+        xe(
           this.hass,
           this.entryId,
           this.interfaceId,
           this.senderAddress,
           this.receiverAddress,
         ),
-        be(
+        xe(
           this.hass,
           this.entryId,
           this.interfaceId,
           this.receiverAddress,
           this.senderAddress,
         ).catch(() => null),
-        we(
+        Ee(
           this.hass,
           this.entryId,
           this.interfaceId,
@@ -4356,7 +4492,7 @@ let We = class extends oe {
         const e = [];
         this._receiverPendingChanges.size > 0 &&
           e.push(
-            xe(
+            ke(
               this.hass,
               this.entryId,
               this.interfaceId,
@@ -4367,7 +4503,7 @@ let We = class extends oe {
           ),
           this._senderPendingChanges.size > 0 &&
             e.push(
-              xe(
+              ke(
                 this.hass,
                 this.entryId,
                 this.interfaceId,
@@ -4379,11 +4515,11 @@ let We = class extends oe {
           await Promise.all(e),
           (this._receiverPendingChanges = new Map()),
           (this._senderPendingChanges = new Map()),
-          Te(this, { message: this._l("link_config.save_success") }),
+          ze(this, { message: this._l("link_config.save_success") }),
           await this._fetchSchemas();
       } catch (e) {
         (this._error = String(e)),
-          Te(this, { message: this._l("link_config.save_failed") });
+          ze(this, { message: this._l("link_config.save_failed") });
       } finally {
         this._saving = !1;
       }
@@ -4417,22 +4553,22 @@ let We = class extends oe {
     return (this._senderSchema?.sections.length ?? 0) > 0;
   }
   _renderProfileSelector() {
-    if (!this._profiles) return H;
+    if (!this._profiles) return K;
     const e = this._profiles.find((e) => e.id === this._selectedProfileId),
       t = e?.description || "";
-    return K`
+    return F`
       <div class="profile-selector">
         <label class="profile-label">${this._l("link_config.profile")}</label>
         <select class="profile-select" @change=${this._handleProfileChange}>
           ${this._profiles.map(
-            (e) => K`<option value=${e.id} ?selected=${
+            (e) => F`<option value=${e.id} ?selected=${
               e.id === this._selectedProfileId
             }>
                 ${e.name}
               </option>`,
           )}
         </select>
-        ${t ? K`<p class="profile-description">${t}</p>` : H}
+        ${t ? F`<p class="profile-description">${t}</p>` : K}
       </div>
     `;
   }
@@ -4451,10 +4587,10 @@ let We = class extends oe {
         (e.factor = s), t.set(s.time_pair_id, e);
       } else
         (s.hidden_by_default && 0 !== this._selectedProfileId) || i.push(s);
-    return K`
+    return F`
       ${[...t.entries()].map(([, e]) =>
         e.base && e.factor
-          ? K`
+          ? F`
               <hm-time-selector
                 .hass=${this.hass}
                 .baseParam=${e.base}
@@ -4468,12 +4604,12 @@ let We = class extends oe {
                 @value-changed=${this._handleReceiverValueChanged}
               ></hm-time-selector>
             `
-          : H,
+          : K,
       )}
       ${i.map((e) =>
         e.display_as_percent && e.has_last_value
           ? this._renderLevelParam(e)
-          : K`
+          : F`
               <hm-form-parameter
                 .hass=${this.hass}
                 .parameter=${e}
@@ -4489,12 +4625,12 @@ let We = class extends oe {
     const t = this._getEffectiveValue(e),
       i = t > 1,
       s = i ? 100 : Math.round(100 * t);
-    return K`
+    return F`
       <div class="level-param">
         <div class="parameter-row">
           <div class="parameter-label">
             ${e.label}
-            ${this._isModified(e) ? K`<span class="modified-dot"></span>` : H}
+            ${this._isModified(e) ? F`<span class="modified-dot"></span>` : K}
           </div>
           <div class="parameter-control level-controls">
             <label class="last-value-toggle">
@@ -4509,8 +4645,8 @@ let We = class extends oe {
             </label>
             ${
               i
-                ? H
-                : K`
+                ? K
+                : F`
                   <div class="slider-group">
                     <input
                       type="range"
@@ -4538,12 +4674,12 @@ let We = class extends oe {
       const t = e.short.length > 0,
         i = e.long.length > 0,
         s = t && i;
-      return K`
+      return F`
         <div class="param-section">
           <h3>${this._l("link_config.receiver_params")}</h3>
           ${
             s
-              ? K`
+              ? F`
                 <div class="keypress-tabs">
                   <button
                     class="tab ${
@@ -4576,19 +4712,19 @@ let We = class extends oe {
                 ? this._renderParamList(e.short)
                 : i
                   ? this._renderParamList(e.long)
-                  : H
+                  : K
           }
           ${
             e.common.length > 0
-              ? K` <div class="common-params">${this._renderParamList(
+              ? F` <div class="common-params">${this._renderParamList(
                   e.common,
                 )}</div> `
-              : H
+              : K
           }
         </div>
       `;
     }
-    return K`
+    return F`
       <div class="param-section">
         <h3>${this._l("link_config.receiver_params")}</h3>
         <hm-config-form
@@ -4603,9 +4739,9 @@ let We = class extends oe {
   }
   render() {
     return this._loading
-      ? K`<div class="loading">${this._l("common.loading")}</div>`
+      ? F`<div class="loading">${this._l("common.loading")}</div>`
       : !this._error || this._receiverSchema || this._senderSchema
-        ? K`
+        ? F`
       <button class="back-button" @click=${this._handleBack}>◂ ${this._l(
         "common.back",
       )}</button>
@@ -4617,19 +4753,19 @@ let We = class extends oe {
             <span class="link-label">${this._l("link_config.sender")}</span>
             ${
               this.senderDeviceName
-                ? K`<span class="link-device-name">${this.senderDeviceName}</span>`
-                : H
+                ? F`<span class="link-device-name">${this.senderDeviceName}</span>`
+                : K
             }
             ${
               this.senderDeviceModel || this.senderChannelTypeLabel
-                ? K`<span class="link-device-detail">
+                ? F`<span class="link-device-detail">
                   ${this.senderDeviceModel}${
                     this.senderChannelTypeLabel
-                      ? K` &middot; ${this.senderChannelTypeLabel}`
-                      : H
+                      ? F` &middot; ${this.senderChannelTypeLabel}`
+                      : K
                   }
                 </span>`
-                : H
+                : K
             }
             <span class="link-address">${this.senderAddress}</span>
           </div>
@@ -4638,31 +4774,31 @@ let We = class extends oe {
             <span class="link-label">${this._l("link_config.receiver")}</span>
             ${
               this.receiverDeviceName
-                ? K`<span class="link-device-name">${this.receiverDeviceName}</span>`
-                : H
+                ? F`<span class="link-device-name">${this.receiverDeviceName}</span>`
+                : K
             }
             ${
               this.receiverDeviceModel || this.receiverChannelTypeLabel
-                ? K`<span class="link-device-detail">
+                ? F`<span class="link-device-detail">
                   ${this.receiverDeviceModel}${
                     this.receiverChannelTypeLabel
-                      ? K` &middot; ${this.receiverChannelTypeLabel}`
-                      : H
+                      ? F` &middot; ${this.receiverChannelTypeLabel}`
+                      : K
                   }
                 </span>`
-                : H
+                : K
             }
             <span class="link-address">${this.receiverAddress}</span>
           </div>
         </div>
       </div>
 
-      ${this._error ? K`<div class="error">${this._error}</div>` : H}
+      ${this._error ? F`<div class="error">${this._error}</div>` : K}
       ${this._renderProfileSelector()}
-      ${this._hasReceiverParams() ? this._renderReceiverParams() : H}
+      ${this._hasReceiverParams() ? this._renderReceiverParams() : K}
       ${
         this._hasSenderParams()
-          ? K`
+          ? F`
             <div class="param-section">
               <h3>${this._l("link_config.sender_params")}</h3>
               <hm-config-form
@@ -4674,12 +4810,12 @@ let We = class extends oe {
               ></hm-config-form>
             </div>
           `
-          : H
+          : K
       }
       ${
         this._hasReceiverParams() || this._hasSenderParams()
-          ? H
-          : K`<div class="empty-state">${this._l(
+          ? K
+          : F`<div class="empty-state">${this._l(
               "link_config.no_params",
             )}</div>`
       }
@@ -4701,7 +4837,7 @@ let We = class extends oe {
         </button>
       </div>
     `
-        : K`<div class="error">${this._error}</div>`;
+        : F`<div class="error">${this._error}</div>`;
   }
   static {
     this.styles = [
@@ -4960,32 +5096,32 @@ let We = class extends oe {
     ];
   }
 };
-e([he({ attribute: !1 })], We.prototype, "hass", void 0),
-  e([he()], We.prototype, "entryId", void 0),
-  e([he()], We.prototype, "interfaceId", void 0),
-  e([he()], We.prototype, "senderAddress", void 0),
-  e([he()], We.prototype, "receiverAddress", void 0),
-  e([he()], We.prototype, "senderDeviceName", void 0),
-  e([he()], We.prototype, "senderDeviceModel", void 0),
-  e([he()], We.prototype, "senderChannelTypeLabel", void 0),
-  e([he()], We.prototype, "receiverDeviceName", void 0),
-  e([he()], We.prototype, "receiverDeviceModel", void 0),
-  e([he()], We.prototype, "receiverChannelTypeLabel", void 0),
-  e([pe()], We.prototype, "_receiverSchema", void 0),
-  e([pe()], We.prototype, "_senderSchema", void 0),
-  e([pe()], We.prototype, "_receiverPendingChanges", void 0),
-  e([pe()], We.prototype, "_senderPendingChanges", void 0),
-  e([pe()], We.prototype, "_loading", void 0),
-  e([pe()], We.prototype, "_saving", void 0),
-  e([pe()], We.prototype, "_error", void 0),
-  e([pe()], We.prototype, "_validationErrors", void 0),
-  e([pe()], We.prototype, "_senderValidationErrors", void 0),
-  e([pe()], We.prototype, "_profiles", void 0),
-  e([pe()], We.prototype, "_activeProfileId", void 0),
-  e([pe()], We.prototype, "_selectedProfileId", void 0),
-  e([pe()], We.prototype, "_activeKeypressTab", void 0),
-  (We = e([_e("hm-link-config")], We));
-let Be = class extends oe {
+e([pe({ attribute: !1 })], je.prototype, "hass", void 0),
+  e([pe()], je.prototype, "entryId", void 0),
+  e([pe()], je.prototype, "interfaceId", void 0),
+  e([pe()], je.prototype, "senderAddress", void 0),
+  e([pe()], je.prototype, "receiverAddress", void 0),
+  e([pe()], je.prototype, "senderDeviceName", void 0),
+  e([pe()], je.prototype, "senderDeviceModel", void 0),
+  e([pe()], je.prototype, "senderChannelTypeLabel", void 0),
+  e([pe()], je.prototype, "receiverDeviceName", void 0),
+  e([pe()], je.prototype, "receiverDeviceModel", void 0),
+  e([pe()], je.prototype, "receiverChannelTypeLabel", void 0),
+  e([_e()], je.prototype, "_receiverSchema", void 0),
+  e([_e()], je.prototype, "_senderSchema", void 0),
+  e([_e()], je.prototype, "_receiverPendingChanges", void 0),
+  e([_e()], je.prototype, "_senderPendingChanges", void 0),
+  e([_e()], je.prototype, "_loading", void 0),
+  e([_e()], je.prototype, "_saving", void 0),
+  e([_e()], je.prototype, "_error", void 0),
+  e([_e()], je.prototype, "_validationErrors", void 0),
+  e([_e()], je.prototype, "_senderValidationErrors", void 0),
+  e([_e()], je.prototype, "_profiles", void 0),
+  e([_e()], je.prototype, "_activeProfileId", void 0),
+  e([_e()], je.prototype, "_selectedProfileId", void 0),
+  e([_e()], je.prototype, "_activeKeypressTab", void 0),
+  (je = e([ue("hm-link-config")], je));
+let Fe = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -5012,7 +5148,7 @@ let Be = class extends oe {
   async _fetchDevice() {
     this._loading = !0;
     try {
-      const e = await me(this.hass, this.entryId);
+      const e = await ge(this.hass, this.entryId);
       this._device = e.find((e) => e.address === this.deviceAddress) ?? null;
     } catch (e) {
       this._error = String(e);
@@ -5127,20 +5263,20 @@ let Be = class extends oe {
           ...(r && { name: r }),
         });
       })(this.hass, this.entryId, e, t, this._linkName || void 0),
-        Te(this, { message: this._l("add_link.create_success") }),
+        ze(this, { message: this._l("add_link.create_success") }),
         this.dispatchEvent(
           new CustomEvent("link-created", { bubbles: !0, composed: !0 }),
         );
     } catch {
-      Te(this, { message: this._l("add_link.create_failed") });
+      ze(this, { message: this._l("add_link.create_failed") });
     } finally {
       this._loading = !1;
     }
   }
   render() {
     return this._loading && !this._device
-      ? K`<div class="loading">${this._l("common.loading")}</div>`
-      : K`
+      ? F`<div class="loading">${this._l("common.loading")}</div>`
+      : F`
       <button class="back-button" @click=${this._handleBack}>
         ◂ ${this._l(
           "select-channel" === this._step ? "common.back" : "add_link.back",
@@ -5151,7 +5287,7 @@ let Be = class extends oe {
         <h2>${this._l("add_link.title")}</h2>
       </div>
 
-      ${this._error ? K`<div class="error">${this._error}</div>` : H}
+      ${this._error ? F`<div class="error">${this._error}</div>` : K}
       ${
         "select-channel" === this._step
           ? this._renderStepChannel()
@@ -5163,7 +5299,7 @@ let Be = class extends oe {
   }
   _renderStepChannel() {
     const e = this._getLinkableChannels();
-    return K`
+    return F`
       <div class="wizard-step">
         <div class="step-indicator">${this._l("add_link.step_channel")}</div>
         <div class="step-description">${this._l(
@@ -5173,13 +5309,13 @@ let Be = class extends oe {
         <div class="radio-list">
           ${
             0 === e.length
-              ? K`<div class="empty-state">${this._l(
+              ? F`<div class="empty-state">${this._l(
                   "add_link.no_compatible",
                 )}</div>`
               : e.map((e) => {
                   const t = e.address.split(":").pop() ?? "",
                     i = this._selectedChannel === e.address;
-                  return K`
+                  return F`
                   <div
                     class="radio-option ${i ? "selected" : ""}"
                     @click=${() => this._handleSelectChannel(e.address)}
@@ -5201,7 +5337,7 @@ let Be = class extends oe {
 
         ${
           e.length > 0
-            ? K`
+            ? F`
               <div class="wizard-actions">
                 <button
                   class="btn btn-primary"
@@ -5212,13 +5348,13 @@ let Be = class extends oe {
                 </button>
               </div>
             `
-            : H
+            : K
         }
       </div>
     `;
   }
   _renderStepPeer() {
-    return K`
+    return F`
       <div class="wizard-step">
         <div class="step-indicator">${this._l("add_link.step_peer")}</div>
 
@@ -5246,8 +5382,8 @@ let Be = class extends oe {
 
         ${
           this._loading
-            ? K`<div class="loading">${this._l("common.loading")}</div>`
-            : K`
+            ? F`<div class="loading">${this._l("common.loading")}</div>`
+            : F`
               <div class="search-box">
                 <input
                   type="text"
@@ -5260,12 +5396,12 @@ let Be = class extends oe {
               <div class="radio-list">
                 ${
                   0 === this._filteredChannels.length
-                    ? K`<div class="empty-state">${this._l(
+                    ? F`<div class="empty-state">${this._l(
                         "add_link.no_compatible",
                       )}</div>`
                     : this._filteredChannels.map((e) => {
                         const t = this._selectedPeer === e.address;
-                        return K`
+                        return F`
                         <div
                           class="radio-option ${t ? "selected" : ""}"
                           @click=${() => this._handleSelectPeer(e.address)}
@@ -5287,7 +5423,7 @@ let Be = class extends oe {
 
               ${
                 this._filteredChannels.length > 0
-                  ? K`
+                  ? F`
                     <div class="wizard-actions">
                       <button
                         class="btn btn-primary"
@@ -5298,7 +5434,7 @@ let Be = class extends oe {
                       </button>
                     </div>
                   `
-                  : H
+                  : K
               }
             `
         }
@@ -5316,7 +5452,7 @@ let Be = class extends oe {
           : this._selectedChannel,
       i = this._resolveName(e),
       s = this._resolveName(t);
-    return K`
+    return F`
       <div class="wizard-step">
         <div class="step-indicator">${this._l("add_link.step_confirm")}</div>
 
@@ -5620,32 +5756,3448 @@ let Be = class extends oe {
     ];
   }
 };
-e([he({ attribute: !1 })], Be.prototype, "hass", void 0),
-  e([he()], Be.prototype, "entryId", void 0),
-  e([he()], Be.prototype, "interfaceId", void 0),
-  e([he()], Be.prototype, "deviceAddress", void 0),
-  e([pe()], Be.prototype, "_step", void 0),
-  e([pe()], Be.prototype, "_device", void 0),
-  e([pe()], Be.prototype, "_selectedChannel", void 0),
-  e([pe()], Be.prototype, "_selectedRole", void 0),
-  e([pe()], Be.prototype, "_selectedPeer", void 0),
-  e([pe()], Be.prototype, "_linkName", void 0),
-  e([pe()], Be.prototype, "_linkableChannels", void 0),
-  e([pe()], Be.prototype, "_filteredChannels", void 0),
-  e([pe()], Be.prototype, "_searchQuery", void 0),
-  e([pe()], Be.prototype, "_loading", void 0),
-  e([pe()], Be.prototype, "_error", void 0),
-  (Be = e([_e("hm-add-link")], Be));
-const Ve = [
-  "MONDAY",
-  "TUESDAY",
-  "WEDNESDAY",
-  "THURSDAY",
-  "FRIDAY",
-  "SATURDAY",
-  "SUNDAY",
-];
-let Ke = class extends oe {
+e([pe({ attribute: !1 })], Fe.prototype, "hass", void 0),
+  e([pe()], Fe.prototype, "entryId", void 0),
+  e([pe()], Fe.prototype, "interfaceId", void 0),
+  e([pe()], Fe.prototype, "deviceAddress", void 0),
+  e([_e()], Fe.prototype, "_step", void 0),
+  e([_e()], Fe.prototype, "_device", void 0),
+  e([_e()], Fe.prototype, "_selectedChannel", void 0),
+  e([_e()], Fe.prototype, "_selectedRole", void 0),
+  e([_e()], Fe.prototype, "_selectedPeer", void 0),
+  e([_e()], Fe.prototype, "_linkName", void 0),
+  e([_e()], Fe.prototype, "_linkableChannels", void 0),
+  e([_e()], Fe.prototype, "_filteredChannels", void 0),
+  e([_e()], Fe.prototype, "_searchQuery", void 0),
+  e([_e()], Fe.prototype, "_loading", void 0),
+  e([_e()], Fe.prototype, "_error", void 0),
+  (Fe = e([ue("hm-add-link")], Fe));
+let Ve = class {
+  constructor(e) {}
+  get _$AU() {
+    return this._$AM._$AU;
+  }
+  _$AT(e, t, i) {
+    (this._$Ct = e), (this._$AM = t), (this._$Ci = i);
+  }
+  _$AS(e, t) {
+    return this.update(e, t);
+  }
+  update(e, t) {
+    return this.render(...t);
+  }
+};
+const { I: Ke } = re,
+  He = (e) => e,
+  Ye = () => document.createComment(""),
+  Ge = (e, t, i) => {
+    const s = e._$AA.parentNode,
+      r = void 0 === t ? e._$AB : t._$AA;
+    if (void 0 === i) {
+      const t = s.insertBefore(Ye(), r),
+        a = s.insertBefore(Ye(), r);
+      i = new Ke(t, a, e, e.options);
+    } else {
+      const t = i._$AB.nextSibling,
+        a = i._$AM,
+        n = a !== e;
+      if (n) {
+        let t;
+        i._$AQ?.(e),
+          (i._$AM = e),
+          void 0 !== i._$AP && (t = e._$AU) !== a._$AU && i._$AP(t);
+      }
+      if (t !== r || n) {
+        let e = i._$AA;
+        for (; e !== t; ) {
+          const t = He(e).nextSibling;
+          He(s).insertBefore(e, r), (e = t);
+        }
+      }
+    }
+    return i;
+  },
+  Ze = (e, t, i = e) => (e._$AI(t, i), e),
+  Je = {},
+  qe = (e, t = Je) => (e._$AH = t),
+  Qe = (e) => {
+    e._$AR(), e._$AA.remove();
+  },
+  Xe = (e, t, i) => {
+    const s = new Map();
+    for (let r = t; r <= i; r++) s.set(e[r], r);
+    return s;
+  },
+  et = (
+    (e) =>
+    (...t) => ({ _$litDirective$: e, values: t })
+  )(
+    class extends Ve {
+      constructor(e) {
+        if ((super(e), 2 !== e.type))
+          throw Error("repeat() can only be used in text expressions");
+      }
+      dt(e, t, i) {
+        let s;
+        void 0 === i ? (i = t) : void 0 !== t && (s = t);
+        const r = [],
+          a = [];
+        let n = 0;
+        for (const t of e) (r[n] = s ? s(t, n) : n), (a[n] = i(t, n)), n++;
+        return { values: a, keys: r };
+      }
+      render(e, t, i) {
+        return this.dt(e, t, i).values;
+      }
+      update(e, [t, i, s]) {
+        const r = ((e) => e._$AH)(e),
+          { values: a, keys: n } = this.dt(t, i, s);
+        if (!Array.isArray(r)) return (this.ut = n), a;
+        const o = (this.ut ??= []),
+          d = [];
+        let l,
+          c,
+          h = 0,
+          p = r.length - 1,
+          _ = 0,
+          u = a.length - 1;
+        for (; h <= p && _ <= u; )
+          if (null === r[h]) h++;
+          else if (null === r[p]) p--;
+          else if (o[h] === n[_]) (d[_] = Ze(r[h], a[_])), h++, _++;
+          else if (o[p] === n[u]) (d[u] = Ze(r[p], a[u])), p--, u--;
+          else if (o[h] === n[u])
+            (d[u] = Ze(r[h], a[u])), Ge(e, d[u + 1], r[h]), h++, u--;
+          else if (o[p] === n[_])
+            (d[_] = Ze(r[p], a[_])), Ge(e, r[h], r[p]), p--, _++;
+          else if (
+            (void 0 === l && ((l = Xe(n, _, u)), (c = Xe(o, h, p))),
+            l.has(o[h]))
+          )
+            if (l.has(o[p])) {
+              const t = c.get(n[_]),
+                i = void 0 !== t ? r[t] : null;
+              if (null === i) {
+                const t = Ge(e, r[h]);
+                Ze(t, a[_]), (d[_] = t);
+              } else (d[_] = Ze(i, a[_])), Ge(e, r[h], i), (r[t] = null);
+              _++;
+            } else Qe(r[p]), p--;
+          else Qe(r[h]), h++;
+        for (; _ <= u; ) {
+          const t = Ge(e, d[u + 1]);
+          Ze(t, a[_]), (d[_++] = t);
+        }
+        for (; h <= p; ) {
+          const e = r[h++];
+          null !== e && Qe(e);
+        }
+        return (this.ut = n), qe(e, d), V;
+      }
+    },
+  ),
+  tt = [
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY",
+    "SUNDAY",
+  ],
+  it = [
+    "fixed_time",
+    "astro",
+    "fixed_if_before_astro",
+    "astro_if_before_fixed",
+    "fixed_if_after_astro",
+    "astro_if_after_fixed",
+    "earliest",
+    "latest",
+  ],
+  st = {
+    switch: {
+      levelType: "binary",
+      hasLevel2: !1,
+      hasDuration: !0,
+      hasRampTime: !1,
+    },
+    light: {
+      levelType: "percentage",
+      hasLevel2: !1,
+      hasDuration: !0,
+      hasRampTime: !0,
+    },
+    cover: {
+      levelType: "percentage",
+      hasLevel2: !0,
+      hasDuration: !1,
+      hasRampTime: !1,
+    },
+    valve: {
+      levelType: "percentage",
+      hasLevel2: !1,
+      hasDuration: !0,
+      hasRampTime: !1,
+    },
+  },
+  rt = ["ms", "s", "min", "h"];
+function at(e) {
+  const [t, i] = e.split(":").map(Number);
+  return 60 * t + i;
+}
+function nt(e) {
+  const t = e % 60;
+  return `${Math.floor(e / 60)
+    .toString()
+    .padStart(2, "0")}:${t.toString().padStart(2, "0")}`;
+}
+function ot(e, t = "24") {
+  if ("24" === t) return e;
+  const [i, s] = e.split(":");
+  let r = parseInt(i, 10);
+  if (24 === r) return "12:00 AM";
+  const a = r >= 12 ? "PM" : "AM";
+  return 0 === r ? (r = 12) : r > 12 && (r -= 12), `${r}:${s || "00"} ${a}`;
+}
+function dt(e) {
+  return e < 10
+    ? "#2b9af9"
+    : e < 14
+      ? "#40c4ff"
+      : e < 17
+        ? "#26c6da"
+        : e < 19
+          ? "#66bb6a"
+          : e < 21
+            ? "#9ccc65"
+            : e < 23
+              ? "#ffb74d"
+              : e < 25
+                ? "#ff8100"
+                : "#f4511e";
+}
+function lt(e) {
+  const { base_temperature: t, periods: i } = e,
+    s = [],
+    r = [...i].sort((e, t) => at(e.starttime) - at(t.starttime));
+  for (let e = 0; e < r.length; e++) {
+    const t = r[e];
+    s.push({
+      startTime: t.starttime,
+      startMinutes: at(t.starttime),
+      endTime: t.endtime,
+      endMinutes: at(t.endtime),
+      temperature: t.temperature,
+      slot: e + 1,
+    });
+  }
+  return { blocks: s, baseTemperature: t };
+}
+function ct(e, t) {
+  const i = [],
+    s = [...e].sort((e, t) => e.startMinutes - t.startMinutes);
+  for (const e of s)
+    i.push({
+      starttime: e.startTime,
+      endtime: e.endTime,
+      temperature: e.temperature,
+    });
+  return { base_temperature: t, periods: i };
+}
+function ht(e) {
+  if (0 === e.length) return [];
+  const t = [...e].sort((e, t) => e.startMinutes - t.startMinutes),
+    i = [];
+  let s = { ...t[0] };
+  for (let e = 1; e < t.length; e++) {
+    const r = t[e];
+    s.endMinutes === r.startMinutes && s.temperature === r.temperature
+      ? (s = { ...s, endTime: r.endTime, endMinutes: r.endMinutes })
+      : (i.push(s), (s = { ...r }));
+  }
+  return i.push(s), i.map((e, t) => ({ ...e, slot: t + 1 }));
+}
+function pt(e, t) {
+  if (0 === e.length)
+    return [
+      {
+        startTime: "00:00",
+        startMinutes: 0,
+        endTime: "24:00",
+        endMinutes: 1440,
+        temperature: t,
+        slot: 1,
+      },
+    ];
+  const i = [...e].sort((e, t) => e.startMinutes - t.startMinutes),
+    s = [];
+  let r = 0;
+  for (const e of i)
+    e.startMinutes > r &&
+      s.push({
+        startTime: nt(r),
+        startMinutes: r,
+        endTime: e.startTime,
+        endMinutes: e.startMinutes,
+        temperature: t,
+        slot: s.length + 1,
+      }),
+      s.push({ ...e, slot: s.length + 1 }),
+      (r = e.endMinutes);
+  return (
+    r < 1440 &&
+      s.push({
+        startTime: nt(r),
+        startMinutes: r,
+        endTime: "24:00",
+        endMinutes: 1440,
+        temperature: t,
+        slot: s.length + 1,
+      }),
+    ht(s)
+  );
+}
+function _t(e) {
+  return [...e]
+    .sort((e, t) => e.startMinutes - t.startMinutes)
+    .map((e, t) => ({ ...e, slot: t + 1 }));
+}
+function ut(e) {
+  return Boolean(
+    Array.isArray(e.weekdays) &&
+      e.weekdays.length > 0 &&
+      Array.isArray(e.target_channels) &&
+      e.target_channels.length > 0,
+  );
+}
+function vt(e) {
+  return "fixed_time" !== e;
+}
+const mt = /^(\d+(?:\.\d+)?)\s*(ms|s|min|h)$/;
+function gt(e) {
+  const t = e.trim().match(mt);
+  return t ? { value: parseFloat(t[1]), unit: t[2] } : null;
+}
+function ft(e, t) {
+  return `${e}${t}`;
+}
+function yt(e) {
+  return mt.test(e.trim());
+}
+function bt(e) {
+  const t = {
+    weekdays: e.weekdays,
+    time: e.time,
+    target_channels: e.target_channels,
+    level: e.level,
+  };
+  return (
+    "fixed_time" !== e.condition && (t.condition = e.condition),
+    null !== e.astro_type && (t.astro_type = e.astro_type),
+    0 !== e.astro_offset_minutes &&
+      (t.astro_offset_minutes = e.astro_offset_minutes),
+    null !== e.level_2 && (t.level_2 = e.level_2),
+    null !== e.duration && (t.duration = e.duration),
+    null !== e.ramp_time && (t.ramp_time = e.ramp_time),
+    t
+  );
+}
+function xt(e) {
+  const t = {};
+  for (const [i, s] of Object.entries(e)) t[i] = bt(s);
+  return t;
+}
+function kt(e, t = 5, i = 30.5) {
+  const { base_temperature: s, periods: r } = e;
+  if (s < t || s > i)
+    return {
+      key: "temperatureOutOfRange",
+      params: { block: "base", min: `${t}`, max: `${i}` },
+    };
+  let a = 0;
+  for (let e = 0; e < r.length; e++) {
+    const s = r[e];
+    if (!s.starttime || !s.endtime || void 0 === s.temperature)
+      return { key: "slotMissingValues", params: { slot: `${e + 1}` } };
+    const n = at(s.starttime),
+      o = at(s.endtime);
+    if (o <= n)
+      return { key: "blockEndBeforeStart", params: { block: `${e + 1}` } };
+    if (n < a)
+      return {
+        key: "slotTimeBackwards",
+        params: { slot: `${e + 1}`, time: s.starttime },
+      };
+    if (s.temperature < t || s.temperature > i)
+      return {
+        key: "temperatureOutOfRange",
+        params: { block: `${e + 1}`, min: `${t}`, max: `${i}` },
+      };
+    a = o;
+  }
+  return null;
+}
+const $t = n`
+  :host {
+    display: block;
+  }
+
+  .schedule-container {
+    display: grid;
+    grid-template-columns: auto repeat(7, minmax(0, 1fr));
+    grid-template-rows: auto 1fr;
+    gap: 8px;
+    min-height: 400px;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .time-axis-header {
+    /* Empty cell in row 1, col 1 - height matches weekday headers */
+  }
+
+  .time-axis-labels {
+    position: relative;
+    border-right: 2px solid var(--divider-color);
+    min-width: 50px;
+  }
+
+  .time-label {
+    position: absolute;
+    right: 8px;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: var(--secondary-text-color);
+    white-space: nowrap;
+  }
+
+  .schedule-content {
+    grid-column: 2 / -1;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+    position: relative;
+    min-height: 300px;
+  }
+
+  .current-time-indicator {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: var(--error-color, #ff0000);
+    border-top: 2px dashed var(--error-color, #ff0000);
+    pointer-events: none;
+    z-index: 10;
+    transform: translateY(-50%);
+    box-shadow: 0 0 4px rgba(255, 0, 0, 0.5);
+    will-change: top;
+  }
+
+  .current-time-indicator::before {
+    content: "";
+    position: absolute;
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    background-color: var(--error-color, #ff0000);
+    border-radius: 50%;
+    box-shadow: 0 0 4px rgba(255, 0, 0, 0.7);
+  }
+
+  .weekday-header {
+    padding: 4px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background-color: var(--primary-color);
+    color: var(--text-primary-color);
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+  }
+
+  .weekday-label {
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .weekday-actions {
+    display: flex;
+    gap: 4px;
+  }
+
+  .copy-btn,
+  .paste-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: background-color 0.2s;
+    opacity: 0.7;
+  }
+
+  .copy-btn:hover,
+  .paste-btn:not(:disabled):hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .copy-btn.active {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.3);
+    animation: pulse 1s ease-in-out;
+    will-change: transform;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+  }
+
+  .paste-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .time-blocks {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: visible;
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+  }
+
+  .time-blocks.editable {
+    cursor: pointer;
+    will-change: transform, box-shadow;
+  }
+
+  .time-blocks.editable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .time-block {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.2s;
+    cursor: pointer;
+  }
+
+  .time-block.base-temp-block {
+    color: var(--secondary-text-color, #666);
+    text-shadow: none;
+    border-top: 1px dashed var(--divider-color, #ccc);
+  }
+
+  .time-block.base-temp-block:first-child {
+    border-top: none;
+  }
+
+  .time-block:hover {
+    opacity: 0.9;
+  }
+
+  .time-block:hover .time-block-tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .temperature {
+    user-select: none;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Active block highlighting */
+  .time-block.active {
+    box-shadow:
+      inset 0 0 0 3px rgba(255, 255, 255, 0.9),
+      0 0 20px rgba(255, 255, 255, 0.6),
+      0 0 30px rgba(255, 255, 255, 0.4);
+    animation: pulse-glow 2s ease-in-out infinite;
+    z-index: 10;
+    will-change: box-shadow;
+  }
+
+  @keyframes pulse-glow {
+    0%,
+    100% {
+      box-shadow:
+        inset 0 0 0 3px rgba(255, 255, 255, 0.9),
+        0 0 15px rgba(255, 255, 255, 0.5),
+        0 0 25px rgba(255, 255, 255, 0.3);
+    }
+    50% {
+      box-shadow:
+        inset 0 0 0 3px rgba(255, 255, 255, 1),
+        0 0 25px rgba(255, 255, 255, 0.8),
+        0 0 40px rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  /* Tooltip styling */
+  .time-block-tooltip {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.95);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 10px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.2s,
+      visibility 0.2s;
+    z-index: 1000;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    min-width: 80px;
+  }
+
+  .tooltip-time {
+    font-weight: 500;
+    margin-bottom: 2px;
+    text-align: center;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+
+  .tooltip-temp {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .hint {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--secondary-text-color);
+  }
+
+  /* Mobile Optimization */
+  @media (max-width: 768px) {
+    .schedule-container {
+      gap: 4px;
+      min-height: 350px;
+    }
+
+    .time-axis-labels {
+      min-width: 40px;
+    }
+
+    .time-label {
+      font-size: 10px;
+      right: 4px;
+    }
+
+    .schedule-content {
+      gap: 4px;
+    }
+
+    .weekday-header {
+      padding: 6px 4px;
+    }
+
+    .weekday-label {
+      font-size: 12px;
+    }
+
+    .weekday-actions {
+      gap: 6px;
+    }
+
+    .copy-btn,
+    .paste-btn {
+      font-size: 16px;
+      padding: 6px 8px;
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    .temperature {
+      font-size: 11px;
+    }
+
+    .time-block-tooltip {
+      font-size: 11px;
+      padding: 8px 12px;
+    }
+
+    .hint {
+      font-size: 14px;
+    }
+  }
+
+  /* Small mobile devices (portrait phones) */
+  @media (max-width: 480px) {
+    .schedule-container {
+      gap: 2px;
+      min-height: 300px;
+    }
+
+    .time-axis-labels {
+      min-width: 35px;
+    }
+
+    .time-label {
+      font-size: 9px;
+      right: 2px;
+    }
+
+    .schedule-content {
+      gap: 2px;
+    }
+
+    .weekday-label {
+      font-size: 11px;
+    }
+
+    .temperature {
+      font-size: 10px;
+    }
+  }
+
+  /* Touch-specific optimizations */
+  @media (hover: none) and (pointer: coarse) {
+    .time-blocks.editable:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .time-blocks.editable:active {
+      transform: scale(0.98);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .time-block:hover {
+      opacity: 1;
+    }
+
+    .time-block:active {
+      opacity: 0.85;
+    }
+
+    /* Show tooltip on tap instead of hover */
+    .time-block:active .time-block-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Disable hover effects, use active states */
+    .copy-btn:hover,
+    .paste-btn:not(:disabled):hover {
+      opacity: 1;
+      background-color: transparent;
+    }
+
+    .copy-btn:active,
+    .paste-btn:not(:disabled):active {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+  }
+`;
+var wt = function (e, t, i, s) {
+  var r,
+    a = arguments.length,
+    n =
+      a < 3 ? t : null === s ? (s = Object.getOwnPropertyDescriptor(t, i)) : s;
+  if ("object" == typeof Reflect && "function" == typeof Reflect.decorate)
+    n = Reflect.decorate(e, t, i, s);
+  else
+    for (var o = e.length - 1; o >= 0; o--)
+      (r = e[o]) && (n = (a < 3 ? r(n) : a > 3 ? r(t, i, n) : r(t, i)) || n);
+  return a > 3 && n && Object.defineProperty(t, i, n), n;
+};
+let St = class extends oe {
+  constructor() {
+    super(...arguments),
+      (this.editable = !1),
+      (this.showTemperature = !0),
+      (this.showGradient = !1),
+      (this.temperatureUnit = "°C"),
+      (this.hourFormat = "24"),
+      (this.editorOpen = !1),
+      (this._currentTimePercent = 0),
+      (this._currentTimeMinutes = 0);
+  }
+  connectedCallback() {
+    super.connectedCallback(),
+      this._updateCurrentTime(),
+      (this._timeUpdateInterval = window.setInterval(() => {
+        this._updateCurrentTime();
+      }, 6e4));
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback(),
+      void 0 !== this._timeUpdateInterval &&
+        (clearInterval(this._timeUpdateInterval),
+        (this._timeUpdateInterval = void 0));
+  }
+  willUpdate(e) {
+    super.willUpdate(e);
+  }
+  _updateCurrentTime() {
+    const e = new Date(),
+      t = 60 * e.getHours() + e.getMinutes();
+    (this._currentTimePercent = (t / 1440) * 100),
+      (this._currentTimeMinutes = t);
+    const i = e.getDay();
+    this._currentWeekday = [
+      "SUNDAY",
+      "MONDAY",
+      "TUESDAY",
+      "WEDNESDAY",
+      "THURSDAY",
+      "FRIDAY",
+      "SATURDAY",
+    ][i];
+  }
+  _isBlockActive(e, t) {
+    return (
+      !(!this._currentWeekday || this._currentWeekday !== e) &&
+      this._currentTimeMinutes >= t.startMinutes &&
+      this._currentTimeMinutes < t.endMinutes
+    );
+  }
+  _getTimeLabels() {
+    const e = [];
+    for (let t = 0; t <= 24; t += 3) {
+      const i = `${t.toString().padStart(2, "0")}:00`;
+      e.push({
+        hour: t,
+        label: ot(i, this.hourFormat),
+        position: (t / 24) * 100,
+      });
+    }
+    return e;
+  }
+  _formatTimeDisplay(e) {
+    return ot(e, this.hourFormat);
+  }
+  _getBaseTemperature(e) {
+    if (this.scheduleData) {
+      const t = this.scheduleData[e];
+      if (t) {
+        const { baseTemperature: e } = lt(t);
+        return e;
+      }
+    }
+    return 20;
+  }
+  _getParsedBlocks(e) {
+    if (this.scheduleData) {
+      const t = this.scheduleData[e];
+      if (!t) return [];
+      const { blocks: i } = lt(t);
+      return i;
+    }
+    return [];
+  }
+  _getWeekdayLabel(e) {
+    return this.translations?.weekdayShortLabels[e] ?? e.slice(0, 2);
+  }
+  _handleWeekdayClick(e) {
+    this.editable &&
+      this.dispatchEvent(
+        new CustomEvent("weekday-click", {
+          detail: { weekday: e },
+          bubbles: !0,
+          composed: !0,
+        }),
+      );
+  }
+  _handleCopy(e, t) {
+    t.stopPropagation(),
+      this.dispatchEvent(
+        new CustomEvent("copy-schedule", {
+          detail: { weekday: e },
+          bubbles: !0,
+          composed: !0,
+        }),
+      );
+  }
+  _handlePaste(e, t) {
+    t.stopPropagation(),
+      this.dispatchEvent(
+        new CustomEvent("paste-schedule", {
+          detail: { weekday: e },
+          bubbles: !0,
+          composed: !0,
+        }),
+      );
+  }
+  render() {
+    return this.scheduleData
+      ? F`
+      <div class="schedule-container">
+        <!-- Empty cell for time-axis header alignment -->
+        <div class="time-axis-header"></div>
+
+        <!-- Weekday headers -->
+        ${et(
+          tt,
+          (e) => `header-${e}`,
+          (e) => {
+            const t = this.copiedWeekday === e;
+            return F`
+              <div class="weekday-header">
+                <div class="weekday-label">${this._getWeekdayLabel(e)}</div>
+                ${
+                  this.editable
+                    ? F`
+                      <div class="weekday-actions">
+                        <button
+                          class="copy-btn ${t ? "active" : ""}"
+                          @click=${(t) => this._handleCopy(e, t)}
+                          title="${this.translations?.copySchedule ?? ""}"
+                        >
+                          \u{1F4CB}
+                        </button>
+                        <button
+                          class="paste-btn"
+                          @click=${(t) => this._handlePaste(e, t)}
+                          title="${this.translations?.pasteSchedule ?? ""}"
+                          ?disabled=${!this.copiedWeekday}
+                        >
+                          \u{1F4C4}
+                        </button>
+                      </div>
+                    `
+                    : ""
+                }
+              </div>
+            `;
+          },
+        )}
+
+        <!-- Time axis labels -->
+        <div class="time-axis-labels">
+          ${et(
+            this._getTimeLabels(),
+            (e) => e.hour,
+            (e) => F`
+              <div class="time-label" style="top: ${e.position}%">${e.label}</div>
+            `,
+          )}
+        </div>
+
+        <!-- Time blocks content wrapper (for correct indicator positioning) -->
+        <div class="schedule-content">
+          ${et(
+            tt,
+            (e) => `${e}-${this.currentProfile}-${this.scheduleDataHash}`,
+            (e) => {
+              const t = this._getParsedBlocks(e),
+                i = this._getBaseTemperature(e),
+                s = pt(t, i);
+              return F`
+                <div
+                  class="time-blocks ${this.editable ? "editable" : ""}"
+                  @click=${() => this._handleWeekdayClick(e)}
+                >
+                  ${et(
+                    s,
+                    (e) => `${e.slot}-${e.startMinutes}-${this.currentProfile}`,
+                    (r, a) => {
+                      const n = this._isBlockActive(e, r),
+                        o =
+                          r.temperature === i &&
+                          !t.some(
+                            (e) =>
+                              e.startMinutes === r.startMinutes &&
+                              e.endMinutes === r.endMinutes,
+                          );
+                      let d;
+                      if (o)
+                        d =
+                          "background-color: var(--secondary-background-color, #e0e0e0);";
+                      else if (this.showGradient) {
+                        d = `background: ${(function (e, t, i) {
+                          const s = dt(e);
+                          return null === t && null === i
+                            ? s
+                            : null !== t && null === i
+                              ? `linear-gradient(to bottom, ${dt(t)}, ${s})`
+                              : null === t && null !== i
+                                ? `linear-gradient(to bottom, ${s}, ${dt(i)})`
+                                : `linear-gradient(to bottom, ${dt(
+                                    t,
+                                  )}, ${s} 50%, ${dt(i)})`;
+                        })(
+                          r.temperature,
+                          a > 0 ? s[a - 1].temperature : null,
+                          a < s.length - 1 ? s[a + 1].temperature : null,
+                        )};`;
+                      } else d = `background-color: ${dt(r.temperature)};`;
+                      return F`
+                        <div
+                          class="time-block ${n ? "active" : ""} ${
+                            o ? "base-temp-block" : ""
+                          }"
+                          style="
+                              height: ${
+                                ((r.endMinutes - r.startMinutes) / 1440) * 100
+                              }%;
+                              ${d}
+                            "
+                        >
+                          ${
+                            this.showTemperature
+                              ? F`<span class="temperature"
+                                >${r.temperature.toFixed(1)}\u00B0</span
+                              >`
+                              : ""
+                          }
+                          <div class="time-block-tooltip">
+                            <div class="tooltip-time">
+                              ${this._formatTimeDisplay(r.startTime)} -
+                              ${this._formatTimeDisplay(r.endTime)}
+                            </div>
+                            <div class="tooltip-temp">
+                              ${(function (e, t = "°C") {
+                                return `${e.toFixed(1)}${t}`;
+                              })(r.temperature, this.temperatureUnit)}
+                            </div>
+                          </div>
+                        </div>
+                      `;
+                    },
+                  )}
+                </div>
+              `;
+            },
+          )}
+
+          <!-- Current time indicator line (hidden when editor is open) -->
+          ${
+            this.editorOpen
+              ? ""
+              : F`<div
+                class="current-time-indicator"
+                style="top: ${this._currentTimePercent}%"
+              ></div>`
+          }
+        </div>
+      </div>
+
+      ${
+        this.editable
+          ? F`<div class="hint">${this.translations?.clickToEdit ?? ""}</div>`
+          : ""
+      }
+    `
+      : F``;
+  }
+  static {
+    this.styles = $t;
+  }
+};
+wt([pe({ attribute: !1 })], St.prototype, "scheduleData", void 0),
+  wt([pe({ type: Boolean })], St.prototype, "editable", void 0),
+  wt([pe({ type: Boolean })], St.prototype, "showTemperature", void 0),
+  wt([pe({ type: Boolean })], St.prototype, "showGradient", void 0),
+  wt([pe({ type: String })], St.prototype, "temperatureUnit", void 0),
+  wt([pe({ type: String })], St.prototype, "hourFormat", void 0),
+  wt([pe({ attribute: !1 })], St.prototype, "translations", void 0),
+  wt([pe({ type: String })], St.prototype, "copiedWeekday", void 0),
+  wt([pe({ type: Boolean })], St.prototype, "editorOpen", void 0),
+  wt([pe({ type: String })], St.prototype, "currentProfile", void 0),
+  wt([pe({ type: String })], St.prototype, "scheduleDataHash", void 0),
+  wt([_e()], St.prototype, "_currentTimePercent", void 0),
+  wt([_e()], St.prototype, "_currentTimeMinutes", void 0),
+  wt([_e()], St.prototype, "_currentWeekday", void 0),
+  (St = wt([le("hmip-schedule-grid")], St));
+const Et = n`
+  :host {
+    display: block;
+  }
+
+  /* Dialog styles */
+  ha-dialog {
+    --mdc-dialog-max-width: 90vw;
+    --mdc-dialog-max-height: 90vh;
+  }
+
+  .dialog-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    overflow-y: auto;
+    max-height: calc(90vh - 200px);
+  }
+
+  .weekday-tabs {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .weekday-tab {
+    padding: 8px 12px;
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+    background-color: var(--card-background-color);
+    color: var(--primary-text-color);
+    font-size: 14px;
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      border-color 0.2s;
+    min-width: 40px;
+    text-align: center;
+  }
+
+  .weekday-tab:hover {
+    background-color: var(--divider-color);
+  }
+
+  .weekday-tab.active {
+    background-color: var(--primary-color);
+    color: var(--text-primary-color, #fff);
+    border-color: var(--primary-color);
+  }
+
+  .dialog-editor {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .dialog-editor .editor {
+    box-shadow: none;
+    border: none;
+    padding: 0;
+  }
+
+  .dialog-editor .editor-header {
+    display: none;
+  }
+
+  .dialog-editor .editor-footer {
+    display: none;
+  }
+
+  /* Editor Styles */
+  .editor {
+    background-color: var(--card-background-color);
+  }
+
+  .editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--divider-color);
+  }
+
+  .editor-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  .editor-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .undo-btn,
+  .redo-btn,
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--secondary-text-color);
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition:
+      background-color 0.2s,
+      opacity 0.2s;
+  }
+
+  .undo-btn:hover:not(:disabled),
+  .redo-btn:hover:not(:disabled),
+  .close-btn:hover {
+    background-color: var(--divider-color);
+  }
+
+  .undo-btn:disabled,
+  .redo-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .validation-warnings {
+    background-color: rgba(255, 152, 0, 0.1);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+    border-radius: 4px;
+    padding: 12px;
+    margin: 12px 0;
+  }
+
+  .warnings-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--primary-text-color);
+  }
+
+  .warning-icon {
+    font-size: 18px;
+  }
+
+  .warnings-title {
+    font-size: 14px;
+  }
+
+  .warnings-list {
+    margin: 0;
+    padding-left: 28px;
+    list-style-type: disc;
+  }
+
+  .warning-item {
+    color: var(--secondary-text-color);
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 4px 0;
+  }
+
+  /* Base Temperature Section */
+  .base-temperature-section {
+    background-color: rgba(var(--rgb-primary-color, 3, 169, 244), 0.1);
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+    padding: 12px;
+    margin: 12px 0;
+  }
+
+  .base-temperature-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .base-temp-label {
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--primary-text-color);
+  }
+
+  .base-temp-description {
+    font-size: 12px;
+    color: var(--secondary-text-color);
+  }
+
+  .base-temperature-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .base-temp-input {
+    width: 80px;
+    font-weight: 500;
+  }
+
+  .editor-content-label {
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--primary-text-color);
+    margin: 16px 0 8px 0;
+    padding-left: 8px;
+  }
+
+  .editor-content {
+    max-height: 500px;
+    overflow-y: auto;
+  }
+
+  .time-block-header {
+    display: grid;
+    grid-template-columns: 100px 100px 90px 1fr 24px;
+    gap: 8px;
+    align-items: center;
+    padding: 8px;
+    border-bottom: 2px solid var(--divider-color);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--secondary-text-color);
+    text-transform: uppercase;
+  }
+
+  .header-cell {
+    text-align: left;
+  }
+
+  .time-block-editor {
+    display: grid;
+    grid-template-columns: 100px 100px 90px 1fr 24px;
+    gap: 8px;
+    align-items: center;
+    padding: 8px;
+    border-bottom: 1px solid var(--divider-color);
+  }
+
+  .time-block-editor.editing {
+    background-color: var(--primary-color-light, rgba(3, 169, 244, 0.1));
+    border: 1px solid var(--primary-color);
+    border-radius: 4px;
+    margin: 4px 0;
+  }
+
+  .time-block-editor.base-temp-slot {
+    opacity: 0.6;
+    background-color: var(--divider-color);
+  }
+
+  .time-display {
+    font-size: 14px;
+    color: var(--primary-text-color);
+    font-family: monospace;
+  }
+
+  .temp-display-group,
+  .temp-input-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .temp-display {
+    font-size: 14px;
+    color: var(--primary-text-color);
+    font-weight: 500;
+  }
+
+  .slot-actions {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+  }
+
+  .slot-edit-btn,
+  .slot-save-btn,
+  .slot-cancel-btn {
+    padding: 4px 8px;
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+    background-color: var(--card-background-color);
+    color: var(--primary-text-color);
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .slot-edit-btn:hover,
+  .slot-save-btn:hover,
+  .slot-cancel-btn:hover {
+    background-color: var(--divider-color);
+  }
+
+  .slot-save-btn {
+    background-color: var(--primary-color);
+    color: var(--text-primary-color);
+    border-color: var(--primary-color);
+  }
+
+  .slot-cancel-btn {
+    background-color: var(--error-color, #e74c3c);
+    color: white;
+    border-color: var(--error-color, #e74c3c);
+  }
+
+  .slot-edit-btn:disabled,
+  .remove-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .block-number {
+    font-weight: 500;
+    color: var(--secondary-text-color);
+  }
+
+  .time-input,
+  .temp-input {
+    padding: 6px 8px;
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+    background-color: var(--card-background-color);
+    color: var(--primary-text-color);
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .time-input {
+    min-width: 100px;
+    max-width: 120px;
+  }
+
+  .temp-input {
+    max-width: 60px;
+  }
+
+  .temp-unit {
+    color: var(--secondary-text-color);
+    font-size: 14px;
+  }
+
+  .remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px;
+  }
+
+  .remove-btn:hover {
+    opacity: 0.7;
+  }
+
+  .color-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid var(--divider-color);
+    flex-shrink: 0;
+  }
+
+  .add-btn {
+    margin: 12px 0;
+    padding: 10px 16px;
+    background-color: var(--primary-color);
+    color: var(--text-primary-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    width: 100%;
+  }
+
+  .add-btn:hover {
+    opacity: 0.9;
+  }
+
+  .editor-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--divider-color);
+  }
+
+  .cancel-btn,
+  .save-btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .cancel-btn {
+    background-color: var(--divider-color);
+    color: var(--primary-text-color);
+  }
+
+  .save-btn {
+    background-color: var(--primary-color);
+    color: var(--text-primary-color);
+  }
+
+  .cancel-btn:hover,
+  .save-btn:hover {
+    opacity: 0.9;
+  }
+
+  /* Mobile Optimization */
+  @media (max-width: 768px) {
+    ha-dialog {
+      --mdc-dialog-max-width: 100vw;
+      --mdc-dialog-max-height: 100vh;
+    }
+
+    .dialog-content {
+      max-height: calc(100vh - 150px);
+    }
+
+    .editor-header h3 {
+      font-size: 18px;
+    }
+
+    .undo-btn,
+    .redo-btn,
+    .close-btn {
+      width: 44px;
+      height: 44px;
+      font-size: 28px;
+    }
+
+    .editor-content {
+      max-height: 400px;
+    }
+
+    .time-block-editor {
+      grid-template-columns: 30px 1fr 70px 40px 44px 20px;
+      gap: 6px;
+      padding: 10px 6px;
+    }
+
+    .block-number {
+      font-size: 13px;
+    }
+
+    .time-input,
+    .temp-input {
+      padding: 10px 8px;
+      font-size: 16px;
+      min-height: 44px;
+    }
+
+    .temp-unit {
+      font-size: 13px;
+    }
+
+    .remove-btn {
+      font-size: 22px;
+      padding: 8px;
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    .add-btn {
+      padding: 14px 16px;
+      font-size: 16px;
+      min-height: 48px;
+    }
+
+    .editor-footer {
+      flex-direction: column-reverse;
+      gap: 8px;
+    }
+
+    .cancel-btn,
+    .save-btn {
+      width: 100%;
+      padding: 14px 24px;
+      font-size: 16px;
+      min-height: 48px;
+    }
+
+    .validation-warnings {
+      padding: 10px;
+      margin: 10px 0;
+    }
+
+    .warnings-title {
+      font-size: 13px;
+    }
+
+    .warning-item {
+      font-size: 12px;
+    }
+  }
+
+  /* Small mobile devices (portrait phones) */
+  @media (max-width: 480px) {
+    .time-block-editor {
+      grid-template-columns: 25px 1fr 60px 35px 44px 16px;
+      gap: 4px;
+      padding: 8px 4px;
+    }
+
+    .block-number {
+      font-size: 12px;
+    }
+
+    .editor-header h3 {
+      font-size: 16px;
+    }
+  }
+
+  /* Landscape mobile optimization */
+  @media (max-width: 768px) and (orientation: landscape) {
+    .editor-content {
+      max-height: 200px;
+    }
+  }
+
+  /* Touch-specific optimizations */
+  @media (hover: none) and (pointer: coarse) {
+    .undo-btn:hover:not(:disabled),
+    .redo-btn:hover:not(:disabled),
+    .close-btn:hover,
+    .add-btn:hover,
+    .cancel-btn:hover,
+    .save-btn:hover,
+    .remove-btn:hover {
+      opacity: 1;
+      background-color: transparent;
+    }
+
+    .undo-btn:active:not(:disabled),
+    .redo-btn:active:not(:disabled),
+    .close-btn:active {
+      background-color: var(--divider-color);
+    }
+
+    .add-btn:active,
+    .save-btn:active {
+      opacity: 0.85;
+    }
+
+    .cancel-btn:active {
+      opacity: 0.85;
+    }
+
+    .remove-btn:active {
+      opacity: 0.5;
+    }
+  }
+`;
+var Ct = function (e, t, i, s) {
+  var r,
+    a = arguments.length,
+    n =
+      a < 3 ? t : null === s ? (s = Object.getOwnPropertyDescriptor(t, i)) : s;
+  if ("object" == typeof Reflect && "function" == typeof Reflect.decorate)
+    n = Reflect.decorate(e, t, i, s);
+  else
+    for (var o = e.length - 1; o >= 0; o--)
+      (r = e[o]) && (n = (a < 3 ? r(n) : a > 3 ? r(t, i, n) : r(t, i)) || n);
+  return a > 3 && n && Object.defineProperty(t, i, n), n;
+};
+let At = class extends oe {
+  constructor() {
+    super(),
+      (this.open = !1),
+      (this.minTemp = 5),
+      (this.maxTemp = 30.5),
+      (this.tempStep = 0.5),
+      (this.temperatureUnit = "°C"),
+      (this.hourFormat = "24"),
+      (this._validationWarnings = []),
+      (this._historyStack = []),
+      (this._historyIndex = -1),
+      (this._keyDownHandler = this._handleKeyDown.bind(this));
+  }
+  connectedCallback() {
+    super.connectedCallback(),
+      window.addEventListener("keydown", this._keyDownHandler);
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback(),
+      window.removeEventListener("keydown", this._keyDownHandler);
+  }
+  willUpdate(e) {
+    if (
+      (super.willUpdate(e),
+      (e.has("open") || e.has("weekday")) && this.open && this.weekday)
+    ) {
+      const t = e.get("open"),
+        i = e.get("weekday");
+      ((!t && this.open) || (this.open && i !== this.weekday)) &&
+        this._initializeEditor(this.weekday);
+    }
+  }
+  _initializeEditor(e) {
+    (this._editingWeekday = e),
+      (this._editingBlocks = this._getParsedBlocks(e)),
+      (this._editingSlotIndex = void 0),
+      (this._editingSlotData = void 0);
+    const t = this.scheduleData?.[e];
+    if (t) {
+      const { baseTemperature: e } = lt(t);
+      this._editingBaseTemperature = e;
+    } else this._editingBaseTemperature = 20;
+    (this._historyStack = [JSON.parse(JSON.stringify(this._editingBlocks))]),
+      (this._historyIndex = 0),
+      this._updateValidationWarnings();
+  }
+  _getParsedBlocks(e) {
+    if (this.scheduleData) {
+      const t = this.scheduleData[e];
+      if (!t) return [];
+      const { blocks: i } = lt(t);
+      return i;
+    }
+    return [];
+  }
+  _getWeekdayLabel(e, t) {
+    return "long" === t
+      ? this.translations?.weekdayLongLabels[e] ?? e
+      : this.translations?.weekdayShortLabels[e] ?? e.slice(0, 2);
+  }
+  _formatTimeDisplay(e) {
+    return ot(e, this.hourFormat);
+  }
+  _formatValidationParams(e) {
+    if (!e) return {};
+    const t = {};
+    for (const [i, s] of Object.entries(e))
+      "weekday" === i && tt.includes(s)
+        ? (t.weekday = this._getWeekdayLabel(s, "long"))
+        : (t[i] = s);
+    return t;
+  }
+  _translateValidationMessage(e) {
+    const t = this.translations?.validationMessages[e.key] || e.key,
+      i = this._formatValidationParams(e.params);
+    e.nested && (i.details = this._translateValidationMessage(e.nested));
+    let s = t;
+    for (const [e, t] of Object.entries(i)) s = s.replace(`{${e}}`, t);
+    return s;
+  }
+  _saveHistoryState() {
+    if (!this._editingBlocks) return;
+    const e = JSON.parse(JSON.stringify(this._editingBlocks));
+    (this._historyStack = this._historyStack.slice(0, this._historyIndex + 1)),
+      this._historyStack.push(e),
+      this._historyIndex++,
+      this._historyStack.length > 50 &&
+        (this._historyStack.shift(), this._historyIndex--);
+  }
+  _undo() {
+    this._historyIndex <= 0 ||
+      (this._historyIndex--,
+      (this._editingBlocks = JSON.parse(
+        JSON.stringify(this._historyStack[this._historyIndex]),
+      )),
+      this._updateValidationWarnings());
+  }
+  _redo() {
+    this._historyIndex >= this._historyStack.length - 1 ||
+      (this._historyIndex++,
+      (this._editingBlocks = JSON.parse(
+        JSON.stringify(this._historyStack[this._historyIndex]),
+      )),
+      this._updateValidationWarnings());
+  }
+  _canUndo() {
+    return this._historyIndex > 0;
+  }
+  _canRedo() {
+    return this._historyIndex < this._historyStack.length - 1;
+  }
+  _handleKeyDown(e) {
+    if (!this.open || !this._editingWeekday || !this._editingBlocks) return;
+    const t = e.ctrlKey || e.metaKey;
+    t && "z" === e.key && !e.shiftKey
+      ? (e.preventDefault(), this._undo())
+      : t &&
+        ("y" === e.key || ("z" === e.key && e.shiftKey)) &&
+        (e.preventDefault(), this._redo());
+  }
+  _updateValidationWarnings() {
+    this._validationWarnings = this._editingBlocks
+      ? (function (e, t = 5, i = 30.5) {
+          const s = [];
+          if (0 === e.length) return s;
+          for (let t = 0; t < e.length - 1; t++) {
+            const i = e[t];
+            i.endMinutes < i.startMinutes &&
+              s.push({
+                key: "blockEndBeforeStart",
+                params: { block: `${t + 1}` },
+              }),
+              i.endMinutes === i.startMinutes &&
+                s.push({
+                  key: "blockZeroDuration",
+                  params: { block: `${t + 1}` },
+                });
+          }
+          const r = e[e.length - 1];
+          return (
+            r.endMinutes < r.startMinutes &&
+              s.push({
+                key: "blockEndBeforeStart",
+                params: { block: `${e.length}` },
+              }),
+            e.forEach((e, r) => {
+              (e.startMinutes < 0 || e.startMinutes > 1440) &&
+                s.push({
+                  key: "invalidStartTime",
+                  params: { block: `${r + 1}` },
+                }),
+                (e.endMinutes < 0 || e.endMinutes > 1440) &&
+                  s.push({
+                    key: "invalidEndTime",
+                    params: { block: `${r + 1}` },
+                  }),
+                (e.temperature < t || e.temperature > i) &&
+                  s.push({
+                    key: "temperatureOutOfRange",
+                    params: { block: `${r + 1}`, min: `${t}`, max: `${i}` },
+                  });
+            }),
+            s
+          );
+        })(this._editingBlocks, this.minTemp, this.maxTemp)
+      : [];
+  }
+  _startSlotEdit(e) {
+    if (!this._editingBlocks || e < 0 || e >= this._editingBlocks.length)
+      return;
+    const t = this._editingBlocks[e];
+    (this._editingSlotIndex = e),
+      (this._editingSlotData = {
+        startTime: t.startTime,
+        endTime: t.endTime,
+        temperature: t.temperature,
+      });
+  }
+  _startSlotEditFromDisplay(e, t) {
+    if (!this._editingBlocks) return;
+    const i = t[e],
+      s = this._editingBlocks.findIndex(
+        (e) =>
+          e.startMinutes === i.startMinutes &&
+          e.endMinutes === i.endMinutes &&
+          e.temperature === i.temperature,
+      );
+    -1 !== s && this._startSlotEdit(s);
+  }
+  _cancelSlotEdit() {
+    (this._editingSlotIndex = void 0), (this._editingSlotData = void 0);
+  }
+  _saveSlotEdit() {
+    if (
+      void 0 === this._editingSlotIndex ||
+      !this._editingSlotData ||
+      !this._editingBlocks ||
+      void 0 === this._editingBaseTemperature
+    )
+      return;
+    const e = this._editingSlotIndex,
+      { startTime: t, endTime: i, temperature: s } = this._editingSlotData,
+      r = {
+        startTime: t,
+        startMinutes: at(t),
+        endTime: i,
+        endMinutes: at(i),
+        temperature: s,
+        slot: e + 1,
+      },
+      a = this._editingBlocks.filter((t, i) => i !== e),
+      n = (function (e, t) {
+        const i = [],
+          s = t.startMinutes,
+          r = t.endMinutes,
+          a = [...e].sort((e, t) => e.startMinutes - t.startMinutes);
+        for (const e of a) {
+          const t = e.startMinutes,
+            a = e.endMinutes;
+          a <= s || t >= r
+            ? i.push(e)
+            : (t < s &&
+                i.push({
+                  ...e,
+                  endTime: nt(s),
+                  endMinutes: s,
+                  slot: i.length + 1,
+                }),
+              a > r &&
+                i.push({
+                  ...e,
+                  startTime: nt(r),
+                  startMinutes: r,
+                  slot: i.length + 1,
+                }));
+        }
+        i.push({ ...t, slot: i.length + 1 });
+        const n = i.sort((e, t) => e.startMinutes - t.startMinutes);
+        return ht(n);
+      })(a, r),
+      o = ht(_t(n));
+    this._saveHistoryState(),
+      (this._editingBlocks = o),
+      (this._editingSlotIndex = void 0),
+      (this._editingSlotData = void 0),
+      this._updateValidationWarnings();
+  }
+  _addNewSlot() {
+    if (!this._editingBlocks || void 0 === this._editingBaseTemperature) return;
+    if (this._editingBlocks.length >= 12) return;
+    let e = 0,
+      t = 60;
+    if (this._editingBlocks.length > 0) {
+      const i = _t(this._editingBlocks),
+        s = i[i.length - 1];
+      if (s.endMinutes < 1440) (e = s.endMinutes), (t = Math.min(e + 60, 1440));
+      else {
+        let s = !1;
+        for (let r = 0; r < i.length; r++) {
+          const a = 0 === r ? 0 : i[r - 1].endMinutes;
+          if (i[r].startMinutes > a) {
+            (e = a), (t = i[r].startMinutes), (s = !0);
+            break;
+          }
+        }
+        if (!s) return;
+      }
+    }
+    const i = Math.min(this._editingBaseTemperature + 2, this.maxTemp),
+      s = {
+        startTime: nt(e),
+        startMinutes: e,
+        endTime: nt(t),
+        endMinutes: t,
+        temperature: i,
+        slot: this._editingBlocks.length + 1,
+      };
+    this._saveHistoryState();
+    const r = _t([...this._editingBlocks, s]);
+    this._editingBlocks = r;
+    const a = r.findIndex((i) => i.startMinutes === e && i.endMinutes === t);
+    a >= 0 && this._startSlotEdit(a), this._updateValidationWarnings();
+  }
+  _removeTimeBlockByIndex(e, t) {
+    if (!this._editingBlocks || void 0 === this._editingBaseTemperature) return;
+    const i = t[e],
+      s = this._editingBlocks.findIndex(
+        (e) =>
+          e.startMinutes === i.startMinutes &&
+          e.endMinutes === i.endMinutes &&
+          e.temperature === i.temperature,
+      );
+    if (-1 === s) return;
+    this._saveHistoryState();
+    const r = this._editingBlocks.filter((e, t) => t !== s);
+    (this._editingBlocks = ht(_t(r))), this._updateValidationWarnings();
+  }
+  _switchToWeekday(e) {
+    e !== this._editingWeekday && this._initializeEditor(e);
+  }
+  _closeEditor() {
+    (this._editingWeekday = void 0),
+      (this._editingBlocks = void 0),
+      (this._editingBaseTemperature = void 0),
+      (this._editingSlotIndex = void 0),
+      (this._editingSlotData = void 0),
+      (this._historyStack = []),
+      (this._historyIndex = -1),
+      this.dispatchEvent(
+        new CustomEvent("editor-closed", { bubbles: !0, composed: !0 }),
+      );
+  }
+  _saveSchedule() {
+    if (
+      !this._editingWeekday ||
+      !this._editingBlocks ||
+      void 0 === this._editingBaseTemperature
+    )
+      return;
+    const e = kt(
+      ct(this._editingBlocks, this._editingBaseTemperature),
+      this.minTemp,
+      this.maxTemp,
+    );
+    if (e) {
+      const t = this._translateValidationMessage(e);
+      return void this.dispatchEvent(
+        new CustomEvent("validation-failed", {
+          detail: { error: t },
+          bubbles: !0,
+          composed: !0,
+        }),
+      );
+    }
+    this.dispatchEvent(
+      new CustomEvent("save-schedule", {
+        detail: {
+          weekday: this._editingWeekday,
+          blocks: this._editingBlocks,
+          baseTemperature: this._editingBaseTemperature,
+        },
+        bubbles: !0,
+        composed: !0,
+      }),
+    );
+  }
+  _saveAndClose() {
+    this._saveSchedule();
+  }
+  render() {
+    return this.open && this._editingWeekday
+      ? F`
+      <ha-dialog
+        open
+        @closed=${this._closeEditor}
+        .heading=${this._formatEdit(this._editingWeekday)}
+        scrimClickAction="close"
+        escapeKeyAction="close"
+      >
+        <div class="dialog-content">
+          <!-- Weekday selector tabs -->
+          <div class="weekday-tabs">
+            ${tt.map(
+              (e) => F`
+                <button
+                  class="weekday-tab ${
+                    e === this._editingWeekday ? "active" : ""
+                  }"
+                  @click=${() => this._switchToWeekday(e)}
+                >
+                  ${this._getWeekdayLabel(e, "short")}
+                </button>
+              `,
+            )}
+          </div>
+
+          <!-- Editor content in dialog -->
+          <div class="dialog-editor">${this._renderEditor()}</div>
+        </div>
+
+        <mwc-button slot="primaryAction" @click=${
+          this._saveAndClose
+        } dialogAction="close">
+          ${this.translations?.save ?? "Save"}
+        </mwc-button>
+        <mwc-button slot="secondaryAction" @click=${
+          this._closeEditor
+        } dialogAction="close">
+          ${this.translations?.cancel ?? "Cancel"}
+        </mwc-button>
+      </ha-dialog>
+    `
+      : F``;
+  }
+  _formatEdit(e) {
+    return (this.translations?.edit ?? "Edit {weekday}").replace(
+      "{weekday}",
+      this._getWeekdayLabel(e, "long"),
+    );
+  }
+  _renderEditor() {
+    if (!this._editingWeekday || !this._editingBlocks) return F``;
+    const e =
+      void 0 !== this._editingBaseTemperature
+        ? pt(this._editingBlocks, this._editingBaseTemperature)
+        : this._editingBlocks;
+    return F`
+      <div class="editor">
+        <div class="editor-header">
+          <h3>${this._formatEdit(this._editingWeekday)}</h3>
+          <div class="editor-actions">
+            <button
+              class="undo-btn"
+              @click=${this._undo}
+              ?disabled=${!this._canUndo()}
+              title="${this.translations?.undoShortcut ?? ""}"
+            >
+              \u21B6
+            </button>
+            <button
+              class="redo-btn"
+              @click=${this._redo}
+              ?disabled=${!this._canRedo()}
+              title="${this.translations?.redoShortcut ?? ""}"
+            >
+              \u21B7
+            </button>
+            <button class="close-btn" @click=${
+              this._closeEditor
+            }>\u2715</button>
+          </div>
+        </div>
+
+        ${
+          this._validationWarnings.length > 0
+            ? F`
+              <div class="validation-warnings">
+                <div class="warnings-header">
+                  <span class="warning-icon">\u26A0\uFE0F</span>
+                  <span class="warnings-title">${
+                    this.translations?.warningsTitle ?? ""
+                  }</span>
+                </div>
+                <ul class="warnings-list">
+                  ${this._validationWarnings.map(
+                    (e) => F`<li class="warning-item">
+                        ${this._translateValidationMessage(e)}
+                      </li>`,
+                  )}
+                </ul>
+              </div>
+            `
+            : ""
+        }
+
+        <!-- Base Temperature Section -->
+        <div class="base-temperature-section">
+          <div class="base-temperature-header">
+            <span class="base-temp-label">${
+              this.translations?.baseTemperature ?? ""
+            }</span>
+            <span class="base-temp-description"
+              >${this.translations?.baseTemperatureDescription ?? ""}</span
+            >
+          </div>
+          <div class="base-temperature-input">
+            <input
+              type="number"
+              class="temp-input base-temp-input"
+              .value=${this._editingBaseTemperature?.toString() || "20.0"}
+              step=${this.tempStep}
+              min=${this.minTemp}
+              max=${this.maxTemp}
+              @change=${(e) => {
+                this._saveHistoryState(),
+                  (this._editingBaseTemperature = parseFloat(e.target.value)),
+                  this.requestUpdate();
+              }}
+            />
+            <span class="temp-unit">${this.temperatureUnit}</span>
+            <div
+              class="color-indicator"
+              style="background-color: ${dt(
+                this._editingBaseTemperature || 20,
+              )}"
+            ></div>
+          </div>
+        </div>
+
+        <div class="editor-content-label">${
+          this.translations?.temperaturePeriods ?? ""
+        }</div>
+        <div class="editor-content">
+          <div class="time-block-header">
+            <span class="header-cell header-from">${
+              this.translations?.from ?? ""
+            }</span>
+            <span class="header-cell header-to">${
+              this.translations?.to ?? ""
+            }</span>
+            <span class="header-cell header-temp">Temp</span>
+            <span class="header-cell header-actions"></span>
+          </div>
+          ${e.map((t, i) => {
+            const s = this._editingBlocks.findIndex(
+                (e) =>
+                  e.startMinutes === t.startMinutes &&
+                  e.endMinutes === t.endMinutes,
+              ),
+              r = !(-1 !== s);
+            return void 0 !== this._editingSlotIndex &&
+              this._editingSlotIndex === s &&
+              void 0 !== this._editingSlotData &&
+              this._editingSlotData
+              ? F`
+                <div class="time-block-editor editing">
+                  <input
+                    type="time"
+                    class="time-input"
+                    .value=${this._editingSlotData.startTime}
+                    @change=${(e) => {
+                      this._editingSlotData &&
+                        ((this._editingSlotData = {
+                          ...this._editingSlotData,
+                          startTime: e.target.value,
+                        }),
+                        this.requestUpdate());
+                    }}
+                  />
+                  <input
+                    type="time"
+                    class="time-input"
+                    .value=${
+                      "24:00" === this._editingSlotData.endTime
+                        ? "23:59"
+                        : this._editingSlotData.endTime
+                    }
+                    @change=${(e) => {
+                      if (this._editingSlotData) {
+                        let t = e.target.value;
+                        "23:59" === t && (t = "24:00"),
+                          (this._editingSlotData = {
+                            ...this._editingSlotData,
+                            endTime: t,
+                          }),
+                          this.requestUpdate();
+                      }
+                    }}
+                  />
+                  <div class="temp-input-group">
+                    <input
+                      type="number"
+                      class="temp-input"
+                      .value=${this._editingSlotData.temperature.toString()}
+                      step=${this.tempStep}
+                      min=${this.minTemp}
+                      max=${this.maxTemp}
+                      @change=${(e) => {
+                        this._editingSlotData &&
+                          ((this._editingSlotData = {
+                            ...this._editingSlotData,
+                            temperature: parseFloat(e.target.value),
+                          }),
+                          this.requestUpdate());
+                      }}
+                    />
+                    <span class="temp-unit">${this.temperatureUnit}</span>
+                  </div>
+                  <div class="slot-actions">
+                    <button class="slot-save-btn" @click=${this._saveSlotEdit}>
+                      ${this.translations?.saveSlot ?? "Save"}
+                    </button>
+                    <button class="slot-cancel-btn" @click=${
+                      this._cancelSlotEdit
+                    }>
+                      ${this.translations?.cancelSlotEdit ?? "Cancel"}
+                    </button>
+                  </div>
+                  <div
+                    class="color-indicator"
+                    style="background-color: ${dt(
+                      this._editingSlotData.temperature,
+                    )}"
+                  ></div>
+                </div>
+              `
+              : F`
+              <div class="time-block-editor ${r ? "base-temp-slot" : ""}">
+                <span class="time-display">${this._formatTimeDisplay(
+                  t.startTime,
+                )}</span>
+                <span class="time-display">${this._formatTimeDisplay(
+                  t.endTime,
+                )}</span>
+                <div class="temp-display-group">
+                  <span class="temp-display">${t.temperature.toFixed(1)}</span>
+                  <span class="temp-unit">${this.temperatureUnit}</span>
+                </div>
+                <div class="slot-actions">
+                  ${
+                    r
+                      ? F``
+                      : F`
+                        <button
+                          class="slot-edit-btn"
+                          @click=${() => this._startSlotEditFromDisplay(i, e)}
+                          ?disabled=${void 0 !== this._editingSlotIndex}
+                        >
+                          ${this.translations?.editSlot ?? "Edit"}
+                        </button>
+                        <button
+                          class="remove-btn"
+                          @click=${() => this._removeTimeBlockByIndex(i, e)}
+                          ?disabled=${void 0 !== this._editingSlotIndex}
+                        >
+                          \u{1F5D1}\uFE0F
+                        </button>
+                      `
+                  }
+                </div>
+                <div
+                  class="color-indicator"
+                  style="background-color: ${dt(t.temperature)}"
+                ></div>
+              </div>
+            `;
+          })}
+          ${
+            this._editingBlocks.length < 12 && void 0 === this._editingSlotIndex
+              ? F`
+                <button class="add-btn" @click=${this._addNewSlot}>
+                  ${this.translations?.addTimeBlock ?? "+ Add Time Block"}
+                </button>
+              `
+              : ""
+          }
+        </div>
+
+        <div class="editor-footer">
+          <button class="cancel-btn" @click=${this._closeEditor}>
+            ${this.translations?.cancel ?? "Cancel"}
+          </button>
+          <button class="save-btn" @click=${this._saveSchedule}>
+            ${this.translations?.save ?? "Save"}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+  static {
+    this.styles = Et;
+  }
+};
+Ct([pe({ type: Boolean })], At.prototype, "open", void 0),
+  Ct([pe({ type: String })], At.prototype, "weekday", void 0),
+  Ct([pe({ attribute: !1 })], At.prototype, "scheduleData", void 0),
+  Ct([pe({ type: Number })], At.prototype, "minTemp", void 0),
+  Ct([pe({ type: Number })], At.prototype, "maxTemp", void 0),
+  Ct([pe({ type: Number })], At.prototype, "tempStep", void 0),
+  Ct([pe({ type: String })], At.prototype, "temperatureUnit", void 0),
+  Ct([pe({ type: String })], At.prototype, "hourFormat", void 0),
+  Ct([pe({ attribute: !1 })], At.prototype, "translations", void 0),
+  Ct([_e()], At.prototype, "_editingWeekday", void 0),
+  Ct([_e()], At.prototype, "_editingBlocks", void 0),
+  Ct([_e()], At.prototype, "_editingBaseTemperature", void 0),
+  Ct([_e()], At.prototype, "_validationWarnings", void 0),
+  Ct([_e()], At.prototype, "_editingSlotIndex", void 0),
+  Ct([_e()], At.prototype, "_editingSlotData", void 0),
+  (At = Ct([le("hmip-schedule-editor")], At));
+const Dt = n`
+  :host {
+    display: block;
+  }
+
+  .schedule-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .toolbar {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .add-button {
+    padding: 10px 16px;
+    background-color: var(--primary-color);
+    color: var(--text-primary-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: opacity 0.2s;
+  }
+
+  .add-button:hover {
+    opacity: 0.9;
+  }
+
+  .no-data {
+    text-align: center;
+    padding: 32px;
+    color: var(--secondary-text-color);
+  }
+
+  .events-table {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .events-header {
+    display: grid;
+    grid-template-columns: 70px 1fr minmax(60px, auto) minmax(60px, auto) 70px;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: var(--secondary-background-color);
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--secondary-text-color);
+    text-transform: uppercase;
+  }
+
+  .events-header.no-actions {
+    grid-template-columns: 70px 1fr minmax(60px, auto) minmax(60px, auto);
+  }
+
+  .event-row {
+    display: grid;
+    grid-template-columns: 70px 1fr minmax(60px, auto) minmax(60px, auto) 70px;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--divider-color);
+    transition: background-color 0.2s;
+  }
+
+  .event-row.no-actions {
+    grid-template-columns: 70px 1fr minmax(60px, auto) minmax(60px, auto);
+  }
+
+  .event-row:last-child {
+    border-bottom: none;
+  }
+
+  .event-row.inactive {
+    opacity: 0.5;
+  }
+
+  .event-row:hover {
+    background-color: rgba(var(--rgb-primary-color, 3, 169, 244), 0.05);
+  }
+
+  .col-time {
+    font-weight: 500;
+    font-family: monospace;
+    color: var(--primary-text-color);
+  }
+
+  .col-weekdays {
+    overflow: hidden;
+  }
+
+  .weekday-badges {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+  }
+
+  .weekday-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  .weekday-badge.active {
+    background-color: var(--primary-color);
+    color: var(--text-primary-color);
+  }
+
+  .weekday-badge.inactive {
+    background-color: var(--divider-color);
+    color: var(--disabled-text-color, var(--secondary-text-color));
+    opacity: 0.5;
+  }
+
+  .col-state {
+    color: var(--primary-text-color);
+  }
+
+  .col-state .level-2 {
+    color: var(--secondary-text-color);
+    font-size: 0.9em;
+  }
+
+  .col-duration {
+    color: var(--secondary-text-color);
+  }
+
+  .col-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 16px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+
+  .icon-button:hover {
+    opacity: 1;
+  }
+
+  /* Mobile Optimization */
+  @media (max-width: 768px) {
+    .add-button {
+      min-height: 44px;
+      padding: 10px 16px;
+      font-size: 16px;
+      width: 100%;
+    }
+
+    .events-header {
+      grid-template-columns: 55px 1fr minmax(50px, auto) minmax(50px, auto) 60px;
+      gap: 6px;
+      padding: 8px 12px;
+      font-size: 11px;
+    }
+
+    .event-row {
+      grid-template-columns: 55px 1fr minmax(50px, auto) minmax(50px, auto) 60px;
+      gap: 6px;
+      padding: 10px 12px;
+    }
+
+    .weekday-badge {
+      min-width: 22px;
+      padding: 2px 3px;
+      font-size: 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .events-header {
+      grid-template-columns: 50px 1fr 50px;
+      gap: 6px;
+      padding: 6px 8px;
+      font-size: 10px;
+    }
+
+    .events-header .col-duration,
+    .events-header .col-state {
+      display: none;
+    }
+
+    .event-row {
+      grid-template-columns: 50px 1fr 50px;
+      gap: 6px;
+      padding: 8px;
+    }
+
+    .event-row .col-duration,
+    .event-row .col-state {
+      display: none;
+    }
+
+    .col-time {
+      font-size: 12px;
+    }
+
+    .weekday-badge {
+      min-width: 20px;
+      padding: 1px 2px;
+      font-size: 9px;
+    }
+  }
+
+  /* Touch device optimizations */
+  @media (hover: none) and (pointer: coarse) {
+    .icon-button {
+      padding: 8px;
+      font-size: 20px;
+    }
+
+    .event-row:hover {
+      background-color: transparent;
+    }
+
+    .event-row:active {
+      background-color: rgba(var(--rgb-primary-color, 3, 169, 244), 0.1);
+    }
+  }
+`;
+var Tt = function (e, t, i, s) {
+  var r,
+    a = arguments.length,
+    n =
+      a < 3 ? t : null === s ? (s = Object.getOwnPropertyDescriptor(t, i)) : s;
+  if ("object" == typeof Reflect && "function" == typeof Reflect.decorate)
+    n = Reflect.decorate(e, t, i, s);
+  else
+    for (var o = e.length - 1; o >= 0; o--)
+      (r = e[o]) && (n = (a < 3 ? r(n) : a > 3 ? r(t, i, n) : r(t, i)) || n);
+  return a > 3 && n && Object.defineProperty(t, i, n), n;
+};
+let It = class extends oe {
+  constructor() {
+    super(...arguments), (this.editable = !0);
+  }
+  static {
+    this.styles = Dt;
+  }
+  _handleAdd() {
+    this.dispatchEvent(
+      new CustomEvent("add-event", { bubbles: !0, composed: !0 }),
+    );
+  }
+  _handleEdit(e) {
+    this.dispatchEvent(
+      new CustomEvent("edit-event", {
+        bubbles: !0,
+        composed: !0,
+        detail: { entry: e },
+      }),
+    );
+  }
+  _handleDelete(e) {
+    this.dispatchEvent(
+      new CustomEvent("delete-event", {
+        bubbles: !0,
+        composed: !0,
+        detail: { entry: e },
+      }),
+    );
+  }
+  render() {
+    if (!this.scheduleData)
+      return F`<div class="no-data">${this.translations.loading}</div>`;
+    const e = (function (e) {
+      const t = [];
+      for (const [i, s] of Object.entries(e))
+        t.push({ ...s, groupNo: i, isActive: ut(s) });
+      return t.sort((e, t) => e.time.localeCompare(t.time)), t;
+    })(this.scheduleData);
+    return 0 === e.length
+      ? F`
+        <div class="no-data">
+          <p>${this.translations.noScheduleEvents}</p>
+          ${
+            this.editable
+              ? F`<button @click=${this._handleAdd} class="add-button">
+                ${this.translations.addEvent}
+              </button>`
+              : ""
+          }
+        </div>
+      `
+      : F`
+      <div class="schedule-list">
+        ${
+          this.editable
+            ? F`<div class="toolbar">
+              <button @click=${this._handleAdd} class="add-button">
+                ${this.translations.addEvent}
+              </button>
+            </div>`
+            : ""
+        }
+        <div class="events-table">
+          <div class="events-header ${this.editable ? "" : "no-actions"}">
+            <div class="col-time">${this.translations.time}</div>
+            <div class="col-weekdays">${this.translations.weekdays}</div>
+            <div class="col-state">${this.translations.state}</div>
+            <div class="col-duration">${this.translations.duration}</div>
+            ${this.editable ? F`<div class="col-actions"></div>` : ""}
+          </div>
+          ${et(
+            e,
+            (e) => e.groupNo,
+            (e) => this._renderEvent(e),
+          )}
+        </div>
+      </div>
+    `;
+  }
+  _renderEvent(e) {
+    const t = (function (e, t) {
+        const i = t ? st[t] : void 0;
+        return "binary" === i?.levelType
+          ? 0 === e
+            ? "Off"
+            : "On"
+          : `${Math.round(100 * e)}%`;
+      })(e.level, this.domain),
+      i = (function (e) {
+        if (!e) return "-";
+        const t = gt(e);
+        return t
+          ? `${t.value}${{ ms: "ms", s: "s", min: "min", h: "h" }[t.unit]}`
+          : e;
+      })(e.duration);
+    return F`
+      <div class="event-row ${e.isActive ? "active" : "inactive"} ${
+        this.editable ? "" : "no-actions"
+      }">
+        <div class="col-time">${e.time}</div>
+        <div class="col-weekdays">
+          <div class="weekday-badges">
+            ${tt.map((t) => {
+              const i = e.weekdays.includes(t);
+              return F`<span class="weekday-badge ${i ? "active" : "inactive"}"
+                >${this.translations.weekdayShortLabels[t]}</span
+              >`;
+            })}
+          </div>
+        </div>
+        <div class="col-state">
+          ${t}
+          ${
+            null !== e.level_2
+              ? F`<span class="level-2"
+                >, ${this.translations.slat}: ${Math.round(
+                  100 * e.level_2,
+                )}%</span
+              >`
+              : ""
+          }
+        </div>
+        <div class="col-duration">${i}</div>
+        ${
+          this.editable
+            ? F`<div class="col-actions">
+              <button
+                @click=${() => this._handleEdit(e)}
+                class="icon-button"
+                title="Edit"
+              >
+                \u270F\uFE0F
+              </button>
+              <button
+                @click=${() => this._handleDelete(e)}
+                class="icon-button"
+                title="Delete"
+              >
+                \uD83D\uDDD1\uFE0F
+              </button>
+            </div>`
+            : ""
+        }
+      </div>
+    `;
+  }
+};
+Tt([pe({ attribute: !1 })], It.prototype, "scheduleData", void 0),
+  Tt([pe({ attribute: !1 })], It.prototype, "domain", void 0),
+  Tt([pe({ type: Boolean })], It.prototype, "editable", void 0),
+  Tt([pe({ attribute: !1 })], It.prototype, "translations", void 0),
+  (It = Tt([le("hmip-device-schedule-list")], It));
+const Mt = n`
+  :host {
+    display: block;
+  }
+
+  /* Editor Overlay */
+  .editor-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .editor-dialog {
+    background-color: var(--card-background-color);
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid var(--divider-color);
+  }
+
+  .editor-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--primary-text-color);
+  }
+
+  .close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--secondary-text-color);
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+  }
+
+  .close-button:hover {
+    background-color: var(--divider-color);
+    color: var(--primary-text-color);
+  }
+
+  .editor-content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-group label {
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--primary-text-color);
+  }
+
+  .form-group input[type="time"],
+  .form-group input[type="text"],
+  .form-group input[type="number"],
+  .form-group select {
+    padding: 8px;
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+    background-color: var(--card-background-color);
+    color: var(--primary-text-color);
+    font-size: 14px;
+  }
+
+  .form-group input[type="range"] {
+    width: 100%;
+  }
+
+  .duration-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .duration-row input[type="number"] {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+    background-color: var(--card-background-color);
+    color: var(--primary-text-color);
+    font-size: 14px;
+  }
+
+  .duration-row select {
+    padding: 8px;
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+    background-color: var(--card-background-color);
+    color: var(--primary-text-color);
+    font-size: 14px;
+  }
+
+  .weekday-checkboxes,
+  .channel-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    cursor: pointer;
+  }
+
+  .editor-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px;
+    border-top: 1px solid var(--divider-color);
+  }
+
+  .button-primary,
+  .button-secondary {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: opacity 0.2s;
+  }
+
+  .button-primary {
+    background-color: var(--primary-color);
+    color: var(--text-primary-color);
+  }
+
+  .button-primary:hover {
+    opacity: 0.9;
+  }
+
+  .button-secondary {
+    background-color: var(--divider-color);
+    color: var(--primary-text-color);
+    border: none;
+  }
+
+  .button-secondary:hover {
+    opacity: 0.9;
+  }
+
+  .validation-errors {
+    background-color: rgba(231, 76, 60, 0.1);
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    border-radius: 4px;
+    padding: 12px;
+    margin: 0;
+  }
+
+  .validation-errors ul {
+    margin: 0;
+    padding-left: 20px;
+    list-style-type: disc;
+  }
+
+  .validation-errors li {
+    color: var(--error-color, #e74c3c);
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 4px 0;
+  }
+
+  /* Mobile Optimization */
+  @media (max-width: 768px) {
+    .button-primary,
+    .button-secondary {
+      min-height: 44px;
+      padding: 10px 16px;
+    }
+  }
+`;
+var Pt = function (e, t, i, s) {
+  var r,
+    a = arguments.length,
+    n =
+      a < 3 ? t : null === s ? (s = Object.getOwnPropertyDescriptor(t, i)) : s;
+  if ("object" == typeof Reflect && "function" == typeof Reflect.decorate)
+    n = Reflect.decorate(e, t, i, s);
+  else
+    for (var o = e.length - 1; o >= 0; o--)
+      (r = e[o]) && (n = (a < 3 ? r(n) : a > 3 ? r(t, i, n) : r(t, i)) || n);
+  return a > 3 && n && Object.defineProperty(t, i, n), n;
+};
+let zt = class extends oe {
+  constructor() {
+    super(...arguments),
+      (this.open = !1),
+      (this.isNewEvent = !1),
+      (this._validationErrors = []);
+  }
+  static {
+    this.styles = Mt;
+  }
+  willUpdate(e) {
+    (e.has("open") || e.has("entry")) &&
+      (this.open && this.entry
+        ? ((this._editingEntry = { ...this.entry }),
+          (this._validationErrors = []))
+        : this.open ||
+          ((this._editingEntry = void 0), (this._validationErrors = [])));
+  }
+  _updateEditingEntry(e) {
+    this._editingEntry &&
+      ((this._editingEntry = { ...this._editingEntry, ...e }),
+      (this._validationErrors = []),
+      this.requestUpdate());
+  }
+  _handleClose() {
+    this.dispatchEvent(
+      new CustomEvent("editor-closed", { bubbles: !0, composed: !0 }),
+    );
+  }
+  _handleSave() {
+    if (!this._editingEntry || void 0 === this.groupNo) return;
+    const e = (function (e, t) {
+      const i = [];
+      (function (e) {
+        try {
+          return (
+            (function (e) {
+              const t = e.split(":");
+              if (2 !== t.length) throw new Error(`Invalid time format: ${e}`);
+              const i = parseInt(t[0], 10),
+                s = parseInt(t[1], 10);
+              if (isNaN(i) || isNaN(s) || i < 0 || i > 23 || s < 0 || s > 59)
+                throw new Error(`Invalid time values: ${e}`);
+            })(e),
+            !0
+          );
+        } catch {
+          return !1;
+        }
+      })(e.time) ||
+        i.push({
+          field: "time",
+          message: "Time must be in HH:MM format (00:00-23:59)",
+        }),
+        (e.weekdays && 0 !== e.weekdays.length) ||
+          i.push({
+            field: "weekdays",
+            message: "At least one weekday must be selected",
+          }),
+        (e.target_channels && 0 !== e.target_channels.length) ||
+          i.push({
+            field: "target_channels",
+            message: "At least one target channel must be selected",
+          });
+      const s = t ? st[t] : void 0;
+      return (
+        "binary" === s?.levelType
+          ? 0 !== e.level &&
+            1 !== e.level &&
+            i.push({
+              field: "level",
+              message: "Level must be 0 or 1 for switch",
+            })
+          : (e.level < 0 || e.level > 1) &&
+            i.push({
+              field: "level",
+              message: "Level must be between 0.0 and 1.0",
+            }),
+        "cover" === t &&
+          null !== e.level_2 &&
+          (e.level_2 < 0 || e.level_2 > 1) &&
+          i.push({
+            field: "level_2",
+            message: "Slat position must be between 0.0 and 1.0",
+          }),
+        vt(e.condition) &&
+          (e.astro_offset_minutes < -720 || e.astro_offset_minutes > 720) &&
+          i.push({
+            field: "astro_offset_minutes",
+            message: "Astro offset must be between -720 and 720 minutes",
+          }),
+        null === e.duration ||
+          yt(e.duration) ||
+          i.push({ field: "duration", message: "Invalid duration format" }),
+        null === e.ramp_time ||
+          yt(e.ramp_time) ||
+          i.push({ field: "ramp_time", message: "Invalid ramp time format" }),
+        i
+      );
+    })(this._editingEntry, this.domain);
+    e.length > 0
+      ? (this._validationErrors = e.map((e) => `${e.field}: ${e.message}`))
+      : this.dispatchEvent(
+          new CustomEvent("save-event", {
+            bubbles: !0,
+            composed: !0,
+            detail: { entry: { ...this._editingEntry }, groupNo: this.groupNo },
+          }),
+        );
+  }
+  render() {
+    return this.open && this._editingEntry
+      ? F`
+      <div class="editor-overlay" @click=${this._handleClose}>
+        <div class="editor-dialog" @click=${(e) => e.stopPropagation()}>
+          <div class="editor-header">
+            <h3>
+              ${
+                this.isNewEvent
+                  ? this.translations.addEvent
+                  : this.translations.editEvent
+              }
+            </h3>
+            <button @click=${
+              this._handleClose
+            } class="close-button">\u2715</button>
+          </div>
+          <div class="editor-content">
+            ${this._renderTimeFields()} ${this._renderConditionFields()}
+            ${this._renderWeekdayFields()} ${this._renderLevelFields()}
+            ${this._renderDurationFields()} ${this._renderRampTimeFields()}
+            ${this._renderChannelFields()} ${this._renderValidationErrors()}
+          </div>
+          <div class="editor-footer">
+            <button @click=${this._handleClose} class="button-secondary">
+              ${this.translations.cancel}
+            </button>
+            <button @click=${this._handleSave} class="button-primary">
+              ${this.translations.save}
+            </button>
+          </div>
+        </div>
+      </div>
+    `
+      : F``;
+  }
+  _renderValidationErrors() {
+    return 0 === this._validationErrors.length
+      ? F``
+      : F`
+      <div class="validation-errors">
+        <ul>
+          ${this._validationErrors.map((e) => F`<li>${e}</li>`)}
+        </ul>
+      </div>
+    `;
+  }
+  _renderTimeFields() {
+    return this._editingEntry
+      ? F`
+      <div class="form-group">
+        <label>${this.translations.time}</label>
+        <input
+          type="time"
+          .value=${this._editingEntry.time}
+          @change=${(e) => {
+            this._updateEditingEntry({ time: e.target.value });
+          }}
+        />
+      </div>
+    `
+      : F``;
+  }
+  _renderConditionFields() {
+    if (!this._editingEntry) return F``;
+    const e = vt(this._editingEntry.condition);
+    return F`
+      <div class="form-group">
+        <label>${this.translations.condition}</label>
+        <select
+          .value=${this._editingEntry.condition}
+          @change=${(e) => {
+            const t = e.target.value,
+              i = { condition: t };
+            "fixed_time" === t
+              ? ((i.astro_type = null), (i.astro_offset_minutes = 0))
+              : null === this._editingEntry.astro_type &&
+                (i.astro_type = "sunrise"),
+              this._updateEditingEntry(i);
+          }}
+        >
+          ${it.map(
+            (e) => F`
+              <option value=${e} ?selected=${
+                e === this._editingEntry.condition
+              }>
+                ${this.translations.conditionLabels[e] || e}
+              </option>
+            `,
+          )}
+        </select>
+      </div>
+      ${
+        e
+          ? F`
+            <div class="form-group">
+              <label
+                >${this.translations.astroSunrise}/${
+                  this.translations.astroSunset
+                }</label
+              >
+              <select
+                .value=${this._editingEntry.astro_type || "sunrise"}
+                @change=${(e) => {
+                  this._updateEditingEntry({ astro_type: e.target.value });
+                }}
+              >
+                <option
+                  value="sunrise"
+                  ?selected=${"sunrise" === this._editingEntry.astro_type}
+                >
+                  ${this.translations.astroSunrise}
+                </option>
+                <option
+                  value="sunset"
+                  ?selected=${"sunset" === this._editingEntry.astro_type}
+                >
+                  ${this.translations.astroSunset}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>${this.translations.astroOffset}</label>
+              <input
+                type="number"
+                min="-720"
+                max="720"
+                .value=${String(this._editingEntry.astro_offset_minutes)}
+                @input=${(e) => {
+                  const t = parseInt(e.target.value, 10);
+                  isNaN(t) ||
+                    this._updateEditingEntry({ astro_offset_minutes: t });
+                }}
+              />
+            </div>
+          `
+          : ""
+      }
+    `;
+  }
+  _renderWeekdayFields() {
+    return this._editingEntry
+      ? F`
+      <div class="form-group">
+        <label>${this.translations.weekdaysLabel}</label>
+        <div class="weekday-checkboxes">
+          ${tt.map((e) => {
+            const t = this._editingEntry.weekdays.includes(e);
+            return F`
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  .checked=${t}
+                  @change=${(t) => {
+                    const i = t.target.checked,
+                      s = [...this._editingEntry.weekdays];
+                    if (i && !s.includes(e)) s.push(e);
+                    else if (!i) {
+                      const t = s.indexOf(e);
+                      t > -1 && s.splice(t, 1);
+                    }
+                    this._updateEditingEntry({ weekdays: s });
+                  }}
+                />
+                ${this.translations.weekdayShortLabels[e]}
+              </label>
+            `;
+          })}
+        </div>
+      </div>
+    `
+      : F``;
+  }
+  _renderLevelFields() {
+    if (!this._editingEntry) return F``;
+    const e = this.domain ? st[this.domain] : void 0;
+    return F`
+      <div class="form-group">
+        <label>${this.translations.stateLabel}</label>
+        ${
+          "binary" === e?.levelType
+            ? F`
+              <select
+                .value=${String(this._editingEntry.level)}
+                @change=${(e) => {
+                  const t = parseInt(e.target.value, 10);
+                  this._updateEditingEntry({ level: t });
+                }}
+              >
+                <option value="0">${this.translations.levelOff}</option>
+                <option value="1">${this.translations.levelOn}</option>
+              </select>
+            `
+            : F`
+              <input
+                type="range"
+                min="0"
+                max="100"
+                .value=${String(Math.round(100 * this._editingEntry.level))}
+                @input=${(e) => {
+                  const t = parseInt(e.target.value, 10) / 100;
+                  this._updateEditingEntry({ level: t });
+                }}
+              />
+              <span>${Math.round(100 * this._editingEntry.level)}%</span>
+            `
+        }
+      </div>
+      ${
+        e?.hasLevel2
+          ? F`
+            <div class="form-group">
+              <label>${this.translations.slat}</label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                .value=${String(
+                  Math.round(100 * (this._editingEntry.level_2 || 0)),
+                )}
+                @input=${(e) => {
+                  const t = parseInt(e.target.value, 10) / 100;
+                  this._updateEditingEntry({ level_2: t });
+                }}
+              />
+              <span>${Math.round(
+                100 * (this._editingEntry.level_2 || 0),
+              )}%</span>
+            </div>
+          `
+          : ""
+      }
+    `;
+  }
+  _renderDurationFields() {
+    if (!this._editingEntry) return F``;
+    const e = this.domain ? st[this.domain] : void 0;
+    if (e && !e.hasDuration) return F``;
+    const t = this._editingEntry.duration
+        ? gt(this._editingEntry.duration)
+        : null,
+      i = t?.value ?? 0,
+      s = t?.unit ?? "s";
+    return F`
+      <div class="form-group">
+        <label>${this.translations.duration}</label>
+        <div class="duration-row">
+          <input
+            type="number"
+            min="0"
+            .value=${String(i)}
+            @input=${(e) => {
+              const t = parseFloat(e.target.value);
+              !isNaN(t) && t > 0
+                ? this._updateEditingEntry({ duration: ft(t, s) })
+                : this._updateEditingEntry({ duration: null });
+            }}
+          />
+          <select
+            .value=${s}
+            @change=${(e) => {
+              i > 0 &&
+                this._updateEditingEntry({ duration: ft(i, e.target.value) });
+            }}
+          >
+            ${rt.map(
+              (e) => F` <option value=${e} ?selected=${e === s}>${e}</option> `,
+            )}
+          </select>
+        </div>
+      </div>
+    `;
+  }
+  _renderRampTimeFields() {
+    if (!this._editingEntry) return F``;
+    const e = this.domain ? st[this.domain] : void 0;
+    if (e && !e.hasRampTime) return F``;
+    const t = this._editingEntry.ramp_time
+        ? gt(this._editingEntry.ramp_time)
+        : null,
+      i = t?.value ?? 0,
+      s = t?.unit ?? "s";
+    return F`
+      <div class="form-group">
+        <label>${this.translations.rampTime}</label>
+        <div class="duration-row">
+          <input
+            type="number"
+            min="0"
+            .value=${String(i)}
+            @input=${(e) => {
+              const t = parseFloat(e.target.value);
+              !isNaN(t) && t > 0
+                ? this._updateEditingEntry({ ramp_time: ft(t, s) })
+                : this._updateEditingEntry({ ramp_time: null });
+            }}
+          />
+          <select
+            .value=${s}
+            @change=${(e) => {
+              i > 0 &&
+                this._updateEditingEntry({ ramp_time: ft(i, e.target.value) });
+            }}
+          >
+            ${rt.map(
+              (e) => F` <option value=${e} ?selected=${e === s}>${e}</option> `,
+            )}
+          </select>
+        </div>
+      </div>
+    `;
+  }
+  _renderChannelFields() {
+    return this._editingEntry
+      ? this.availableTargetChannels &&
+        Object.keys(this.availableTargetChannels).length > 0
+        ? F`
+        <div class="form-group">
+          <label>${this.translations.channels}</label>
+          <div class="channel-checkboxes">
+            ${Object.entries(this.availableTargetChannels).map(([e, t]) => {
+              const i = this._editingEntry.target_channels.includes(e);
+              return F`
+                <label class="checkbox-label">
+                  <input
+                    type="checkbox"
+                    .checked=${i}
+                    @change=${(t) => {
+                      const i = t.target.checked,
+                        s = [...this._editingEntry.target_channels];
+                      if (i && !s.includes(e)) s.push(e);
+                      else if (!i) {
+                        const t = s.indexOf(e);
+                        t > -1 && s.splice(t, 1);
+                      }
+                      this._updateEditingEntry({ target_channels: s });
+                    }}
+                  />
+                  ${t.name || e}
+                </label>
+              `;
+            })}
+          </div>
+        </div>
+      `
+        : F`
+      <div class="form-group">
+        <label>${this.translations.channels}</label>
+        <input
+          type="text"
+          .value=${this._editingEntry.target_channels.join(", ")}
+          @input=${(e) => {
+            const t = e.target.value
+              .split(",")
+              .map((e) => e.trim())
+              .filter((e) => e.length > 0);
+            this._updateEditingEntry({ target_channels: t });
+          }}
+          placeholder="1_1, 2_1"
+        />
+      </div>
+    `
+      : F``;
+  }
+};
+Pt([pe({ type: Boolean })], zt.prototype, "open", void 0),
+  Pt([pe({ attribute: !1 })], zt.prototype, "entry", void 0),
+  Pt([pe()], zt.prototype, "groupNo", void 0),
+  Pt([pe({ type: Boolean })], zt.prototype, "isNewEvent", void 0),
+  Pt([pe({ attribute: !1 })], zt.prototype, "domain", void 0),
+  Pt([pe({ attribute: !1 })], zt.prototype, "availableTargetChannels", void 0),
+  Pt([pe({ attribute: !1 })], zt.prototype, "translations", void 0),
+  Pt([_e()], zt.prototype, "_editingEntry", void 0),
+  Pt([_e()], zt.prototype, "_validationErrors", void 0),
+  (zt = Pt([le("hmip-device-schedule-editor")], zt));
+let Nt = class extends oe {
   constructor() {
     super(...arguments),
       (this.entryId = ""),
@@ -5656,12 +9208,11 @@ let Ke = class extends oe {
       (this._climateData = null),
       (this._deviceData = null),
       (this._selectedProfile = ""),
-      (this._selectedWeekday = "MONDAY"),
-      (this._editingPeriods = []),
-      (this._editingBaseTemp = 17),
       (this._loading = !0),
       (this._saving = !1),
-      (this._error = "");
+      (this._error = ""),
+      (this._deviceShowEditor = !1),
+      (this._deviceIsNewEvent = !1);
   }
   updated(e) {
     (e.has("entryId") || e.has("deviceAddress")) &&
@@ -5700,8 +9251,7 @@ let Ke = class extends oe {
           });
         })(this.hass, this.entryId, e.address, this._selectedProfile || void 0);
         (this._climateData = t),
-          this._selectedProfile || (this._selectedProfile = t.active_profile),
-          this._loadWeekdayEditor();
+          this._selectedProfile || (this._selectedProfile = t.active_profile);
       } else
         this._deviceData = await (async function (e, t, i) {
           return e.callWS({
@@ -5716,14 +9266,6 @@ let Ke = class extends oe {
       this._loading = !1;
     }
   }
-  _loadWeekdayEditor() {
-    if (!this._climateData) return;
-    const e = this._climateData.schedule_data[this._selectedWeekday];
-    e
-      ? ((this._editingBaseTemp = e.base_temperature),
-        (this._editingPeriods = [...e.periods]))
-      : ((this._editingBaseTemp = 17), (this._editingPeriods = []));
-  }
   _l(e, t) {
     return Ie(this.hass, e, t);
   }
@@ -5737,7 +9279,12 @@ let Ke = class extends oe {
     i &&
       ((this._selectedDevice = i),
       (this._selectedProfile = ""),
-      (this._selectedWeekday = "MONDAY"),
+      (this._editingWeekday = void 0),
+      (this._copiedSchedule = void 0),
+      (this._deviceShowEditor = !1),
+      (this._deviceEditingEntry = void 0),
+      (this._deviceEditingGroupNo = void 0),
+      (this._deviceIsNewEvent = !1),
       await this._loadSchedule(i));
   }
   async _handleProfileChange(e) {
@@ -5765,81 +9312,112 @@ let Ke = class extends oe {
               ...this._climateData,
               active_profile: this._selectedProfile,
             }),
-          Te(this, { message: this._l("device_schedule.save_success") });
+          ze(this, { message: this._l("device_schedule.save_success") });
       } catch {
-        Te(this, { message: this._l("device_schedule.save_failed") });
+        ze(this, { message: this._l("device_schedule.save_failed") });
       }
   }
-  _handleWeekdaySelect(e) {
-    (this._selectedWeekday = e), this._loadWeekdayEditor();
+  _onWeekdayClick(e) {
+    this._editingWeekday = e.detail.weekday;
   }
-  _handlePeriodChange(e, t, i) {
-    const s = [...this._editingPeriods];
-    (s[e] = { ...s[e], [t]: i }), (this._editingPeriods = s);
+  _onCopySchedule(e) {
+    const t = e.detail.weekday;
+    if (!this._climateData) return;
+    const i = this._climateData.schedule_data[t];
+    if (!i) return;
+    const { blocks: s, baseTemperature: r } = lt(i);
+    this._copiedSchedule = {
+      weekday: t,
+      blocks: JSON.parse(JSON.stringify(s)),
+      baseTemperature: r,
+    };
   }
-  _handleAddPeriod() {
-    const e = this._editingPeriods[this._editingPeriods.length - 1];
-    this._editingPeriods = [
-      ...this._editingPeriods,
-      {
-        starttime: e ? e.endtime : "06:00",
-        endtime: "24:00",
-        temperature: this._editingBaseTemp + 4,
-      },
-    ];
-  }
-  _handleDeletePeriod(e) {
-    this._editingPeriods = this._editingPeriods.filter((t, i) => i !== e);
-  }
-  async _handleSaveClimateWeekday() {
-    if (this._selectedDevice) {
+  async _onPasteSchedule(e) {
+    const t = e.detail.weekday;
+    if (!this._selectedDevice || !this._copiedSchedule || !this._climateData)
+      return;
+    const i =
+        this._copiedSchedule.baseTemperature ??
+        (function (e) {
+          if (0 === e.length) return 20;
+          const t = new Map();
+          for (const i of e) {
+            const e = i.endMinutes - i.startMinutes,
+              s = t.get(i.temperature) || 0;
+            t.set(i.temperature, s + e);
+          }
+          let i = 0,
+            s = 20;
+          for (const [e, r] of t.entries()) r > i && ((i = r), (s = e));
+          return s;
+        })(this._copiedSchedule.blocks),
+      s = ct(this._copiedSchedule.blocks, i);
+    if (
+      kt(s, this._climateData.min_temp ?? 5, this._climateData.max_temp ?? 30.5)
+    )
+      ze(this, { message: this._l("device_schedule.invalid_schedule") });
+    else {
       this._saving = !0;
       try {
-        await (async function (e, t, i, s, r, a, n) {
-          return e.callWS({
-            type: "homematicip_local/config/set_climate_schedule_weekday",
-            entry_id: t,
-            device_address: i,
-            profile: s,
-            weekday: r,
-            base_temperature: a,
-            simple_weekday_list: n,
-          });
-        })(
+        const { base_temperature: e, periods: i } = s;
+        await we(
           this.hass,
           this.entryId,
           this._selectedDevice.address,
           this._selectedProfile,
-          this._selectedWeekday,
-          this._editingBaseTemp,
-          this._editingPeriods.map((e) => ({ ...e })),
+          t,
+          e,
+          i.map((e) => ({ ...e })),
         ),
-          Te(this, { message: this._l("device_schedule.save_success") }),
+          ze(this, { message: this._l("device_schedule.save_success") }),
           await this._loadSchedule(this._selectedDevice);
       } catch {
-        Te(this, { message: this._l("device_schedule.save_failed") });
+        ze(this, { message: this._l("device_schedule.save_failed") });
       } finally {
         this._saving = !1;
       }
     }
   }
-  async _handleSaveDeviceSchedule() {
-    if (this._selectedDevice && this._deviceData) {
+  async _onSaveSchedule(e) {
+    if (!this._selectedDevice || !this._climateData) return;
+    const { weekday: t, blocks: i, baseTemperature: s } = e.detail,
+      r = ct(i, s);
+    if (
+      kt(r, this._climateData.min_temp ?? 5, this._climateData.max_temp ?? 30.5)
+    )
+      ze(this, { message: this._l("device_schedule.invalid_schedule") });
+    else {
       this._saving = !0;
       try {
-        await ke(
+        const { base_temperature: e, periods: i } = r;
+        await we(
           this.hass,
           this.entryId,
           this._selectedDevice.address,
-          this._deviceData.schedule_data,
+          this._selectedProfile,
+          t,
+          e,
+          i.map((e) => ({ ...e })),
         ),
-          Te(this, { message: this._l("device_schedule.save_success") });
+          ze(this, { message: this._l("device_schedule.save_success") }),
+          (this._editingWeekday = void 0),
+          await this._loadSchedule(this._selectedDevice);
       } catch {
-        Te(this, { message: this._l("device_schedule.save_failed") });
+        ze(this, { message: this._l("device_schedule.save_failed") });
       } finally {
         this._saving = !1;
       }
     }
+  }
+  _onValidationFailed(e) {
+    ze(this, {
+      message: this._l("device_schedule.invalid_schedule", {
+        error: e.detail.error,
+      }),
+    });
+  }
+  _onEditorClosed() {
+    this._editingWeekday = void 0;
   }
   async _handleReload() {
     if (this._selectedDevice)
@@ -5851,10 +9429,10 @@ let Ke = class extends oe {
             device_address: i,
           });
         })(this.hass, this.entryId, this._selectedDevice.address),
-          Te(this, { message: this._l("device_schedule.reload_success") }),
+          ze(this, { message: this._l("device_schedule.reload_success") }),
           await this._loadSchedule(this._selectedDevice);
       } catch {
-        Te(this, { message: this._l("device_schedule.reload_failed") });
+        ze(this, { message: this._l("device_schedule.reload_failed") });
       }
   }
   async _handleExport() {
@@ -5893,32 +9471,129 @@ let Ke = class extends oe {
                   ...this._climateData,
                   schedule_data: i,
                 }),
-                this._loadWeekdayEditor(),
-                Te(this, {
+                ze(this, {
                   message: this._l("device_schedule.import_success"),
                 }))
-              : (await ke(
+              : (await Se(
                   this.hass,
                   this.entryId,
                   this._selectedDevice.address,
                   i,
                 ),
-                Te(this, {
+                ze(this, {
                   message: this._l("device_schedule.import_success"),
                 }),
                 await this._loadSchedule(this._selectedDevice));
           } catch {
-            Te(this, { message: this._l("device_schedule.import_failed") });
+            ze(this, { message: this._l("device_schedule.import_failed") });
           }
       }),
       e.click();
   }
+  _buildGridTranslations() {
+    return {
+      weekdayShortLabels: {
+        MONDAY: this._l("device_schedule.weekdays").split(",")[0],
+        TUESDAY: this._l("device_schedule.weekdays").split(",")[1],
+        WEDNESDAY: this._l("device_schedule.weekdays").split(",")[2],
+        THURSDAY: this._l("device_schedule.weekdays").split(",")[3],
+        FRIDAY: this._l("device_schedule.weekdays").split(",")[4],
+        SATURDAY: this._l("device_schedule.weekdays").split(",")[5],
+        SUNDAY: this._l("device_schedule.weekdays").split(",")[6],
+      },
+      clickToEdit: this._l("device_schedule.click_to_edit"),
+      copySchedule: this._l("device_schedule.copy_schedule"),
+      pasteSchedule: this._l("device_schedule.paste_schedule"),
+    };
+  }
+  _buildEditorTranslations() {
+    const e = this._l("device_schedule.weekdays").split(",");
+    return {
+      weekdayShortLabels: {
+        MONDAY: e[0],
+        TUESDAY: e[1],
+        WEDNESDAY: e[2],
+        THURSDAY: e[3],
+        FRIDAY: e[4],
+        SATURDAY: e[5],
+        SUNDAY: e[6],
+      },
+      weekdayLongLabels: {
+        MONDAY: this._l("device_schedule.weekday_monday"),
+        TUESDAY: this._l("device_schedule.weekday_tuesday"),
+        WEDNESDAY: this._l("device_schedule.weekday_wednesday"),
+        THURSDAY: this._l("device_schedule.weekday_thursday"),
+        FRIDAY: this._l("device_schedule.weekday_friday"),
+        SATURDAY: this._l("device_schedule.weekday_saturday"),
+        SUNDAY: this._l("device_schedule.weekday_sunday"),
+      },
+      edit: this._l("device_schedule.edit"),
+      cancel: this._l("common.cancel"),
+      save: this._l("device_schedule.save"),
+      addTimeBlock: this._l("device_schedule.add_time_block"),
+      from: this._l("device_schedule.from"),
+      to: this._l("device_schedule.to"),
+      baseTemperature: this._l("device_schedule.base_temperature"),
+      baseTemperatureDescription: this._l(
+        "device_schedule.base_temperature_description",
+      ),
+      temperaturePeriods: this._l("device_schedule.temperature_periods"),
+      editSlot: this._l("device_schedule.edit_slot"),
+      saveSlot: this._l("device_schedule.save_slot"),
+      cancelSlotEdit: this._l("device_schedule.cancel_slot_edit"),
+      undoShortcut: this._l("device_schedule.undo_shortcut"),
+      redoShortcut: this._l("device_schedule.redo_shortcut"),
+      warningsTitle: this._l("device_schedule.warnings_title"),
+      validationMessages: {
+        blockEndBeforeStart: this._l(
+          "device_schedule.validation_block_end_before_start",
+        ),
+        blockZeroDuration: this._l(
+          "device_schedule.validation_block_zero_duration",
+        ),
+        invalidStartTime: this._l(
+          "device_schedule.validation_invalid_start_time",
+        ),
+        invalidEndTime: this._l("device_schedule.validation_invalid_end_time"),
+        temperatureOutOfRange: this._l(
+          "device_schedule.validation_temp_out_of_range",
+        ),
+        invalidSlotCount: this._l(
+          "device_schedule.validation_invalid_slot_count",
+        ),
+        invalidSlotKey: this._l("device_schedule.validation_invalid_slot_key"),
+        missingSlot: this._l("device_schedule.validation_missing_slot"),
+        slotMissingValues: this._l(
+          "device_schedule.validation_slot_missing_values",
+        ),
+        slotTimeBackwards: this._l(
+          "device_schedule.validation_slot_time_backwards",
+        ),
+        slotTimeExceedsDay: this._l(
+          "device_schedule.validation_slot_time_exceeds_day",
+        ),
+        lastSlotMustEnd: this._l(
+          "device_schedule.validation_last_slot_must_end",
+        ),
+        scheduleMustBeObject: this._l(
+          "device_schedule.validation_schedule_must_be_object",
+        ),
+        missingWeekday: this._l("device_schedule.validation_missing_weekday"),
+        invalidWeekdayData: this._l(
+          "device_schedule.validation_invalid_weekday_data",
+        ),
+        weekdayValidationError: this._l(
+          "device_schedule.validation_weekday_error",
+        ),
+      },
+    };
+  }
   render() {
     return this._loading && 0 === this._devices.length
-      ? K`<div class="loading">${this._l("common.loading")}</div>`
+      ? F`<div class="loading">${this._l("common.loading")}</div>`
       : this._error && 0 === this._devices.length
-        ? K`<div class="error">${this._error}</div>`
-        : K`
+        ? F`<div class="error">${this._error}</div>`
+        : F`
       <button class="back-button" @click=${this._handleBack}>◂ ${this._l(
         "common.back",
       )}</button>
@@ -5931,60 +9606,65 @@ let Ke = class extends oe {
             <option value="">${this._l(
               "device_schedule.select_device",
             )}</option>
-            ${this._devices.map(
-              (e) => K`
-                <option
-                  value="${e.address}"
-                  ?selected=${e.address === this._selectedDevice?.address}
-                >
-                  ${e.name} (${e.model}) -
-                  ${this._l(`device_schedule.schedule_type_${e.schedule_type}`)}
-                </option>
-              `,
-            )}
+            ${[...this._devices]
+              .sort((e, t) => e.name.localeCompare(t.name))
+              .map(
+                (e) => F`
+                  <option
+                    value="${e.address}"
+                    ?selected=${e.address === this._selectedDevice?.address}
+                  >
+                    ${e.name} (${e.model}) -
+                    ${this._l(
+                      `device_schedule.schedule_type_${e.schedule_type}`,
+                    )}
+                  </option>
+                `,
+              )}
           </select>
         </div>
       </div>
 
       ${
         0 === this._devices.length
-          ? K`<div class="empty-state">${this._l(
+          ? F`<div class="empty-state">${this._l(
               "device_schedule.no_devices",
             )}</div>`
-          : H
+          : K
       }
       ${
         this._selectedDevice && this._loading
-          ? K`<div class="loading">${this._l("common.loading")}</div>`
-          : H
+          ? F`<div class="loading">${this._l("common.loading")}</div>`
+          : K
       }
       ${
         this._error && this._selectedDevice
-          ? K`<div class="error">${this._error}</div>`
-          : H
+          ? F`<div class="error">${this._error}</div>`
+          : K
       }
       ${
         "climate" === this._selectedDevice?.schedule_type && this._climateData
           ? this._renderClimateSchedule()
-          : H
+          : K
       }
       ${
         "default" === this._selectedDevice?.schedule_type && this._deviceData
           ? this._renderDeviceSchedule()
-          : H
+          : K
       }
     `;
   }
   _renderClimateSchedule() {
-    const e = this._climateData;
-    return K`
+    const e = this._climateData,
+      t = e.schedule_data;
+    return F`
       <div class="schedule-content">
         <div class="toolbar">
           <div class="profile-selector">
             <label>${this._l("device_schedule.profile")}:</label>
             <select @change=${this._handleProfileChange}>
               ${e.available_profiles.map(
-                (t) => K`
+                (t) => F`
                   <option value="${t}" ?selected=${t === this._selectedProfile}>
                     ${t}${t === e.active_profile ? " ✓" : ""}
                   </option>
@@ -5993,14 +9673,14 @@ let Ke = class extends oe {
             </select>
             ${
               this._selectedProfile !== e.active_profile
-                ? K`
+                ? F`
                   <button class="action-btn small" @click=${
                     this._handleSetActiveProfile
                   }>
                     ${this._l("device_schedule.active_profile")}
                   </button>
                 `
-                : H
+                : K
             }
           </div>
           <div class="toolbar-actions">
@@ -6016,123 +9696,221 @@ let Ke = class extends oe {
           </div>
         </div>
 
-        ${this._renderWeekdayOverview()} ${this._renderWeekdayEditor()}
+        <div class="climate-grid-container">
+          <hmip-schedule-grid
+            .scheduleData=${t}
+            .editable=${!0}
+            .showTemperature=${!0}
+            .showGradient=${!1}
+            temperatureUnit="\u00B0C"
+            hourFormat="24"
+            .translations=${this._buildGridTranslations()}
+            .copiedWeekday=${this._copiedSchedule?.weekday}
+            .editorOpen=${!!this._editingWeekday}
+            .currentProfile=${this._selectedProfile}
+            @weekday-click=${this._onWeekdayClick}
+            @copy-schedule=${this._onCopySchedule}
+            @paste-schedule=${this._onPasteSchedule}
+          ></hmip-schedule-grid>
+        </div>
+
+        <hmip-schedule-editor
+          .open=${!!this._editingWeekday}
+          .weekday=${this._editingWeekday}
+          .scheduleData=${t}
+          .minTemp=${e.min_temp ?? 5}
+          .maxTemp=${e.max_temp ?? 30.5}
+          .tempStep=${e.step ?? 0.5}
+          temperatureUnit="\u00B0C"
+          hourFormat="24"
+          .translations=${this._buildEditorTranslations()}
+          @save-schedule=${this._onSaveSchedule}
+          @validation-failed=${this._onValidationFailed}
+          @editor-closed=${this._onEditorClosed}
+        ></hmip-schedule-editor>
       </div>
+
+      ${
+        this._saving
+          ? F`<div class="saving-overlay">${this._l(
+              "device_schedule.saving",
+            )}</div>`
+          : K
+      }
     `;
   }
-  _renderWeekdayOverview() {
-    const e = this._climateData.schedule_data,
-      t = this._l("device_schedule.weekdays").split(",");
-    return K`
-      <div class="weekday-overview">
-        ${Ve.map(
-          (i, s) => K`
-            <button
-              class="weekday-tab ${i === this._selectedWeekday ? "active" : ""}"
-              @click=${() => this._handleWeekdaySelect(i)}
-            >
-              <span class="weekday-name">${t[s]}</span>
-              <span class="weekday-periods"> ${
-                e[i]?.periods?.length ?? 0
-              } </span>
-            </button>
-          `,
-        )}
-      </div>
-    `;
+  _onDeviceAddEvent() {
+    if (!this._deviceData) return;
+    const e = this._deviceData.schedule_data?.entries ?? {},
+      t = this._deviceData.max_entries;
+    if (t && Object.keys(e).length >= t)
+      return void ze(this, {
+        message: this._l("device_schedule.max_entries", { max: t }),
+      });
+    const i = (function (e) {
+        const t = {
+          weekdays: [],
+          time: "00:00",
+          condition: "fixed_time",
+          astro_type: null,
+          astro_offset_minutes: 0,
+          target_channels: [],
+          level: 0,
+          level_2: null,
+          duration: null,
+          ramp_time: null,
+        };
+        return "cover" === e && (t.level_2 = 0), t;
+      })(this._deviceData.schedule_domain ?? void 0),
+      s = this._deviceData.available_target_channels;
+    if (s) {
+      const e = Object.keys(s)[0];
+      e && (i.target_channels = [e]);
+    }
+    const r = Object.keys(e).map((e) => parseInt(e, 10)),
+      a = r.length > 0 ? Math.max(...r) : 0;
+    (this._deviceEditingGroupNo = String(a + 1)),
+      (this._deviceEditingEntry = { ...i }),
+      (this._deviceIsNewEvent = !0),
+      (this._deviceShowEditor = !0);
   }
-  _renderWeekdayEditor() {
-    const e = `weekday_${this._selectedWeekday.toLowerCase()}`;
-    return K`
-      <div class="weekday-editor">
-        <h3>${this._l(`device_schedule.${e}`)}</h3>
-
-        <div class="base-temp-row">
-          <label>${this._l("device_schedule.base_temperature")}:</label>
-          <input
-            type="number"
-            .value=${String(this._editingBaseTemp)}
-            min=${this._climateData?.min_temp ?? 5}
-            max=${this._climateData?.max_temp ?? 30.5}
-            step=${this._climateData?.step ?? 0.5}
-            @change=${(e) => {
-              this._editingBaseTemp = parseFloat(e.target.value);
-            }}
-          />
-          &deg;C
-        </div>
-
-        <div class="periods-list">
-          ${this._editingPeriods.map(
-            (e, t) => K`
-              <div class="period-row">
-                <label>${this._l("device_schedule.from")}:</label>
-                <input
-                  type="time"
-                  .value=${e.starttime}
-                  @change=${(e) =>
-                    this._handlePeriodChange(t, "starttime", e.target.value)}
-                />
-                <label>${this._l("device_schedule.to")}:</label>
-                <input
-                  type="time"
-                  .value=${"24:00" === e.endtime ? "23:59" : e.endtime}
-                  @change=${(e) =>
-                    this._handlePeriodChange(t, "endtime", e.target.value)}
-                />
-                <label>${this._l("device_schedule.temperature")}:</label>
-                <input
-                  type="number"
-                  .value=${String(e.temperature)}
-                  min=${this._climateData?.min_temp ?? 5}
-                  max=${this._climateData?.max_temp ?? 30.5}
-                  step=${this._climateData?.step ?? 0.5}
-                  @change=${(e) =>
-                    this._handlePeriodChange(
-                      t,
-                      "temperature",
-                      parseFloat(e.target.value),
-                    )}
-                />
-                &deg;C
-                <button class="delete-btn" @click=${() =>
-                  this._handleDeletePeriod(t)}>
-                  ${this._l("device_schedule.delete_period")}
-                </button>
-              </div>
-            `,
-          )}
-        </div>
-
-        <div class="editor-actions">
-          <button class="action-btn" @click=${this._handleAddPeriod}>
-            + ${this._l("device_schedule.add_period")}
-          </button>
-          <button
-            class="action-btn primary"
-            ?disabled=${this._saving}
-            @click=${this._handleSaveClimateWeekday}
-          >
-            ${this._l(
-              this._saving ? "device_schedule.saving" : "device_schedule.save",
-            )}
-          </button>
-        </div>
-      </div>
-    `;
+  _onDeviceEditEvent(e) {
+    const t = e.detail.entry;
+    (this._deviceEditingGroupNo = t.groupNo),
+      (this._deviceEditingEntry = { ...t }),
+      (this._deviceIsNewEvent = !1),
+      (this._deviceShowEditor = !0);
+  }
+  async _onDeviceDeleteEvent(e) {
+    if (!confirm(this._l("device_schedule.confirm_delete"))) return;
+    if (!this._deviceData || !this._selectedDevice) return;
+    const t = { ...(this._deviceData.schedule_data?.entries ?? {}) };
+    delete t[e.detail.entry.groupNo], (this._saving = !0);
+    try {
+      await Se(this.hass, this.entryId, this._selectedDevice.address, {
+        entries: xt(t),
+      }),
+        ze(this, { message: this._l("device_schedule.save_success") }),
+        await this._loadSchedule(this._selectedDevice);
+    } catch {
+      ze(this, { message: this._l("device_schedule.save_failed") });
+    } finally {
+      this._saving = !1;
+    }
+  }
+  async _onDeviceSaveEvent(e) {
+    if (!this._deviceData || !this._selectedDevice) return;
+    const { entry: t, groupNo: i } = e.detail,
+      s = { ...(this._deviceData.schedule_data?.entries ?? {}), [i]: t };
+    (this._saving = !0),
+      (this._deviceShowEditor = !1),
+      (this._deviceEditingEntry = void 0),
+      (this._deviceEditingGroupNo = void 0),
+      (this._deviceIsNewEvent = !1);
+    try {
+      await Se(this.hass, this.entryId, this._selectedDevice.address, {
+        entries: xt(s),
+      }),
+        ze(this, { message: this._l("device_schedule.save_success") }),
+        await this._loadSchedule(this._selectedDevice);
+    } catch {
+      ze(this, { message: this._l("device_schedule.save_failed") });
+    } finally {
+      this._saving = !1;
+    }
+  }
+  _onDeviceEditorClosed() {
+    (this._deviceShowEditor = !1),
+      (this._deviceEditingEntry = void 0),
+      (this._deviceEditingGroupNo = void 0),
+      (this._deviceIsNewEvent = !1);
+  }
+  _buildDeviceListTranslations() {
+    const e = this._l("device_schedule.weekdays").split(",");
+    return {
+      weekdayShortLabels: {
+        MONDAY: e[0],
+        TUESDAY: e[1],
+        WEDNESDAY: e[2],
+        THURSDAY: e[3],
+        FRIDAY: e[4],
+        SATURDAY: e[5],
+        SUNDAY: e[6],
+      },
+      time: this._l("device_schedule.time"),
+      weekdays: this._l("device_schedule.weekdays_label"),
+      duration: this._l("device_schedule.duration"),
+      state: this._l("device_schedule.level"),
+      addEvent: this._l("device_schedule.add_event"),
+      slat: this._l("device_schedule.slat"),
+      noScheduleEvents: this._l("device_schedule.no_schedule_data"),
+      loading: this._l("common.loading"),
+    };
+  }
+  _buildDeviceEditorTranslations() {
+    const e = this._l("device_schedule.weekdays").split(",");
+    return {
+      weekdayShortLabels: {
+        MONDAY: e[0],
+        TUESDAY: e[1],
+        WEDNESDAY: e[2],
+        THURSDAY: e[3],
+        FRIDAY: e[4],
+        SATURDAY: e[5],
+        SUNDAY: e[6],
+      },
+      addEvent: this._l("device_schedule.add_event"),
+      editEvent: this._l("device_schedule.edit_event"),
+      cancel: this._l("common.cancel"),
+      save: this._l("device_schedule.save"),
+      time: this._l("device_schedule.time"),
+      condition: this._l("device_schedule.condition"),
+      weekdaysLabel: this._l("device_schedule.weekdays_label"),
+      stateLabel: this._l("device_schedule.level"),
+      duration: this._l("device_schedule.duration"),
+      rampTime: this._l("device_schedule.ramp_time"),
+      channels: this._l("device_schedule.target_channel"),
+      levelOn: this._l("device_schedule.level_on"),
+      levelOff: this._l("device_schedule.level_off"),
+      slat: this._l("device_schedule.slat"),
+      astroSunrise: this._l("device_schedule.astro_sunrise"),
+      astroSunset: this._l("device_schedule.astro_sunset"),
+      astroOffset: this._l("device_schedule.astro_offset"),
+      confirmDelete: this._l("device_schedule.confirm_delete"),
+      conditionLabels: {
+        fixed_time: this._l("device_schedule.condition_fixed_time"),
+        astro: this._l("device_schedule.condition_astro"),
+        fixed_if_before_astro: this._l(
+          "device_schedule.condition_fixed_if_before_astro",
+        ),
+        astro_if_before_fixed: this._l(
+          "device_schedule.condition_astro_if_before_fixed",
+        ),
+        fixed_if_after_astro: this._l(
+          "device_schedule.condition_fixed_if_after_astro",
+        ),
+        astro_if_after_fixed: this._l(
+          "device_schedule.condition_astro_if_after_fixed",
+        ),
+        earliest: this._l("device_schedule.condition_earliest"),
+        latest: this._l("device_schedule.condition_latest"),
+      },
+    };
   }
   _renderDeviceSchedule() {
     const e = this._deviceData,
       t = e.schedule_data,
       i = t?.entries ?? {},
-      s = Object.keys(i).length;
-    return K`
+      s = Object.keys(i).length,
+      r = e.schedule_domain ?? void 0,
+      a = e.available_target_channels;
+    return F`
       <div class="schedule-content">
         <div class="toolbar">
           <div class="schedule-info">
             ${this._l("device_schedule.entries", { count: s })} |
             ${this._l("device_schedule.max_entries", { max: e.max_entries })}
-            ${e.schedule_domain ? K` | ${e.schedule_domain}` : H}
+            ${e.schedule_domain ? F` | ${e.schedule_domain}` : K}
           </div>
           <div class="toolbar-actions">
             <button class="action-btn" @click=${this._handleExport}>
@@ -6147,61 +9925,39 @@ let Ke = class extends oe {
           </div>
         </div>
 
-        ${
-          0 === s
-            ? K`<div class="empty-state">${this._l(
-                "device_schedule.no_schedule_data",
-              )}</div>`
-            : K`
-              <div class="entries-table">
-                <div class="entries-header">
-                  <span>#</span>
-                  <span>${this._l("device_schedule.weekdays")}</span>
-                  <span>${this._l("device_schedule.time")}</span>
-                  <span>${this._l("device_schedule.condition")}</span>
-                </div>
-                ${Object.entries(i).map(
-                  ([e, t]) => K`
-                    <div class="entry-row">
-                      <span class="entry-key">${e}</span>
-                      <span>${this._formatEntryWeekdays(t)}</span>
-                      <span>${this._formatEntryTime(t)}</span>
-                      <span>${this._formatEntryCondition(t)}</span>
-                    </div>
-                  `,
-                )}
-              </div>
-            `
-        }
-
-        <div class="editor-actions">
-          <button
-            class="action-btn primary"
-            ?disabled=${this._saving}
-            @click=${this._handleSaveDeviceSchedule}
-          >
-            ${this._l(
-              this._saving ? "device_schedule.saving" : "device_schedule.save",
-            )}
-          </button>
+        <div class="device-schedule-container">
+          <hmip-device-schedule-list
+            .scheduleData=${i}
+            .domain=${r}
+            .editable=${!0}
+            .translations=${this._buildDeviceListTranslations()}
+            @add-event=${this._onDeviceAddEvent}
+            @edit-event=${this._onDeviceEditEvent}
+            @delete-event=${this._onDeviceDeleteEvent}
+          ></hmip-device-schedule-list>
         </div>
+
+        <hmip-device-schedule-editor
+          .open=${this._deviceShowEditor}
+          .entry=${this._deviceEditingEntry}
+          .groupNo=${this._deviceEditingGroupNo}
+          .isNewEvent=${this._deviceIsNewEvent}
+          .domain=${r}
+          .availableTargetChannels=${a}
+          .translations=${this._buildDeviceEditorTranslations()}
+          @save-event=${this._onDeviceSaveEvent}
+          @editor-closed=${this._onDeviceEditorClosed}
+        ></hmip-device-schedule-editor>
       </div>
+
+      ${
+        this._saving
+          ? F`<div class="saving-overlay">${this._l(
+              "device_schedule.saving",
+            )}</div>`
+          : K
+      }
     `;
-  }
-  _formatEntryWeekdays(e) {
-    const t = this._l("device_schedule.weekdays").split(",");
-    return (e.weekdays ?? [])
-      .map((e) => {
-        const i = Ve.indexOf(e);
-        return i >= 0 ? t[i] : e;
-      })
-      .join(", ");
-  }
-  _formatEntryTime(e) {
-    return String(e.time ?? e.begin ?? "");
-  }
-  _formatEntryCondition(e) {
-    return String(e.condition_type ?? e.condition ?? "");
   }
   static {
     this.styles = [
@@ -6311,156 +10067,19 @@ let Ke = class extends oe {
         cursor: not-allowed;
       }
 
-      .weekday-overview {
-        display: flex;
-        border-bottom: 1px solid var(--divider-color, #e0e0e0);
-      }
-
-      .weekday-tab {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 8px 4px;
-        border: none;
-        background: none;
-        cursor: pointer;
-        font-family: inherit;
-        font-size: 13px;
-        color: var(--primary-text-color);
-        border-bottom: 2px solid transparent;
-      }
-
-      .weekday-tab.active {
-        border-bottom-color: var(--primary-color, #03a9f4);
-        color: var(--primary-color, #03a9f4);
-        font-weight: 500;
-      }
-
-      .weekday-tab:hover {
-        background: var(--secondary-background-color, #fafafa);
-      }
-
-      .weekday-periods {
-        font-size: 11px;
-        color: var(--secondary-text-color);
-        margin-top: 2px;
-      }
-
-      .weekday-editor {
+      .climate-grid-container {
         padding: 16px;
       }
 
-      .weekday-editor h3 {
-        margin: 0 0 12px;
-        font-size: 16px;
-        font-weight: 500;
-      }
-
-      .base-temp-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 16px;
-        font-size: 14px;
-      }
-
-      .base-temp-row input {
-        width: 70px;
-        padding: 4px 8px;
-        border: 1px solid var(--divider-color, #e0e0e0);
-        border-radius: 4px;
-        font-size: 14px;
-        font-family: inherit;
-      }
-
-      .periods-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-bottom: 16px;
-      }
-
-      .period-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px;
-        background: var(--secondary-background-color, #fafafa);
-        border-radius: 4px;
-        flex-wrap: wrap;
-        font-size: 14px;
-      }
-
-      .period-row input[type="time"] {
-        padding: 4px 8px;
-        border: 1px solid var(--divider-color, #e0e0e0);
-        border-radius: 4px;
-        font-size: 14px;
-        font-family: inherit;
-      }
-
-      .period-row input[type="number"] {
-        width: 70px;
-        padding: 4px 8px;
-        border: 1px solid var(--divider-color, #e0e0e0);
-        border-radius: 4px;
-        font-size: 14px;
-        font-family: inherit;
-      }
-
-      .delete-btn {
-        background: none;
-        border: 1px solid var(--error-color, #db4437);
-        color: var(--error-color, #db4437);
-        padding: 2px 8px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 12px;
-        font-family: inherit;
-        margin-left: auto;
-      }
-
-      .delete-btn:hover {
-        background: var(--error-color, #db4437);
-        color: #fff;
-      }
-
-      .editor-actions {
-        display: flex;
-        justify-content: space-between;
-        padding: 16px;
-        border-top: 1px solid var(--divider-color, #e0e0e0);
-      }
-
-      .entries-table {
-        font-size: 14px;
-      }
-
-      .entries-header {
-        display: grid;
-        grid-template-columns: 40px 1fr 100px 120px;
-        gap: 8px;
-        padding: 8px 16px;
-        font-weight: 500;
-        background: var(--secondary-background-color, #fafafa);
-        border-bottom: 1px solid var(--divider-color, #e0e0e0);
-      }
-
-      .entry-row {
-        display: grid;
-        grid-template-columns: 40px 1fr 100px 120px;
-        gap: 8px;
-        padding: 8px 16px;
-        border-bottom: 1px solid var(--divider-color, #e0e0e0);
-      }
-
-      .entry-row:last-child {
-        border-bottom: none;
-      }
-
-      .entry-key {
+      .saving-overlay {
+        text-align: center;
+        padding: 12px;
         color: var(--secondary-text-color);
+        font-style: italic;
+      }
+
+      .device-schedule-container {
+        padding: 16px;
       }
 
       @media (max-width: 600px) {
@@ -6472,51 +10091,31 @@ let Ke = class extends oe {
         .toolbar-actions {
           flex-wrap: wrap;
         }
-
-        .period-row {
-          flex-direction: column;
-          align-items: stretch;
-        }
-
-        .period-row input {
-          width: 100% !important;
-        }
-
-        .delete-btn {
-          margin-left: 0;
-        }
-
-        .entries-header,
-        .entry-row {
-          grid-template-columns: 1fr;
-          gap: 4px;
-        }
-
-        .entries-header {
-          display: none;
-        }
       }
     `,
     ];
   }
 };
-e([he({ attribute: !1 })], Ke.prototype, "hass", void 0),
-  e([he()], Ke.prototype, "entryId", void 0),
-  e([he()], Ke.prototype, "deviceAddress", void 0),
-  e([he()], Ke.prototype, "deviceName", void 0),
-  e([pe()], Ke.prototype, "_devices", void 0),
-  e([pe()], Ke.prototype, "_selectedDevice", void 0),
-  e([pe()], Ke.prototype, "_climateData", void 0),
-  e([pe()], Ke.prototype, "_deviceData", void 0),
-  e([pe()], Ke.prototype, "_selectedProfile", void 0),
-  e([pe()], Ke.prototype, "_selectedWeekday", void 0),
-  e([pe()], Ke.prototype, "_editingPeriods", void 0),
-  e([pe()], Ke.prototype, "_editingBaseTemp", void 0),
-  e([pe()], Ke.prototype, "_loading", void 0),
-  e([pe()], Ke.prototype, "_saving", void 0),
-  e([pe()], Ke.prototype, "_error", void 0),
-  (Ke = e([_e("hm-device-schedule")], Ke));
-let je = class extends oe {
+e([pe({ attribute: !1 })], Nt.prototype, "hass", void 0),
+  e([pe()], Nt.prototype, "entryId", void 0),
+  e([pe()], Nt.prototype, "deviceAddress", void 0),
+  e([pe()], Nt.prototype, "deviceName", void 0),
+  e([_e()], Nt.prototype, "_devices", void 0),
+  e([_e()], Nt.prototype, "_selectedDevice", void 0),
+  e([_e()], Nt.prototype, "_climateData", void 0),
+  e([_e()], Nt.prototype, "_deviceData", void 0),
+  e([_e()], Nt.prototype, "_selectedProfile", void 0),
+  e([_e()], Nt.prototype, "_editingWeekday", void 0),
+  e([_e()], Nt.prototype, "_copiedSchedule", void 0),
+  e([_e()], Nt.prototype, "_loading", void 0),
+  e([_e()], Nt.prototype, "_saving", void 0),
+  e([_e()], Nt.prototype, "_error", void 0),
+  e([_e()], Nt.prototype, "_deviceEditingEntry", void 0),
+  e([_e()], Nt.prototype, "_deviceEditingGroupNo", void 0),
+  e([_e()], Nt.prototype, "_deviceShowEditor", void 0),
+  e([_e()], Nt.prototype, "_deviceIsNewEvent", void 0),
+  (Nt = e([ue("hm-device-schedule")], Nt));
+let Rt = class extends oe {
   constructor() {
     super(...arguments),
       (this.narrow = !1),
@@ -6561,8 +10160,8 @@ let je = class extends oe {
       n = t.get("channel") || "",
       o = t.get("channel_type") || "",
       d = t.get("paramset") || "MASTER",
-      c = t.get("sender") || "",
-      l = t.get("receiver") || "";
+      l = t.get("sender") || "",
+      c = t.get("receiver") || "";
     s && (this._entryId = s),
       i &&
         this._navigateTo(i, {
@@ -6571,8 +10170,8 @@ let je = class extends oe {
           channel: n,
           channelType: o,
           paramsetKey: d,
-          senderAddress: c,
-          receiverAddress: l,
+          senderAddress: l,
+          receiverAddress: c,
         });
   }
   _updateUrlHash() {
@@ -6639,7 +10238,7 @@ let je = class extends oe {
   render() {
     switch (this._view) {
       case "device-list":
-        return K`
+        return F`
           <hm-device-list
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -6652,7 +10251,7 @@ let je = class extends oe {
           ></hm-device-list>
         `;
       case "device-detail":
-        return K`
+        return F`
           <hm-device-detail
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -6668,7 +10267,7 @@ let je = class extends oe {
           ></hm-device-detail>
         `;
       case "channel-config":
-        return K`
+        return F`
           <hm-channel-config
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -6685,7 +10284,7 @@ let je = class extends oe {
           ></hm-channel-config>
         `;
       case "change-history":
-        return K`
+        return F`
           <hm-change-history
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -6703,7 +10302,7 @@ let je = class extends oe {
           ></hm-change-history>
         `;
       case "device-links":
-        return K`
+        return F`
           <hm-device-links
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -6720,7 +10319,7 @@ let je = class extends oe {
           ></hm-device-links>
         `;
       case "link-config":
-        return K`
+        return F`
           <hm-link-config
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -6741,7 +10340,7 @@ let je = class extends oe {
           ></hm-link-config>
         `;
       case "add-link":
-        return K`
+        return F`
           <hm-add-link
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -6760,7 +10359,7 @@ let je = class extends oe {
           ></hm-add-link>
         `;
       case "device-schedule":
-        return K`
+        return F`
           <hm-device-schedule
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -6800,25 +10399,25 @@ let je = class extends oe {
   `;
   }
 };
-e([he({ attribute: !1 })], je.prototype, "hass", void 0),
-  e([he({ attribute: !1 })], je.prototype, "panel", void 0),
-  e([he({ type: Boolean, reflect: !0 })], je.prototype, "narrow", void 0),
-  e([pe()], je.prototype, "_view", void 0),
-  e([pe()], je.prototype, "_entryId", void 0),
-  e([pe()], je.prototype, "_entries", void 0),
-  e([pe()], je.prototype, "_selectedDevice", void 0),
-  e([pe()], je.prototype, "_selectedInterfaceId", void 0),
-  e([pe()], je.prototype, "_selectedChannel", void 0),
-  e([pe()], je.prototype, "_selectedChannelType", void 0),
-  e([pe()], je.prototype, "_selectedParamsetKey", void 0),
-  e([pe()], je.prototype, "_selectedDeviceName", void 0),
-  e([pe()], je.prototype, "_selectedSenderAddress", void 0),
-  e([pe()], je.prototype, "_selectedReceiverAddress", void 0),
-  e([pe()], je.prototype, "_senderDeviceName", void 0),
-  e([pe()], je.prototype, "_senderDeviceModel", void 0),
-  e([pe()], je.prototype, "_senderChannelTypeLabel", void 0),
-  e([pe()], je.prototype, "_receiverDeviceName", void 0),
-  e([pe()], je.prototype, "_receiverDeviceModel", void 0),
-  e([pe()], je.prototype, "_receiverChannelTypeLabel", void 0),
-  (je = e([_e("homematic-config")], je));
-export { je as HomematicConfigPanel };
+e([pe({ attribute: !1 })], Rt.prototype, "hass", void 0),
+  e([pe({ attribute: !1 })], Rt.prototype, "panel", void 0),
+  e([pe({ type: Boolean, reflect: !0 })], Rt.prototype, "narrow", void 0),
+  e([_e()], Rt.prototype, "_view", void 0),
+  e([_e()], Rt.prototype, "_entryId", void 0),
+  e([_e()], Rt.prototype, "_entries", void 0),
+  e([_e()], Rt.prototype, "_selectedDevice", void 0),
+  e([_e()], Rt.prototype, "_selectedInterfaceId", void 0),
+  e([_e()], Rt.prototype, "_selectedChannel", void 0),
+  e([_e()], Rt.prototype, "_selectedChannelType", void 0),
+  e([_e()], Rt.prototype, "_selectedParamsetKey", void 0),
+  e([_e()], Rt.prototype, "_selectedDeviceName", void 0),
+  e([_e()], Rt.prototype, "_selectedSenderAddress", void 0),
+  e([_e()], Rt.prototype, "_selectedReceiverAddress", void 0),
+  e([_e()], Rt.prototype, "_senderDeviceName", void 0),
+  e([_e()], Rt.prototype, "_senderDeviceModel", void 0),
+  e([_e()], Rt.prototype, "_senderChannelTypeLabel", void 0),
+  e([_e()], Rt.prototype, "_receiverDeviceName", void 0),
+  e([_e()], Rt.prototype, "_receiverDeviceModel", void 0),
+  e([_e()], Rt.prototype, "_receiverChannelTypeLabel", void 0),
+  (Rt = e([ue("homematic-config")], Rt));
+export { Rt as HomematicConfigPanel };

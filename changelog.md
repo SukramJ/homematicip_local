@@ -96,11 +96,15 @@
 
 - **Multi-instance panel registration**: Fixed the configuration panel disappearing when multiple CCU instances are configured and not all have the panel enabled. The panel is now kept registered as long as at least one config entry has it enabled, instead of letting the last-loaded entry's setting override all others.
 
-## Bump aiohomematic to [2026.2.21](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.21)
+## Bump aiohomematic to [2026.2.23](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.23)
 
 ### Documentation (aiohomematic)
 
 - **Comprehensive documentation audit** (2026.2.21): ~20 documentation files updated with corrected class names, API signatures, coordinator access patterns, event types, constant values, exception hierarchy, and sequence diagrams.
+
+### New Features (aiohomematic, continued)
+
+- **Schedule domain property for week profiles** (2026.2.22): `schedule_domain` property on `WeekProfileDataPoint` and `WeekProfileDataPointProtocol` that returns the `DataPointCategory` (switch, light, cover, valve) for non-climate schedule devices. Enables consumers like the Climate Schedule Card to distinguish schedule types and adapt their UI accordingly.
 
 ### Architecture (aiohomematic)
 
@@ -181,6 +185,7 @@
 
 ### Bug Fixes (aiohomematic)
 
+- **Clear deleted schedule entries on CCU** (2026.2.23): `DefaultWeekProfile.convert_dict_to_raw_schedule` now explicitly zeroes out `WEEKDAY` and `TARGET_CHANNELS` for unused groups (1-24) that are not in the schedule. This ensures that deleted schedule entries are properly deactivated on the CCU, since `put_paramset` only updates keys that are sent.
 - **LINK paramset parameter translations** (2026.2.18): `get_parameter_translation()` and `get_parameter_value_translation()` now strip `SHORT_`/`LONG_` prefixes and retry the base name, resolving translations for link parameters (e.g. `SHORT_ON_LEVEL` → "Einschalthelligkeit (kurz)"). Added 138 parameter translations and 1158 value translations for link-specific parameters.
 - **Fix delayed device creation failing on multi-interface devices** (2026.2.18): When a new HmIP device was paired, the CCU sends `newDevices` on multiple interfaces (e.g. HmIP-RF and VirtualDevices) with the same device address. `_delayed_device_descriptions` was keyed by device address only, causing the first call to consume descriptions from all interfaces. Fixed by making `_delayed_device_descriptions` interface-aware.
 - **Preserve channel postfix when translation suppresses parameter name** (2026.2.17): When a parameter translation resolves to an empty string for a multi-channel data point, the channel disambiguation postfix (e.g. `ch13`) was lost because the truthiness check treated `""` the same as `None`. Changed to an identity check (`is not None`) so that an empty translation correctly yields `translated_name="ch13"` instead of removing the name entirely.
@@ -209,7 +214,7 @@
 - **ClimateWeekProfile**: Simple schedule format now uses Pydantic models for automatic validation. The existing user-facing format remains unchanged, but input validation is now more robust with clear error messages.
 - **DefaultWeekProfile**: Refactored schedule cache to use human-readable Pydantic models (`SimpleSchedule`, `SimpleScheduleEntry`) instead of complex dictionary format.
 
-## Bump aiohomematic-config to [2026.2.8](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.1...2026.2.8)
+## Bump aiohomematic-config to [2026.2.9](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.1...2026.2.9)
 
 New companion library providing device configuration utilities for the integration.
 
@@ -220,6 +225,7 @@ New companion library providing device configuration utilities for the integrati
 - **Change history module** (2026.2.6): `ConfigChangeLog` class with FIFO-capped storage, filtering, and serialization. `ConfigChangeEntry` frozen dataclass for immutable change records. `build_change_diff()` helper for computing old/new value diffs.
 - **Async profile loading** (2026.2.7): `ProfileStore.get_profiles()` and `ProfileStore.match_active_profile()` are now async. Fixed blocking `read_text`/`open` calls inside the async event loop (uses `asyncio.to_thread`). **Breaking**: callers must now await these methods.
 - **Schedule facade module** (2026.2.8): `schedule_facade` module for schedule management in the configuration panel. `list_schedule_devices()` for discovering devices with schedule support. `get_climate_schedule()` / `set_climate_schedule_weekday()` / `set_climate_active_profile()` for climate schedules. `get_device_schedule()` / `set_device_schedule()` for generic device schedules.
+- **Schedule domain from upstream** (2026.2.9): Use `schedule_domain` property from aiohomematic instead of local heuristic. Removed `_get_schedule_domain()` helper and `ScheduleType` import from `schedule_facade`.
 
 # Version [2.2.4](https://github.com/SukramJ/homematicip_local/compare/2.2.3...2.2.4) (2026-02-01)
 

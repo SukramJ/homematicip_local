@@ -38,6 +38,7 @@ ATTR_MAX_TEMP: Final = "max_temp"
 ATTR_MIN_TEMP: Final = "min_temp"
 ATTR_SCHEDULE_API_VERSION: Final = "schedule_api_version"
 ATTR_SCHEDULE_CHANNEL_ADDRESS: Final = "schedule_channel_address"
+ATTR_SCHEDULE_DOMAIN: Final = "schedule_domain"
 ATTR_SCHEDULE_TYPE: Final = "schedule_type"
 
 _LOGGER = logging.getLogger(__name__)
@@ -242,6 +243,7 @@ class AioHomematicWeekProfileSensor(AioHomematicGenericEntity[WeekProfileDataPoi
             ATTR_MIN_TEMP,
             ATTR_SCHEDULE_API_VERSION,
             ATTR_SCHEDULE_CHANNEL_ADDRESS,
+            ATTR_SCHEDULE_DOMAIN,
             ATTR_SCHEDULE_TYPE,
         }
     )
@@ -269,6 +271,8 @@ class AioHomematicWeekProfileSensor(AioHomematicGenericEntity[WeekProfileDataPoi
                 attributes[ATTR_SCHEDULE_DATA] = schedule
         elif schedule := self._data_point.schedule:
             attributes[ATTR_SCHEDULE_API_VERSION] = SCHEDULE_API_VERSION
+            if schedule_domain := self._data_point.schedule_domain:
+                attributes[ATTR_SCHEDULE_DOMAIN] = schedule_domain
             if target_channels := self._data_point.available_target_channels:
                 attributes[ATTR_AVAILABLE_TARGET_CHANNELS] = target_channels
             attributes[ATTR_SCHEDULE_DATA] = schedule
