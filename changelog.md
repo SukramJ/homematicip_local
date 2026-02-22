@@ -68,6 +68,10 @@
 
 - **CCU backup agent**: New `LocalBackupAgent` that appears in the HA backup UI as a backup storage location. HA backups can be stored in the CCU backup directory and managed (list, download, delete) via the standard backup UI. One agent is registered per CCU config entry (multi-CCU capable). Existing CCU `.sbk` pre/post-backup hooks are unchanged.
 
+- **Configuration panel: Schedule management**: Schedule editing integrated into the configuration panel via WebSocket API. List devices with schedule support, read/write climate schedules per profile and weekday, set the active climate profile, and read/write generic device schedules — all from the panel UI.
+
+- **Configuration panel: Reload device config**: New WebSocket command to reload a device's configuration from the CCU without restarting the integration.
+
 ### Changed
 
 - **Entity names from backend translations**: Removed redundant local entity translations (binary_sensor, button, lock, number, select, sensor, switch, valve) from strings.json and translation files. Entity names are now provided by the backend CCU translation system via `translated_name`. Only climate (preset modes) and event (keypress types) translations remain local.
@@ -92,7 +96,11 @@
 
 - **Multi-instance panel registration**: Fixed the configuration panel disappearing when multiple CCU instances are configured and not all have the panel enabled. The panel is now kept registered as long as at least one config entry has it enabled, instead of letting the last-loaded entry's setting override all others.
 
-## Bump aiohomematic to [2026.2.20](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.20)
+## Bump aiohomematic to [2026.2.21](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.21)
+
+### Documentation (aiohomematic)
+
+- **Comprehensive documentation audit** (2026.2.21): ~20 documentation files updated with corrected class names, API signatures, coordinator access patterns, event types, constant values, exception hierarchy, and sequence diagrams.
 
 ### Architecture (aiohomematic)
 
@@ -201,7 +209,7 @@
 - **ClimateWeekProfile**: Simple schedule format now uses Pydantic models for automatic validation. The existing user-facing format remains unchanged, but input validation is now more robust with clear error messages.
 - **DefaultWeekProfile**: Refactored schedule cache to use human-readable Pydantic models (`SimpleSchedule`, `SimpleScheduleEntry`) instead of complex dictionary format.
 
-## Bump aiohomematic-config to [2026.2.6](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.1...2026.2.6)
+## Bump aiohomematic-config to [2026.2.8](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.1...2026.2.8)
 
 New companion library providing device configuration utilities for the integration.
 
@@ -210,6 +218,8 @@ New companion library providing device configuration utilities for the integrati
 - **Parameter filtering and section titles** (2026.2.4): Locale-aware section titles in `ParameterGrouper` (German translations). Parameters without CCU translation are filtered (matches CCU WebUI easymode behavior). VALUE_LIST parameters always get `option_labels` with humanized fallback.
 - **Link parameter metadata & profiles** (2026.2.5): `link_param_metadata` module for classifying LINK parameters (SHORT/LONG grouping, time pair detection, category classification). `ProfileStore` for loading easymode profile definitions from CCU-extracted JSON. `FormSchemaGenerator` enriches LINK parameters with metadata via `enrich_link_metadata` flag. Time preset tables for on/off, delay, and ramp durations.
 - **Change history module** (2026.2.6): `ConfigChangeLog` class with FIFO-capped storage, filtering, and serialization. `ConfigChangeEntry` frozen dataclass for immutable change records. `build_change_diff()` helper for computing old/new value diffs.
+- **Async profile loading** (2026.2.7): `ProfileStore.get_profiles()` and `ProfileStore.match_active_profile()` are now async. Fixed blocking `read_text`/`open` calls inside the async event loop (uses `asyncio.to_thread`). **Breaking**: callers must now await these methods.
+- **Schedule facade module** (2026.2.8): `schedule_facade` module for schedule management in the configuration panel. `list_schedule_devices()` for discovering devices with schedule support. `get_climate_schedule()` / `set_climate_schedule_weekday()` / `set_climate_active_profile()` for climate schedules. `get_device_schedule()` / `set_device_schedule()` for generic device schedules.
 
 # Version [2.2.4](https://github.com/SukramJ/homematicip_local/compare/2.2.3...2.2.4) (2026-02-01)
 

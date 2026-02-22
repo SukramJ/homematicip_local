@@ -6,6 +6,7 @@ import dataclasses
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
+from pydantic import ValidationError
 import voluptuous as vol
 
 from aiohomematic.const import ParamsetKey
@@ -18,7 +19,13 @@ from aiohomematic_config import (
     ProfileStore,
     build_change_diff,
     export_configuration,
+    get_climate_schedule,
+    get_device_schedule,
     import_configuration,
+    list_schedule_devices,
+    set_climate_active_profile,
+    set_climate_schedule_weekday,
+    set_device_schedule,
 )
 from homeassistant.components.websocket_api import async_register_command
 from homeassistant.components.websocket_api.connection import ActiveConnection
@@ -105,6 +112,14 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     async_register_command(hass, ws_add_link)
     async_register_command(hass, ws_remove_link)
     async_register_command(hass, ws_get_linkable_channels)
+    # Schedule commands
+    async_register_command(hass, ws_list_schedule_devices)
+    async_register_command(hass, ws_get_climate_schedule)
+    async_register_command(hass, ws_set_climate_schedule_weekday)
+    async_register_command(hass, ws_set_climate_active_profile)
+    async_register_command(hass, ws_get_device_schedule)
+    async_register_command(hass, ws_set_device_schedule)
+    async_register_command(hass, ws_reload_device_config)
 
 
 def _get_control_unit(hass: HomeAssistant, *, entry_id: str) -> ControlUnit | None:
@@ -1326,3 +1341,247 @@ async def ws_get_linkable_channels(
         locale=hass.config.language,
     )
     connection.send_result(msg["id"], {"channels": [dataclasses.asdict(ch) for ch in channels]})
+
+
+# ---------------------------------------------------------------------------
+# Schedule commands
+# ---------------------------------------------------------------------------
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/config/list_schedule_devices",
+        vol.Required("entry_id"): str,
+    }
+)
+@async_response
+async def ws_list_schedule_devices(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return all devices with schedule support."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    devices = list_schedule_devices(devices=control.central.device_coordinator.devices)
+    connection.send_result(msg["id"], {"devices": [dataclasses.asdict(d) for d in devices]})
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/config/get_climate_schedule",
+        vol.Required("entry_id"): str,
+        vol.Required("device_address"): str,
+        vol.Optional("profile"): str,
+    }
+)
+@async_response
+async def ws_get_climate_schedule(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return climate schedule data."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    device = control.central.device_coordinator.get_device(address=msg["device_address"])
+    if device is None:
+        connection.send_error(msg["id"], "device_not_found", "Device not found")
+        return
+
+    try:
+        data = await get_climate_schedule(
+            device=device,
+            profile=msg.get("profile"),
+        )
+    except (BaseHomematicException, ValueError, ValidationError) as err:
+        connection.send_error(msg["id"], "read_failed", str(err))
+        return
+
+    connection.send_result(msg["id"], dataclasses.asdict(data))
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/config/set_climate_schedule_weekday",
+        vol.Required("entry_id"): str,
+        vol.Required("device_address"): str,
+        vol.Required("profile"): str,
+        vol.Required("weekday"): str,
+        vol.Required("base_temperature"): vol.Coerce(float),
+        vol.Required("simple_weekday_list"): list,
+    }
+)
+@async_response
+async def ws_set_climate_schedule_weekday(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Set climate schedule weekday data."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    device = control.central.device_coordinator.get_device(address=msg["device_address"])
+    if device is None:
+        connection.send_error(msg["id"], "device_not_found", "Device not found")
+        return
+
+    try:
+        await set_climate_schedule_weekday(
+            device=device,
+            profile=msg["profile"],
+            weekday=msg["weekday"],
+            base_temperature=msg["base_temperature"],
+            simple_weekday_list=msg["simple_weekday_list"],
+        )
+    except (BaseHomematicException, ValueError, ValidationError) as err:
+        connection.send_error(msg["id"], "write_failed", str(err))
+        return
+
+    connection.send_result(msg["id"], {"success": True})
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/config/set_climate_active_profile",
+        vol.Required("entry_id"): str,
+        vol.Required("device_address"): str,
+        vol.Required("profile"): str,
+    }
+)
+@async_response
+async def ws_set_climate_active_profile(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Set the active climate schedule profile."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    device = control.central.device_coordinator.get_device(address=msg["device_address"])
+    if device is None:
+        connection.send_error(msg["id"], "device_not_found", "Device not found")
+        return
+
+    try:
+        set_climate_active_profile(device=device, profile=msg["profile"])
+    except (ValueError, ValidationError) as err:
+        connection.send_error(msg["id"], "write_failed", str(err))
+        return
+
+    connection.send_result(msg["id"], {"success": True})
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/config/get_device_schedule",
+        vol.Required("entry_id"): str,
+        vol.Required("device_address"): str,
+    }
+)
+@async_response
+async def ws_get_device_schedule(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return device schedule data."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    device = control.central.device_coordinator.get_device(address=msg["device_address"])
+    if device is None:
+        connection.send_error(msg["id"], "device_not_found", "Device not found")
+        return
+
+    try:
+        data = await get_device_schedule(device=device)
+    except (BaseHomematicException, ValueError, ValidationError) as err:
+        connection.send_error(msg["id"], "read_failed", str(err))
+        return
+
+    connection.send_result(msg["id"], dataclasses.asdict(data))
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/config/set_device_schedule",
+        vol.Required("entry_id"): str,
+        vol.Required("device_address"): str,
+        vol.Required("schedule_data"): dict,
+    }
+)
+@async_response
+async def ws_set_device_schedule(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Set device schedule data."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    device = control.central.device_coordinator.get_device(address=msg["device_address"])
+    if device is None:
+        connection.send_error(msg["id"], "device_not_found", "Device not found")
+        return
+
+    try:
+        await set_device_schedule(
+            device=device,
+            schedule_data=msg["schedule_data"],
+        )
+    except (BaseHomematicException, ValueError, ValidationError) as err:
+        connection.send_error(msg["id"], "write_failed", str(err))
+        return
+
+    connection.send_result(msg["id"], {"success": True})
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/config/reload_device_config",
+        vol.Required("entry_id"): str,
+        vol.Required("device_address"): str,
+    }
+)
+@async_response
+async def ws_reload_device_config(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Reload device configuration from CCU."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    device = control.central.device_coordinator.get_device(address=msg["device_address"])
+    if device is None:
+        connection.send_error(msg["id"], "device_not_found", "Device not found")
+        return
+
+    try:
+        await device.reload_device_config()
+    except BaseHomematicException as err:
+        connection.send_error(msg["id"], "reload_failed", str(err))
+        return
+
+    connection.send_result(msg["id"], {"success": True})
