@@ -436,8 +436,8 @@ const $ = globalThis,
   O = /'/g,
   W = /"/g,
   j = /^(?:script|style|textarea|title)$/i,
-  F = (e, ...t) => ({ _$litType$: 1, strings: e, values: t }),
-  V = Symbol.for("lit-noChange"),
+  V = (e, ...t) => ({ _$litType$: 1, strings: e, values: t }),
+  F = Symbol.for("lit-noChange"),
   K = Symbol.for("lit-nothing"),
   H = new WeakMap(),
   Y = I.createTreeWalker(I, 129);
@@ -568,7 +568,7 @@ class Z {
   }
 }
 function J(e, t, i = e, s) {
-  if (t === V) return t;
+  if (t === F) return t;
   let r = void 0 !== s ? i._$Co?.[s] : i._$Cl;
   const a = P(t) ? void 0 : t._$litDirective$;
   return (
@@ -656,7 +656,7 @@ class Q {
       P(e)
         ? e === K || null == e || "" === e
           ? (this._$AH !== K && this._$AR(), (this._$AH = K))
-          : e !== this._$AH && e !== V && this._(e)
+          : e !== this._$AH && e !== F && this._(e)
         : void 0 !== e._$litType$
           ? this.$(e)
           : void 0 !== e.nodeType
@@ -744,14 +744,14 @@ class X {
     let a = !1;
     if (void 0 === r)
       (e = J(this, e, t, 0)),
-        (a = !P(e) || (e !== this._$AH && e !== V)),
+        (a = !P(e) || (e !== this._$AH && e !== F)),
         a && (this._$AH = e);
     else {
       const s = e;
       let n, o;
       for (e = r[0], n = 0; n < r.length - 1; n++)
         (o = J(this, s[i + n], t, n)),
-          o === V && (o = this._$AH[n]),
+          o === F && (o = this._$AH[n]),
           (a ||= !P(o) || o !== this._$AH[n]),
           o === K ? (e = K) : e !== K && (e += (o ?? "") + r[n + 1]),
           (this._$AH[n] = o);
@@ -785,7 +785,7 @@ class ie extends X {
     super(e, t, i, s, r), (this.type = 5);
   }
   _$AI(e, t = this) {
-    if ((e = J(this, e, t, 0) ?? K) === V) return;
+    if ((e = J(this, e, t, 0) ?? K) === F) return;
     const i = this._$AH,
       s =
         (e === K && i !== K) ||
@@ -853,7 +853,7 @@ let oe = class extends k {
     super.disconnectedCallback(), this._$Do?.setConnected(!1);
   }
   render() {
-    return V;
+    return F;
   }
 };
 (oe._$litElement$ = !0),
@@ -1751,17 +1751,17 @@ let Ie = class extends oe {
   }
   _renderMaintenanceIcons(e) {
     return e && 0 !== Object.keys(e).length
-      ? F`
+      ? V`
       <div class="device-status">
         ${
           !0 === e.unreach
-            ? F`<span
+            ? V`<span
               class="status-badge unreachable"
               title="${this._l("device_list.unreachable")}"
               >&#x274C;</span
             >`
             : !1 === e.unreach
-              ? F`<span class="status-badge reachable" title="${this._l(
+              ? V`<span class="status-badge reachable" title="${this._l(
                   "device_list.reachable",
                 )}"
                 >&#x2705;</span
@@ -1770,7 +1770,7 @@ let Ie = class extends oe {
         }
         ${
           !0 === e.low_bat
-            ? F`<span class="status-badge low-bat" title="${this._l(
+            ? V`<span class="status-badge low-bat" title="${this._l(
                 "device_list.low_battery",
               )}"
               >&#x1F50B;</span
@@ -1779,7 +1779,7 @@ let Ie = class extends oe {
         }
         ${
           !0 === e.config_pending
-            ? F`<span
+            ? V`<span
               class="status-badge config-pending"
               title="${this._l("device_list.config_pending")}"
               >&#x23F3;</span
@@ -1791,14 +1791,14 @@ let Ie = class extends oe {
       : K;
   }
   render() {
-    return F`
+    return V`
       <div class="panel-header">
         <h1>${this._l("device_list.title")}</h1>
       </div>
 
       ${
         this.entries.length > 1
-          ? F`
+          ? V`
             <div class="entry-selector">
               <label>${this._l("device_list.select_ccu")}</label>
               <select @change=${this._handleEntryChanged}>
@@ -1806,7 +1806,7 @@ let Ie = class extends oe {
                   ${this._l("device_list.select_placeholder")}
                 </option>
                 ${this.entries.map(
-                  (e) => F`
+                  (e) => V`
                     <option value=${e.entry_id} ?selected=${
                       e.entry_id === this.entryId
                     }>
@@ -1821,7 +1821,7 @@ let Ie = class extends oe {
       }
       ${
         this.entryId
-          ? F`
+          ? V`
             <div class="search-bar">
               <input
                 type="text"
@@ -1837,31 +1837,31 @@ let Ie = class extends oe {
       }
       ${
         this._loading
-          ? F`<div class="loading"><span>${this._l(
+          ? V`<div class="loading"><span>${this._l(
               "common.loading",
             )}</span></div>`
           : this._error
-            ? F`<div class="error">${this._error}</div>`
+            ? V`<div class="error">${this._error}</div>`
             : this.entryId
               ? 0 === this._filteredDevices.length
-                ? F`<div class="empty-state">${this._l(
+                ? V`<div class="empty-state">${this._l(
                     "device_list.no_devices",
                   )}</div>`
                 : this._renderDeviceGroups()
-              : F`<div class="empty-state">${this._l(
+              : V`<div class="empty-state">${this._l(
                   "device_list.no_entry_selected",
                 )}</div>`
       }
     `;
   }
   _renderDeviceGroups() {
-    return F`
+    return V`
       ${Array.from(this._groupedDevices.entries()).map(
-        ([e, t]) => F`
+        ([e, t]) => V`
           <div class="interface-group">
             <div class="interface-header">${e}</div>
             ${t.map(
-              (e) => F`
+              (e) => V`
                 <div class="device-card" @click=${() =>
                   this._handleDeviceClick(e)}>
                   <div class="device-main">
@@ -2213,16 +2213,16 @@ let ze = class extends oe {
   }
   render() {
     if (this._loading)
-      return F`<div class="loading">${this._l("common.loading")}</div>`;
-    if (this._error) return F`<div class="error">${this._error}</div>`;
+      return V`<div class="loading">${this._l("common.loading")}</div>`;
+    if (this._error) return V`<div class="error">${this._error}</div>`;
     if (!this._device)
-      return F`<div class="empty-state">${this._l(
+      return V`<div class="empty-state">${this._l(
         "device_detail.not_found",
       )}</div>`;
     const e = this._device,
       t = e.channels.find((e) => e.address.endsWith(":0")),
       i = e.channels.filter((e) => !e.address.endsWith(":0"));
-    return F`
+    return V`
       <button class="back-button" @click=${this._handleBack}>◂ ${this._l(
         "common.back",
       )}</button>
@@ -2236,7 +2236,7 @@ let ze = class extends oe {
         <div class="header-actions">
           ${
             ve.has(e.interface)
-              ? F`
+              ? V`
                 <button class="history-button" @click=${this._handleShowLinks}>
                   ${this._l("device_detail.show_links")}
                 </button>
@@ -2245,7 +2245,7 @@ let ze = class extends oe {
           }
           ${
             this._hasSchedule
-              ? F`
+              ? V`
                 <button class="history-button" @click=${
                   this._handleShowSchedules
                 }>
@@ -2267,7 +2267,7 @@ let ze = class extends oe {
   _renderMaintenanceChannel(e, t) {
     const i = t && Object.keys(t).length > 0,
       s = e.paramset_keys.includes("MASTER");
-    return F`
+    return V`
       <div class="channel-card maintenance">
         <div class="channel-header">
           ${this._l("device_detail.channel")} 0: ${e.channel_type_label}
@@ -2275,7 +2275,7 @@ let ze = class extends oe {
         ${i ? this._renderStatusSummary(t) : K}
         ${
           s
-            ? F`
+            ? V`
               <div class="channel-actions">
                 <button class="configure-button" @click=${() =>
                   this._handleChannelClick(e)}>
@@ -2341,10 +2341,10 @@ let ze = class extends oe {
         }),
       0 === t.length
         ? K
-        : F`
+        : V`
       <div class="status-grid">
         ${t.map(
-          (e) => F`
+          (e) => V`
             <div class="status-item">
               <span class="status-icon">${e.icon}</span>
               <span>${e.label}: ${e.value}</span>
@@ -2358,14 +2358,14 @@ let ze = class extends oe {
   _renderChannel(e) {
     const t = e.address.split(":").pop() ?? "",
       i = e.paramset_keys.includes("MASTER");
-    return F`
+    return V`
       <div class="channel-card">
         <div class="channel-header">
           ${this._l("device_detail.channel")} ${t}: ${e.channel_type_label}
         </div>
         ${
           i
-            ? F`
+            ? V`
               <div class="channel-actions">
                 <button class="configure-button" @click=${() =>
                   this._handleChannelClick(e)}>
@@ -2381,7 +2381,7 @@ let ze = class extends oe {
                 </button>
               </div>
             `
-            : F`
+            : V`
               <div class="channel-no-config">${this._l(
                 "device_detail.no_master_config",
               )}</div>
@@ -2509,18 +2509,18 @@ let Ne = class extends oe {
   render() {
     const e = this.parameter,
       t = !e.writable;
-    return F`
+    return V`
       <div class="parameter-row ${t ? "read-only" : ""}">
         <div class="parameter-label">
           ${e.label}
-          ${e.unit ? F`<span class="parameter-unit">(${e.unit})</span>` : K}
-          ${this.modified ? F`<span class="modified-dot"></span>` : K}
+          ${e.unit ? V`<span class="parameter-unit">(${e.unit})</span>` : K}
+          ${this.modified ? V`<span class="modified-dot"></span>` : K}
         </div>
         <div class="parameter-control">${this._renderWidget(e, t)}</div>
       </div>
       ${
         this.validationError
-          ? F`<div class="validation-error">${this.validationError}</div>`
+          ? V`<div class="validation-error">${this.validationError}</div>`
           : K
       }
     `;
@@ -2528,7 +2528,7 @@ let Ne = class extends oe {
   _renderWidget(e, t) {
     switch (e.widget) {
       case "toggle":
-        return F`
+        return V`
           <label class="toggle">
             <input
               type="checkbox"
@@ -2549,7 +2549,7 @@ let Ne = class extends oe {
           </label>
         `;
       case "slider_with_input":
-        return F`
+        return V`
           <div class="slider-group">
             <input
               type="range"
@@ -2579,7 +2579,7 @@ let Ne = class extends oe {
           </div>
         `;
       case "number_input":
-        return F`
+        return V`
           <input
             type="number"
             class="number-input"
@@ -2595,7 +2595,7 @@ let Ne = class extends oe {
           />
         `;
       case "dropdown":
-        return F`
+        return V`
           <select
             ?disabled=${t}
             @change=${(e) => {
@@ -2604,17 +2604,17 @@ let Ne = class extends oe {
           >
             ${(e.options ?? []).map(
               (e, t) =>
-                F` <option value=${t} ?selected=${
+                V` <option value=${t} ?selected=${
                   this.value === t
                 }>${e}</option> `,
             )}
           </select>
         `;
       case "radio_group":
-        return F`
+        return V`
           <div class="radio-group">
             ${(e.options ?? []).map(
-              (i, s) => F`
+              (i, s) => V`
                 <label class="radio-item">
                   <input
                     type="radio"
@@ -2630,7 +2630,7 @@ let Ne = class extends oe {
           </div>
         `;
       case "text_input":
-        return F`
+        return V`
           <input
             type="text"
             .value=${String(this.value ?? "")}
@@ -2641,7 +2641,7 @@ let Ne = class extends oe {
           />
         `;
       case "button":
-        return F`
+        return V`
           <button
             class="action-button"
             ?disabled=${t}
@@ -2651,7 +2651,7 @@ let Ne = class extends oe {
           </button>
         `;
       default:
-        return F`<span class="read-only-value">${String(
+        return V`<span class="read-only-value">${String(
           this.value ?? "",
         )}</span>`;
     }
@@ -2792,13 +2792,13 @@ let Re = class extends oe {
   }
   render() {
     return this.schema && this.schema.sections
-      ? F`
+      ? V`
       ${this.schema.sections.map(
-        (e) => F`
+        (e) => V`
           <div class="form-section">
             <div class="section-header">${e.title}</div>
             ${e.parameters.map(
-              (e) => F`
+              (e) => V`
                 <hm-form-parameter
                   .hass=${this.hass}
                   .parameter=${e}
@@ -3137,16 +3137,16 @@ let Be = class extends oe {
   }
   render() {
     return this._loading
-      ? F`<div class="loading">${this._l("common.loading")}</div>`
+      ? V`<div class="loading">${this._l("common.loading")}</div>`
       : this._error && !this._schema
-        ? F`<div class="error">${this._error}</div>`
-        : F`
+        ? V`<div class="error">${this._error}</div>`
+        : V`
       <button class="back-button" @click=${this._handleBack}>◂ ${this._l(
         "common.back",
       )}</button>
 
       <div class="config-header">
-        ${this.deviceName ? F`<h2>${this.deviceName}</h2>` : K}
+        ${this.deviceName ? V`<h2>${this.deviceName}</h2>` : K}
         <div class="device-info">
           ${this.channelAddress} —
           ${
@@ -3156,10 +3156,10 @@ let Be = class extends oe {
         </div>
       </div>
 
-      ${this._error ? F`<div class="error">${this._error}</div>` : K}
+      ${this._error ? V`<div class="error">${this._error}</div>` : K}
       ${
         this._schema
-          ? F`
+          ? V`
             <hm-config-form
               .hass=${this.hass}
               .schema=${this._schema}
@@ -3433,7 +3433,7 @@ let Le = class extends oe {
     }
   }
   render() {
-    return F`
+    return V`
       <button class="back-button" @click=${this._handleBack}>◂ ${this._l(
         "common.back",
       )}</button>
@@ -3444,18 +3444,18 @@ let Le = class extends oe {
 
       ${
         this._loading
-          ? F`<div class="loading">${this._l("common.loading")}</div>`
+          ? V`<div class="loading">${this._l("common.loading")}</div>`
           : this._error
-            ? F`<div class="error">${this._error}</div>`
+            ? V`<div class="error">${this._error}</div>`
             : 0 === this._entries.length
-              ? F`<div class="empty-state">${this._l(
+              ? V`<div class="empty-state">${this._l(
                   "change_history.empty",
                 )}</div>`
               : this._renderEntries()
       }
       ${
         !this._loading && this._entries.length > 0
-          ? F`
+          ? V`
             <div class="action-bar">
               <button class="btn btn-secondary destructive" @click=${
                 this._handleClear
@@ -3469,13 +3469,13 @@ let Le = class extends oe {
     `;
   }
   _renderEntries() {
-    return F`
+    return V`
       <div class="history-list">
         ${this._entries.map((e, t) => {
           const i = `${e.timestamp}-${t}`,
             s = this._expandedEntries.has(i),
             r = Object.keys(e.changes).length;
-          return F`
+          return V`
             <div class="history-entry">
               <div class="history-entry-header" @click=${() =>
                 this._toggleEntry(i)}>
@@ -3501,10 +3501,10 @@ let Le = class extends oe {
               </div>
               ${
                 s
-                  ? F`
+                  ? V`
                     <div class="history-details">
                       ${Object.entries(e.changes).map(
-                        ([e, t]) => F`
+                        ([e, t]) => V`
                           <div class="change-row">
                             <span class="change-param">${e}</span>
                             <span class="change-values">
@@ -3818,7 +3818,7 @@ let Ue = class extends oe {
     return e;
   }
   render() {
-    return F`
+    return V`
       <button class="back-button" @click=${this._handleBack}>◂ ${this._l(
         "common.back",
       )}</button>
@@ -3840,11 +3840,11 @@ let Ue = class extends oe {
 
       ${
         this._loading
-          ? F`<div class="loading">${this._l("common.loading")}</div>`
+          ? V`<div class="loading">${this._l("common.loading")}</div>`
           : this._error
-            ? F`<div class="error">${this._error}</div>`
+            ? V`<div class="error">${this._error}</div>`
             : 0 === this._links.length
-              ? F`<div class="empty-state">${this._l(
+              ? V`<div class="empty-state">${this._l(
                   "device_links.empty",
                 )}</div>`
               : this._renderGroupedLinks()
@@ -3854,10 +3854,10 @@ let Ue = class extends oe {
   _renderGroupedLinks() {
     const e = this._groupByChannel(),
       t = [...e.keys()].sort((e, t) => parseInt(e) - parseInt(t));
-    return F`
+    return V`
       ${t.map((t) => {
         const i = e.get(t);
-        return F`
+        return V`
           <div class="link-channel-group">
             <div class="link-channel-header">
               ${this._l("device_links.channel_group", { channel: t })}
@@ -3870,7 +3870,7 @@ let Ue = class extends oe {
   }
   _renderLinkCard(e) {
     const t = "outgoing" === e.direction;
-    return F`
+    return V`
       <div class="link-card ${t ? "outgoing" : "incoming"}">
         <div class="link-direction">
           <span class="direction-badge ${e.direction}">
@@ -3884,7 +3884,7 @@ let Ue = class extends oe {
               <span class="link-device-detail">
                 ${e.sender_device_model}${
                   e.sender_channel_type_label
-                    ? F` · ${e.sender_channel_type_label}`
+                    ? V` · ${e.sender_channel_type_label}`
                     : K
                 }
               </span>
@@ -3896,14 +3896,14 @@ let Ue = class extends oe {
               <span class="link-device-detail">
                 ${e.receiver_device_model}${
                   e.receiver_channel_type_label
-                    ? F` · ${e.receiver_channel_type_label}`
+                    ? V` · ${e.receiver_channel_type_label}`
                     : K
                 }
               </span>
               <span class="link-endpoint-address">${e.receiver_address}</span>
             </div>
           </div>
-          ${e.name ? F`<div class="link-name">"${e.name}"</div>` : K}
+          ${e.name ? V`<div class="link-name">"${e.name}"</div>` : K}
         </div>
         <div class="link-actions">
           <button class="configure-button" @click=${() =>
@@ -4161,16 +4161,16 @@ let Oe = class extends oe {
     const e = this.baseParam.label.replace(/ Base$/, "").replace(/ Basis$/, ""),
       t = this._matchesPreset,
       i = this._isCustom && !t;
-    return F`
+    return V`
       <div class="time-selector">
         <div class="parameter-row">
           <div class="parameter-label">
-            ${e} ${this.modified ? F`<span class="modified-dot"></span>` : K}
+            ${e} ${this.modified ? V`<span class="modified-dot"></span>` : K}
           </div>
           <div class="parameter-control">
             <select @change=${this._handlePresetChange}>
               ${this.presets.map(
-                (e) => F`
+                (e) => V`
                   <option
                     value="${e.base}-${e.factor}"
                     ?selected=${
@@ -4189,7 +4189,7 @@ let Oe = class extends oe {
         </div>
         ${
           i || !t
-            ? F`
+            ? V`
               <div class="custom-time-inputs">
                 <label>
                   ${this._l("time_selector.base")}:
@@ -4549,19 +4549,19 @@ let We = class extends oe {
     if (!this._profiles) return K;
     const e = this._profiles.find((e) => e.id === this._selectedProfileId),
       t = e?.description || "";
-    return F`
+    return V`
       <div class="profile-selector">
         <label class="profile-label">${this._l("link_config.profile")}</label>
         <select class="profile-select" @change=${this._handleProfileChange}>
           ${this._profiles.map(
-            (e) => F`<option value=${e.id} ?selected=${
+            (e) => V`<option value=${e.id} ?selected=${
               e.id === this._selectedProfileId
             }>
                 ${e.name}
               </option>`,
           )}
         </select>
-        ${t ? F`<p class="profile-description">${t}</p>` : K}
+        ${t ? V`<p class="profile-description">${t}</p>` : K}
       </div>
     `;
   }
@@ -4580,10 +4580,10 @@ let We = class extends oe {
         (e.factor = s), t.set(s.time_pair_id, e);
       } else
         (s.hidden_by_default && 0 !== this._selectedProfileId) || i.push(s);
-    return F`
+    return V`
       ${[...t.entries()].map(([, e]) =>
         e.base && e.factor
-          ? F`
+          ? V`
               <hm-time-selector
                 .hass=${this.hass}
                 .baseParam=${e.base}
@@ -4602,7 +4602,7 @@ let We = class extends oe {
       ${i.map((e) =>
         e.display_as_percent && e.has_last_value
           ? this._renderLevelParam(e)
-          : F`
+          : V`
               <hm-form-parameter
                 .hass=${this.hass}
                 .parameter=${e}
@@ -4618,12 +4618,12 @@ let We = class extends oe {
     const t = this._getEffectiveValue(e),
       i = t > 1,
       s = i ? 100 : Math.round(100 * t);
-    return F`
+    return V`
       <div class="level-param">
         <div class="parameter-row">
           <div class="parameter-label">
             ${e.label}
-            ${this._isModified(e) ? F`<span class="modified-dot"></span>` : K}
+            ${this._isModified(e) ? V`<span class="modified-dot"></span>` : K}
           </div>
           <div class="parameter-control level-controls">
             <label class="last-value-toggle">
@@ -4639,7 +4639,7 @@ let We = class extends oe {
             ${
               i
                 ? K
-                : F`
+                : V`
                   <div class="slider-group">
                     <input
                       type="range"
@@ -4667,12 +4667,12 @@ let We = class extends oe {
       const t = e.short.length > 0,
         i = e.long.length > 0,
         s = t && i;
-      return F`
+      return V`
         <div class="param-section">
           <h3>${this._l("link_config.receiver_params")}</h3>
           ${
             s
-              ? F`
+              ? V`
                 <div class="keypress-tabs">
                   <button
                     class="tab ${
@@ -4709,7 +4709,7 @@ let We = class extends oe {
           }
           ${
             e.common.length > 0
-              ? F` <div class="common-params">${this._renderParamList(
+              ? V` <div class="common-params">${this._renderParamList(
                   e.common,
                 )}</div> `
               : K
@@ -4717,7 +4717,7 @@ let We = class extends oe {
         </div>
       `;
     }
-    return F`
+    return V`
       <div class="param-section">
         <h3>${this._l("link_config.receiver_params")}</h3>
         <hm-config-form
@@ -4732,9 +4732,9 @@ let We = class extends oe {
   }
   render() {
     return this._loading
-      ? F`<div class="loading">${this._l("common.loading")}</div>`
+      ? V`<div class="loading">${this._l("common.loading")}</div>`
       : !this._error || this._receiverSchema || this._senderSchema
-        ? F`
+        ? V`
       <button class="back-button" @click=${this._handleBack}>◂ ${this._l(
         "common.back",
       )}</button>
@@ -4746,15 +4746,15 @@ let We = class extends oe {
             <span class="link-label">${this._l("link_config.sender")}</span>
             ${
               this.senderDeviceName
-                ? F`<span class="link-device-name">${this.senderDeviceName}</span>`
+                ? V`<span class="link-device-name">${this.senderDeviceName}</span>`
                 : K
             }
             ${
               this.senderDeviceModel || this.senderChannelTypeLabel
-                ? F`<span class="link-device-detail">
+                ? V`<span class="link-device-detail">
                   ${this.senderDeviceModel}${
                     this.senderChannelTypeLabel
-                      ? F` &middot; ${this.senderChannelTypeLabel}`
+                      ? V` &middot; ${this.senderChannelTypeLabel}`
                       : K
                   }
                 </span>`
@@ -4767,15 +4767,15 @@ let We = class extends oe {
             <span class="link-label">${this._l("link_config.receiver")}</span>
             ${
               this.receiverDeviceName
-                ? F`<span class="link-device-name">${this.receiverDeviceName}</span>`
+                ? V`<span class="link-device-name">${this.receiverDeviceName}</span>`
                 : K
             }
             ${
               this.receiverDeviceModel || this.receiverChannelTypeLabel
-                ? F`<span class="link-device-detail">
+                ? V`<span class="link-device-detail">
                   ${this.receiverDeviceModel}${
                     this.receiverChannelTypeLabel
-                      ? F` &middot; ${this.receiverChannelTypeLabel}`
+                      ? V` &middot; ${this.receiverChannelTypeLabel}`
                       : K
                   }
                 </span>`
@@ -4786,12 +4786,12 @@ let We = class extends oe {
         </div>
       </div>
 
-      ${this._error ? F`<div class="error">${this._error}</div>` : K}
+      ${this._error ? V`<div class="error">${this._error}</div>` : K}
       ${this._renderProfileSelector()}
       ${this._hasReceiverParams() ? this._renderReceiverParams() : K}
       ${
         this._hasSenderParams()
-          ? F`
+          ? V`
             <div class="param-section">
               <h3>${this._l("link_config.sender_params")}</h3>
               <hm-config-form
@@ -4808,7 +4808,7 @@ let We = class extends oe {
       ${
         this._hasReceiverParams() || this._hasSenderParams()
           ? K
-          : F`<div class="empty-state">${this._l(
+          : V`<div class="empty-state">${this._l(
               "link_config.no_params",
             )}</div>`
       }
@@ -4830,7 +4830,7 @@ let We = class extends oe {
         </button>
       </div>
     `
-        : F`<div class="error">${this._error}</div>`;
+        : V`<div class="error">${this._error}</div>`;
   }
   static {
     this.styles = [
@@ -5268,8 +5268,8 @@ let je = class extends oe {
   }
   render() {
     return this._loading && !this._device
-      ? F`<div class="loading">${this._l("common.loading")}</div>`
-      : F`
+      ? V`<div class="loading">${this._l("common.loading")}</div>`
+      : V`
       <button class="back-button" @click=${this._handleBack}>
         ◂ ${this._l(
           "select-channel" === this._step ? "common.back" : "add_link.back",
@@ -5280,7 +5280,7 @@ let je = class extends oe {
         <h2>${this._l("add_link.title")}</h2>
       </div>
 
-      ${this._error ? F`<div class="error">${this._error}</div>` : K}
+      ${this._error ? V`<div class="error">${this._error}</div>` : K}
       ${
         "select-channel" === this._step
           ? this._renderStepChannel()
@@ -5292,7 +5292,7 @@ let je = class extends oe {
   }
   _renderStepChannel() {
     const e = this._getLinkableChannels();
-    return F`
+    return V`
       <div class="wizard-step">
         <div class="step-indicator">${this._l("add_link.step_channel")}</div>
         <div class="step-description">${this._l(
@@ -5302,13 +5302,13 @@ let je = class extends oe {
         <div class="radio-list">
           ${
             0 === e.length
-              ? F`<div class="empty-state">${this._l(
+              ? V`<div class="empty-state">${this._l(
                   "add_link.no_compatible",
                 )}</div>`
               : e.map((e) => {
                   const t = e.address.split(":").pop() ?? "",
                     i = this._selectedChannel === e.address;
-                  return F`
+                  return V`
                   <div
                     class="radio-option ${i ? "selected" : ""}"
                     @click=${() => this._handleSelectChannel(e.address)}
@@ -5330,7 +5330,7 @@ let je = class extends oe {
 
         ${
           e.length > 0
-            ? F`
+            ? V`
               <div class="wizard-actions">
                 <button
                   class="btn btn-primary"
@@ -5347,7 +5347,7 @@ let je = class extends oe {
     `;
   }
   _renderStepPeer() {
-    return F`
+    return V`
       <div class="wizard-step">
         <div class="step-indicator">${this._l("add_link.step_peer")}</div>
 
@@ -5375,8 +5375,8 @@ let je = class extends oe {
 
         ${
           this._loading
-            ? F`<div class="loading">${this._l("common.loading")}</div>`
-            : F`
+            ? V`<div class="loading">${this._l("common.loading")}</div>`
+            : V`
               <div class="search-box">
                 <input
                   type="text"
@@ -5389,12 +5389,12 @@ let je = class extends oe {
               <div class="radio-list">
                 ${
                   0 === this._filteredChannels.length
-                    ? F`<div class="empty-state">${this._l(
+                    ? V`<div class="empty-state">${this._l(
                         "add_link.no_compatible",
                       )}</div>`
                     : this._filteredChannels.map((e) => {
                         const t = this._selectedPeer === e.address;
-                        return F`
+                        return V`
                         <div
                           class="radio-option ${t ? "selected" : ""}"
                           @click=${() => this._handleSelectPeer(e.address)}
@@ -5416,7 +5416,7 @@ let je = class extends oe {
 
               ${
                 this._filteredChannels.length > 0
-                  ? F`
+                  ? V`
                     <div class="wizard-actions">
                       <button
                         class="btn btn-primary"
@@ -5445,7 +5445,7 @@ let je = class extends oe {
           : this._selectedChannel,
       i = this._resolveName(e),
       s = this._resolveName(t);
-    return F`
+    return V`
       <div class="wizard-step">
         <div class="step-indicator">${this._l("add_link.step_confirm")}</div>
 
@@ -5749,7 +5749,7 @@ let je = class extends oe {
     ];
   }
 };
-function Fe(e) {
+function Ve(e) {
   return (t) => (customElements.get(e) || customElements.define(e, t), t);
 }
 e([he({ attribute: !1 })], je.prototype, "hass", void 0),
@@ -5768,7 +5768,7 @@ e([he({ attribute: !1 })], je.prototype, "hass", void 0),
   e([pe()], je.prototype, "_loading", void 0),
   e([pe()], je.prototype, "_error", void 0),
   (je = e([_e("hm-add-link")], je));
-let Ve = class {
+let Fe = class {
   constructor(e) {}
   get _$AU() {
     return this._$AM._$AU;
@@ -5828,7 +5828,7 @@ const { I: Ke } = re,
     (e) =>
     (...t) => ({ _$litDirective$: e, values: t })
   )(
-    class extends Ve {
+    class extends Fe {
       constructor(e) {
         if ((super(e), 2 !== e.type))
           throw Error("repeat() can only be used in text expressions");
@@ -5888,7 +5888,7 @@ const { I: Ke } = re,
           const e = r[h++];
           null !== e && Qe(e);
         }
-        return (this.ut = n), qe(e, d), V;
+        return (this.ut = n), qe(e, d), F;
       }
     },
   ),
@@ -6651,7 +6651,7 @@ let St = class extends oe {
   }
   render() {
     return this.scheduleData
-      ? F`
+      ? V`
       <div class="schedule-container">
         <!-- Empty cell for time-axis header alignment -->
         <div class="time-axis-header"></div>
@@ -6662,19 +6662,19 @@ let St = class extends oe {
           (e) => `header-${e}`,
           (e) => {
             const t = this.copiedWeekday === e;
-            return F`
+            return V`
               <div class="weekday-header">
                 <div class="weekday-label">${this._getWeekdayLabel(e)}</div>
                 ${
                   this.editable
-                    ? F`
+                    ? V`
                       <div class="weekday-actions">
                         <button
                           class="copy-btn ${t ? "active" : ""}"
                           @click=${(t) => this._handleCopy(e, t)}
                           title="${this.translations?.copySchedule ?? ""}"
                         >
-                          \u{1F4CB}
+                          📋
                         </button>
                         <button
                           class="paste-btn"
@@ -6682,7 +6682,7 @@ let St = class extends oe {
                           title="${this.translations?.pasteSchedule ?? ""}"
                           ?disabled=${!this.copiedWeekday}
                         >
-                          \u{1F4C4}
+                          📄
                         </button>
                       </div>
                     `
@@ -6698,7 +6698,7 @@ let St = class extends oe {
           ${et(
             this._getTimeLabels(),
             (e) => e.hour,
-            (e) => F`
+            (e) => V`
               <div class="time-label" style="top: ${e.position}%">${e.label}</div>
             `,
           )}
@@ -6713,7 +6713,7 @@ let St = class extends oe {
               const t = this._getParsedBlocks(e),
                 i = this._getBaseTemperature(e),
                 s = pt(t, i);
-              return F`
+              return V`
                 <div
                   class="time-blocks ${this.editable ? "editable" : ""}"
                   @click=${() => this._handleWeekdayClick(e)}
@@ -6752,7 +6752,7 @@ let St = class extends oe {
                           a < s.length - 1 ? s[a + 1].temperature : null,
                         )};`;
                       } else d = `background-color: ${dt(r.temperature)};`;
-                      return F`
+                      return V`
                         <div
                           class="time-block ${n ? "active" : ""} ${
                             o ? "base-temp-block" : ""
@@ -6766,8 +6766,8 @@ let St = class extends oe {
                         >
                           ${
                             this.showTemperature
-                              ? F`<span class="temperature"
-                                >${r.temperature.toFixed(1)}\u00B0</span
+                              ? V`<span class="temperature"
+                                >${r.temperature.toFixed(1)}°</span
                               >`
                               : ""
                           }
@@ -6795,7 +6795,7 @@ let St = class extends oe {
           ${
             this.editorOpen
               ? ""
-              : F`<div
+              : V`<div
                 class="current-time-indicator"
                 style="top: ${this._currentTimePercent}%"
               ></div>`
@@ -6805,11 +6805,11 @@ let St = class extends oe {
 
       ${
         this.editable
-          ? F`<div class="hint">${this.translations?.clickToEdit ?? ""}</div>`
+          ? V`<div class="hint">${this.translations?.clickToEdit ?? ""}</div>`
           : ""
       }
     `
-      : F``;
+      : V``;
   }
   static {
     this.styles = $t;
@@ -6829,7 +6829,7 @@ wt([he({ attribute: !1 })], St.prototype, "scheduleData", void 0),
   wt([pe()], St.prototype, "_currentTimePercent", void 0),
   wt([pe()], St.prototype, "_currentTimeMinutes", void 0),
   wt([pe()], St.prototype, "_currentWeekday", void 0),
-  (St = wt([Fe("hmip-schedule-grid")], St));
+  (St = wt([Ve("hmip-schedule-grid")], St));
 const Et = n`
   :host {
     display: block;
@@ -7759,7 +7759,7 @@ let At = class extends oe {
   }
   render() {
     return this.open && this._editingWeekday
-      ? F`
+      ? V`
       <ha-dialog
         open
         @closed=${this._closeEditor}
@@ -7771,7 +7771,7 @@ let At = class extends oe {
           <!-- Weekday selector tabs -->
           <div class="weekday-tabs">
             ${tt.map(
-              (e) => F`
+              (e) => V`
                 <button
                   class="weekday-tab ${
                     e === this._editingWeekday ? "active" : ""
@@ -7800,7 +7800,7 @@ let At = class extends oe {
         </mwc-button>
       </ha-dialog>
     `
-      : F``;
+      : V``;
   }
   _formatEdit(e) {
     return (this.translations?.edit ?? "Edit {weekday}").replace(
@@ -7809,12 +7809,12 @@ let At = class extends oe {
     );
   }
   _renderEditor() {
-    if (!this._editingWeekday || !this._editingBlocks) return F``;
+    if (!this._editingWeekday || !this._editingBlocks) return V``;
     const e =
       void 0 !== this._editingBaseTemperature
         ? pt(this._editingBlocks, this._editingBaseTemperature)
         : this._editingBlocks;
-    return F`
+    return V`
       <div class="editor">
         <div class="editor-header">
           <h3>${this._formatEdit(this._editingWeekday)}</h3>
@@ -7825,7 +7825,7 @@ let At = class extends oe {
               ?disabled=${!this._canUndo()}
               title="${this.translations?.undoShortcut ?? ""}"
             >
-              \u21B6
+              ↶
             </button>
             <button
               class="redo-btn"
@@ -7833,27 +7833,25 @@ let At = class extends oe {
               ?disabled=${!this._canRedo()}
               title="${this.translations?.redoShortcut ?? ""}"
             >
-              \u21B7
+              ↷
             </button>
-            <button class="close-btn" @click=${
-              this._closeEditor
-            }>\u2715</button>
+            <button class="close-btn" @click=${this._closeEditor}>✕</button>
           </div>
         </div>
 
         ${
           this._validationWarnings.length > 0
-            ? F`
+            ? V`
               <div class="validation-warnings">
                 <div class="warnings-header">
-                  <span class="warning-icon">\u26A0\uFE0F</span>
+                  <span class="warning-icon">⚠️</span>
                   <span class="warnings-title">${
                     this.translations?.warningsTitle ?? ""
                   }</span>
                 </div>
                 <ul class="warnings-list">
                   ${this._validationWarnings.map(
-                    (e) => F`<li class="warning-item">
+                    (e) => V`<li class="warning-item">
                         ${this._translateValidationMessage(e)}
                       </li>`,
                   )}
@@ -7922,7 +7920,7 @@ let At = class extends oe {
               this._editingSlotIndex === s &&
               void 0 !== this._editingSlotData &&
               this._editingSlotData
-              ? F`
+              ? V`
                 <div class="time-block-editor editing">
                   <input
                     type="time"
@@ -7994,7 +7992,7 @@ let At = class extends oe {
                   ></div>
                 </div>
               `
-              : F`
+              : V`
               <div class="time-block-editor ${r ? "base-temp-slot" : ""}">
                 <span class="time-display">${this._formatTimeDisplay(
                   t.startTime,
@@ -8009,8 +8007,8 @@ let At = class extends oe {
                 <div class="slot-actions">
                   ${
                     r
-                      ? F``
-                      : F`
+                      ? V``
+                      : V`
                         <button
                           class="slot-edit-btn"
                           @click=${() => this._startSlotEditFromDisplay(i, e)}
@@ -8023,7 +8021,7 @@ let At = class extends oe {
                           @click=${() => this._removeTimeBlockByIndex(i, e)}
                           ?disabled=${void 0 !== this._editingSlotIndex}
                         >
-                          \u{1F5D1}\uFE0F
+                          🗑️
                         </button>
                       `
                   }
@@ -8037,7 +8035,7 @@ let At = class extends oe {
           })}
           ${
             this._editingBlocks.length < 12 && void 0 === this._editingSlotIndex
-              ? F`
+              ? V`
                 <button class="add-btn" @click=${this._addNewSlot}>
                   ${this.translations?.addTimeBlock ?? "+ Add Time Block"}
                 </button>
@@ -8076,7 +8074,7 @@ Ct([he({ type: Boolean })], At.prototype, "open", void 0),
   Ct([pe()], At.prototype, "_validationWarnings", void 0),
   Ct([pe()], At.prototype, "_editingSlotIndex", void 0),
   Ct([pe()], At.prototype, "_editingSlotData", void 0),
-  (At = Ct([Fe("hmip-schedule-editor")], At));
+  (At = Ct([Ve("hmip-schedule-editor")], At));
 const Dt = n`
   :host {
     display: block;
@@ -8361,7 +8359,7 @@ let It = class extends oe {
   }
   render() {
     if (!this.scheduleData)
-      return F`<div class="no-data">${this.translations.loading}</div>`;
+      return V`<div class="no-data">${this.translations.loading}</div>`;
     const e = (function (e) {
       const t = [];
       for (const [i, s] of Object.entries(e))
@@ -8369,23 +8367,23 @@ let It = class extends oe {
       return t.sort((e, t) => e.time.localeCompare(t.time)), t;
     })(this.scheduleData);
     return 0 === e.length
-      ? F`
+      ? V`
         <div class="no-data">
           <p>${this.translations.noScheduleEvents}</p>
           ${
             this.editable
-              ? F`<button @click=${this._handleAdd} class="add-button">
+              ? V`<button @click=${this._handleAdd} class="add-button">
                 ${this.translations.addEvent}
               </button>`
               : ""
           }
         </div>
       `
-      : F`
+      : V`
       <div class="schedule-list">
         ${
           this.editable
-            ? F`<div class="toolbar">
+            ? V`<div class="toolbar">
               <button @click=${this._handleAdd} class="add-button">
                 ${this.translations.addEvent}
               </button>
@@ -8398,7 +8396,7 @@ let It = class extends oe {
             <div class="col-weekdays">${this.translations.weekdays}</div>
             <div class="col-state">${this.translations.state}</div>
             <div class="col-duration">${this.translations.duration}</div>
-            ${this.editable ? F`<div class="col-actions"></div>` : ""}
+            ${this.editable ? V`<div class="col-actions"></div>` : ""}
           </div>
           ${et(
             e,
@@ -8425,16 +8423,18 @@ let It = class extends oe {
           ? `${t.value}${{ ms: "ms", s: "s", min: "min", h: "h" }[t.unit]}`
           : e;
       })(e.duration);
-    return F`
-      <div class="event-row ${e.isActive ? "active" : "inactive"} ${
-        this.editable ? "" : "no-actions"
-      }">
+    return V`
+      <div
+        class="event-row ${e.isActive ? "active" : "inactive"} ${
+          this.editable ? "" : "no-actions"
+        }"
+      >
         <div class="col-time">${e.time}</div>
         <div class="col-weekdays">
           <div class="weekday-badges">
             ${tt.map((t) => {
               const i = e.weekdays.includes(t);
-              return F`<span class="weekday-badge ${i ? "active" : "inactive"}"
+              return V`<span class="weekday-badge ${i ? "active" : "inactive"}"
                 >${this.translations.weekdayShortLabels[t]}</span
               >`;
             })}
@@ -8444,7 +8444,7 @@ let It = class extends oe {
           ${t}
           ${
             null !== e.level_2
-              ? F`<span class="level-2"
+              ? V`<span class="level-2"
                 >, ${this.translations.slat}: ${Math.round(
                   100 * e.level_2,
                 )}%</span
@@ -8455,20 +8455,14 @@ let It = class extends oe {
         <div class="col-duration">${i}</div>
         ${
           this.editable
-            ? F`<div class="col-actions">
-              <button
-                @click=${() => this._handleEdit(e)}
-                class="icon-button"
-                title="Edit"
-              >
-                \u270F\uFE0F
+            ? V`<div class="col-actions">
+              <button @click=${() =>
+                this._handleEdit(e)} class="icon-button" title="Edit">
+                ✏️
               </button>
-              <button
-                @click=${() => this._handleDelete(e)}
-                class="icon-button"
-                title="Delete"
-              >
-                \uD83D\uDDD1\uFE0F
+              <button @click=${() =>
+                this._handleDelete(e)} class="icon-button" title="Delete">
+                🗑️
               </button>
             </div>`
             : ""
@@ -8481,7 +8475,7 @@ Tt([he({ attribute: !1 })], It.prototype, "scheduleData", void 0),
   Tt([he({ attribute: !1 })], It.prototype, "domain", void 0),
   Tt([he({ type: Boolean })], It.prototype, "editable", void 0),
   Tt([he({ attribute: !1 })], It.prototype, "translations", void 0),
-  (It = Tt([Fe("hmip-device-schedule-list")], It));
+  (It = Tt([Ve("hmip-device-schedule-list")], It));
 const Mt = n`
   :host {
     display: block;
@@ -8820,20 +8814,16 @@ let zt = class extends oe {
   }
   render() {
     return this.open && this._editingEntry
-      ? F`
+      ? V`
       <div class="editor-overlay" @click=${this._handleClose}>
         <div class="editor-dialog" @click=${(e) => e.stopPropagation()}>
           <div class="editor-header">
-            <h3>
-              ${
-                this.isNewEvent
-                  ? this.translations.addEvent
-                  : this.translations.editEvent
-              }
-            </h3>
-            <button @click=${
-              this._handleClose
-            } class="close-button">\u2715</button>
+            <h3>${
+              this.isNewEvent
+                ? this.translations.addEvent
+                : this.translations.editEvent
+            }</h3>
+            <button @click=${this._handleClose} class="close-button">✕</button>
           </div>
           <div class="editor-content">
             ${this._renderTimeFields()} ${this._renderConditionFields()}
@@ -8852,22 +8842,22 @@ let zt = class extends oe {
         </div>
       </div>
     `
-      : F``;
+      : V``;
   }
   _renderValidationErrors() {
     return 0 === this._validationErrors.length
-      ? F``
-      : F`
+      ? V``
+      : V`
       <div class="validation-errors">
         <ul>
-          ${this._validationErrors.map((e) => F`<li>${e}</li>`)}
+          ${this._validationErrors.map((e) => V`<li>${e}</li>`)}
         </ul>
       </div>
     `;
   }
   _renderTimeFields() {
     return this._editingEntry
-      ? F`
+      ? V`
       <div class="form-group">
         <label>${this.translations.time}</label>
         <input
@@ -8879,12 +8869,12 @@ let zt = class extends oe {
         />
       </div>
     `
-      : F``;
+      : V``;
   }
   _renderConditionFields() {
-    if (!this._editingEntry) return F``;
+    if (!this._editingEntry) return V``;
     const e = vt(this._editingEntry.condition);
-    return F`
+    return V`
       <div class="form-group">
         <label>${this.translations.condition}</label>
         <select
@@ -8900,7 +8890,7 @@ let zt = class extends oe {
           }}
         >
           ${it.map(
-            (e) => F`
+            (e) => V`
               <option value=${e} ?selected=${
                 e === this._editingEntry.condition
               }>
@@ -8912,29 +8902,25 @@ let zt = class extends oe {
       </div>
       ${
         e
-          ? F`
+          ? V`
             <div class="form-group">
-              <label
-                >${this.translations.astroSunrise}/${
-                  this.translations.astroSunset
-                }</label
-              >
+              <label>${this.translations.astroSunrise}/${
+                this.translations.astroSunset
+              }</label>
               <select
                 .value=${this._editingEntry.astro_type || "sunrise"}
                 @change=${(e) => {
                   this._updateEditingEntry({ astro_type: e.target.value });
                 }}
               >
-                <option
-                  value="sunrise"
-                  ?selected=${"sunrise" === this._editingEntry.astro_type}
-                >
+                <option value="sunrise" ?selected=${
+                  "sunrise" === this._editingEntry.astro_type
+                }>
                   ${this.translations.astroSunrise}
                 </option>
-                <option
-                  value="sunset"
-                  ?selected=${"sunset" === this._editingEntry.astro_type}
-                >
+                <option value="sunset" ?selected=${
+                  "sunset" === this._editingEntry.astro_type
+                }>
                   ${this.translations.astroSunset}
                 </option>
               </select>
@@ -8960,13 +8946,13 @@ let zt = class extends oe {
   }
   _renderWeekdayFields() {
     return this._editingEntry
-      ? F`
+      ? V`
       <div class="form-group">
         <label>${this.translations.weekdaysLabel}</label>
         <div class="weekday-checkboxes">
           ${tt.map((e) => {
             const t = this._editingEntry.weekdays.includes(e);
-            return F`
+            return V`
               <label class="checkbox-label">
                 <input
                   type="checkbox"
@@ -8989,17 +8975,17 @@ let zt = class extends oe {
         </div>
       </div>
     `
-      : F``;
+      : V``;
   }
   _renderLevelFields() {
-    if (!this._editingEntry) return F``;
+    if (!this._editingEntry) return V``;
     const e = this.domain ? st[this.domain] : void 0;
-    return F`
+    return V`
       <div class="form-group">
         <label>${this.translations.stateLabel}</label>
         ${
           "binary" === e?.levelType
-            ? F`
+            ? V`
               <select
                 .value=${String(this._editingEntry.level)}
                 @change=${(e) => {
@@ -9011,7 +8997,7 @@ let zt = class extends oe {
                 <option value="1">${this.translations.levelOn}</option>
               </select>
             `
-            : F`
+            : V`
               <input
                 type="range"
                 min="0"
@@ -9028,7 +9014,7 @@ let zt = class extends oe {
       </div>
       ${
         e?.hasLevel2
-          ? F`
+          ? V`
             <div class="form-group">
               <label>${this.translations.slat}</label>
               <input
@@ -9053,15 +9039,15 @@ let zt = class extends oe {
     `;
   }
   _renderDurationFields() {
-    if (!this._editingEntry) return F``;
+    if (!this._editingEntry) return V``;
     const e = this.domain ? st[this.domain] : void 0;
-    if (e && !e.hasDuration) return F``;
+    if (e && !e.hasDuration) return V``;
     const t = this._editingEntry.duration
         ? gt(this._editingEntry.duration)
         : null,
       i = t?.value ?? 0,
       s = t?.unit ?? "s";
-    return F`
+    return V`
       <div class="form-group">
         <label>${this.translations.duration}</label>
         <div class="duration-row">
@@ -9084,7 +9070,7 @@ let zt = class extends oe {
             }}
           >
             ${rt.map(
-              (e) => F` <option value=${e} ?selected=${e === s}>${e}</option> `,
+              (e) => V` <option value=${e} ?selected=${e === s}>${e}</option> `,
             )}
           </select>
         </div>
@@ -9092,15 +9078,15 @@ let zt = class extends oe {
     `;
   }
   _renderRampTimeFields() {
-    if (!this._editingEntry) return F``;
+    if (!this._editingEntry) return V``;
     const e = this.domain ? st[this.domain] : void 0;
-    if (e && !e.hasRampTime) return F``;
+    if (e && !e.hasRampTime) return V``;
     const t = this._editingEntry.ramp_time
         ? gt(this._editingEntry.ramp_time)
         : null,
       i = t?.value ?? 0,
       s = t?.unit ?? "s";
-    return F`
+    return V`
       <div class="form-group">
         <label>${this.translations.rampTime}</label>
         <div class="duration-row">
@@ -9123,7 +9109,7 @@ let zt = class extends oe {
             }}
           >
             ${rt.map(
-              (e) => F` <option value=${e} ?selected=${e === s}>${e}</option> `,
+              (e) => V` <option value=${e} ?selected=${e === s}>${e}</option> `,
             )}
           </select>
         </div>
@@ -9134,13 +9120,13 @@ let zt = class extends oe {
     return this._editingEntry
       ? this.availableTargetChannels &&
         Object.keys(this.availableTargetChannels).length > 0
-        ? F`
+        ? V`
         <div class="form-group">
           <label>${this.translations.channels}</label>
           <div class="channel-checkboxes">
             ${Object.entries(this.availableTargetChannels).map(([e, t]) => {
               const i = this._editingEntry.target_channels.includes(e);
-              return F`
+              return V`
                 <label class="checkbox-label">
                   <input
                     type="checkbox"
@@ -9163,7 +9149,7 @@ let zt = class extends oe {
           </div>
         </div>
       `
-        : F`
+        : V`
       <div class="form-group">
         <label>${this.translations.channels}</label>
         <input
@@ -9180,7 +9166,7 @@ let zt = class extends oe {
         />
       </div>
     `
-      : F``;
+      : V``;
   }
 };
 Pt([he({ type: Boolean })], zt.prototype, "open", void 0),
@@ -9192,7 +9178,7 @@ Pt([he({ type: Boolean })], zt.prototype, "open", void 0),
   Pt([he({ attribute: !1 })], zt.prototype, "translations", void 0),
   Pt([pe()], zt.prototype, "_editingEntry", void 0),
   Pt([pe()], zt.prototype, "_validationErrors", void 0),
-  (zt = Pt([Fe("hmip-device-schedule-editor")], zt));
+  (zt = Pt([Ve("hmip-device-schedule-editor")], zt));
 let Nt = class extends oe {
   constructor() {
     super(...arguments),
@@ -9586,10 +9572,10 @@ let Nt = class extends oe {
   }
   render() {
     return this._loading && 0 === this._devices.length
-      ? F`<div class="loading">${this._l("common.loading")}</div>`
+      ? V`<div class="loading">${this._l("common.loading")}</div>`
       : this._error && 0 === this._devices.length
-        ? F`<div class="error">${this._error}</div>`
-        : F`
+        ? V`<div class="error">${this._error}</div>`
+        : V`
       <button class="back-button" @click=${this._handleBack}>◂ ${this._l(
         "common.back",
       )}</button>
@@ -9605,7 +9591,7 @@ let Nt = class extends oe {
             ${[...this._devices]
               .sort((e, t) => e.name.localeCompare(t.name))
               .map(
-                (e) => F`
+                (e) => V`
                   <option
                     value="${e.address}"
                     ?selected=${e.address === this._selectedDevice?.address}
@@ -9623,19 +9609,19 @@ let Nt = class extends oe {
 
       ${
         0 === this._devices.length
-          ? F`<div class="empty-state">${this._l(
+          ? V`<div class="empty-state">${this._l(
               "device_schedule.no_devices",
             )}</div>`
           : K
       }
       ${
         this._selectedDevice && this._loading
-          ? F`<div class="loading">${this._l("common.loading")}</div>`
+          ? V`<div class="loading">${this._l("common.loading")}</div>`
           : K
       }
       ${
         this._error && this._selectedDevice
-          ? F`<div class="error">${this._error}</div>`
+          ? V`<div class="error">${this._error}</div>`
           : K
       }
       ${
@@ -9653,14 +9639,14 @@ let Nt = class extends oe {
   _renderClimateSchedule() {
     const e = this._climateData,
       t = e.schedule_data;
-    return F`
+    return V`
       <div class="schedule-content">
         <div class="toolbar">
           <div class="profile-selector">
             <label>${this._l("device_schedule.profile")}:</label>
             <select @change=${this._handleProfileChange}>
               ${e.available_profiles.map(
-                (t) => F`
+                (t) => V`
                   <option value="${t}" ?selected=${t === this._selectedProfile}>
                     ${t}${t === e.active_profile ? " ✓" : ""}
                   </option>
@@ -9669,7 +9655,7 @@ let Nt = class extends oe {
             </select>
             ${
               this._selectedProfile !== e.active_profile
-                ? F`
+                ? V`
                   <button class="action-btn small" @click=${
                     this._handleSetActiveProfile
                   }>
@@ -9698,7 +9684,7 @@ let Nt = class extends oe {
             .editable=${!0}
             .showTemperature=${!0}
             .showGradient=${!1}
-            temperatureUnit="\u00B0C"
+            temperatureUnit="°C"
             hourFormat="24"
             .translations=${this._buildGridTranslations()}
             .copiedWeekday=${this._copiedSchedule?.weekday}
@@ -9717,7 +9703,7 @@ let Nt = class extends oe {
           .minTemp=${e.min_temp ?? 5}
           .maxTemp=${e.max_temp ?? 30.5}
           .tempStep=${e.step ?? 0.5}
-          temperatureUnit="\u00B0C"
+          temperatureUnit="°C"
           hourFormat="24"
           .translations=${this._buildEditorTranslations()}
           @save-schedule=${this._onSaveSchedule}
@@ -9728,7 +9714,7 @@ let Nt = class extends oe {
 
       ${
         this._saving
-          ? F`<div class="saving-overlay">${this._l(
+          ? V`<div class="saving-overlay">${this._l(
               "device_schedule.saving",
             )}</div>`
           : K
@@ -9900,13 +9886,13 @@ let Nt = class extends oe {
       s = Object.keys(i).length,
       r = e.schedule_domain ?? void 0,
       a = e.available_target_channels;
-    return F`
+    return V`
       <div class="schedule-content">
         <div class="toolbar">
           <div class="schedule-info">
             ${this._l("device_schedule.entries", { count: s })} |
             ${this._l("device_schedule.max_entries", { max: e.max_entries })}
-            ${e.schedule_domain ? F` | ${e.schedule_domain}` : K}
+            ${e.schedule_domain ? V` | ${e.schedule_domain}` : K}
           </div>
           <div class="toolbar-actions">
             <button class="action-btn" @click=${this._handleExport}>
@@ -9948,7 +9934,7 @@ let Nt = class extends oe {
 
       ${
         this._saving
-          ? F`<div class="saving-overlay">${this._l(
+          ? V`<div class="saving-overlay">${this._l(
               "device_schedule.saving",
             )}</div>`
           : K
@@ -10234,7 +10220,7 @@ let Rt = class extends oe {
   render() {
     switch (this._view) {
       case "device-list":
-        return F`
+        return V`
           <hm-device-list
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -10247,7 +10233,7 @@ let Rt = class extends oe {
           ></hm-device-list>
         `;
       case "device-detail":
-        return F`
+        return V`
           <hm-device-detail
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -10263,7 +10249,7 @@ let Rt = class extends oe {
           ></hm-device-detail>
         `;
       case "channel-config":
-        return F`
+        return V`
           <hm-channel-config
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -10280,7 +10266,7 @@ let Rt = class extends oe {
           ></hm-channel-config>
         `;
       case "change-history":
-        return F`
+        return V`
           <hm-change-history
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -10298,7 +10284,7 @@ let Rt = class extends oe {
           ></hm-change-history>
         `;
       case "device-links":
-        return F`
+        return V`
           <hm-device-links
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -10315,7 +10301,7 @@ let Rt = class extends oe {
           ></hm-device-links>
         `;
       case "link-config":
-        return F`
+        return V`
           <hm-link-config
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -10336,7 +10322,7 @@ let Rt = class extends oe {
           ></hm-link-config>
         `;
       case "add-link":
-        return F`
+        return V`
           <hm-add-link
             .hass=${this.hass}
             .entryId=${this._entryId}
@@ -10355,7 +10341,7 @@ let Rt = class extends oe {
           ></hm-add-link>
         `;
       case "device-schedule":
-        return F`
+        return V`
           <hm-device-schedule
             .hass=${this.hass}
             .entryId=${this._entryId}
