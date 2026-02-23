@@ -38,7 +38,7 @@
 
 - **Climate entity subscribes to week profile changes**: The climate entity now subscribes to `device.week_profile_data_point` updates, ensuring schedule attributes (`schedule_data`, `current_schedule_profile`, `available_profiles`) update in real-time when the schedule changes on the device.
 
-- **Device configuration panel**: New sidebar panel for editing Homematic device MASTER parameters directly from the Home Assistant UI. Provides a form-based interface with per-channel configuration, validation, and reset-to-defaults. Enable via Advanced Options in the integration config flow. Requires `aiohomematic-config`.
+- **Device configuration panel**: New sidebar panel for editing device parameters, managing direct links, and configuring schedules — directly from the Home Assistant UI. Enable via Advanced Options. See [documentation](https://sukramj.github.io/aiohomematic/user/features/config_panel/).
 
 - **Panel translations**: The configuration panel UI (sidebar title, section headers, parameter labels, enum values, toggle labels) is fully translated based on the Home Assistant language setting (German and English). Parameter filtering matches the CCU WebUI easymode behavior — only parameters with known translations are shown.
 
