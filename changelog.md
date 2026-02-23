@@ -96,7 +96,7 @@
 
 - **Multi-instance panel registration**: Fixed the configuration panel disappearing when multiple CCU instances are configured and not all have the panel enabled. The panel is now kept registered as long as at least one config entry has it enabled, instead of letting the last-loaded entry's setting override all others.
 
-## Bump aiohomematic to [2026.2.24](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.24)
+## Bump aiohomematic to [2026.2.25](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.25)
 
 ### Documentation (aiohomematic)
 
@@ -227,7 +227,7 @@ New companion library providing device configuration utilities for the integrati
 - **Schedule facade module** (2026.2.8): `schedule_facade` module for schedule management in the configuration panel. `list_schedule_devices()` for discovering devices with schedule support. `get_climate_schedule()` / `set_climate_schedule_weekday()` / `set_climate_active_profile()` for climate schedules. `get_device_schedule()` / `set_device_schedule()` for generic device schedules.
 - **Schedule domain from upstream** (2026.2.9): Use `schedule_domain` property from aiohomematic instead of local heuristic. Removed `_get_schedule_domain()` helper and `ScheduleType` import from `schedule_facade`.
 
-## Service 2.3.0 with aiohomematic [2026.2.24](https://github.com/SukramJ/aiohomematic/compare/2026.2.23...2026.2.24) and aiohomematic-config [2026.2.9](https://github.com/SukramJ/aiohomematic-config/releases/tag/2026.2.9)
+## Service 2.3.0 with aiohomematic [2026.2.25](https://github.com/SukramJ/aiohomematic/compare/2026.2.0...2026.2.25) and aiohomematic-config [2026.2.9](https://github.com/SukramJ/aiohomematic-config/releases/tag/2026.2.0...2026.2.9)
 
 # Version [2.2.4](https://github.com/SukramJ/homematicip_local/compare/2.2.3...2.2.4) (2026-02-01)
 
