@@ -614,7 +614,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         schema=SCHEMA_SET_DEVICE_VALUE,
     )
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass=hass,
         domain=DOMAIN,
         service=HmipLocalServices.PUT_LINK_PARAMSET,
         service_func=async_call_hmip_local_service,
@@ -681,7 +682,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         supports_response=SupportsResponse.OPTIONAL,
     )
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass=hass,
         domain=DOMAIN,
         service=HmipLocalServices.SET_SCHEDULE,
         service_func=async_call_hmip_local_service,
@@ -704,7 +706,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         supports_response=SupportsResponse.OPTIONAL,
     )
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass=hass,
         domain=DOMAIN,
         service=HmipLocalServices.SET_SCHEDULE_PROFILE,
         service_func=async_call_hmip_local_service,
@@ -718,14 +721,16 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         schema=SCHEMA_SET_SCHEDULE_WEEKDAY,
     )
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass=hass,
         domain=DOMAIN,
         service=HmipLocalServices.COPY_SCHEDULE,
         service_func=async_call_hmip_local_service,
         schema=SCHEMA_COPY_SCHEDULE,
     )
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass=hass,
         domain=DOMAIN,
         service=HmipLocalServices.COPY_SCHEDULE_PROFILE,
         service_func=async_call_hmip_local_service,
