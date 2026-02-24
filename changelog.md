@@ -72,6 +72,10 @@
 
 - **Configuration panel: Reload device config**: New WebSocket command to reload a device's configuration from the CCU without restarting the integration.
 
+- **Device configuration URL deep-link**: When the configuration panel is enabled, each device's `DeviceInfo` now includes a `configuration_url` that links directly to the device detail view in the configuration panel. Clicking the link on a device's page navigates to the panel with the correct entry, device address, and interface pre-selected.
+
+- **Climate `config_entry_id` attribute**: Climate entities with schedule support now expose a `config_entry_id` state attribute, enabling automations and frontend cards to identify the associated config entry.
+
 ### Changed
 
 - **Entity names from backend translations**: Removed redundant local entity translations (binary_sensor, button, lock, number, select, sensor, switch, valve) from strings.json and translation files. Entity names are now provided by the backend CCU translation system via `translated_name`. Only climate (preset modes) and event (keypress types) translations remain local.

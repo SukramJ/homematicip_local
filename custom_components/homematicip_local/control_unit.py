@@ -69,6 +69,7 @@ from .const import (
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
     CONF_COMMAND_THROTTLE_INTERVAL,
+    CONF_ENABLE_CONFIG_PANEL,
     CONF_ENABLE_LIGHT_LAST_BRIGHTNESS,
     CONF_ENABLE_MQTT,
     CONF_ENABLE_PROGRAM_SCAN,
@@ -90,6 +91,7 @@ from .const import (
     CONF_VERIFY_TLS,
     DEFAULT_BACKUP_PATH,
     DEFAULT_COMMAND_THROTTLE_INTERVAL,
+    DEFAULT_ENABLE_CONFIG_PANEL,
     DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK,
     DEFAULT_ENABLE_LIGHT_LAST_BRIGHTNESS,
     DEFAULT_ENABLE_MQTT,
@@ -150,6 +152,7 @@ class BaseControlUnit:
         self._entry_id: Final = control_config.entry_id
         self._instance_name: Final = control_config.instance_name
         self._backup_directory: Final = control_config.backup_directory
+        self._enable_config_panel: Final = control_config.enable_config_panel
         self._enable_light_last_brightness: Final = control_config.enable_light_last_brightness
         self._enable_mqtt: Final = control_config.enable_mqtt
         self._enable_sub_devices: Final = control_config.enable_sub_devices
@@ -198,6 +201,11 @@ class BaseControlUnit:
         return self._attr_device_info
 
     @property
+    def enable_config_panel(self) -> bool:
+        """Return if the configuration panel is enabled."""
+        return self._enable_config_panel
+
+    @property
     def enable_light_last_brightness(self) -> bool:
         """Return if last brightness for lights is enabled."""
         return self._enable_light_last_brightness
@@ -206,6 +214,11 @@ class BaseControlUnit:
     def enable_sub_devices(self) -> bool:
         """Return if sub devices are enabled."""
         return self._enable_sub_devices
+
+    @property
+    def entry_id(self) -> str:
+        """Return the Homematic(IP) Local config entry id."""
+        return self._entry_id
 
     async def start_central(self) -> None:
         """Start the central unit."""
@@ -1011,6 +1024,7 @@ class ControlConfig:
         self._interface_config: Final[Mapping[str, Any]] = self._data.get(CONF_INTERFACE, {})
         # advanced_config
         ac = self._data.get(CONF_ADVANCED_CONFIG, {})
+        self.enable_config_panel: Final[bool] = ac.get(CONF_ENABLE_CONFIG_PANEL, DEFAULT_ENABLE_CONFIG_PANEL)
         self.enable_light_last_brightness: Final[bool] = ac.get(
             CONF_ENABLE_LIGHT_LAST_BRIGHTNESS, DEFAULT_ENABLE_LIGHT_LAST_BRIGHTNESS
         )

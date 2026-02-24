@@ -31,7 +31,13 @@ from homeassistant.components.climate.const import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -116,7 +122,13 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
     _enable_turn_on_off_backwards_compatibility: bool = False
     __no_recored_attributes = AioHomematicGenericEntity.NO_RECORDED_ATTRIBUTES
     __no_recored_attributes.update(
-        {ATTR_AVAILABLE_PROFILES, ATTR_DEVICE_ACTIVE_PROFILE_INDEX, ATTR_OPTIMUM_START_STOP, ATTR_TEMPERATURE_OFFSET}
+        {
+            ATTR_AVAILABLE_PROFILES,
+            ATTR_DEVICE_ACTIVE_PROFILE_INDEX,
+            ATTR_CONFIG_ENTRY_ID,
+            ATTR_OPTIMUM_START_STOP,
+            ATTR_TEMPERATURE_OFFSET,
+        }
     )
     _unrecorded_attributes = frozenset(__no_recored_attributes)
 
@@ -177,6 +189,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         # Add schedule attributes if this entity supports schedules
         if (wp_dp := self._week_profile_data_point) is not None:
             attributes[ATTR_AVAILABLE_PROFILES] = [profile.value for profile in wp_dp.available_profiles]
+            attributes[ATTR_CONFIG_ENTRY_ID] = self._cu.entry_id
             attributes[ATTR_CURRENT_SCHEDULE_PROFILE] = wp_dp.current_schedule_profile
             attributes[ATTR_DEVICE_ACTIVE_PROFILE_INDEX] = wp_dp.device_active_profile_index
             attributes[ATTR_SCHEDULE_API_VERSION] = CLIMATE_SCHEDULE_API_VERSION
