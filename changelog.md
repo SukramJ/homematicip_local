@@ -229,7 +229,7 @@
 - **ClimateWeekProfile**: Simple schedule format now uses Pydantic models for automatic validation. The existing user-facing format remains unchanged, but input validation is now more robust with clear error messages.
 - **DefaultWeekProfile**: Refactored schedule cache to use human-readable Pydantic models (`SimpleSchedule`, `SimpleScheduleEntry`) instead of complex dictionary format.
 
-## Bump aiohomematic-config to [2026.2.9](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.1...2026.2.9)
+## Bump aiohomematic-config to [2026.2.10](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.1...2026.2.10)
 
 New companion library providing device configuration utilities for the integration.
 
@@ -241,6 +241,7 @@ New companion library providing device configuration utilities for the integrati
 - **Async profile loading** (2026.2.7): `ProfileStore.get_profiles()` and `ProfileStore.match_active_profile()` are now async. Fixed blocking `read_text`/`open` calls inside the async event loop (uses `asyncio.to_thread`). **Breaking**: callers must now await these methods.
 - **Schedule facade module** (2026.2.8): `schedule_facade` module for schedule management in the configuration panel. `list_schedule_devices()` for discovering devices with schedule support. `get_climate_schedule()` / `set_climate_schedule_weekday()` / `set_climate_active_profile()` for climate schedules. `get_device_schedule()` / `set_device_schedule()` for generic device schedules.
 - **Schedule domain from upstream** (2026.2.9): Use `schedule_domain` property from aiohomematic instead of local heuristic. Removed `_get_schedule_domain()` helper and `ScheduleType` import from `schedule_facade`.
+- **Device-level change history filtering** (2026.2.10): `ConfigChangeLog.get_entries()` now uses prefix matching for the `channel_address` filter, so querying by device address returns history entries for all channels of that device.
 
 # Version [2.2.4](https://github.com/SukramJ/homematicip_local/compare/2.2.3...2.2.4) (2026-02-01)
 
