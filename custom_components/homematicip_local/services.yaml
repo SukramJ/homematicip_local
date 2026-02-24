@@ -627,29 +627,6 @@ put_paramset:
             - "BURST"
             - "WAKEUP"
 
-set_current_schedule_profile:
-  fields:
-    device_id:
-      required: false
-      selector:
-        device:
-          integration: homematicip_local
-    device_address:
-      required: false
-      selector:
-        text:
-    profile:
-      required: true
-      selector:
-        select:
-          options:
-            - "P1"
-            - "P2"
-            - "P3"
-            - "P4"
-            - "P5"
-            - "P6"
-
 enable_away_mode_by_calendar:
   target:
     entity:

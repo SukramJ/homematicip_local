@@ -13,7 +13,9 @@
   - `set_simple_schedule` → `set_schedule`
   - `set_simple_schedule_profile` → `set_schedule_profile`
   - `set_simple_schedule_weekday` → `set_schedule_weekday`
-  - `set_schedule_active_profile` → `set_current_schedule_profile`
+
+- **Removed services:**
+  - `set_schedule_active_profile` / `set_current_schedule_profile` — use `set_current_schedule_profile` via the configuration panel or update the profile through the `set_schedule_profile` service instead
 
 - **Renamed entity attributes (Climate & Week Profile Sensor):**
   - `active_profile` → `current_schedule_profile`

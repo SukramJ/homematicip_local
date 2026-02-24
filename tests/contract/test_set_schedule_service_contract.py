@@ -47,7 +47,6 @@ class TestScheduleServiceConstantsContract:
         assert HmipLocalServices.SET_SCHEDULE_WEEKDAY == "set_schedule_weekday"
         assert HmipLocalServices.COPY_SCHEDULE == "copy_schedule"
         assert HmipLocalServices.COPY_SCHEDULE_PROFILE == "copy_schedule_profile"
-        assert HmipLocalServices.SET_CURRENT_SCHEDULE_PROFILE == "set_current_schedule_profile"
 
     def test_device_based_constants_exist(self) -> None:
         """Contract: Device-based schedule service constants exist."""
@@ -59,7 +58,6 @@ class TestScheduleServiceConstantsContract:
         assert hasattr(HmipLocalServices, "SET_SCHEDULE_WEEKDAY")
         assert hasattr(HmipLocalServices, "COPY_SCHEDULE")
         assert hasattr(HmipLocalServices, "COPY_SCHEDULE_PROFILE")
-        assert hasattr(HmipLocalServices, "SET_CURRENT_SCHEDULE_PROFILE")
 
     def test_old_domain_specific_constants_removed(self) -> None:
         """Contract: Old domain-specific constants are removed."""

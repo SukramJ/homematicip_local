@@ -211,7 +211,6 @@ class TestScheduleServiceMethodNaming:
         assert hasattr(HmipLocalServices, "SET_SCHEDULE_WEEKDAY")
         assert hasattr(HmipLocalServices, "COPY_SCHEDULE")
         assert hasattr(HmipLocalServices, "COPY_SCHEDULE_PROFILE")
-        assert hasattr(HmipLocalServices, "SET_CURRENT_SCHEDULE_PROFILE")
 
     def test_old_entity_based_service_names_removed(self) -> None:
         """Verify that old entity-based service names are removed."""

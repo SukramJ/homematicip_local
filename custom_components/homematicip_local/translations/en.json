@@ -1350,24 +1350,6 @@
       },
       "name": "Set device value"
     },
-    "set_current_schedule_profile": {
-      "description": "Set the active schedule profile on a climate device",
-      "fields": {
-        "device_address": {
-          "description": "Enter a device address",
-          "name": "Device address"
-        },
-        "device_id": {
-          "description": "Select a device",
-          "name": "Device"
-        },
-        "profile": {
-          "description": "Select a profile to activate (P1-P6)",
-          "name": "Profile"
-        }
-      },
-      "name": "Set active schedule profile"
-    },
     "set_schedule": {
       "description": "Set the complete schedule for a device",
       "fields": {

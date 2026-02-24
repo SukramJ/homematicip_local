@@ -1312,24 +1312,6 @@
             }, 
             "name": "Stellt die kombinierte Position der Jalousie ein"
         }, 
-        "set_current_schedule_profile": {
-            "description": "Aktiviert ein Profil auf einem Klimagerät", 
-            "fields": {
-                "device_address": {
-                    "description": "Geräteadresse eingeben", 
-                    "name": "Geräteadresse"
-                }, 
-                "device_id": {
-                    "description": "Gerät auswählen", 
-                    "name": "Gerät"
-                }, 
-                "profile": {
-                    "description": "Wählen Sie ein Profil zum Aktivieren", 
-                    "name": "Profil"
-                }
-            }, 
-            "name": "Aktives Zeitplan-Profil setzen"
-        }, 
         "set_device_value": {
             "description": "Schreibt den Wert eines Geräteparameters über die XML-RPC-Schnittstelle", 
             "fields": {
