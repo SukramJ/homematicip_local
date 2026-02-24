@@ -125,7 +125,6 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         {
             ATTR_AVAILABLE_PROFILES,
             ATTR_DEVICE_ACTIVE_PROFILE_INDEX,
-            ATTR_CONFIG_ENTRY_ID,
             ATTR_OPTIMUM_START_STOP,
             ATTR_TEMPERATURE_OFFSET,
         }

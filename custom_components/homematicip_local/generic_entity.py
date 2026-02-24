@@ -17,6 +17,7 @@ from aiohomematic.interfaces import (
     GenericSysvarDataPointProtocol,
 )
 from aiohomematic.type_aliases import UnsubscribeCallback
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -55,6 +56,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
 
     NO_RECORDED_ATTRIBUTES = {
         ATTR_ADDRESS,
+        ATTR_CONFIG_ENTRY_ID,
         ATTR_FUNCTION,
         ATTR_INTERFACE_ID,
         ATTR_MODEL,

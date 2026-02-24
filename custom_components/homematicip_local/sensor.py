@@ -13,6 +13,7 @@ from aiohomematic.model.generic import DpSensor
 from aiohomematic.model.hub import SysvarDpSensor
 from aiohomematic.model.week_profile_data_point import WeekProfileDataPoint
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass, SensorEntity, SensorStateClass
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -254,6 +255,7 @@ class AioHomematicWeekProfileSensor(AioHomematicGenericEntity[WeekProfileDataPoi
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the week profile sensor."""
         attributes = super().extra_state_attributes
+        attributes[ATTR_CONFIG_ENTRY_ID] = self._cu.entry_id
         attributes[ATTR_SCHEDULE_TYPE] = self._data_point.schedule_type.value
         attributes[ATTR_MAX_ENTRIES] = self._data_point.max_entries
         if schedule_channel_address := self._data_point.schedule_channel_address:
