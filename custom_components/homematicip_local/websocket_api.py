@@ -1370,7 +1370,6 @@ async def ws_list_schedule_devices(
     connection.send_result(msg["id"], {"devices": [dataclasses.asdict(d) for d in devices]})
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/get_climate_schedule",
@@ -1450,7 +1449,6 @@ async def ws_set_climate_schedule_weekday(
     connection.send_result(msg["id"], {"success": True})
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/set_climate_active_profile",
@@ -1484,7 +1482,6 @@ async def ws_set_climate_active_profile(
     connection.send_result(msg["id"], {"success": True})
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/get_device_schedule",

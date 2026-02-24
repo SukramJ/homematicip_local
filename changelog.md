@@ -80,6 +80,8 @@
 
 ### Changed
 
+- **Schedule WebSocket commands opened to non-admin users**: Removed `@require_admin` restriction from `get_climate_schedule`, `set_climate_active_profile`, and `get_device_schedule` WebSocket commands, allowing non-admin users to read and interact with schedule data.
+
 - **Entity names from backend translations**: Removed redundant local entity translations (binary_sensor, button, lock, number, select, sensor, switch, valve) from strings.json and translation files. Entity names are now provided by the backend CCU translation system via `translated_name`. Only climate (preset modes) and event (keypress types) translations remain local.
 
 - **Config entry migration v16**: Existing config entries are migrated to include `command_throttle_interval` with the default value
