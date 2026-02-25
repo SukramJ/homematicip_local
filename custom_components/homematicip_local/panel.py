@@ -28,13 +28,18 @@ _PANEL_TITLES: Final[dict[str, str]] = {
 _DEFAULT_PANEL_TITLE: Final = "HM Device Configuration"
 
 PANEL_REGISTERED_KEY: HassKey[bool] = HassKey(f"{PANEL_NAME}_registered")
+_STATIC_PATH_REGISTERED_KEY: HassKey[bool] = HassKey(f"{PANEL_NAME}_static_path_registered")
 
 
-async def async_register_panel(hass: HomeAssistant) -> None:
-    """Register the Homematic configuration panel."""
-    if hass.data.get(PANEL_REGISTERED_KEY):
+async def _async_register_static_path(hass: HomeAssistant) -> None:
+    """
+    Register the static path for the panel frontend file (once, permanently).
+
+    aiohttp does not support removing routes, so the static path must only
+    be registered once per HA process lifetime.
+    """
+    if hass.data.get(_STATIC_PATH_REGISTERED_KEY):
         return
-    hass.data[PANEL_REGISTERED_KEY] = True
 
     if not _PANEL_FILE.exists():
         _LOGGER.warning(
@@ -44,7 +49,20 @@ async def async_register_panel(hass: HomeAssistant) -> None:
         return
 
     await hass.http.async_register_static_paths([StaticPathConfig(_PANEL_URL, str(_PANEL_FILE), cache_headers=True)])
+    hass.data[_STATIC_PATH_REGISTERED_KEY] = True
 
+
+async def async_register_panel(hass: HomeAssistant) -> None:
+    """Register the Homematic configuration panel."""
+    if hass.data.get(PANEL_REGISTERED_KEY):
+        return
+
+    await _async_register_static_path(hass)
+
+    if not hass.data.get(_STATIC_PATH_REGISTERED_KEY):
+        return
+
+    hass.data[PANEL_REGISTERED_KEY] = True
     await panel_custom.async_register_panel(
         hass,
         webcomponent_name=PANEL_NAME,

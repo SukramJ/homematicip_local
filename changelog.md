@@ -1,3 +1,13 @@
+# Version [2.3.1](https://github.com/SukramJ/homematicip_local/compare/2.3.0...2.3.1) (2026-02-25)
+
+## What's Changed
+
+### Fixed
+
+- **Fix panel registration failure on integration reload**: Separated static HTTP route registration from frontend panel registration. The static route (which cannot be removed by aiohttp) is now tracked independently and only registered once per HA process lifetime. Previously, reloading the integration or an automatic retry after a transient error would attempt to re-register the static route, causing a `RuntimeError` that cascaded into all platform setups failing with "has already been setup".
+
+---
+
 # Version [2.3.0](https://github.com/SukramJ/homematicip_local/compare/2.2.4...2.3.0) (2026-02-23)
 
 ## What's Changed
