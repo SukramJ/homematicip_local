@@ -263,6 +263,11 @@
                 }
             }
         }, 
+        "number": {
+            "pipe_level": {
+                "name": "Ventil-Öffnungsgrad"
+            }
+        }, 
         "select": {
             "acoustic_alarm_selection": {
                 "name": "Sirenen-Ton", 
@@ -318,6 +323,12 @@
             "connection_latency": {
                 "name": "Verbindungslatenz"
             }, 
+            "cover_level": {
+                "name": "Abdeckungsposition"
+            }, 
+            "cover_tilt": {
+                "name": "Lamellenposition"
+            }, 
             "direction": {
                 "name": "Richtung", 
                 "state": {
@@ -360,6 +371,9 @@
             "last_event_age": {
                 "name": "Alter letztes Ereignis"
             }, 
+            "light_level": {
+                "name": "Helligkeit"
+            }, 
             "lock_state": {
                 "name": "Schließzustand", 
                 "state": {
@@ -367,6 +381,9 @@
                     "unknown": "Unbekannt", 
                     "unlocked": "Unverriegelt"
                 }
+            }, 
+            "pipe_level": {
+                "name": "Ventil-Öffnungsgrad"
             }, 
             "rain_counter_today": {
                 "name": "Regenzähler Heute"

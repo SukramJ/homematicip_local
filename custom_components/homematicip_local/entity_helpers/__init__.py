@@ -165,7 +165,7 @@ def _get_name_and_translation_key(
     """Get the name and translation_key for an entity."""
     name = data_point.name
 
-    if entity_desc.translation_key and entity_desc.translation_key in ENTITY_TRANSLATION_KEYS:
+    if entity_desc.translation_key:
         return name, entity_desc.translation_key
 
     if isinstance(data_point, (CalculatedDataPointProtocol, GenericDataPointProtocol)):

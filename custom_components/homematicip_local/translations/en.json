@@ -263,6 +263,11 @@
         }
       }
     },
+    "number": {
+      "pipe_level": {
+        "name": "Valve opening"
+      }
+    },
     "select": {
       "acoustic_alarm_selection": {
         "name": "Siren Tone",
@@ -309,6 +314,12 @@
       }
     },
     "sensor": {
+      "cover_level": {
+        "name": "Cover level"
+      },
+      "cover_tilt": {
+        "name": "Tilt level"
+      },
       "direction": {
         "name": "Direction",
         "state": {
@@ -327,6 +338,9 @@
           "ventilation_position": "Ventilation position"
         }
       },
+      "light_level": {
+        "name": "Light level"
+      },
       "lock_state": {
         "name": "Lock State",
         "state": {
@@ -334,6 +348,9 @@
           "unknown": "Unknown",
           "unlocked": "Unlocked"
         }
+      },
+      "pipe_level": {
+        "name": "Valve opening"
       },
       "sec_direction": {
         "name": "Direction",

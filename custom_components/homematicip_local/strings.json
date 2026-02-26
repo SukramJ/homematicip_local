@@ -263,6 +263,11 @@
                 }
             }
         }, 
+        "number": {
+            "pipe_level": {
+                "name": "Valve opening"
+            }
+        }, 
         "select": {
             "acoustic_alarm_selection": {
                 "name": "Siren Tone", 
@@ -318,6 +323,12 @@
             "connection_latency": {
                 "name": "Connection Latency"
             }, 
+            "cover_level": {
+                "name": "Cover level"
+            }, 
+            "cover_tilt": {
+                "name": "Tilt level"
+            }, 
             "direction": {
                 "name": "Direction", 
                 "state": {
@@ -360,6 +371,9 @@
             "last_event_age": {
                 "name": "Last Event Age"
             }, 
+            "light_level": {
+                "name": "Light level"
+            }, 
             "lock_state": {
                 "name": "Lock State", 
                 "state": {
@@ -367,6 +381,9 @@
                     "unknown": "Unknown", 
                     "unlocked": "Unlocked"
                 }
+            }, 
+            "pipe_level": {
+                "name": "Valve opening"
             }, 
             "rain_counter_today": {
                 "name": "Rain Counter Today"

@@ -6,6 +6,8 @@
 
 - **Fix panel registration failure on integration reload**: Separated static HTTP route registration from frontend panel registration. The static route (which cannot be removed by aiohttp) is now tracked independently and only registered once per HA process lifetime. Previously, reloading the integration or an automatic retry after a transient error would attempt to re-register the static route, causing a `RuntimeError` that cascaded into all platform setups failing with "has already been setup".
 
+- **Fix entity translations for LEVEL sensors**: LEVEL sensors on thermostats and other devices (e.g. valve opening, cover level, light level, tilt level) now show translated names and correct icons again. The translation_key from entity descriptions was incorrectly filtered by a whitelist, causing both the local translation and the icon mapping from `icons.json` to be lost. Added translations for `pipe_level`, `cover_level`, `light_level`, and `cover_tilt` in all locales.
+
 ### Config Panel
 
 - Migrated all UI elements to Home Assistant built-in components
@@ -16,8 +18,9 @@
 
 ### Dependencies
 
-## Bump aiohomematic to [2026.2.26](https://github.com/SukramJ/aiohomematic/compare/2026.2.25...2026.2.26)
+#### Bump aiohomematic to [2026.2.27](https://github.com/SukramJ/aiohomematic/compare/2026.2.25...2026.2.27)
 
+- **Fix channel-specific translation lookup**: The `channel_type` parameter was not lowercased before lookup, causing channel-specific translations (e.g. `maintenance|low_bat` → "Batterie") to never match when the channel type came from device descriptions in uppercase. Both lookup functions now normalize `channel_type` to lowercase.
 - **Option value translations from options.tcl**: ~65 new entries per locale for MASTER paramset dropdown parameters (`POWERUP_JUMPTARGET`, `LOGIC_COMBINATION`, `FLOOR_HEATING_MODE`, `HEATING_MODE_SELECTION`, `MIOB_DIN_CONFIG`, `DALI_EFFECTS`, etc.). Parameters that previously showed raw VALUE_LIST values now display human-readable labels in the UI.
 
 ---

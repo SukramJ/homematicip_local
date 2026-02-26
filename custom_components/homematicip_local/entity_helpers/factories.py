@@ -254,6 +254,7 @@ def diagnostic_binary_sensor(
     device_class: BinarySensorDeviceClass,
     enabled_default: bool = False,
     icon: str | None = None,
+    name_source: HmNameSource = HmNameSource.PARAMETER,
     **kwargs: Any,
 ) -> HmBinarySensorEntityDescription:
     """
@@ -273,6 +274,7 @@ def diagnostic_binary_sensor(
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=enabled_default,
         icon=icon,
+        name_source=name_source,
         **kwargs,
     )
 
