@@ -1,10 +1,24 @@
-# Version [2.3.1](https://github.com/SukramJ/homematicip_local/compare/2.3.0...2.3.1) (2026-02-25)
+# Version [2.3.1](https://github.com/SukramJ/homematicip_local/compare/2.3.0...2.3.1) (2026-02-26)
 
 ## What's Changed
 
 ### Fixed
 
 - **Fix panel registration failure on integration reload**: Separated static HTTP route registration from frontend panel registration. The static route (which cannot be removed by aiohttp) is now tracked independently and only registered once per HA process lifetime. Previously, reloading the integration or an automatic retry after a transient error would attempt to re-register the static route, causing a `RuntimeError` that cascaded into all platform setups failing with "has already been setup".
+
+### Config Panel
+
+- Migrated all UI elements to Home Assistant built-in components
+- MASTER paramset: Unit/Value parameter pairs (e.g. `*_UNIT` + `*_VALUE`) are now displayed as a single preset dropdown instead of two separate rows, matching the CCU behavior
+- 13 standard Homematic time presets (100ms–15 minutes) with localized labels (EN/DE)
+- "Custom value" / "Wert eingeben" option reveals the original unit and value fields for manual entry
+- Automatic detection: if current values match a preset, the preset is shown; otherwise custom mode with detail fields
+
+### Dependencies
+
+## Bump aiohomematic to [2026.2.26](https://github.com/SukramJ/aiohomematic/compare/2026.2.25...2026.2.26)
+
+- **Option value translations from options.tcl**: ~65 new entries per locale for MASTER paramset dropdown parameters (`POWERUP_JUMPTARGET`, `LOGIC_COMBINATION`, `FLOOR_HEATING_MODE`, `HEATING_MODE_SELECTION`, `MIOB_DIN_CONFIG`, `DALI_EFFECTS`, etc.). Parameters that previously showed raw VALUE_LIST values now display human-readable labels in the UI.
 
 ---
 
