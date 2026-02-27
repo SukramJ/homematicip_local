@@ -1,3 +1,15 @@
+# Version [2.3.2](https://github.com/SukramJ/homematicip_local/compare/2.3.1...2.3.2) (2026-02-27)
+
+## What's Changed
+
+### Dependencies
+
+#### Bump aiohomematic to [2026.2.28](https://github.com/SukramJ/aiohomematic/compare/2026.2.27...2026.2.28)
+
+- **Fix spurious optimistic update rollbacks**: `apply_optimistic_value()` was called before the `is_state_change()` check in the direct send path. When sending a value identical to the current state (e.g. turning off an already-off switch), the optimistic timer started but no RPC was sent to the CCU, making confirmation impossible. After 30 seconds the timer fired a spurious rollback with warning logs and `OptimisticRollbackEvent`. The state change check now runs first so optimistic tracking is only activated when an RPC call actually occurs.
+
+---
+
 # Version [2.3.1](https://github.com/SukramJ/homematicip_local/compare/2.3.0...2.3.1) (2026-02-26)
 
 ## What's Changed
