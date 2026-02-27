@@ -2,11 +2,21 @@
 
 ## What's Changed
 
+### Config Panel
+
+- **Parameter help texts**: Markdown-formatted help texts for ~165 MASTER paramset parameters (e.g. `BUTTON_LOCK`, `TEMPERATURE_OFFSET`, `VALVE_OFFSET`) are now displayed below each parameter in the configuration panel
+
 ### Dependencies
 
-#### Bump aiohomematic to [2026.2.28](https://github.com/SukramJ/aiohomematic/compare/2026.2.27...2026.2.28)
+#### Bump aiohomematic to [2026.2.29](https://github.com/SukramJ/aiohomematic/compare/2026.2.27...2026.2.29)
 
+- **Parameter help texts**: Extract and expose Markdown-formatted help texts for ~165 MASTER paramset parameters from the CCU WebUI. The HTML content is converted to Markdown, template variables are resolved, and the result is available via `get_parameter_help()` and as a `description` property on `BaseParameterDataPoint`.
 - **Fix spurious optimistic update rollbacks**: `apply_optimistic_value()` was called before the `is_state_change()` check in the direct send path. When sending a value identical to the current state (e.g. turning off an already-off switch), the optimistic timer started but no RPC was sent to the CCU, making confirmation impossible. After 30 seconds the timer fired a spurious rollback with warning logs and `OptimisticRollbackEvent`. The state change check now runs first so optimistic tracking is only activated when an RPC call actually occurs.
+
+#### Bump aiohomematic-config to [2026.2.11](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.2.11)
+
+- Add `description` field to `FormParameter` with Markdown-formatted parameter help text
+- Use `get_parameter_help()` from aiohomematic to populate help texts (locale-aware, with LINK prefix stripping)
 
 ---
 

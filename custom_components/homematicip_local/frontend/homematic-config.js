@@ -520,6 +520,7 @@ function e(e,t,i,s){var a,n=arguments.length,r=n<3?t:null===s?s=Object.getOwnPro
         </div>
         <div class="parameter-control">${this._renderWidget(e,t)}</div>
       </div>
+      ${e.description?W`<ha-markdown .content=${e.description} class="parameter-description"></ha-markdown>`:F}
       ${this.validationError?W`<div class="validation-error">${this.validationError}</div>`:F}
     `}_renderWidget(e,t){switch(e.widget){case"toggle":return W`
           <ha-switch
@@ -654,6 +655,14 @@ function e(e,t,i,s){var a,n=arguments.length,r=n<3?t:null===s?s=Object.getOwnPro
       .read-only-value {
         font-size: 14px;
         color: var(--secondary-text-color);
+      }
+
+      .parameter-description {
+        display: block;
+        font-size: 12px;
+        color: var(--secondary-text-color);
+        margin: -4px 0 4px;
+        line-height: 1.4;
       }
 
       @media (max-width: 600px) {
