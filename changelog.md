@@ -1,22 +1,32 @@
-# Version [2.3.2](https://github.com/SukramJ/homematicip_local/compare/2.3.1...2.3.2) (2026-02-27)
+# Version [2.3.2](https://github.com/SukramJ/homematicip_local/compare/2.3.1...2.3.2) (2026-02-28)
 
 ## What's Changed
 
 ### Config Panel
 
+- **Device icons**: Device list, device detail, and channel config views now display device images from the CCU via proxy endpoint. Graceful fallback when icon is unavailable.
 - **Parameter help texts**: Markdown-formatted help texts for ~165 MASTER paramset parameters (e.g. `BUTTON_LOCK`, `TEMPERATURE_OFFSET`, `VALVE_OFFSET`) are now displayed below each parameter in the configuration panel
+- **Device schedule fix**: Schedule entries without target channels are now correctly displayed (dimmed). Removed frontend `target_channels` validation (CCU allows `TARGET_CHANNELS = 0`). Auto-selects first device in schedule view when no matching device is found.
+- **Bug fixes**: Fixed `ha-slider` event handling (fires `value-changed` instead of native `change`), fixed `ha-select` event leaking corrupting pending changes state, fixed `ha-select` dropdown closing the device schedule editor dialog, fixed editor dialog closing on save when validation errors exist
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.2.29](https://github.com/SukramJ/aiohomematic/compare/2026.2.27...2026.2.29)
+#### Bump aiohomematic to [2026.2.32](https://github.com/SukramJ/aiohomematic/compare/2026.2.27...2026.2.32)
 
+- **Device icons**: Extract device model to icon filename mapping from CCU's `DEVDB.tcl` (525 entries). New `get_device_icon()` in `ccu_translations` and `icon` property on `Device` expose the filename relative to `img/devices/250/` for downstream consumers.
+- **Profile-specific parameter translations**: Extract ~550 additional parameter translations from CCU easymode profile localization files (e.g. `COLOR_TEMP`, `MAX_COLOR_TEMP`, `SWITCH_DIRECTION`), merged with lowest priority into the existing parameter translation output.
 - **Parameter help texts**: Extract and expose Markdown-formatted help texts for ~165 MASTER paramset parameters from the CCU WebUI. The HTML content is converted to Markdown, template variables are resolved, and the result is available via `get_parameter_help()` and as a `description` property on `BaseParameterDataPoint`.
 - **Fix spurious optimistic update rollbacks**: `apply_optimistic_value()` was called before the `is_state_change()` check in the direct send path. When sending a value identical to the current state (e.g. turning off an already-off switch), the optimistic timer started but no RPC was sent to the CCU, making confirmation impossible. After 30 seconds the timer fired a spurious rollback with warning logs and `OptimisticRollbackEvent`. The state change check now runs first so optimistic tracking is only activated when an RPC call actually occurs.
+- **Fix install mode**: Use interface-specific client instead of primary client for install mode buttons. Previously, activating install mode for one interface (e.g. HmIP-RF) could incorrectly target another interface (e.g. BidCos-RF).
+- **Fix non-climate schedules with empty target channels**: Schedules without explicit target channels were incorrectly filtered as inactive because `is_schedule_active()` required both weekdays and target channels. The CCU handles default channel assignment when no explicit channels are configured, so the activity check now only requires at least one weekday.
 
-#### Bump aiohomematic-config to [2026.2.11](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.2.11)
+#### Bump aiohomematic-config to [2026.2.13](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.2.13)
 
+- Add `device_icon` field to `FormSchema` with icon filename from CCU device database
 - Add `description` field to `FormParameter` with Markdown-formatted parameter help text
 - Use `get_parameter_help()` from aiohomematic to populate help texts (locale-aware, with LINK prefix stripping)
+- Fix URL-encoded umlauts in profile names and descriptions (`%D6` → `Ö`) by adding `urllib.parse.unquote()` before `html.unescape()`
+- Fix profile matching to prefer most specific profile when multiple profiles match (highest fixed-constraint count wins)
 
 ---
 

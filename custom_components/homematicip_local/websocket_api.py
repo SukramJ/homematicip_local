@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Final
 from pydantic import ValidationError
 import voluptuous as vol
 
+from aiohomematic.ccu_translations import get_device_icon
 from aiohomematic.const import ParamsetKey
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.support.address import get_device_address
@@ -170,7 +171,13 @@ async def ws_list_devices(
         return
 
     devices = control.central.configuration.get_configurable_devices(locale=hass.config.language)
-    connection.send_result(msg["id"], {"devices": [dataclasses.asdict(d) for d in devices]})
+    device_dicts = []
+    for d in devices:
+        d_dict = dataclasses.asdict(d)
+        if icon := get_device_icon(model=d.model):
+            d_dict["device_icon"] = icon
+        device_dicts.append(d_dict)
+    connection.send_result(msg["id"], {"devices": device_dicts})
 
 
 @require_admin

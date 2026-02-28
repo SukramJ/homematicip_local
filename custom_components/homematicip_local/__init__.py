@@ -56,6 +56,7 @@ from .const import (
     HMIP_LOCAL_PLATFORMS,
 )
 from .control_unit import ControlConfig, ControlUnit, get_storage_directory
+from .device_icon import ICON_VIEW_REGISTERED_KEY, DeviceIconView
 from .panel import async_register_panel, async_unregister_panel
 from .services import async_get_loaded_config_entries, async_setup_services, async_unload_services
 from .support import get_aiohomematic_version, get_device_address_at_interface_from_identifiers
@@ -181,6 +182,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
     if not hass.data.get("homematicip_local_ws_registered"):
         async_register_websocket_commands(hass)
         hass.data["homematicip_local_ws_registered"] = True
+
+    # Register device icon proxy view once
+    if not hass.data.get(ICON_VIEW_REGISTERED_KEY):
+        hass.http.register_view(DeviceIconView)
+        hass.data[ICON_VIEW_REGISTERED_KEY] = True
 
     # Register or unregister panel based on config entry settings.
     # Only unregister if no loaded config entry has the panel enabled.
