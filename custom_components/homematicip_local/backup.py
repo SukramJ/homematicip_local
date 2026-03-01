@@ -174,12 +174,15 @@ class CcuLocalBackupAgent(LocalBackupAgent):
         """
         Upload a backup.
 
-        Create a CCU backup first, then persist HA backup metadata.
-        The tar file is already written to disk by HA core at get_new_backup_path().
+        Write the HA backup tar from the stream, create a CCU backup,
+        then persist metadata linking both files.
         CCU backup failures are logged but do not block the HA backup.
         """
-        ccu_filename = await self._async_create_ccu_backup()
         tar_path = self.get_new_backup_path(backup)
+        await self._hass.async_add_executor_job(tar_path.parent.mkdir, True, True)
+        await self._async_write_tar(open_stream=open_stream, tar_path=tar_path)
+
+        ccu_filename = await self._async_create_ccu_backup()
         meta_path = tar_path.parent / _meta_filename(tar_filename=tar_path.name)
         meta_data = {
             "backup": backup.as_dict(),
@@ -193,6 +196,7 @@ class CcuLocalBackupAgent(LocalBackupAgent):
             )
         except OSError as err:
             self._cleanup_ccu_backup(ccu_filename=ccu_filename)
+            await self._hass.async_add_executor_job(tar_path.unlink, True)
             raise BackupAgentError(f"Failed to save backup metadata: {err}") from err
         self._backups[backup.backup_id] = (backup, tar_path, ccu_filename)
 
@@ -239,6 +243,25 @@ class CcuLocalBackupAgent(LocalBackupAgent):
             )
             return None
         return backup_data.filename
+
+    async def _async_write_tar(
+        self,
+        *,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
+        tar_path: Path,
+    ) -> None:
+        """Write backup tar file from the stream to disk."""
+        try:
+            stream = await open_stream()
+            fh = await self._hass.async_add_executor_job(tar_path.open, "wb")
+            try:
+                async for chunk in stream:
+                    await self._hass.async_add_executor_job(fh.write, chunk)
+            finally:
+                await self._hass.async_add_executor_job(fh.close)
+        except OSError as err:
+            await self._hass.async_add_executor_job(tar_path.unlink, True)
+            raise BackupAgentError(f"Failed to write backup tar: {err}") from err
 
     def _cleanup_ccu_backup(self, *, ccu_filename: str | None) -> None:
         """Remove CCU backup file on rollback."""

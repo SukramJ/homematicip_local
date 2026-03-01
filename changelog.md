@@ -1,6 +1,10 @@
-# Version [2.3.2](https://github.com/SukramJ/homematicip_local/compare/2.3.1...2.3.2) (2026-02-28)
+# Version [2.3.2](https://github.com/SukramJ/homematicip_local/compare/2.3.1...2.3.2) (2026-03-01)
 
 ## What's Changed
+
+### Fixed
+
+- **Fix backup agent not writing backup files**: The backup agent's `async_upload_backup()` did not write the HA backup tar file from the provided stream before persisting metadata. Only the `_meta.json` and CCU `.sbk` backup were created, but the `.tar` file was missing. The agent now correctly writes the tar stream to disk using HA's async executor pattern before creating the CCU backup and metadata. Failed writes are properly cleaned up.
 
 ### Config Panel
 
