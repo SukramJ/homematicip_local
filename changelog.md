@@ -11,16 +11,17 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.2.32](https://github.com/SukramJ/aiohomematic/compare/2026.2.27...2026.2.32)
+#### Bump aiohomematic to [2026.3.0](https://github.com/SukramJ/aiohomematic/compare/2026.2.27...2026.3.0)
 
 - **Device icons**: Extract device model to icon filename mapping from CCU's `DEVDB.tcl` (525 entries). New `get_device_icon()` in `ccu_translations` and `icon` property on `Device` expose the filename relative to `img/devices/250/` for downstream consumers.
 - **Profile-specific parameter translations**: Extract ~550 additional parameter translations from CCU easymode profile localization files (e.g. `COLOR_TEMP`, `MAX_COLOR_TEMP`, `SWITCH_DIRECTION`), merged with lowest priority into the existing parameter translation output.
 - **Parameter help texts**: Extract and expose Markdown-formatted help texts for ~165 MASTER paramset parameters from the CCU WebUI. The HTML content is converted to Markdown, template variables are resolved, and the result is available via `get_parameter_help()` and as a `description` property on `BaseParameterDataPoint`.
+- **Fix device link encoding**: Fix garbled UTF-8 characters in device link names and descriptions retrieved via XML-RPC. The CCU stores user-defined strings as UTF-8 but the XML-RPC transport decodes them as ISO-8859-1, causing multi-byte characters to be misinterpreted (e.g. `ü` → `Ã¼`). New `fix_xml_rpc_encoding` utility reverses the double-encoding.
 - **Fix spurious optimistic update rollbacks**: `apply_optimistic_value()` was called before the `is_state_change()` check in the direct send path. When sending a value identical to the current state (e.g. turning off an already-off switch), the optimistic timer started but no RPC was sent to the CCU, making confirmation impossible. After 30 seconds the timer fired a spurious rollback with warning logs and `OptimisticRollbackEvent`. The state change check now runs first so optimistic tracking is only activated when an RPC call actually occurs.
 - **Fix install mode**: Use interface-specific client instead of primary client for install mode buttons. Previously, activating install mode for one interface (e.g. HmIP-RF) could incorrectly target another interface (e.g. BidCos-RF).
 - **Fix non-climate schedules with empty target channels**: Schedules without explicit target channels were incorrectly filtered as inactive because `is_schedule_active()` required both weekdays and target channels. The CCU handles default channel assignment when no explicit channels are configured, so the activity check now only requires at least one weekday.
 
-#### Bump aiohomematic-config to [2026.2.15](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.2.15)
+#### Bump aiohomematic-config to [2026.3.0](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.3.0)
 
 - Add `device_icon` field to `FormSchema` with icon filename from CCU device database
 - Add `description` field to `FormParameter` with Markdown-formatted parameter help text
@@ -28,6 +29,9 @@
 - Fix URL-encoded umlauts in profile names and descriptions (`%D6` → `Ö`) by adding `urllib.parse.unquote()` before `html.unescape()`
 - Fix profile matching to prefer most specific profile when multiple profiles match (highest fixed-constraint count wins)
 - Resolve TCL `$variable` references in easymode profile constraints (e.g. `$NOP`, `$RAMP_ON`)
+- Handle TCL `[subst {...}]` wrappers in easymode profile constraint parsing
+- Follow TCL `source` includes to resolve profiles defined in shared files (e.g. `profiles.tcl`, `profilesTunableWhite.tcl`)
+- Add profiles for new receiver types: `AUTO_RELOCK_TRANSCEIVER`, `DOOR_LOCK_TRANSCEIVER`, `UNIVERSAL_LIGHT_RECEIVER_LSC`, `UNIVERSAL_LIGHT_RECEIVER_RGB(W)`, `UNIVERSAL_LIGHT_RECEIVER_RGBW_DALI`, `UNIVERSAL_LIGHT_RECEIVER_TW`
 
 ---
 
