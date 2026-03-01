@@ -20,7 +20,7 @@
 - **Fix install mode**: Use interface-specific client instead of primary client for install mode buttons. Previously, activating install mode for one interface (e.g. HmIP-RF) could incorrectly target another interface (e.g. BidCos-RF).
 - **Fix non-climate schedules with empty target channels**: Schedules without explicit target channels were incorrectly filtered as inactive because `is_schedule_active()` required both weekdays and target channels. The CCU handles default channel assignment when no explicit channels are configured, so the activity check now only requires at least one weekday.
 
-#### Bump aiohomematic-config to [2026.2.14](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.2.14)
+#### Bump aiohomematic-config to [2026.2.15](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.2.15)
 
 - Add `device_icon` field to `FormSchema` with icon filename from CCU device database
 - Add `description` field to `FormParameter` with Markdown-formatted parameter help text
