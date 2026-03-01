@@ -392,8 +392,19 @@ class TestCcuLocalBackupAgent:
         agent = self._make_agent(hass=hass, backup_dir=tmp_path)
         backup = _make_agent_backup()
 
+        tar_path = agent.get_new_backup_path(backup)
+        tar_path.parent.mkdir(parents=True, exist_ok=True)
+        tar_path.write_bytes(b"fake-tar-content")
+
+        original = hass.async_add_executor_job
+
+        async def fail_on_write_text(func: Any, *args: Any) -> Any:
+            if hasattr(func, "__self__") and isinstance(func.__self__, Path) and func.__name__ == "write_text":
+                raise OSError("disk full")
+            return await original(func, *args)
+
         with (
-            patch.object(hass, "async_add_executor_job", side_effect=OSError("disk full")),
+            patch.object(hass, "async_add_executor_job", side_effect=fail_on_write_text),
             pytest.raises(BackupAgentError, match="Failed to save backup metadata"),
         ):
             await agent.async_upload_backup(open_stream=AsyncMock(), backup=backup)

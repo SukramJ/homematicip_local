@@ -179,7 +179,7 @@ class CcuLocalBackupAgent(LocalBackupAgent):
         CCU backup failures are logged but do not block the HA backup.
         """
         tar_path = self.get_new_backup_path(backup)
-        await self._hass.async_add_executor_job(tar_path.parent.mkdir, True, True)
+        await self._hass.async_add_executor_job(tar_path.parent.mkdir, 0o777, True, True)
         await self._async_write_tar(open_stream=open_stream, tar_path=tar_path)
 
         ccu_filename = await self._async_create_ccu_backup()
