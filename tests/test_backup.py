@@ -125,23 +125,27 @@ class TestCcuLocalBackupAgent:
         assert agent.agent_id == "homematicip_local.test-entry-id"
 
     async def test_delete_backup(self, hass: HomeAssistant, tmp_path: Path) -> None:
-        """Test deleting a backup removes tar and metadata files."""
-        agent = self._make_agent(hass=hass, backup_dir=tmp_path)
+        """Test deleting a backup removes metadata and CCU backup files."""
+        central = MagicMock()
+        central.available = True
+        central.name = "TestCCU"
+        backup_data = _make_backup_data()
+        central.create_backup_and_download = AsyncMock(return_value=backup_data)
+
+        agent = self._make_agent(hass=hass, backup_dir=tmp_path, central=central)
         backup = _make_agent_backup()
 
-        tar_path = agent.get_new_backup_path(backup)
-        tar_path.parent.mkdir(parents=True, exist_ok=True)
-        tar_path.write_bytes(b"fake-tar-content")
         await agent.async_upload_backup(open_stream=AsyncMock(), backup=backup)
 
-        meta_path = tar_path.parent / (tar_path.stem + "_meta.json")
-        assert tar_path.exists()
+        meta_path = tmp_path / "test-backup-id_meta.json"
+        ccu_path = tmp_path / "backup_2026.tar.gz"
         assert meta_path.exists()
+        assert ccu_path.exists()
 
         await agent.async_delete_backup("test-backup-id")
 
-        assert not tar_path.exists()
         assert not meta_path.exists()
+        assert not ccu_path.exists()
         assert await agent.async_list_backups() == []
 
     async def test_delete_backup_not_found(self, hass: HomeAssistant, tmp_path: Path) -> None:
@@ -153,12 +157,15 @@ class TestCcuLocalBackupAgent:
 
     async def test_delete_backup_os_error(self, hass: HomeAssistant, tmp_path: Path) -> None:
         """Test that OSError during delete is wrapped in BackupAgentError."""
-        agent = self._make_agent(hass=hass, backup_dir=tmp_path)
+        central = MagicMock()
+        central.available = True
+        central.name = "TestCCU"
+        backup_data = _make_backup_data()
+        central.create_backup_and_download = AsyncMock(return_value=backup_data)
+
+        agent = self._make_agent(hass=hass, backup_dir=tmp_path, central=central)
         backup = _make_agent_backup()
 
-        tar_path = agent.get_new_backup_path(backup)
-        tar_path.parent.mkdir(parents=True, exist_ok=True)
-        tar_path.write_bytes(b"fake-tar-content")
         await agent.async_upload_backup(open_stream=AsyncMock(), backup=backup)
 
         # Ensure backups are loaded so _load_backups is not called during delete
@@ -170,8 +177,41 @@ class TestCcuLocalBackupAgent:
         ):
             await agent.async_delete_backup("test-backup-id")
 
-    async def test_delete_backup_removes_ccu_file(self, hass: HomeAssistant, tmp_path: Path) -> None:
-        """Test deleting a backup also removes the associated CCU backup file."""
+    async def test_delete_backup_with_fresh_agent(self, hass: HomeAssistant, tmp_path: Path) -> None:
+        """Test deleting a backup with a fresh agent instance (simulates HA restart)."""
+        backup = _make_agent_backup()
+
+        central = MagicMock()
+        central.available = True
+        central.name = "TestCCU"
+        backup_data = _make_backup_data()
+        central.create_backup_and_download = AsyncMock(return_value=backup_data)
+
+        # Agent 1: handles the upload
+        agent1 = self._make_agent(hass=hass, backup_dir=tmp_path, central=central)
+        await agent1.async_upload_backup(open_stream=AsyncMock(), backup=backup)
+
+        meta_path = tmp_path / "test-backup-id_meta.json"
+        ccu_path = tmp_path / "backup_2026.tar.gz"
+        assert meta_path.exists()
+        assert ccu_path.exists()
+
+        # Agent 2: fresh instance (as if HA restarted), handles the delete
+        agent2 = self._make_agent(hass=hass, backup_dir=tmp_path, central=central)
+        await agent2.async_delete_backup("test-backup-id")
+
+        assert not meta_path.exists()
+        assert not ccu_path.exists()
+
+    async def test_download_backup_not_supported(self, hass: HomeAssistant, tmp_path: Path) -> None:
+        """Test that download raises BackupAgentError (agent only stores CCU backups)."""
+        agent = self._make_agent(hass=hass, backup_dir=tmp_path)
+
+        with pytest.raises(BackupAgentError, match="Download not supported"):
+            await agent.async_download_backup("test-backup-id")
+
+    async def test_get_backup(self, hass: HomeAssistant, tmp_path: Path) -> None:
+        """Test retrieving a backup by ID."""
         central = MagicMock()
         central.available = True
         central.name = "TestCCU"
@@ -181,64 +221,29 @@ class TestCcuLocalBackupAgent:
         agent = self._make_agent(hass=hass, backup_dir=tmp_path, central=central)
         backup = _make_agent_backup()
 
-        tar_path = agent.get_new_backup_path(backup)
-        tar_path.parent.mkdir(parents=True, exist_ok=True)
-        tar_path.write_bytes(b"fake-tar-content")
-        await agent.async_upload_backup(open_stream=AsyncMock(), backup=backup)
-
-        ccu_path = tmp_path / "backup_2026.tar.gz"
-        meta_path = tar_path.parent / (tar_path.stem + "_meta.json")
-        assert tar_path.exists()
-        assert meta_path.exists()
-        assert ccu_path.exists()
-
-        await agent.async_delete_backup("test-backup-id")
-
-        assert not tar_path.exists()
-        assert not meta_path.exists()
-        assert not ccu_path.exists()
-
-    async def test_delete_backup_with_fresh_agent(self, hass: HomeAssistant, tmp_path: Path) -> None:
-        """Test deleting a backup with a fresh agent instance (simulates HA restart)."""
-        backup = _make_agent_backup()
-
-        # Agent 1: handles the upload
-        agent1 = self._make_agent(hass=hass, backup_dir=tmp_path)
-        tar_path = agent1.get_new_backup_path(backup)
-        tar_path.parent.mkdir(parents=True, exist_ok=True)
-        tar_path.write_bytes(b"fake-tar-content")
-        await agent1.async_upload_backup(open_stream=AsyncMock(), backup=backup)
-
-        meta_path = tar_path.parent / (tar_path.stem + "_meta.json")
-        assert tar_path.exists()
-        assert meta_path.exists()
-
-        # Agent 2: fresh instance (as if HA restarted), handles the delete
-        agent2 = self._make_agent(hass=hass, backup_dir=tmp_path)
-        await agent2.async_delete_backup("test-backup-id")
-
-        assert not tar_path.exists()
-        assert not meta_path.exists()
-
-    async def test_download_backup_not_implemented(self, hass: HomeAssistant, tmp_path: Path) -> None:
-        """Test that download raises NotImplementedError (HA core uses get_backup_path)."""
-        agent = self._make_agent(hass=hass, backup_dir=tmp_path)
-
-        with pytest.raises(NotImplementedError):
-            await agent.async_download_backup("test-backup-id")
-
-    async def test_get_backup(self, hass: HomeAssistant, tmp_path: Path) -> None:
-        """Test retrieving a backup by ID."""
-        agent = self._make_agent(hass=hass, backup_dir=tmp_path)
-        backup = _make_agent_backup()
-
-        tar_path = agent.get_new_backup_path(backup)
-        tar_path.parent.mkdir(parents=True, exist_ok=True)
-        tar_path.write_bytes(b"fake-tar-content")
         await agent.async_upload_backup(open_stream=AsyncMock(), backup=backup)
 
         result = await agent.async_get_backup("test-backup-id")
         assert result.backup_id == "test-backup-id"
+
+    async def test_get_backup_ccu_deleted(self, hass: HomeAssistant, tmp_path: Path) -> None:
+        """Test that BackupNotFound is raised when CCU backup file was deleted."""
+        central = MagicMock()
+        central.available = True
+        central.name = "TestCCU"
+        backup_data = _make_backup_data()
+        central.create_backup_and_download = AsyncMock(return_value=backup_data)
+
+        agent = self._make_agent(hass=hass, backup_dir=tmp_path, central=central)
+        backup = _make_agent_backup()
+
+        await agent.async_upload_backup(open_stream=AsyncMock(), backup=backup)
+
+        # Delete the CCU file externally
+        (tmp_path / "backup_2026.tar.gz").unlink()
+
+        with pytest.raises(BackupNotFound):
+            await agent.async_get_backup("test-backup-id")
 
     async def test_get_backup_not_found(self, hass: HomeAssistant, tmp_path: Path) -> None:
         """Test that BackupNotFound is raised for missing backup."""
@@ -246,41 +251,6 @@ class TestCcuLocalBackupAgent:
 
         with pytest.raises(BackupNotFound):
             await agent.async_get_backup("nonexistent")
-
-    async def test_get_backup_path(self, hass: HomeAssistant, tmp_path: Path) -> None:
-        """Test get_backup_path returns the correct path."""
-        agent = self._make_agent(hass=hass, backup_dir=tmp_path)
-        backup = _make_agent_backup()
-
-        tar_path = agent.get_new_backup_path(backup)
-        tar_path.write_bytes(b"fake-tar-content")
-        await agent.async_upload_backup(open_stream=AsyncMock(), backup=backup)
-
-        result = agent.get_backup_path("test-backup-id")
-        assert result == tar_path
-
-    async def test_get_backup_path_not_found(self, hass: HomeAssistant, tmp_path: Path) -> None:
-        """Test get_backup_path raises BackupNotFound for unknown backup."""
-        agent = self._make_agent(hass=hass, backup_dir=tmp_path)
-
-        with pytest.raises(BackupNotFound):
-            agent.get_backup_path("nonexistent")
-
-    async def test_get_backup_tar_deleted(self, hass: HomeAssistant, tmp_path: Path) -> None:
-        """Test that BackupNotFound is raised when tar file was deleted."""
-        agent = self._make_agent(hass=hass, backup_dir=tmp_path)
-        backup = _make_agent_backup()
-
-        tar_path = agent.get_new_backup_path(backup)
-        tar_path.parent.mkdir(parents=True, exist_ok=True)
-        tar_path.write_bytes(b"fake-tar-content")
-        await agent.async_upload_backup(open_stream=AsyncMock(), backup=backup)
-
-        # Delete the tar file externally
-        tar_path.unlink()
-
-        with pytest.raises(BackupNotFound):
-            await agent.async_get_backup("test-backup-id")
 
     async def test_list_backups_empty(self, hass: HomeAssistant, tmp_path: Path) -> None:
         """Test listing backups from empty directory."""
@@ -291,32 +261,13 @@ class TestCcuLocalBackupAgent:
     async def test_load_from_disk(self, hass: HomeAssistant, tmp_path: Path) -> None:
         """Test that backups are loaded from existing metadata files on disk."""
         backup = _make_agent_backup()
-        tar_name = "Test_Backup_2026-02-10_12.00_00000000.tar"
-        meta_name = "Test_Backup_2026-02-10_12.00_00000000_meta.json"
+        ccu_filename = "ccu_backup.sbk"
+        meta_name = "test-backup-id_meta.json"
 
-        # Create files on disk before agent starts (new format)
-        (tmp_path / tar_name).write_bytes(b"fake-tar")
+        # Create files on disk before agent starts
+        (tmp_path / ccu_filename).write_bytes(b"fake-ccu-backup")
         (tmp_path / meta_name).write_text(
-            json.dumps({"backup": backup.as_dict(), "ccu_backup_filename": "ccu_backup.sbk"}),
-            encoding="utf-8",
-        )
-
-        agent = self._make_agent(hass=hass, backup_dir=tmp_path)
-        backups = await agent.async_list_backups()
-
-        assert len(backups) == 1
-        assert backups[0].backup_id == "test-backup-id"
-
-    async def test_load_from_disk_legacy_format(self, hass: HomeAssistant, tmp_path: Path) -> None:
-        """Test that backups with legacy metadata format (without wrapper) are loaded."""
-        backup = _make_agent_backup()
-        tar_name = "Test_Backup_2026-02-10_12.00_00000000.tar"
-        meta_name = "Test_Backup_2026-02-10_12.00_00000000_meta.json"
-
-        # Create files on disk with legacy format (plain AgentBackup dict)
-        (tmp_path / tar_name).write_bytes(b"fake-tar")
-        (tmp_path / meta_name).write_text(
-            json.dumps(backup.as_dict()),
+            json.dumps({"backup": backup.as_dict(), "ccu_backup_filename": ccu_filename}),
             encoding="utf-8",
         )
 
@@ -329,24 +280,39 @@ class TestCcuLocalBackupAgent:
     async def test_load_skips_corrupt_metadata(self, hass: HomeAssistant, tmp_path: Path) -> None:
         """Test that corrupt metadata files are skipped gracefully."""
         meta_name = "corrupt_backup_meta.json"
-        tar_name = "corrupt_backup.tar"
 
         (tmp_path / meta_name).write_text("not valid json", encoding="utf-8")
-        (tmp_path / tar_name).write_bytes(b"fake-tar")
 
         agent = self._make_agent(hass=hass, backup_dir=tmp_path)
         backups = await agent.async_list_backups()
 
         assert backups == []
 
-    async def test_load_skips_orphaned_metadata(self, hass: HomeAssistant, tmp_path: Path) -> None:
-        """Test that metadata without tar file is cleaned up."""
+    async def test_load_skips_legacy_metadata_without_ccu(self, hass: HomeAssistant, tmp_path: Path) -> None:
+        """Test that legacy metadata without CCU backup reference is cleaned up."""
         backup = _make_agent_backup()
-        meta_name = "Test_Backup_2026-02-10_12.00_00000000_meta.json"
+        meta_name = "test-backup-id_meta.json"
 
-        # Only create metadata, no tar file
+        # Legacy format: plain AgentBackup dict without ccu_backup_filename
         (tmp_path / meta_name).write_text(
             json.dumps(backup.as_dict()),
+            encoding="utf-8",
+        )
+
+        agent = self._make_agent(hass=hass, backup_dir=tmp_path)
+        backups = await agent.async_list_backups()
+
+        assert backups == []
+        assert not (tmp_path / meta_name).exists()  # Cleaned up
+
+    async def test_load_skips_orphaned_metadata(self, hass: HomeAssistant, tmp_path: Path) -> None:
+        """Test that metadata without CCU backup file is cleaned up."""
+        backup = _make_agent_backup()
+        meta_name = "test-backup-id_meta.json"
+
+        # Only create metadata, no CCU backup file
+        (tmp_path / meta_name).write_text(
+            json.dumps({"backup": backup.as_dict(), "ccu_backup_filename": "missing.sbk"}),
             encoding="utf-8",
         )
 
@@ -363,24 +329,34 @@ class TestCcuLocalBackupAgent:
         assert backups == []
 
     async def test_upload_and_list(self, hass: HomeAssistant, tmp_path: Path) -> None:
-        """Test that uploading creates metadata and backup appears in list."""
-        agent = self._make_agent(hass=hass, backup_dir=tmp_path)
+        """Test that uploading creates metadata and CCU backup, and backup appears in list."""
+        central = MagicMock()
+        central.available = True
+        central.name = "TestCCU"
+        backup_data = _make_backup_data()
+        central.create_backup_and_download = AsyncMock(return_value=backup_data)
+
+        agent = self._make_agent(hass=hass, backup_dir=tmp_path, central=central)
         backup = _make_agent_backup()
 
-        # Simulate manager writing the .tar file
-        tar_path = agent.get_new_backup_path(backup)
-        tar_path.parent.mkdir(parents=True, exist_ok=True)
-        tar_path.write_bytes(b"fake-tar-content")
-
-        # Agent gets notified of the upload
         await agent.async_upload_backup(
             open_stream=AsyncMock(),
             backup=backup,
         )
 
-        # Verify metadata file was written
-        meta_path = tar_path.parent / (tar_path.stem + "_meta.json")
+        # Verify metadata file was written with correct name
+        meta_path = tmp_path / "test-backup-id_meta.json"
         assert meta_path.exists()
+
+        # Verify metadata content
+        meta_data = json.loads(meta_path.read_text(encoding="utf-8"))
+        assert meta_data["backup"]["backup_id"] == "test-backup-id"
+        assert meta_data["ccu_backup_filename"] == "backup_2026.tar.gz"
+
+        # Verify CCU backup was created
+        ccu_path = tmp_path / "backup_2026.tar.gz"
+        assert ccu_path.exists()
+        assert ccu_path.read_bytes() == b"backup-content"
 
         # Verify backup appears in list
         backups = await agent.async_list_backups()
@@ -389,12 +365,14 @@ class TestCcuLocalBackupAgent:
 
     async def test_upload_backup_os_error(self, hass: HomeAssistant, tmp_path: Path) -> None:
         """Test that OSError during upload metadata write is wrapped in BackupAgentError."""
-        agent = self._make_agent(hass=hass, backup_dir=tmp_path)
-        backup = _make_agent_backup()
+        central = MagicMock()
+        central.available = True
+        central.name = "TestCCU"
+        backup_data = _make_backup_data()
+        central.create_backup_and_download = AsyncMock(return_value=backup_data)
 
-        tar_path = agent.get_new_backup_path(backup)
-        tar_path.parent.mkdir(parents=True, exist_ok=True)
-        tar_path.write_bytes(b"fake-tar-content")
+        agent = self._make_agent(hass=hass, backup_dir=tmp_path, central=central)
+        backup = _make_agent_backup()
 
         original = hass.async_add_executor_job
 
@@ -440,7 +418,7 @@ class TestCcuLocalBackupAgent:
         assert not ccu_path.exists()
 
     async def test_upload_ccu_backup_fails(self, hass: HomeAssistant, tmp_path: Path) -> None:
-        """Test that CCU backup failure logs warning but metadata is still saved."""
+        """Test that CCU backup failure raises BackupAgentError."""
         central = MagicMock()
         central.available = True
         central.name = "TestCCU"
@@ -449,17 +427,11 @@ class TestCcuLocalBackupAgent:
         agent = self._make_agent(hass=hass, backup_dir=tmp_path, central=central)
         backup = _make_agent_backup()
 
-        tar_path = agent.get_new_backup_path(backup)
-        tar_path.parent.mkdir(parents=True, exist_ok=True)
-        tar_path.write_bytes(b"fake-tar-content")
-        await agent.async_upload_backup(open_stream=AsyncMock(), backup=backup)
-
-        # Metadata was still saved despite CCU backup failure
-        backups = await agent.async_list_backups()
-        assert len(backups) == 1
+        with pytest.raises(BackupAgentError, match="Failed to create CCU backup"):
+            await agent.async_upload_backup(open_stream=AsyncMock(), backup=backup)
 
     async def test_upload_ccu_backup_returns_none(self, hass: HomeAssistant, tmp_path: Path) -> None:
-        """Test that None backup data logs warning but metadata is still saved."""
+        """Test that None backup data raises BackupAgentError."""
         central = MagicMock()
         central.available = True
         central.name = "TestCCU"
@@ -468,17 +440,11 @@ class TestCcuLocalBackupAgent:
         agent = self._make_agent(hass=hass, backup_dir=tmp_path, central=central)
         backup = _make_agent_backup()
 
-        tar_path = agent.get_new_backup_path(backup)
-        tar_path.parent.mkdir(parents=True, exist_ok=True)
-        tar_path.write_bytes(b"fake-tar-content")
-        await agent.async_upload_backup(open_stream=AsyncMock(), backup=backup)
-
-        # Metadata was still saved despite no CCU backup data
-        backups = await agent.async_list_backups()
-        assert len(backups) == 1
+        with pytest.raises(BackupAgentError, match="no data returned"):
+            await agent.async_upload_backup(open_stream=AsyncMock(), backup=backup)
 
     async def test_upload_ccu_unavailable(self, hass: HomeAssistant, tmp_path: Path) -> None:
-        """Test that unavailable CCU logs warning but metadata is still saved."""
+        """Test that unavailable CCU raises BackupAgentError."""
         central = MagicMock()
         central.available = False
         central.name = "TestCCU"
@@ -487,18 +453,13 @@ class TestCcuLocalBackupAgent:
         agent = self._make_agent(hass=hass, backup_dir=tmp_path, central=central)
         backup = _make_agent_backup()
 
-        tar_path = agent.get_new_backup_path(backup)
-        tar_path.parent.mkdir(parents=True, exist_ok=True)
-        tar_path.write_bytes(b"fake-tar-content")
-        await agent.async_upload_backup(open_stream=AsyncMock(), backup=backup)
+        with pytest.raises(BackupAgentError, match="is not available"):
+            await agent.async_upload_backup(open_stream=AsyncMock(), backup=backup)
 
         central.create_backup_and_download.assert_not_awaited()
-        # Metadata was still saved
-        backups = await agent.async_list_backups()
-        assert len(backups) == 1
 
     async def test_upload_creates_ccu_backup(self, hass: HomeAssistant, tmp_path: Path) -> None:
-        """Test that uploading a backup creates a CCU backup first."""
+        """Test that uploading a backup creates a CCU backup."""
         central = MagicMock()
         central.available = True
         central.name = "TestCCU"
@@ -508,9 +469,6 @@ class TestCcuLocalBackupAgent:
         agent = self._make_agent(hass=hass, backup_dir=tmp_path, central=central)
         backup = _make_agent_backup()
 
-        tar_path = agent.get_new_backup_path(backup)
-        tar_path.parent.mkdir(parents=True, exist_ok=True)
-        tar_path.write_bytes(b"fake-tar-content")
         await agent.async_upload_backup(open_stream=AsyncMock(), backup=backup)
 
         central.create_backup_and_download.assert_awaited_once()

@@ -2,9 +2,9 @@
 
 ## What's Changed
 
-### Fixed
+### Changed
 
-- **Fix backup agent not writing backup files**: The backup agent's `async_upload_backup()` did not write the HA backup tar file from the provided stream before persisting metadata. Only the `_meta.json` and CCU `.sbk` backup were created, but the `.tar` file was missing. The agent now correctly writes the tar stream to disk using HA's async executor pattern before creating the CCU backup and metadata. Failed writes are properly cleaned up.
+- **Backup agent stores only CCU backups**: The backup agent no longer inherits from `LocalBackupAgent` and no longer writes the HA backup tar file. It now extends `BackupAgent` directly and only stores the CCU backup (`.sbk`) and metadata (`.json`) in the backup directory. The HA backup tar is managed by HA core. CCU backup failures (unavailable CCU, no data, connection error) now raise `BackupAgentError` instead of being silently logged, allowing HA to properly report per-agent backup failures. Orphaned metadata from previous versions is automatically cleaned up on load.
 
 ### Config Panel
 

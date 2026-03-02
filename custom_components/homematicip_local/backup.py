@@ -10,14 +10,7 @@ from typing import Any, Final
 
 from aiohomematic.central import CentralUnit
 from aiohomematic.exceptions import BaseHomematicException
-from homeassistant.components.backup import (
-    AgentBackup,
-    BackupAgent,
-    BackupAgentError,
-    BackupNotFound,
-    LocalBackupAgent,
-    suggested_filename,
-)
+from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError, BackupNotFound
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
@@ -73,18 +66,13 @@ def async_notify_backup_listeners(hass: HomeAssistant) -> None:
         listen()
 
 
-def _meta_filename(*, tar_filename: str) -> str:
-    """Return the metadata filename for a backup tar file."""
-    return tar_filename.rsplit(".", 1)[0] + "_meta.json"
+def _meta_filename(*, backup_id: str) -> str:
+    """Return the metadata filename for a backup."""
+    return f"{backup_id}_meta.json"
 
 
-def _tar_filename_from_meta(*, meta_filename: str) -> str:
-    """Return the tar filename for a metadata file."""
-    return meta_filename.replace("_meta.json", ".tar")
-
-
-class CcuLocalBackupAgent(LocalBackupAgent):
-    """Backup agent storing HA backups in the CCU backup directory."""
+class CcuLocalBackupAgent(BackupAgent):
+    """Backup agent storing CCU backups alongside HA backup metadata."""
 
     domain = DOMAIN
 
@@ -104,25 +92,25 @@ class CcuLocalBackupAgent(LocalBackupAgent):
         self._backup_dir = Path(backup_directory)
         self.name = name
         self.unique_id = unique_id
-        self._backups: dict[str, tuple[AgentBackup, Path, str | None]] = {}
+        self._backups: dict[str, tuple[AgentBackup, str | None]] = {}
         self._loaded_backups = False
 
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
-        """Delete a backup file, its metadata, and associated CCU backup."""
+        """Delete a backup's metadata and associated CCU backup file."""
         if not self._loaded_backups:
             await self._load_backups()
-        backup_path = self.get_backup_path(backup_id)
-        meta_path = backup_path.parent / _meta_filename(tar_filename=backup_path.name)
-        _, _, ccu_filename = self._backups[backup_id]
+        if backup_id not in self._backups:
+            raise BackupNotFound(f"Backup {backup_id} not found")
+        meta_path = self._backup_dir / _meta_filename(backup_id=backup_id)
+        _, ccu_filename = self._backups[backup_id]
         try:
-            await self._hass.async_add_executor_job(backup_path.unlink, True)
             await self._hass.async_add_executor_job(meta_path.unlink, True)
             if ccu_filename:
                 ccu_path = self._backup_dir / ccu_filename
                 await self._hass.async_add_executor_job(ccu_path.unlink, True)
         except OSError as err:
             raise BackupAgentError(f"Failed to delete backup {backup_id}: {err}") from err
-        _LOGGER.debug("Deleted backup at %s", backup_path)
+        _LOGGER.debug("Deleted backup %s", backup_id)
         self._backups.pop(backup_id)
 
     async def async_download_backup(
@@ -133,9 +121,10 @@ class CcuLocalBackupAgent(LocalBackupAgent):
         """
         Download a backup file.
 
-        Not used for LocalBackupAgent - HA core uses get_backup_path() directly.
+        Not supported - this agent only stores CCU backups, not HA backup data.
+        HA restore uses the local or cloud backup agent.
         """
-        raise NotImplementedError
+        raise BackupAgentError("Download not supported: this agent only stores CCU backups")
 
     async def async_get_backup(
         self,
@@ -147,22 +136,24 @@ class CcuLocalBackupAgent(LocalBackupAgent):
             await self._load_backups()
         if backup_id not in self._backups:
             raise BackupNotFound(f"Backup {backup_id} not found")
-        backup, backup_path, _ = self._backups[backup_id]
-        if not await self._hass.async_add_executor_job(backup_path.exists):
-            _LOGGER.debug(
-                "Removing tracked backup (%s) that does not exist at %s",
-                backup.backup_id,
-                backup_path,
-            )
-            self._backups.pop(backup_id)
-            raise BackupNotFound(f"Backup {backup_id} not found")
+        backup, ccu_filename = self._backups[backup_id]
+        if ccu_filename:
+            ccu_path = self._backup_dir / ccu_filename
+            if not await self._hass.async_add_executor_job(ccu_path.exists):
+                _LOGGER.debug(
+                    "Removing tracked backup (%s) - CCU file %s does not exist",
+                    backup.backup_id,
+                    ccu_filename,
+                )
+                self._backups.pop(backup_id)
+                raise BackupNotFound(f"Backup {backup_id} not found")
         return backup
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         if not self._loaded_backups:
             await self._load_backups()
-        return [backup for backup, _, _ in self._backups.values()]
+        return [backup for backup, _ in self._backups.values()]
 
     async def async_upload_backup(
         self,
@@ -174,16 +165,14 @@ class CcuLocalBackupAgent(LocalBackupAgent):
         """
         Upload a backup.
 
-        Write the HA backup tar from the stream, create a CCU backup,
-        then persist metadata linking both files.
-        CCU backup failures are logged but do not block the HA backup.
+        Create a CCU backup and persist metadata linking it to the HA backup.
+        The HA backup tar is managed by HA core and not stored by this agent.
         """
-        tar_path = self.get_new_backup_path(backup)
-        await self._hass.async_add_executor_job(tar_path.parent.mkdir, 0o777, True, True)
-        await self._async_write_tar(open_stream=open_stream, tar_path=tar_path)
+        await self._hass.async_add_executor_job(self._backup_dir.mkdir, 0o777, True, True)
 
         ccu_filename = await self._async_create_ccu_backup()
-        meta_path = tar_path.parent / _meta_filename(tar_filename=tar_path.name)
+
+        meta_path = self._backup_dir / _meta_filename(backup_id=backup.backup_id)
         meta_data = {
             "backup": backup.as_dict(),
             "ccu_backup_filename": ccu_filename,
@@ -196,37 +185,17 @@ class CcuLocalBackupAgent(LocalBackupAgent):
             )
         except OSError as err:
             self._cleanup_ccu_backup(ccu_filename=ccu_filename)
-            await self._hass.async_add_executor_job(tar_path.unlink, True)
             raise BackupAgentError(f"Failed to save backup metadata: {err}") from err
-        self._backups[backup.backup_id] = (backup, tar_path, ccu_filename)
-
-    def get_backup_path(self, backup_id: str) -> Path:
-        """Return the local path to an existing backup."""
-        try:
-            return self._backups[backup_id][1]
-        except KeyError as err:
-            raise BackupNotFound(f"Backup {backup_id} does not exist") from err
-
-    def get_new_backup_path(self, backup: AgentBackup) -> Path:
-        """Return the local path to a new backup."""
-        return self._backup_dir / suggested_filename(backup)
+        self._backups[backup.backup_id] = (backup, ccu_filename)
 
     async def _async_create_ccu_backup(self) -> str | None:
         """Create a CCU backup and save it to the backup directory."""
         if not self._central.available:
-            _LOGGER.warning(
-                "CCU %s is not available, skipping CCU backup",
-                self._central.name,
-            )
-            return None
+            raise BackupAgentError(f"CCU {self._central.name} is not available, cannot create CCU backup")
         try:
             backup_data = await self._central.create_backup_and_download()
             if backup_data is None:
-                _LOGGER.warning(
-                    "Failed to create backup from CCU %s: no data returned",
-                    self._central.name,
-                )
-                return None
+                raise BackupAgentError(f"Failed to create backup from CCU {self._central.name}: no data returned")
             self._backup_dir.mkdir(parents=True, exist_ok=True)
             backup_path = self._backup_dir / backup_data.filename
             await self._hass.async_add_executor_job(backup_path.write_bytes, backup_data.content)
@@ -236,32 +205,8 @@ class CcuLocalBackupAgent(LocalBackupAgent):
                 len(backup_data.content),
             )
         except BaseHomematicException as err:
-            _LOGGER.warning(
-                "Failed to create CCU backup for %s: %s",
-                self._central.name,
-                err,
-            )
-            return None
+            raise BackupAgentError(f"Failed to create CCU backup for {self._central.name}: {err}") from err
         return backup_data.filename
-
-    async def _async_write_tar(
-        self,
-        *,
-        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
-        tar_path: Path,
-    ) -> None:
-        """Write backup tar file from the stream to disk."""
-        try:
-            stream = await open_stream()
-            fh = await self._hass.async_add_executor_job(tar_path.open, "wb")
-            try:
-                async for chunk in stream:
-                    await self._hass.async_add_executor_job(fh.write, chunk)
-            finally:
-                await self._hass.async_add_executor_job(fh.close)
-        except OSError as err:
-            await self._hass.async_add_executor_job(tar_path.unlink, True)
-            raise BackupAgentError(f"Failed to write backup tar: {err}") from err
 
     def _cleanup_ccu_backup(self, *, ccu_filename: str | None) -> None:
         """Remove CCU backup file on rollback."""
@@ -272,13 +217,13 @@ class CcuLocalBackupAgent(LocalBackupAgent):
     async def _load_backups(self) -> None:
         """Load backup metadata from disk."""
         backups = await self._hass.async_add_executor_job(self._read_backups)
-        _LOGGER.debug("Loaded %s HA backups for %s", len(backups), self.name)
+        _LOGGER.debug("Loaded %s CCU backups for %s", len(backups), self.name)
         self._backups = backups
         self._loaded_backups = True
 
-    def _read_backups(self) -> dict[str, tuple[AgentBackup, Path, str | None]]:
+    def _read_backups(self) -> dict[str, tuple[AgentBackup, str | None]]:
         """Read backup metadata files from disk."""
-        backups: dict[str, tuple[AgentBackup, Path, str | None]] = {}
+        backups: dict[str, tuple[AgentBackup, str | None]] = {}
         if not self._backup_dir.exists():
             return backups
         for meta_path in self._backup_dir.glob("*_meta.json"):
@@ -290,12 +235,17 @@ class CcuLocalBackupAgent(LocalBackupAgent):
                 else:
                     backup = AgentBackup.from_dict(meta_data)
                     ccu_filename = None
-                tar_path = self._backup_dir / _tar_filename_from_meta(meta_filename=meta_path.name)
-                if tar_path.exists():
-                    backups[backup.backup_id] = (backup, tar_path, ccu_filename)
+                if ccu_filename and (self._backup_dir / ccu_filename).exists():
+                    backups[backup.backup_id] = (backup, ccu_filename)
+                elif ccu_filename is None:
+                    _LOGGER.warning(
+                        "Backup metadata %s has no CCU backup file, removing metadata",
+                        meta_path,
+                    )
+                    meta_path.unlink(missing_ok=True)
                 else:
                     _LOGGER.warning(
-                        "Backup tar file missing for metadata %s, removing metadata",
+                        "CCU backup file missing for metadata %s, removing metadata",
                         meta_path,
                     )
                     meta_path.unlink(missing_ok=True)
