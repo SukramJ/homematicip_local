@@ -204,6 +204,14 @@ DP_ACTION_SELECT_WHITELIST: Final[tuple[str, ...]] = (
 # Config entry key for storing DpActionSelect values
 CONF_ACTION_SELECT_VALUES: Final = "action_select_values"
 
+# DpActionNumber whitelist - defines which parameter names should be exposed as InputHelper entities
+DP_ACTION_NUMBER_WHITELIST: Final[tuple[str, ...]] = (
+    # "DURATION_VALUE",  # Siren duration value
+)
+
+# Config entry key for storing DpActionNumber values (legacy, now in storage file)
+CONF_ACTION_NUMBER_VALUES: Final = "action_number_values"
+
 
 def _get_hmip_local_platforms() -> tuple[Platform, ...]:
     """Return relevant Homematic(IP) Local for OpenCCU platforms."""

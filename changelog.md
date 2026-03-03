@@ -1,3 +1,25 @@
+# Version [2.3.3](https://github.com/SukramJ/homematicip_local/compare/2.3.2...2.3.3) (2026-03-03)
+
+## What's Changed
+
+### Added
+
+- **DpActionNumber support**: New `AioHomematicActionNumber` entity for write-only FLOAT/INTEGER data points (`BaseDpActionNumber`). Values are stored locally (not sent to device) and persisted in a dedicated storage file (`homematicip_local.action_number.{entry_id}`), analogous to the existing `DpActionSelect` pattern. Entities are filtered by `DP_ACTION_NUMBER_WHITELIST` (currently empty; `DURATION_VALUE` prepared but commented out).
+
+### Config Panel
+
+- **Link config editor fix**: Fixed false dirty state when opening the link config editor without making changes.
+
+### Dependencies
+
+#### Bump aiohomematic to [2026.3.1](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.1)
+
+- **DpActionNumber data points**: New `DpActionFloat` and `DpActionInteger` generic data point types for write-only FLOAT/INTEGER parameters. These provide number entities in Home Assistant (with MIN/MAX validation) while remaining write-only at the protocol level. Previously, all write-only numeric parameters were mapped to `DpAction` (no HA entity). The resolver now maps write-only FLOAT to `DpActionFloat` and write-only INTEGER to `DpActionInteger`.
+- **Siren duration unit conversion**: `CustomDpIpSiren.turn_on()` now properly converts the duration value using automatic unit conversion (seconds → minutes → hours) before sending to the device. Previously, the raw duration was sent with the default unit, causing incorrect behavior for large duration values (>16343s).
+- **Siren duration**: The siren's `DURATION_VALUE` parameter is now exposed as a visible number entity in Home Assistant, allowing users to set a default duration. `turn_on()` uses this value as fallback when no explicit duration is provided, fixing the issue where `siren.turn_on` without parameters activated the siren for 0 seconds.
+
+---
+
 # Version [2.3.2](https://github.com/SukramJ/homematicip_local/compare/2.3.1...2.3.2) (2026-03-01)
 
 ## What's Changed
