@@ -1,11 +1,26 @@
 {
   "entity": {
     "sensor": {
+      "alarm_messages": {
+        "default": "mdi:alarm-light"
+      },
       "brightness": {
         "default": "mdi:invert-colors"
       },
       "button_press": {
         "default": "mdi:gesture-tap"
+      },
+      "carrier_sense_level": {
+        "default": "mdi:signal"
+      },
+      "connection_latency": {
+        "default": "mdi:timer-outline"
+      },
+      "cover_level": {
+        "default": "mdi:blinds"
+      },
+      "cover_tilt": {
+        "default": "mdi:blinds-horizontal"
       },
       "direction": {
         "default": "mdi:arrow-up-down"
@@ -17,8 +32,35 @@
           "ventilation_position": "mdi:garage-open"
         }
       },
+      "duty_cycle_level": {
+        "default": "mdi:chart-line"
+      },
+      "energy_counter_feed_in_total": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "energy_counter_total": {
+        "default": "mdi:lightning-bolt"
+      },
       "frequency": {
         "default": "mdi:sine-wave"
+      },
+      "inbox": {
+        "default": "mdi:inbox"
+      },
+      "install_mode_bidcos": {
+        "default": "mdi:access-point"
+      },
+      "install_mode_hmip": {
+        "default": "mdi:access-point"
+      },
+      "ip_address": {
+        "default": "mdi:ip-network"
+      },
+      "last_event_age": {
+        "default": "mdi:clock-outline"
+      },
+      "light_level": {
+        "default": "mdi:brightness-percent"
       },
       "lock_state": {
         "default": "mdi:lock",
@@ -29,7 +71,13 @@
       "pipe_level": {
         "default": "mdi:pipe-valve"
       },
-      "rain_counter": {
+      "rain_counter_today": {
+        "default": "mdi:weather-rainy"
+      },
+      "rain_counter_total": {
+        "default": "mdi:weather-rainy"
+      },
+      "rain_counter_yesterday": {
         "default": "mdi:weather-rainy"
       },
       "sec_direction": {
@@ -38,11 +86,17 @@
       "sec_key_error": {
         "default": "mdi:lock-alert"
       },
+      "sec_wds_state": {
+        "default": "mdi:water-alert"
+      },
       "sec_win_error": {
         "default": "mdi:lock-alert"
       },
       "sec_win_status": {
         "default": "mdi:battery-50"
+      },
+      "service_messages": {
+        "default": "mdi:message-alert"
       },
       "smoke_detector_alarm_status": {
         "default": "mdi:smoke-detector",
@@ -52,8 +106,17 @@
           "secondary_alarm": "mdi:smoke-detector-variant-alert"
         }
       },
-      "sunshineduration": {
+      "sunshine_counter_today": {
         "default": "mdi:weather-sunny"
+      },
+      "sunshine_counter_total": {
+        "default": "mdi:weather-sunny"
+      },
+      "sunshine_counter_yesterday": {
+        "default": "mdi:weather-sunny"
+      },
+      "system_health": {
+        "default": "mdi:heart-pulse"
       },
       "tri_state": {
         "default": "mdi:window-closed",
@@ -62,20 +125,28 @@
           "tilted": "mdi:angle-acute"
         }
       },
+      "week_profile": {
+        "default": "mdi:calendar-week"
+      },
       "wind_dir": {
         "default": "mdi:windsock"
       },
       "wind_speed": {
         "default": "mdi:weather-windy"
+      },
+      "wkp_code_state": {
+        "default": "mdi:dialpad"
       }
     }
   },
   "services": {
+    "add_link": "mdi:link-plus",
     "clear_cache": "mdi:trash-can",
+    "clear_text_display": "mdi:message-off",
+    "confirm_all_delayed_devices": "mdi:check-all",
     "copy_schedule": "mdi:calendar",
     "copy_schedule_profile": "mdi:calendar",
-    "cover_get_schedule": "mdi:calendar",
-    "cover_set_schedule": "mdi:calendar",
+    "create_ccu_backup": "mdi:backup-restore",
     "create_central_links": "mdi:link",
     "disable_away_mode": "mdi:caravan",
     "enable_away_mode_by_calendar": "mdi:caravan",
@@ -85,25 +156,33 @@
     "force_device_availability": "mdi:devices",
     "get_device_value": "mdi:download-box",
     "get_link_paramset": "mdi:link",
-    "get_link_peers": "mdi:link,",
+    "get_link_peers": "mdi:link",
     "get_paramset": "mdi:download-box",
-    "light_get_schedule": "mdi:calendar",
+    "get_schedule": "mdi:calendar",
+    "get_schedule_profile": "mdi:calendar",
+    "get_schedule_weekday": "mdi:calendar",
+    "get_variable_value": "mdi:variable",
     "light_set_on_time": "mdi:timer-check-outline",
-    "light_set_schedule": "mdi:calendar",
+    "play_sound": "mdi:play-circle",
     "put_link_paramset": "mdi:link",
     "put_paramset": "mdi:content-save",
+    "record_session": "mdi:record-circle",
+    "reload_channel_config": "mdi:reload",
+    "reload_device_config": "mdi:reload",
     "remove_central_links": "mdi:link",
+    "remove_link": "mdi:link-off",
+    "send_text_display": "mdi:message-text",
     "set_cover_combined_position": "mdi:blinds-horizontal",
     "set_device_value": "mdi:content-save",
-    "set_schedule_simple_profile": "mdi:calendar",
-    "set_schedule_simple_weekday": "mdi:calendar",
+    "set_schedule": "mdi:calendar",
+    "set_schedule_profile": "mdi:calendar",
+    "set_schedule_weekday": "mdi:calendar",
+    "set_sound_led": "mdi:led-on",
     "set_variable_value": "mdi:content-save",
-    "switch_get_schedule": "mdi:calendar",
+    "stop_sound": "mdi:stop-circle",
     "switch_set_on_time": "mdi:timer-check-outline",
-    "switch_set_schedule": "mdi:calendar",
     "turn_on_siren": "mdi:alarm",
     "update_device_firmware_data": "mdi:update",
-    "valve_get_schedule": "mdi:calendar",
-    "valve_set_schedule": "mdi:calendar"
+    "valve_set_on_time": "mdi:timer-check-outline"
   }
 }
