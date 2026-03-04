@@ -1,5 +1,5 @@
 bandit==1.9.4
 codespell==2.4.1
 python-typing-update==v0.8.1
-ruff==0.15.2
+ruff==0.15.4
 yamllint==1.38.0

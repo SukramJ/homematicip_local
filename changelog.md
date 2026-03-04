@@ -1,12 +1,30 @@
-# Version [2.3.3](https://github.com/SukramJ/homematicip_local/compare/2.3.2...2.3.3) (2026-03-03)
+# Version [2.3.3](https://github.com/SukramJ/homematicip_local/compare/2.3.2...2.3.3) (2026-03-04)
 
 ## What's Changed
 
 ### Added
 
 - **DpActionNumber support**: New `AioHomematicActionNumber` entity for write-only FLOAT/INTEGER data points (`BaseDpActionNumber`). Values are stored locally (not sent to device) and persisted in a dedicated storage file (`homematicip_local.action_number.{entry_id}`), analogous to the existing `DpActionSelect` pattern. Entities are filtered by `DP_ACTION_NUMBER_WHITELIST` (currently empty; `DURATION_VALUE` prepared but commented out).
+- 15 new WebSocket commands for the Integration and OpenCCU panel tabs (`homematicip_local/integration/*` and `homematicip_local/ccu/*`)
 
 ### Config Panel
+
+- **Integration dashboard tab**: New "Integration" tab in the config panel providing a consolidated view of the integration's operational state:
+  - System health with central state and health score
+  - Device statistics with per-interface breakdown (total, unreachable, firmware-updatable)
+  - Command throttle monitor per interface (interval, queue size, throttled/burst counts)
+  - Incident log with severity-colored entries and clear action
+  - Cache management (clear all cached data)
+
+- **OpenCCU dashboard tab**: New "OpenCCU" tab for CCU-specific information and management:
+  - System information (name, model, version, serial, hostname, CCU type, available interfaces)
+  - Hub messages (service and alarm message counts)
+  - Install mode control for HmIP-RF and BidCos-RF with activation buttons and remaining time display
+  - Signal quality table with sortable columns (RSSI, signal strength, battery, reachability per device)
+  - Firmware overview table with sortable columns and update-available highlighting
+  - CCU backup creation with download to backup directory
+
+- **Tab navigation**: The config panel now features a tab bar (Devices / Integration / OpenCCU) for switching between views. Tab state is persisted in the URL hash.
 
 - **Link config editor fix**: Fixed false dirty state when opening the link config editor without making changes.
 
