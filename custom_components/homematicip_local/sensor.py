@@ -8,7 +8,7 @@ import logging
 from typing import Any, Final, cast, override
 
 from aiohomematic.const import DEFAULT_MULTIPLIER, DataPointCategory, HubValueType, ParameterType
-from aiohomematic.interfaces import ClimateWeekProfileDataPointProtocol
+from aiohomematic.interfaces import ClimateWeekProfileDataPointProtocol, CombinedDataPointProtocol
 from aiohomematic.model.generic import DpSensor
 from aiohomematic.model.hub import SysvarDpSensor
 from aiohomematic.model.week_profile_data_point import WeekProfileDataPoint
@@ -54,7 +54,7 @@ async def async_setup_entry(
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
-    def async_add_sensor(data_points: tuple[DpSensor[Any], ...]) -> None:
+    def async_add_sensor(data_points: tuple[DpSensor[Any] | CombinedDataPointProtocol, ...]) -> None:
         """Add sensor from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_SENSOR: Adding %i data points", len(data_points))
 
@@ -64,6 +64,7 @@ async def async_setup_entry(
                 data_point=data_point,
             )
             for data_point in data_points
+            if isinstance(data_point, DpSensor)
         ]:
             async_add_entities(entities)
 

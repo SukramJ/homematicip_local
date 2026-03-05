@@ -10,6 +10,7 @@ from aiohomematic.const import CallSource, DataPointUsage
 from aiohomematic.interfaces import (
     CalculatedDataPointProtocol,
     CallbackDataPointProtocol,
+    CombinedDataPointProtocol,
     CustomDataPointProtocol,
     GenericDataPointProtocol,
     GenericHubDataPointProtocol,
@@ -82,7 +83,9 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         else:
             self._attr_entity_registry_enabled_default = data_point.enabled_default
             if (
-                isinstance(data_point, CalculatedDataPointProtocol | GenericDataPointProtocol)
+                isinstance(
+                    data_point, CalculatedDataPointProtocol | CombinedDataPointProtocol | GenericDataPointProtocol
+                )
                 and data_point.translation_key in ENTITY_TRANSLATION_KEYS
             ):
                 self._attr_translation_key = data_point.translation_key
@@ -129,7 +132,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
 
         _LOGGER.debug("init: Setting up %s", data_point.full_name)
         if (
-            isinstance(data_point, CalculatedDataPointProtocol | GenericDataPointProtocol)
+            isinstance(data_point, CalculatedDataPointProtocol | CombinedDataPointProtocol | GenericDataPointProtocol)
             and hasattr(self, "entity_description")
             and hasattr(self.entity_description, "native_unit_of_measurement")
             and data_point.unit is not None
@@ -185,7 +188,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         if (
             isinstance(self._data_point, CalculatedDataPointProtocol | GenericDataPointProtocol)
             and self._data_point.is_readable
-        ) or isinstance(self._data_point, CustomDataPointProtocol):
+        ) or isinstance(self._data_point, CombinedDataPointProtocol | CustomDataPointProtocol):
             if self._data_point.is_valid:
                 attributes[ATTR_VALUE_STATE] = (
                     HmEntityState.UNCERTAIN if self._data_point.state_uncertain else HmEntityState.VALID
@@ -215,7 +218,12 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         entity_name = self._data_point.translated_name
         device_name = self._ha_device_name
 
-        if isinstance(self._data_point, CalculatedDataPointProtocol | GenericDataPointProtocol) and entity_name:
+        if (
+            isinstance(
+                self._data_point, CalculatedDataPointProtocol | CombinedDataPointProtocol | GenericDataPointProtocol
+            )
+            and entity_name
+        ):
             if entity_name.startswith(device_name):
                 entity_name = entity_name.removeprefix(device_name).strip()
             translated_name = super().name
@@ -241,7 +249,11 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
 
         # For data points not handled above, delegate to HA's translation mechanism.
         if not isinstance(
-            self._data_point, CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocol
+            self._data_point,
+            CalculatedDataPointProtocol
+            | CombinedDataPointProtocol
+            | CustomDataPointProtocol
+            | GenericDataPointProtocol,
         ):
             if not self.platform_data:
                 return self._name_internal(None, {})
@@ -280,7 +292,11 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
             )
         # Init value of entity.
         if isinstance(
-            self._data_point, CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocol
+            self._data_point,
+            CalculatedDataPointProtocol
+            | CombinedDataPointProtocol
+            | CustomDataPointProtocol
+            | GenericDataPointProtocol,
         ):
             await self._data_point.load_data_point_value(call_source=CallSource.HA_INIT)
         if (
@@ -296,7 +312,11 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
     async def async_update(self) -> None:
         """Update entities."""
         if isinstance(
-            self._data_point, CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocol
+            self._data_point,
+            CalculatedDataPointProtocol
+            | CombinedDataPointProtocol
+            | CustomDataPointProtocol
+            | GenericDataPointProtocol,
         ):
             await self._data_point.load_data_point_value(call_source=CallSource.MANUAL_OR_SCHEDULED)
 
@@ -364,9 +384,12 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
             ATTR_ADDRESS: self._data_point.channel.address,
             ATTR_MODEL: self._data_point.device.model,
         }
-        if isinstance(self._data_point, CalculatedDataPointProtocol | GenericDataPointProtocol):
+        if isinstance(
+            self._data_point, CalculatedDataPointProtocol | CombinedDataPointProtocol | GenericDataPointProtocol
+        ):
             attributes[ATTR_PARAMETER] = self._data_point.parameter
-            attributes[ATTR_FUNCTION] = self._data_point.function
+            if isinstance(self._data_point, CalculatedDataPointProtocol | GenericDataPointProtocol):
+                attributes[ATTR_FUNCTION] = self._data_point.function
 
         return attributes
 

@@ -7,6 +7,8 @@ import logging
 from typing import Any, Final, override
 
 from aiohomematic.const import DataPointCategory, HubValueType, ParameterType
+from aiohomematic.interfaces import CombinedDataPointProtocol
+from aiohomematic.model.combined.timer import CombinedDpTimerAction
 from aiohomematic.model.generic import BaseDpActionNumber, BaseDpNumber
 from aiohomematic.model.hub import SysvarDpNumber
 from homeassistant.components.number import NumberEntity, NumberMode, RestoreNumber
@@ -139,6 +141,23 @@ async def async_setup_entry(
         ]:
             async_add_entities(entities)
 
+    @callback
+    def async_add_combined_number(data_points: tuple[Any, ...]) -> None:
+        """Add combined number from Homematic(IP) Local for OpenCCU."""
+        combined_dps = [dp for dp in data_points if isinstance(dp, CombinedDataPointProtocol)]
+        if not combined_dps:
+            return
+        _LOGGER.debug("ASYNC_ADD_COMBINED_NUMBER: Adding %i data points", len(combined_dps))
+
+        if entities := [
+            AioHomematicCombinedNumber(
+                control_unit=control_unit,
+                data_point=data_point,
+            )
+            for data_point in combined_dps
+        ]:
+            async_add_entities(entities)
+
     entry.async_on_unload(
         func=async_dispatcher_connect(
             hass=hass,
@@ -163,11 +182,21 @@ async def async_setup_entry(
         )
     )
 
+    entry.async_on_unload(
+        func=async_dispatcher_connect(
+            hass=hass,
+            signal=signal_new_data_point(entry_id=entry.entry_id, platform=DataPointCategory.SENSOR),
+            target=async_add_combined_number,
+        )
+    )
+
     async_add_number(data_points=control_unit.get_new_data_points(data_point_type=BaseDpNumber))
 
     async_add_hub_number(data_points=control_unit.get_new_hub_data_points(data_point_type=SysvarDpNumber))
 
     async_add_action_number(data_points=control_unit.get_new_data_points(data_point_type=BaseDpActionNumber))
+
+    async_add_combined_number(data_points=control_unit.get_new_data_points(data_point_type=CombinedDpTimerAction))
 
 
 class AioHomematicNumber(AioHomematicGenericEntity[BaseDpNumber[Any]], RestoreNumber):
@@ -379,3 +408,42 @@ class AioHomematicActionNumber(AioHomematicGenericRestoreEntity[BaseDpActionNumb
                 channel_address,
                 parameter,
             )
+
+
+class AioHomematicCombinedNumber(AioHomematicGenericEntity[CombinedDataPointProtocol], NumberEntity):
+    """Representation of the HomematicIP combined number entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_mode = NumberMode.BOX
+
+    def __init__(
+        self,
+        control_unit: ControlUnit,
+        data_point: CombinedDataPointProtocol,
+    ) -> None:
+        """Initialize the combined number entity."""
+        super().__init__(
+            control_unit=control_unit,
+            data_point=data_point,
+        )
+        if data_point.min is not None:
+            self._attr_native_min_value = float(data_point.min)
+        if data_point.max is not None:
+            self._attr_native_max_value = float(data_point.max)
+        self._attr_native_step = 1.0
+        if data_point.unit:
+            self._attr_native_unit_of_measurement = data_point.unit
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the current value."""
+        if (value := self._data_point.value) is not None:
+            return float(value)
+        return None
+
+    @override
+    @handle_homematic_errors
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        await self._data_point.send_value(value=value)

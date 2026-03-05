@@ -16,6 +16,7 @@ from aiohomematic.const import CHANNEL_ADDRESS_PATTERN, DEVICE_ADDRESS_PATTERN, 
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.interfaces import (
     CalculatedDataPointProtocol,
+    CombinedDataPointProtocol,
     CustomDataPointProtocol,
     GenericDataPointProtocolAny,
     GenericProgramDataPointProtocol,
@@ -123,7 +124,11 @@ def validate_paramset_key(value: Any) -> str:
 
 # Union for entity types used as base class for data points
 HmBaseDataPointProtocol: TypeAlias = (
-    CalculatedDataPointProtocol | CustomDataPointProtocol | GenericDataPointProtocolAny | WeekProfileDataPoint
+    CalculatedDataPointProtocol
+    | CombinedDataPointProtocol
+    | CustomDataPointProtocol
+    | GenericDataPointProtocolAny
+    | WeekProfileDataPoint
 )
 # Generic base type used for data points in Homematic(IP) Local for OpenCCU
 HmGenericDataPointProtocol = TypeVar("HmGenericDataPointProtocol", bound=HmBaseDataPointProtocol)

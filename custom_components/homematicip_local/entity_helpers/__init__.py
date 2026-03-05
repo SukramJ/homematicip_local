@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from aiohomematic.interfaces import (
     CalculatedDataPointProtocol,
+    CombinedDataPointProtocol,
     CustomDataPointProtocol,
     GenericDataPointProtocol,
     GenericHubDataPointProtocol,
@@ -114,7 +115,7 @@ def get_entity_description(
     postfix: str | None = None
     var_name: str | None = None
 
-    if isinstance(data_point, (CalculatedDataPointProtocol, GenericDataPointProtocol)):
+    if isinstance(data_point, (CalculatedDataPointProtocol, CombinedDataPointProtocol, GenericDataPointProtocol)):
         parameter = data_point.parameter
         device_model = data_point.device.model
         if hasattr(data_point, "unit") and data_point.unit:
@@ -168,7 +169,7 @@ def _get_name_and_translation_key(
     if entity_desc.translation_key:
         return name, entity_desc.translation_key
 
-    if isinstance(data_point, (CalculatedDataPointProtocol, GenericDataPointProtocol)):
+    if isinstance(data_point, (CalculatedDataPointProtocol, CombinedDataPointProtocol, GenericDataPointProtocol)):
         if isinstance(entity_desc, HmEntityDescription):
             if entity_desc.name_source == HmNameSource.ENTITY_NAME:
                 return name, name.lower()
