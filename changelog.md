@@ -8,6 +8,10 @@
 - **CombinedDataPoint support**: New `AioHomematicCombinedNumber` entity for `CombinedDataPointProtocol` data points (e.g. `CombinedDpTimerAction`). These combined data points merge multiple underlying parameters (e.g. timer value + unit) into a single writable number entity with automatic unit conversion. Exposed as `EntityCategory.CONFIG` number entities with min/max/unit from the combined data point. Sensor platform filters out `CombinedDataPointProtocol` instances to prevent duplicate read-only entities.
 - 15 new WebSocket commands for the Integration and OpenCCU panel tabs (`homematicip_local/integration/*` and `homematicip_local/ccu/*`)
 
+### Fixed
+
+- **Fix calculated sensor entities not created**: Calculated data points (e.g. `OperatingVoltageLevel` / Betriebsspannungspegel) were no longer created as sensor entities. The `isinstance(data_point, DpSensor)` filter added to exclude `CombinedDataPointProtocol` instances also excluded `CalculatedDataPoint` instances, which are not subclasses of `DpSensor`. The filter now accepts both `DpSensor` and `CalculatedDataPoint`.
+
 ### Config Panel
 
 - **Integration dashboard tab**: New "Integration" tab in the config panel providing a consolidated view of the integration's operational state:

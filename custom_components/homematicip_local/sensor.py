@@ -8,7 +8,8 @@ import logging
 from typing import Any, Final, cast, override
 
 from aiohomematic.const import DEFAULT_MULTIPLIER, DataPointCategory, HubValueType, ParameterType
-from aiohomematic.interfaces import ClimateWeekProfileDataPointProtocol, CombinedDataPointProtocol
+from aiohomematic.interfaces import CalculatedDataPointProtocol, ClimateWeekProfileDataPointProtocol, CombinedDataPointProtocol
+from aiohomematic.model.calculated import CalculatedDataPoint
 from aiohomematic.model.generic import DpSensor
 from aiohomematic.model.hub import SysvarDpSensor
 from aiohomematic.model.week_profile_data_point import WeekProfileDataPoint
@@ -54,7 +55,9 @@ async def async_setup_entry(
     control_unit: ControlUnit = entry.runtime_data
 
     @callback
-    def async_add_sensor(data_points: tuple[DpSensor[Any] | CombinedDataPointProtocol, ...]) -> None:
+    def async_add_sensor(
+        data_points: tuple[DpSensor[Any] | CalculatedDataPointProtocol | CombinedDataPointProtocol, ...],
+    ) -> None:
         """Add sensor from Homematic(IP) Local for OpenCCU."""
         _LOGGER.debug("ASYNC_ADD_SENSOR: Adding %i data points", len(data_points))
 
@@ -64,7 +67,7 @@ async def async_setup_entry(
                 data_point=data_point,
             )
             for data_point in data_points
-            if isinstance(data_point, DpSensor)
+            if isinstance(data_point, (DpSensor, CalculatedDataPoint))
         ]:
             async_add_entities(entities)
 
@@ -121,7 +124,7 @@ async def async_setup_entry(
     async_add_week_profile_sensor(data_points=control_unit.get_new_data_points(data_point_type=WeekProfileDataPoint))
 
 
-class AioHomematicSensor(AioHomematicGenericEntity[DpSensor[Any]], RestoreSensor):
+class AioHomematicSensor(AioHomematicGenericEntity[DpSensor[Any] | CalculatedDataPoint[Any]], RestoreSensor):
     """Representation of the HomematicIP sensor entity."""
 
     entity_description: HmSensorEntityDescription
@@ -130,7 +133,7 @@ class AioHomematicSensor(AioHomematicGenericEntity[DpSensor[Any]], RestoreSensor
     def __init__(
         self,
         control_unit: ControlUnit,
-        data_point: DpSensor[Any],
+        data_point: DpSensor[Any] | CalculatedDataPoint[Any],
     ) -> None:
         """Initialize the sensor entity."""
         super().__init__(
