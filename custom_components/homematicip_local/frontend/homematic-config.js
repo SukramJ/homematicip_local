@@ -182,11 +182,12 @@ function e(e,t,i,s){var a,n=arguments.length,r=n<3?t:null===s?s=Object.getOwnPro
               <ha-select
                 .label=${this._l("device_list.select_ccu")}
                 .value=${this.entryId}
-                @selected=${this._handleEntryChanged}
+                @change=${this._handleEntryChanged}
+                @closed=${e=>e.stopPropagation()}
               >
                 ${this.entries.map(e=>W`
                     <ha-list-item
-                      .value=${e.entry_id}
+                      value=${e.entry_id}
                       ?selected=${e.entry_id===this.entryId}
                     >
                       ${e.title}
@@ -605,11 +606,11 @@ function e(e,t,i,s){var a,n=arguments.length,r=n<3?t:null===s?s=Object.getOwnPro
           <ha-select
             .value=${String(this.value??0)}
             .disabled=${t}
-            @selected=${e=>{const t=parseInt(e.target.value,10);Number.isNaN(t)||t===this.value||this._emitChange(t)}}
-            @value-changed=${e=>e.stopPropagation()}
+            @change=${e=>{const t=parseInt(e.target.value,10);Number.isNaN(t)||t===this.value||this._emitChange(t)}}
+            @closed=${e=>e.stopPropagation()}
           >
             ${(e.options??[]).map((t,i)=>W`
-                <ha-list-item .value=${String(i)} ?selected=${this.value===i}>
+                <ha-list-item value=${String(i)} ?selected=${this.value===i}>
                   ${Be(e,t)}
                 </ha-list-item>
               `)}
@@ -751,15 +752,15 @@ function e(e,t,i,s){var a,n=arguments.length,r=n<3?t:null===s?s=Object.getOwnPro
           <ha-select
             .value=${p}
             .disabled=${d}
-            @selected=${t=>this._handlePresetSelected(t,e,i,s)}
-            @value-changed=${e=>e.stopPropagation()}
+            @change=${t=>this._handlePresetSelected(t,e,i,s)}
+            @closed=${e=>e.stopPropagation()}
           >
             ${He.map((e,t)=>W`
-                <ha-list-item .value=${String(t)}>
+                <ha-list-item value=${String(t)} ?selected=${p===String(t)}>
                   ${"de"===a?e.label_de:e.label_en}
                 </ha-list-item>
               `)}
-            <ha-list-item .value=${"custom"}>
+            <ha-list-item value=${"custom"} ?selected=${"custom"===p}>
               ${Me(this.hass,"form_parameter.custom_value")}
             </ha-list-item>
           </ha-select>
@@ -1330,16 +1331,19 @@ function e(e,t,i,s){var a,n=arguments.length,r=n<3?t:null===s?s=Object.getOwnPro
             ${e} ${this.modified?W`<span class="modified-dot"></span>`:F}
           </div>
           <div class="parameter-control">
-            <ha-select @selected=${this._handlePresetChange}>
+            <ha-select
+              @change=${this._handlePresetChange}
+              @closed=${e=>e.stopPropagation()}
+            >
               ${this.presets.map(e=>W`
                   <ha-list-item
-                    .value=${`${e.base}-${e.factor}`}
+                    value=${`${e.base}-${e.factor}`}
                     ?selected=${e.base===this.baseValue&&e.factor===this.factorValue}
                   >
                     ${e.label}
                   </ha-list-item>
                 `)}
-              <ha-list-item .value=${"custom"} ?selected=${!t}>
+              <ha-list-item value=${"custom"} ?selected=${!t}>
                 ${this._l("link_config.custom_time")}
               </ha-list-item>
             </ha-select>
@@ -1415,9 +1419,17 @@ function e(e,t,i,s){var a,n=arguments.length,r=n<3?t:null===s?s=Object.getOwnPro
         <ha-select
           .label=${this._l("link_config.profile")}
           .value=${String(this._selectedProfileId)}
-          @selected=${this._handleProfileChange}
+          @change=${this._handleProfileChange}
+          @closed=${e=>e.stopPropagation()}
         >
-          ${this._profiles.map(e=>W`<ha-list-item .value=${String(e.id)}> ${e.name} </ha-list-item>`)}
+          ${this._profiles.map(e=>W`
+              <ha-list-item
+                value=${String(e.id)}
+                ?selected=${e.id===this._selectedProfileId}
+              >
+                ${e.name}
+              </ha-list-item>
+            `)}
         </ha-select>
         ${t?W`<p class="profile-description">${t}</p>`:F}
       </div>
@@ -3551,11 +3563,11 @@ function e(e,t,i,s){var a,n=arguments.length,r=n<3?t:null===s?s=Object.getOwnPro
         <label>${this.translations.condition}</label>
         <ha-select
           .value=${this._editingEntry.condition}
-          @selected=${e=>{const t=e.target.value,i={condition:t};"fixed_time"===t?(i.astro_type=null,i.astro_offset_minutes=0):null===this._editingEntry.astro_type&&(i.astro_type="sunrise"),this._updateEditingEntry(i)}}
+          @change=${e=>{const t=e.target.value,i={condition:t};"fixed_time"===t?(i.astro_type=null,i.astro_offset_minutes=0):null===this._editingEntry.astro_type&&(i.astro_type="sunrise"),this._updateEditingEntry(i)}}
           @closed=${e=>e.stopPropagation()}
         >
           ${dt.map(e=>W`
-              <ha-list-item .value=${e} ?selected=${e===this._editingEntry.condition}>
+              <ha-list-item value=${e} ?selected=${e===this._editingEntry.condition}>
                 ${this.translations.conditionLabels[e]||e}
               </ha-list-item>
             `)}
@@ -3566,17 +3578,17 @@ function e(e,t,i,s){var a,n=arguments.length,r=n<3?t:null===s?s=Object.getOwnPro
               <label>${this.translations.astroSunrise}/${this.translations.astroSunset}</label>
               <ha-select
                 .value=${this._editingEntry.astro_type||"sunrise"}
-                @selected=${e=>{this._updateEditingEntry({astro_type:e.target.value})}}
+                @change=${e=>{this._updateEditingEntry({astro_type:e.target.value})}}
                 @closed=${e=>e.stopPropagation()}
               >
                 <ha-list-item
-                  .value=${"sunrise"}
+                  value=${"sunrise"}
                   ?selected=${"sunrise"===this._editingEntry.astro_type}
                 >
                   ${this.translations.astroSunrise}
                 </ha-list-item>
                 <ha-list-item
-                  .value=${"sunset"}
+                  value=${"sunset"}
                   ?selected=${"sunset"===this._editingEntry.astro_type}
                 >
                   ${this.translations.astroSunset}
@@ -3615,11 +3627,11 @@ function e(e,t,i,s){var a,n=arguments.length,r=n<3?t:null===s?s=Object.getOwnPro
         ${"binary"===e?.levelType?W`
               <ha-select
                 .value=${String(this._editingEntry.level)}
-                @selected=${e=>{const t=parseInt(e.target.value,10);this._updateEditingEntry({level:t})}}
+                @change=${e=>{const t=parseInt(e.target.value,10);this._updateEditingEntry({level:t})}}
                 @closed=${e=>e.stopPropagation()}
               >
-                <ha-list-item .value=${"0"}>${this.translations.levelOff}</ha-list-item>
-                <ha-list-item .value=${"1"}>${this.translations.levelOn}</ha-list-item>
+                <ha-list-item value=${"0"} ?selected=${0===this._editingEntry.level}>${this.translations.levelOff}</ha-list-item>
+                <ha-list-item value=${"1"} ?selected=${1===this._editingEntry.level}>${this.translations.levelOn}</ha-list-item>
               </ha-select>
             `:W`
               <div class="slider-group">
@@ -3661,11 +3673,11 @@ function e(e,t,i,s){var a,n=arguments.length,r=n<3?t:null===s?s=Object.getOwnPro
           />
           <ha-select
             .value=${s}
-            @selected=${e=>{i>0&&this._updateEditingEntry({duration:wt(i,e.target.value)})}}
+            @change=${e=>{i>0&&this._updateEditingEntry({duration:wt(i,e.target.value)})}}
             @closed=${e=>e.stopPropagation()}
           >
             ${ct.map(e=>W`
-                <ha-list-item .value=${e} ?selected=${e===s}>${e}</ha-list-item>
+                <ha-list-item value=${e} ?selected=${e===s}>${e}</ha-list-item>
               `)}
           </ha-select>
         </div>
@@ -3682,11 +3694,11 @@ function e(e,t,i,s){var a,n=arguments.length,r=n<3?t:null===s?s=Object.getOwnPro
           />
           <ha-select
             .value=${s}
-            @selected=${e=>{i>0&&this._updateEditingEntry({ramp_time:wt(i,e.target.value)})}}
+            @change=${e=>{i>0&&this._updateEditingEntry({ramp_time:wt(i,e.target.value)})}}
             @closed=${e=>e.stopPropagation()}
           >
             ${ct.map(e=>W`
-                <ha-list-item .value=${e} ?selected=${e===s}>${e}</ha-list-item>
+                <ha-list-item value=${e} ?selected=${e===s}>${e}</ha-list-item>
               `)}
           </ha-select>
         </div>
@@ -3706,7 +3718,7 @@ function e(e,t,i,s){var a,n=arguments.length,r=n<3?t:null===s?s=Object.getOwnPro
               `})}
           </div>
         </div>
-      `:W``}};Ut([he({type:Boolean})],Vt.prototype,"open",void 0),Ut([he({attribute:!1})],Vt.prototype,"entry",void 0),Ut([he()],Vt.prototype,"groupNo",void 0),Ut([he({type:Boolean})],Vt.prototype,"isNewEvent",void 0),Ut([he({attribute:!1})],Vt.prototype,"domain",void 0),Ut([he({attribute:!1})],Vt.prototype,"availableTargetChannels",void 0),Ut([he({attribute:!1})],Vt.prototype,"translations",void 0),Ut([pe()],Vt.prototype,"_editingEntry",void 0),Ut([pe()],Vt.prototype,"_validationErrors",void 0),Vt=Ut([Ge("hmip-device-schedule-editor")],Vt);let Ht=class extends oe{constructor(){super(...arguments),this.entryId="",this.deviceAddress="",this.deviceName="",this._devices=[],this._selectedDevice=null,this._climateData=null,this._deviceData=null,this._selectedProfile="",this._loading=!0,this._saving=!1,this._error="",this._deviceShowEditor=!1,this._deviceIsNewEvent=!1}updated(e){(e.has("entryId")||e.has("deviceAddress"))&&this.entryId&&this._fetchDevices()}async _fetchDevices(){this._loading=!0,this._error="";try{let e;this._devices=await ke(this.hass,this.entryId),this.deviceAddress&&(e=this._devices.find(e=>e.address===this.deviceAddress)),!e&&this._devices.length>0&&(e=this._devices[0]),e&&(this._selectedDevice=e,await this._loadSchedule(e))}catch(e){this._error=String(e)}finally{this._loading=!1}}async _loadSchedule(e){this._loading=!0,this._error="",this._climateData=null,this._deviceData=null;try{if("climate"===e.schedule_type){let t=this._selectedProfile||void 0;if(!t){const i=await we(this.hass,this.entryId,e.address);t=i.active_profile,this._selectedProfile=t;const s=Object.keys(i.schedule_data).some(e=>"MONDAY"===e||"TUESDAY"===e||"WEDNESDAY"===e||"THURSDAY"===e||"FRIDAY"===e||"SATURDAY"===e||"SUNDAY"===e);s&&(this._climateData=i)}if(!this._climateData){const i=await we(this.hass,this.entryId,e.address,t);this._climateData=i,!this._selectedProfile&&i.active_profile&&(this._selectedProfile=i.active_profile)}}else this._deviceData=await async function(e,t,i){return e.callWS({type:"homematicip_local/config/get_device_schedule",entry_id:t,device_address:i})}(this.hass,this.entryId,e.address)}catch{this._error=this._l("device_schedule.load_failed")}finally{this._loading=!1}}_l(e,t){return Me(this.hass,e,t)}_handleBack(){this.dispatchEvent(new CustomEvent("back",{bubbles:!0,composed:!0}))}async _handleDeviceSelect(e){const t=e.target.value;if(!t)return void(this._selectedDevice=null);const i=this._devices.find(e=>e.address===t);i&&(this._selectedDevice=i,this._selectedProfile="",this._editingWeekday=void 0,this._copiedSchedule=void 0,this._deviceShowEditor=!1,this._deviceEditingEntry=void 0,this._deviceEditingGroupNo=void 0,this._deviceIsNewEvent=!1,await this._loadSchedule(i))}async _handleProfileChange(e){const t=e.target.value;t&&t!==this._selectedProfile&&(this._selectedProfile=t,this._selectedDevice&&await this._loadSchedule(this._selectedDevice))}async _handleSetActiveProfile(){if(this._selectedDevice&&this._selectedProfile)try{await async function(e,t,i,s){return e.callWS({type:"homematicip_local/config/set_climate_active_profile",entry_id:t,device_address:i,profile:s})}(this.hass,this.entryId,this._selectedDevice.address,this._selectedProfile),this._climateData&&(this._climateData={...this._climateData,active_profile:this._selectedProfile}),ze(this,{message:this._l("device_schedule.save_success")})}catch{ze(this,{message:this._l("device_schedule.save_failed")})}}_onWeekdayClick(e){this._editingWeekday=e.detail.weekday}_onCopySchedule(e){const t=e.detail.weekday;if(!this._climateData)return;const i=this._climateData.schedule_data[t];if(!i)return;const{blocks:s,baseTemperature:a}=vt(i);this._copiedSchedule={weekday:t,blocks:JSON.parse(JSON.stringify(s)),baseTemperature:a}}async _onPasteSchedule(e){const t=e.detail.weekday;if(!this._selectedDevice||!this._copiedSchedule||!this._climateData)return;const i=this._copiedSchedule.baseTemperature??function(e){if(0===e.length)return 20;const t=new Map;for(const i of e){const e=i.endMinutes-i.startMinutes,s=t.get(i.temperature)||0;t.set(i.temperature,s+e)}let i=0,s=20;for(const[e,a]of t.entries())a>i&&(i=a,s=e);return s}(this._copiedSchedule.blocks),s=mt(this._copiedSchedule.blocks,i);if(At(s,this._climateData.min_temp??5,this._climateData.max_temp??30.5))ze(this,{message:this._l("device_schedule.invalid_schedule")});else{this._saving=!0;try{const{base_temperature:e,periods:i}=s;await Se(this.hass,this.entryId,this._selectedDevice.address,this._selectedProfile,t,e,i.map(e=>({...e}))),ze(this,{message:this._l("device_schedule.save_success")}),await this._loadSchedule(this._selectedDevice)}catch{ze(this,{message:this._l("device_schedule.save_failed")})}finally{this._saving=!1}}}async _onSaveSchedule(e){if(!this._selectedDevice||!this._climateData)return;const{weekday:t,blocks:i,baseTemperature:s}=e.detail,a=mt(i,s);if(At(a,this._climateData.min_temp??5,this._climateData.max_temp??30.5))ze(this,{message:this._l("device_schedule.invalid_schedule")});else{this._saving=!0;try{const{base_temperature:e,periods:i}=a;await Se(this.hass,this.entryId,this._selectedDevice.address,this._selectedProfile,t,e,i.map(e=>({...e}))),ze(this,{message:this._l("device_schedule.save_success")}),this._editingWeekday=void 0,await this._loadSchedule(this._selectedDevice)}catch{ze(this,{message:this._l("device_schedule.save_failed")})}finally{this._saving=!1}}}_onValidationFailed(e){ze(this,{message:this._l("device_schedule.invalid_schedule",{error:e.detail.error})})}_onEditorClosed(){this._editingWeekday=void 0}async _handleReload(){if(this._selectedDevice)try{await async function(e,t,i){return e.callWS({type:"homematicip_local/config/reload_device_config",entry_id:t,device_address:i})}(this.hass,this.entryId,this._selectedDevice.address),ze(this,{message:this._l("device_schedule.reload_success")}),await this._loadSchedule(this._selectedDevice)}catch{ze(this,{message:this._l("device_schedule.reload_failed")})}}async _handleExport(){const e=this._climateData?.schedule_data??this._deviceData?.schedule_data;if(!e)return;const t=JSON.stringify(e,null,2),i=new Blob([t],{type:"application/json"}),s=URL.createObjectURL(i),a=document.createElement("a");a.href=s;const n=this._selectedDevice?.address.replace(/:/g,"_")??"schedule";a.download=`${n}_schedule.json`,a.click(),URL.revokeObjectURL(s)}async _handleImport(){const e=document.createElement("input");e.type="file",e.accept=".json",e.onchange=async()=>{const t=e.files?.[0];if(t&&this._selectedDevice)try{const e=await t.text(),i=JSON.parse(e);if(!await Le(0,{title:this._l("device_schedule.import_confirm_title"),text:this._l("device_schedule.import_confirm_text"),confirmText:this._l("device_schedule.import"),dismissText:this._l("common.cancel")}))return;"climate"===this._selectedDevice.schedule_type?(this._climateData={...this._climateData,schedule_data:i},ze(this,{message:this._l("device_schedule.import_success")})):(await Ee(this.hass,this.entryId,this._selectedDevice.address,i),ze(this,{message:this._l("device_schedule.import_success")}),await this._loadSchedule(this._selectedDevice))}catch{ze(this,{message:this._l("device_schedule.import_failed")})}},e.click()}_buildGridTranslations(){return{weekdayShortLabels:{MONDAY:this._l("device_schedule.weekdays").split(",")[0],TUESDAY:this._l("device_schedule.weekdays").split(",")[1],WEDNESDAY:this._l("device_schedule.weekdays").split(",")[2],THURSDAY:this._l("device_schedule.weekdays").split(",")[3],FRIDAY:this._l("device_schedule.weekdays").split(",")[4],SATURDAY:this._l("device_schedule.weekdays").split(",")[5],SUNDAY:this._l("device_schedule.weekdays").split(",")[6]},clickToEdit:this._l("device_schedule.click_to_edit"),copySchedule:this._l("device_schedule.copy_schedule"),pasteSchedule:this._l("device_schedule.paste_schedule")}}_buildEditorTranslations(){const e=this._l("device_schedule.weekdays").split(",");return{weekdayShortLabels:{MONDAY:e[0],TUESDAY:e[1],WEDNESDAY:e[2],THURSDAY:e[3],FRIDAY:e[4],SATURDAY:e[5],SUNDAY:e[6]},weekdayLongLabels:{MONDAY:this._l("device_schedule.weekday_monday"),TUESDAY:this._l("device_schedule.weekday_tuesday"),WEDNESDAY:this._l("device_schedule.weekday_wednesday"),THURSDAY:this._l("device_schedule.weekday_thursday"),FRIDAY:this._l("device_schedule.weekday_friday"),SATURDAY:this._l("device_schedule.weekday_saturday"),SUNDAY:this._l("device_schedule.weekday_sunday")},edit:this._l("device_schedule.edit"),cancel:this._l("common.cancel"),save:this._l("device_schedule.save"),addTimeBlock:this._l("device_schedule.add_time_block"),from:this._l("device_schedule.from"),to:this._l("device_schedule.to"),baseTemperature:this._l("device_schedule.base_temperature"),baseTemperatureDescription:this._l("device_schedule.base_temperature_description"),temperaturePeriods:this._l("device_schedule.temperature_periods"),editSlot:this._l("device_schedule.edit_slot"),saveSlot:this._l("device_schedule.save_slot"),cancelSlotEdit:this._l("device_schedule.cancel_slot_edit"),undoShortcut:this._l("device_schedule.undo_shortcut"),redoShortcut:this._l("device_schedule.redo_shortcut"),warningsTitle:this._l("device_schedule.warnings_title"),validationMessages:{blockEndBeforeStart:this._l("device_schedule.validation_block_end_before_start"),blockZeroDuration:this._l("device_schedule.validation_block_zero_duration"),invalidStartTime:this._l("device_schedule.validation_invalid_start_time"),invalidEndTime:this._l("device_schedule.validation_invalid_end_time"),temperatureOutOfRange:this._l("device_schedule.validation_temp_out_of_range"),invalidSlotCount:this._l("device_schedule.validation_invalid_slot_count"),invalidSlotKey:this._l("device_schedule.validation_invalid_slot_key"),missingSlot:this._l("device_schedule.validation_missing_slot"),slotMissingValues:this._l("device_schedule.validation_slot_missing_values"),slotTimeBackwards:this._l("device_schedule.validation_slot_time_backwards"),slotTimeExceedsDay:this._l("device_schedule.validation_slot_time_exceeds_day"),lastSlotMustEnd:this._l("device_schedule.validation_last_slot_must_end"),scheduleMustBeObject:this._l("device_schedule.validation_schedule_must_be_object"),missingWeekday:this._l("device_schedule.validation_missing_weekday"),invalidWeekdayData:this._l("device_schedule.validation_invalid_weekday_data"),weekdayValidationError:this._l("device_schedule.validation_weekday_error")}}}render(){return this._loading&&0===this._devices.length?W`<div class="loading">${this._l("common.loading")}</div>`:this._error&&0===this._devices.length?W`<div class="error">${this._error}</div>`:W`
+      `:W``}};Ut([he({type:Boolean})],Vt.prototype,"open",void 0),Ut([he({attribute:!1})],Vt.prototype,"entry",void 0),Ut([he()],Vt.prototype,"groupNo",void 0),Ut([he({type:Boolean})],Vt.prototype,"isNewEvent",void 0),Ut([he({attribute:!1})],Vt.prototype,"domain",void 0),Ut([he({attribute:!1})],Vt.prototype,"availableTargetChannels",void 0),Ut([he({attribute:!1})],Vt.prototype,"translations",void 0),Ut([pe()],Vt.prototype,"_editingEntry",void 0),Ut([pe()],Vt.prototype,"_validationErrors",void 0),Vt=Ut([Ge("hmip-device-schedule-editor")],Vt);let Ht=class extends oe{constructor(){super(...arguments),this.entryId="",this.deviceAddress="",this.deviceName="",this._devices=[],this._selectedDevice=null,this._climateData=null,this._deviceData=null,this._selectedProfile="",this._loading=!0,this._saving=!1,this._error="",this._deviceShowEditor=!1,this._deviceIsNewEvent=!1}updated(e){(e.has("entryId")||e.has("deviceAddress"))&&this.entryId&&this._fetchDevices()}async _fetchDevices(){this._loading=!0,this._error="";try{let e;this._devices=await ke(this.hass,this.entryId),this.deviceAddress&&(e=this._devices.find(e=>e.address===this.deviceAddress)),!e&&this._devices.length>0&&(e=this._devices[0]),e&&(this._selectedDevice=e,await this._loadSchedule(e))}catch(e){this._error=String(e)}finally{this._loading=!1}}async _loadSchedule(e){this._loading=!0,this._error="",this._climateData=null,this._deviceData=null;try{if("climate"===e.schedule_type){let t=this._selectedProfile||void 0;if(!t){const i=await we(this.hass,this.entryId,e.address);t=i.active_profile,this._selectedProfile=t;const s=Object.keys(i.schedule_data).some(e=>"MONDAY"===e||"TUESDAY"===e||"WEDNESDAY"===e||"THURSDAY"===e||"FRIDAY"===e||"SATURDAY"===e||"SUNDAY"===e);s&&(this._climateData=i)}if(!this._climateData){const i=await we(this.hass,this.entryId,e.address,t);this._climateData=i,!this._selectedProfile&&i.active_profile&&(this._selectedProfile=i.active_profile)}}else this._deviceData=await async function(e,t,i){return e.callWS({type:"homematicip_local/config/get_device_schedule",entry_id:t,device_address:i})}(this.hass,this.entryId,e.address)}catch{this._error=this._l("device_schedule.load_failed")}finally{this._loading=!1}}_l(e,t){return Me(this.hass,e,t)}_handleBack(){this.dispatchEvent(new CustomEvent("back",{bubbles:!0,composed:!0}))}async _handleDeviceSelect(e){const t=e.target.value;if(!t)return void(this._selectedDevice=null);const i=this._devices.find(e=>e.address===t);i&&(this._selectedDevice=i,this._selectedProfile="",this._editingWeekday=void 0,this._copiedSchedule=void 0,this._deviceShowEditor=!1,this._deviceEditingEntry=void 0,this._deviceEditingGroupNo=void 0,this._deviceIsNewEvent=!1,await this._loadSchedule(i))}async _handleProfileChange(e){const t=e.target.value;t&&t!==this._selectedProfile&&(this._selectedProfile=t,this._selectedDevice&&await this._loadSchedule(this._selectedDevice))}_onWeekdayClick(e){this._editingWeekday=e.detail.weekday}_onCopySchedule(e){const t=e.detail.weekday;if(!this._climateData)return;const i=this._climateData.schedule_data[t];if(!i)return;const{blocks:s,baseTemperature:a}=vt(i);this._copiedSchedule={weekday:t,blocks:JSON.parse(JSON.stringify(s)),baseTemperature:a}}async _onPasteSchedule(e){const t=e.detail.weekday;if(!this._selectedDevice||!this._copiedSchedule||!this._climateData)return;const i=this._copiedSchedule.baseTemperature??function(e){if(0===e.length)return 20;const t=new Map;for(const i of e){const e=i.endMinutes-i.startMinutes,s=t.get(i.temperature)||0;t.set(i.temperature,s+e)}let i=0,s=20;for(const[e,a]of t.entries())a>i&&(i=a,s=e);return s}(this._copiedSchedule.blocks),s=mt(this._copiedSchedule.blocks,i);if(At(s,this._climateData.min_temp??5,this._climateData.max_temp??30.5))ze(this,{message:this._l("device_schedule.invalid_schedule")});else{this._saving=!0;try{const{base_temperature:e,periods:i}=s;await Se(this.hass,this.entryId,this._selectedDevice.address,this._selectedProfile,t,e,i.map(e=>({...e}))),ze(this,{message:this._l("device_schedule.save_success")}),await this._loadSchedule(this._selectedDevice)}catch{ze(this,{message:this._l("device_schedule.save_failed")})}finally{this._saving=!1}}}async _onSaveSchedule(e){if(!this._selectedDevice||!this._climateData)return;const{weekday:t,blocks:i,baseTemperature:s}=e.detail,a=mt(i,s);if(At(a,this._climateData.min_temp??5,this._climateData.max_temp??30.5))ze(this,{message:this._l("device_schedule.invalid_schedule")});else{this._saving=!0;try{const{base_temperature:e,periods:i}=a;await Se(this.hass,this.entryId,this._selectedDevice.address,this._selectedProfile,t,e,i.map(e=>({...e}))),ze(this,{message:this._l("device_schedule.save_success")}),this._editingWeekday=void 0,await this._loadSchedule(this._selectedDevice)}catch{ze(this,{message:this._l("device_schedule.save_failed")})}finally{this._saving=!1}}}_onValidationFailed(e){ze(this,{message:this._l("device_schedule.invalid_schedule",{error:e.detail.error})})}_onEditorClosed(){this._editingWeekday=void 0}async _handleReload(){if(this._selectedDevice)try{await async function(e,t,i){return e.callWS({type:"homematicip_local/config/reload_device_config",entry_id:t,device_address:i})}(this.hass,this.entryId,this._selectedDevice.address),ze(this,{message:this._l("device_schedule.reload_success")}),await this._loadSchedule(this._selectedDevice)}catch{ze(this,{message:this._l("device_schedule.reload_failed")})}}async _handleExport(){const e=this._climateData?.schedule_data??this._deviceData?.schedule_data;if(!e)return;const t=JSON.stringify(e,null,2),i=new Blob([t],{type:"application/json"}),s=URL.createObjectURL(i),a=document.createElement("a");a.href=s;const n=this._selectedDevice?.address.replace(/:/g,"_")??"schedule";a.download=`${n}_schedule.json`,a.click(),URL.revokeObjectURL(s)}async _handleImport(){const e=document.createElement("input");e.type="file",e.accept=".json",e.onchange=async()=>{const t=e.files?.[0];if(t&&this._selectedDevice)try{const e=await t.text(),i=JSON.parse(e);if(!await Le(0,{title:this._l("device_schedule.import_confirm_title"),text:this._l("device_schedule.import_confirm_text"),confirmText:this._l("device_schedule.import"),dismissText:this._l("common.cancel")}))return;"climate"===this._selectedDevice.schedule_type?(this._climateData={...this._climateData,schedule_data:i},ze(this,{message:this._l("device_schedule.import_success")})):(await Ee(this.hass,this.entryId,this._selectedDevice.address,i),ze(this,{message:this._l("device_schedule.import_success")}),await this._loadSchedule(this._selectedDevice))}catch{ze(this,{message:this._l("device_schedule.import_failed")})}},e.click()}_buildGridTranslations(){return{weekdayShortLabels:{MONDAY:this._l("device_schedule.weekdays").split(",")[0],TUESDAY:this._l("device_schedule.weekdays").split(",")[1],WEDNESDAY:this._l("device_schedule.weekdays").split(",")[2],THURSDAY:this._l("device_schedule.weekdays").split(",")[3],FRIDAY:this._l("device_schedule.weekdays").split(",")[4],SATURDAY:this._l("device_schedule.weekdays").split(",")[5],SUNDAY:this._l("device_schedule.weekdays").split(",")[6]},clickToEdit:this._l("device_schedule.click_to_edit"),copySchedule:this._l("device_schedule.copy_schedule"),pasteSchedule:this._l("device_schedule.paste_schedule")}}_buildEditorTranslations(){const e=this._l("device_schedule.weekdays").split(",");return{weekdayShortLabels:{MONDAY:e[0],TUESDAY:e[1],WEDNESDAY:e[2],THURSDAY:e[3],FRIDAY:e[4],SATURDAY:e[5],SUNDAY:e[6]},weekdayLongLabels:{MONDAY:this._l("device_schedule.weekday_monday"),TUESDAY:this._l("device_schedule.weekday_tuesday"),WEDNESDAY:this._l("device_schedule.weekday_wednesday"),THURSDAY:this._l("device_schedule.weekday_thursday"),FRIDAY:this._l("device_schedule.weekday_friday"),SATURDAY:this._l("device_schedule.weekday_saturday"),SUNDAY:this._l("device_schedule.weekday_sunday")},edit:this._l("device_schedule.edit"),cancel:this._l("common.cancel"),save:this._l("device_schedule.save"),addTimeBlock:this._l("device_schedule.add_time_block"),from:this._l("device_schedule.from"),to:this._l("device_schedule.to"),baseTemperature:this._l("device_schedule.base_temperature"),baseTemperatureDescription:this._l("device_schedule.base_temperature_description"),temperaturePeriods:this._l("device_schedule.temperature_periods"),editSlot:this._l("device_schedule.edit_slot"),saveSlot:this._l("device_schedule.save_slot"),cancelSlotEdit:this._l("device_schedule.cancel_slot_edit"),undoShortcut:this._l("device_schedule.undo_shortcut"),redoShortcut:this._l("device_schedule.redo_shortcut"),warningsTitle:this._l("device_schedule.warnings_title"),validationMessages:{blockEndBeforeStart:this._l("device_schedule.validation_block_end_before_start"),blockZeroDuration:this._l("device_schedule.validation_block_zero_duration"),invalidStartTime:this._l("device_schedule.validation_invalid_start_time"),invalidEndTime:this._l("device_schedule.validation_invalid_end_time"),temperatureOutOfRange:this._l("device_schedule.validation_temp_out_of_range"),invalidSlotCount:this._l("device_schedule.validation_invalid_slot_count"),invalidSlotKey:this._l("device_schedule.validation_invalid_slot_key"),missingSlot:this._l("device_schedule.validation_missing_slot"),slotMissingValues:this._l("device_schedule.validation_slot_missing_values"),slotTimeBackwards:this._l("device_schedule.validation_slot_time_backwards"),slotTimeExceedsDay:this._l("device_schedule.validation_slot_time_exceeds_day"),lastSlotMustEnd:this._l("device_schedule.validation_last_slot_must_end"),scheduleMustBeObject:this._l("device_schedule.validation_schedule_must_be_object"),missingWeekday:this._l("device_schedule.validation_missing_weekday"),invalidWeekdayData:this._l("device_schedule.validation_invalid_weekday_data"),weekdayValidationError:this._l("device_schedule.validation_weekday_error")}}}render(){return this._loading&&0===this._devices.length?W`<div class="loading">${this._l("common.loading")}</div>`:this._error&&0===this._devices.length?W`<div class="error">${this._error}</div>`:W`
       <ha-icon-button
         class="back-button"
         .path=${"M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"}
@@ -3721,13 +3733,12 @@ function e(e,t,i,s){var a,n=arguments.length,r=n<3?t:null===s?s=Object.getOwnPro
           <ha-select
             .label=${this._l("device_schedule.select_device")}
             .value=${this._selectedDevice?.address??""}
-            @selected=${this._handleDeviceSelect}
+            @change=${this._handleDeviceSelect}
             @closed=${e=>e.stopPropagation()}
-            @value-changed=${e=>e.stopPropagation()}
           >
             ${[...this._devices].sort((e,t)=>e.name.localeCompare(t.name)).map(e=>W`
                   <ha-list-item
-                    .value=${e.address}
+                    value=${e.address}
                     ?selected=${e.address===this._selectedDevice?.address}
                   >
                     ${e.name} (${e.model}) -
@@ -3750,24 +3761,18 @@ function e(e,t,i,s){var a,n=arguments.length,r=n<3?t:null===s?s=Object.getOwnPro
             <ha-select
               .label=${this._l("device_schedule.profile")}
               .value=${this._selectedProfile}
-              @selected=${this._handleProfileChange}
+              @change=${this._handleProfileChange}
               @closed=${e=>e.stopPropagation()}
-              @value-changed=${e=>e.stopPropagation()}
             >
               ${e.available_profiles.map(t=>W`
                   <ha-list-item
-                    .value=${t}
+                    value=${t}
                     ?selected=${t===this._selectedProfile}
                   >
                     ${t}${t===e.active_profile?" ✓":""}
                   </ha-list-item>
                 `)}
             </ha-select>
-            ${this._selectedProfile!==e.active_profile?W`
-                  <ha-button outlined class="small" @click=${this._handleSetActiveProfile}>
-                    ${this._l("device_schedule.active_profile")}
-                  </ha-button>
-                `:F}
           </div>
           <div class="toolbar-actions">
             <ha-button outlined @click=${this._handleExport}>
