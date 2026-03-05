@@ -185,7 +185,7 @@ async def async_setup_entry(
     entry.async_on_unload(
         func=async_dispatcher_connect(
             hass=hass,
-            signal=signal_new_data_point(entry_id=entry.entry_id, platform=DataPointCategory.SENSOR),
+            signal=signal_new_data_point(entry_id=entry.entry_id, platform=DataPointCategory.ACTION_NUMBER),
             target=async_add_combined_number,
         )
     )
@@ -349,7 +349,7 @@ class AioHomematicActionNumber(AioHomematicGenericRestoreEntity[BaseDpActionNumb
         ):
             try:
                 return float(self._restored_state.state)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 pass
 
         if (default := self._data_point.default) is not None:

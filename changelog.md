@@ -10,7 +10,8 @@
 
 ### Fixed
 
-- **Fix calculated sensor entities not created**: Calculated data points (e.g. `OperatingVoltageLevel` / Betriebsspannungspegel) were no longer created as sensor entities. The `isinstance(data_point, DpSensor)` filter added to exclude `CombinedDataPointProtocol` instances also excluded `CalculatedDataPoint` instances, which are not subclasses of `DpSensor`. The filter now accepts both `DpSensor` and `CalculatedDataPoint`.
+- **Fix sensor entities not created for non-DpSensor data points**: The `isinstance(data_point, DpSensor)` filter added to exclude `CombinedDataPointProtocol` instances also excluded `CalculatedDataPoint` instances (e.g. `OperatingVoltageLevel` / Betriebsspannungspegel) and forced-sensor `GenericDataPoint` instances (e.g. `LEVEL` / Ventilöffnungsgrad on HmIP-eTRV). The filter now excludes only `CombinedDataPointProtocol` instead of requiring specific subclasses.
+- **Fix CombinedDataPoint number entities not created on dynamic discovery**: The `async_add_combined_number` dispatcher in the number platform listened on `DataPointCategory.SENSOR` but `CombinedDpTimerAction` (e.g. siren duration on HmIP-ASIR-2) has `_category = DataPointCategory.ACTION_NUMBER`. Changed the signal to `ACTION_NUMBER` so combined number entities are correctly created during dynamic device discovery.
 
 ### Config Panel
 
