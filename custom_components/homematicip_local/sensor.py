@@ -8,7 +8,11 @@ import logging
 from typing import Any, Final, cast, override
 
 from aiohomematic.const import DEFAULT_MULTIPLIER, DataPointCategory, HubValueType, ParameterType
-from aiohomematic.interfaces import CalculatedDataPointProtocol, ClimateWeekProfileDataPointProtocol, CombinedDataPointProtocol
+from aiohomematic.interfaces import (
+    CalculatedDataPointProtocol,
+    ClimateWeekProfileDataPointProtocol,
+    CombinedDataPointProtocol,
+)
 from aiohomematic.model.calculated import CalculatedDataPoint
 from aiohomematic.model.generic import DpSensor
 from aiohomematic.model.hub import SysvarDpSensor
@@ -124,7 +128,7 @@ async def async_setup_entry(
     async_add_week_profile_sensor(data_points=control_unit.get_new_data_points(data_point_type=WeekProfileDataPoint))
 
 
-class AioHomematicSensor(AioHomematicGenericEntity[DpSensor[Any] | CalculatedDataPoint[Any]], RestoreSensor):
+class AioHomematicSensor(AioHomematicGenericEntity[DpSensor[Any] | CalculatedDataPointProtocol], RestoreSensor):
     """Representation of the HomematicIP sensor entity."""
 
     entity_description: HmSensorEntityDescription
@@ -133,7 +137,7 @@ class AioHomematicSensor(AioHomematicGenericEntity[DpSensor[Any] | CalculatedDat
     def __init__(
         self,
         control_unit: ControlUnit,
-        data_point: DpSensor[Any] | CalculatedDataPoint[Any],
+        data_point: DpSensor[Any] | CalculatedDataPointProtocol,
     ) -> None:
         """Initialize the sensor entity."""
         super().__init__(
