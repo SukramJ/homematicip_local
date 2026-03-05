@@ -2,8 +2,8 @@
 
 async-upnp-client==0.46.2
 aiohomematic==2026.3.1
-aiohomematic-test-support==2026.3.0
-aiohomematic-config==2026.3.0
+aiohomematic-test-support==2026.3.1
+aiohomematic-config==2026.3.1
 isal==1.8.0
 mypy==1.19.1
 pur==7.3.3

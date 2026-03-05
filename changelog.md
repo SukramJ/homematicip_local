@@ -28,6 +28,7 @@
 - **Tab navigation**: The config panel now features a tab bar (Devices / Integration / OpenCCU) for switching between views. Tab state is persisted in the URL hash.
 
 - **Link config editor fix**: Fixed false dirty state when opening the link config editor without making changes.
+- **HA 2026.3 compatibility**: Fixed `ha-select` compatibility with Home Assistant 2026.3.0+.
 
 ### Dependencies
 
@@ -73,8 +74,9 @@
 - **Fix install mode**: Use interface-specific client instead of primary client for install mode buttons. Previously, activating install mode for one interface (e.g. HmIP-RF) could incorrectly target another interface (e.g. BidCos-RF).
 - **Fix non-climate schedules with empty target channels**: Schedules without explicit target channels were incorrectly filtered as inactive because `is_schedule_active()` required both weekdays and target channels. The CCU handles default channel assignment when no explicit channels are configured, so the activity check now only requires at least one weekday.
 
-#### Bump aiohomematic-config to [2026.3.0](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.3.0)
+#### Bump aiohomematic-config to [2026.3.1](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.3.1)
 
+- Add `device_active_profile_index` field to `ClimateScheduleData` for active profile index from device
 - Add `device_icon` field to `FormSchema` with icon filename from CCU device database
 - Add `description` field to `FormParameter` with Markdown-formatted parameter help text
 - Use `get_parameter_help()` from aiohomematic to populate help texts (locale-aware, with LINK prefix stripping)
