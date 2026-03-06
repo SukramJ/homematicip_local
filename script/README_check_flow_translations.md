@@ -218,7 +218,7 @@ When adding new features:
 
 ## Technical Details
 
-- **Language**: Python 3.13+
+- **Language**: Python 3.14+
 - **Dependencies**: Standard library only (no external dependencies)
 - **Execution time**: < 1 second
 - **Files checked**: 4 (config_flow.py, strings.json, en.json, de.json)

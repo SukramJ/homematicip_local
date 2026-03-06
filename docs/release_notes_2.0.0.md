@@ -334,7 +334,7 @@ If you encounter issues, go back to **Debug and Analysis Settings** in the integ
 
 This version requires:
 - **Home Assistant 2025.10.0** or newer
-- **Python 3.13** or newer
+- **Python 3.14** or newer
 
 Configuration is automatically migrated. After updating, consider checking the diagnostic settings to enable the new system monitoring sensors.
 

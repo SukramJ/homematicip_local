@@ -25,8 +25,8 @@ This document provides comprehensive guidance for AI assistants working with the
 
 **Project Name:** Homematic(IP) Local for OpenCCU
 **Type:** Home Assistant Custom Integration
-**Version:** 2.2.4
-**Primary Language:** Python 3.13+
+**Version:** 2.3.3
+**Primary Language:** Python 3.14+
 **Domain:** `homematicip_local`
 
 This is a production-quality Home Assistant custom integration that enables local communication with Homematic and HomematicIP smart home devices through various hubs (CCU2/3, OpenCCU, Debmatic, Homegear). It provides bi-directional communication using XML-RPC for device control and push state updates, and JSON-RPC for fetching device names and room information.
@@ -79,7 +79,7 @@ homematicip_local/
 │   ├── test_*.py                         # Platform-specific tests
 │   │
 ├── .github/workflows/                    # CI/CD pipelines
-│   ├── test-run.yaml                     # Main test pipeline (Python 3.13, 3.14)
+│   ├── test-run.yaml                     # Main test pipeline (Python 3.14)
 │   ├── pre-commit.yml                    # Code quality gate
 │   ├── hacs_validate.yaml                # HACS validation
 │   └── hassfest.yaml                     # HA manifest validation
@@ -117,9 +117,9 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2026.2.0) - Core async library for Homematic device communication
+- **aiohomematic** (v2026.3.1) - Core async library for Homematic device communication
 - **Home Assistant Core** - Minimum version: 2025.10.0+
-- **Python 3.13+** (target version for development)
+- **Python 3.14+** (target version for development)
 
 ### Development Dependencies
 
@@ -128,7 +128,7 @@ homematicip_local/
 - **pylint** (4.0.4) - Code linting
 - **ruff** (0.14.9) - Fast Python linter and formatter
 - **prek** (0.2.28) - Git hooks manager (Rust-based pre-commit alternative)
-- **aiohomematic-test-support** (2026.2.0) - Mock test data
+- **aiohomematic-test-support** (2026.3.1) - Mock test data
 - **async-upnp-client** (0.46.1) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
 
@@ -138,7 +138,7 @@ homematicip_local/
 
 ### Prerequisites
 
-- **Python**: 3.13 or higher
+- **Python**: 3.14 or higher
 - **Package Manager**: pip, uv (recommended)
 - **Git**: For version control
 
@@ -159,7 +159,7 @@ homematicip_local/
    cd homematicip_local
 
    # Create virtual environment
-   python3.13 -m venv venv
+   python3.14 -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
 
    # Install dependencies
@@ -302,7 +302,7 @@ devices = [d for d in all_devices if d.is_ready]
 
 #### Ruff Configuration
 
-- **Target**: Python 3.13
+- **Target**: Python 3.14
 - **Line Length**: 120 characters
 - **Enabled Rules**: B, C, D, E, F, G, I, LOG, PT, SIM, and more
 - **Auto-fix enabled** in prek
@@ -891,7 +891,7 @@ t6u7v8w Use deepcopy for config entry data modification
 
 **What NOT to include**:
 ```
-x9y0z1a Bump aiohomematic to 2026.2.1  ❌ (dependency update, documented in aiohomematic)
+x9y0z1a Bump aiohomematic to 2026.3.1  ❌ (dependency update, documented in aiohomematic)
 b2c3d4e Update manifest.json requirements  ❌ (maintenance task)
 f5g6h7i Run prek hooks  ❌ (development process, not user-facing)
 ```
@@ -1169,10 +1169,10 @@ python script/check_translations.py
 
 ### Version Information
 
-- **Current Version:** 2.2.5
-- **Minimum HA Version:** 2025.10.0+
-- **Python Target:** 3.13+ (CI tests on 3.13, 3.14)
-- **aiohomematic Version:** 2026.2.1
+- **Current Version:** 2.3.3
+- **Minimum HA Version:** 2026.3.1+
+- **Python Target:** 3.14+ (CI tests on 3.14)
+- **aiohomematic Version:** 2026.3.1
 
 ### External Resources
 

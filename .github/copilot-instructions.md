@@ -6,7 +6,7 @@ This file provides GitHub Copilot with context-specific instructions for working
 
 **Project**: Homematic(IP) Local for OpenCCU
 **Type**: Home Assistant Custom Integration
-**Language**: Python 3.13+
+**Language**: Python 3.14+
 **Domain**: `homematicip_local`
 **Architecture**: Async, event-driven, push-based state updates
 
@@ -210,9 +210,9 @@ from aiohomematic.support import support as hms
 ## Version Information
 
 - **Integration Version**: 2.0.0
-- **Minimum HA Version**: 2025.10.0+
-- **Python Target**: 3.13+
-- **aiohomematic Version**: 2025.12.41
+- **Minimum HA Version**: 2026.3.1+
+- **Python Target**: 3.14+
+- **aiohomematic Version**: 2026.3.1
 
 ## Documentation Structure
 

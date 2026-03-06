@@ -1,4 +1,4 @@
-# Version [2.3.3](https://github.com/SukramJ/homematicip_local/compare/2.3.2...2.3.3) (2026-03-05)
+# Version [2.4.0](https://github.com/SukramJ/homematicip_local/compare/2.3.2...2.4.0) (2026-03-05)
 
 ## What's Changed
 
@@ -12,6 +12,11 @@
 
 - **Fix sensor entities not created for non-DpSensor data points**: The `isinstance(data_point, DpSensor)` filter added to exclude `CombinedDataPointProtocol` instances also excluded `CalculatedDataPoint` instances (e.g. `OperatingVoltageLevel` / Betriebsspannungspegel) and forced-sensor `GenericDataPoint` instances (e.g. `LEVEL` / Ventilöffnungsgrad on HmIP-eTRV). The filter now excludes only `CombinedDataPointProtocol` instead of requiring specific subclasses.
 - **Fix CombinedDataPoint number entities not created on dynamic discovery**: The `async_add_combined_number` dispatcher in the number platform listened on `DataPointCategory.SENSOR` but `CombinedDpTimerAction` (e.g. siren duration on HmIP-ASIR-2) has `_category = DataPointCategory.ACTION_NUMBER`. Changed the signal to `ACTION_NUMBER` so combined number entities are correctly created during dynamic device discovery.
+
+### Changed
+
+- **Python 3.14 minimum**: Dropped Python 3.13 support. CI, mypy, pylint, ruff, Dockerfile, and all documentation updated to target Python 3.14+.
+- **Minimum Home Assistant version**: Raised from 2025.10.0 to 2026.3.0.
 
 ### Config Panel
 
@@ -1167,7 +1172,7 @@ There is no longer any need to register Homematic(IP) Local for OpenCCU as a cus
   - Remove python 3.12 for github tests and pylint
   - Set battery to UNKNOWN for HmIP-PCBS-BAT
   - Sort battery list for correct wildcard search
-  - Use py 3.13 for mypy and pylint
+  - Use py 3.14 for mypy and pylint
 - Fix import from HA
 
 # Version 1.80.0 (2025-01-30)

@@ -42,7 +42,7 @@ This project follows the [Contributor Covenant Code of Conduct](https://www.cont
 
 ### Prerequisites
 
-- **Python 3.13+** (required for development)
+- **Python 3.14+** (required for development)
 - **Git** for version control
 - **pip** or **uv** (recommended) for package management
 
@@ -66,7 +66,7 @@ git clone https://github.com/sukramj/homematicip_local.git
 cd homematicip_local
 
 # Create virtual environment
-python3.13 -m venv venv
+python3.14 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
