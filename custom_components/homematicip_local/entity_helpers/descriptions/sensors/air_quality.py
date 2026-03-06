@@ -137,7 +137,7 @@ AIR_QUALITY_SENSOR_RULES: list[EntityDescriptionRule] = [
         description=measurement_sensor(
             key="AIR_PRESSURE",
             device_class=SensorDeviceClass.PRESSURE,
-            unit=UnitOfPressure.HECTOPASCAL,
+            unit=UnitOfPressure.HPA,
         ),
     ),
     # Dirt level (e.g., vacuum cleaner sensors)
