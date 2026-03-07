@@ -42,18 +42,26 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.3.1](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.1)
+#### Bump aiohomematic to [2026.3.3](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.3)
 
-- **DpActionNumber data points**: New `DpActionFloat` and `DpActionInteger` generic data point types for write-only FLOAT/INTEGER parameters. These provide number entities in Home Assistant (with MIN/MAX validation) while remaining write-only at the protocol level. Previously, all write-only numeric parameters were mapped to `DpAction` (no HA entity). The resolver now maps write-only FLOAT to `DpActionFloat` and write-only INTEGER to `DpActionInteger`.
-- **DpActionBoolean and DpActionString data points**: New `DpActionBoolean` and `DpActionString` generic data point types for write-only BOOL/STRING parameters. These complete the DpAction hierarchy so that every CCU write-only parameter type has a type-safe handler. Previously, write-only BOOL and STRING parameters fell through to the generic `DpAction` fallback with `Any` value type. `DpAction` now only handles `TYPE=ACTION` parameters (triggers without type information).
-- **Type-correct custom data point fields**: Replaced `DpAction` with specific types in custom data points where pydevccu paramset data shows a concrete TYPE: `MANU_MODE` (TYPE=FLOAT) → `DpActionFloat`, `CONTROL_MODE` on HmIP (TYPE=INTEGER) → `DpActionInteger`, `DISPLAY_DATA_COMMIT` (TYPE=BOOL) → `DpActionBoolean`, `DISPLAY_DATA_STRING`/`COMBINED_PARAMETER`/`LEVEL_COMBINED` (TYPE=STRING) → `DpActionString`. `DpAction` remains only for genuine TYPE=ACTION parameters (`AUTO_MODE`, `BOOST_MODE`, `COMFORT_MODE`, `LOWERING_MODE`, `STOP`, `OPEN`).
-- **CombinedDataPoint for timer value+unit pairs**: Introduced `CombinedDataPoint` base class and `CombinedDpTimerAction` concrete implementation in `aiohomematic/model/combined/`. This new data point type combines multiple underlying data points (e.g., timer value + unit) into a single writable entity with automatic unit conversion (seconds to S/M/H). Replaced the ephemeral `TimerField`/`TimerAccessor` pattern with the `CombinedTimerField` descriptor. For the IP Siren (HmIP-ASIR), the duration combined data point is exposed as a visible HA number entity with automatic unit conversion, replacing the raw `DURATION_VALUE` number entity. Applied across all custom data points with timer parameters: lights, sirens, switches, and valves. Removed `TimerUnitMixin`, `OnOffActionMixin`, `TimerAccessor`, and `TimerField`.
-- **CombinedDpHsColor for hue+saturation pairs**: New `CombinedDpHsColor` combined data point that encapsulates HUE + SATURATION into a single `tuple[float, float]` value with automatic saturation scaling (CCU 0.0–1.0 ↔ HA 0.0–100.0). Added `CombinedHsColorField` descriptor. Simplified `CustomDpIpRGBWLight` and `CustomDpIpDrgDaliLight` by replacing boilerplate `hs_color` property and `turn_on()` conversion logic with delegation to the combined data point.
-- **Unified field visibility in profile configs**: Merged 6 field dictionaries (3 pairs of hidden/visible) in `ChannelGroupConfig` into 3 dictionaries where each entry carries its own visibility via `hidden()`/`visible()` helper functions. Removed `visible_fields`, `visible_channel_fields`, and `visible_fixed_channel_fields` from both `ChannelGroupConfig` and `RebasedChannelGroupConfig`.
-- **Siren duration unit conversion**: `CustomDpIpSiren.turn_on()` now properly converts the duration value using automatic unit conversion (seconds → minutes → hours) before sending to the device. Previously, the raw duration was sent with the default unit, causing incorrect behavior for large duration values (>16343s).
-- **Siren duration**: The siren's `DURATION_VALUE` parameter is now exposed as a visible number entity in Home Assistant, allowing users to set a default duration. `turn_on()` uses this value as fallback when no explicit duration is provided, fixing the issue where `siren.turn_on` without parameters activated the siren for 0 seconds.
-- **Duration translations**: Added German and English translations for the `DURATION_VALUE` combined data point parameter.
-- **Fix scheduler busy-loop at 100% CPU during connection issues**: When `has_connection_issue` was True, the scheduler entered a busy-loop because skipped jobs never advanced their `next_run`, causing the sleep calculation to compute `delay = 0.0`. The sleep calculation now only considers jobs eligible to run in the current state, and skipped jobs advance their schedule to prevent a burst of simultaneous execution on recovery.
+- **DpActionNumber data points**: New `DpActionFloat` and `DpActionInteger` for write-only FLOAT/INTEGER parameters with MIN/MAX validation
+- **DpActionBoolean and DpActionString data points**: Complete the DpAction hierarchy for write-only BOOL/STRING parameters. `DpAction` now only handles `TYPE=ACTION` parameters
+- **Type-correct custom data point fields**: Replaced `DpAction` with specific types (`DpActionFloat`, `DpActionInteger`, `DpActionBoolean`, `DpActionString`) in custom data points based on pydevccu paramset TYPE
+- **CombinedDataPoint for timer value+unit pairs**: New `CombinedDpTimerAction` combines timer value + unit into a single writable entity with automatic unit conversion (seconds to S/M/H). Replaces `TimerField`/`TimerAccessor` pattern. Siren duration exposed as visible number entity with automatic unit conversion
+- **CombinedDpHsColor for hue+saturation pairs**: Encapsulates HUE + SATURATION into a single `tuple[float, float]` value with automatic saturation scaling. Simplifies RGBW and DALI light custom data points
+- **Unified field visibility in profile configs**: Merged 6 field dictionaries into 3 with per-entry visibility via `hidden()`/`visible()` helpers
+- **Siren duration fix**: `turn_on()` now properly converts duration with unit conversion and uses stored default when no explicit duration is provided
+- **Duration translations**: Added German and English translations for `DURATION_VALUE`
+- **Fix scheduler busy-loop at 100% CPU during connection issues**: Skipped jobs now advance their schedule to prevent busy-loop and burst on recovery
+- **Security hardening**: ReGa script injection prevention, device address validation, password field protection, authorization header sanitization, ReGa script path traversal prevention, firmware URL scheme validation, restrictive temp file/directory permissions, RPC background task limit (1000 max), cryptographic RNG for address anonymization
+- **Performance**: Pre-sorted EventBus handlers, parallel device finalization/client refresh/interface operations, `weakref.finalize` for subscription cleanup, `slots=True` for dataclasses, optimized multi-channel group check
+
+#### Bump aiohomematic-config to [2026.3.2](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.3.2)
+
+- Add `device_active_profile_index` field to `ClimateScheduleData` for active profile index from device
+- Add `device_icon` field to `FormSchema` with icon filename from CCU device database
+- Add `description` field to `FormParameter` with Markdown-formatted parameter help text
+- **Python 3.14 minimum**: Dropped Python 3.13 support
 
 ---
 
@@ -202,7 +210,7 @@
 
 - **Configuration panel: Reload device config**: New WebSocket command to reload a device's configuration from the CCU without restarting the integration.
 
-- **Device configuration URL deep-link**: When the configuration panel is enabled, each device's `DeviceInfo` now includes a `configuration_url` that links directly to the device detail view in the configuration panel. Clicking the link on a device's page navigates to the panel with the correct entry, device address, and interface pre-selected.
+- **Device configuration URL deep-link**: When the configuration panel is enabled, each device's `DeviceInfo` now includes a `configuration_url` that links directly to the device detail view in the configuration panel. Clicking the link on a device's page navigates to the panel with the correct entry, device address, and interface preselected.
 
 - **`config_entry_id` attribute**: Climate and week profile sensor entities with schedule support now expose a `config_entry_id` state attribute, enabling automations and frontend cards to identify the associated config entry.
 
