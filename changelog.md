@@ -42,7 +42,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.3.3](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.3)
+#### Bump aiohomematic to [2026.3.4](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.4)
 
 - **DpActionNumber data points**: New `DpActionFloat` and `DpActionInteger` for write-only FLOAT/INTEGER parameters with MIN/MAX validation
 - **DpActionBoolean and DpActionString data points**: Complete the DpAction hierarchy for write-only BOOL/STRING parameters. `DpAction` now only handles `TYPE=ACTION` parameters
@@ -54,6 +54,7 @@
 - **Duration translations**: Added German and English translations for `DURATION_VALUE`
 - **Fix scheduler busy-loop at 100% CPU during connection issues**: Skipped jobs now advance their schedule to prevent busy-loop and burst on recovery
 - **Security hardening**: ReGa script injection prevention, device address validation, password field protection, authorization header sanitization, ReGa script path traversal prevention, firmware URL scheme validation, restrictive temp file/directory permissions, RPC background task limit (1000 max), cryptographic RNG for address anonymization
+- **Fix health tracker central state sync**: `sync_central_state()` synchronizes cached central state after `_evaluate_central_state()` completes
 - **Performance**: Pre-sorted EventBus handlers, parallel device finalization/client refresh/interface operations, `weakref.finalize` for subscription cleanup, `slots=True` for dataclasses, optimized multi-channel group check
 
 #### Bump aiohomematic-config to [2026.3.2](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.3.2)
