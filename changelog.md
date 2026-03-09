@@ -1,3 +1,15 @@
+# Version [2.4.1](https://github.com/SukramJ/homematicip_local/compare/2.4.0...2.4.1) (2026-03-09)
+
+## What's Changed
+
+### Fixed
+
+- **Install mode availability**: The install mode status WebSocket response now includes an `available` field indicating whether each interface (HmIP-RF, BidCos-RF) actually supports install mode. Previously, unavailable interfaces were indistinguishable from inactive ones.
+
+### Config Panel
+
+- **Updated frontend**: Rebuilt config panel frontend.
+
 # Version [2.4.0](https://github.com/SukramJ/homematicip_local/compare/2.3.2...2.4.0) (2026-03-05)
 
 ## What's Changed

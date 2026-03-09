@@ -6,6 +6,7 @@ aiohomematic-test-support==2026.3.4
 aiohomematic-config==2026.3.2
 isal==1.8.0
 mypy==1.19.1
+prek==0.3.5
 pur==7.3.3
 pylint==4.0.5
 pylint_strict_informational==0.1

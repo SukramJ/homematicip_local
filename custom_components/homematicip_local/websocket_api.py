@@ -1959,11 +1959,13 @@ async def ws_get_install_mode_status(
             result[label] = {
                 "remaining_seconds": im_dp.sensor.value,
                 "active": im_dp.sensor.is_active,
+                "available": True,
             }
         else:
             result[label] = {
                 "remaining_seconds": None,
                 "active": False,
+                "available": False,
             }
 
     connection.send_result(msg["id"], result)

@@ -668,7 +668,9 @@ class TestWsGetInstallModeStatus:
         assert response["success"] is True
         assert response["result"]["hmip"]["remaining_seconds"] is None
         assert response["result"]["hmip"]["active"] is False
+        assert response["result"]["hmip"]["available"] is False
         assert response["result"]["bidcos"]["remaining_seconds"] is None
+        assert response["result"]["bidcos"]["available"] is False
 
     async def test_success(
         self,
@@ -710,8 +712,10 @@ class TestWsGetInstallModeStatus:
         assert response["success"] is True
         assert response["result"]["hmip"]["remaining_seconds"] == 45
         assert response["result"]["hmip"]["active"] is True
+        assert response["result"]["hmip"]["available"] is True
         assert response["result"]["bidcos"]["remaining_seconds"] == 0
         assert response["result"]["bidcos"]["active"] is False
+        assert response["result"]["bidcos"]["available"] is True
 
 
 class TestWsTriggerInstallMode:
