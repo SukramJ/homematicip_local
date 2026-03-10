@@ -8,7 +8,8 @@
 
 ### Config Panel
 
-- **Updated frontend**: Rebuilt config panel frontend.
+- Added auto-polling to Integration dashboard — refreshes every 5s during initialization, every 30s once stable
+- Added auto-polling to OpenCCU dashboard — refreshes all data (system info, hub/service/alarm messages, signal quality, firmware, install mode) every 30s; loading spinner only shown on initial load
 
 # Version [2.4.0](https://github.com/SukramJ/homematicip_local/compare/2.3.2...2.4.0) (2026-03-05)
 
