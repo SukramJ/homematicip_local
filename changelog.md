@@ -1,4 +1,4 @@
-# Version [2.4.1](https://github.com/SukramJ/homematicip_local/compare/2.4.0...2.4.1) (2026-03-09)
+# Version [2.4.1](https://github.com/SukramJ/homematicip_local/compare/2.4.0...2.4.1) (2026-03-11)
 
 ## What's Changed
 
@@ -10,6 +10,11 @@
 
 - Added auto-polling to Integration dashboard — refreshes every 5s during initialization, every 30s once stable
 - Added auto-polling to OpenCCU dashboard — refreshes all data (system info, hub/service/alarm messages, signal quality, firmware, install mode) every 30s; loading spinner only shown on initial load
+
+### Dependencies
+
+- Bump aiohomematic to 2026.3.6
+- Bump aiohomematic-config to 2026.3.2
 
 # Version [2.4.0](https://github.com/SukramJ/homematicip_local/compare/2.3.2...2.4.0) (2026-03-05)
 
