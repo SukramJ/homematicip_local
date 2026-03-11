@@ -13,8 +13,17 @@
 
 ### Dependencies
 
-- Bump aiohomematic to 2026.3.6
-- Bump aiohomematic-config to 2026.3.2
+#### Bump aiohomematic to [2026.3.7](https://github.com/SukramJ/aiohomematic/compare/2026.3.4...2026.3.7)
+
+- **PayloadProtocol**: New protocol interface for `config_payload`, `info_payload`, and `state_payload` properties across devices, channels, data points, and central
+- **Property `alt_name` support**: Property decorators accept optional `alt_name` for alternative payload keys (e.g. `address` → `serial_number`, `firmware` → `sw_version`)
+- **Capabilities reclassified**: `capabilities` properties moved from `info_property` to `config_property` (immutable device features)
+- **Exact contract tests**: Payload key stability tests detect property additions, removals, and `alt_name` changes
+
+#### Bump aiohomematic-config to [2026.3.2](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.3.2)
+
+- Add `device_active_profile_index` field to `ClimateScheduleData` for active profile index from device
+- Python 3.14 minimum, dropped Python 3.13 support
 
 # Version [2.4.0](https://github.com/SukramJ/homematicip_local/compare/2.3.2...2.4.0) (2026-03-05)
 
