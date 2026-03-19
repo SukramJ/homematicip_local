@@ -1,3 +1,38 @@
+# Version [2.4.2](https://github.com/SukramJ/homematicip_local/compare/2.4.1...2.4.2) (2026-03-19)
+
+## What's Changed
+
+### Config Panel
+
+- Active climate profile indicator — profile dropdown now shows which profile is active on the device (e.g. "Profil 1 (Aktives Profil)")
+- Device icons displayed in device list, device detail, and channel config views (via CCU proxy endpoint)
+- Parameter help text with Markdown formatting below each parameter
+- MASTER paramset time presets — unit/value parameter pairs displayed as a single preset dropdown (13 standard Homematic presets, 100ms–15 minutes)
+- Dropdown and radio options now use translated labels from the backend
+
+### Dependencies
+
+#### Bump aiohomematic to [2026.3.9](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.9)
+
+- **TLS certifi CA bundle**: TLS context now loads the `certifi` CA bundle when available, ensuring trusted certificates work out-of-the-box in Home Assistant
+- **Skip optimistic updates for action data points**: Action data points (ACTION, ACTION_NUMBER, ACTION_SELECT, BUTTON) never receive CCU confirmations — the optimistic timer now skips them, preventing spurious rollback warnings
+- **Connection recovery**: Heartbeat timer now starts correctly after CCU reboots
+- **PayloadProtocol**: New protocol interface for payload properties across devices, channels, and data points
+- **Property `alt_name`**: Alternative payload keys (e.g. `address` → `serial_number`)
+- **Data point metadata**: `Quantity` and `ValueBehavior` enums for semantic parameter classification
+- **Cover capabilities**: `CoverCapabilities` dataclass with static capability flags
+- **DpAction types**: Complete hierarchy (`DpActionFloat`, `DpActionInteger`, `DpActionBoolean`, `DpActionString`)
+- **CombinedDataPoint**: `CombinedDpTimerAction` and `CombinedDpHsColor` for multi-parameter entities
+
+#### Bump aiohomematic-config to [2026.3.2](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.3.2)
+
+- `device_active_profile_index` field for active profile index from device
+- `device_icon` field with icon filename from CCU device database
+- Parameter `description` field with Markdown-formatted help text
+- TCL profile parsing improvements (variable resolution, `subst` handling, `source` includes)
+- New receiver profiles (door lock, universal light, RGBW DALI)
+- Python 3.14 minimum
+
 # Version [2.4.1](https://github.com/SukramJ/homematicip_local/compare/2.4.0...2.4.1) (2026-03-11)
 
 ## What's Changed
