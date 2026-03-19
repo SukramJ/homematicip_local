@@ -12,8 +12,10 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.3.9](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.9)
+#### Bump aiohomematic to [2026.3.10](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.10)
 
+- **Hidden/device-level channels in configuration**: Device-level, internal, and invisible channels with MASTER paramset are now included in configurable channels
+- **Read-only MASTER parameters**: Read-only configuration values are now displayed in device configuration
 - **TLS certifi CA bundle**: TLS context now loads the `certifi` CA bundle when available, ensuring trusted certificates work out-of-the-box in Home Assistant
 - **Skip optimistic updates for action data points**: Action data points (ACTION, ACTION_NUMBER, ACTION_SELECT, BUTTON) never receive CCU confirmations — the optimistic timer now skips them, preventing spurious rollback warnings
 - **Connection recovery**: Heartbeat timer now starts correctly after CCU reboots
