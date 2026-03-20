@@ -9,6 +9,14 @@
 - Parameter help text with Markdown formatting below each parameter
 - MASTER paramset time presets — unit/value parameter pairs displayed as a single preset dropdown (13 standard Homematic presets, 100ms–15 minutes)
 - Dropdown and radio options now use translated labels from the backend
+- OpenCCU dashboard: all table columns sortable; filter bars for Signal Quality and Firmware tables (shown when >10 devices)
+- OpenCCU dashboard: removed Signal column (redundant with RSSI), Hub Messages section, and "Backup available" badge; moved Actions card below System Information
+- Climate and device schedule editors now use shared `@hmip/schedule-ui` components
+- Fixed `ha-slider` and `ha-select` event handling in paramset and schedule editors (slider changes not registering, event leaking, dropdown closing dialogs)
+- Fixed device schedule entries without target channels not being shown; target channels are now optional
+- Fixed UTF-8 link names showing as mojibake (e.g. "KÃ¼chenblock" instead of "Küchenblock")
+- Fixed editor dialog closing on save when validation errors exist
+- Fixed copy/paste schedule icons overflowing at narrow widths
 
 ### Dependencies
 
