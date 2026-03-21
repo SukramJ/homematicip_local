@@ -1,4 +1,4 @@
-# Version [2.4.2](https://github.com/SukramJ/homematicip_local/compare/2.4.1...2.4.2) (2026-03-19)
+# Version [2.4.2](https://github.com/SukramJ/homematicip_local/compare/2.4.1...2.4.2) (2026-03-21)
 
 ## What's Changed
 
@@ -9,6 +9,7 @@
 - Parameter help text with Markdown formatting below each parameter
 - MASTER paramset time presets — unit/value parameter pairs displayed as a single preset dropdown (13 standard Homematic presets, 100ms–15 minutes)
 - Dropdown and radio options now use translated labels from the backend
+- HmIP-specific parameter translations — config panel now resolves HmIP channel types for correct CCU translations (e.g. `SHUTTER_CONTACT` → `SHUTTER_CONTACT_HMIP`)
 - OpenCCU dashboard: all table columns sortable; filter bars for Signal Quality and Firmware tables (shown when >10 devices)
 - OpenCCU dashboard: removed Signal column (redundant with RSSI), Hub Messages section, and "Backup available" badge; moved Actions card below System Information
 - Climate and device schedule editors now use shared `@hmip/schedule-ui` components
@@ -20,13 +21,14 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.3.10](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.10)
+#### Bump aiohomematic to [2026.3.11](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.11)
 
 - **Hidden/device-level channels in configuration**: Device-level, internal, and invisible channels with MASTER paramset are now included in configurable channels
 - **Read-only MASTER parameters**: Read-only configuration values are now displayed in device configuration
 - **TLS certifi CA bundle**: TLS context now loads the `certifi` CA bundle when available, ensuring trusted certificates work out-of-the-box in Home Assistant
 - **Skip optimistic updates for action data points**: Action data points (ACTION, ACTION_NUMBER, ACTION_SELECT, BUTTON) never receive CCU confirmations — the optimistic timer now skips them, preventing spurious rollback warnings
 - **Connection recovery**: Heartbeat timer now starts correctly after CCU reboots
+- **HmIP channel type resolution**: `resolve_channel_type` for HmIP-specific translation lookups
 - **PayloadProtocol**: New protocol interface for payload properties across devices, channels, and data points
 - **Property `alt_name`**: Alternative payload keys (e.g. `address` → `serial_number`)
 - **Data point metadata**: `Quantity` and `ValueBehavior` enums for semantic parameter classification
@@ -34,11 +36,12 @@
 - **DpAction types**: Complete hierarchy (`DpActionFloat`, `DpActionInteger`, `DpActionBoolean`, `DpActionString`)
 - **CombinedDataPoint**: `CombinedDpTimerAction` and `CombinedDpHsColor` for multi-parameter entities
 
-#### Bump aiohomematic-config to [2026.3.2](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.3.2)
+#### Bump aiohomematic-config to [2026.3.3](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.3.3)
 
 - `device_active_profile_index` field for active profile index from device
 - `device_icon` field with icon filename from CCU device database
 - Parameter `description` field with Markdown-formatted help text
+- HmIP channel type resolution via `is_hmip` parameter in `FormSchemaGenerator.generate()`
 - TCL profile parsing improvements (variable resolution, `subst` handling, `source` includes)
 - New receiver profiles (door lock, universal light, RGBW DALI)
 - Python 3.14 minimum

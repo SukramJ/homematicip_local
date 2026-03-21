@@ -244,6 +244,7 @@ async def ws_get_form_schema(
         channel_type=msg.get("channel_type", ""),
         model=device.model if device else "",
         sub_model=device.sub_model if device else None,
+        is_hmip=device.interface == Interface.HMIP_RF if device else False,
     )
 
     connection.send_result(msg["id"], schema.model_dump())
@@ -1069,6 +1070,7 @@ async def ws_get_link_form_schema(
         sub_model=device.sub_model,
         require_translation=False,
         enrich_link_metadata=True,
+        is_hmip=device.interface == Interface.HMIP_RF,
     )
 
     connection.send_result(msg["id"], schema.model_dump())
