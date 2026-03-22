@@ -1,4 +1,4 @@
-# Version [2.4.2](https://github.com/SukramJ/homematicip_local/compare/2.4.1...2.4.2) (2026-03-21)
+# Version [2.4.2](https://github.com/SukramJ/homematicip_local/compare/2.4.1...2.4.2) (2026-03-22)
 
 ## What's Changed
 
@@ -21,12 +21,13 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.3.11](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.11)
+#### Bump aiohomematic to [2026.3.12](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.12)
 
 - **Hidden/device-level channels in configuration**: Device-level, internal, and invisible channels with MASTER paramset are now included in configurable channels
 - **Read-only MASTER parameters**: Read-only configuration values are now displayed in device configuration
 - **TLS certifi CA bundle**: TLS context now loads the `certifi` CA bundle when available, ensuring trusted certificates work out-of-the-box in Home Assistant
 - **Skip optimistic updates for action data points**: Action data points (ACTION, ACTION_NUMBER, ACTION_SELECT, BUTTON) never receive CCU confirmations — the optimistic timer now skips them, preventing spurious rollback warnings
+- **Skip duplicate optimistic sends**: Identical value sends are deduplicated to avoid unnecessary device writes
 - **Connection recovery**: Heartbeat timer now starts correctly after CCU reboots
 - **HmIP channel type resolution**: `resolve_channel_type` for HmIP-specific translation lookups
 - **PayloadProtocol**: New protocol interface for payload properties across devices, channels, and data points
