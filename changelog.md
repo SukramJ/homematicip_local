@@ -21,8 +21,9 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.3.13](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.13)
+#### Bump aiohomematic to [2026.3.14](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.14)
 
+- **CCU easymode metadata extraction**: Channel-level easymode metadata for MASTER paramset profile enrichment
 - **Hidden/device-level channels in configuration**: Device-level, internal, and invisible channels with MASTER paramset are now included in configurable channels
 - **Read-only MASTER parameters**: Read-only configuration values are now displayed in device configuration
 - **TLS certifi CA bundle**: TLS context now loads the `certifi` CA bundle when available, ensuring trusted certificates work out-of-the-box in Home Assistant
@@ -38,8 +39,11 @@
 - **DpAction types**: Complete hierarchy (`DpActionFloat`, `DpActionInteger`, `DpActionBoolean`, `DpActionString`)
 - **CombinedDataPoint**: `CombinedDpTimerAction` and `CombinedDpHsColor` for multi-parameter entities
 
-#### Bump aiohomematic-config to [2026.3.3](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.3.3)
+#### Bump aiohomematic-config to [2026.3.4](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.3.4)
 
+- Easymode metadata enrichment: conditional visibility, option presets, subset groups, and metadata-based parameter ordering
+- Cross-parameter validation in config sessions
+- `MasterProfileStore` for MASTER paramset easymode profiles
 - `device_active_profile_index` field for active profile index from device
 - `device_icon` field with icon filename from CCU device database
 - Parameter `description` field with Markdown-formatted help text

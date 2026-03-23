@@ -29,6 +29,7 @@ from aiohomematic_config import (
     set_climate_schedule_weekday,
     set_device_schedule,
 )
+from aiohomematic_config.master_profile_store import MasterProfileStore
 from homeassistant.components.websocket_api import async_register_command
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.decorators import async_response, require_admin, websocket_command
@@ -44,6 +45,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 SESSIONS_KEY: HassKey[dict[str, ConfigSession]] = HassKey("homematicip_local_config_sessions")
 PROFILE_STORE_KEY: HassKey[ProfileStore] = HassKey("homematicip_local_profile_store")
+MASTER_PROFILE_STORE_KEY: HassKey[MasterProfileStore] = HassKey("homematicip_local_master_profile_store")
 CHANGE_LOG_KEY: HassKey[ConfigChangeLog] = HassKey("homematicip_local_change_log")
 HISTORY_STORE_KEY: Final = "homematicip_local.config_changes"
 
@@ -109,6 +111,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     async_register_command(hass, ws_list_device_links)
     async_register_command(hass, ws_get_link_form_schema)
     async_register_command(hass, ws_get_link_profiles)
+    async_register_command(hass, ws_get_master_profiles)
     async_register_command(hass, ws_get_link_paramset)
     async_register_command(hass, ws_put_link_paramset)
     async_register_command(hass, ws_add_link)
@@ -163,6 +166,13 @@ def _get_profile_store(hass: HomeAssistant) -> ProfileStore:
     if PROFILE_STORE_KEY not in hass.data:
         hass.data[PROFILE_STORE_KEY] = ProfileStore()
     return hass.data[PROFILE_STORE_KEY]
+
+
+def _get_master_profile_store(hass: HomeAssistant) -> MasterProfileStore:
+    """Return the shared MasterProfileStore instance, creating it if needed."""
+    if MASTER_PROFILE_STORE_KEY not in hass.data:
+        hass.data[MASTER_PROFILE_STORE_KEY] = MasterProfileStore()
+    return hass.data[MASTER_PROFILE_STORE_KEY]
 
 
 # ---------------------------------------------------------------------------
@@ -1146,6 +1156,82 @@ async def ws_get_link_profiles(
         active_profile_id = await profile_store.match_active_profile(
             receiver_channel_type=receiver_channel_type,
             sender_channel_type=sender_channel_type,
+            current_values=current_values,
+        )
+
+    connection.send_result(
+        msg["id"],
+        {
+            "profiles": [p.model_dump() for p in profiles],
+            "active_profile_id": active_profile_id,
+        },
+    )
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/config/get_master_profiles",
+        vol.Required("entry_id"): str,
+        vol.Required("interface_id"): str,
+        vol.Required("channel_address"): str,
+        vol.Required("sender_type"): str,
+    }
+)
+@async_response
+async def ws_get_master_profiles(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return available MASTER easymode profiles for a channel."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    channel_addr = msg["channel_address"]
+    sender_type = msg["sender_type"]
+
+    # Resolve channel type
+    device_addr = get_device_address(address=channel_addr)
+    device = control.central.device_coordinator.get_device(address=device_addr)
+    if device is None:
+        connection.send_error(msg["id"], "device_not_found", "Device not found")
+        return
+
+    channel = device.get_channel(channel_address=channel_addr)
+    channel_type = channel.type_name if channel else ""
+
+    if not channel_type:
+        connection.send_result(msg["id"], {"profiles": None, "active_profile_id": 0})
+        return
+
+    store = _get_master_profile_store(hass)
+    locale = hass.config.language
+
+    profiles = store.get_profiles(
+        channel_type=channel_type,
+        sender_type=sender_type,
+        locale=locale,
+    )
+
+    if profiles is None:
+        connection.send_result(msg["id"], {"profiles": None, "active_profile_id": 0})
+        return
+
+    # Load current LINK paramset values to match active profile
+    try:
+        current_values = await control.central.configuration.get_paramset(
+            interface_id=msg["interface_id"],
+            channel_address=channel_addr,
+            paramset_key=ParamsetKey.MASTER,
+        )
+    except BaseHomematicException:
+        active_profile_id = 0
+    else:
+        active_profile_id = store.match_active_profile(
+            channel_type=channel_type,
+            sender_type=sender_type,
             current_values=current_values,
         )
 
