@@ -1,10 +1,13 @@
-# Version [2.4.2](https://github.com/SukramJ/homematicip_local/compare/2.4.1...2.4.2) (2026-03-22)
+# Version [2.5.0](https://github.com/SukramJ/homematicip_local/compare/2.4.1...2.5.0) (2026-03-22)
 
 ## What's Changed
 
 ### Config Panel
 
+- Easymode support for paramset editor — conditional visibility, preset dropdowns, and subset groups for context-dependent device configuration forms
+- Cross-validation translations (en/de) for min/max, level range, and threshold constraints
 - Active climate profile indicator — profile dropdown now shows which profile is active on the device (e.g. "Profil 1 (Aktives Profil)")
+- Device detail improvements: RSSI Peer always shown, Duty Cycle and Reachability displayed as Yes/No
 - Device icons displayed in device list, device detail, and channel config views (via CCU proxy endpoint)
 - Parameter help text with Markdown formatting below each parameter
 - MASTER paramset time presets — unit/value parameter pairs displayed as a single preset dropdown (13 standard Homematic presets, 100ms–15 minutes)
@@ -21,8 +24,9 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.3.14](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.14)
+#### Bump aiohomematic to [2026.3.15](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.15)
 
+- **CCU data gzip consolidation**: CCU-sourced data (easymode metadata, translations) consolidated into gzip archives — 95% package size reduction (~11 MB → ~516 KB)
 - **CCU easymode metadata extraction**: Channel-level easymode metadata for MASTER paramset profile enrichment
 - **Hidden/device-level channels in configuration**: Device-level, internal, and invisible channels with MASTER paramset are now included in configurable channels
 - **Read-only MASTER parameters**: Read-only configuration values are now displayed in device configuration
