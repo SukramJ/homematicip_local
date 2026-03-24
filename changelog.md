@@ -24,7 +24,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.3.15](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.15)
+#### Bump aiohomematic to [2026.3.16](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.16)
 
 - **CCU data gzip consolidation**: CCU-sourced data (easymode metadata, translations) consolidated into gzip archives — 95% package size reduction (~11 MB → ~516 KB)
 - **CCU easymode metadata extraction**: Channel-level easymode metadata for MASTER paramset profile enrichment
