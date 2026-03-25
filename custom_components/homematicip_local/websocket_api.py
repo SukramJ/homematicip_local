@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import dataclasses
 import logging
 from pathlib import Path
@@ -34,8 +35,12 @@ from homeassistant.components.websocket_api import async_register_command
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.decorators import async_response, require_admin, websocket_command
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.storage import Store
 from homeassistant.util.hass_dict import HassKey
+
+from .const import DOMAIN
+from .repairs import REPAIR_CALLBACKS
 
 if TYPE_CHECKING:
     from .control_unit import ControlUnit
@@ -142,6 +147,13 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     async_register_command(hass, ws_get_firmware_overview)
     async_register_command(hass, ws_refresh_firmware_data)
     async_register_command(hass, ws_panel_reload_device_config)
+    # Inbox, service messages, alarm messages
+    async_register_command(hass, ws_get_inbox_devices)
+    async_register_command(hass, ws_accept_inbox_device)
+    async_register_command(hass, ws_get_service_messages)
+    async_register_command(hass, ws_acknowledge_service_message)
+    async_register_command(hass, ws_get_alarm_messages)
+    async_register_command(hass, ws_acknowledge_alarm_message)
 
 
 def _get_control_unit(hass: HomeAssistant, *, entry_id: str) -> ControlUnit | None:
@@ -2253,6 +2265,239 @@ async def ws_panel_reload_device_config(
         await device.reload_device_config()
     except BaseHomematicException as err:
         connection.send_error(msg["id"], "reload_failed", str(err))
+        return
+
+    connection.send_result(msg["id"], {"success": True})
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/ccu/get_inbox_devices",
+        vol.Required("entry_id"): str,
+    }
+)
+@async_response
+async def ws_get_inbox_devices(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return inbox devices (not yet accepted)."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    try:
+        devices = await control.central.json_rpc_client.get_inbox_devices()
+    except BaseHomematicException as err:
+        connection.send_error(msg["id"], "fetch_failed", str(err))
+        return
+
+    connection.send_result(
+        msg["id"],
+        {
+            "devices": [dataclasses.asdict(dev) for dev in devices],
+        },
+    )
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/ccu/accept_inbox_device",
+        vol.Required("entry_id"): str,
+        vol.Required("device_address"): str,
+        vol.Optional("device_name"): str,
+        vol.Optional("device_id"): str,
+    }
+)
+@async_response
+async def ws_accept_inbox_device(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Accept a device from the CCU inbox."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    try:
+        success = await control.central.json_rpc_client.accept_device_in_inbox(device_address=msg["device_address"])
+    except BaseHomematicException as err:
+        connection.send_error(msg["id"], "accept_failed", str(err))
+        return
+
+    if not success:
+        connection.send_error(msg["id"], "accept_failed", "Failed to accept device")
+        return
+
+    if (device_name := msg.get("device_name")) and (device_id := msg.get("device_id")):
+        try:
+            await control.central.json_rpc_client.rename_device(rega_id=int(device_id), new_name=device_name)
+        except BaseHomematicException as err:
+            _LOGGER.warning("Failed to rename device %s: %s", msg["device_address"], err)
+
+    # Auto-confirm the repair issue that will be created when the CCU sends
+    # the newDevices callback. Wait for the callback to arrive and then
+    # execute the repair callback so the device appears in HA immediately.
+    device_address = msg["device_address"]
+    device_name_for_confirm = msg.get("device_name", "")
+
+    async def _auto_confirm_delayed_device() -> None:
+        # Wait for the repair callback to be registered (max 30s)
+        for _ in range(60):
+            matching = [
+                issue_id
+                for issue_id in REPAIR_CALLBACKS
+                if issue_id.startswith("devices_delayed|") and issue_id.endswith(f"|{device_address}")
+            ]
+            if matching:
+                for issue_id in matching:
+                    if cb := REPAIR_CALLBACKS.pop(issue_id, None):
+                        try:
+                            await cb(device_name=device_name_for_confirm)
+                        except Exception:
+                            _LOGGER.exception("Failed to auto-confirm device %s", device_address)
+                    async_delete_issue(hass=hass, domain=DOMAIN, issue_id=issue_id)
+                _LOGGER.info("Auto-confirmed inbox device %s", device_address)
+                return
+            await asyncio.sleep(0.5)
+
+        _LOGGER.warning("Timeout waiting for delayed device callback for %s", device_address)
+
+    hass.async_create_task(
+        _auto_confirm_delayed_device(),
+        f"auto_confirm_inbox_{device_address}",
+    )
+
+    connection.send_result(msg["id"], {"success": True})
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/ccu/get_service_messages",
+        vol.Required("entry_id"): str,
+    }
+)
+@async_response
+async def ws_get_service_messages(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return detailed service messages."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    try:
+        messages = await control.central.json_rpc_client.get_service_messages()
+    except BaseHomematicException as err:
+        connection.send_error(msg["id"], "fetch_failed", str(err))
+        return
+
+    connection.send_result(
+        msg["id"],
+        {
+            "messages": [dataclasses.asdict(m) for m in messages],
+        },
+    )
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/ccu/get_alarm_messages",
+        vol.Required("entry_id"): str,
+    }
+)
+@async_response
+async def ws_get_alarm_messages(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return detailed alarm messages."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    try:
+        alarms = await control.central.json_rpc_client.get_alarm_messages()
+    except BaseHomematicException as err:
+        connection.send_error(msg["id"], "fetch_failed", str(err))
+        return
+
+    connection.send_result(
+        msg["id"],
+        {
+            "alarms": [dataclasses.asdict(a) for a in alarms],
+        },
+    )
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/ccu/acknowledge_service_message",
+        vol.Required("entry_id"): str,
+        vol.Required("msg_id"): str,
+    }
+)
+@async_response
+async def ws_acknowledge_service_message(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Acknowledge (clear) a service message."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    try:
+        success = await control.central.json_rpc_client.acknowledge_message(message_id=msg["msg_id"])
+    except BaseHomematicException as err:
+        connection.send_error(msg["id"], "acknowledge_failed", str(err))
+        return
+
+    if not success:
+        connection.send_error(msg["id"], "acknowledge_failed", "Failed to acknowledge message")
+        return
+
+    connection.send_result(msg["id"], {"success": True})
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/ccu/acknowledge_alarm_message",
+        vol.Required("entry_id"): str,
+        vol.Required("alarm_id"): str,
+    }
+)
+@async_response
+async def ws_acknowledge_alarm_message(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Acknowledge (clear) an alarm message."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    try:
+        success = await control.central.json_rpc_client.acknowledge_message(message_id=msg["alarm_id"])
+    except BaseHomematicException as err:
+        connection.send_error(msg["id"], "acknowledge_failed", str(err))
+        return
+
+    if not success:
+        connection.send_error(msg["id"], "acknowledge_failed", "Failed to acknowledge alarm")
         return
 
     connection.send_result(msg["id"], {"success": True})

@@ -46,6 +46,7 @@ HUB_RULES: list[EntityDescriptionRule] = [
         description=HmSensorEntityDescription(
             key="ALARM_MESSAGES",
             state_class=SensorStateClass.MEASUREMENT,
+            translation_key="alarm_messages",
         ),
     ),
     EntityDescriptionRule(
@@ -54,6 +55,7 @@ HUB_RULES: list[EntityDescriptionRule] = [
         description=HmSensorEntityDescription(
             key="SERVICE_MESSAGES",
             state_class=SensorStateClass.MEASUREMENT,
+            translation_key="service_messages",
         ),
     ),
     # Hub sensors - Install mode

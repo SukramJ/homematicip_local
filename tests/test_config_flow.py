@@ -1745,6 +1745,15 @@ class TestReconfigureFlow:
         assert entry.data[CONF_INTERFACE][Interface.HMIP_RF][CONF_PORT] == IF_HMIP_RF_TLS_PORT
         assert entry.data[CONF_INTERFACE][Interface.BIDCOS_RF][CONF_PORT] == IF_BIDCOS_RF_TLS_PORT
 
+    @pytest.fixture(autouse=True)
+    def _mock_setup_entry(self):
+        """Mock async_setup_entry to prevent central startup after reconfigure."""
+        with patch(
+            "custom_components.homematicip_local.async_setup_entry",
+            return_value=True,
+        ):
+            yield
+
 
 class TestPortConfigErrorHandling:
     """Tests for port configuration step error handling."""

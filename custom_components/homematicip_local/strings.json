@@ -315,7 +315,7 @@
         }, 
         "sensor": {
             "alarm_messages": {
-                "name": "AlarmMessages"
+                "name": "Alarm messages"
             }, 
             "carrier_sense_level": {
                 "name": "Carrier Sense Level"
@@ -437,7 +437,7 @@
                 }
             }, 
             "service_messages": {
-                "name": "ServiceMessages"
+                "name": "Service messages"
             }, 
             "smoke_detector_alarm_status": {
                 "name": "Smoke Detector Alarm Status", 

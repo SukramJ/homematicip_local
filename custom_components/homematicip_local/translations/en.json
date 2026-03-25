@@ -429,7 +429,7 @@
         }
       },
       "alarm_messages": {
-        "name": "AlarmMessages"
+        "name": "Alarm messages"
       },
       "carrier_sense_level": {
         "name": "Carrier Sense Level"
@@ -471,7 +471,7 @@
         "name": "Rain Counter Yesterday"
       },
       "service_messages": {
-        "name": "ServiceMessages"
+        "name": "Service messages"
       },
       "sunshine_counter_today": {
         "name": "Sunshine Counter Today"

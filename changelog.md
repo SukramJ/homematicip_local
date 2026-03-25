@@ -1,4 +1,4 @@
-# Version [2.5.0](https://github.com/SukramJ/homematicip_local/compare/2.4.1...2.5.0) (2026-03-22)
+# Version [2.5.0](https://github.com/SukramJ/homematicip_local/compare/2.4.1...2.5.0) (2026-03-25)
 
 ## What's Changed
 
@@ -13,8 +13,8 @@
 - MASTER paramset time presets — unit/value parameter pairs displayed as a single preset dropdown (13 standard Homematic presets, 100ms–15 minutes)
 - Dropdown and radio options now use translated labels from the backend
 - HmIP-specific parameter translations — config panel now resolves HmIP channel types for correct CCU translations (e.g. `SHUTTER_CONTACT` → `SHUTTER_CONTACT_HMIP`)
-- OpenCCU dashboard: all table columns sortable; filter bars for Signal Quality and Firmware tables (shown when >10 devices)
-- OpenCCU dashboard: removed Signal column (redundant with RSSI), Hub Messages section, and "Backup available" badge; moved Actions card below System Information
+- OpenCCU dashboard: sub-tab navigation (General, Messages, Signal Quality, Firmware); all table columns sortable; filter bars for Signal Quality and Firmware tables (shown when >10 devices)
+- OpenCCU dashboard: Messages tab with Inbox (accept devices with rename and auto-confirm), Service Messages (acknowledge), and Alarm Messages (acknowledge) — badge shows total count
 - Climate and device schedule editors now use shared `@hmip/schedule-ui` components
 - Fixed `ha-slider` and `ha-select` event handling in paramset and schedule editors (slider changes not registering, event leaking, dropdown closing dialogs)
 - Fixed device schedule entries without target channels not being shown; target channels are now optional
@@ -24,8 +24,11 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.3.16](https://github.com/SukramJ/aiohomematic/compare/2026.3.0...2026.3.16)
+#### Bump aiohomematic to [2026.3.17](https://github.com/SukramJ/aiohomematic/compare/2026.3.8...2026.3.17)
 
+- **Service messages hub sensor**: New sensor exposing active CCU service messages — count as state, full message details as attribute
+- **Alarm messages hub sensor**: New sensor exposing active CCU alarm messages (Alarmmeldungen) — count as state, full message details as attribute
+- **Acknowledge messages**: Support for acknowledging service and alarm messages via ReGa scripts
 - **CCU data gzip consolidation**: CCU-sourced data (easymode metadata, translations) consolidated into gzip archives — 95% package size reduction (~11 MB → ~516 KB)
 - **CCU easymode metadata extraction**: Channel-level easymode metadata for MASTER paramset profile enrichment
 - **Hidden/device-level channels in configuration**: Device-level, internal, and invisible channels with MASTER paramset are now included in configurable channels
@@ -36,25 +39,19 @@
 - **Additional parameter translations**: Extracted more parameter translations for improved config panel localization
 - **Connection recovery**: Heartbeat timer now starts correctly after CCU reboots
 - **HmIP channel type resolution**: `resolve_channel_type` for HmIP-specific translation lookups
-- **PayloadProtocol**: New protocol interface for payload properties across devices, channels, and data points
-- **Property `alt_name`**: Alternative payload keys (e.g. `address` → `serial_number`)
-- **Data point metadata**: `Quantity` and `ValueBehavior` enums for semantic parameter classification
-- **Cover capabilities**: `CoverCapabilities` dataclass with static capability flags
-- **DpAction types**: Complete hierarchy (`DpActionFloat`, `DpActionInteger`, `DpActionBoolean`, `DpActionString`)
-- **CombinedDataPoint**: `CombinedDpTimerAction` and `CombinedDpHsColor` for multi-parameter entities
+- **New device**: HmIP-DLP (IP Door Lock Pro)
 
-#### Bump aiohomematic-config to [2026.3.4](https://github.com/SukramJ/aiohomematic-config/compare/2026.2.10...2026.3.4)
+#### Bump aiohomematic-config to [2026.3.4](https://github.com/SukramJ/aiohomematic-config/compare/2026.3.2...2026.3.4)
 
 - Easymode metadata enrichment: conditional visibility, option presets, subset groups, and metadata-based parameter ordering
 - Cross-parameter validation in config sessions
 - `MasterProfileStore` for MASTER paramset easymode profiles
+- HmIP channel type resolution via `is_hmip` parameter
 - `device_active_profile_index` field for active profile index from device
 - `device_icon` field with icon filename from CCU device database
 - Parameter `description` field with Markdown-formatted help text
-- HmIP channel type resolution via `is_hmip` parameter in `FormSchemaGenerator.generate()`
 - TCL profile parsing improvements (variable resolution, `subst` handling, `source` includes)
 - New receiver profiles (door lock, universal light, RGBW DALI)
-- Python 3.14 minimum
 
 # Version [2.4.1](https://github.com/SukramJ/homematicip_local/compare/2.4.0...2.4.1) (2026-03-11)
 

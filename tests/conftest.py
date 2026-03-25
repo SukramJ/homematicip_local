@@ -31,6 +31,7 @@ pytest_plugins = "pytest_homeassistant_custom_component"  # pylint: disable=inva
 @pytest.fixture(autouse=True)
 def teardown():
     """Clean up."""
+    yield
     patch.stopall()
 
 
@@ -44,6 +45,26 @@ def _reset_i18n():
 def auto_enable_custom_integrations(enable_custom_integrations: Any):  # noqa: F811
     """Auto add enable_custom_integrations."""
     return
+
+
+@pytest.fixture(autouse=True)
+def _mock_socket_access():
+    """Mock network and port detection to prevent socket access in HA 2026.4+."""
+    with (
+        patch(
+            "homeassistant.components.network.network.async_load_adapters",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.http.async_get_source_ip",
+            return_value="127.0.0.1",
+        ),
+        patch(
+            "custom_components.homematicip_local.find_free_port",
+            return_value=8765,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
