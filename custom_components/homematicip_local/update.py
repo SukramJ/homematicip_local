@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import Any, Final, override
 
-from aiohomematic.const import CCUType, DataPointCategory
+from aiohomematic.const import CCUType, DataPointCategory, DataPointType
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.hub import HmUpdate
 from aiohomematic.model.update import DpUpdate
@@ -80,7 +80,7 @@ async def async_setup_entry(
         )
     )
 
-    async_add_update(data_points=control_unit.get_new_data_points(data_point_type=DpUpdate))
+    async_add_update(data_points=control_unit.get_new_data_points(data_point_type=DataPointType.UPDATE))
 
 
 class AioHomematicUpdate(UpdateEntity):

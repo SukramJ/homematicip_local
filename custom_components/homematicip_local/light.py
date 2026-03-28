@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Final, override
 
-from aiohomematic.const import DataPointCategory
+from aiohomematic.const import DataPointCategory, DataPointType
 from aiohomematic.model.custom import (
     FIXED_COLOR_TO_HS_CONVERTER,
     CustomDpDimmer,
@@ -74,7 +74,7 @@ async def async_setup_entry(
         )
     )
 
-    async_add_light(data_points=control_unit.get_new_data_points(data_point_type=CustomDpDimmer))
+    async_add_light(data_points=control_unit.get_new_data_points(data_point_type=DataPointType.LIGHT))
 
 
 class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightEntity):

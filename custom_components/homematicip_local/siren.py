@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, override
 
-from aiohomematic.const import DataPointCategory
+from aiohomematic.const import DataPointCategory, DataPointType
 from aiohomematic.model.custom import BaseCustomDpSiren, CustomDpSoundPlayer, PlaySoundArgs, SirenOnArgs
 from homeassistant.components.siren import SirenEntity
 from homeassistant.components.siren.const import ATTR_DURATION, ATTR_TONE, SirenEntityFeature
@@ -53,7 +53,7 @@ async def async_setup_entry(
         )
     )
 
-    async_add_siren(data_points=control_unit.get_new_data_points(data_point_type=BaseCustomDpSiren))
+    async_add_siren(data_points=control_unit.get_new_data_points(data_point_type=DataPointType.SIREN))
 
 
 class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], SirenEntity):

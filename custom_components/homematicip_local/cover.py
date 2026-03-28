@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Final, TypeVar, override
 
-from aiohomematic.const import DataPointCategory
+from aiohomematic.const import DataPointCategory, DataPointType
 from aiohomematic.model.custom import CustomDpBlind, CustomDpCover, CustomDpGarage, CustomDpIpBlind
 from aiohomematic.model.data_point import CallParameterCollector
 from homeassistant.components.cover import (
@@ -96,7 +96,7 @@ async def async_setup_entry(
         )
     )
 
-    async_add_cover(data_points=control_unit.get_new_data_points(data_point_type=CustomDpCover | CustomDpGarage))
+    async_add_cover(data_points=control_unit.get_new_data_points(data_point_type=DataPointType.COVER))
 
 
 class AioHomematicBaseCover(AioHomematicGenericRestoreEntity[HmGenericCover], CoverEntity):

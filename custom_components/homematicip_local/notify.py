@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Final
 
-from aiohomematic.const import DataPointCategory
+from aiohomematic.const import DataPointCategory, DataPointType
 from aiohomematic.model.custom.text_display import CustomDpTextDisplay
 from homeassistant.components.notify import NotifyEntity, NotifyEntityFeature
 from homeassistant.core import HomeAssistant, callback
@@ -65,7 +65,11 @@ async def async_setup_entry(
         )
     )
 
-    async_add_notify(data_points=control_unit.get_new_data_points(data_point_type=CustomDpTextDisplay))
+    async_add_notify(
+        data_points=control_unit.get_new_data_points(
+            data_point_type=DataPointType.TEXT, category=DataPointCategory.TEXT_DISPLAY
+        )
+    )
 
 
 class TextDisplayStore:

@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import override
 
-from aiohomematic.const import DataPointCategory
+from aiohomematic.const import DataPointCategory, DataPointType
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.generic import DpButton
 from aiohomematic.model.hub import ProgramDpButton
@@ -72,7 +72,11 @@ async def async_setup_entry(
         )
     )
 
-    async_add_button(data_points=control_unit.get_new_data_points(data_point_type=DpButton))
+    async_add_button(
+        data_points=control_unit.get_new_data_points(
+            data_point_type=DataPointType.BUTTON, category=DataPointCategory.BUTTON
+        )
+    )
 
     async_add_program_button(data_points=control_unit.get_new_hub_data_points(data_point_type=ProgramDpButton))
 

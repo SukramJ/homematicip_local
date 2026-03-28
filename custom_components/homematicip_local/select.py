@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final, override
 
-from aiohomematic.const import DataPointCategory
+from aiohomematic.const import DataPointCategory, DataPointType
 from aiohomematic.model.generic import DpActionSelect, DpSelect
 from aiohomematic.model.hub import SysvarDpSelect
 from homeassistant.components.select import SelectEntity
@@ -157,11 +157,19 @@ async def async_setup_entry(
         )
     )
 
-    async_add_select(data_points=control_unit.get_new_data_points(data_point_type=DpSelect))
+    async_add_select(
+        data_points=control_unit.get_new_data_points(
+            data_point_type=DataPointType.SELECT, category=DataPointCategory.SELECT
+        )
+    )
 
     async_add_hub_select(data_points=control_unit.get_new_hub_data_points(data_point_type=SysvarDpSelect))
 
-    async_add_action_select(data_points=control_unit.get_new_data_points(data_point_type=DpActionSelect))
+    async_add_action_select(
+        data_points=control_unit.get_new_data_points(
+            data_point_type=DataPointType.SELECT, category=DataPointCategory.ACTION_SELECT
+        )
+    )
 
 
 class AioHomematicSelect(AioHomematicGenericRestoreEntity[DpSelect], SelectEntity):

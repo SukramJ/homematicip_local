@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import override
 
-from aiohomematic.const import DataPointCategory
+from aiohomematic.const import DataPointCategory, DataPointType
 from aiohomematic.model.generic import DpBinarySensor
 from aiohomematic.model.hub import SysvarDpBinarySensor
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -63,7 +63,7 @@ async def async_setup_entry(
         )
     )
 
-    async_add_binary_sensor(data_points=control_unit.get_new_data_points(data_point_type=DpBinarySensor))
+    async_add_binary_sensor(data_points=control_unit.get_new_data_points(data_point_type=DataPointType.BINARY_SENSOR))
 
     async_add_hub_binary_sensor(data_points=control_unit.get_new_hub_data_points(data_point_type=SysvarDpBinarySensor))
 

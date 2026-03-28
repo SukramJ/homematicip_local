@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Final, override
 
-from aiohomematic.const import DataPointCategory
+from aiohomematic.const import DataPointCategory, DataPointType
 from aiohomematic.interfaces import ClimateWeekProfileDataPointProtocol
 from aiohomematic.model.custom import (
     PROFILE_PREFIX,
@@ -112,7 +112,7 @@ async def async_setup_entry(
         )
     )
 
-    async_add_climate(data_points=control_unit.get_new_data_points(data_point_type=BaseCustomDpClimate))
+    async_add_climate(data_points=control_unit.get_new_data_points(data_point_type=DataPointType.CLIMATE))
 
 
 class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate], ClimateEntity):

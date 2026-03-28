@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import override
 
-from aiohomematic.const import DataPointCategory
+from aiohomematic.const import DataPointCategory, DataPointType
 from aiohomematic.model.generic import DpText
 from aiohomematic.model.hub import SysvarDpText
 from homeassistant.components.text import TextEntity
@@ -69,7 +69,11 @@ async def async_setup_entry(
         )
     )
 
-    async_add_text(data_points=control_unit.get_new_data_points(data_point_type=DpText))
+    async_add_text(
+        data_points=control_unit.get_new_data_points(
+            data_point_type=DataPointType.TEXT, category=DataPointCategory.TEXT
+        )
+    )
 
     async_add_hub_text(data_points=control_unit.get_new_hub_data_points(data_point_type=SysvarDpText))
 

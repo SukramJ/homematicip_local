@@ -7,14 +7,13 @@ from decimal import Decimal
 import logging
 from typing import Any, Final, cast, override
 
-from aiohomematic.const import DEFAULT_MULTIPLIER, DataPointCategory, HubValueType, ParameterType
+from aiohomematic.const import DEFAULT_MULTIPLIER, DataPointCategory, DataPointType, HubValueType, ParameterType
 from aiohomematic.interfaces import (
     CalculatedDataPointProtocol,
     ClimateWeekProfileDataPointProtocol,
     CombinedDataPointProtocol,
     GenericDataPointProtocol,
 )
-from aiohomematic.model.generic import DpSensor
 from aiohomematic.model.hub import SysvarDpSensor
 from aiohomematic.model.week_profile_data_point import WeekProfileDataPoint
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass, SensorEntity, SensorStateClass
@@ -123,11 +122,19 @@ async def async_setup_entry(
         )
     )
 
-    async_add_sensor(data_points=control_unit.get_new_data_points(data_point_type=DpSensor))
+    async_add_sensor(
+        data_points=control_unit.get_new_data_points(
+            data_point_type=DataPointType.SENSOR, category=DataPointCategory.SENSOR
+        )
+    )
 
     async_add_hub_sensor(data_points=control_unit.get_new_hub_data_points(data_point_type=SysvarDpSensor))
 
-    async_add_week_profile_sensor(data_points=control_unit.get_new_data_points(data_point_type=WeekProfileDataPoint))
+    async_add_week_profile_sensor(
+        data_points=control_unit.get_new_data_points(
+            data_point_type=DataPointType.SENSOR, category=DataPointCategory.WEEK_PROFILE
+        )
+    )
 
 
 class AioHomematicSensor(

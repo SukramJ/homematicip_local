@@ -7,7 +7,6 @@ from copy import deepcopy
 from functools import partial
 import logging
 import time
-from types import UnionType
 from typing import Any, Final, Self, TypeVar, cast
 
 from aiohomematic import __version__ as AIOHM_VERSION
@@ -18,6 +17,7 @@ from aiohomematic.central.events import (
     DeviceLifecycleEventType,
     DeviceTriggerEvent,
     OptimisticRollbackEvent,
+    SubscriptionGroup,
     SystemStatusChangedEvent,
 )
 from aiohomematic.client import InterfaceConfig
@@ -37,6 +37,7 @@ from aiohomematic.const import (
     CentralState,
     ClientState,
     DataPointCategory,
+    DataPointType,
     DescriptionMarker,
     DeviceTriggerEventType,
     FailureReason,
@@ -172,7 +173,6 @@ class BaseControlUnit:
             serial_number=self._central.system_information.serial,
             sw_version=self._central.version,
         )
-        self._unsubscribe_callbacks: Final[list[UnsubscribeCallback]] = []
 
     @classmethod
     async def async_create(cls, *, control_config: ControlConfig) -> Self:
@@ -259,6 +259,10 @@ class ControlUnit(BaseControlUnit):
         super().__init__(control_config=control_config, central=central)
         self._mqtt_consumer: MQTTConsumer | None = None
         self._auto_confirm_until: Final = control_config.auto_confirm_until
+        self._subscription_group: Final[SubscriptionGroup] = self._central.event_bus.create_subscription_group(
+            name="homematicip_local"
+        )
+        self._transition_unsubscribes: Final[list[UnsubscribeCallback]] = []
 
     def ensure_via_device_exists(self, identifier: str, suggested_area: str | None, via_device: str) -> None:
         """Create a via device for a device."""
@@ -295,21 +299,15 @@ class ControlUnit(BaseControlUnit):
     def get_new_data_points(
         self,
         *,
-        data_point_type: type[_DATA_POINT_T] | UnionType,
-    ) -> tuple[_DATA_POINT_T, ...]:
-        """Return all data points by type."""
-        category = (
-            data_point_type.__args__[0].default_category()
-            if isinstance(data_point_type, UnionType)
-            else data_point_type.default_category()
-        )
-        return cast(
-            tuple[_DATA_POINT_T, ...],
-            self.central.query_facade.get_data_points(
-                category=category,
-                exclude_no_create=True,
-                registered=False,
-            ),
+        data_point_type: DataPointType,
+        category: DataPointCategory | None = None,
+    ) -> tuple[Any, ...]:
+        """Return all new data points by type, optionally filtered by category."""
+        return self.central.query_facade.get_data_points(
+            data_point_type=data_point_type,
+            category=category,
+            exclude_no_create=True,
+            registered=False,
         )
 
     def get_new_hub_data_points(
@@ -332,42 +330,48 @@ class ControlUnit(BaseControlUnit):
         # (e.g., from PingPong race condition bug fixed in aiohomematic 2026.1.3)
         self._cleanup_callback_issues()
 
-        # Subscribe to integration events (5 focused subscriptions)
+        # Subscribe to integration events
         _LOGGER.debug("Subscribing to integration events")
-        self._unsubscribe_callbacks.append(
-            self._central.event_bus.subscribe(
-                event_type=SystemStatusChangedEvent,
-                event_key=None,
-                handler=self._on_system_status,
+
+        # Targeted state transition handlers (simple transitions)
+        self._transition_unsubscribes.append(
+            self._central.on_state_transition(
+                to_state=CentralState.RUNNING,
+                handler=self._on_central_running,
             )
         )
-        self._unsubscribe_callbacks.append(
-            self._central.event_bus.subscribe(
-                event_type=DeviceLifecycleEvent,
-                event_key=None,
-                handler=self._on_device_lifecycle,
+        self._transition_unsubscribes.append(
+            self._central.on_state_transition(
+                to_state=CentralState.RECOVERING,
+                handler=self._on_central_recovering,
             )
         )
-        self._unsubscribe_callbacks.append(
-            self._central.event_bus.subscribe(
-                event_type=DataPointsCreatedEvent,
-                event_key=None,
-                handler=self._on_data_points_created,
-            )
+
+        # SystemStatusChangedEvent for detail-dependent logic (DEGRADED/FAILED + infra)
+        self._subscription_group.subscribe(
+            event_type=SystemStatusChangedEvent,
+            event_key=None,
+            handler=self._on_system_status,
         )
-        self._unsubscribe_callbacks.append(
-            self._central.event_bus.subscribe(
-                event_type=DeviceTriggerEvent,
-                event_key=None,
-                handler=self._on_device_trigger,
-            )
+        self._subscription_group.subscribe(
+            event_type=DeviceLifecycleEvent,
+            event_key=None,
+            handler=self._on_device_lifecycle,
         )
-        self._unsubscribe_callbacks.append(
-            self._central.event_bus.subscribe(
-                event_type=OptimisticRollbackEvent,
-                event_key=None,
-                handler=self._on_optimistic_rollback,
-            )
+        self._subscription_group.subscribe(
+            event_type=DataPointsCreatedEvent,
+            event_key=None,
+            handler=self._on_data_points_created,
+        )
+        self._subscription_group.subscribe(
+            event_type=DeviceTriggerEvent,
+            event_key=None,
+            handler=self._on_device_trigger,
+        )
+        self._subscription_group.subscribe(
+            event_type=OptimisticRollbackEvent,
+            event_key=None,
+            handler=self._on_optimistic_rollback,
         )
         self._async_add_central_to_device_registry()
         await super().start_central()
@@ -380,9 +384,9 @@ class ControlUnit(BaseControlUnit):
         if self._mqtt_consumer:
             self._mqtt_consumer.unsubscribe()
 
-        for unregister in self._unsubscribe_callbacks:
-            if unregister is not None:
-                unregister()
+        self._subscription_group.unsubscribe_all()
+        for unsub in self._transition_unsubscribes:
+            unsub()
 
         await super().stop_central(*args)
 
@@ -461,7 +465,7 @@ class ControlUnit(BaseControlUnit):
             )
 
     @callback
-    def _fire_device_availability_event(self, *, device_address: str, available: bool) -> None:
+    def _fire_device_availability_event(self, *, device_address: str, device_name: str | None, available: bool) -> None:
         """Fire device availability event to HA event bus."""
         hm_device = self._central.device_coordinator.get_device(address=device_address)
         if hm_device is None:
@@ -477,11 +481,12 @@ class ControlUnit(BaseControlUnit):
             EVENT_PARAMETER: "AVAILABILITY",
         }
 
-        # Lookup device for device_id and name
-        name: str | None = None
+        # Use device_name from event, prefer name_by_user from HA device registry
+        name: str | None = device_name
         if device_entry := self._async_get_device_entry(device_address=device_address):
-            name = device_entry.name_by_user or device_entry.name
+            name = device_entry.name_by_user or name
             event_data[EVENT_DEVICE_ID] = device_entry.id
+        if name:
             event_data[EVENT_NAME] = name
 
         title = f"{DOMAIN.upper()} Device {'Available' if available else 'Unavailable'}"
@@ -606,6 +611,26 @@ class ControlUnit(BaseControlUnit):
             _LOGGER.debug("SYSTEM NOTIFICATION disabled for FAILED state")
         return False
 
+    async def _on_central_recovering(self, **kwargs: Any) -> None:
+        """Handle transition to RECOVERING state."""
+        _LOGGER.info("Central %s is RECOVERING - attempting reconnection", self._instance_name)
+        self._hass.bus.async_fire(
+            event_type=f"{DOMAIN}.central_state_changed",
+            event_data={"instance_name": self._instance_name, "new_state": CentralState.RECOVERING.value},
+        )
+
+    async def _on_central_running(self, **kwargs: Any) -> None:
+        """Handle transition to RUNNING state."""
+        issue_id_degraded = f"{self._entry_id}_central_degraded"
+        issue_id_failed = f"{self._entry_id}_central_failed"
+        async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
+        async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
+        _LOGGER.info("Central %s is RUNNING - all interfaces connected", self._instance_name)
+        self._hass.bus.async_fire(
+            event_type=f"{DOMAIN}.central_state_changed",
+            event_data={"instance_name": self._instance_name, "new_state": CentralState.RUNNING.value},
+        )
+
     async def _on_data_points_created(self, event: DataPointsCreatedEvent) -> None:
         """Handle data points created event from aiohomematic (Entity discovery)."""
         for category, data_points in event.new_data_points.items():
@@ -699,12 +724,15 @@ class ControlUnit(BaseControlUnit):
                 )
 
         elif event.event_type == DeviceLifecycleEventType.AVAILABILITY_CHANGED:
+            # Build address-to-name mapping from event
+            name_by_address: dict[str, str] = dict(zip(event.device_addresses, event.device_names, strict=False))
             for device_address, available in event.availability_changes:
                 _LOGGER.debug("Device %s availability: %s", device_address, available)
 
                 # Fire HA event for automations (e.g., blueprints)
                 self._fire_device_availability_event(
                     device_address=device_address,
+                    device_name=name_by_address.get(device_address),
                     available=available,
                 )
 
@@ -722,11 +750,12 @@ class ControlUnit(BaseControlUnit):
             EVENT_VALUE: event.value,
         }
 
-        # Lookup device for device_id and name
-        name: str | None = None
+        # Use event.device_name from aiohomematic, prefer name_by_user from HA device registry
+        name: str | None = event.device_name
         if device_entry := self._async_get_device_entry(device_address=device_address):
-            name = device_entry.name_by_user or device_entry.name
+            name = device_entry.name_by_user or name
             event_data[EVENT_DEVICE_ID] = device_entry.id
+        if name:
             event_data[EVENT_NAME] = name
 
         trigger_type = event.trigger_type
@@ -783,10 +812,10 @@ class ControlUnit(BaseControlUnit):
 
         device_address = get_device_address(address=event.dpk.channel_address)
 
-        # Resolve device name from HA device registry
-        name: str | None = None
+        # Use event.device_name from aiohomematic, prefer name_by_user from HA device registry
+        name: str | None = event.device_name
         if device_entry := self._async_get_device_entry(device_address=device_address):
-            name = device_entry.name_by_user or device_entry.name
+            name = device_entry.name_by_user or name
 
         display_name = name or device_address
 
@@ -823,44 +852,34 @@ class ControlUnit(BaseControlUnit):
         )
 
     async def _on_system_status(self, event: SystemStatusChangedEvent) -> None:
-        """Handle system status event from aiohomematic (Infrastructure + Lifecycle)."""
-        # Central state changes
+        """Handle system status event from aiohomematic (detail-dependent logic)."""
+        # Central state changes that need rich event data (DEGRADED/FAILED)
         if event.central_state:
             central_state = event.central_state
             issue_id_degraded = f"{self._entry_id}_central_degraded"
             issue_id_failed = f"{self._entry_id}_central_failed"
 
-            match central_state:
-                case CentralState.RUNNING:
-                    # All interfaces connected - remove any existing issues
-                    async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
-                    async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
-                    _LOGGER.info("Central %s is RUNNING - all interfaces connected", self._instance_name)
+            if central_state == CentralState.DEGRADED:
+                # Some interfaces disconnected - check if any have authentication issues
+                async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
+                if self._handle_degraded_state(event, issue_id_degraded):
+                    return  # Reauth triggered, don't create repair issue
+                # Fire HA event for automations
+                self._hass.bus.async_fire(
+                    event_type=f"{DOMAIN}.central_state_changed",
+                    event_data={"instance_name": self._instance_name, "new_state": central_state.value},
+                )
 
-                case CentralState.DEGRADED:
-                    # Some interfaces disconnected - check if any have authentication issues
-                    async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
-                    if self._handle_degraded_state(event, issue_id_degraded):
-                        return  # Reauth triggered, don't create repair issue
-
-                case CentralState.RECOVERING:
-                    # Active recovery in progress - no issue changes
-                    _LOGGER.info("Central %s is RECOVERING - attempting reconnection", self._instance_name)
-
-                case CentralState.FAILED:
-                    # Critical error - all recovery attempts failed
-                    async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
-                    if self._handle_failed_state(event, issue_id_failed):
-                        return  # Reauth triggered, don't create repair issue
-
-            # Fire HA event for automations
-            self._hass.bus.async_fire(
-                event_type=f"{DOMAIN}.central_state_changed",
-                event_data={
-                    "instance_name": self._instance_name,
-                    "new_state": central_state.value,
-                },
-            )
+            elif central_state == CentralState.FAILED:
+                # Critical error - all recovery attempts failed
+                async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
+                if self._handle_failed_state(event, issue_id_failed):
+                    return  # Reauth triggered, don't create repair issue
+                # Fire HA event for automations
+                self._hass.bus.async_fire(
+                    event_type=f"{DOMAIN}.central_state_changed",
+                    event_data={"instance_name": self._instance_name, "new_state": central_state.value},
+                )
 
         # Connection state changes: tuple[str, bool] = (interface_id, connected)
         if event.connection_state:

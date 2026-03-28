@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, override
 
-from aiohomematic.const import DataPointCategory
+from aiohomematic.const import DataPointCategory, DataPointType
 from aiohomematic.model.custom import BaseCustomDpLock, LockState
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -51,7 +51,7 @@ async def async_setup_entry(
         )
     )
 
-    async_add_lock(data_points=control_unit.get_new_data_points(data_point_type=BaseCustomDpLock))
+    async_add_lock(data_points=control_unit.get_new_data_points(data_point_type=DataPointType.LOCK))
 
 
 class AioHomematicLock(AioHomematicGenericRestoreEntity[BaseCustomDpLock], LockEntity):

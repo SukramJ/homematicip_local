@@ -6,9 +6,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final, override
 
-from aiohomematic.const import DataPointCategory, HubValueType, ParameterType
+from aiohomematic.const import DataPointCategory, DataPointType, HubValueType, ParameterType
 from aiohomematic.interfaces import CombinedDataPointProtocol
-from aiohomematic.model.combined.timer import CombinedDpTimerAction
 from aiohomematic.model.generic import BaseDpActionNumber, BaseDpNumber
 from aiohomematic.model.hub import SysvarDpNumber
 from homeassistant.components.number import NumberEntity, NumberMode, RestoreNumber
@@ -190,13 +189,20 @@ async def async_setup_entry(
         )
     )
 
-    async_add_number(data_points=control_unit.get_new_data_points(data_point_type=BaseDpNumber))
+    async_add_number(
+        data_points=control_unit.get_new_data_points(
+            data_point_type=DataPointType.NUMBER, category=DataPointCategory.NUMBER
+        )
+    )
 
     async_add_hub_number(data_points=control_unit.get_new_hub_data_points(data_point_type=SysvarDpNumber))
 
-    async_add_action_number(data_points=control_unit.get_new_data_points(data_point_type=BaseDpActionNumber))
+    action_number_dps = control_unit.get_new_data_points(
+        data_point_type=DataPointType.NUMBER, category=DataPointCategory.ACTION_NUMBER
+    )
+    async_add_action_number(data_points=action_number_dps)
 
-    async_add_combined_number(data_points=control_unit.get_new_data_points(data_point_type=CombinedDpTimerAction))
+    async_add_combined_number(data_points=action_number_dps)
 
 
 class AioHomematicNumber(AioHomematicGenericEntity[BaseDpNumber[Any]], RestoreNumber):
