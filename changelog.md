@@ -1,6 +1,13 @@
-# Version [2.5.0](https://github.com/SukramJ/homematicip_local/compare/2.4.1...2.5.0) (2026-03-25)
+# Version [2.5.0](https://github.com/SukramJ/homematicip_local/compare/2.4.1...2.5.0) (2026-03-28)
 
 ## What's Changed
+
+### Integration
+
+- **SubscriptionGroup**: Event bus subscriptions managed via `SubscriptionGroup` instead of manual callback tracking
+- **Device name from events**: Event handlers (`_on_device_trigger`, `_on_optimistic_rollback`, `_fire_device_availability_event`) now use `event.device_name` from aiohomematic, falling back to HA device registry only for user-overridden names
+- **DataPointType-based platform routing**: `get_new_data_points()` uses `DataPointType` enum instead of concrete class types, decoupling platform setup from aiohomematic model internals
+- **State transition handlers**: RUNNING and RECOVERING central states handled via `on_state_transition()` callbacks; DEGRADED/FAILED remain on `SystemStatusChangedEvent` for access to failure details
 
 ### Config Panel
 
@@ -16,6 +23,8 @@
 - OpenCCU dashboard: sub-tab navigation (General, Messages, Signal Quality, Firmware); all table columns sortable; filter bars for Signal Quality and Firmware tables (shown when >10 devices)
 - OpenCCU dashboard: Messages tab with Inbox (accept devices with rename and auto-confirm), Service Messages (acknowledge), and Alarm Messages (acknowledge) — badge shows total count
 - Climate and device schedule editors now use shared `@hmip/schedule-ui` components
+- Semantic parameter grouping from easymode metadata with locale-aware labels
+- Cross-parameter validation exposed via `CrossValidationConstraint` model
 - Fixed `ha-slider` and `ha-select` event handling in paramset and schedule editors (slider changes not registering, event leaking, dropdown closing dialogs)
 - Fixed device schedule entries without target channels not being shown; target channels are now optional
 - Fixed UTF-8 link names showing as mojibake (e.g. "KÃ¼chenblock" instead of "Küchenblock")
@@ -24,7 +33,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.3.17](https://github.com/SukramJ/aiohomematic/compare/2026.3.8...2026.3.17)
+#### Bump aiohomematic to [2026.3.19](https://github.com/SukramJ/aiohomematic/compare/2026.3.8...2026.3.19)
 
 - **Service messages hub sensor**: New sensor exposing active CCU service messages — count as state, full message details as attribute
 - **Alarm messages hub sensor**: New sensor exposing active CCU alarm messages (Alarmmeldungen) — count as state, full message details as attribute
@@ -40,8 +49,17 @@
 - **Connection recovery**: Heartbeat timer now starts correctly after CCU reboots
 - **HmIP channel type resolution**: `resolve_channel_type` for HmIP-specific translation lookups
 - **New device**: HmIP-DLP (IP Door Lock Pro)
+- **SysvarDpSwitch turn_on/turn_off**: Direct `turn_on()`/`turn_off()` methods for system variable switches
+- **DataPointType enum**: Canonical data point type for downstream platform routing without isinstance checks
+- **SubscriptionGroup**: Collective subscription lifecycle management via `event_bus.create_subscription_group()`
+- **Device name in events**: Human-readable device names on `DeviceTriggerEvent`, `DeviceLifecycleEvent`, `OptimisticRollbackEvent`, and `DataPointStateChangedEvent`
+- **State transition callbacks**: `central.on_state_transition()` for targeted `CentralState` transition handling
+- **Extended query facade**: `get_data_points()` with `data_point_type` filter; `get_devices()` with interface/availability filters; `get_schedule_capable_devices()`
+- **System variable creation**: `create_system_variable_bool()`, `_float()`, `_enum()` for creating system variables on the CCU
+- **Link info read/write**: `get_link_info()` / `set_link_info()` for link metadata management
+- **Service message suppression**: `suppress_service_message()` / `get_suppressed_service_messages()`
 
-#### Bump aiohomematic-config to [2026.3.4](https://github.com/SukramJ/aiohomematic-config/compare/2026.3.2...2026.3.4)
+#### Bump aiohomematic-config to [2026.3.5](https://github.com/SukramJ/aiohomematic-config/compare/2026.3.2...2026.3.5)
 
 - Easymode metadata enrichment: conditional visibility, option presets, subset groups, and metadata-based parameter ordering
 - Cross-parameter validation in config sessions
@@ -52,6 +70,8 @@
 - Parameter `description` field with Markdown-formatted help text
 - TCL profile parsing improvements (variable resolution, `subst` handling, `source` includes)
 - New receiver profiles (door lock, universal light, RGBW DALI)
+- `CrossValidationConstraint` model and `cross_validation` field on `FormSchema`
+- Semantic parameter grouping from easymode `parameter_groups` metadata with locale-aware labels
 
 # Version [2.4.1](https://github.com/SukramJ/homematicip_local/compare/2.4.0...2.4.1) (2026-03-11)
 
