@@ -31,6 +31,7 @@ from .generic_entity import (
     ATTR_SCHEDULE_DATA,
     ATTR_VALUE_STATE,
     AioHomematicGenericEntity,
+    AioHomematicGenericHubEntity,
     AioHomematicGenericSysvarEntity,
 )
 
@@ -219,6 +220,12 @@ class AioHomematicSensor(
 
 class AioHomematicSysvarSensor(AioHomematicGenericSysvarEntity[SysvarDpSensor], SensorEntity):
     """Representation of the HomematicIP hub sensor entity."""
+
+    _unrecorded_attributes = frozenset(
+        AioHomematicGenericHubEntity.NO_RECORDED_ATTRIBUTES
+        | {f"alarm_{i}" for i in range(1, 100)}
+        | {f"message_{i}" for i in range(1, 200)}
+    )
 
     def __init__(
         self,

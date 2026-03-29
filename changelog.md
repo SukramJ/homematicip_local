@@ -8,6 +8,7 @@
 - **Device name from events**: Event handlers (`_on_device_trigger`, `_on_optimistic_rollback`, `_fire_device_availability_event`) now use `event.device_name` from aiohomematic, falling back to HA device registry only for user-overridden names
 - **DataPointType-based platform routing**: `get_new_data_points()` uses `DataPointType` enum instead of concrete class types, decoupling platform setup from aiohomematic model internals
 - **State transition handlers**: RUNNING and RECOVERING central states handled via `on_state_transition()` callbacks; DEGRADED/FAILED remain on `SystemStatusChangedEvent` for access to failure details
+- **Exclude message attributes from recorder**: `AioHomematicSysvarSensor` excludes `alarm_1`..`alarm_99` and `message_1`..`message_199` attributes from recorder to prevent database bloat
 
 ### Config Panel
 
