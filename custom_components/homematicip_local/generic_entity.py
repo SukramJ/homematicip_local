@@ -619,6 +619,7 @@ class AioHomematicGenericSysvarEntity(AioHomematicGenericHubEntity, Generic[HmGe
         """Return the state attributes of the generic entity."""
         attributes: dict[str, Any] = {}
         attributes.update(self._static_state_attributes)
+        attributes.update(self._data_point.additional_information)
         if self._data_point.is_valid:
             attributes[ATTR_VALUE_STATE] = (
                 HmEntityState.UNCERTAIN if self._data_point.state_uncertain else HmEntityState.VALID

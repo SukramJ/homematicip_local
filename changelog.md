@@ -33,8 +33,13 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.3.19](https://github.com/SukramJ/aiohomematic/compare/2026.3.8...2026.3.19)
+#### Bump aiohomematic to [2026.3.20](https://github.com/SukramJ/aiohomematic/compare/2026.3.8...2026.3.20)
 
+- **Message enrichment**: `ServiceMessageData` and `AlarmMessageData` include pre-resolved fields (`message_code`, `display_name`, `msg_type_name`) with i18n support (en/de)
+- **Individual message attributes**: Message sensors expose each message as individual extra state attribute (`alarm_1`, `message_1`, ...) with human-readable display names
+- **ServiceMessageType enum extended**: Added `ALARM`, `UPDATE_PENDING`, and `COMMUNICATION` types
+- **DST-safe health checks**: Replaced `datetime.now()` with `time.monotonic()` for callback alive and connection checks, preventing false timeouts during DST transitions
+- **Alarm messages fix**: Fixed ReGa script not returning active alarm messages for system alarms with sentinel trigger data points
 - **Service messages hub sensor**: New sensor exposing active CCU service messages — count as state, full message details as attribute
 - **Alarm messages hub sensor**: New sensor exposing active CCU alarm messages (Alarmmeldungen) — count as state, full message details as attribute
 - **Acknowledge messages**: Support for acknowledging service and alarm messages via ReGa scripts
