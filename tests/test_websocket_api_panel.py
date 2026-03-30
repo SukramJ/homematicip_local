@@ -591,6 +591,8 @@ class TestWsGetHubData:
         """Test getting hub data with no message data points."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
         type(control.central.hub_coordinator).sysvar_data_points = PropertyMock(return_value=())
+        type(control.central.hub_coordinator).service_messages_dp = PropertyMock(return_value=None)
+        type(control.central.hub_coordinator).alarm_messages_dp = PropertyMock(return_value=None)
 
         client = await hass_ws_client(hass)
         await client.send_json(
