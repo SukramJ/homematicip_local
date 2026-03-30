@@ -2015,14 +2015,9 @@ async def ws_get_hub_data(
         connection.send_error(msg["id"], "not_found", "Config entry not found")
         return
 
-    service_messages: int | None = None
-    alarm_messages: int | None = None
-
-    for dp in control.central.hub_coordinator.sysvar_data_points:
-        if "SERVICE_MESSAGES" in dp.name:
-            service_messages = dp.value
-        elif "ALARM_MESSAGES" in dp.name:
-            alarm_messages = dp.value
+    hub_coord = control.central.hub_coordinator
+    service_messages = hub_coord.service_messages_dp.value if hub_coord.service_messages_dp else None
+    alarm_messages = hub_coord.alarm_messages_dp.value if hub_coord.alarm_messages_dp else None
 
     connection.send_result(
         msg["id"],

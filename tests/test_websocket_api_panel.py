@@ -615,17 +615,14 @@ class TestWsGetHubData:
         """Test getting hub data with service and alarm messages."""
         control: ControlUnit = mock_loaded_config_entry.runtime_data
 
-        sysvar_service = Mock()
-        sysvar_service.name = "SERVICE_MESSAGES"
-        sysvar_service.value = 3
+        service_dp = Mock()
+        service_dp.value = 3
 
-        sysvar_alarm = Mock()
-        sysvar_alarm.name = "ALARM_MESSAGES"
-        sysvar_alarm.value = 1
+        alarm_dp = Mock()
+        alarm_dp.value = 1
 
-        type(control.central.hub_coordinator).sysvar_data_points = PropertyMock(
-            return_value=(sysvar_service, sysvar_alarm)
-        )
+        type(control.central.hub_coordinator).service_messages_dp = PropertyMock(return_value=service_dp)
+        type(control.central.hub_coordinator).alarm_messages_dp = PropertyMock(return_value=alarm_dp)
 
         client = await hass_ws_client(hass)
         await client.send_json(

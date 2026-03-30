@@ -1,9 +1,23 @@
-# Version [2.5.0](https://github.com/SukramJ/homematicip_local/compare/2.4.1...2.5.0) (2026-03-28)
+# Version [2.5.0](https://github.com/SukramJ/homematicip_local/compare/2.4.1...2.5.0) (2026-03-30)
 
 ## What's Changed
 
+### Breaking Changes
+
+- **Removed SysVar entities for alarm/service messages**: The system variables
+  `${sysVarAlarmMessages}` (ID 40) and `${sysVarServiceMessages}` (ID 41) are no
+  longer auto-enabled and renamed. These are superseded by the dedicated hub
+  sensors `HmAlarmMessagesSensor` and `HmServiceMessagesSensor`. Users who
+  have automations referencing the old SysVar-based entity IDs
+  (`sensor.*_sysvar_alarm_messages` / `sensor.*_sysvar_service_messages`) must
+  update them to use the new hub sensor entities
+  (`sensor.*_hub_alarm_messages` / `sensor.*_hub_service_messages`).
+
 ### Integration
 
+- **Hub data WebSocket API**: `ws_get_hub_data` now reads alarm/service message
+  counts directly from the dedicated hub data points instead of iterating over
+  system variable data points
 - **SubscriptionGroup**: Event bus subscriptions managed via `SubscriptionGroup` instead of manual callback tracking
 - **Device name from events**: Event handlers (`_on_device_trigger`, `_on_optimistic_rollback`, `_fire_device_availability_event`) now use `event.device_name` from aiohomematic, falling back to HA device registry only for user-overridden names
 - **DataPointType-based platform routing**: `get_new_data_points()` uses `DataPointType` enum instead of concrete class types, decoupling platform setup from aiohomematic model internals
@@ -34,7 +48,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.3.20](https://github.com/SukramJ/aiohomematic/compare/2026.3.8...2026.3.20)
+#### Bump aiohomematic to [2026.3.21](https://github.com/SukramJ/aiohomematic/compare/2026.3.8...2026.3.21)
 
 - **Message enrichment**: `ServiceMessageData` and `AlarmMessageData` include pre-resolved fields (`message_code`, `display_name`, `msg_type_name`) with i18n support (en/de)
 - **Individual message attributes**: Message sensors expose each message as individual extra state attribute (`alarm_1`, `message_1`, ...) with human-readable display names
@@ -64,6 +78,10 @@
 - **System variable creation**: `create_system_variable_bool()`, `_float()`, `_enum()` for creating system variables on the CCU
 - **Link info read/write**: `get_link_info()` / `set_link_info()` for link metadata management
 - **Service message suppression**: `suppress_service_message()` / `get_suppressed_service_messages()`
+- **Quittable flag based on trigger datapoint**: Service message quittable check now uses `OPERATION_WRITE` on the trigger datapoint, matching CCU WebUI behavior
+- **Acknowledge only writable messages**: `acknowledge_message` refuses non-quittable messages instead of silently acknowledging them
+- **Removed auto-enable of alarm/service SysVars**: `${sysVarAlarmMessages}` and `${sysVarServiceMessages}` no longer force-enabled — superseded by dedicated hub sensors
+- **Exposed message DPs on HubCoordinator**: `alarm_messages_dp` and `service_messages_dp` accessible via `HubCoordinator` for direct downstream access
 
 #### Bump aiohomematic-config to [2026.3.5](https://github.com/SukramJ/aiohomematic-config/compare/2026.3.2...2026.3.5)
 
@@ -78,6 +96,12 @@
 - New receiver profiles (door lock, universal light, RGBW DALI)
 - `CrossValidationConstraint` model and `cross_validation` field on `FormSchema`
 - Semantic parameter grouping from easymode `parameter_groups` metadata with locale-aware labels
+
+#### Bump homematicip-local-frontend
+
+- Removed frontend message enrichment — display names and message codes now provided by aiohomematic
+- OpenCCU Messages tab: Inbox (accept devices), Service Messages (acknowledge), Alarm Messages (acknowledge) with badge counts
+- Acknowledge only quittable messages in service and alarm message cards
 
 # Version [2.4.1](https://github.com/SukramJ/homematicip_local/compare/2.4.0...2.4.1) (2026-03-11)
 
