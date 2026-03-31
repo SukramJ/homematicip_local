@@ -48,8 +48,10 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.3.21](https://github.com/SukramJ/aiohomematic/compare/2026.3.8...2026.3.21)
+#### Bump aiohomematic to [2026.3.22](https://github.com/SukramJ/aiohomematic/compare/2026.3.8...2026.3.22)
 
+- **Fixed false channel identification for hub data points**: Renamed `rega_id` to `ise_id` to correctly identify hub data point channels
+- **Fixed acknowledge for alarm messages**: ReGa script for acknowledging alarm messages corrected
 - **Message enrichment**: `ServiceMessageData` and `AlarmMessageData` include pre-resolved fields (`message_code`, `display_name`, `msg_type_name`) with i18n support (en/de)
 - **Individual message attributes**: Message sensors expose each message as individual extra state attribute (`alarm_1`, `message_1`, ...) with human-readable display names
 - **ServiceMessageType enum extended**: Added `ALARM`, `UPDATE_PENDING`, and `COMMUNICATION` types
@@ -99,6 +101,7 @@
 
 #### Bump homematicip-local-frontend
 
+- HA 2026.3.0+ / 2026.4.0+ compatibility
 - Removed frontend message enrichment — display names and message codes now provided by aiohomematic
 - OpenCCU Messages tab: Inbox (accept devices), Service Messages (acknowledge), Alarm Messages (acknowledge) with badge counts
 - Acknowledge only quittable messages in service and alarm message cards
