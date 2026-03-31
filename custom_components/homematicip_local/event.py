@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import logging
+from typing import Final
 
+from aiohomematic.central.events import DataPointStateChangedEvent, DeviceRemovedEvent, SubscriptionGroup
 from aiohomematic.const import DATA_POINT_EVENTS, DataPointCategory
 from aiohomematic.interfaces import ChannelEventGroupProtocol
-from aiohomematic.type_aliases import UnsubscribeCallback
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -89,7 +90,9 @@ class AioHomematicEvent(EventEntity):
             EVENT_ADDRESS: event_group.channel.address,
             EVENT_MODEL: event_group.device.model,
         }
-        self._unsubscribe_callbacks: list[UnsubscribeCallback] = []
+        self._subscription_group: Final[SubscriptionGroup] = control_unit.central.event_bus.create_subscription_group(
+            name=f"event_{event_group.unique_id}"
+        )
         _LOGGER.debug(
             "init: Setting up %s %s",
             event_group.device.name,
@@ -108,24 +111,25 @@ class AioHomematicEvent(EventEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
-        self._unsubscribe_callbacks.append(
-            self._event_group.subscribe_to_data_point_updated(
-                handler=self._async_event_changed, custom_id=self.entity_id
-            )
+        self._event_group.register()
+        self._subscription_group.subscribe(
+            event_type=DataPointStateChangedEvent,
+            event_key=self._event_group.unique_id,
+            handler=self._async_event_changed,
         )
-        self._unsubscribe_callbacks.append(
-            self._event_group.subscribe_to_device_removed(handler=self._async_device_removed)
+        self._subscription_group.subscribe(
+            event_type=DeviceRemovedEvent,
+            event_key=self._event_group.unique_id,
+            handler=self._async_device_removed,
         )
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
-        # Remove callback from device.
-        for unregister in self._unsubscribe_callbacks:
-            if unregister is not None:
-                unregister()
+        self._event_group.unregister()
+        self._subscription_group.unsubscribe_all()
 
     @callback
-    def _async_device_removed(self) -> None:
+    def _async_device_removed(self, *, event: DeviceRemovedEvent) -> None:
         """Handle hm device removal."""
         self.hass.async_create_task(self.async_remove(force_remove=True))
 
@@ -140,17 +144,12 @@ class AioHomematicEvent(EventEntity):
                 device_registry.async_remove_device(device_id)
 
     @callback
-    def _async_event_changed(
-        self,
-        *,
-        data_point: ChannelEventGroupProtocol,
-        custom_id: str,  # noqa: ARG002
-    ) -> None:
+    def _async_event_changed(self, *, event: DataPointStateChangedEvent) -> None:
         """Handle device state changes."""
         # Don't update disabled entities
         if self.enabled:
-            if event := data_point.last_triggered_event:
-                self._trigger_event(event.parameter.lower())
+            if triggered := self._event_group.last_triggered_event:
+                self._trigger_event(triggered.parameter.lower())
                 _LOGGER.debug("Device event emitted %s", self.name)
                 self.async_schedule_update_ha_state()
         else:

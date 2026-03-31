@@ -6,11 +6,11 @@ import logging
 from pathlib import Path
 from typing import Any, Final, override
 
+from aiohomematic.central.events import DataPointStateChangedEvent, DeviceRemovedEvent, SubscriptionGroup
 from aiohomematic.const import CCUType, DataPointCategory, DataPointType
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.hub import HmUpdate
 from aiohomematic.model.update import DpUpdate
-from aiohomematic.type_aliases import UnsubscribeCallback
 from homeassistant.components.update import UpdateDeviceClass, UpdateEntity, UpdateEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -108,7 +108,9 @@ class AioHomematicUpdate(UpdateEntity):
             identifiers={(DOMAIN, data_point.device.identifier)},
         )
         self._attr_extra_state_attributes = {ATTR_FIRMWARE_UPDATE_STATE: data_point.device.firmware_update_state}
-        self._unsubscribe_callbacks: list[UnsubscribeCallback] = []
+        self._subscription_group: Final[SubscriptionGroup] = control_unit.central.event_bus.create_subscription_group(
+            name=f"update_{data_point.unique_id}"
+        )
         _LOGGER.debug("init: Setting up %s", data_point.full_name)
 
     @property
@@ -144,13 +146,16 @@ class AioHomematicUpdate(UpdateEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
-        self._unsubscribe_callbacks.append(
-            self._data_point.subscribe_to_data_point_updated(
-                handler=self._async_entity_changed, custom_id=self.entity_id
-            )
+        self._data_point.register()
+        self._subscription_group.subscribe(
+            event_type=DataPointStateChangedEvent,
+            event_key=self._data_point.unique_id,
+            handler=self._async_entity_changed,
         )
-        self._unsubscribe_callbacks.append(
-            self._data_point.subscribe_to_device_removed(handler=self._async_device_removed)
+        self._subscription_group.subscribe(
+            event_type=DeviceRemovedEvent,
+            event_key=self._data_point.unique_id,
+            handler=self._async_device_removed,
         )
 
     @override
@@ -165,13 +170,11 @@ class AioHomematicUpdate(UpdateEntity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
-        # Remove callback from device.
-        for unregister in self._unsubscribe_callbacks:
-            if unregister is not None:
-                unregister()
+        self._data_point.unregister()
+        self._subscription_group.unsubscribe_all()
 
     @callback
-    def _async_device_removed(self) -> None:
+    def _async_device_removed(self, *, event: DeviceRemovedEvent) -> None:
         """Handle hm device removal."""
         self.hass.async_create_task(self.async_remove(force_remove=True))
 
@@ -186,7 +189,7 @@ class AioHomematicUpdate(UpdateEntity):
                 device_registry.async_remove_device(device_id)
 
     @callback
-    def _async_entity_changed(self, *args: Any, **kwargs: Any) -> None:
+    def _async_entity_changed(self, *, event: DataPointStateChangedEvent) -> None:
         """Handle device state changes."""
         # Don't update disabled entities
         if self.enabled:
@@ -222,7 +225,9 @@ class AioHomematicHubUpdate(UpdateEntity):
             if control_unit.central.system_information.ccu_type == CCUType.OPENCCU
             else UpdateEntityFeature.INSTALL
         )
-        self._unsubscribe_callbacks: list[UnsubscribeCallback] = []
+        self._subscription_group: Final[SubscriptionGroup] = control_unit.central.event_bus.create_subscription_group(
+            name=f"hub_update_{data_point.unique_id}"
+        )
         _LOGGER.debug("init: Setting up %s", data_point.full_name)
 
     @property
@@ -258,13 +263,16 @@ class AioHomematicHubUpdate(UpdateEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks and load initial data."""
-        self._unsubscribe_callbacks.append(
-            self._data_point.subscribe_to_data_point_updated(
-                handler=self._async_entity_changed, custom_id=self.entity_id
-            )
+        self._data_point.register()
+        self._subscription_group.subscribe(
+            event_type=DataPointStateChangedEvent,
+            event_key=self._data_point.unique_id,
+            handler=self._async_entity_changed,
         )
-        self._unsubscribe_callbacks.append(
-            self._data_point.subscribe_to_device_removed(handler=self._async_device_removed)
+        self._subscription_group.subscribe(
+            event_type=DeviceRemovedEvent,
+            event_key=self._data_point.unique_id,
+            handler=self._async_device_removed,
         )
 
     @override
@@ -280,10 +288,8 @@ class AioHomematicHubUpdate(UpdateEntity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
-        # Remove callback from device.
-        for unregister in self._unsubscribe_callbacks:
-            if unregister is not None:
-                unregister()
+        self._data_point.unregister()
+        self._subscription_group.unsubscribe_all()
 
     async def _async_create_backup(self) -> None:
         """Create a backup before installing the update."""
@@ -307,7 +313,7 @@ class AioHomematicHubUpdate(UpdateEntity):
             raise HomeAssistantError(f"Failed to create backup before update: {err}") from err
 
     @callback
-    def _async_device_removed(self) -> None:
+    def _async_device_removed(self, *, event: DeviceRemovedEvent) -> None:
         """Handle hm device removal."""
         self.hass.async_create_task(self.async_remove(force_remove=True))
 
@@ -322,7 +328,7 @@ class AioHomematicHubUpdate(UpdateEntity):
                 device_registry.async_remove_device(device_id)
 
     @callback
-    def _async_entity_changed(self, *args: Any, **kwargs: Any) -> None:
+    def _async_entity_changed(self, *, event: DataPointStateChangedEvent) -> None:
         """Handle device state changes."""
         # Don't update disabled entities
         if self.enabled:

@@ -20,6 +20,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 
+def _create_mock_subscription_group() -> MagicMock:
+    """Create a mock subscription group."""
+    mock_group = MagicMock()
+    mock_group.subscribe = MagicMock(return_value=MagicMock())
+    mock_group.unsubscribe_all = MagicMock()
+    return mock_group
+
+
 def create_mock_update(
     *,
     available: bool = True,
@@ -44,8 +52,8 @@ def create_mock_update(
     mock_data_point.full_name = full_name
     mock_data_point.update_firmware = AsyncMock()
     mock_data_point.refresh_firmware_data = AsyncMock()
-    mock_data_point.subscribe_to_data_point_updated = Mock(return_value=Mock())
-    mock_data_point.subscribe_to_device_removed = Mock(return_value=Mock())
+    mock_data_point.register = MagicMock()
+    mock_data_point.unregister = MagicMock()
 
     # Create mock device
     mock_device = MagicMock()
@@ -63,7 +71,7 @@ def create_mock_update(
     update._attr_unique_id = f"homematicip_local_{unique_id}"
     update._attr_device_info = {"identifiers": {("homematicip_local", device_identifier)}}
     update._attr_extra_state_attributes = {ATTR_FIRMWARE_UPDATE_STATE: firmware_update_state}
-    update._unsubscribe_callbacks = []
+    update._subscription_group = _create_mock_subscription_group()
 
     return update
 
@@ -91,8 +99,8 @@ def create_mock_hub_update(
     mock_data_point.unique_id = unique_id
     mock_data_point.full_name = full_name
     mock_data_point.install = AsyncMock()
-    mock_data_point.subscribe_to_data_point_updated = Mock(return_value=Mock())
-    mock_data_point.subscribe_to_device_removed = Mock(return_value=Mock())
+    mock_data_point.register = MagicMock()
+    mock_data_point.unregister = MagicMock()
 
     # Create mock central
     mock_central = MagicMock()
@@ -118,7 +126,7 @@ def create_mock_hub_update(
     hub_update._attr_unique_id = f"homematicip_local_{unique_id}"
     hub_update._attr_device_info = mock_cu.device_info
     hub_update._attr_supported_features = supported_features
-    hub_update._unsubscribe_callbacks = []
+    hub_update._subscription_group = _create_mock_subscription_group()
 
     return hub_update
 
@@ -186,9 +194,8 @@ class TestAioHomematicUpdateMethods:
         update = create_mock_update()
         await update.async_added_to_hass()
 
-        assert len(update._unsubscribe_callbacks) == 2
-        update._data_point.subscribe_to_data_point_updated.assert_called_once()
-        update._data_point.subscribe_to_device_removed.assert_called_once()
+        update._data_point.register.assert_called_once()
+        assert update._subscription_group.subscribe.call_count == 2
 
     @pytest.mark.asyncio
     async def test_async_install(self) -> None:
@@ -218,25 +225,11 @@ class TestAioHomematicUpdateMethods:
     async def test_async_will_remove_from_hass(self) -> None:
         """Test async_will_remove_from_hass unsubscribes callbacks."""
         update = create_mock_update()
-        mock_unsubscribe1 = Mock()
-        mock_unsubscribe2 = Mock()
-        update._unsubscribe_callbacks = [mock_unsubscribe1, mock_unsubscribe2]
 
         await update.async_will_remove_from_hass()
 
-        mock_unsubscribe1.assert_called_once()
-        mock_unsubscribe2.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_async_will_remove_from_hass_handles_none(self) -> None:
-        """Test async_will_remove_from_hass handles None callbacks."""
-        update = create_mock_update()
-        mock_unsubscribe = Mock()
-        update._unsubscribe_callbacks = [mock_unsubscribe, None]
-
-        await update.async_will_remove_from_hass()
-
-        mock_unsubscribe.assert_called_once()
+        update._data_point.unregister.assert_called_once()
+        update._subscription_group.unsubscribe_all.assert_called_once()
 
 
 class TestAioHomematicUpdateCallbacks:
@@ -255,6 +248,7 @@ class TestAioHomematicUpdateCallbacks:
         mock_device_registry = MagicMock()
         mock_device_registry.devices = {}  # Device not in registry
 
+        mock_event = MagicMock()
         with (
             patch.object(hass, "async_create_task"),
             patch(
@@ -262,7 +256,7 @@ class TestAioHomematicUpdateCallbacks:
                 return_value=mock_device_registry,
             ),
         ):
-            update._async_device_removed()
+            update._async_device_removed(event=mock_event)
 
         mock_device_registry.async_remove_device.assert_not_called()
 
@@ -273,8 +267,9 @@ class TestAioHomematicUpdateCallbacks:
         update.async_remove = Mock()
         update.registry_entry = None
 
+        mock_event = MagicMock()
         with patch.object(hass, "async_create_task") as mock_create_task:
-            update._async_device_removed()
+            update._async_device_removed(event=mock_event)
 
         mock_create_task.assert_called_once()
 
@@ -291,6 +286,7 @@ class TestAioHomematicUpdateCallbacks:
         mock_device_registry = MagicMock()
         mock_device_registry.devices = {"device_123": MagicMock()}
 
+        mock_event = MagicMock()
         with (
             patch.object(hass, "async_create_task"),
             patch(
@@ -298,7 +294,7 @@ class TestAioHomematicUpdateCallbacks:
                 return_value=mock_device_registry,
             ),
         ):
-            update._async_device_removed()
+            update._async_device_removed(event=mock_event)
 
         mock_device_registry.async_remove_device.assert_called_once_with("device_123")
 
@@ -309,9 +305,10 @@ class TestAioHomematicUpdateCallbacks:
         update._attr_entity_id = "update.test"
         update.async_schedule_update_ha_state = Mock()
 
+        mock_event = MagicMock()
         # Mock enabled property
         with patch.object(type(update), "enabled", property(lambda self: False)):
-            update._async_entity_changed()
+            update._async_entity_changed(event=mock_event)
 
         update.async_schedule_update_ha_state.assert_not_called()
 
@@ -322,9 +319,10 @@ class TestAioHomematicUpdateCallbacks:
         update._attr_entity_id = "update.test"
         update.async_schedule_update_ha_state = Mock()
 
+        mock_event = MagicMock()
         # Mock enabled property
         with patch.object(type(update), "enabled", property(lambda self: True)):
-            update._async_entity_changed()
+            update._async_entity_changed(event=mock_event)
 
         update.async_schedule_update_ha_state.assert_called_once()
 
@@ -354,7 +352,7 @@ class TestAioHomematicUpdateInit:
         assert update._data_point == mock_data_point
         assert update._attr_unique_id == "homematicip_local_test_123"
         assert ATTR_FIRMWARE_UPDATE_STATE in update._attr_extra_state_attributes
-        assert update._unsubscribe_callbacks == []
+        assert update._subscription_group is not None
 
     def test_should_poll(self) -> None:
         """Test should_poll attribute."""
@@ -443,9 +441,8 @@ class TestAioHomematicHubUpdateMethods:
         hub_update = create_mock_hub_update()
         await hub_update.async_added_to_hass()
 
-        assert len(hub_update._unsubscribe_callbacks) == 2
-        hub_update._data_point.subscribe_to_data_point_updated.assert_called_once()
-        hub_update._data_point.subscribe_to_device_removed.assert_called_once()
+        hub_update._data_point.register.assert_called_once()
+        assert hub_update._subscription_group.subscribe.call_count == 2
 
     @pytest.mark.asyncio
     async def test_async_install_backup_exception(self, hass: HomeAssistant) -> None:
@@ -504,14 +501,11 @@ class TestAioHomematicHubUpdateMethods:
     async def test_async_will_remove_from_hass(self) -> None:
         """Test async_will_remove_from_hass unsubscribes callbacks."""
         hub_update = create_mock_hub_update()
-        mock_unsubscribe1 = Mock()
-        mock_unsubscribe2 = Mock()
-        hub_update._unsubscribe_callbacks = [mock_unsubscribe1, mock_unsubscribe2]
 
         await hub_update.async_will_remove_from_hass()
 
-        mock_unsubscribe1.assert_called_once()
-        mock_unsubscribe2.assert_called_once()
+        hub_update._data_point.unregister.assert_called_once()
+        hub_update._subscription_group.unsubscribe_all.assert_called_once()
 
 
 class TestAioHomematicHubUpdateCallbacks:
@@ -524,8 +518,9 @@ class TestAioHomematicHubUpdateCallbacks:
         hub_update.async_remove = Mock()
         hub_update.registry_entry = None
 
+        mock_event = MagicMock()
         with patch.object(hass, "async_create_task"):
-            hub_update._async_device_removed()
+            hub_update._async_device_removed(event=mock_event)
 
     def test_async_device_removed_with_device_id(self, hass: HomeAssistant) -> None:
         """Test _async_device_removed with device ID."""
@@ -540,6 +535,7 @@ class TestAioHomematicHubUpdateCallbacks:
         mock_device_registry = MagicMock()
         mock_device_registry.devices = {"hub_device_123": MagicMock()}
 
+        mock_event = MagicMock()
         with (
             patch.object(hass, "async_create_task"),
             patch(
@@ -547,7 +543,7 @@ class TestAioHomematicHubUpdateCallbacks:
                 return_value=mock_device_registry,
             ),
         ):
-            hub_update._async_device_removed()
+            hub_update._async_device_removed(event=mock_event)
 
         mock_device_registry.async_remove_device.assert_called_once_with("hub_device_123")
 
@@ -558,8 +554,9 @@ class TestAioHomematicHubUpdateCallbacks:
         hub_update._attr_entity_id = "update.hub"
         hub_update.async_schedule_update_ha_state = Mock()
 
+        mock_event = MagicMock()
         with patch.object(type(hub_update), "enabled", property(lambda self: False)):
-            hub_update._async_entity_changed()
+            hub_update._async_entity_changed(event=mock_event)
 
         hub_update.async_schedule_update_ha_state.assert_not_called()
 
@@ -570,8 +567,9 @@ class TestAioHomematicHubUpdateCallbacks:
         hub_update._attr_entity_id = "update.hub"
         hub_update.async_schedule_update_ha_state = Mock()
 
+        mock_event = MagicMock()
         with patch.object(type(hub_update), "enabled", property(lambda self: True)):
-            hub_update._async_entity_changed()
+            hub_update._async_entity_changed(event=mock_event)
 
         hub_update.async_schedule_update_ha_state.assert_called_once()
 

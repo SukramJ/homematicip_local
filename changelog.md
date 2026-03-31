@@ -21,7 +21,8 @@
 - **SubscriptionGroup**: Event bus subscriptions managed via `SubscriptionGroup` instead of manual callback tracking
 - **Device name from events**: Event handlers (`_on_device_trigger`, `_on_optimistic_rollback`, `_fire_device_availability_event`) now use `event.device_name` from aiohomematic, falling back to HA device registry only for user-overridden names
 - **DataPointType-based platform routing**: `get_new_data_points()` uses `DataPointType` enum instead of concrete class types, decoupling platform setup from aiohomematic model internals
-- **State transition handlers**: RUNNING and RECOVERING central states handled via `on_state_transition()` callbacks; DEGRADED/FAILED remain on `SystemStatusChangedEvent` for access to failure details
+- **Unified subscription architecture**: Entity-level subscriptions migrated from `subscribe_to_data_point_updated()`/`subscribe_to_device_removed()` to EventBus `SubscriptionGroup.subscribe()` with `DataPointStateChangedEvent`/`DeviceRemovedEvent`. Data point registration via `register()`/`unregister()` replaces `custom_id` ownership
+- **State transition handlers**: Central state transitions (RUNNING/RECOVERING) handled via `CentralStateChangedEvent` subscription; DEGRADED/FAILED remain on `SystemStatusChangedEvent` for access to failure details
 - **Exclude message attributes from recorder**: `AioHomematicSysvarSensor` excludes `alarm_1`..`alarm_99` and `message_1`..`message_199` attributes from recorder to prevent database bloat
 
 ### Config Panel
@@ -48,7 +49,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.3.22](https://github.com/SukramJ/aiohomematic/compare/2026.3.8...2026.3.22)
+#### Bump aiohomematic to [2026.3.23](https://github.com/SukramJ/aiohomematic/compare/2026.3.8...2026.3.23)
 
 - **Fixed false channel identification for hub data points**: Renamed `rega_id` to `ise_id` to correctly identify hub data point channels
 - **Fixed acknowledge for alarm messages**: ReGa script for acknowledging alarm messages corrected
@@ -84,6 +85,8 @@
 - **Acknowledge only writable messages**: `acknowledge_message` refuses non-quittable messages instead of silently acknowledging them
 - **Removed auto-enable of alarm/service SysVars**: `${sysVarAlarmMessages}` and `${sysVarServiceMessages}` no longer force-enabled — superseded by dedicated hub sensors
 - **Exposed message DPs on HubCoordinator**: `alarm_messages_dp` and `service_messages_dp` accessible via `HubCoordinator` for direct downstream access
+- **Event tier enforcement**: Internal events separated from public API; `__all__` exports only public events
+- **Unified subscription architecture**: DataPoint subscriptions routed through EventBus; `subscribe_to_data_point_updated()`/`subscribe_to_device_removed()` and `custom_id` removed; `register()`/`unregister()` for consumer lifecycle; `SubscriptionGroup.add()` replaced by `SubscriptionGroup.subscribe()`; typed `get_data_points_by_type()` query method
 
 #### Bump aiohomematic-config to [2026.3.5](https://github.com/SukramJ/aiohomematic-config/compare/2026.3.2...2026.3.5)
 

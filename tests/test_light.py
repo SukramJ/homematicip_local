@@ -101,7 +101,7 @@ def create_mock_light(
     light._attr_unique_id = "test_unique_id"
     light._attr_device_info = {}
     light._static_state_attributes = {}
-    light._unsubscribe_callbacks = []
+    light._subscription_group = MagicMock()
 
     return light
 

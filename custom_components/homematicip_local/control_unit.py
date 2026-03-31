@@ -12,6 +12,7 @@ from typing import Any, Final, Self, TypeVar, cast
 from aiohomematic import __version__ as AIOHM_VERSION
 from aiohomematic.central import CentralConfig, CentralUnit, check_config
 from aiohomematic.central.events import (
+    CentralStateChangedEvent,
     DataPointsCreatedEvent,
     DeviceLifecycleEvent,
     DeviceLifecycleEventType,
@@ -54,7 +55,6 @@ from aiohomematic.const import (
 from aiohomematic.exceptions import AuthFailure, BaseHomematicException
 from aiohomematic.model.data_point import CallbackDataPoint
 from aiohomematic.support.address import get_device_address
-from aiohomematic.type_aliases import UnsubscribeCallback
 from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 
@@ -262,7 +262,6 @@ class ControlUnit(BaseControlUnit):
         self._subscription_group: Final[SubscriptionGroup] = self._central.event_bus.create_subscription_group(
             name="homematicip_local"
         )
-        self._transition_unsubscribes: Final[list[UnsubscribeCallback]] = []
 
     def ensure_via_device_exists(self, identifier: str, suggested_area: str | None, via_device: str) -> None:
         """Create a via device for a device."""
@@ -333,18 +332,11 @@ class ControlUnit(BaseControlUnit):
         # Subscribe to integration events
         _LOGGER.debug("Subscribing to integration events")
 
-        # Targeted state transition handlers (simple transitions)
-        self._transition_unsubscribes.append(
-            self._central.on_state_transition(
-                to_state=CentralState.RUNNING,
-                handler=self._on_central_running,
-            )
-        )
-        self._transition_unsubscribes.append(
-            self._central.on_state_transition(
-                to_state=CentralState.RECOVERING,
-                handler=self._on_central_recovering,
-            )
+        # Central state transition handler
+        self._subscription_group.subscribe(
+            event_type=CentralStateChangedEvent,
+            event_key=self._central.name,
+            handler=self._on_central_state_changed,
         )
 
         # SystemStatusChangedEvent for detail-dependent logic (DEGRADED/FAILED + infra)
@@ -385,8 +377,6 @@ class ControlUnit(BaseControlUnit):
             self._mqtt_consumer.unsubscribe()
 
         self._subscription_group.unsubscribe_all()
-        for unsub in self._transition_unsubscribes:
-            unsub()
 
         await super().stop_central(*args)
 
@@ -611,7 +601,7 @@ class ControlUnit(BaseControlUnit):
             _LOGGER.debug("SYSTEM NOTIFICATION disabled for FAILED state")
         return False
 
-    async def _on_central_recovering(self, **kwargs: Any) -> None:
+    async def _on_central_recovering(self) -> None:
         """Handle transition to RECOVERING state."""
         _LOGGER.info("Central %s is RECOVERING - attempting reconnection", self._instance_name)
         self._hass.bus.async_fire(
@@ -619,7 +609,7 @@ class ControlUnit(BaseControlUnit):
             event_data={"instance_name": self._instance_name, "new_state": CentralState.RECOVERING.value},
         )
 
-    async def _on_central_running(self, **kwargs: Any) -> None:
+    async def _on_central_running(self) -> None:
         """Handle transition to RUNNING state."""
         issue_id_degraded = f"{self._entry_id}_central_degraded"
         issue_id_failed = f"{self._entry_id}_central_failed"
@@ -630,6 +620,13 @@ class ControlUnit(BaseControlUnit):
             event_type=f"{DOMAIN}.central_state_changed",
             event_data={"instance_name": self._instance_name, "new_state": CentralState.RUNNING.value},
         )
+
+    async def _on_central_state_changed(self, *, event: CentralStateChangedEvent) -> None:
+        """Handle central state transitions."""
+        if event.new_state == CentralState.RECOVERING:
+            await self._on_central_recovering()
+        elif event.new_state == CentralState.RUNNING:
+            await self._on_central_running()
 
     async def _on_data_points_created(self, event: DataPointsCreatedEvent) -> None:
         """Handle data points created event from aiohomematic (Entity discovery)."""

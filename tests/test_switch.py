@@ -73,7 +73,9 @@ class TestSysvarDpSwitch:
         ha_state, _ = helper.get_and_check_state(
             hass=hass, control=control, entity_id=entity_id, entity_name=entity_name
         )
-        data_point: SysvarDpSwitch = cast(SysvarDpSwitch, helper.get_data_point(control=control, entity_id=entity_id))
+        data_point: SysvarDpSwitch = cast(
+            SysvarDpSwitch, helper.get_data_point(control=control, entity_id=entity_id, hass=hass)
+        )
         assert ha_state.state == STATE_OFF
 
         assert data_point.send_variable.call_count == 0

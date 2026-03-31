@@ -26,6 +26,7 @@ from custom_components.homematicip_local import HAHM_VERSION as _HAHM_VERSION
 from custom_components.homematicip_local.control_unit import ControlUnit
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,9 +37,8 @@ EXCLUDE_METHODS_FROM_MOCKS: Final = [
     "load_data_point_value",
     "publish_data_point_updated_event",
     "publish_device_removed_event",
-    "subscribe_to_data_point_updated",
-    "subscribe_to_device_removed",
-    "subscribe_to_internal_data_point_updated",
+    "register",
+    "unregister",
     "write_value",
     "write_temporary_value",
 ]
@@ -120,19 +120,27 @@ def get_and_check_state(hass: HomeAssistant, control: ControlUnit, entity_id: st
     ha_state = hass.states.get(entity_id)
     assert ha_state is not None
     # assert ha_state.name == entity_name
-    data_point = get_data_point(control=control, entity_id=entity_id)
+    data_point = get_data_point(control=control, entity_id=entity_id, hass=hass)
 
     return ha_state, data_point
 
 
-def get_data_point(control: ControlUnit, entity_id: str):
+def get_data_point(control: ControlUnit, entity_id: str, hass: HomeAssistant | None = None):
     """Get the data point by entity id."""
-    for dp in control.central.query_facade.get_data_points():
-        if dp.custom_id == entity_id:
-            return dp
-    for dp in control.central.hub_coordinator.get_hub_data_points():
-        if dp.custom_id == entity_id:
-            return dp
+    dp_unique_id: str | None = None
+    if hass:
+        registry = er.async_get(hass)
+        if entry := registry.async_get(entity_id):
+            dp_unique_id = entry.unique_id.removeprefix("homematicip_local_")
+
+    if dp_unique_id:
+        for dp in control.central.query_facade.get_data_points():
+            if dp.unique_id == dp_unique_id:
+                return dp
+        for dp in control.central.hub_coordinator.get_hub_data_points():
+            if dp.unique_id == dp_unique_id:
+                return dp
+    return None
 
 
 def get_mock(instance, **kwargs):
