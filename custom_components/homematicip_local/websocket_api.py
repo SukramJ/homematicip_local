@@ -2330,7 +2330,7 @@ async def ws_accept_inbox_device(
 
     if (device_name := msg.get("device_name")) and (device_id := msg.get("device_id")):
         try:
-            await control.central.json_rpc_client.rename_device(rega_id=int(device_id), new_name=device_name)
+            await control.central.json_rpc_client.rename_device(ise_id=int(device_id), new_name=device_name)
         except BaseHomematicException as err:
             _LOGGER.warning("Failed to rename device %s: %s", msg["device_address"], err)
 
