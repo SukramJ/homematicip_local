@@ -49,8 +49,9 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.3.23](https://github.com/SukramJ/aiohomematic/compare/2026.3.8...2026.3.23)
+#### Bump aiohomematic to [2026.4.0](https://github.com/SukramJ/aiohomematic/compare/2026.3.8...2026.4.0)
 
+- **Fixed forced-to-sensor data points not publishing events**: Data points with `force_to_sensor()` (LEVEL on HmIP-eTRV and HmIP-HEATING) published events with the internal `_unique_id` instead of the `unique_id` property, causing key mismatches and orphaned subscriptions (memory leak)
 - **Fixed false channel identification for hub data points**: Renamed `rega_id` to `ise_id` to correctly identify hub data point channels
 - **Fixed acknowledge for alarm messages**: ReGa script for acknowledging alarm messages corrected
 - **Message enrichment**: `ServiceMessageData` and `AlarmMessageData` include pre-resolved fields (`message_code`, `display_name`, `msg_type_name`) with i18n support (en/de)
