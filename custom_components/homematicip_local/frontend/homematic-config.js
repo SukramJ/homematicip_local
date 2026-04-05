@@ -620,7 +620,7 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
               .step=${e.step??1}
               .value=${Number(this.value??e.min??0)}
               .disabled=${t}
-              @value-changed=${t=>{t.stopPropagation();const i=Number(t.detail.value),s="integer"===e.type?Math.round(i):i;s!==this.value&&this._emitChange(s)}}
+              @change=${t=>{const i=Number(t.target.value),s="integer"===e.type?Math.round(i):i;s!==this.value&&this._emitChange(s)}}
             ></ha-slider>
             <input
               type="number"
@@ -3613,6 +3613,15 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
     ha-dialog {
       --ha-dialog-max-width: 100vw;
     }
+
+    .editor-footer {
+      flex-direction: column-reverse;
+      gap: 8px;
+    }
+
+    .editor-footer ha-button {
+      width: 100%;
+    }
   }
 `;var Ft=function(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPropertyDescriptor(t,i):s;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(e,t,i,s);else for(var o=e.length-1;o>=0;o--)(a=e[o])&&(n=(r<3?a(n):r>3?a(t,i,n):a(t,i))||n);return r>3&&n&&Object.defineProperty(t,i,n),n};let Ht=class extends oe{constructor(){super(...arguments),this.open=!1,this.isNewEvent=!1,this._validationErrors=[]}static{this.styles=Ut}willUpdate(e){(e.has("open")||e.has("entry"))&&(this.open&&this.entry?(this._editingEntry={...this.entry},this._validationErrors=[]):this.open||(this._editingEntry=void 0,this._validationErrors=[]))}_updateEditingEntry(e){this._editingEntry&&(this._editingEntry={...this._editingEntry,...e},this._validationErrors=[],this.requestUpdate())}_handleClose(){this.dispatchEvent(new CustomEvent("editor-closed",{bubbles:!0,composed:!0}))}_handleSave(){if(!this._editingEntry||void 0===this.groupNo)return;const e=function(e,t){const i=[];(function(e){try{return function(e){const t=e.split(":");if(2!==t.length)throw new Error(`Invalid time format: ${e}`);const i=parseInt(t[0],10),s=parseInt(t[1],10);if(isNaN(i)||isNaN(s)||i<0||i>23||s<0||s>59)throw new Error(`Invalid time values: ${e}`)}(e),!0}catch{return!1}})(e.time)||i.push({field:"time",message:"Time must be in HH:MM format (00:00-23:59)"}),e.weekdays&&0!==e.weekdays.length||i.push({field:"weekdays",message:"At least one weekday must be selected"});const s=t?ht[t]:void 0;return"binary"===s?.levelType?0!==e.level&&1!==e.level&&i.push({field:"level",message:"Level must be 0 or 1 for switch"}):(e.level<0||e.level>1)&&i.push({field:"level",message:"Level must be between 0.0 and 1.0"}),"cover"===t&&null!==e.level_2&&(e.level_2<0||e.level_2>1)&&i.push({field:"level_2",message:"Slat position must be between 0.0 and 1.0"}),kt(e.condition)&&(e.astro_offset_minutes<-720||e.astro_offset_minutes>720)&&i.push({field:"astro_offset_minutes",message:"Astro offset must be between -720 and 720 minutes"}),null===e.duration||Et(e.duration)||i.push({field:"duration",message:"Invalid duration format"}),null===e.ramp_time||Et(e.ramp_time)||i.push({field:"ramp_time",message:"Invalid ramp time format"}),i}(this._editingEntry,this.domain);e.length>0?this._validationErrors=e.map(e=>`${e.field}: ${e.message}`):this.dispatchEvent(new CustomEvent("save-event",{bubbles:!0,composed:!0,detail:{entry:{...this._editingEntry},groupNo:this.groupNo}}))}render(){return this.open&&this._editingEntry?O`
       <ha-dialog
@@ -3708,7 +3717,7 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
                   min="0"
                   max="100"
                   .value=${Math.round(100*this._editingEntry.level)}
-                  @value-changed=${e=>{e.stopPropagation(),this._updateEditingEntry({level:parseInt(e.detail.value,10)/100})}}
+                  @change=${e=>{const t=Number(e.target.value);this._updateEditingEntry({level:t/100})}}
                 ></ha-slider>
                 <span class="slider-value">${Math.round(100*this._editingEntry.level)}%</span>
               </div>
@@ -3722,7 +3731,7 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
                   min="0"
                   max="100"
                   .value=${Math.round(100*(this._editingEntry.level_2||0))}
-                  @value-changed=${e=>{e.stopPropagation(),this._updateEditingEntry({level_2:parseInt(e.detail.value,10)/100})}}
+                  @change=${e=>{const t=Number(e.target.value);this._updateEditingEntry({level_2:t/100})}}
                 ></ha-slider>
                 <span class="slider-value"
                   >${Math.round(100*(this._editingEntry.level_2||0))}%</span

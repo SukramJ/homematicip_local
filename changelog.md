@@ -1,3 +1,20 @@
+# Version [2.5.3](https://github.com/SukramJ/homematicip_local/compare/2.5.2...2.5.3) (2026-04-05)
+
+## What's Changed
+
+### Dependencies
+
+#### Bump aiohomematic to [2026.4.1](https://github.com/SukramJ/aiohomematic/compare/2026.4.0...2026.4.1)
+
+- **Clamp schedule level_2 to [0.0, 1.0]**: Schedule level_2 values are now clamped to the valid range
+- **Always populate unconfirmed value on set**: Unconfirmed value is now always populated when setting a data point value
+
+#### Bump homematicip-local-frontend
+
+- Migrate `ha-slider` event handlers and improve mobile layout
+
+---
+
 # Version [2.5.2](https://github.com/SukramJ/homematicip_local/compare/2.4.1...2.5.2) (2026-03-30)
 
 ## What's Changed
