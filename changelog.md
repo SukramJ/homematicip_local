@@ -11,7 +11,8 @@
 
 #### Bump homematicip-local-frontend
 
-- Migrate `ha-slider` event handlers and improve mobile layout
+- Migrate `ha-slider` event handlers from custom `value-changed` to native `change` events (HA 2026.3.0+ compatibility)
+- Improved mobile layout across all packages: stacked footer buttons, full-width buttons on narrow viewports, better touch targets
 
 ---
 
