@@ -175,6 +175,19 @@ BINARY_SENSOR_RULES: list[EntityDescriptionRule] = [
             device_class=BinarySensorDeviceClass.TAMPER,
         ),
     ),
+    EntityDescriptionRule(
+        category=DataPointCategory.BINARY_SENSOR,
+        parameters=(
+            "SABOTAGE_ACCELERATION",
+            "SABOTAGE_BATTERY",
+            "SABOTAGE_MAGNETIC_FIELD",
+            "SABOTAGE_VERTICAL",
+        ),
+        description=diagnostic_binary_sensor(
+            key="SABOTAGE",
+            device_class=BinarySensorDeviceClass.TAMPER,
+        ),
+    ),
     # Window
     EntityDescriptionRule(
         category=DataPointCategory.BINARY_SENSOR,
@@ -182,6 +195,17 @@ BINARY_SENSOR_RULES: list[EntityDescriptionRule] = [
         description=binary_sensor(
             key="WINDOW_STATE",
             device_class=BinarySensorDeviceClass.WINDOW,
+        ),
+    ),
+    # Device-specific: Door lock door sensor (magnetic contact)
+    EntityDescriptionRule(
+        category=DataPointCategory.BINARY_SENSOR,
+        parameters=("STATE",),
+        devices=("HmIP-DLP",),
+        priority=10,
+        description=binary_sensor(
+            key="STATE",
+            device_class=BinarySensorDeviceClass.DOOR,
         ),
     ),
     # Device-specific: DSD-PCB occupancy

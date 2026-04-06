@@ -38,4 +38,26 @@ SWITCH_RULES: list[EntityDescriptionRule] = [
             entity_registry_enabled_default=False,
         ),
     ),
+    # Auto relock
+    EntityDescriptionRule(
+        category=DataPointCategory.SWITCH,
+        parameters=("AUTO_RELOCK_STATE",),
+        description=SwitchEntityDescription(
+            key="AUTO_RELOCK_STATE",
+            device_class=SwitchDeviceClass.SWITCH,
+            entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
+        ),
+    ),
+    # Permission state (access control)
+    EntityDescriptionRule(
+        category=DataPointCategory.SWITCH,
+        parameters=("PERMISSION_STATE",),
+        description=SwitchEntityDescription(
+            key="PERMISSION_STATE",
+            device_class=SwitchDeviceClass.SWITCH,
+            entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
+        ),
+    ),
 ]

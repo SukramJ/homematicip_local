@@ -1,18 +1,30 @@
-# Version [2.5.3](https://github.com/SukramJ/homematicip_local/compare/2.5.2...2.5.3) (2026-04-05)
+# Version [2.6.0](https://github.com/SukramJ/homematicip_local/compare/2.5.2...2.6.0) (2026-04-07)
 
 ## What's Changed
 
+### Integration
+
+- **HmIP-DLP support**: Added entity descriptions for door lock panel — door sensor (binary sensor), sabotage sensors, lock state reason (sensor), auto-relock and permission state (switches)
+
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.1](https://github.com/SukramJ/aiohomematic/compare/2026.4.0...2026.4.1)
+#### Bump aiohomematic to [2026.4.2](https://github.com/SukramJ/aiohomematic/compare/2026.4.0...2026.4.2)
 
 - **Clamp schedule level_2 to [0.0, 1.0]**: Schedule level_2 values are now clamped to the valid range
 - **Always populate unconfirmed value on set**: Unconfirmed value is now always populated when setting a data point value
+- **Additional data points for HmIP-DLP**: Registered sabotage, door state, permission, lock state reason, and auto-relock data points
+- **Multi-channel detection cache**: Registered additional data points in multi-channel detection cache
+- **Fixed multi-channel postfix for data point names**: Corrected multi-channel postfix handling
+- **Ignore HmIP-WRC6-230 in visibility rules**: Excluded HmIP-WRC6-230 from visibility rules
+- **Synthesize missing parameter name translations**: Missing parameter name translations now synthesized from value entries
+- **Fixed spurious optimistic rollbacks for CUxD/CCU-Jack devices**: Optimistic rollbacks no longer triggered for CUxD/CCU-Jack devices
 
 #### Bump homematicip-local-frontend
 
 - Migrate `ha-slider` event handlers from custom `value-changed` to native `change` events (HA 2026.3.0+ compatibility)
 - Improved mobile layout across all packages: stacked footer buttons, full-width buttons on narrow viewports, better touch targets
+- Redesigned device schedule list from grid table to card-based two-line layout
+- Improved combined astro condition descriptions
 
 ---
 

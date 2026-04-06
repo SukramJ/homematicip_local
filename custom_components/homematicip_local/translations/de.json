@@ -382,6 +382,17 @@
                     "unlocked": "Unverriegelt"
                 }
             }, 
+            "lock_state_reason": {
+                "state": {
+                    "manual": "Manuell", 
+                    "manual_inside": "Manuell innen", 
+                    "manual_outside": "Manuell außen", 
+                    "motor": "Motor", 
+                    "motor_after_open": "Motor nach Öffnen", 
+                    "motor_after_open_acked": "Motor nach Öffnen bestätigt", 
+                    "unknown": "Unbekannt"
+                }
+            }, 
             "pipe_level": {
                 "name": "Ventil-Öffnungsgrad"
             }, 

@@ -92,6 +92,16 @@ MISC_SENSOR_RULES: list[EntityDescriptionRule] = [
             translation_key="lock_state",
         ),
     ),
+    # Lock state reason
+    EntityDescriptionRule(
+        category=DataPointCategory.SENSOR,
+        parameters=("LOCK_STATE_REASON",),
+        description=enum_sensor(
+            key="LOCK_STATE_REASON",
+            translation_key="lock_state_reason",
+            enabled_default=False,
+        ),
+    ),
     # Smoke detector alarm status
     EntityDescriptionRule(
         category=DataPointCategory.SENSOR,
