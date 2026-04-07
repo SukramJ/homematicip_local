@@ -694,12 +694,12 @@
             }, 
             "permissions": {
                 "data": {
-                    "non_admin_permissions": "Permissions for non-admin users"
+                    "non_admin_permissions": "Allow non-admin users to edit schedules"
                 }, 
                 "data_description": {
-                    "non_admin_permissions": "Select which operations non-admin users are allowed to perform. Admin users always have full access."
+                    "non_admin_permissions": "When enabled, non-admin users can edit heating schedules via the schedule cards. Admin users always have full access."
                 }, 
-                "description": "Configure which permissions non-admin users have in this integration", 
+                "description": "Configure schedule editing permissions for non-admin users", 
                 "title": "Non-admin permissions"
             }, 
             "programs_sysvars": {
@@ -794,13 +794,6 @@
                 "turquoise": "Turquoise", 
                 "white": "White", 
                 "yellow": "Yellow"
-            }
-        }, 
-        "non_admin_permissions": {
-            "options": {
-                "device_config": "Configure device parameters", 
-                "device_links": "Manage device links", 
-                "schedule_edit": "Edit schedules"
             }
         }
     }, 

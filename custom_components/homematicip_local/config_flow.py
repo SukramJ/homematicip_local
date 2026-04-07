@@ -43,7 +43,6 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
-    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -1478,39 +1477,22 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
         """Handle non-admin permission settings."""
         if user_input is not None:
             new_options = dict(self.entry.options)
-            new_options[CONF_NON_ADMIN_PERMISSIONS] = user_input.get(CONF_NON_ADMIN_PERMISSIONS, [])
+            if user_input.get(CONF_NON_ADMIN_PERMISSIONS, False):
+                new_options[CONF_NON_ADMIN_PERMISSIONS] = ["schedule_edit"]
+            else:
+                new_options[CONF_NON_ADMIN_PERMISSIONS] = []
             self.hass.config_entries.async_update_entry(entry=self.entry, options=new_options)
             return self.async_create_entry(title="", data={})
 
-        current_permissions: list[str] = list(self.entry.options.get(CONF_NON_ADMIN_PERMISSIONS, []))
+        current_enabled = "schedule_edit" in self.entry.options.get(CONF_NON_ADMIN_PERMISSIONS, [])
         return self.async_show_form(
             step_id="permissions",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
+                    vol.Required(
                         CONF_NON_ADMIN_PERMISSIONS,
-                        default=current_permissions,
-                    ): SelectSelector(
-                        config=SelectSelectorConfig(
-                            mode=SelectSelectorMode.LIST,
-                            multiple=True,
-                            options=[
-                                SelectOptionDict(
-                                    value="schedule_edit",
-                                    label="schedule_edit",
-                                ),
-                                SelectOptionDict(
-                                    value="device_config",
-                                    label="device_config",
-                                ),
-                                SelectOptionDict(
-                                    value="device_links",
-                                    label="device_links",
-                                ),
-                            ],
-                            translation_key=CONF_NON_ADMIN_PERMISSIONS,
-                        )
-                    ),
+                        default=current_enabled,
+                    ): BOOLEAN_SELECTOR,
                 }
             ),
         )

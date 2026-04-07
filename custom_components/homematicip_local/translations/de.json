@@ -694,12 +694,12 @@
             }, 
             "permissions": {
                 "data": {
-                    "non_admin_permissions": "Berechtigungen für Nicht-Admin-Benutzer"
+                    "non_admin_permissions": "Nicht-Admin-Benutzern erlauben, Zeitpläne zu bearbeiten"
                 }, 
                 "data_description": {
-                    "non_admin_permissions": "Wähle aus, welche Operationen Nicht-Admin-Benutzer ausführen dürfen. Admin-Benutzer haben immer vollen Zugriff."
+                    "non_admin_permissions": "Wenn aktiviert, können Nicht-Admin-Benutzer Heizungszeitpläne über die Zeitplan-Karten bearbeiten. Admin-Benutzer haben immer vollen Zugriff."
                 }, 
-                "description": "Konfiguriere die Berechtigungen für Nicht-Admin-Benutzer in dieser Integration", 
+                "description": "Zeitplan-Bearbeitungsrechte für Nicht-Admin-Benutzer konfigurieren", 
                 "title": "Nicht-Admin-Berechtigungen"
             }, 
             "programs_sysvars": {
@@ -794,13 +794,6 @@
                 "turquoise": "Türkis", 
                 "white": "Weiß", 
                 "yellow": "Gelb"
-            }
-        }, 
-        "non_admin_permissions": {
-            "options": {
-                "device_config": "Geräteparameter konfigurieren", 
-                "device_links": "Direktverknüpfungen verwalten", 
-                "schedule_edit": "Zeitpläne bearbeiten"
             }
         }
     }, 

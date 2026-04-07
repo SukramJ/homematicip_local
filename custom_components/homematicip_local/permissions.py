@@ -15,12 +15,6 @@ SCOPE_DEVICE_CONFIG: Final = "device_config"
 SCOPE_DEVICE_LINKS: Final = "device_links"
 SCOPE_SYSTEM_ADMIN: Final = "system_admin"
 
-ALL_NON_ADMIN_SCOPES: Final[list[str]] = [
-    SCOPE_SCHEDULE_EDIT,
-    SCOPE_DEVICE_CONFIG,
-    SCOPE_DEVICE_LINKS,
-]
-
 ALL_SCOPES: Final[list[str]] = [
     SCOPE_SCHEDULE_EDIT,
     SCOPE_DEVICE_CONFIG,

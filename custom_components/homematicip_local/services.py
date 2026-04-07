@@ -39,7 +39,7 @@ from homeassistant.helpers.service import (
 
 from .const import DOMAIN, HmipLocalServices
 from .control_unit import ControlUnit
-from .permissions import SCOPE_DEVICE_CONFIG, SCOPE_DEVICE_LINKS, SCOPE_SCHEDULE_EDIT, check_service_permission
+from .permissions import SCOPE_SCHEDULE_EDIT, check_service_permission
 from .support import (
     get_device_address_at_interface_from_identifiers,
     validate_channel_address,
@@ -456,7 +456,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             return await handler(hass=hass, service=service)
         return None
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass=hass,
         domain=DOMAIN,
         service=HmipLocalServices.ADD_LINK,
         service_func=async_call_hmip_local_service,
@@ -591,7 +592,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         schema=SCHEMA_REMOVE_CENTRAL_LINKS,
     )
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass=hass,
         domain=DOMAIN,
         service=HmipLocalServices.REMOVE_LINK,
         service_func=async_call_hmip_local_service,
@@ -612,7 +614,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         schema=SCHEMA_SET_DEVICE_VALUE,
     )
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass=hass,
         domain=DOMAIN,
         service=HmipLocalServices.PUT_LINK_PARAMSET,
         service_func=async_call_hmip_local_service,
@@ -871,10 +874,6 @@ async def _async_service_add_link(*, hass: HomeAssistant, service: ServiceCall) 
     description = service.data.get(CONF_DESCRIPTION, "created by HA")
 
     if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
-        if entry_id := _async_get_entry_id_for_device(hass=hass, hm_device=hm_device):
-            await check_service_permission(
-                hass=hass, entry_id=entry_id, user_id=service.context.user_id, required_scope=SCOPE_DEVICE_LINKS
-            )
         try:
             await hm_device.client.add_link(
                 sender_address=sender_channel_address,
@@ -921,10 +920,6 @@ async def _async_service_remove_link(*, hass: HomeAssistant, service: ServiceCal
     receiver_channel_address = service.data[CONF_RECEIVER_CHANNEL_ADDRESS]
 
     if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
-        if entry_id := _async_get_entry_id_for_device(hass=hass, hm_device=hm_device):
-            await check_service_permission(
-                hass=hass, entry_id=entry_id, user_id=service.context.user_id, required_scope=SCOPE_DEVICE_LINKS
-            )
         try:
             await hm_device.client.remove_link(
                 sender_address=sender_channel_address,
@@ -1194,10 +1189,6 @@ async def _async_service_put_link_paramset(*, hass: HomeAssistant, service: Serv
     rx_mode = service.data.get(CONF_RX_MODE)
 
     if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
-        if entry_id := _async_get_entry_id_for_device(hass=hass, hm_device=hm_device):
-            await check_service_permission(
-                hass=hass, entry_id=entry_id, user_id=service.context.user_id, required_scope=SCOPE_DEVICE_LINKS
-            )
         try:
             await hm_device.client.put_paramset(
                 channel_address=receiver_channel_address,
@@ -1222,10 +1213,6 @@ async def _async_service_put_paramset(*, hass: HomeAssistant, service: ServiceCa
     rx_mode = service.data.get(CONF_RX_MODE)
 
     if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
-        if entry_id := _async_get_entry_id_for_device(hass=hass, hm_device=hm_device):
-            await check_service_permission(
-                hass=hass, entry_id=entry_id, user_id=service.context.user_id, required_scope=SCOPE_DEVICE_CONFIG
-            )
         channel_address = f"{hm_device.address}:{channel_no}" if channel_no is not None else hm_device.address
         try:
             await hm_device.client.put_paramset(
