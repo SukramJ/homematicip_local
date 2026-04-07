@@ -383,6 +383,7 @@
                 }
             }, 
             "lock_state_reason": {
+                "name": "Schließgrund", 
                 "state": {
                     "manual": "Manuell", 
                     "manual_inside": "Manuell innen", 

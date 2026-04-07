@@ -382,6 +382,18 @@
                     "unlocked": "Unlocked"
                 }
             }, 
+            "lock_state_reason": {
+                "name": "Lock State Reason", 
+                "state": {
+                    "manual": "Manual", 
+                    "manual_inside": "Manual inside", 
+                    "manual_outside": "Manual outside", 
+                    "motor": "Motor", 
+                    "motor_after_open": "Motor after open", 
+                    "motor_after_open_acked": "Motor after open acknowledged", 
+                    "unknown": "Unknown"
+                }
+            }, 
             "pipe_level": {
                 "name": "Valve opening"
             }, 
