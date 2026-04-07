@@ -723,6 +723,13 @@
         }
     }, 
     "selector": {
+        "non_admin_permissions": {
+            "options": {
+                "schedule_edit": "Edit schedules",
+                "device_config": "Configure device parameters",
+                "device_links": "Manage device links"
+            }
+        },
         "display_alignment": {
             "options": {
                 "center": "Center", 

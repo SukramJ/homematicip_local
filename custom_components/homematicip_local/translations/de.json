@@ -795,6 +795,13 @@
                 "white": "Weiß", 
                 "yellow": "Gelb"
             }
+        }, 
+        "non_admin_permissions": {
+            "options": {
+                "device_config": "Geräteparameter konfigurieren", 
+                "device_links": "Direktverknüpfungen verwalten", 
+                "schedule_edit": "Zeitpläne bearbeiten"
+            }
         }
     }, 
     "services": {

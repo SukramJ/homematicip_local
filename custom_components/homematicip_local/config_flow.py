@@ -43,6 +43,7 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -1494,10 +1495,20 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
                             mode=SelectSelectorMode.LIST,
                             multiple=True,
                             options=[
-                                "schedule_edit",
-                                "device_config",
-                                "device_links",
+                                SelectOptionDict(
+                                    value="schedule_edit",
+                                    label="schedule_edit",
+                                ),
+                                SelectOptionDict(
+                                    value="device_config",
+                                    label="device_config",
+                                ),
+                                SelectOptionDict(
+                                    value="device_links",
+                                    label="device_links",
+                                ),
                             ],
+                            translation_key=CONF_NON_ADMIN_PERMISSIONS,
                         )
                     ),
                 }

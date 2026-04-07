@@ -795,6 +795,13 @@
                 "white": "White", 
                 "yellow": "Yellow"
             }
+        }, 
+        "non_admin_permissions": {
+            "options": {
+                "device_config": "Configure device parameters", 
+                "device_links": "Manage device links", 
+                "schedule_edit": "Edit schedules"
+            }
         }
     }, 
     "services": {
