@@ -967,7 +967,6 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
               @value-changed=${this._handleValueChanged}
             ></hm-config-form>
           `:j}
-
       ${this.editable?H`
             <div class="action-bar-split">
               <div class="action-bar-left">
@@ -1280,7 +1279,6 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
               ${this._l("device_links.add_link")}
             </ha-button>
           `:j}
-
       ${this._loading?H`<div class="loading">${this._l("common.loading")}</div>`:this._error?H`<div class="error">${this._error}</div>`:0===this._links.length?H`<div class="empty-state">${this._l("device_links.empty")}</div>`:this._renderGroupedLinks()}
     `}_renderGroupedLinks(){const e=this._groupByChannel(),t=[...e.keys()].sort((e,t)=>parseInt(e)-parseInt(t));return H`
       ${t.map(t=>{const i=e.get(t);return H`
@@ -1692,7 +1690,6 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
             </div>
           `:j}
       ${this._hasReceiverParams()||this._hasSenderParams()?j:H`<div class="empty-state">${this._l("link_config.no_params")}</div>`}
-
       ${this.editable?H`
             <div class="action-bar">
               <ha-button

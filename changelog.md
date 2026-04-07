@@ -5,7 +5,7 @@
 ### Integration
 
 - **HmIP-DLP support**: Added entity descriptions for door lock panel — door sensor (binary sensor), sabotage sensors, lock state reason (sensor), auto-relock and permission state (switches)
-- **Granular non-admin permissions**: Backend enforcement for permission scopes (`schedule_edit`, `device_config`, `device_links`, `system_admin`). WebSocket write endpoints use `@require_scope` decorator, service calls check via `check_service_permission()`. Read operations remain accessible to all authenticated users. Configurable per integration instance via Options Flow. Config panel opened to non-admin users (`require_admin=False`); granular access control handled by scopes. New `get_user_permissions` WebSocket endpoint for frontend permission queries.
+- **Non-admin schedule editing**: Non-admin users can edit heating schedules via HACS cards when enabled in Options Flow. Backend enforces permissions via `@require_scope` decorator (WebSocket) and `check_service_permission()` (service calls). New `get_user_permissions` WebSocket endpoint for frontend permission queries. Read operations remain accessible to all authenticated users.
 
 ### Dependencies
 

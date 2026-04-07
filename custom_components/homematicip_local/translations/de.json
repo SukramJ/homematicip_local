@@ -648,7 +648,7 @@
                     "advanced_settings": "Erweiterte Einstellungen", 
                     "connection": "Verbindungseinstellungen", 
                     "interfaces": "Schnittstellenkonfiguration", 
-                    "permissions": "Nicht-Admin-Berechtigungen", 
+                    "permissions": "Zeitplan-Bearbeitung", 
                     "programs_sysvars": "Programme & Systemvariablen"
                 }, 
                 "title": "Integration konfigurieren"
@@ -697,10 +697,9 @@
                     "non_admin_permissions": "Nicht-Admin-Benutzern erlauben, Zeitpläne zu bearbeiten"
                 }, 
                 "data_description": {
-                    "non_admin_permissions": "Wenn aktiviert, können Nicht-Admin-Benutzer Heizungszeitpläne über die Zeitplan-Karten bearbeiten. Admin-Benutzer haben immer vollen Zugriff."
+                    "non_admin_permissions": "Wenn aktiviert, können Nicht-Admin-Benutzer Gerätezeitpläne über die Zeitplan-Karten bearbeiten. Admin-Benutzer haben immer vollen Zugriff."
                 }, 
-                "description": "Zeitplan-Bearbeitungsrechte für Nicht-Admin-Benutzer konfigurieren", 
-                "title": "Nicht-Admin-Berechtigungen"
+                "title": "Zeitplan-Bearbeitung"
             }, 
             "programs_sysvars": {
                 "data": {
