@@ -66,6 +66,9 @@ CONF_CUSTOM_PORTS: Final = "custom_ports"  # Dict of custom interface ports
 CONF_CUSTOM_PORT_CONFIG: Final = "custom_port_config"  # Checkbox for custom port configuration
 CONF_SKIP_BACKEND_DETECTION: Final = "skip_backend_detection"  # Checkbox to skip backend detection
 
+# Non-admin permission scopes (stored in config entry options)
+CONF_NON_ADMIN_PERMISSIONS: Final = "non_admin_permissions"
+
 EVENT_ADDRESS: Final = "address"
 EVENT_CHANNEL_NO: Final = "channel_no"
 EVENT_DEVICE_ADDRESS: Final = "device_address"

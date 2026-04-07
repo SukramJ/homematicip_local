@@ -648,6 +648,7 @@
                     "advanced_settings": "Advanced settings", 
                     "connection": "Connection settings", 
                     "interfaces": "TLS & interfaces", 
+                    "permissions": "Non-admin permissions", 
                     "programs_sysvars": "Programs & system variables"
                 }, 
                 "title": "Configure integration"
@@ -690,6 +691,16 @@
                 }, 
                 "description": "Configure interface ports (TLS is {tls_status})", 
                 "title": "Port configuration"
+            }, 
+            "permissions": {
+                "data": {
+                    "non_admin_permissions": "Permissions for non-admin users"
+                }, 
+                "data_description": {
+                    "non_admin_permissions": "Select which operations non-admin users are allowed to perform. Admin users always have full access."
+                }, 
+                "description": "Configure which permissions non-admin users have in this integration", 
+                "title": "Non-admin permissions"
             }, 
             "programs_sysvars": {
                 "data": {

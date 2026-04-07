@@ -643,15 +643,26 @@
                 "title": "Connection settings"
             }, 
             "init": {
-                "description": "What would you like to configure?", 
+                "description": "What would you like to configure?",
                 "menu_options": {
-                    "advanced_settings": "Advanced settings", 
-                    "connection": "Connection settings", 
-                    "interfaces": "TLS & interfaces", 
+                    "advanced_settings": "Advanced settings",
+                    "connection": "Connection settings",
+                    "interfaces": "TLS & interfaces",
+                    "permissions": "Non-admin permissions",
                     "programs_sysvars": "Programs & system variables"
-                }, 
+                },
                 "title": "Configure integration"
-            }, 
+            },
+            "permissions": {
+                "data": {
+                    "non_admin_permissions": "Permissions for non-admin users"
+                },
+                "data_description": {
+                    "non_admin_permissions": "Select which operations non-admin users are allowed to perform. Admin users always have full access."
+                },
+                "description": "Configure which permissions non-admin users have in this integration",
+                "title": "Non-admin permissions"
+            },
             "interfaces": {
                 "data": {
                     "bidcos_rf_enabled": "Enable Homematic (Bidcos-RF)", 

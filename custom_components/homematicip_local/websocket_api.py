@@ -33,13 +33,22 @@ from aiohomematic_config import (
 from aiohomematic_config.master_profile_store import MasterProfileStore
 from homeassistant.components.websocket_api import async_register_command
 from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.components.websocket_api.decorators import async_response, require_admin, websocket_command
+from homeassistant.components.websocket_api.decorators import async_response, websocket_command
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.storage import Store
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
+from .permissions import (
+    ALL_SCOPES,
+    CONF_NON_ADMIN_PERMISSIONS,
+    SCOPE_DEVICE_CONFIG,
+    SCOPE_DEVICE_LINKS,
+    SCOPE_SCHEDULE_EDIT,
+    SCOPE_SYSTEM_ADMIN,
+    require_scope,
+)
 from .repairs import REPAIR_CALLBACKS
 
 if TYPE_CHECKING:
@@ -147,6 +156,8 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     async_register_command(hass, ws_get_firmware_overview)
     async_register_command(hass, ws_refresh_firmware_data)
     async_register_command(hass, ws_panel_reload_device_config)
+    # User permissions
+    async_register_command(hass, ws_get_user_permissions)
     # Inbox, service messages, alarm messages
     async_register_command(hass, ws_get_inbox_devices)
     async_register_command(hass, ws_accept_inbox_device)
@@ -192,7 +203,6 @@ def _get_master_profile_store(hass: HomeAssistant) -> MasterProfileStore:
 # ---------------------------------------------------------------------------
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/list_devices",
@@ -220,7 +230,6 @@ async def ws_list_devices(
     connection.send_result(msg["id"], {"devices": device_dicts})
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/get_form_schema",
@@ -272,7 +281,6 @@ async def ws_get_form_schema(
     connection.send_result(msg["id"], schema.model_dump())
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/get_paramset",
@@ -309,7 +317,7 @@ async def ws_get_paramset(
     connection.send_result(msg["id"], {"values": values})
 
 
-@require_admin
+@require_scope(SCOPE_DEVICE_CONFIG)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/put_paramset",
@@ -393,7 +401,7 @@ async def ws_put_paramset(
 # ---------------------------------------------------------------------------
 
 
-@require_admin
+@require_scope(SCOPE_DEVICE_CONFIG)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/session_open",
@@ -445,7 +453,7 @@ async def ws_session_open(
     connection.send_result(msg["id"], {"success": True})
 
 
-@require_admin
+@require_scope(SCOPE_DEVICE_CONFIG)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/session_set",
@@ -488,7 +496,7 @@ async def ws_session_set(
     )
 
 
-@require_admin
+@require_scope(SCOPE_DEVICE_CONFIG)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/session_undo",
@@ -528,7 +536,7 @@ async def ws_session_undo(
     )
 
 
-@require_admin
+@require_scope(SCOPE_DEVICE_CONFIG)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/session_redo",
@@ -568,7 +576,7 @@ async def ws_session_redo(
     )
 
 
-@require_admin
+@require_scope(SCOPE_DEVICE_CONFIG)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/session_save",
@@ -687,7 +695,7 @@ async def ws_session_save(
     )
 
 
-@require_admin
+@require_scope(SCOPE_DEVICE_CONFIG)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/session_discard",
@@ -719,7 +727,6 @@ async def ws_session_discard(
 # ---------------------------------------------------------------------------
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/export_paramset",
@@ -775,7 +782,7 @@ async def ws_export_paramset(
     connection.send_result(msg["id"], {"json_data": json_data})
 
 
-@require_admin
+@require_scope(SCOPE_DEVICE_CONFIG)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/import_paramset",
@@ -885,7 +892,7 @@ async def ws_import_paramset(
 # ---------------------------------------------------------------------------
 
 
-@require_admin
+@require_scope(SCOPE_DEVICE_CONFIG)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/copy_paramset",
@@ -951,7 +958,6 @@ async def ws_copy_paramset(
 # ---------------------------------------------------------------------------
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/get_change_history",
@@ -979,7 +985,7 @@ async def ws_get_change_history(
     )
 
 
-@require_admin
+@require_scope(SCOPE_SYSTEM_ADMIN)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/clear_change_history",
@@ -1004,7 +1010,6 @@ async def ws_clear_change_history(
 # ---------------------------------------------------------------------------
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/list_device_links",
@@ -1031,7 +1036,6 @@ async def ws_list_device_links(
     connection.send_result(msg["id"], {"links": [dataclasses.asdict(dl) for dl in device_links]})
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/get_link_form_schema",
@@ -1098,7 +1102,6 @@ async def ws_get_link_form_schema(
     connection.send_result(msg["id"], schema.model_dump())
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/get_link_profiles",
@@ -1180,7 +1183,6 @@ async def ws_get_link_profiles(
     )
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/get_master_profiles",
@@ -1256,7 +1258,6 @@ async def ws_get_master_profiles(
     )
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/get_link_paramset",
@@ -1298,7 +1299,7 @@ async def ws_get_link_paramset(
     connection.send_result(msg["id"], {"values": values})
 
 
-@require_admin
+@require_scope(SCOPE_DEVICE_LINKS)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/put_link_paramset",
@@ -1372,7 +1373,7 @@ async def ws_put_link_paramset(
     connection.send_result(msg["id"], {"success": True})
 
 
-@require_admin
+@require_scope(SCOPE_DEVICE_LINKS)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/add_link",
@@ -1407,7 +1408,7 @@ async def ws_add_link(
     connection.send_result(msg["id"], {"success": True})
 
 
-@require_admin
+@require_scope(SCOPE_DEVICE_LINKS)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/remove_link",
@@ -1438,7 +1439,6 @@ async def ws_remove_link(
     connection.send_result(msg["id"], {"success": True})
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/get_linkable_channels",
@@ -1473,7 +1473,6 @@ async def ws_get_linkable_channels(
 # ---------------------------------------------------------------------------
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/list_schedule_devices",
@@ -1531,7 +1530,7 @@ async def ws_get_climate_schedule(
     connection.send_result(msg["id"], dataclasses.asdict(data))
 
 
-@require_admin
+@require_scope(SCOPE_SCHEDULE_EDIT)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/set_climate_schedule_weekday",
@@ -1574,6 +1573,7 @@ async def ws_set_climate_schedule_weekday(
     connection.send_result(msg["id"], {"success": True})
 
 
+@require_scope(SCOPE_SCHEDULE_EDIT)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/set_climate_active_profile",
@@ -1639,7 +1639,7 @@ async def ws_get_device_schedule(
     connection.send_result(msg["id"], dataclasses.asdict(data))
 
 
-@require_admin
+@require_scope(SCOPE_SCHEDULE_EDIT)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/set_device_schedule",
@@ -1676,7 +1676,7 @@ async def ws_set_device_schedule(
     connection.send_result(msg["id"], {"success": True})
 
 
-@require_admin
+@require_scope(SCOPE_SCHEDULE_EDIT)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/config/reload_device_config",
@@ -1714,7 +1714,6 @@ async def ws_reload_device_config(
 # ---------------------------------------------------------------------------
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/integration/get_system_health",
@@ -1735,7 +1734,6 @@ async def ws_get_system_health(
     connection.send_result(msg["id"], control.central.health.to_dict())
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/integration/get_command_throttle_stats",
@@ -1770,7 +1768,6 @@ async def ws_get_command_throttle_stats(
     connection.send_result(msg["id"], {"throttle_stats": throttle_stats})
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/integration/get_incidents",
@@ -1813,7 +1810,7 @@ async def ws_get_incidents(
     )
 
 
-@require_admin
+@require_scope(SCOPE_SYSTEM_ADMIN)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/integration/clear_incidents",
@@ -1835,7 +1832,7 @@ async def ws_clear_incidents(
     connection.send_result(msg["id"], {"success": True})
 
 
-@require_admin
+@require_scope(SCOPE_SYSTEM_ADMIN)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/integration/clear_cache",
@@ -1857,7 +1854,6 @@ async def ws_clear_cache(
     connection.send_result(msg["id"], {"success": True})
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/integration/get_device_statistics",
@@ -1912,7 +1908,6 @@ async def ws_get_device_statistics(
 # ---------------------------------------------------------------------------
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/ccu/get_system_information",
@@ -1952,7 +1947,7 @@ async def ws_get_system_information(
     )
 
 
-@require_admin
+@require_scope(SCOPE_SYSTEM_ADMIN)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/ccu/create_backup",
@@ -1997,7 +1992,6 @@ async def ws_create_backup(
         connection.send_error(msg["id"], "backup_failed", str(err))
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/ccu/get_hub_data",
@@ -2028,7 +2022,6 @@ async def ws_get_hub_data(
     )
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/ccu/get_install_mode_status",
@@ -2066,7 +2059,7 @@ async def ws_get_install_mode_status(
     connection.send_result(msg["id"], result)
 
 
-@require_admin
+@require_scope(SCOPE_SYSTEM_ADMIN)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/ccu/trigger_install_mode",
@@ -2105,7 +2098,6 @@ async def ws_trigger_install_mode(
     connection.send_result(msg["id"], {"success": True})
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/ccu/get_signal_quality",
@@ -2153,7 +2145,6 @@ async def ws_get_signal_quality(
     connection.send_result(msg["id"], {"devices": devices_data})
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/ccu/get_firmware_overview",
@@ -2205,7 +2196,7 @@ async def ws_get_firmware_overview(
     )
 
 
-@require_admin
+@require_scope(SCOPE_SYSTEM_ADMIN)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/ccu/refresh_firmware_data",
@@ -2232,7 +2223,7 @@ async def ws_refresh_firmware_data(
     connection.send_result(msg["id"], {"success": True})
 
 
-@require_admin
+@require_scope(SCOPE_SCHEDULE_EDIT)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/ccu/reload_device_config",
@@ -2265,7 +2256,6 @@ async def ws_panel_reload_device_config(
     connection.send_result(msg["id"], {"success": True})
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/ccu/get_inbox_devices",
@@ -2297,7 +2287,7 @@ async def ws_get_inbox_devices(
     )
 
 
-@require_admin
+@require_scope(SCOPE_SYSTEM_ADMIN)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/ccu/accept_inbox_device",
@@ -2370,7 +2360,6 @@ async def ws_accept_inbox_device(
     connection.send_result(msg["id"], {"success": True})
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/ccu/get_service_messages",
@@ -2402,7 +2391,6 @@ async def ws_get_service_messages(
     )
 
 
-@require_admin
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/ccu/get_alarm_messages",
@@ -2434,7 +2422,7 @@ async def ws_get_alarm_messages(
     )
 
 
-@require_admin
+@require_scope(SCOPE_SYSTEM_ADMIN)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/ccu/acknowledge_service_message",
@@ -2466,7 +2454,7 @@ async def ws_acknowledge_service_message(
     connection.send_result(msg["id"], {"success": True})
 
 
-@require_admin
+@require_scope(SCOPE_SYSTEM_ADMIN)
 @websocket_command(
     {
         vol.Required("type"): "homematicip_local/ccu/acknowledge_alarm_message",
@@ -2496,3 +2484,41 @@ async def ws_acknowledge_alarm_message(
         return
 
     connection.send_result(msg["id"], {"success": True})
+
+
+# ---------------------------------------------------------------------------
+# User permissions
+# ---------------------------------------------------------------------------
+
+
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/config/get_user_permissions",
+        vol.Required("entry_id"): str,
+    }
+)
+@async_response
+async def ws_get_user_permissions(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return the effective permissions for the current user."""
+    user = connection.user
+    entry = hass.config_entries.async_get_entry(msg["entry_id"])
+    if entry is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    if user.is_admin or user.is_owner:
+        scopes = list(ALL_SCOPES)
+    else:
+        scopes = list(entry.options.get(CONF_NON_ADMIN_PERMISSIONS, []))
+
+    connection.send_result(
+        msg["id"],
+        {
+            "is_admin": user.is_admin,
+            "permissions": scopes,
+        },
+    )

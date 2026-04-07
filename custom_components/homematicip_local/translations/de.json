@@ -648,6 +648,7 @@
                     "advanced_settings": "Erweiterte Einstellungen", 
                     "connection": "Verbindungseinstellungen", 
                     "interfaces": "Schnittstellenkonfiguration", 
+                    "permissions": "Nicht-Admin-Berechtigungen", 
                     "programs_sysvars": "Programme & Systemvariablen"
                 }, 
                 "title": "Integration konfigurieren"
@@ -690,6 +691,16 @@
                 }, 
                 "description": "Schnittstellen-Ports konfigurieren (TLS ist {tls_status})", 
                 "title": "Port-Konfiguration"
+            }, 
+            "permissions": {
+                "data": {
+                    "non_admin_permissions": "Berechtigungen für Nicht-Admin-Benutzer"
+                }, 
+                "data_description": {
+                    "non_admin_permissions": "Wähle aus, welche Operationen Nicht-Admin-Benutzer ausführen dürfen. Admin-Benutzer haben immer vollen Zugriff."
+                }, 
+                "description": "Konfiguriere die Berechtigungen für Nicht-Admin-Benutzer in dieser Integration", 
+                "title": "Nicht-Admin-Berechtigungen"
             }, 
             "programs_sysvars": {
                 "data": {

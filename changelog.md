@@ -5,26 +5,38 @@
 ### Integration
 
 - **HmIP-DLP support**: Added entity descriptions for door lock panel — door sensor (binary sensor), sabotage sensors, lock state reason (sensor), auto-relock and permission state (switches)
+- **Granular non-admin permissions**: Backend enforcement for permission scopes (`schedule_edit`, `device_config`, `device_links`, `system_admin`). WebSocket write endpoints use `@require_scope` decorator, service calls check via `check_service_permission()`. Read operations remain accessible to all authenticated users. Configurable per integration instance via Options Flow. Config panel opened to non-admin users (`require_admin=False`); granular access control handled by scopes. New `get_user_permissions` WebSocket endpoint for frontend permission queries.
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.2](https://github.com/SukramJ/aiohomematic/compare/2026.4.0...2026.4.2)
+#### Bump aiohomematic to [2026.4.2](https://github.com/SukramJ/aiohomematic/compare/2026.3.1...2026.4.2)
 
-- **Clamp schedule level_2 to [0.0, 1.0]**: Schedule level_2 values are now clamped to the valid range
-- **Always populate unconfirmed value on set**: Unconfirmed value is now always populated when setting a data point value
-- **Additional data points for HmIP-DLP**: Registered sabotage, door state, permission, lock state reason, and auto-relock data points
-- **Multi-channel detection cache**: Registered additional data points in multi-channel detection cache
-- **Fixed multi-channel postfix for data point names**: Corrected multi-channel postfix handling
-- **Ignore HmIP-WRC6-230 in visibility rules**: Excluded HmIP-WRC6-230 from visibility rules
-- **Synthesize missing parameter name translations**: Missing parameter name translations now synthesized from value entries
-- **Fixed spurious optimistic rollbacks for CUxD/CCU-Jack devices**: Optimistic rollbacks no longer triggered for CUxD/CCU-Jack devices
+- Additional data points for HmIP-DLP (door state, permission, lock state reason, auto-relock, sabotage)
+- Multi-channel detection cache for additional data points
+- Synthesize missing parameter name translations from value entries
+- Clamp schedule level_2 to [0.0, 1.0]
+- Always populate unconfirmed value on set (fixes unknown state after setting same value)
+- Fixed multi-channel postfix for data point names
+- Fixed spurious optimistic rollbacks for CUxD/CCU-Jack devices
+- Ignore HmIP-WRC6-230 in visibility rules
+
+#### Bump aiohomematic-config to [2026.3.5](https://github.com/SukramJ/aiohomematic-config/compare/2026.3.1...2026.3.5)
+
+- Easymode metadata enrichment: conditional visibility, presets, subset groups
+- Cross-validation constraints model and semantic parameter grouping
+- Master profile store for MASTER paramset easymode profiles
+- HmIP channel type resolution for correct CCU translations
+- Python 3.14 minimum
 
 #### Bump homematicip-local-frontend
 
-- Migrate `ha-slider` event handlers from custom `value-changed` to native `change` events (HA 2026.3.0+ compatibility)
-- Improved mobile layout across all packages: stacked footer buttons, full-width buttons on narrow viewports, better touch targets
-- Redesigned device schedule list from grid table to card-based two-line layout
-- Improved combined astro condition descriptions
+- Non-admin permissions (Phase 2): removed frontend admin checks, backend-enforced permission scopes, read-only mode for restricted views, `getUserPermissions()` API
+- Redesigned device schedule list from grid table to card-based two-line layout with condition descriptions
+- OpenCCU dashboard: Inbox, Service Messages, Alarm Messages with acknowledge/accept actions
+- Easymode support for paramset editor: conditional visibility, presets, subset groups
+- Integration dashboard: system health, device statistics, throttle stats, incidents, cache management
+- HA 2026.3.0+/2026.4.0+ compatibility: migrated to native HA components, fixed `ha-dialog`/`ha-select`/`ha-slider` event handling
+- Improved mobile layout across all packages
 
 ---
 

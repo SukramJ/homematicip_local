@@ -70,7 +70,7 @@ async def async_register_panel(hass: HomeAssistant) -> None:
         sidebar_title=_PANEL_TITLES.get(hass.config.language, _DEFAULT_PANEL_TITLE),
         sidebar_icon=PANEL_ICON,
         module_url=_PANEL_URL,
-        require_admin=True,
+        require_admin=False,
         config={"_panel_custom": {"name": PANEL_NAME, "module_url": _PANEL_URL}},
     )
     _LOGGER.debug("Registered Homematic configuration panel at %s", _PANEL_URL)

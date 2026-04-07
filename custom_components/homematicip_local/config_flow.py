@@ -73,6 +73,7 @@ from .const import (
     CONF_JSON_PORT,
     CONF_LISTEN_ON_ALL_IP,
     CONF_MQTT_PREFIX,
+    CONF_NON_ADMIN_PERMISSIONS,
     CONF_OPTIONAL_SETTINGS,
     CONF_PROGRAM_MARKERS,
     CONF_SKIP_BACKEND_DETECTION,
@@ -1366,7 +1367,7 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
         """Show menu for options configuration."""
         return self.async_show_menu(
             step_id="init",
-            menu_options=["connection", "interfaces", "programs_sysvars", "advanced_settings"],
+            menu_options=["connection", "interfaces", "programs_sysvars", "advanced_settings", "permissions"],
         )
 
     async def async_step_interfaces(self, interface_input: ConfigType | None = None) -> ConfigFlowResult:
@@ -1470,6 +1471,37 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
             data_schema=get_port_config_schema(data=self.data),
             errors=errors,
             description_placeholders=description_placeholders,
+        )
+
+    async def async_step_permissions(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Handle non-admin permission settings."""
+        if user_input is not None:
+            new_options = dict(self.entry.options)
+            new_options[CONF_NON_ADMIN_PERMISSIONS] = user_input.get(CONF_NON_ADMIN_PERMISSIONS, [])
+            self.hass.config_entries.async_update_entry(entry=self.entry, options=new_options)
+            return self.async_create_entry(title="", data={})
+
+        current_permissions: list[str] = list(self.entry.options.get(CONF_NON_ADMIN_PERMISSIONS, []))
+        return self.async_show_form(
+            step_id="permissions",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_NON_ADMIN_PERMISSIONS,
+                        default=current_permissions,
+                    ): SelectSelector(
+                        config=SelectSelectorConfig(
+                            mode=SelectSelectorMode.LIST,
+                            multiple=True,
+                            options=[
+                                "schedule_edit",
+                                "device_config",
+                                "device_links",
+                            ],
+                        )
+                    ),
+                }
+            ),
         )
 
     async def async_step_programs_sysvars(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
