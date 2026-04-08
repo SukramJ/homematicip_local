@@ -1305,7 +1305,7 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
                         unique_id=system_information.serial,
                         data=self.data,
                     )
-                return self.async_create_entry(title="", data={})
+                return self.async_create_entry(title="", data=dict(self.entry.options))
             except AuthFailure:
                 errors["base"] = "invalid_auth"
                 description_placeholders["invalid_items"] = self.data[CONF_HOST]
@@ -1345,7 +1345,7 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
                         unique_id=system_information.serial,
                         data=self.data,
                     )
-                return self.async_create_entry(title="", data={})
+                return self.async_create_entry(title="", data=dict(self.entry.options))
             except AuthFailure:
                 errors["base"] = "invalid_auth"
                 description_placeholders["invalid_items"] = self.data[CONF_HOST]
@@ -1392,7 +1392,7 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
                         unique_id=system_information.serial,
                         data=self.data,
                     )
-                return self.async_create_entry(title="", data={})
+                return self.async_create_entry(title="", data=dict(self.entry.options))
             except AuthFailure:
                 # Auth errors should go back to connection step
                 _LOGGER.debug("Options Flow: Authentication failed")
@@ -1436,7 +1436,7 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
                         unique_id=system_information.serial,
                         data=self.data,
                     )
-                return self.async_create_entry(title="", data={})
+                return self.async_create_entry(title="", data=dict(self.entry.options))
             except AuthFailure:
                 errors["base"] = "invalid_auth"
                 description_placeholders["invalid_items"] = self.data[CONF_HOST]
@@ -1476,13 +1476,14 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
     async def async_step_permissions(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
         """Handle non-admin permission settings."""
         if user_input is not None:
-            new_options = dict(self.entry.options)
             if user_input.get(CONF_NON_ADMIN_PERMISSIONS, False):
-                new_options[CONF_NON_ADMIN_PERMISSIONS] = ["schedule_edit"]
+                permissions: list[str] = ["schedule_edit"]
             else:
-                new_options[CONF_NON_ADMIN_PERMISSIONS] = []
+                permissions = []
+            new_options = dict(self.entry.options)
+            new_options[CONF_NON_ADMIN_PERMISSIONS] = permissions
             self.hass.config_entries.async_update_entry(entry=self.entry, options=new_options)
-            return self.async_create_entry(title="", data={})
+            return self.async_create_entry(title="", data=new_options)
 
         current_enabled = "schedule_edit" in self.entry.options.get(CONF_NON_ADMIN_PERMISSIONS, [])
         return self.async_show_form(
@@ -1525,7 +1526,7 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
                         unique_id=system_information.serial,
                         data=self.data,
                     )
-                return self.async_create_entry(title="", data={})
+                return self.async_create_entry(title="", data=dict(self.entry.options))
             except AuthFailure:
                 errors["base"] = "invalid_auth"
                 description_placeholders["invalid_items"] = self.data[CONF_HOST]
