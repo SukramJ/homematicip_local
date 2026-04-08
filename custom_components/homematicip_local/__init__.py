@@ -57,7 +57,7 @@ from .const import (
 )
 from .control_unit import ControlConfig, ControlUnit, get_storage_directory
 from .device_icon import ICON_VIEW_REGISTERED_KEY, DeviceIconView
-from .panel import async_register_panel, async_unregister_panel
+from .panel import async_register_cards, async_register_panel, async_unregister_cards, async_unregister_panel
 from .services import async_get_loaded_config_entries, async_setup_services, async_unload_services
 from .support import get_aiohomematic_version, get_device_address_at_interface_from_identifiers
 from .websocket_api import async_register_websocket_commands
@@ -195,6 +195,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
     else:
         async_unregister_panel(hass)
 
+    # Register Lovelace cards (always, independent of panel setting)
+    await async_register_cards(hass)
+
     # Register on HA stop event to gracefully shutdown Homematic(IP) Local connection
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, control.stop_central)
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -213,6 +216,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -
         await control.stop_central()
     if len(async_get_loaded_config_entries(hass=hass)) == 0:
         async_unregister_panel(hass)
+        async_unregister_cards(hass)
         del hass.data[HM_KEY]
     async_notify_backup_listeners(hass)
     return unload_ok

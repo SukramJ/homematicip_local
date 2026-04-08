@@ -4,8 +4,15 @@
 
 ### Integration
 
+- **Bundled Lovelace cards**: All frontend cards are now delivered directly through the integration — no separate HACS installation required. Cards are automatically available once the integration is loaded. Existing standalone HACS installations are detected and skipped with a console warning.
+  - **Climate Schedule Card** (`homematicip-local-climate-schedule-card`): Visual weekly thermostat schedule editor with profile switching, copy/paste, and import/export
+  - **Schedule Card** (`homematicip-local-schedule-card`): Event-based schedule editor for switches, lights, covers, and valves with fixed-time and astronomical conditions
+  - **Status Cards** (`homematicip-local-status-card`) — three new cards in one bundle:
+    - `homematicip-system-health-card`: System health score, device statistics, Duty Cycle/Carrier Sense levels per radio module, optional incidents list
+    - `homematicip-device-status-card`: Device status overview with filtering (all/problems/unreachable/low battery/config pending)
+    - `homematicip-messages-card`: Service messages and alarm messages with acknowledge buttons
 - **HmIP-DLP support**: Added entity descriptions for door lock panel — door sensor (binary sensor), sabotage sensors, lock state reason (sensor), auto-relock and permission state (switches)
-- **Non-admin schedule editing**: Non-admin users can edit device schedules via HACS cards when enabled in Options Flow. Backend enforces permissions via `@require_scope` decorator (WebSocket) and `check_service_permission()` (service calls). New `get_user_permissions` WebSocket endpoint for frontend permission queries. Read operations remain accessible to all authenticated users.
+- **Non-admin schedule editing**: Non-admin users can edit device schedules via the schedule cards when enabled in Options Flow. Backend enforces permissions via `@require_scope` decorator (WebSocket) and `check_service_permission()` (service calls). New `get_user_permissions` WebSocket endpoint for frontend permission queries.
 
 ### Dependencies
 
@@ -31,6 +38,7 @@
 
 #### Bump homematicip-local-frontend
 
+- Integration-bundled cards: climate schedule card, schedule card, and three new status cards delivered through the integration with automatic registration and HACS migration guard
 - Non-admin permissions (Phase 2): removed frontend admin checks, backend-enforced permission scopes, read-only mode for restricted views
 - Redesigned device schedule list: three-line card layout with condition type, parameters, and weekday badges
 - OpenCCU dashboard: Inbox, Service Messages, Alarm Messages with acknowledge/accept actions
