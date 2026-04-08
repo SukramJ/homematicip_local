@@ -113,12 +113,14 @@ def mock_facade() -> Mock:
                 channels=(
                     ConfigurableDeviceChannel(
                         address="VCU0000001:0",
+                        channel_name="Test Switch:0",
                         channel_type="MAINTENANCE",
                         channel_type_label="Maintenance",
                         paramset_keys=("MASTER",),
                     ),
                     ConfigurableDeviceChannel(
                         address="VCU0000001:1",
+                        channel_name="Test Switch:1",
                         channel_type="SWITCH",
                         channel_type_label="Switch",
                         paramset_keys=("MASTER", "VALUES"),
@@ -247,6 +249,7 @@ class TestWsListDevices:
                     channels=(
                         ConfigurableDeviceChannel(
                             address="VCU0000001:1",
+                            channel_name="Test Switch:1",
                             channel_type="SWITCH",
                             channel_type_label="Switch",
                             paramset_keys=("MASTER",),
