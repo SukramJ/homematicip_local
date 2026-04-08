@@ -1,17 +1,18 @@
-# Version [2.6.0](https://github.com/SukramJ/homematicip_local/compare/2.5.2...2.6.0) (2026-04-07)
+# Version [2.6.0](https://github.com/SukramJ/homematicip_local/compare/2.5.2...2.6.0) (2026-04-08)
 
 ## What's Changed
 
 ### Integration
 
 - **HmIP-DLP support**: Added entity descriptions for door lock panel — door sensor (binary sensor), sabotage sensors, lock state reason (sensor), auto-relock and permission state (switches)
-- **Non-admin schedule editing**: Non-admin users can edit heating schedules via HACS cards when enabled in Options Flow. Backend enforces permissions via `@require_scope` decorator (WebSocket) and `check_service_permission()` (service calls). New `get_user_permissions` WebSocket endpoint for frontend permission queries. Read operations remain accessible to all authenticated users.
+- **Non-admin schedule editing**: Non-admin users can edit device schedules via HACS cards when enabled in Options Flow. Backend enforces permissions via `@require_scope` decorator (WebSocket) and `check_service_permission()` (service calls). New `get_user_permissions` WebSocket endpoint for frontend permission queries. Read operations remain accessible to all authenticated users.
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.2](https://github.com/SukramJ/aiohomematic/compare/2026.3.1...2026.4.2)
+#### Bump aiohomematic to [2026.4.3](https://github.com/SukramJ/aiohomematic/compare/2026.3.1...2026.4.3)
 
 - Additional data points for HmIP-DLP (door state, permission, lock state reason, auto-relock, sabotage)
+- Channel name exposed in device link and linkable channel data
 - Multi-channel detection cache for additional data points
 - Synthesize missing parameter name translations from value entries
 - Clamp schedule level_2 to [0.0, 1.0]
@@ -20,18 +21,18 @@
 - Fixed spurious optimistic rollbacks for CUxD/CCU-Jack devices
 - Ignore HmIP-WRC6-230 in visibility rules
 
-#### Bump aiohomematic-config to [2026.3.5](https://github.com/SukramJ/aiohomematic-config/compare/2026.3.1...2026.3.5)
+#### Bump aiohomematic-config to [2026.4.0](https://github.com/SukramJ/aiohomematic-config/compare/2026.3.1...2026.4.0)
 
+- Receiver type alias resolution for shared easymode profiles (e.g. `OPTICAL_SIGNAL_RECEIVER` → `DIMMER_VIRTUAL_RECEIVER`)
 - Easymode metadata enrichment: conditional visibility, presets, subset groups
 - Cross-validation constraints model and semantic parameter grouping
 - Master profile store for MASTER paramset easymode profiles
 - HmIP channel type resolution for correct CCU translations
-- Python 3.14 minimum
 
 #### Bump homematicip-local-frontend
 
-- Non-admin permissions (Phase 2): removed frontend admin checks, backend-enforced permission scopes, read-only mode for restricted views, `getUserPermissions()` API
-- Redesigned device schedule list from grid table to card-based two-line layout with condition descriptions
+- Non-admin permissions (Phase 2): removed frontend admin checks, backend-enforced permission scopes, read-only mode for restricted views
+- Redesigned device schedule list: three-line card layout with condition type, parameters, and weekday badges
 - OpenCCU dashboard: Inbox, Service Messages, Alarm Messages with acknowledge/accept actions
 - Easymode support for paramset editor: conditional visibility, presets, subset groups
 - Integration dashboard: system health, device statistics, throttle stats, incidents, cache management
