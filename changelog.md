@@ -9,10 +9,10 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.3](https://github.com/SukramJ/aiohomematic/compare/2026.3.1...2026.4.3)
+#### Bump aiohomematic to [2026.4.4](https://github.com/SukramJ/aiohomematic/compare/2026.3.1...2026.4.4)
 
 - Additional data points for HmIP-DLP (door state, permission, lock state reason, auto-relock, sabotage)
-- Channel name exposed in device link and linkable channel data
+- Channel name exposed in configurable device channels, device links, and linkable channels
 - Multi-channel detection cache for additional data points
 - Synthesize missing parameter name translations from value entries
 - Clamp schedule level_2 to [0.0, 1.0]
