@@ -131,6 +131,8 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     async_register_command(hass, ws_add_link)
     async_register_command(hass, ws_remove_link)
     async_register_command(hass, ws_get_linkable_channels)
+    # Determine parameter
+    async_register_command(hass, ws_determine_parameter)
     # Schedule commands
     async_register_command(hass, ws_list_schedule_devices)
     async_register_command(hass, ws_get_climate_schedule)
@@ -156,6 +158,10 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     async_register_command(hass, ws_get_firmware_overview)
     async_register_command(hass, ws_refresh_firmware_data)
     async_register_command(hass, ws_panel_reload_device_config)
+    # Firmware update trigger
+    async_register_command(hass, ws_update_firmware)
+    # Link profile testing
+    async_register_command(hass, ws_test_link_profile)
     # User permissions
     async_register_command(hass, ws_get_user_permissions)
     # Inbox, service messages, alarm messages
@@ -2484,6 +2490,181 @@ async def ws_acknowledge_alarm_message(
         return
 
     connection.send_result(msg["id"], {"success": True})
+
+
+# ---------------------------------------------------------------------------
+# Determine parameter
+# ---------------------------------------------------------------------------
+
+
+@require_scope(SCOPE_DEVICE_CONFIG)
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/config/determine_parameter",
+        vol.Required("entry_id"): str,
+        vol.Required("interface_id"): str,
+        vol.Required("channel_address"): str,
+        vol.Required("parameter_id"): str,
+    }
+)
+@async_response
+async def ws_determine_parameter(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Auto-detect a parameter value from the device."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    device_address = get_device_address(address=msg["channel_address"])
+    device = control.central.device_coordinator.get_device(address=device_address)
+    if device is None:
+        connection.send_error(msg["id"], "device_not_found", "Device not found")
+        return
+
+    try:
+        value = await device.client.determine_parameter(
+            channel_address=msg["channel_address"],
+            parameter=msg["parameter_id"],
+        )
+    except BaseHomematicException as err:
+        connection.send_error(msg["id"], "determine_failed", str(err))
+        return
+
+    connection.send_result(msg["id"], {"success": True, "value": value})
+
+
+# ---------------------------------------------------------------------------
+# Firmware update trigger
+# ---------------------------------------------------------------------------
+
+
+@require_scope(SCOPE_SYSTEM_ADMIN)
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/ccu/update_firmware",
+        vol.Required("entry_id"): str,
+        vol.Required("device_address"): str,
+    }
+)
+@async_response
+async def ws_update_firmware(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Trigger a firmware update for a device."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    device = control.central.device_coordinator.get_device(address=msg["device_address"])
+    if device is None:
+        connection.send_error(msg["id"], "device_not_found", "Device not found")
+        return
+
+    if not device.firmware_updatable:
+        connection.send_error(msg["id"], "not_updatable", "Device firmware is not updatable")
+        return
+
+    try:
+        success = await device.update_firmware(refresh_after_update_intervals=(10, 60))
+    except BaseHomematicException as err:
+        connection.send_error(msg["id"], "update_failed", str(err))
+        return
+
+    connection.send_result(msg["id"], {"success": success})
+
+
+# ---------------------------------------------------------------------------
+# Link profile testing
+# ---------------------------------------------------------------------------
+
+
+@require_scope(SCOPE_DEVICE_LINKS)
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/config/test_link_profile",
+        vol.Required("entry_id"): str,
+        vol.Required("interface_id"): str,
+        vol.Required("sender_channel_address"): str,
+        vol.Required("receiver_channel_address"): str,
+        vol.Required("profile_id"): int,
+    }
+)
+@async_response
+async def ws_test_link_profile(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """
+    Test a link profile by temporarily applying it.
+
+    This writes the profile's default values to the link paramset so the user
+    can observe the effect. The values remain until overwritten.
+    """
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    receiver_addr = msg["receiver_channel_address"]
+    sender_addr = msg["sender_channel_address"]
+
+    # Resolve devices and channel types
+    receiver_device_addr = get_device_address(address=receiver_addr)
+    receiver_device = control.central.device_coordinator.get_device(address=receiver_device_addr)
+    if receiver_device is None:
+        connection.send_error(msg["id"], "device_not_found", "Receiver device not found")
+        return
+
+    receiver_channel = receiver_device.get_channel(channel_address=receiver_addr)
+    receiver_channel_type = receiver_channel.type_name if receiver_channel else ""
+
+    sender_device_addr = get_device_address(address=sender_addr)
+    sender_device = control.central.device_coordinator.get_device(address=sender_device_addr)
+    sender_channel = sender_device.get_channel(channel_address=sender_addr) if sender_device else None
+    sender_channel_type = sender_channel.type_name if sender_channel else ""
+
+    # Get the profile
+    profile_store = _get_profile_store(hass)
+    profiles = await profile_store.get_profiles(
+        receiver_channel_type=receiver_channel_type,
+        sender_channel_type=sender_channel_type,
+        locale=hass.config.language,
+    )
+    if profiles is None:
+        connection.send_error(msg["id"], "no_profiles", "No profiles available for this link")
+        return
+
+    profile = next((p for p in profiles if p.id == msg["profile_id"]), None)
+    if profile is None:
+        connection.send_error(msg["id"], "profile_not_found", f"Profile {msg['profile_id']} not found")
+        return
+
+    # Build values: merge default_values and fixed_params
+    values_to_apply: dict[str, Any] = {}
+    values_to_apply.update(profile.fixed_params)
+    values_to_apply.update(profile.default_values)
+
+    if not values_to_apply:
+        connection.send_error(msg["id"], "no_values", "Profile has no values to apply")
+        return
+
+    try:
+        await receiver_device.client.put_paramset(
+            channel_address=receiver_addr,
+            paramset_key_or_link_address=sender_addr,
+            values=values_to_apply,
+            check_against_pd=True,
+        )
+    except BaseHomematicException as err:
+        connection.send_error(msg["id"], "apply_failed", str(err))
+        return
+
+    connection.send_result(msg["id"], {"success": True, "applied_values": values_to_apply})
 
 
 # ---------------------------------------------------------------------------

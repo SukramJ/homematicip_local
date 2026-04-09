@@ -1,23 +1,31 @@
-# Version [2.6.0](https://github.com/SukramJ/homematicip_local/compare/2.5.2...2.6.0) (2026-04-08)
+# Version [2.6.0](https://github.com/SukramJ/homematicip_local/compare/2.5.2...2.6.0) (2026-04-09)
 
 ## What's Changed
 
+### New Frontend Cards
+
+All frontend cards are now delivered directly through the integration — no separate HACS installation required. Cards are automatically available once the integration is loaded. Existing standalone HACS installations are detected and skipped with a console warning.
+
+- **Climate Schedule Card** (`homematicip-local-climate-schedule-card`): Visual weekly thermostat schedule editor with profile switching, copy/paste, and import/export. Edit heating schedules conveniently right from your Home Assistant dashboard.
+- **Schedule Card** (`homematicip-local-schedule-card`): Schedule editor for switches, lights, covers, and valves with fixed-time and astronomical conditions (sunrise/sunset). Supports multiple switching points per day with different values.
+- **Status Cards** (`homematicip-local-status-card`) — three new cards in one bundle:
+  - `homematicip-system-health-card`: System health score, device statistics, Duty Cycle/Carrier Sense levels per radio module, optional incidents list
+  - `homematicip-device-status-card`: Device status overview with filtering (all/problems/unreachable/low battery/config pending)
+  - `homematicip-messages-card`: Service and alarm messages with acknowledge buttons
+
 ### Integration
 
-- **Bundled Lovelace cards**: All frontend cards are now delivered directly through the integration — no separate HACS installation required. Cards are automatically available once the integration is loaded. Existing standalone HACS installations are detected and skipped with a console warning.
-  - **Climate Schedule Card** (`homematicip-local-climate-schedule-card`): Visual weekly thermostat schedule editor with profile switching, copy/paste, and import/export
-  - **Schedule Card** (`homematicip-local-schedule-card`): Event-based schedule editor for switches, lights, covers, and valves with fixed-time and astronomical conditions
-  - **Status Cards** (`homematicip-local-status-card`) — three new cards in one bundle:
-    - `homematicip-system-health-card`: System health score, device statistics, Duty Cycle/Carrier Sense levels per radio module, optional incidents list
-    - `homematicip-device-status-card`: Device status overview with filtering (all/problems/unreachable/low battery/config pending)
-    - `homematicip-messages-card`: Service messages and alarm messages with acknowledge buttons
 - **HmIP-DLP support**: Added entity descriptions for door lock panel — door sensor (binary sensor), sabotage sensors, lock state reason (sensor), auto-relock and permission state (switches)
 - **Non-admin schedule editing**: Non-admin users can edit device schedules via the schedule cards when enabled in Options Flow. Backend enforces permissions via `@require_scope` decorator (WebSocket) and `check_service_permission()` (service calls). New `get_user_permissions` WebSocket endpoint for frontend permission queries.
+- **Auto-detect parameter values**: New `determine_parameter` WebSocket endpoint for auto-detecting parameter values on a channel via XML-RPC
+- **Firmware update trigger**: New `update_firmware` WebSocket endpoint to trigger device firmware updates from the config panel
+- **Link profile testing**: New `test_link_profile` WebSocket endpoint to apply link profile default values for testing
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.4](https://github.com/SukramJ/aiohomematic/compare/2026.3.1...2026.4.4)
+#### Bump aiohomematic to [2026.4.6](https://github.com/SukramJ/aiohomematic/compare/2026.3.1...2026.4.6)
 
+- `determine_parameter` support for auto-detecting parameter values via XML-RPC
 - Additional data points for HmIP-DLP (door state, permission, lock state reason, auto-relock, sabotage)
 - Channel name exposed in configurable device channels, device links, and linkable channels
 - Multi-channel detection cache for additional data points
@@ -26,10 +34,10 @@
 - Always populate unconfirmed value on set (fixes unknown state after setting same value)
 - Fixed multi-channel postfix for data point names
 - Fixed spurious optimistic rollbacks for CUxD/CCU-Jack devices
-- Ignore HmIP-WRC6-230 in visibility rules
 
-#### Bump aiohomematic-config to [2026.4.0](https://github.com/SukramJ/aiohomematic-config/compare/2026.3.1...2026.4.0)
+#### Bump aiohomematic-config to [2026.4.1](https://github.com/SukramJ/aiohomematic-config/compare/2026.3.1...2026.4.1)
 
+- `operations` field on `FormParameter` exposing the raw OPERATIONS bitfield from the paramset description
 - Receiver type alias resolution for shared easymode profiles (e.g. `OPTICAL_SIGNAL_RECEIVER` → `DIMMER_VIRTUAL_RECEIVER`)
 - Easymode metadata enrichment: conditional visibility, presets, subset groups
 - Cross-validation constraints model and semantic parameter grouping
@@ -38,13 +46,19 @@
 
 #### Bump homematicip-local-frontend
 
-- Integration-bundled cards: climate schedule card, schedule card, and three new status cards delivered through the integration with automatic registration and HACS migration guard
-- Non-admin permissions (Phase 2): removed frontend admin checks, backend-enforced permission scopes, read-only mode for restricted views
-- Redesigned device schedule list: three-line card layout with condition type, parameters, and weekday badges
-- OpenCCU dashboard: Inbox, Service Messages, Alarm Messages with acknowledge/accept actions
-- Easymode support for paramset editor: conditional visibility, presets, subset groups
-- Integration dashboard: system health, device statistics, throttle stats, incidents, cache management
-- HA 2026.3.0+/2026.4.0+ compatibility: migrated to native HA components, fixed `ha-dialog`/`ha-select`/`ha-slider` event handling
+- UX Review — Full CCU Parity & Mobile Optimization (57 items resolved)
+- Expert mode toggle, auto-detect button, link profile testing, firmware update trigger
+- Responsive schedule editor and mobile card layouts for all tables
+- Inline `<ha-alert>` replacing all `alert()` calls
+- Skeleton loading, swipe-to-delete, mobile day view with swipe gestures
+- Device/link list sorting, virtual channel badges
+- Accessibility: aria-live regions, keyboard navigation, focus management
+- Non-admin permissions: backend-enforced permission scopes, read-only mode
+- Redesigned device schedule list: three-line card layout
+- OpenCCU dashboard: Inbox, Service Messages, Alarm Messages
+- Easymode support for paramset editor
+- Integration dashboard: system health, device statistics, throttle stats, incidents
+- HA 2026.3.0+/2026.4.0+ compatibility
 - Improved mobile layout across all packages
 
 ---
