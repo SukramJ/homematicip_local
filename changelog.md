@@ -15,6 +15,7 @@ All frontend cards are now delivered directly through the integration — no sep
 
 ### Integration
 
+- **Config panel enabled by default**: The device configuration panel now appears in the sidebar automatically for CCU backends — no manual activation required. Homegear instances are excluded (panel not supported). Users who don't need it can disable it in Advanced Options. Existing config entries are migrated to the new default.
 - **HmIP-DLP support**: Added entity descriptions for door lock panel — door sensor (binary sensor), sabotage sensors, lock state reason (sensor), auto-relock and permission state (switches)
 - **Non-admin schedule editing**: Non-admin users can edit device schedules via the schedule cards when enabled in Options Flow. Backend enforces permissions via `@require_scope` decorator (WebSocket) and `check_service_permission()` (service calls). New `get_user_permissions` WebSocket endpoint for frontend permission queries.
 - **Auto-detect parameter values**: New `determine_parameter` WebSocket endpoint for auto-detecting parameter values on a channel via XML-RPC
@@ -46,6 +47,7 @@ All frontend cards are now delivered directly through the integration — no sep
 
 #### Bump homematicip-local-frontend
 
+- Config panel entry selector filters out Homegear instances (CCU-only)
 - UX Review — Full CCU Parity & Mobile Optimization (57 items resolved)
 - Expert mode toggle, auto-detect button, link profile testing, firmware update trigger
 - Responsive schedule editor and mobile card layouts for all tables

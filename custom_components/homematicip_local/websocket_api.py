@@ -2696,10 +2696,15 @@ async def ws_get_user_permissions(
     else:
         scopes = list(entry.options.get(CONF_NON_ADMIN_PERMISSIONS, []))
 
+    backend: str | None = None
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is not None:
+        backend = control.central.model
+
     connection.send_result(
         msg["id"],
         {
             "is_admin": user.is_admin,
             "permissions": scopes,
+            "backend": backend,
         },
     )

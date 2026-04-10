@@ -114,7 +114,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
                 f"&device={hm_device.address}"
                 f"&interface={hm_device.interface_id}"
             )
-            if control_unit.enable_config_panel
+            if not control_unit.disable_config_panel
             else None,
             manufacturer=hm_device.manufacturer,
             model=hm_device.model,

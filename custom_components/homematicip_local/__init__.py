@@ -14,6 +14,7 @@ from aiohomematic import __version__ as HAHM_VERSION
 from aiohomematic.const import (
     DEFAULT_ENABLE_SYSVAR_SCAN,
     DEFAULT_UN_IGNORES,
+    Backend,
     IntegrationIssueType,
     OptionalSettings,
     is_interface_default_port,
@@ -37,7 +38,7 @@ from .const import (
     CONF_CALLBACK_PORT_XML_RPC,
     CONF_COMMAND_THROTTLE_INTERVAL,
     CONF_CUSTOM_PORTS,
-    CONF_ENABLE_CONFIG_PANEL,
+    CONF_DISABLE_CONFIG_PANEL,
     CONF_ENABLE_PROGRAM_SCAN,
     CONF_ENABLE_SYSTEM_NOTIFICATIONS,
     CONF_ENABLE_SYSVAR_SCAN,
@@ -48,7 +49,7 @@ from .const import (
     CONF_UN_IGNORES,
     DEFAULT_AUTO_CONFIRM_NEW_DEVICES_TIMEOUT,
     DEFAULT_COMMAND_THROTTLE_INTERVAL,
-    DEFAULT_ENABLE_CONFIG_PANEL,
+    DEFAULT_DISABLE_CONFIG_PANEL,
     DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS,
     DEFAULT_SYS_SCAN_INTERVAL,
     DOMAIN,
@@ -105,11 +106,14 @@ def _cleanup_stale_issues(*, hass: HomeAssistant, entry_id: str) -> None:
 
 
 def _any_entry_has_panel_enabled(*, hass: HomeAssistant) -> bool:
-    """Return True if any loaded config entry has the config panel enabled."""
-    return any(
-        entry.data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_ENABLE_CONFIG_PANEL, DEFAULT_ENABLE_CONFIG_PANEL)
-        for entry in hass.config_entries.async_entries(domain=DOMAIN, include_ignore=False, include_disabled=False)
-    )
+    """Return True if any loaded CCU config entry has the config panel enabled."""
+    for entry in hass.config_entries.async_entries(domain=DOMAIN, include_ignore=False, include_disabled=False):
+        if entry.data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_DISABLE_CONFIG_PANEL, DEFAULT_DISABLE_CONFIG_PANEL):
+            continue
+        # Panel only supported for CCU backends
+        if hasattr(entry, "runtime_data") and (control := entry.runtime_data) and control.central.model == Backend.CCU:
+            return True
+    return False
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -> bool:
@@ -188,8 +192,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
         hass.http.register_view(DeviceIconView)
         hass.data[ICON_VIEW_REGISTERED_KEY] = True
 
-    # Register or unregister panel based on config entry settings.
-    # Only unregister if no loaded config entry has the panel enabled.
+    # Register or unregister panel based on config entry settings and backend type.
+    # Panel is enabled by default for CCU backends only.
     if _any_entry_has_panel_enabled(hass=hass):
         await async_register_panel(hass)
     else:
@@ -218,6 +222,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -
         async_unregister_panel(hass)
         async_unregister_cards(hass)
         del hass.data[HM_KEY]
+    elif not _any_entry_has_panel_enabled(hass=hass):
+        async_unregister_panel(hass)
     async_notify_backup_listeners(hass)
     return unload_ok
 
@@ -429,5 +435,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
         if CONF_ADVANCED_CONFIG in data:
             data[CONF_ADVANCED_CONFIG][CONF_COMMAND_THROTTLE_INTERVAL] = DEFAULT_COMMAND_THROTTLE_INTERVAL
         hass.config_entries.async_update_entry(entry, version=16, data=data)
+    if entry.version == 16:
+        data = dict(entry.data)
+        if CONF_ADVANCED_CONFIG in data:
+            # Remove old enable_config_panel key; panel is now enabled by default
+            data[CONF_ADVANCED_CONFIG].pop("enable_config_panel", None)
+        hass.config_entries.async_update_entry(entry, version=17, data=data)
     _LOGGER.info("Migration to version %s successful", entry.version)
     return True
