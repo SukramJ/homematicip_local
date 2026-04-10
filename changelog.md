@@ -13,6 +13,7 @@
 #### Bump homematicip-local-frontend
 
 - Config panel entry selector filters out Homegear instances (CCU-only)
+- Fixed cards showing infinite loading spinner in HA Card Picker
 - Fixed device icons invisible or poorly visible in dark mode
 
 ---

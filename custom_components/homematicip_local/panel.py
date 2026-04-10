@@ -5,11 +5,11 @@ from __future__ import annotations
 import hashlib
 import logging
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 from homeassistant.components import frontend, panel_custom
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.hass_dict import HassKey
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -149,7 +149,22 @@ async def async_register_cards(hass: HomeAssistant) -> None:
         return
 
     if frontend.DATA_EXTRA_MODULE_URL not in hass.data:
-        _LOGGER.warning("Frontend not yet initialized. Skipping card registration")
+        _LOGGER.debug("Frontend not yet initialized. Deferring card registration")
+
+        @callback
+        def _retry_register_cards(event: Any = None) -> None:  # noqa: ANN401
+            """Retry card registration after HA startup is complete."""
+            if hass.data.get(CARDS_REGISTERED_KEY):
+                return
+            if frontend.DATA_EXTRA_MODULE_URL not in hass.data:
+                _LOGGER.warning("Frontend still not available after startup. Skipping card registration")
+                return
+            for card_name, url in _CARD_URLS.items():
+                frontend.add_extra_js_url(hass, url)
+                _LOGGER.debug("Registered Lovelace card %s at %s (deferred)", card_name, url)
+            hass.data[CARDS_REGISTERED_KEY] = True
+
+        hass.bus.async_listen_once("homeassistant_started", _retry_register_cards)
         return
 
     for card_name, url in _CARD_URLS.items():
