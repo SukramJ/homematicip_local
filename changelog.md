@@ -4,8 +4,15 @@
 
 ### Dependencies
 
+#### Bump aiohomematic to [2026.4.7](https://github.com/SukramJ/aiohomematic/compare/2026.4.4...2026.4.7)
+
+- Fixed missing DURATION_UNIT/DURATION_VALUE in putParamset for signal lights (HmIP-BSL, HmIP-RGBW, HmIPW-WRC6)
+- Fixed RAMP_TIME_TO_OFF usage for RGBW and DRG-DALI lights
+- Fixed siren duration always sent on turn_on
+
 #### Bump homematicip-local-frontend
 
+- Config panel entry selector filters out Homegear instances (CCU-only)
 - Fixed device icons invisible or poorly visible in dark mode
 
 ---
