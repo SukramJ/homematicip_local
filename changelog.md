@@ -1,3 +1,15 @@
+# Version [2.6.1](https://github.com/SukramJ/homematicip_local/compare/2.6.0...2.6.1) (2026-04-10)
+
+## What's Changed
+
+### Dependencies
+
+#### Bump homematicip-local-frontend
+
+- Fixed device icons invisible or poorly visible in dark mode
+
+---
+
 # Version [2.6.0](https://github.com/SukramJ/homematicip_local/compare/2.5.2...2.6.0) (2026-04-09)
 
 ## What's Changed
