@@ -29,6 +29,7 @@ from aiohomematic_config import (
     set_climate_active_profile,
     set_climate_schedule_weekday,
     set_device_schedule,
+    set_schedule_enabled,
 )
 from aiohomematic_config.master_profile_store import MasterProfileStore
 from homeassistant.components.websocket_api import async_register_command
@@ -140,6 +141,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     async_register_command(hass, ws_set_climate_active_profile)
     async_register_command(hass, ws_get_device_schedule)
     async_register_command(hass, ws_set_device_schedule)
+    async_register_command(hass, ws_set_schedule_enabled)
     async_register_command(hass, ws_reload_device_config)
     # Integration tab commands
     async_register_command(hass, ws_get_system_health)
@@ -1676,6 +1678,43 @@ async def ws_set_device_schedule(
             schedule_data=msg["schedule_data"],
         )
     except (BaseHomematicException, ValueError, ValidationError) as err:
+        connection.send_error(msg["id"], "write_failed", str(err))
+        return
+
+    connection.send_result(msg["id"], {"success": True})
+
+
+@require_scope(SCOPE_SCHEDULE_EDIT)
+@websocket_command(
+    {
+        vol.Required("type"): "homematicip_local/config/set_schedule_enabled",
+        vol.Required("entry_id"): str,
+        vol.Required("device_address"): str,
+        vol.Required("enabled"): bool,
+    }
+)
+@async_response
+async def ws_set_schedule_enabled(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Enable or disable the weekly program on a device."""
+    if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
+        connection.send_error(msg["id"], "not_found", "Config entry not found")
+        return
+
+    device = control.central.device_coordinator.get_device(address=msg["device_address"])
+    if device is None:
+        connection.send_error(msg["id"], "device_not_found", "Device not found")
+        return
+
+    try:
+        await set_schedule_enabled(
+            device=device,
+            enabled=msg["enabled"],
+        )
+    except (BaseHomematicException, ValueError) as err:
         connection.send_error(msg["id"], "write_failed", str(err))
         return
 
