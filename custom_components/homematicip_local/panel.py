@@ -35,9 +35,7 @@ _STATIC_PATH_REGISTERED_KEY: HassKey[bool] = HassKey(f"{PANEL_NAME}_static_path_
 # --- Lovelace cards ---
 
 _CARD_FILES: Final[dict[str, str]] = {
-    "climate-schedule-card": "homematicip-local-climate-schedule-card.js",
-    "schedule-card": "homematicip-local-schedule-card.js",
-    "status-card": "homematicip-local-status-card.js",
+    "all-cards": "homematicip-local-all-cards.js",
 }
 
 CARDS_REGISTERED_KEY: HassKey[bool] = HassKey("homematicip_local_cards_registered")

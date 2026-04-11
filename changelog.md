@@ -1,19 +1,19 @@
-# Version [2.6.1](https://github.com/SukramJ/homematicip_local/compare/2.6.0...2.6.1) (2026-04-10)
+# Version [2.6.1](https://github.com/SukramJ/homematicip_local/compare/2.6.0...2.6.1) (2026-04-11)
 
 ## What's Changed
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.7](https://github.com/SukramJ/aiohomematic/compare/2026.4.4...2026.4.7)
+#### Bump aiohomematic to [2026.4.8](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.8)
 
-- Fixed missing DURATION_UNIT/DURATION_VALUE in putParamset for signal lights (HmIP-BSL, HmIP-RGBW, HmIPW-WRC6)
+- Fixed missing DURATION_UNIT/DURATION_VALUE in putParamset for turn_on and turn_off (HmIP-BSL, HmIP-RGBW, HmIPW-WRC6, HmIP-DRG-DALI)
 - Fixed RAMP_TIME_TO_OFF usage for RGBW and DRG-DALI lights
 - Fixed siren duration always sent on turn_on
 
 #### Bump homematicip-local-frontend
 
-- Config panel entry selector filters out Homegear instances (CCU-only)
-- Fixed cards showing infinite loading spinner in HA Card Picker
+- Fixed cards showing "Konfigurationsfehler" in Firefox
+- Fixed cards showing infinite loading spinner in HA Card Picker and on dashboards
 - Fixed device icons invisible or poorly visible in dark mode
 
 ---
@@ -35,18 +35,13 @@ All frontend cards are now delivered directly through the integration — no sep
 
 ### Integration
 
-- **Config panel enabled by default**: The device configuration panel now appears in the sidebar automatically for CCU backends — no manual activation required. Homegear instances are excluded (panel not supported). Users who don't need it can disable it in Advanced Options. Existing config entries are migrated to the new default.
 - **HmIP-DLP support**: Added entity descriptions for door lock panel — door sensor (binary sensor), sabotage sensors, lock state reason (sensor), auto-relock and permission state (switches)
 - **Non-admin schedule editing**: Non-admin users can edit device schedules via the schedule cards when enabled in Options Flow. Backend enforces permissions via `@require_scope` decorator (WebSocket) and `check_service_permission()` (service calls). New `get_user_permissions` WebSocket endpoint for frontend permission queries.
-- **Auto-detect parameter values**: New `determine_parameter` WebSocket endpoint for auto-detecting parameter values on a channel via XML-RPC
-- **Firmware update trigger**: New `update_firmware` WebSocket endpoint to trigger device firmware updates from the config panel
-- **Link profile testing**: New `test_link_profile` WebSocket endpoint to apply link profile default values for testing
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.6](https://github.com/SukramJ/aiohomematic/compare/2026.3.1...2026.4.6)
+#### Bump aiohomematic to [2026.4.4](https://github.com/SukramJ/aiohomematic/compare/2026.3.1...2026.4.6)
 
-- `determine_parameter` support for auto-detecting parameter values via XML-RPC
 - Additional data points for HmIP-DLP (door state, permission, lock state reason, auto-relock, sabotage)
 - Channel name exposed in configurable device channels, device links, and linkable channels
 - Multi-channel detection cache for additional data points
@@ -67,15 +62,9 @@ All frontend cards are now delivered directly through the integration — no sep
 
 #### Bump homematicip-local-frontend
 
-- Config panel entry selector filters out Homegear instances (CCU-only)
+- Integration-bundled cards: climate schedule card, schedule card, and three new status cards
+- Non-admin permissions (Phase 2): backend-enforced permission scopes, read-only mode
 - UX Review — Full CCU Parity & Mobile Optimization (57 items resolved)
-- Expert mode toggle, auto-detect button, link profile testing, firmware update trigger
-- Responsive schedule editor and mobile card layouts for all tables
-- Inline `<ha-alert>` replacing all `alert()` calls
-- Skeleton loading, swipe-to-delete, mobile day view with swipe gestures
-- Device/link list sorting, virtual channel badges
-- Accessibility: aria-live regions, keyboard navigation, focus management
-- Non-admin permissions: backend-enforced permission scopes, read-only mode
 - Redesigned device schedule list: three-line card layout
 - OpenCCU dashboard: Inbox, Service Messages, Alarm Messages
 - Easymode support for paramset editor
