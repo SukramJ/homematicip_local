@@ -103,6 +103,13 @@ async def async_setup_entry(
         )
     )
 
+    async_add_schedule_switch(
+        data_points=control_unit.get_new_data_points(
+            data_point_type=DataPointType.SWITCH,
+            category=DataPointCategory.SCHEDULE_SWITCH,
+        )
+    )
+
     async_add_switch(
         data_points=control_unit.get_new_data_points(
             data_point_type=DataPointType.SWITCH,
@@ -111,13 +118,6 @@ async def async_setup_entry(
 
     async_add_hub_switch(data_points=control_unit.get_new_hub_data_points(data_point_type=SysvarDpSwitch))
     # async_add_hub_switch(data_points=control_unit.get_new_hub_data_points(data_point_type=ProgramDpSwitch))
-
-    async_add_schedule_switch(
-        data_points=control_unit.get_new_data_points(
-            data_point_type=DataPointType.SWITCH,
-            category=DataPointCategory.SCHEDULE_SWITCH,
-        )
-    )
 
 
 class AioHomematicSwitch(AioHomematicGenericRestoreEntity[CustomDpSwitch | DpSwitch], SwitchEntity):
