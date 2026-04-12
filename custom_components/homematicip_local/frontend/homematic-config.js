@@ -4597,7 +4597,7 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
       </div>
 
       ${this._saving?F`<div class="saving-overlay">${this._l("device_schedule.saving")}</div>`:j}
-    `}_onDeviceAddEvent(){if(!this._deviceData)return;const e=this._deviceData.schedule_data?.entries??{},t=this._deviceData.max_entries;if(t&&Object.keys(e).length>=t)return void nt(this,{message:this._l("device_schedule.max_entries",{max:t})});const i=function(e){const t={weekdays:[],time:"00:00",condition:"fixed_time",astro_type:null,astro_offset_minutes:0,target_channels:[],level:0,level_2:null,duration:null,ramp_time:null};return"cover"===e&&(t.level_2=0),t}(this._deviceData.schedule_domain??void 0),s=this._deviceData.available_target_channels;if(s){const e=Object.keys(s)[0];e&&(i.target_channels=[e])}const a=Object.keys(e).map(e=>parseInt(e,10)),r=a.length>0?Math.max(...a):0;this._deviceEditingGroupNo=String(r+1),this._deviceEditingEntry={...i},this._deviceIsNewEvent=!0,this._deviceShowEditor=!0}_onDeviceEditEvent(e){const t=e.detail.entry;this._deviceEditingGroupNo=t.groupNo,this._deviceEditingEntry={...t},this._deviceIsNewEvent=!1,this._deviceShowEditor=!0}async _onDeviceDeleteEvent(e){if(!confirm(this._l("device_schedule.confirm_delete")))return;if(!this._deviceData||!this._selectedDevice)return;const t={...this._deviceData.schedule_data?.entries??{}};delete t[e.detail.entry.groupNo],this._saving=!0;try{await Be(this.hass,this.entryId,this._selectedDevice.address,{entries:jt(t)}),nt(this,{message:this._l("device_schedule.save_success")}),await this._loadSchedule(this._selectedDevice)}catch{nt(this,{message:this._l("device_schedule.save_failed")})}finally{this._saving=!1}}async _onDeviceSaveEvent(e){if(!this._deviceData||!this._selectedDevice)return;const{entry:t,groupNo:i}=e.detail,s={...this._deviceData.schedule_data?.entries??{},[i]:t};this._saving=!0,this._deviceShowEditor=!1,this._deviceEditingEntry=void 0,this._deviceEditingGroupNo=void 0,this._deviceIsNewEvent=!1;try{await Be(this.hass,this.entryId,this._selectedDevice.address,{entries:jt(s)}),nt(this,{message:this._l("device_schedule.save_success")}),await this._loadSchedule(this._selectedDevice)}catch{nt(this,{message:this._l("device_schedule.save_failed")})}finally{this._saving=!1}}_onDeviceEditorClosed(){this._deviceShowEditor=!1,this._deviceEditingEntry=void 0,this._deviceEditingGroupNo=void 0,this._deviceIsNewEvent=!1}async _handleScheduleEnabledToggle(){if(!this._selectedDevice||!this._deviceData||null===this._deviceData.schedule_enabled)return;const e=!this._deviceData.schedule_enabled;this._saving=!0;try{await async function(e,t,i,s){return e.callWS({type:"homematicip_local/config/set_schedule_enabled",entry_id:t,device_address:i,enabled:s})}(this.hass,this.entryId,this._selectedDevice.address,e),nt(this,{message:this._l(e?"device_schedule.weekly_program_enabled_toast":"device_schedule.weekly_program_disabled_toast")}),await this._loadSchedule(this._selectedDevice)}catch{nt(this,{message:this._l("device_schedule.weekly_program_enable_failed")})}finally{this._saving=!1}}_buildDeviceListTranslations(){const e=this._l("device_schedule.weekdays").split(",");return{weekdayShortLabels:{MONDAY:e[0],TUESDAY:e[1],WEDNESDAY:e[2],THURSDAY:e[3],FRIDAY:e[4],SATURDAY:e[5],SUNDAY:e[6]},condition:this._l("device_schedule.condition"),time:this._l("device_schedule.time"),weekdays:this._l("device_schedule.weekdays_label"),duration:this._l("device_schedule.duration"),state:this._l("device_schedule.level"),addEvent:this._l("device_schedule.add_event"),editEvent:this._l("device_schedule.edit_event"),deleteEvent:this._l("device_schedule.delete_event"),slat:this._l("device_schedule.slat"),noScheduleEvents:this._l("device_schedule.no_schedule_data"),loading:this._l("common.loading"),conditionLabels:{fixed_time:this._l("device_schedule.condition_fixed_time"),astro:this._l("device_schedule.condition_astro"),fixed_if_before_astro:this._l("device_schedule.condition_fixed_if_before_astro"),astro_if_before_fixed:this._l("device_schedule.condition_astro_if_before_fixed"),fixed_if_after_astro:this._l("device_schedule.condition_fixed_if_after_astro"),astro_if_after_fixed:this._l("device_schedule.condition_astro_if_after_fixed"),earliest:this._l("device_schedule.condition_earliest"),latest:this._l("device_schedule.condition_latest")},levelOn:this._l("device_schedule.level_on"),levelOff:this._l("device_schedule.level_off"),conditionSummaryLabels:{sunrise:this._l("device_schedule.astro_sunrise"),sunset:this._l("device_schedule.astro_sunset"),or:this._l("device_schedule.or"),ifBefore:this._l("device_schedule.if_before"),ifAfter:this._l("device_schedule.if_after")}}}_buildDeviceEditorTranslations(){const e=this._l("device_schedule.weekdays").split(",");return{weekdayShortLabels:{MONDAY:e[0],TUESDAY:e[1],WEDNESDAY:e[2],THURSDAY:e[3],FRIDAY:e[4],SATURDAY:e[5],SUNDAY:e[6]},addEvent:this._l("device_schedule.add_event"),editEvent:this._l("device_schedule.edit_event"),cancel:this._l("common.cancel"),save:this._l("device_schedule.save"),time:this._l("device_schedule.time"),condition:this._l("device_schedule.condition"),weekdaysLabel:this._l("device_schedule.weekdays_label"),stateLabel:this._l("device_schedule.level"),duration:this._l("device_schedule.duration"),rampTime:this._l("device_schedule.ramp_time"),channels:this._l("device_schedule.target_channel"),levelOn:this._l("device_schedule.level_on"),levelOff:this._l("device_schedule.level_off"),slat:this._l("device_schedule.slat"),astroSunrise:this._l("device_schedule.astro_sunrise"),astroSunset:this._l("device_schedule.astro_sunset"),astroOffset:this._l("device_schedule.astro_offset"),confirmDelete:this._l("device_schedule.confirm_delete"),conditionLabels:{fixed_time:this._l("device_schedule.condition_fixed_time"),astro:this._l("device_schedule.condition_astro"),fixed_if_before_astro:this._l("device_schedule.condition_fixed_if_before_astro"),astro_if_before_fixed:this._l("device_schedule.condition_astro_if_before_fixed"),fixed_if_after_astro:this._l("device_schedule.condition_fixed_if_after_astro"),astro_if_after_fixed:this._l("device_schedule.condition_astro_if_after_fixed"),earliest:this._l("device_schedule.condition_earliest"),latest:this._l("device_schedule.condition_latest")}}}_renderDeviceSchedule(){const e=this._deviceData,t=e.schedule_data,i=t?.entries??{},s=Object.keys(i).length,a=e.schedule_domain??void 0,r=e.available_target_channels;return F`
+    `}_onDeviceAddEvent(){if(!this._deviceData)return;const e=this._deviceData.schedule_data?.entries??{},t=this._deviceData.max_entries;if(t&&Object.keys(e).length>=t)return void nt(this,{message:this._l("device_schedule.max_entries",{max:t})});const i=function(e){const t={weekdays:[],time:"00:00",condition:"fixed_time",astro_type:null,astro_offset_minutes:0,target_channels:[],level:0,level_2:null,duration:null,ramp_time:null};return"cover"===e&&(t.level_2=0),t}(this._deviceData.schedule_domain??void 0),s=this._deviceData.available_target_channels;if(s){const e=Object.keys(s)[0];e&&(i.target_channels=[e])}const a=Object.keys(e).map(e=>parseInt(e,10)),r=a.length>0?Math.max(...a):0;this._deviceEditingGroupNo=String(r+1),this._deviceEditingEntry={...i},this._deviceIsNewEvent=!0,this._deviceShowEditor=!0}_onDeviceEditEvent(e){const t=e.detail.entry;this._deviceEditingGroupNo=t.groupNo,this._deviceEditingEntry={...t},this._deviceIsNewEvent=!1,this._deviceShowEditor=!0}async _onDeviceDeleteEvent(e){if(!confirm(this._l("device_schedule.confirm_delete")))return;if(!this._deviceData||!this._selectedDevice)return;const t={...this._deviceData.schedule_data?.entries??{}};delete t[e.detail.entry.groupNo],this._saving=!0;try{await Be(this.hass,this.entryId,this._selectedDevice.address,{entries:jt(t)}),nt(this,{message:this._l("device_schedule.save_success")}),await this._loadSchedule(this._selectedDevice)}catch{nt(this,{message:this._l("device_schedule.save_failed")})}finally{this._saving=!1}}async _onDeviceSaveEvent(e){if(!this._deviceData||!this._selectedDevice)return;const{entry:t,groupNo:i}=e.detail,s={...this._deviceData.schedule_data?.entries??{},[i]:t};this._saving=!0,this._deviceShowEditor=!1,this._deviceEditingEntry=void 0,this._deviceEditingGroupNo=void 0,this._deviceIsNewEvent=!1;try{await Be(this.hass,this.entryId,this._selectedDevice.address,{entries:jt(s)}),nt(this,{message:this._l("device_schedule.save_success")}),await this._loadSchedule(this._selectedDevice)}catch{nt(this,{message:this._l("device_schedule.save_failed")})}finally{this._saving=!1}}_onDeviceEditorClosed(){this._deviceShowEditor=!1,this._deviceEditingEntry=void 0,this._deviceEditingGroupNo=void 0,this._deviceIsNewEvent=!1}async _handleScheduleEnabledToggle(e){if(!this._selectedDevice||!this._deviceData||null===this._deviceData.schedule_enabled)return;const t=!this._deviceData.schedule_enabled[e];this._saving=!0;try{await async function(e,t,i,s,a){const r={type:"homematicip_local/config/set_schedule_enabled",entry_id:t,device_address:i,enabled:s};return void 0!==a&&(r.channel_key=a),e.callWS(r)}(this.hass,this.entryId,this._selectedDevice.address,t,e),nt(this,{message:this._l(t?"device_schedule.weekly_program_enabled_toast":"device_schedule.weekly_program_disabled_toast")}),await this._loadSchedule(this._selectedDevice)}catch{nt(this,{message:this._l("device_schedule.weekly_program_enable_failed")})}finally{this._saving=!1}}_buildDeviceListTranslations(){const e=this._l("device_schedule.weekdays").split(",");return{weekdayShortLabels:{MONDAY:e[0],TUESDAY:e[1],WEDNESDAY:e[2],THURSDAY:e[3],FRIDAY:e[4],SATURDAY:e[5],SUNDAY:e[6]},condition:this._l("device_schedule.condition"),time:this._l("device_schedule.time"),weekdays:this._l("device_schedule.weekdays_label"),duration:this._l("device_schedule.duration"),state:this._l("device_schedule.level"),addEvent:this._l("device_schedule.add_event"),editEvent:this._l("device_schedule.edit_event"),deleteEvent:this._l("device_schedule.delete_event"),slat:this._l("device_schedule.slat"),noScheduleEvents:this._l("device_schedule.no_schedule_data"),loading:this._l("common.loading"),conditionLabels:{fixed_time:this._l("device_schedule.condition_fixed_time"),astro:this._l("device_schedule.condition_astro"),fixed_if_before_astro:this._l("device_schedule.condition_fixed_if_before_astro"),astro_if_before_fixed:this._l("device_schedule.condition_astro_if_before_fixed"),fixed_if_after_astro:this._l("device_schedule.condition_fixed_if_after_astro"),astro_if_after_fixed:this._l("device_schedule.condition_astro_if_after_fixed"),earliest:this._l("device_schedule.condition_earliest"),latest:this._l("device_schedule.condition_latest")},levelOn:this._l("device_schedule.level_on"),levelOff:this._l("device_schedule.level_off"),conditionSummaryLabels:{sunrise:this._l("device_schedule.astro_sunrise"),sunset:this._l("device_schedule.astro_sunset"),or:this._l("device_schedule.or"),ifBefore:this._l("device_schedule.if_before"),ifAfter:this._l("device_schedule.if_after")}}}_buildDeviceEditorTranslations(){const e=this._l("device_schedule.weekdays").split(",");return{weekdayShortLabels:{MONDAY:e[0],TUESDAY:e[1],WEDNESDAY:e[2],THURSDAY:e[3],FRIDAY:e[4],SATURDAY:e[5],SUNDAY:e[6]},addEvent:this._l("device_schedule.add_event"),editEvent:this._l("device_schedule.edit_event"),cancel:this._l("common.cancel"),save:this._l("device_schedule.save"),time:this._l("device_schedule.time"),condition:this._l("device_schedule.condition"),weekdaysLabel:this._l("device_schedule.weekdays_label"),stateLabel:this._l("device_schedule.level"),duration:this._l("device_schedule.duration"),rampTime:this._l("device_schedule.ramp_time"),channels:this._l("device_schedule.target_channel"),levelOn:this._l("device_schedule.level_on"),levelOff:this._l("device_schedule.level_off"),slat:this._l("device_schedule.slat"),astroSunrise:this._l("device_schedule.astro_sunrise"),astroSunset:this._l("device_schedule.astro_sunset"),astroOffset:this._l("device_schedule.astro_offset"),confirmDelete:this._l("device_schedule.confirm_delete"),conditionLabels:{fixed_time:this._l("device_schedule.condition_fixed_time"),astro:this._l("device_schedule.condition_astro"),fixed_if_before_astro:this._l("device_schedule.condition_fixed_if_before_astro"),astro_if_before_fixed:this._l("device_schedule.condition_astro_if_before_fixed"),fixed_if_after_astro:this._l("device_schedule.condition_fixed_if_after_astro"),astro_if_after_fixed:this._l("device_schedule.condition_astro_if_after_fixed"),earliest:this._l("device_schedule.condition_earliest"),latest:this._l("device_schedule.condition_latest")}}}_renderDeviceSchedule(){const e=this._deviceData,t=e.schedule_data,i=t?.entries??{},s=Object.keys(i).length,a=e.schedule_domain??void 0,r=e.available_target_channels;return F`
       <div class="schedule-content">
         <div class="toolbar">
           <div class="schedule-info">
@@ -4620,15 +4620,20 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
           </div>
         </div>
 
-        ${null!==e.schedule_enabled?F`<div class="schedule-enabled-toggle">
-              <ha-switch
-                .checked=${e.schedule_enabled}
-                .disabled=${!this.editable||this._saving}
-                @change=${this._handleScheduleEnabledToggle}
-              ></ha-switch>
-              <span class="schedule-enabled-label">
-                ${this._l(e.schedule_enabled?"device_schedule.weekly_program_enabled":"device_schedule.weekly_program_disabled")}
-              </span>
+        ${null!==e.schedule_enabled?F`<div class="schedule-enabled-bar">
+              <span class="schedule-enabled-title"
+                >${this._l("device_schedule.weekly_program")}:</span
+              >
+              <div class="channel-chips">
+                ${Object.entries(e.schedule_enabled).map(([t,i])=>F` <button
+                      class="channel-chip ${i?"active":"inactive"}"
+                      .disabled=${!this.editable||this._saving}
+                      @click=${()=>this._handleScheduleEnabledToggle(t)}
+                      title="${e.available_target_channels?.[t]?.name??t}: ${this._l(i?"device_schedule.weekly_program_enabled":"device_schedule.weekly_program_disabled")}"
+                    >
+                      ${e.available_target_channels?.[t]?.name??t}
+                    </button>`)}
+              </div>
             </div>`:j}
 
         <div class="device-schedule-container">
@@ -4729,17 +4734,63 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
         font-style: italic;
       }
 
-      .schedule-enabled-toggle {
+      .schedule-enabled-bar {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
         padding: 12px 16px;
         border-bottom: 1px solid var(--divider-color, #e0e0e0);
+        flex-wrap: wrap;
       }
 
-      .schedule-enabled-label {
-        font-size: 14px;
-        color: var(--primary-text-color);
+      .schedule-enabled-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--secondary-text-color);
+        white-space: nowrap;
+      }
+
+      .channel-chips {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+
+      .channel-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        border: none;
+        cursor: pointer;
+        transition:
+          background-color 0.2s,
+          opacity 0.2s;
+      }
+
+      .channel-chip.active {
+        background-color: var(--primary-color);
+        color: var(--text-primary-color);
+      }
+
+      .channel-chip.inactive {
+        background-color: var(--divider-color);
+        color: var(--disabled-text-color, var(--secondary-text-color));
+        opacity: 0.6;
+      }
+
+      .channel-chip:hover:not([disabled]) {
+        opacity: 0.8;
+      }
+
+      .channel-chip[disabled] {
+        cursor: not-allowed;
+        opacity: 0.4;
       }
 
       .device-schedule-container {
@@ -4828,10 +4879,7 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
       ></hm-breadcrumb>
     `}_renderToolbar(){return F`
       <div class="toolbar">
-        <ha-menu-button
-          .hass=${this.hass}
-          .narrow=${this.narrow}
-        ></ha-menu-button>
+        <ha-menu-button .hass=${this.hass} .narrow=${this.narrow}></ha-menu-button>
         <div class="main-title">${this._l("device_list.title")}</div>
       </div>
     `}_renderEntrySelector(){return this._entries.length<=1?j:F`

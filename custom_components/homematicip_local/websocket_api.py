@@ -1691,6 +1691,7 @@ async def ws_set_device_schedule(
         vol.Required("entry_id"): str,
         vol.Required("device_address"): str,
         vol.Required("enabled"): bool,
+        vol.Optional("channel_key"): str,
     }
 )
 @async_response
@@ -1713,6 +1714,7 @@ async def ws_set_schedule_enabled(
         await set_schedule_enabled(
             device=device,
             enabled=msg["enabled"],
+            channel_key=msg.get("channel_key"),
         )
     except (BaseHomematicException, ValueError) as err:
         connection.send_error(msg["id"], "write_failed", str(err))
