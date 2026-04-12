@@ -6,6 +6,7 @@ import logging
 from typing import Any, Final, override
 
 from aiohomematic.const import DataPointCategory, DataPointType
+from aiohomematic.interfaces import ScheduleChannelSwitchProtocol
 from aiohomematic.model.custom import CustomDpSwitch
 from aiohomematic.model.generic import DpSwitch
 from aiohomematic.model.hub import ProgramDpSwitch, SysvarDpSwitch
@@ -70,6 +71,16 @@ async def async_setup_entry(
         ]:
             async_add_entities(program_entities)
 
+    @callback
+    def async_add_schedule_switch(data_points: tuple[ScheduleChannelSwitchProtocol, ...]) -> None:
+        """Add schedule channel switch from Homematic(IP) Local for OpenCCU."""
+        _LOGGER.debug("ASYNC_ADD_SCHEDULE_SWITCH: Adding %i data points", len(data_points))
+
+        if entities := [
+            AioHomematicScheduleSwitch(control_unit=control_unit, data_point=data_point) for data_point in data_points
+        ]:
+            async_add_entities(entities)
+
     entry.async_on_unload(
         func=async_dispatcher_connect(
             hass=hass,
@@ -84,6 +95,13 @@ async def async_setup_entry(
             target=async_add_hub_switch,
         )
     )
+    entry.async_on_unload(
+        func=async_dispatcher_connect(
+            hass=hass,
+            signal=signal_new_data_point(entry_id=entry.entry_id, platform=DataPointCategory.SCHEDULE_SWITCH),
+            target=async_add_schedule_switch,
+        )
+    )
 
     async_add_switch(
         data_points=control_unit.get_new_data_points(
@@ -93,6 +111,13 @@ async def async_setup_entry(
 
     async_add_hub_switch(data_points=control_unit.get_new_hub_data_points(data_point_type=SysvarDpSwitch))
     # async_add_hub_switch(data_points=control_unit.get_new_hub_data_points(data_point_type=ProgramDpSwitch))
+
+    async_add_schedule_switch(
+        data_points=control_unit.get_new_data_points(
+            data_point_type=DataPointType.SWITCH,
+            category=DataPointCategory.SCHEDULE_SWITCH,
+        )
+    )
 
 
 class AioHomematicSwitch(AioHomematicGenericRestoreEntity[CustomDpSwitch | DpSwitch], SwitchEntity):
@@ -172,6 +197,41 @@ class AioHomematicSysvarSwitch(AioHomematicGenericSysvarEntity[SysvarDpSwitch], 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._data_point.send_variable(value=True)
+
+
+class AioHomematicScheduleSwitch(AioHomematicGenericEntity[ScheduleChannelSwitchProtocol], SwitchEntity):
+    """Representation of the HomematicIP schedule channel switch entity."""
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return true if schedule is enabled for this channel."""
+        return self._data_point.value
+
+    @property
+    @override
+    def name(self) -> str | None:
+        """Return the name of the entity."""
+        if self._cu.enable_sub_devices:
+            # Sub-device is "Schedule"/"Zeitplan", entity name is just the channel name
+            return self._data_point.name_data.channel_name or None
+        entity_name = self._data_point.translated_name
+        device_name = self._ha_device_name
+        if entity_name.startswith(device_name):
+            entity_name = entity_name.removeprefix(device_name).strip()
+        return entity_name or None
+
+    @override
+    @handle_homematic_errors
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable the schedule for this channel."""
+        await self._data_point.turn_off()
+
+    @override
+    @handle_homematic_errors
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable the schedule for this channel."""
+        await self._data_point.turn_on()
 
 
 class AioHomematicProgramSwitch(AioHomematicGenericProgramEntity[ProgramDpSwitch], SwitchEntity):

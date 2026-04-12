@@ -21,6 +21,7 @@ from aiohomematic.interfaces import (
     GenericDataPointProtocolAny,
     GenericProgramDataPointProtocol,
     GenericSysvarDataPointProtocol,
+    ScheduleChannelSwitchProtocol,
 )
 from aiohomematic.model.week_profile_data_point import WeekProfileDataPoint
 from aiohomematic.support.address import get_device_address
@@ -128,6 +129,7 @@ HmBaseDataPointProtocol: TypeAlias = (
     | CombinedDataPointProtocol
     | CustomDataPointProtocol
     | GenericDataPointProtocolAny
+    | ScheduleChannelSwitchProtocol
     | WeekProfileDataPoint
 )
 # Generic base type used for data points in Homematic(IP) Local for OpenCCU

@@ -6,8 +6,9 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final, Generic, override
 
+from aiohomematic import ccu_translations
 from aiohomematic.central.events import DataPointStateChangedEvent, DeviceRemovedEvent, SubscriptionGroup
-from aiohomematic.const import CallSource, DataPointUsage
+from aiohomematic.const import CallSource, DataPointCategory, DataPointUsage
 from aiohomematic.interfaces import (
     CalculatedDataPointProtocol,
     CallbackDataPointProtocol,
@@ -37,6 +38,12 @@ from .support import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+_SCHEDULE_CATEGORIES: Final[frozenset[DataPointCategory]] = frozenset(
+    {DataPointCategory.WEEK_PROFILE, DataPointCategory.SCHEDULE_SWITCH}
+)
+_SCHEDULE_TRANSLATION_PARAMETER: Final = "SCHEDULE_CHANNEL_SWITCH"
+
 ATTR_ADDRESS: Final = "address"
 ATTR_DESCRIPTION: Final = "description"
 ATTR_FUNCTION: Final = "function"
@@ -103,6 +110,10 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
                 if (room := channel_group_master.room) is not None:
                     suggested_area = room
 
+        if control_unit.enable_sub_devices and data_point.category in _SCHEDULE_CATEGORIES:
+            via_device = hm_device.identifier
+            identifier = f"{hm_device.identifier}-schedule"
+
         control_unit.ensure_via_device_exists(
             identifier=identifier, suggested_area=suggested_area, via_device=via_device
         )
@@ -153,6 +164,15 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         hm_device = self._data_point.device
         if not self._cu.enable_sub_devices:
             return hm_device.name
+
+        if self._data_point.category in _SCHEDULE_CATEGORIES:
+            return (
+                ccu_translations.get_parameter_translation(
+                    parameter=_SCHEDULE_TRANSLATION_PARAMETER,
+                    locale=hm_device.config_provider.config.locale,
+                )
+                or "Schedule"
+            )
 
         if (
             hm_device.has_sub_devices

@@ -8,8 +8,9 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.9](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.9)
+#### Bump aiohomematic to [2026.4.10](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.10)
 
+- Added `ScheduleChannelSwitch` data point for per-channel schedule enable/disable
 - Per-channel schedule enable/disable via `COMBINED_PARAMETER` (atomic bitmask + mode write)
 - Load `WEEK_PROGRAM_CHANNEL_LOCKS` value at startup (fixes delayed `schedule_enabled` attribute)
 - Fixed missing DURATION_UNIT/DURATION_VALUE in putParamset for turn_on and turn_off (HmIP-BSL, HmIP-RGBW, HmIPW-WRC6, HmIP-DRG-DALI)

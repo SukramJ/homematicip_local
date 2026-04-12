@@ -21,7 +21,7 @@ from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import StateType, UndefinedType
 
 from . import HomematicConfigEntry
 from .const import CLIMATE_SCHEDULE_API_VERSION, SCHEDULE_API_VERSION, HmEntityState
@@ -310,6 +310,15 @@ class AioHomematicWeekProfileSensor(AioHomematicGenericEntity[WeekProfileDataPoi
             attributes[ATTR_SCHEDULE_DATA] = schedule
 
         return attributes
+
+    @property
+    @override
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the entity."""
+        if self._cu.enable_sub_devices:
+            # Sub-device is "Schedule"/"Zeitplan", sensor is the main entity
+            return None
+        return super().name
 
     @property
     def native_value(self) -> int:
