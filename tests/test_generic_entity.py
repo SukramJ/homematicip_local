@@ -7,10 +7,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from aiohomematic.const import DataPointCategory
+from custom_components.homematicip_local.const import DOMAIN
 from custom_components.homematicip_local.control_unit import ControlUnit
 from custom_components.homematicip_local.generic_entity import AioHomematicGenericEntity
 
 # pylint: disable=protected-access
+
+_DEVICE_IDENTIFIER = "TEST_DEVICE"
+_CENTRAL_NAME = "test_central"
 
 
 def _create_mock_data_point(
@@ -34,7 +38,7 @@ def _create_mock_data_point(
     # Device mock
     mock_device = MagicMock()
     mock_device.configure_mock(name=device_name)
-    mock_device.identifier = "TEST_DEVICE"
+    mock_device.identifier = _DEVICE_IDENTIFIER
     mock_device.manufacturer = "eQ-3"
     mock_device.model = "HmIP-PSM"
     mock_device.model_description = "Pluggable Switch and Meter"
@@ -45,7 +49,7 @@ def _create_mock_data_point(
     mock_device.has_sub_devices = False
 
     mock_central_info = MagicMock()
-    mock_central_info.configure_mock(name="test_central")
+    mock_central_info.configure_mock(name=_CENTRAL_NAME)
     mock_device.central_info = mock_central_info
 
     mock_config = MagicMock()
@@ -70,6 +74,22 @@ def _create_mock_control_unit(*, enable_sub_devices: bool = False) -> MagicMock:
     return mock_cu
 
 
+def _create_entity(
+    *,
+    mock_dp: MagicMock,
+    mock_cu: MagicMock,
+) -> AioHomematicGenericEntity:
+    """Create an AioHomematicGenericEntity with patched get_data_point."""
+    with patch(
+        "custom_components.homematicip_local.generic_entity.get_data_point",
+        side_effect=lambda data_point: data_point,
+    ):
+        return AioHomematicGenericEntity(
+            control_unit=mock_cu,
+            data_point=mock_dp,
+        )
+
+
 class TestHaDeviceName:
     """Tests for _ha_device_name property."""
 
@@ -80,43 +100,21 @@ class TestHaDeviceName:
             device_name="HmIP-PSM Test",
         )
         mock_cu = _create_mock_control_unit(enable_sub_devices=False)
-
-        with patch(
-            "custom_components.homematicip_local.generic_entity.get_data_point",
-            side_effect=lambda data_point: data_point,
-        ):
-            entity = AioHomematicGenericEntity(
-                control_unit=mock_cu,
-                data_point=mock_dp,
-            )
+        entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
 
         assert entity._ha_device_name == "HmIP-PSM Test"
 
-    @pytest.mark.parametrize(
-        "category",
-        [
-            DataPointCategory.SCHEDULE_SWITCH,
-            DataPointCategory.WEEK_PROFILE,
-        ],
-    )
-    def test_schedule_device_name_contains_schedule(
-        self,
-        category: DataPointCategory,
-    ) -> None:
-        """Test that schedule device name contains 'Schedule' regardless of enable_sub_devices."""
-        mock_dp = _create_mock_data_point(category=category, device_name="HmIP-PSM Test")
+    def test_non_schedule_device_name_sub_devices_disabled(self) -> None:
+        """Test that device name is plain when sub devices are disabled."""
+        mock_dp = _create_mock_data_point(
+            category=DataPointCategory.SCHEDULE_SWITCH,
+            device_name="HmIP-PSM Test",
+        )
         mock_cu = _create_mock_control_unit(enable_sub_devices=False)
+        entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
 
-        with patch(
-            "custom_components.homematicip_local.generic_entity.get_data_point",
-            side_effect=lambda data_point: data_point,
-        ):
-            entity = AioHomematicGenericEntity(
-                control_unit=mock_cu,
-                data_point=mock_dp,
-            )
-
-        assert "Schedule" in entity._ha_device_name or "Zeitplan" in entity._ha_device_name
+        # Without sub devices, schedule entities are on the main device
+        assert entity._ha_device_name == "HmIP-PSM Test"
 
     def test_schedule_device_name_fallback_to_schedule(self) -> None:
         """Test that schedule device name falls back to 'Schedule' when no translation."""
@@ -126,16 +124,8 @@ class TestHaDeviceName:
         )
         # Use a locale that has no translation
         mock_dp.device.config_provider.config.locale = "xx"
-        mock_cu = _create_mock_control_unit(enable_sub_devices=False)
-
-        with patch(
-            "custom_components.homematicip_local.generic_entity.get_data_point",
-            side_effect=lambda data_point: data_point,
-        ):
-            entity = AioHomematicGenericEntity(
-                control_unit=mock_cu,
-                data_point=mock_dp,
-            )
+        mock_cu = _create_mock_control_unit(enable_sub_devices=True)
+        entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
 
         assert entity._ha_device_name == "HmIP-PSM Test Schedule"
 
@@ -145,22 +135,13 @@ class TestHaDeviceName:
             category=DataPointCategory.SCHEDULE_SWITCH,
             device_name="HmIP-PSM Test",
         )
-        mock_cu = _create_mock_control_unit(enable_sub_devices=False)
+        mock_cu = _create_mock_control_unit(enable_sub_devices=True)
 
-        with (
-            patch(
-                "custom_components.homematicip_local.generic_entity.get_data_point",
-                side_effect=lambda data_point: data_point,
-            ),
-            patch(
-                "custom_components.homematicip_local.generic_entity.ccu_translations.get_parameter_translation",
-                return_value="Zeitplan",
-            ) as mock_translation,
-        ):
-            entity = AioHomematicGenericEntity(
-                control_unit=mock_cu,
-                data_point=mock_dp,
-            )
+        with patch(
+            "custom_components.homematicip_local.generic_entity.ccu_translations.get_parameter_translation",
+            return_value="Zeitplan",
+        ) as mock_translation:
+            entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
 
         mock_translation.assert_called_once_with(
             parameter="SCHEDULE_CHANNEL_SWITCH",
@@ -182,14 +163,64 @@ class TestHaDeviceName:
         """Test that schedule device name contains 'Schedule' when sub devices are enabled."""
         mock_dp = _create_mock_data_point(category=category, device_name="HmIP-PSM Test")
         mock_cu = _create_mock_control_unit(enable_sub_devices=True)
-
-        with patch(
-            "custom_components.homematicip_local.generic_entity.get_data_point",
-            side_effect=lambda data_point: data_point,
-        ):
-            entity = AioHomematicGenericEntity(
-                control_unit=mock_cu,
-                data_point=mock_dp,
-            )
+        entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
 
         assert "Schedule" in entity._ha_device_name or "Zeitplan" in entity._ha_device_name
+
+
+class TestScheduleSubdevice:
+    """Tests for schedule sub-device creation logic."""
+
+    def test_non_schedule_no_subdevice(self) -> None:
+        """Test that non-schedule entities do not create a sub-device."""
+        mock_dp = _create_mock_data_point(category=DataPointCategory.SWITCH)
+        mock_cu = _create_mock_control_unit(enable_sub_devices=True)
+        entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
+
+        device_info = entity._attr_device_info
+        assert device_info is not None
+        assert device_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
+        assert device_info["via_device"] == (DOMAIN, _CENTRAL_NAME)
+
+    @pytest.mark.parametrize(
+        "category",
+        [
+            DataPointCategory.SCHEDULE_SWITCH,
+            DataPointCategory.WEEK_PROFILE,
+        ],
+    )
+    def test_schedule_creates_subdevice_when_sub_devices_enabled(
+        self,
+        category: DataPointCategory,
+    ) -> None:
+        """Test that a separate schedule sub-device is created when sub devices are enabled."""
+        mock_dp = _create_mock_data_point(category=category)
+        mock_cu = _create_mock_control_unit(enable_sub_devices=True)
+        entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
+
+        device_info = entity._attr_device_info
+        assert device_info is not None
+        assert device_info["identifiers"] == {(DOMAIN, f"{_DEVICE_IDENTIFIER}-schedule")}
+        assert device_info["via_device"] == (DOMAIN, _DEVICE_IDENTIFIER)
+
+    @pytest.mark.parametrize(
+        "category",
+        [
+            DataPointCategory.SCHEDULE_SWITCH,
+            DataPointCategory.WEEK_PROFILE,
+        ],
+    )
+    def test_schedule_no_subdevice_when_sub_devices_disabled(
+        self,
+        category: DataPointCategory,
+    ) -> None:
+        """Test that no separate schedule sub-device is created when sub devices are disabled."""
+        mock_dp = _create_mock_data_point(category=category)
+        mock_cu = _create_mock_control_unit(enable_sub_devices=False)
+        entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
+
+        device_info = entity._attr_device_info
+        assert device_info is not None
+        # Entity stays on main device, not a separate schedule sub-device
+        assert device_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
+        assert device_info["via_device"] == (DOMAIN, _CENTRAL_NAME)

@@ -110,7 +110,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
                 if (room := channel_group_master.room) is not None:
                     suggested_area = room
 
-        if data_point.category in _SCHEDULE_CATEGORIES:
+        if control_unit.enable_sub_devices and data_point.category in _SCHEDULE_CATEGORIES:
             via_device = hm_device.identifier
             identifier = f"{hm_device.identifier}-schedule"
 
@@ -162,6 +162,8 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
     def _ha_device_name(self) -> str:
         """Return the Homematic entity device name."""
         hm_device = self._data_point.device
+        if not self._cu.enable_sub_devices:
+            return hm_device.name
 
         if self._data_point.category in _SCHEDULE_CATEGORIES:
             schedule_name = (
