@@ -44,6 +44,18 @@ _SCHEDULE_CATEGORIES: Final[frozenset[DataPointCategory]] = frozenset(
 )
 _SCHEDULE_TRANSLATION_PARAMETER: Final = "SCHEDULE_CHANNEL_SWITCH"
 
+
+def get_schedule_name(*, locale: str) -> str:
+    """Return the translated schedule name for the given locale."""
+    return (
+        ccu_translations.get_parameter_translation(
+            parameter=_SCHEDULE_TRANSLATION_PARAMETER,
+            locale=locale,
+        )
+        or "Schedule"
+    )
+
+
 ATTR_ADDRESS: Final = "address"
 ATTR_DESCRIPTION: Final = "description"
 ATTR_FUNCTION: Final = "function"
@@ -166,14 +178,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
             return hm_device.name
 
         if self._data_point.category in _SCHEDULE_CATEGORIES:
-            schedule_name = (
-                ccu_translations.get_parameter_translation(
-                    parameter=_SCHEDULE_TRANSLATION_PARAMETER,
-                    locale=hm_device.config_provider.config.locale,
-                )
-                or "Schedule"
-            )
-            return f"{hm_device.name} {schedule_name}"
+            return f"{hm_device.name} {get_schedule_name(locale=hm_device.config_provider.config.locale)}"
 
         if (
             self._cu.enable_sub_devices

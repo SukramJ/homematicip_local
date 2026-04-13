@@ -14,6 +14,7 @@ SWITCH_RULES: list[EntityDescriptionRule] = [
         description=SwitchEntityDescription(
             key="SCHEDULE_SWITCH",
             device_class=SwitchDeviceClass.SWITCH,
+            entity_category=EntityCategory.CONFIG,
             entity_registry_enabled_default=False,
         ),
     ),

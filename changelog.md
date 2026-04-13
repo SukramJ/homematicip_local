@@ -6,6 +6,7 @@
 
 - Per-channel schedule enable/disable support for non-climate week profiles (WebSocket endpoint + sensor attribute)
 - Schedule switch entities are now disabled by default in the entity registry
+- Schedule entities (week profile sensor, schedule switch) now consistently use "Zeitplan"/"Schedule" in their name, both with and without sub-devices enabled
 - Fixed schedule sub-device naming: schedule devices now correctly include "Schedule"/"Zeitplan" in their name when sub-devices are enabled
 
 ### Dependencies

@@ -33,6 +33,7 @@ from .generic_entity import (
     AioHomematicGenericEntity,
     AioHomematicGenericHubEntity,
     AioHomematicGenericSysvarEntity,
+    get_schedule_name,
 )
 
 ATTR_CURRENT_SCHEDULE_PROFILE: Final = "active_profile"
@@ -315,8 +316,11 @@ class AioHomematicWeekProfileSensor(AioHomematicGenericEntity[WeekProfileDataPoi
     @override
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
-        # Sub-device is "Schedule"/"Zeitplan", sensor is the main entity
-        return None
+        if self._cu.enable_sub_devices:
+            # Sub-device is "Schedule"/"Zeitplan", sensor is the main entity
+            return None
+        # Without sub-devices, use the schedule translation as entity name
+        return get_schedule_name(locale=self._data_point.device.config_provider.config.locale)
 
     @property
     def native_value(self) -> int:
