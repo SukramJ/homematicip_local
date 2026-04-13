@@ -5,6 +5,8 @@
 ### Integration
 
 - Per-channel schedule enable/disable support for non-climate week profiles (WebSocket endpoint + sensor attribute)
+- Schedule entities (week profile, schedule switch) are now always created in a dedicated sub-device
+- Schedule switch entities are now disabled by default in the entity registry
 
 ### Dependencies
 

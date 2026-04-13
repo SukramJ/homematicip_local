@@ -8,6 +8,15 @@ from homeassistant.components.switch import SwitchDeviceClass, SwitchEntityDescr
 from homeassistant.const import EntityCategory
 
 SWITCH_RULES: list[EntityDescriptionRule] = [
+    # Schedule switch (disabled by default)
+    EntityDescriptionRule(
+        category=DataPointCategory.SCHEDULE_SWITCH,
+        description=SwitchEntityDescription(
+            key="SCHEDULE_SWITCH",
+            device_class=SwitchDeviceClass.SWITCH,
+            entity_registry_enabled_default=False,
+        ),
+    ),
     # Outlet (HmIP-PS)
     EntityDescriptionRule(
         category=DataPointCategory.SWITCH,

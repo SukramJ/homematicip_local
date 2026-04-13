@@ -110,7 +110,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
                 if (room := channel_group_master.room) is not None:
                     suggested_area = room
 
-        if control_unit.enable_sub_devices and data_point.category in _SCHEDULE_CATEGORIES:
+        if data_point.category in _SCHEDULE_CATEGORIES:
             via_device = hm_device.identifier
             identifier = f"{hm_device.identifier}-schedule"
 

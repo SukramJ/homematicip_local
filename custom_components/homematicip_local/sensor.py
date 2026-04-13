@@ -315,10 +315,8 @@ class AioHomematicWeekProfileSensor(AioHomematicGenericEntity[WeekProfileDataPoi
     @override
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
-        if self._cu.enable_sub_devices:
-            # Sub-device is "Schedule"/"Zeitplan", sensor is the main entity
-            return None
-        return super().name
+        # Sub-device is "Schedule"/"Zeitplan", sensor is the main entity
+        return None
 
     @property
     def native_value(self) -> int:

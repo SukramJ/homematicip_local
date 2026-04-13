@@ -212,14 +212,8 @@ class AioHomematicScheduleSwitch(AioHomematicGenericEntity[ScheduleChannelSwitch
     @override
     def name(self) -> str | None:
         """Return the name of the entity."""
-        if self._cu.enable_sub_devices:
-            # Sub-device is "Schedule"/"Zeitplan", entity name is just the channel name
-            return self._data_point.name_data.channel_name or None
-        entity_name = self._data_point.translated_name
-        device_name = self._ha_device_name
-        if entity_name.startswith(device_name):
-            entity_name = entity_name.removeprefix(device_name).strip()
-        return entity_name or None
+        # Sub-device is "Schedule"/"Zeitplan", entity name is just the channel name
+        return self._data_point.name_data.channel_name or None
 
     @override
     @handle_homematic_errors
