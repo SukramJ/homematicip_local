@@ -162,8 +162,6 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
     def _ha_device_name(self) -> str:
         """Return the Homematic entity device name."""
         hm_device = self._data_point.device
-        if not self._cu.enable_sub_devices:
-            return hm_device.name
 
         if self._data_point.category in _SCHEDULE_CATEGORIES:
             schedule_name = (
@@ -176,7 +174,8 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
             return f"{hm_device.name} {schedule_name}"
 
         if (
-            hm_device.has_sub_devices
+            self._cu.enable_sub_devices
+            and hm_device.has_sub_devices
             and self._data_point.channel.is_in_multi_group
             and (channel_group_master := self._data_point.channel.group_master)
         ):
