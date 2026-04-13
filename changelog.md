@@ -26,6 +26,8 @@
 #### Bump homematicip-local-frontend
 
 - Per-channel schedule enable/disable as clickable channel chips
+- Improved the schedule card layout to reduce vertical space usage
+- Removed misleading "Update verfügbar" badge from CCU dashboard System Information card
 - Fixed cards showing "Konfigurationsfehler" in Firefox
 - Fixed cards showing infinite loading spinner in HA Card Picker and on dashboards
 - Fixed device icons invisible or poorly visible in dark mode
