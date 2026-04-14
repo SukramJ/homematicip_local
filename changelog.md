@@ -17,6 +17,7 @@
 - Added CCU direct-link detection to all button blueprints: optional warning notification and action skip when CCU direct connections exist for the pressed button (based on community contribution by @hosswald)
 - Added configurable delay to all reactivate-device blueprints (default: 10 seconds)
 - Updated all blueprint versions to v2026-04-14
+- Added comprehensive blueprint test suite (171 tests): schema validation, input validation, template substitution, full-flow end-to-end tests including direct-link detection and all button-subtype mappings
 
 ### Dependencies
 
