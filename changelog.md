@@ -8,6 +8,11 @@
 - Schedule switch entities are now disabled by default in the entity registry
 - Schedule entities (week profile sensor, schedule switch) now consistently use "Zeitplan"/"Schedule" in their name, both with and without sub-devices enabled
 - Fixed schedule sub-device naming: schedule devices now correctly include "Schedule"/"Zeitplan" in their name when sub-devices are enabled
+- Added configurable `command_retry_max_attempts` setting in advanced config (default: 3, range: 0-10) for the new command retry mechanism
+- Added `retry` parameter to `set_device_value`, `put_paramset`, and `put_link_paramset` services (default: true) to leverage the new command retry mechanism in aiohomematic
+- Added missing config flow translations (EN/DE) for `command_retry_max_attempts`
+- Fixed KeyError when `command_retry_max_attempts` is absent from existing config entries
+- Enabled parallel test execution via pytest-xdist (`-n auto --dist loadscope`)
 
 ### Blueprints
 
@@ -21,11 +26,12 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.10](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.10)
+#### Bump aiohomematic to [2026.4.11](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.11)
 
 - Added `ScheduleChannelSwitch` data point for per-channel schedule enable/disable
 - Per-channel schedule enable/disable via `COMBINED_PARAMETER` (atomic bitmask + mode write)
 - Load `WEEK_PROGRAM_CHANNEL_LOCKS` value at startup (fixes delayed `schedule_enabled` attribute)
+- Command retry mechanism for transient failures (automatic retry with backoff for temporarily unreachable devices)
 - Fixed missing DURATION_UNIT/DURATION_VALUE in putParamset for turn_on and turn_off (HmIP-BSL, HmIP-RGBW, HmIPW-WRC6, HmIP-DRG-DALI)
 - Fixed RAMP_TIME_TO_OFF usage for RGBW and DRG-DALI lights
 - Fixed siren duration always sent on turn_on

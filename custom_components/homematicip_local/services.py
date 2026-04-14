@@ -118,6 +118,7 @@ CONF_SENDER_CHANNEL_ADDRESS: Final = "sender_channel_address"
 CONF_TIME: Final = "time"
 CONF_VALUE: Final = "value"
 CONF_VALUE_TYPE: Final = "value_type"
+CONF_RETRY: Final = "retry"
 CONF_WAIT_FOR_CALLBACK: Final = "wait_for_callback"
 
 DEFAULT_CHANNEL: Final = 1
@@ -376,6 +377,7 @@ SCHEMA_SET_DEVICE_VALUE = vol.All(
             vol.Optional(CONF_WAIT_FOR_CALLBACK): validate_wait_for,
             vol.Optional(CONF_VALUE_TYPE): vol.In(["boolean", "dateTime.iso8601", "double", "int", "string"]),
             vol.Optional(CONF_RX_MODE): vol.All(cv.string, vol.Upper),
+            vol.Optional(CONF_RETRY, default=True): cv.boolean,
         }
     ),
 )
@@ -386,6 +388,7 @@ SCHEMA_PUT_LINK_PARAMSET = vol.All(
         vol.Optional(CONF_SENDER_CHANNEL_ADDRESS): validate_channel_address,
         vol.Required(CONF_PARAMSET): dict,
         vol.Optional(CONF_RX_MODE): vol.All(cv.string, vol.Upper),
+        vol.Optional(CONF_RETRY, default=True): cv.boolean,
     }
 )
 
@@ -399,6 +402,7 @@ SCHEMA_PUT_PARAMSET = vol.All(
             vol.Required(CONF_PARAMSET): dict,
             vol.Optional(CONF_WAIT_FOR_CALLBACK): validate_wait_for,
             vol.Optional(CONF_RX_MODE): vol.All(cv.string, vol.Upper),
+            vol.Optional(CONF_RETRY, default=True): cv.boolean,
         }
     ),
 )
@@ -1107,6 +1111,8 @@ async def _async_service_set_device_value(*, hass: HomeAssistant, service: Servi
             # Default is 'string'
             value = str(value)
 
+    retry: bool = service.data.get(CONF_RETRY, True)
+
     if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
         try:
             await hm_device.client.set_value(
@@ -1117,6 +1123,7 @@ async def _async_service_set_device_value(*, hass: HomeAssistant, service: Servi
                 wait_for_callback=wait_for_callback,
                 rx_mode=rx_mode,
                 check_against_pd=True,
+                retry=retry,
             )
         except BaseHomematicException as bhexc:
             raise HomeAssistantError(bhexc) from bhexc
@@ -1187,6 +1194,7 @@ async def _async_service_put_link_paramset(*, hass: HomeAssistant, service: Serv
     # The service schema makes sure that this cast works.
     values = dict(service.data[CONF_PARAMSET])
     rx_mode = service.data.get(CONF_RX_MODE)
+    retry: bool = service.data.get(CONF_RETRY, True)
 
     if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
         try:
@@ -1196,6 +1204,7 @@ async def _async_service_put_link_paramset(*, hass: HomeAssistant, service: Serv
                 values=values,
                 rx_mode=rx_mode,
                 check_against_pd=True,
+                retry=retry,
             )
         except BaseHomematicException as bhexc:
             raise HomeAssistantError(bhexc) from bhexc
@@ -1211,6 +1220,7 @@ async def _async_service_put_paramset(*, hass: HomeAssistant, service: ServiceCa
     values = dict(service.data[CONF_PARAMSET])
     wait_for_callback = service.data.get(CONF_WAIT_FOR_CALLBACK)
     rx_mode = service.data.get(CONF_RX_MODE)
+    retry: bool = service.data.get(CONF_RETRY, True)
 
     if hm_device := _async_get_hm_device_by_service_data(hass=hass, service=service):
         channel_address = f"{hm_device.address}:{channel_no}" if channel_no is not None else hm_device.address
@@ -1222,6 +1232,7 @@ async def _async_service_put_paramset(*, hass: HomeAssistant, service: ServiceCa
                 wait_for_callback=wait_for_callback,
                 rx_mode=rx_mode,
                 check_against_pd=True,
+                retry=retry,
             )
         except BaseHomematicException as bhexc:
             raise HomeAssistantError(bhexc) from bhexc

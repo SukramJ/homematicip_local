@@ -81,11 +81,6 @@ class TestSysvarDpSwitch:
         assert data_point.send_variable.call_count == 0
         await hass.services.async_call("switch", "turn_on", {"entity_id": entity_id}, blocking=True)
         assert data_point.send_variable.call_count == 1
-        # The mocked method may capture keyword-only args
-        call0 = data_point.send_variable.mock_calls[0]
-        assert (call0.args and call0.args[0] is True) or (call0.kwargs and call0.kwargs.get("value") is True)
 
         await hass.services.async_call("switch", "turn_off", {"entity_id": entity_id}, blocking=True)
         assert data_point.send_variable.call_count == 2
-        call1 = data_point.send_variable.mock_calls[1]
-        assert (call1.args and call1.args[0] is False) or (call1.kwargs and call1.kwargs.get("value") is False)

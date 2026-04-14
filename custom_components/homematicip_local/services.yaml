@@ -556,6 +556,10 @@ set_device_value:
           options:
             - "BURST"
             - "WAKEUP"
+    retry:
+      default: true
+      selector:
+        boolean:
 
 put_link_paramset:
   fields:
@@ -581,6 +585,10 @@ put_link_paramset:
           options:
             - "BURST"
             - "WAKEUP"
+    retry:
+      default: true
+      selector:
+        boolean:
 
 put_paramset:
   fields:
@@ -626,6 +634,10 @@ put_paramset:
           options:
             - "BURST"
             - "WAKEUP"
+    retry:
+      default: true
+      selector:
+        boolean:
 
 enable_away_mode_by_calendar:
   target:

@@ -69,6 +69,7 @@ from .const import (
     CONF_BACKUP_PATH,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
+    CONF_COMMAND_RETRY_MAX_ATTEMPTS,
     CONF_COMMAND_THROTTLE_INTERVAL,
     CONF_DISABLE_CONFIG_PANEL,
     CONF_ENABLE_LIGHT_LAST_BRIGHTNESS,
@@ -91,6 +92,7 @@ from .const import (
     CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE,
     CONF_VERIFY_TLS,
     DEFAULT_BACKUP_PATH,
+    DEFAULT_COMMAND_RETRY_MAX_ATTEMPTS,
     DEFAULT_COMMAND_THROTTLE_INTERVAL,
     DEFAULT_DISABLE_CONFIG_PANEL,
     DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK,
@@ -1060,6 +1062,9 @@ class ControlConfig:
             program_markers if (program_markers := ac.get(CONF_PROGRAM_MARKERS)) else DEFAULT_PROGRAM_MARKERS
         )
         self._sys_scan_interval: Final[int] = ac.get(CONF_SYS_SCAN_INTERVAL, DEFAULT_SYS_SCAN_INTERVAL)
+        self._command_retry_max_attempts: Final[int] = ac.get(
+            CONF_COMMAND_RETRY_MAX_ATTEMPTS, DEFAULT_COMMAND_RETRY_MAX_ATTEMPTS
+        )
         self._command_throttle_interval: Final[float] = ac.get(
             CONF_COMMAND_THROTTLE_INTERVAL, DEFAULT_COMMAND_THROTTLE_INTERVAL
         )
@@ -1157,7 +1162,10 @@ class ControlConfig:
             password=self._password,
             program_markers=self._program_markers,
             schedule_timer_config=ScheduleTimerConfig(sys_scan_interval=self._sys_scan_interval),
-            timeout_config=TimeoutConfig(command_throttle_interval=self._command_throttle_interval),
+            timeout_config=TimeoutConfig(
+                command_retry_max_attempts=self._command_retry_max_attempts,
+                command_throttle_interval=self._command_throttle_interval,
+            ),
             start_direct=self._start_direct,
             storage_directory=get_storage_directory(hass=self.hass),
             sysvar_markers=self._sysvar_markers,

@@ -339,6 +339,7 @@ norecursedirs = [
 ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+addopts = "-n auto --dist loadscope"
 
 [tool.ruff]
 target-version = "py313"
@@ -500,6 +501,8 @@ max-complexity = 25
 
 [tool.coverage.run]
 source = ["custom_components/homematicip_local"]
+parallel = true
+concurrency = ["thread"]
 
 [tool.coverage.report]
 exclude_lines = [

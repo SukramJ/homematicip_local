@@ -24,6 +24,7 @@
                 "data": {
                     "callback_host": "Callback-Host (optional)", 
                     "callback_port_xml_rpc": "Callback-Port (optional)", 
+                    "command_retry_max_attempts": "Befehlswiederholungsversuche", 
                     "command_throttle_interval": "Befehlsdrosselung (Intervall)", 
                     "disable_config_panel": "Gerätekonfigurations-Panel deaktivieren", 
                     "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
@@ -43,6 +44,7 @@
                 "data_description": {
                     "callback_host": "IP-Adresse für CCU-Callbacks. Leer lassen für automatische Erkennung.", 
                     "callback_port_xml_rpc": "Port für XML-RPC-Callbacks. Leer lassen für automatische Zuweisung.", 
+                    "command_retry_max_attempts": "Maximale Anzahl Wiederholungsversuche bei vorübergehenden Befehlsfehlern (Timeout, Gerät nicht erreichbar). Auf 0 setzen um Wiederholungen zu deaktivieren.", 
                     "command_throttle_interval": "Mindestabstand zwischen Gerätebefehlen in Sekunden. Auf 0 setzen um die Drosselung zu deaktivieren. Gewährleistet einen reibungslosen Betrieb bei großen Installationen.", 
                     "disable_config_panel": "Das Gerätekonfigurations-Panel aus der Seitenleiste ausblenden.", 
                     "enable_system_notifications": "Benachrichtigungen für Verbindungsprobleme und Gerätefehler in Home Assistant anzeigen.", 
@@ -599,6 +601,7 @@
                 "data": {
                     "callback_host": "Callback Hostname/IP-Adresse", 
                     "callback_port_xml_rpc": "Callback XML-RPC Port", 
+                    "command_retry_max_attempts": "Befehlswiederholungsversuche", 
                     "command_throttle_interval": "Befehlsdrosselung (Intervall)", 
                     "disable_config_panel": "Gerätekonfigurations-Panel deaktivieren", 
                     "enable_system_notifications": "Systembenachrichtigungen aktivieren", 
@@ -614,6 +617,7 @@
                 "data_description": {
                     "callback_host": "IP-Adresse für CCU-Callbacks. Leer lassen für automatische Erkennung.", 
                     "callback_port_xml_rpc": "Port für XML-RPC-Callbacks. Leer lassen für automatische Zuweisung.", 
+                    "command_retry_max_attempts": "Maximale Anzahl Wiederholungsversuche bei vorübergehenden Befehlsfehlern (Timeout, Gerät nicht erreichbar). Auf 0 setzen um Wiederholungen zu deaktivieren.", 
                     "command_throttle_interval": "Mindestabstand zwischen Gerätebefehlen in Sekunden. Auf 0 setzen um die Drosselung zu deaktivieren. Gewährleistet einen reibungslosen Betrieb bei großen Installationen.", 
                     "disable_config_panel": "Das Gerätekonfigurations-Panel aus der Seitenleiste ausblenden.", 
                     "enable_system_notifications": "Persistente Benachrichtigungen für Systemereignisse wie Netzwerkprobleme oder nicht erreichbare Geräte aktivieren.", 
@@ -1172,6 +1176,10 @@
                     "description": "Kanaladresse des verknüpften Empfängers", 
                     "name": "Empfänger Kanaladresse"
                 }, 
+                "retry": {
+                    "description": "Bei vorübergehenden Fehlern wiederholen (Standard: true)", 
+                    "name": "Wiederholen"
+                }, 
                 "rx_mode": {
                     "description": "Der verwendete Empfangsmodus", 
                     "name": "RX Modus"
@@ -1205,6 +1213,10 @@
                 "paramset_key": {
                     "description": "Der verwendete Parametersatz", 
                     "name": "Parametersatzschlüssel"
+                }, 
+                "retry": {
+                    "description": "Bei vorübergehenden Fehlern wiederholen (Standard: true)", 
+                    "name": "Wiederholen"
                 }, 
                 "rx_mode": {
                     "description": "Der verwendete Empfangsmodus", 
@@ -1369,6 +1381,10 @@
                 "parameter": {
                     "description": "Zu sendender Parameter, z. B. STATE", 
                     "name": "Parameter"
+                }, 
+                "retry": {
+                    "description": "Bei vorübergehenden Fehlern wiederholen (Standard: true)", 
+                    "name": "Wiederholen"
                 }, 
                 "rx_mode": {
                     "description": "Der verwendete Empfangsmodus", 

@@ -24,6 +24,7 @@ DEFAULT_ENABLE_MQTT: Final = False
 DEFAULT_MQTT_PREFIX: Final = ""
 DEFAULT_DISABLE_CONFIG_PANEL: Final = False
 DEFAULT_ENABLE_SUB_DEVICES: Final = False
+DEFAULT_COMMAND_RETRY_MAX_ATTEMPTS: Final = 3
 DEFAULT_COMMAND_THROTTLE_INTERVAL: Final = 0.1
 
 DEFAULT_SYS_SCAN_INTERVAL: Final = 30
@@ -32,6 +33,7 @@ LEARN_MORE_URL_XMLRPC_SERVER_RECEIVES_NO_EVENTS: Final = "https://github.com/suk
 LEARN_MORE_URL_PONG_MISMATCH: Final = "https://github.com/sukramj/homematicip_local#what-is-the-meaning-of-pending-pong-mismatch-on-interface--austehende-pong-ereignisse-auf-interface"
 
 CONF_ADVANCED_CONFIG: Final = "advanced_config"
+CONF_COMMAND_RETRY_MAX_ATTEMPTS: Final = "command_retry_max_attempts"
 CONF_COMMAND_THROTTLE_INTERVAL: Final = "command_throttle_interval"
 CONF_BACKUP_PATH: Final = "backup_path"
 CONF_CALLBACK_HOST: Final = "callback_host"

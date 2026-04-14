@@ -24,6 +24,7 @@
                 "data": {
                     "callback_host": "Callback host (optional)", 
                     "callback_port_xml_rpc": "Callback port (optional)", 
+                    "command_retry_max_attempts": "Command retry attempts", 
                     "command_throttle_interval": "Command throttle interval", 
                     "disable_config_panel": "Disable device configuration panel", 
                     "enable_system_notifications": "Enable system notifications", 
@@ -43,6 +44,7 @@
                 "data_description": {
                     "callback_host": "IP address for CCU callbacks. Leave empty for auto-detection.", 
                     "callback_port_xml_rpc": "Port for XML-RPC callbacks. Leave empty for automatic assignment.", 
+                    "command_retry_max_attempts": "Maximum number of retry attempts for transient command failures (timeout, device unreachable). Set to 0 to disable retry.", 
                     "command_throttle_interval": "Minimum delay between device commands in seconds. Set to 0 to disable throttling. Ensures smooth operation for large installations.", 
                     "disable_config_panel": "Hide the device configuration panel from the sidebar.", 
                     "enable_system_notifications": "Show notifications for connection issues and device errors in Home Assistant.", 
@@ -375,25 +377,25 @@
                 "name": "Light level"
             }, 
             "lock_state": {
-                "name": "Lock State",
+                "name": "Lock State", 
                 "state": {
-                    "locked": "Locked",
-                    "unknown": "Unknown",
+                    "locked": "Locked", 
+                    "unknown": "Unknown", 
                     "unlocked": "Unlocked"
                 }
-            },
+            }, 
             "lock_state_reason": {
-                "name": "Lock State Reason",
+                "name": "Lock State Reason", 
                 "state": {
-                    "manual": "Manual",
-                    "manual_inside": "Manual inside",
-                    "manual_outside": "Manual outside",
-                    "motor": "Motor",
-                    "motor_after_open": "Motor after open",
-                    "motor_after_open_acked": "Motor after open acknowledged",
+                    "manual": "Manual", 
+                    "manual_inside": "Manual inside", 
+                    "manual_outside": "Manual outside", 
+                    "motor": "Motor", 
+                    "motor_after_open": "Motor after open", 
+                    "motor_after_open_acked": "Motor after open acknowledged", 
                     "unknown": "Unknown"
                 }
-            },
+            }, 
             "pipe_level": {
                 "name": "Valve opening"
             }, 
@@ -599,6 +601,7 @@
                 "data": {
                     "callback_host": "Callback host (optional)", 
                     "callback_port_xml_rpc": "Callback port (optional)", 
+                    "command_retry_max_attempts": "Command retry attempts", 
                     "command_throttle_interval": "Command throttle interval", 
                     "disable_config_panel": "Disable device configuration panel", 
                     "enable_system_notifications": "Enable system notifications", 
@@ -614,6 +617,7 @@
                 "data_description": {
                     "callback_host": "IP address for CCU callbacks. Leave empty for auto-detection.", 
                     "callback_port_xml_rpc": "Port for XML-RPC callbacks. Leave empty for automatic assignment.", 
+                    "command_retry_max_attempts": "Maximum number of retry attempts for transient command failures (timeout, device unreachable). Set to 0 to disable retry.", 
                     "command_throttle_interval": "Minimum delay between device commands in seconds. Set to 0 to disable throttling. Ensures smooth operation for large installations.", 
                     "disable_config_panel": "Hide the device configuration panel from the sidebar.", 
                     "enable_system_notifications": "Show notifications for connection issues and device errors in Home Assistant.", 
@@ -643,25 +647,16 @@
                 "title": "Connection settings"
             }, 
             "init": {
-                "description": "What would you like to configure?",
+                "description": "What would you like to configure?", 
                 "menu_options": {
-                    "advanced_settings": "Advanced settings",
-                    "connection": "Connection settings",
-                    "interfaces": "TLS & interfaces",
-                    "permissions": "Schedule editing",
+                    "advanced_settings": "Advanced settings", 
+                    "connection": "Connection settings", 
+                    "interfaces": "TLS & interfaces", 
+                    "permissions": "Schedule editing", 
                     "programs_sysvars": "Programs & system variables"
-                },
+                }, 
                 "title": "Configure integration"
-            },
-            "permissions": {
-                "data": {
-                    "non_admin_permissions": "Allow non-admin users to edit schedules"
-                },
-                "data_description": {
-                    "non_admin_permissions": "When enabled, non-admin users can edit device schedules via the schedule cards. Admin users always have full access."
-                },
-                "title": "Schedule editing"
-            },
+            }, 
             "interfaces": {
                 "data": {
                     "bidcos_rf_enabled": "Enable Homematic (Bidcos-RF)", 
@@ -700,6 +695,15 @@
                 }, 
                 "description": "Configure interface ports (TLS is {tls_status})", 
                 "title": "Port configuration"
+            }, 
+            "permissions": {
+                "data": {
+                    "non_admin_permissions": "Allow non-admin users to edit schedules"
+                }, 
+                "data_description": {
+                    "non_admin_permissions": "When enabled, non-admin users can edit device schedules via the schedule cards. Admin users always have full access."
+                }, 
+                "title": "Schedule editing"
             }, 
             "programs_sysvars": {
                 "data": {
@@ -1172,6 +1176,10 @@
                     "description": "Channel address of the associated receiver", 
                     "name": "Receiver Channel Address"
                 }, 
+                "retry": {
+                    "description": "Retry on transient failures (default: true)", 
+                    "name": "Retry"
+                }, 
                 "rx_mode": {
                     "description": "The receive mode used", 
                     "name": "RX mode"
@@ -1205,6 +1213,10 @@
                 "paramset_key": {
                     "description": "The paramset_key argument", 
                     "name": "Paramset key"
+                }, 
+                "retry": {
+                    "description": "Retry on transient failures (default: true)", 
+                    "name": "Retry"
                 }, 
                 "rx_mode": {
                     "description": "The receive mode used", 
@@ -1369,6 +1381,10 @@
                 "parameter": {
                     "description": "Parameter to send i.e STATE", 
                     "name": "Parameter"
+                }, 
+                "retry": {
+                    "description": "Retry on transient failures (default: true)", 
+                    "name": "Retry"
                 }, 
                 "rx_mode": {
                     "description": "The receive mode used", 

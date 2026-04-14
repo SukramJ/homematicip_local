@@ -24,6 +24,7 @@
                 "data": {
                     "callback_host": "Callback host (optional)", 
                     "callback_port_xml_rpc": "Callback port (optional)", 
+                    "command_retry_max_attempts": "Command retry attempts", 
                     "command_throttle_interval": "Command throttle interval", 
                     "disable_config_panel": "Disable device configuration panel", 
                     "enable_system_notifications": "Enable system notifications", 
@@ -43,6 +44,7 @@
                 "data_description": {
                     "callback_host": "IP address for CCU callbacks. Leave empty for auto-detection.", 
                     "callback_port_xml_rpc": "Port for XML-RPC callbacks. Leave empty for automatic assignment.", 
+                    "command_retry_max_attempts": "Maximum number of retry attempts for transient command failures (timeout, device unreachable). Set to 0 to disable retry.", 
                     "command_throttle_interval": "Minimum delay between device commands in seconds. Set to 0 to disable throttling. Ensures smooth operation for large installations.", 
                     "disable_config_panel": "Hide the device configuration panel from the sidebar.", 
                     "enable_system_notifications": "Show notifications for connection issues and device errors in Home Assistant.", 
@@ -599,6 +601,7 @@
                 "data": {
                     "callback_host": "Callback host (optional)", 
                     "callback_port_xml_rpc": "Callback port (optional)", 
+                    "command_retry_max_attempts": "Command retry attempts", 
                     "command_throttle_interval": "Command throttle interval", 
                     "disable_config_panel": "Disable device configuration panel", 
                     "enable_system_notifications": "Enable system notifications", 
@@ -614,6 +617,7 @@
                 "data_description": {
                     "callback_host": "IP address for CCU callbacks. Leave empty for auto-detection.", 
                     "callback_port_xml_rpc": "Port for XML-RPC callbacks. Leave empty for automatic assignment.", 
+                    "command_retry_max_attempts": "Maximum number of retry attempts for transient command failures (timeout, device unreachable). Set to 0 to disable retry.", 
                     "command_throttle_interval": "Minimum delay between device commands in seconds. Set to 0 to disable throttling. Ensures smooth operation for large installations.", 
                     "disable_config_panel": "Hide the device configuration panel from the sidebar.", 
                     "enable_system_notifications": "Show notifications for connection issues and device errors in Home Assistant.", 
@@ -1172,6 +1176,10 @@
                     "description": "Channel address of the associated receiver", 
                     "name": "Receiver Channel Address"
                 }, 
+                "retry": {
+                    "description": "Retry on transient failures (default: true)", 
+                    "name": "Retry"
+                }, 
                 "rx_mode": {
                     "description": "The receive mode used", 
                     "name": "RX mode"
@@ -1205,6 +1213,10 @@
                 "paramset_key": {
                     "description": "The paramset_key argument", 
                     "name": "Paramset key"
+                }, 
+                "retry": {
+                    "description": "Retry on transient failures (default: true)", 
+                    "name": "Retry"
                 }, 
                 "rx_mode": {
                     "description": "The receive mode used", 
@@ -1369,6 +1381,10 @@
                 "parameter": {
                     "description": "Parameter to send i.e STATE", 
                     "name": "Parameter"
+                }, 
+                "retry": {
+                    "description": "Retry on transient failures (default: true)", 
+                    "name": "Retry"
                 }, 
                 "rx_mode": {
                     "description": "The receive mode used", 

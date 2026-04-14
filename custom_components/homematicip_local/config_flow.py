@@ -58,6 +58,7 @@ from .const import (
     CONF_BACKUP_PATH,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
+    CONF_COMMAND_RETRY_MAX_ATTEMPTS,
     CONF_COMMAND_THROTTLE_INTERVAL,
     CONF_CUSTOM_PORT_CONFIG,
     CONF_CUSTOM_PORTS,
@@ -84,6 +85,7 @@ from .const import (
     CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE,
     CONF_VERIFY_TLS,
     DEFAULT_BACKUP_PATH,
+    DEFAULT_COMMAND_RETRY_MAX_ATTEMPTS,
     DEFAULT_COMMAND_THROTTLE_INTERVAL,
     DEFAULT_DISABLE_CONFIG_PANEL,
     DEFAULT_ENABLE_LIGHT_LAST_BRIGHTNESS,
@@ -149,6 +151,10 @@ PORT_SELECTOR_OPTIONAL = vol.All(
 )
 SCAN_INTERVAL_SELECTOR = vol.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=5, step="any", unit_of_measurement="sec")),
+    vol.Coerce(int),
+)
+COMMAND_RETRY_MAX_ATTEMPTS_SELECTOR = vol.All(
+    NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=10, step=1)),
     vol.Coerce(int),
 )
 COMMAND_THROTTLE_INTERVAL_SELECTOR = vol.All(
@@ -418,6 +424,12 @@ def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_SYS_SCAN_INTERVAL, DEFAULT_SYS_SCAN_INTERVAL),
             ): SCAN_INTERVAL_SELECTOR,
             vol.Required(
+                CONF_COMMAND_RETRY_MAX_ATTEMPTS,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(
+                    CONF_COMMAND_RETRY_MAX_ATTEMPTS, DEFAULT_COMMAND_RETRY_MAX_ATTEMPTS
+                ),
+            ): COMMAND_RETRY_MAX_ATTEMPTS_SELECTOR,
+            vol.Required(
                 CONF_COMMAND_THROTTLE_INTERVAL,
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(
                     CONF_COMMAND_THROTTLE_INTERVAL, DEFAULT_COMMAND_THROTTLE_INTERVAL
@@ -520,6 +532,12 @@ def get_advanced_settings_schema(data: ConfigType, all_un_ignore_parameters: lis
                 CONF_MQTT_PREFIX,
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_MQTT_PREFIX, DEFAULT_MQTT_PREFIX),
             ): TEXT_SELECTOR,
+            vol.Required(
+                CONF_COMMAND_RETRY_MAX_ATTEMPTS,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(
+                    CONF_COMMAND_RETRY_MAX_ATTEMPTS, DEFAULT_COMMAND_RETRY_MAX_ATTEMPTS
+                ),
+            ): COMMAND_RETRY_MAX_ATTEMPTS_SELECTOR,
             vol.Required(
                 CONF_COMMAND_THROTTLE_INTERVAL,
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(
@@ -1781,6 +1799,9 @@ def _update_advanced_input(data: ConfigType, advanced_input: ConfigType) -> None
         CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE
     ]
     data[CONF_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] = advanced_input[CONF_OPTIONAL_SETTINGS]
+    data[CONF_ADVANCED_CONFIG][CONF_COMMAND_RETRY_MAX_ATTEMPTS] = advanced_input.get(
+        CONF_COMMAND_RETRY_MAX_ATTEMPTS, DEFAULT_COMMAND_RETRY_MAX_ATTEMPTS
+    )
     data[CONF_ADVANCED_CONFIG][CONF_COMMAND_THROTTLE_INTERVAL] = advanced_input[CONF_COMMAND_THROTTLE_INTERVAL]
 
     if advanced_input.get(CONF_UN_IGNORES):
@@ -1824,6 +1845,9 @@ def _update_advanced_settings_input(data: ConfigType, advanced_input: ConfigType
         CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE
     ]
     data[CONF_ADVANCED_CONFIG][CONF_OPTIONAL_SETTINGS] = advanced_input[CONF_OPTIONAL_SETTINGS]
+    data[CONF_ADVANCED_CONFIG][CONF_COMMAND_RETRY_MAX_ATTEMPTS] = advanced_input.get(
+        CONF_COMMAND_RETRY_MAX_ATTEMPTS, DEFAULT_COMMAND_RETRY_MAX_ATTEMPTS
+    )
     data[CONF_ADVANCED_CONFIG][CONF_COMMAND_THROTTLE_INTERVAL] = advanced_input[CONF_COMMAND_THROTTLE_INTERVAL]
     data[CONF_ADVANCED_CONFIG][CONF_BACKUP_PATH] = advanced_input.get(CONF_BACKUP_PATH, DEFAULT_BACKUP_PATH)
 
