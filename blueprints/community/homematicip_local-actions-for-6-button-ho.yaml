@@ -8,8 +8,10 @@ blueprint:
     Tested with HmIP-WRC6. Should work with other device too.
     This variant of the original blueprint supports multiple devices, and alerting the user or skipping execution if there is a conflicting direct device connection in the CCU.
     by @hosswald
-    v2026-02-08
+    v2026-04-14
   domain: automation
+  homeassistant:
+    min_version: "2026.3.0"
   source_url: https://github.com/sukramj/homematicip_local/blob/devel/blueprints/automation/homematicip_local-actions-for-6-button.yaml
   input:
     remote:
@@ -157,7 +159,7 @@ action:
         {% elif t == 'press_long' and s == 6 %}{{ (action_right_bottom_long | default([])) | length > 0 }}
         {% else %}false{% endif %}
 
-  - service: homematicip_local.get_link_peers
+  - action: homematicip_local.get_link_peers
     data:
       device_id: "{{ trigger.event.data.device_id }}"
       channel: "{{ channel }}"
@@ -170,11 +172,9 @@ action:
       has_direct_link: "{{ (direct_link_peer_count | int(0)) > 0 }}"
 
   - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ notify_on_direct_links and has_direct_link and has_configured_action }}"
+      - conditions: "{{ notify_on_direct_links and has_direct_link and has_configured_action }}"
         sequence:
-          - service: persistent_notification.create
+          - action: persistent_notification.create
             data:
               title: "Homematic CCU direct connection detected"
               message: >-
@@ -182,60 +182,34 @@ action:
                 A Home Assistant action is configured for this button, but the CCU may also handle it directly.
 
   - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ skip_actions_when_direct_link and has_direct_link and has_configured_action }}"
+      - conditions: "{{ skip_actions_when_direct_link and has_direct_link and has_configured_action }}"
         sequence:
           - stop: "Skipped blueprint actions: CCU direct connection exists for this channel."
 
   - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_short' and trigger.event.data.subtype  == 1 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_short' and trigger.event.data.subtype == 1 }}"
         sequence: !input "action_left_top_short"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_long' and trigger.event.data.subtype  == 1 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_long' and trigger.event.data.subtype == 1 }}"
         sequence: !input "action_left_top_long"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_short' and trigger.event.data.subtype  == 2 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_short' and trigger.event.data.subtype == 2 }}"
         sequence: !input "action_right_top_short"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_long' and trigger.event.data.subtype  == 2 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_long' and trigger.event.data.subtype == 2 }}"
         sequence: !input "action_right_top_long"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_short' and trigger.event.data.subtype  == 3 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_short' and trigger.event.data.subtype == 3 }}"
         sequence: !input "action_left_middle_short"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_long' and trigger.event.data.subtype  == 3 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_long' and trigger.event.data.subtype == 3 }}"
         sequence: !input "action_left_middle_long"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_short' and trigger.event.data.subtype  == 4 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_short' and trigger.event.data.subtype == 4 }}"
         sequence: !input "action_right_middle_short"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_long' and trigger.event.data.subtype  == 4 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_long' and trigger.event.data.subtype == 4 }}"
         sequence: !input "action_right_middle_long"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_short' and trigger.event.data.subtype  == 5 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_short' and trigger.event.data.subtype == 5 }}"
         sequence: !input "action_left_bottom_short"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_long' and trigger.event.data.subtype  == 5 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_long' and trigger.event.data.subtype == 5 }}"
         sequence: !input "action_left_bottom_long"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_short' and trigger.event.data.subtype  == 6 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_short' and trigger.event.data.subtype == 6 }}"
         sequence: !input "action_right_bottom_short"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_long' and trigger.event.data.subtype  == 6 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_long' and trigger.event.data.subtype == 6 }}"
         sequence: !input "action_right_bottom_long"
 
 mode: parallel

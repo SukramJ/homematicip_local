@@ -6,16 +6,36 @@ blueprint:
     to your configured minimum duration for long press. This can be configured in
     your CCU.
     Tested with HmIP-KRCA. Should work with other device too.
-    v2022-10-28
+    v2026-04-14
   domain: automation
+  homeassistant:
+    min_version: "2026.3.0"
   source_url: https://github.com/sukramj/homematicip_local/blob/devel/blueprints/automation/homematicip_local-actions-for-key_ring_remote_control.yaml
   input:
     remote:
       name: 4-Button Device (e.g. HmIP-KRCA)
-      description: Please select a 4-Button device of your Homematic(IP) Local integration.
+      description: Please select one or more 4-Button devices of your Homematic(IP) Local integration.
       selector:
         device:
           integration: homematicip_local
+          multiple: true
+
+    notify_on_direct_links:
+      name: Warn if direct connections exist in CCU
+      description: >
+        A persistent notification will be sent if there is a direct connection in the CCU for the pressed button.
+      default: true
+      selector:
+        boolean: {}
+
+    skip_actions_when_direct_link:
+      name: Skip if direct connection exists in CCU
+      description: >
+        The configured action will be skipped if there is a direct connection in the CCU for the pressed button.
+      default: false
+      selector:
+        boolean: {}
+
     action_1_short:
       name: Action
       description: Button 1, Short Press
@@ -65,45 +85,90 @@ blueprint:
       selector:
         action: {}
 
+variables:
+  remotes: !input remote
+  notify_on_direct_links: !input notify_on_direct_links
+  skip_actions_when_direct_link: !input skip_actions_when_direct_link
+
+  action_1_short: !input action_1_short
+  action_1_long: !input action_1_long
+  action_2_short: !input action_2_short
+  action_2_long: !input action_2_long
+  action_3_short: !input action_3_short
+  action_3_long: !input action_3_long
+  action_4_short: !input action_4_short
+  action_4_long: !input action_4_long
+
 trigger:
   - platform: event
     event_type: homematic.keypress
-    event_data:
-      device_id: !input "remote"
-condition: []
+
+condition:
+  - condition: template
+    value_template: >-
+      {% set selected = remotes if remotes is list else [remotes] %}
+      {{ trigger.event.data.device_id in selected }}
+
 action:
+  - variables:
+      channel: "{{ trigger.event.data.subtype }}"
+      has_configured_action: >-
+        {% set t = trigger.event.data.type %}
+        {% set s = trigger.event.data.subtype %}
+        {% if t == 'press_short' and s == 2 %}{{ (action_1_short | default([])) | length > 0 }}
+        {% elif t == 'press_long' and s == 2 %}{{ (action_1_long | default([])) | length > 0 }}
+        {% elif t == 'press_short' and s == 1 %}{{ (action_2_short | default([])) | length > 0 }}
+        {% elif t == 'press_long' and s == 1 %}{{ (action_2_long | default([])) | length > 0 }}
+        {% elif t == 'press_short' and s == 4 %}{{ (action_3_short | default([])) | length > 0 }}
+        {% elif t == 'press_long' and s == 4 %}{{ (action_3_long | default([])) | length > 0 }}
+        {% elif t == 'press_short' and s == 3 %}{{ (action_4_short | default([])) | length > 0 }}
+        {% elif t == 'press_long' and s == 3 %}{{ (action_4_long | default([])) | length > 0 }}
+        {% else %}false{% endif %}
+
+  - action: homematicip_local.get_link_peers
+    data:
+      device_id: "{{ trigger.event.data.device_id }}"
+      channel: "{{ channel }}"
+    response_variable: link_peers
+
+  - variables:
+      direct_link_peer_count: >-
+        {% set lists = (link_peers.values() | list) if link_peers is mapping else [] %}
+        {{ lists | map('count') | sum }}
+      has_direct_link: "{{ (direct_link_peer_count | int(0)) > 0 }}"
+
   - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_short' and trigger.event.data.subtype  == 2 }}"
+      - conditions: "{{ notify_on_direct_links and has_direct_link and has_configured_action }}"
+        sequence:
+          - action: persistent_notification.create
+            data:
+              title: "Homematic CCU direct connection detected"
+              message: >-
+                Device {{ trigger.event.data.device_id }}, channel {{ channel }} has direct CCU links (peers).
+                A Home Assistant action is configured for this button, but the CCU may also handle it directly.
+
+  - choose:
+      - conditions: "{{ skip_actions_when_direct_link and has_direct_link and has_configured_action }}"
+        sequence:
+          - stop: "Skipped blueprint actions: CCU direct connection exists for this channel."
+
+  - choose:
+      - conditions: "{{ trigger.event.data.type == 'press_short' and trigger.event.data.subtype == 2 }}"
         sequence: !input "action_1_short"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_long' and trigger.event.data.subtype  == 2 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_long' and trigger.event.data.subtype == 2 }}"
         sequence: !input "action_1_long"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_short' and trigger.event.data.subtype  == 1 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_short' and trigger.event.data.subtype == 1 }}"
         sequence: !input "action_2_short"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_long' and trigger.event.data.subtype  == 1 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_long' and trigger.event.data.subtype == 1 }}"
         sequence: !input "action_2_long"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_short' and trigger.event.data.subtype  == 4 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_short' and trigger.event.data.subtype == 4 }}"
         sequence: !input "action_3_short"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_long' and trigger.event.data.subtype  == 4 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_long' and trigger.event.data.subtype == 4 }}"
         sequence: !input "action_3_long"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_short' and trigger.event.data.subtype  == 3 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_short' and trigger.event.data.subtype == 3 }}"
         sequence: !input "action_4_short"
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.type  == 'press_long' and trigger.event.data.subtype  == 3 }}"
+      - conditions: "{{ trigger.event.data.type == 'press_long' and trigger.event.data.subtype == 3 }}"
         sequence: !input "action_4_long"
+
 mode: parallel
 max: 10

@@ -1,9 +1,21 @@
 blueprint:
   name: Homematic(IP) reactivate device full
   description: Reactivate every device marked as not available.
-    v2022-12-05
+    v2026-04-14
   domain: automation
+  homeassistant:
+    min_version: "2026.3.0"
   source_url: https://github.com/sukramj/homematicip_local/blob/devel/blueprints/automation/homematicip_local_reactivate_device_full.yaml
+  input:
+    delay_seconds:
+      name: Delay before reactivation (seconds)
+      description: Wait before forcing device availability. This gives the device time to respond after the unavailability event.
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: seconds
 
 mode: restart
 max_exceeded: silent
@@ -15,6 +27,8 @@ trigger:
       unavailable: true
 
 action:
-  - service: homematicip_local.force_device_availability
+  - delay:
+      seconds: !input delay_seconds
+  - action: homematicip_local.force_device_availability
     data:
       device_id: "{{ trigger.event.data.device_id }}"
