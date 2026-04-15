@@ -1944,13 +1944,13 @@ const de={attribute:!0,type:String,converter:y,reflect:!1,hasChanged:b},ce=(e=de
                 <span class="schedule-enabled-title">${this._translations.ui.weeklyProgram}:</span>
                 <div class="channel-chips">
                   ${Object.entries(this._scheduleEnabled).map(([e,t])=>{const i=1===Object.keys(this._scheduleEnabled).length?t?this._translations.ui.scheduleEnabled:this._translations.ui.scheduleDisabled:this._availableTargetChannels?.[e]?.name??e;return F` <button
-                        class="channel-chip ${t?"active":"inactive"}"
-                        .disabled=${!this._isEditable||this._isLoading}
-                        @click=${()=>this._handleScheduleEnabledToggle(e)}
-                        title="${this._availableTargetChannels?.[e]?.name??e}: ${t?this._translations.ui.weeklyProgramEnabled:this._translations.ui.weeklyProgramDisabled}"
-                      >
-                        ${i}
-                      </button>`})}
+                      class="channel-chip ${t?"active":"inactive"}"
+                      .disabled=${!this._isEditable||this._isLoading}
+                      @click=${()=>this._handleScheduleEnabledToggle(e)}
+                      title="${this._availableTargetChannels?.[e]?.name??e}: ${t?this._translations.ui.weeklyProgramEnabled:this._translations.ui.weeklyProgramDisabled}"
+                    >
+                      ${i}
+                    </button>`})}
                 </div>
               </div>`:""}
           ${this._scheduleData?F`
