@@ -1,3 +1,21 @@
+# Version [2.6.2](https://github.com/SukramJ/homematicip_local/compare/2.6.1...2.6.2) (2026-04-15)
+
+## What's Changed
+
+### Dependencies
+
+#### Bump aiohomematic to [2026.4.13](https://github.com/SukramJ/aiohomematic/compare/2026.4.11...2026.4.13)
+
+- Lock schedule support for HmIP-DLD and HmIP-DLP (door lock mode, user permission mode, domain validation)
+- Fixed schedule target channels for multi-config lock devices
+
+#### Bump homematicip-local-frontend
+
+- Added schedule support for lock devices
+- Fixed lock schedule editor labels and translations
+
+---
+
 # Version [2.6.1](https://github.com/SukramJ/homematicip_local/compare/2.6.0...2.6.1) (2026-04-12)
 
 ## What's Changed
