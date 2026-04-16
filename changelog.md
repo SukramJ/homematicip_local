@@ -1,21 +1,3 @@
-# Version [2.6.2](https://github.com/SukramJ/homematicip_local/compare/2.6.1...2.6.2) (2026-04-15)
-
-## What's Changed
-
-### Dependencies
-
-#### Bump aiohomematic to [2026.4.13](https://github.com/SukramJ/aiohomematic/compare/2026.4.11...2026.4.13)
-
-- Lock schedule support for HmIP-DLD and HmIP-DLP (door lock mode, user permission mode, domain validation)
-- Fixed schedule target channels for multi-config lock devices
-
-#### Bump homematicip-local-frontend
-
-- Added schedule support for lock devices
-- Fixed lock schedule editor labels and translations
-
----
-
 # Version [2.6.1](https://github.com/SukramJ/homematicip_local/compare/2.6.0...2.6.1) (2026-04-12)
 
 ## What's Changed
@@ -44,25 +26,31 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.11](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.11)
+#### Bump aiohomematic to [2026.4.14](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.14)
 
 - Added `ScheduleChannelSwitch` data point for per-channel schedule enable/disable
 - Per-channel schedule enable/disable via `COMBINED_PARAMETER` (atomic bitmask + mode write)
 - Load `WEEK_PROGRAM_CHANNEL_LOCKS` value at startup (fixes delayed `schedule_enabled` attribute)
 - Command retry mechanism for transient failures (automatic retry with backoff for temporarily unreachable devices)
+- Lock schedule support for HmIP-DLD and HmIP-DLP (door lock mode, user permission mode, domain validation)
+- Extract MASTER paramset metadata from CCU WebUI dialog functions
+- Fixed schedule target channels for multi-config lock devices
 - Fixed missing DURATION_UNIT/DURATION_VALUE in putParamset for turn_on and turn_off (HmIP-BSL, HmIP-RGBW, HmIPW-WRC6, HmIP-DRG-DALI)
 - Fixed RAMP_TIME_TO_OFF usage for RGBW and DRG-DALI lights
 - Fixed siren duration always sent on turn_on
 
-#### Bump aiohomematic-config to [2026.4.2](https://github.com/SukramJ/aiohomematic-config/compare/2026.4.1...2026.4.2)
+#### Bump aiohomematic-config to [2026.4.3](https://github.com/SukramJ/aiohomematic-config/compare/2026.4.1...2026.4.3)
 
 - Per-channel `schedule_enabled` field on `DeviceScheduleData`
+- Use `get_ui_label_translation()` from aiohomematic
 
 #### Bump homematicip-local-frontend
 
 - Per-channel schedule enable/disable as clickable channel chips
+- Added schedule support for lock devices
 - Improved the schedule card layout to reduce vertical space usage
 - Removed misleading "Update verfügbar" badge from CCU dashboard System Information card
+- Fixed lock schedule editor labels and translations
 - Fixed cards showing "Konfigurationsfehler" in Firefox
 - Fixed cards showing infinite loading spinner in HA Card Picker and on dashboards
 - Fixed device icons invisible or poorly visible in dark mode
