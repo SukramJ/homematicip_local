@@ -52,6 +52,7 @@
 - Removed misleading "Update verfügbar" badge from CCU dashboard System Information card
 - Fixed lock schedule editor labels and translations
 - Fixed cards showing "Konfigurationsfehler" in Firefox
+- Config panel now available for all backends (CCU and Homegear); OpenCCU tab only shown for CCU backends
 - Fixed cards showing infinite loading spinner in HA Card Picker and on dashboards
 - Fixed device icons invisible or poorly visible in dark mode
 

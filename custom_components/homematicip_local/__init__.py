@@ -14,7 +14,6 @@ from aiohomematic import __version__ as HAHM_VERSION
 from aiohomematic.const import (
     DEFAULT_ENABLE_SYSVAR_SCAN,
     DEFAULT_UN_IGNORES,
-    Backend,
     IntegrationIssueType,
     OptionalSettings,
     is_interface_default_port,
@@ -106,12 +105,11 @@ def _cleanup_stale_issues(*, hass: HomeAssistant, entry_id: str) -> None:
 
 
 def _any_entry_has_panel_enabled(*, hass: HomeAssistant) -> bool:
-    """Return True if any loaded CCU config entry has the config panel enabled."""
+    """Return True if any loaded config entry has the config panel enabled."""
     for entry in hass.config_entries.async_entries(domain=DOMAIN, include_ignore=False, include_disabled=False):
         if entry.data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_DISABLE_CONFIG_PANEL, DEFAULT_DISABLE_CONFIG_PANEL):
             continue
-        # Panel only supported for CCU backends
-        if hasattr(entry, "runtime_data") and (control := entry.runtime_data) and control.central.model == Backend.CCU:
+        if hasattr(entry, "runtime_data") and entry.runtime_data:
             return True
     return False
 
