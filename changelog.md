@@ -26,7 +26,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.14](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.14)
+#### Bump aiohomematic to [2026.4.15](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.15)
 
 - Added `ScheduleChannelSwitch` data point for per-channel schedule enable/disable
 - Per-channel schedule enable/disable via `COMBINED_PARAMETER` (atomic bitmask + mode write)
@@ -34,10 +34,13 @@
 - Command retry mechanism for transient failures (automatic retry with backoff for temporarily unreachable devices)
 - Lock schedule support for HmIP-DLD and HmIP-DLP (door lock mode, user permission mode, domain validation)
 - Extract MASTER paramset metadata from CCU WebUI dialog functions
+- Support non-climate link roles (HmIP-RCV-50 virtual remote and other non-climate devices now linkable via "Add Direct Link" wizard)
 - Fixed schedule target channels for multi-config lock devices
 - Fixed missing DURATION_UNIT/DURATION_VALUE in putParamset for turn_on and turn_off (HmIP-BSL, HmIP-RGBW, HmIPW-WRC6, HmIP-DRG-DALI)
 - Fixed RAMP_TIME_TO_OFF usage for RGBW and DRG-DALI lights
 - Fixed siren duration always sent on turn_on
+- Fixed HmIP-RCV-50 (and similar devices) missing from the panel device list due to empty CHILDREN entries
+- Improved logging for unsupported JSON-RPC methods (warning instead of error) and for devices with failing configurable-channel lookup
 
 #### Bump aiohomematic-config to [2026.4.3](https://github.com/SukramJ/aiohomematic-config/compare/2026.4.1...2026.4.3)
 
