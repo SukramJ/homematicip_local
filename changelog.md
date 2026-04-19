@@ -26,7 +26,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.15](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.15)
+#### Bump aiohomematic to [2026.4.16](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.16)
 
 - Added `ScheduleChannelSwitch` data point for per-channel schedule enable/disable
 - Per-channel schedule enable/disable via `COMBINED_PARAMETER` (atomic bitmask + mode write)
@@ -35,16 +35,20 @@
 - Lock schedule support for HmIP-DLD and HmIP-DLP (door lock mode, user permission mode, domain validation)
 - Extract MASTER paramset metadata from CCU WebUI dialog functions
 - Support non-climate link roles (HmIP-RCV-50 virtual remote and other non-climate devices now linkable via "Add Direct Link" wizard)
+- Added `WeekProfile.supported_schedule_fields` exposing the `ScheduleField`s the device advertises; forwarded as entity attribute so frontends can hide non-functional schedule inputs (e.g. HmIP-DLD)
+- Validate schedule writes against paramset description (`check_against_pd=True`) — unsupported `WP_*` parameters now raise a clear `ClientException` instead of being silently rejected
 - Fixed schedule target channels for multi-config lock devices
 - Fixed missing DURATION_UNIT/DURATION_VALUE in putParamset for turn_on and turn_off (HmIP-BSL, HmIP-RGBW, HmIPW-WRC6, HmIP-DRG-DALI)
 - Fixed RAMP_TIME_TO_OFF usage for RGBW and DRG-DALI lights
 - Fixed siren duration always sent on turn_on
 - Fixed HmIP-RCV-50 (and similar devices) missing from the panel device list due to empty CHILDREN entries
+- Fixed HmIP-DLD silently rejecting schedule updates by filtering unsupported schedule fields before `put_paramset`
 - Improved logging for unsupported JSON-RPC methods (warning instead of error) and for devices with failing configurable-channel lookup
 
-#### Bump aiohomematic-config to [2026.4.3](https://github.com/SukramJ/aiohomematic-config/compare/2026.4.1...2026.4.3)
+#### Bump aiohomematic-config to [2026.4.4](https://github.com/SukramJ/aiohomematic-config/compare/2026.4.1...2026.4.4)
 
 - Per-channel `schedule_enabled` field on `DeviceScheduleData`
+- Added `supported_schedule_fields` on `DeviceScheduleData` exposing which `ScheduleField`s the device advertises
 - Use `get_ui_label_translation()` from aiohomematic
 
 #### Bump homematicip-local-frontend
@@ -53,6 +57,7 @@
 - Added schedule support for lock devices
 - Improved the schedule card layout to reduce vertical space usage
 - Removed misleading "Update verfügbar" badge from CCU dashboard System Information card
+- Device schedule editor now hides unsupported schedule fields (e.g. for HmIP-DLD) based on `supported_schedule_fields`
 - Fixed lock schedule editor labels and translations
 - Fixed cards showing "Konfigurationsfehler" in Firefox
 - Config panel now available for all backends (CCU and Homegear); OpenCCU tab only shown for CCU backends
