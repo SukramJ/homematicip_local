@@ -26,8 +26,9 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.16](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.16)
+#### Bump aiohomematic to [2026.4.17](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.17)
 
+- Added device profile for HmIP-UDI-SMI55
 - Added `ScheduleChannelSwitch` data point for per-channel schedule enable/disable
 - Per-channel schedule enable/disable via `COMBINED_PARAMETER` (atomic bitmask + mode write)
 - Load `WEEK_PROGRAM_CHANNEL_LOCKS` value at startup (fixes delayed `schedule_enabled` attribute)
