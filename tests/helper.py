@@ -173,8 +173,7 @@ def get_data_point_mock[DP](data_point: DP) -> DP:
         # patch.object(data_point, "is_valid", return_value=True).start()
     except Exception:
         pass
-    finally:
-        return data_point
+    return data_point
 
 
 def _get_full_qualname(obj: Any, method_name: str) -> str:

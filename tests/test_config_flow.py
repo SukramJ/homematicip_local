@@ -3178,3 +3178,12 @@ class TestReauthFlow:
         assert result2["type"] == FlowResultType.FORM
         assert result2["step_id"] == "reauth_confirm"
         assert result2["errors"] == {"base": "invalid_config"}
+
+    @pytest.fixture(autouse=True)
+    def _mock_setup_entry(self):
+        """Mock async_setup_entry to prevent central startup after reauth."""
+        with patch(
+            "custom_components.homematicip_local.async_setup_entry",
+            return_value=True,
+        ):
+            yield
