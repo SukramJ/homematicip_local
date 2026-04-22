@@ -1,4 +1,4 @@
-# Version [2.7.0](https://github.com/SukramJ/homematicip_local/compare/2.6.0...2.7.0) (2026-04-19)
+# Version [2.7.0](https://github.com/SukramJ/homematicip_local/compare/2.6.0...2.7.0) (2026-04-22)
 
 ## What's Changed
 
@@ -13,6 +13,16 @@
 - Added missing config flow translations (EN/DE) for `command_retry_max_attempts`
 - Fixed KeyError when `command_retry_max_attempts` is absent from existing config entries
 - Enabled parallel test execution via pytest-xdist (`-n auto --dist loadscope`)
+- Internal code quality: aligned linter configuration with aiohomematic / HA core
+  - Ruff: bumped target to Python 3.14, modernized `[tool.ruff.lint]` section syntax, enabled rule families `A`, `ASYNC`, `BLE`, `FURB`, `PTH`, full `S` (bandit), `SLF`, `TC`, `TID` and additional `B`/`RUF` checks; lowered mccabe complexity from 25 to 15; added banned-api entries for `async_timeout` and `pytz`; explicit `pep257` docstring convention
+  - Mypy: enabled `possibly-undefined` and `unused-awaitable` error codes
+  - Pylint: added `pylint_per_file_ignores` plugin, enabled `useless-suppression`, removed deprecated `extension-pkg-whitelist`
+  - Pytest: added `log_format`, `asyncio_debug`, custom markers and `filterwarnings`
+  - Coverage: enabled branch coverage and extended `exclude_lines` for protocol stubs and abstract methods
+  - Pre-commit: bumped `python-typing-update` to `--py314-plus` and included integration sources; bandit no longer scans test fixtures
+- Refactored `async_migrate_entry` into a dispatch table of pure data-only migrations (per-version helpers)
+- Split `_on_system_status` into per-detail handlers (central / connection / client / callback / issues)
+- Moved blocking `Path.mkdir`/`Path.write_bytes` off the event loop in CCU backup paths (button, services, update, websocket_api)
 
 ### Blueprints
 
@@ -26,7 +36,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.18](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.18)
+#### Bump aiohomematic to [2026.4.19](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.19)
 
 - Added device profile for HmIP-UDI-SMI55
 - Added `ScheduleChannelSwitch` data point for per-channel schedule enable/disable
@@ -47,7 +57,7 @@
 - Improved logging for unsupported JSON-RPC methods (warning instead of error) and for devices with failing configurable-channel lookup
 - Internal code quality: stricter linter configuration (ruff `S`/`BLE`/`PTH`, lowered mccabe complexity, additional bandit checks, mypy `possibly-undefined`/`unused-awaitable`), migration of filesystem operations to `pathlib`, narrowed broad exception handlers, and refactored complex functions for readability
 
-#### Bump aiohomematic-config to [2026.4.5](https://github.com/SukramJ/aiohomematic-config/compare/2026.4.1...2026.4.5)
+#### Bump aiohomematic-config to [2026.4.6](https://github.com/SukramJ/aiohomematic-config/compare/2026.4.1...2026.4.6)
 
 - Per-channel `schedule_enabled` field on `DeviceScheduleData`
 - Added `supported_schedule_fields` on `DeviceScheduleData` exposing which `ScheduleField`s the device advertises

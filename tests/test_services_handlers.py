@@ -76,7 +76,7 @@ def mock_control_unit():
     control.central.client_coordinator = Mock()
     control.central.client_coordinator.has_client = Mock(return_value=False)
     control.central.create_backup_and_download = AsyncMock()
-    control.backup_directory = "backups"  # noqa: S108
+    control.backup_directory = "backups"
     return control
 
 

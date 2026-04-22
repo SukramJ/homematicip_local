@@ -502,6 +502,130 @@ class ControlUnit(BaseControlUnit):
                 event_data=event_data,
             )
 
+    def _handle_aiohomematic_issue(self, issue: Any) -> None:
+        """Process a single aiohomematic-reported issue."""
+        issue_id = f"{self._entry_id}_{issue.issue_id}"
+        if issue.issue_type == IntegrationIssueType.PING_PONG_MISMATCH and (
+            issue.mismatch_count == 0 or issue.severity == IntegrationIssueSeverity.WARNING
+        ):
+            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
+            return
+        if issue.issue_type == IntegrationIssueType.PARAMSET_INCONSISTENCY:
+            ir.async_create_issue(
+                hass=self._hass,
+                domain=DOMAIN,
+                issue_id=issue_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                learn_more_url="https://homematic-forum.de/forum/viewtopic.php?t=77531",
+                translation_key=issue.translation_key,
+                translation_placeholders=issue.translation_placeholders,
+            )
+            return
+        if issue.severity == IntegrationIssueSeverity.ERROR:
+            ir.async_create_issue(
+                hass=self._hass,
+                domain=DOMAIN,
+                issue_id=issue_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key=issue.translation_key,
+                translation_placeholders=issue.translation_placeholders,
+            )
+
+    def _handle_callback_state(self, event: SystemStatusChangedEvent) -> None:
+        """Process callback_state event detail."""
+        if not event.callback_state:
+            return
+        interface_id, alive = event.callback_state
+        _LOGGER.debug("Callback state for %s: alive=%s", interface_id, alive)
+        issue_id = f"{self._entry_id}_callback_{interface_id}"
+        if alive:
+            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
+        else:
+            ir.async_create_issue(
+                hass=self._hass,
+                domain=DOMAIN,
+                issue_id=issue_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="callback_server_failed",
+                translation_placeholders={"interface_id": interface_id},
+            )
+
+    def _handle_central_state(self, event: SystemStatusChangedEvent) -> bool:
+        """Process central_state event detail; return True when reauth was triggered."""
+        central_state = event.central_state
+        if not central_state:
+            return False
+        issue_id_degraded = f"{self._entry_id}_central_degraded"
+        issue_id_failed = f"{self._entry_id}_central_failed"
+
+        if central_state == CentralState.DEGRADED:
+            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
+            if self._handle_degraded_state(event, issue_id_degraded):
+                return True
+        elif central_state == CentralState.FAILED:
+            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
+            if self._handle_failed_state(event, issue_id_failed):
+                return True
+        else:
+            return False
+
+        self._hass.bus.async_fire(
+            event_type=f"{DOMAIN}.central_state_changed",
+            event_data={"instance_name": self._instance_name, "new_state": central_state.value},
+        )
+        return False
+
+    def _handle_client_state(self, event: SystemStatusChangedEvent) -> None:
+        """Process client_state event detail."""
+        if not event.client_state:
+            return
+        interface_id, old_state, new_state = event.client_state
+        _LOGGER.debug("Client state for %s: %s -> %s", interface_id, old_state, new_state)
+        issue_id = f"{self._entry_id}_client_{interface_id}"
+        if new_state == ClientState.CONNECTED:
+            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
+        elif new_state == ClientState.DISCONNECTED:
+            ir.async_create_issue(
+                hass=self._hass,
+                domain=DOMAIN,
+                issue_id=issue_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="client_failed",
+                translation_placeholders={"interface_id": interface_id},
+            )
+
+    def _handle_connection_state(self, event: SystemStatusChangedEvent) -> None:
+        """Process connection_state event detail."""
+        if not event.connection_state:
+            return
+        interface_id, connected = event.connection_state
+        _LOGGER.debug("Connection state for %s: connected=%s", interface_id, connected)
+        issue_id = f"{self._entry_id}_connection_{interface_id}"
+        if connected:
+            async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
+        else:
+            ir.async_create_issue(
+                hass=self._hass,
+                domain=DOMAIN,
+                issue_id=issue_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="connection_failed",
+                translation_placeholders={"interface_id": interface_id},
+            )
+        self._hass.bus.async_fire(
+            event_type=f"{DOMAIN}.interface_connection_changed",
+            event_data={
+                "instance_name": self._instance_name,
+                "interface_id": interface_id,
+                "connected": connected,
+            },
+        )
+
     def _handle_degraded_state(self, event: SystemStatusChangedEvent, issue_id_degraded: str) -> bool:
         """Handle DEGRADED central state. Return True if reauth was triggered."""
         # Check if any degraded interface has an authentication failure
@@ -852,147 +976,13 @@ class ControlUnit(BaseControlUnit):
 
     async def _on_system_status(self, event: SystemStatusChangedEvent) -> None:
         """Handle system status event from aiohomematic (detail-dependent logic)."""
-        # Central state changes that need rich event data (DEGRADED/FAILED)
-        if event.central_state:
-            central_state = event.central_state
-            issue_id_degraded = f"{self._entry_id}_central_degraded"
-            issue_id_failed = f"{self._entry_id}_central_failed"
-
-            if central_state == CentralState.DEGRADED:
-                # Some interfaces disconnected - check if any have authentication issues
-                async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_failed)
-                if self._handle_degraded_state(event, issue_id_degraded):
-                    return  # Reauth triggered, don't create repair issue
-                # Fire HA event for automations
-                self._hass.bus.async_fire(
-                    event_type=f"{DOMAIN}.central_state_changed",
-                    event_data={"instance_name": self._instance_name, "new_state": central_state.value},
-                )
-
-            elif central_state == CentralState.FAILED:
-                # Critical error - all recovery attempts failed
-                async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id_degraded)
-                if self._handle_failed_state(event, issue_id_failed):
-                    return  # Reauth triggered, don't create repair issue
-                # Fire HA event for automations
-                self._hass.bus.async_fire(
-                    event_type=f"{DOMAIN}.central_state_changed",
-                    event_data={"instance_name": self._instance_name, "new_state": central_state.value},
-                )
-
-        # Connection state changes: tuple[str, bool] = (interface_id, connected)
-        if event.connection_state:
-            interface_id, connected = event.connection_state
-            _LOGGER.debug("Connection state for %s: connected=%s", interface_id, connected)
-            if not connected:
-                ir.async_create_issue(
-                    hass=self._hass,
-                    domain=DOMAIN,
-                    issue_id=f"{self._entry_id}_connection_{interface_id}",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.ERROR,
-                    translation_key="connection_failed",
-                    translation_placeholders={"interface_id": interface_id},
-                )
-            else:
-                # Connection restored - delete issue
-                async_delete_issue(
-                    hass=self._hass,
-                    domain=DOMAIN,
-                    issue_id=f"{self._entry_id}_connection_{interface_id}",
-                )
-
-            # Fire HA event for automations
-            self._hass.bus.async_fire(
-                event_type=f"{DOMAIN}.interface_connection_changed",
-                event_data={
-                    "instance_name": self._instance_name,
-                    "interface_id": interface_id,
-                    "connected": connected,
-                },
-            )
-
-        # Client state changes: tuple[str, ClientState, ClientState] = (interface_id, old_state, new_state)
-        if event.client_state:
-            interface_id, old_state, new_state = event.client_state
-            _LOGGER.debug("Client state for %s: %s -> %s", interface_id, old_state, new_state)
-            if new_state == ClientState.CONNECTED:
-                # Client connected - delete issue
-                async_delete_issue(
-                    hass=self._hass,
-                    domain=DOMAIN,
-                    issue_id=f"{self._entry_id}_client_{interface_id}",
-                )
-            elif new_state == ClientState.DISCONNECTED:
-                ir.async_create_issue(
-                    hass=self._hass,
-                    domain=DOMAIN,
-                    issue_id=f"{self._entry_id}_client_{interface_id}",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.ERROR,
-                    translation_key="client_failed",
-                    translation_placeholders={"interface_id": interface_id},
-                )
-
-        # Callback state changes: tuple[str, bool] = (interface_id, alive)
-        if event.callback_state:
-            interface_id, alive = event.callback_state
-            _LOGGER.debug("Callback state for %s: alive=%s", interface_id, alive)
-            if alive:
-                # Callback alive - delete issue
-                async_delete_issue(
-                    hass=self._hass,
-                    domain=DOMAIN,
-                    issue_id=f"{self._entry_id}_callback_{interface_id}",
-                )
-            else:
-                ir.async_create_issue(
-                    hass=self._hass,
-                    domain=DOMAIN,
-                    issue_id=f"{self._entry_id}_callback_{interface_id}",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.ERROR,
-                    translation_key="callback_server_failed",
-                    translation_placeholders={"interface_id": interface_id},
-                )
-
-        # Issues from aiohomematic
+        if self._handle_central_state(event):
+            return  # Reauth triggered, suppress further processing
+        self._handle_connection_state(event)
+        self._handle_client_state(event)
+        self._handle_callback_state(event)
         for issue in event.issues:
-            issue_id = f"{self._entry_id}_{issue.issue_id}"
-            # For ping_pong_mismatch issues:
-            # - Delete the issue when mismatch_count drops to 0 (recovery signal)
-            # - Only create repair issues for ERROR severity (above threshold)
-            # - WARNING severity is for telemetry only, not user-facing repair issues
-            if issue.issue_type == IntegrationIssueType.PING_PONG_MISMATCH and (
-                issue.mismatch_count == 0 or issue.severity == IntegrationIssueSeverity.WARNING
-            ):
-                async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=issue_id)
-                continue
-            # PARAMSET_INCONSISTENCY issues are WARNING severity but should create repair issues
-            # to inform users about potential device problems after firmware updates
-            if issue.issue_type == IntegrationIssueType.PARAMSET_INCONSISTENCY:
-                ir.async_create_issue(
-                    hass=self._hass,
-                    domain=DOMAIN,
-                    issue_id=issue_id,
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.WARNING,
-                    learn_more_url="https://homematic-forum.de/forum/viewtopic.php?t=77531",
-                    translation_key=issue.translation_key,
-                    translation_placeholders=issue.translation_placeholders,
-                )
-                continue
-            # Only create repair issues for ERROR severity
-            if issue.severity == IntegrationIssueSeverity.ERROR:
-                ir.async_create_issue(
-                    hass=self._hass,
-                    domain=DOMAIN,
-                    issue_id=issue_id,
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.ERROR,
-                    translation_key=issue.translation_key,
-                    translation_placeholders=issue.translation_placeholders,
-                )
+            self._handle_aiohomematic_issue(issue)
 
 
 class ControlUnitTemp(BaseControlUnit):

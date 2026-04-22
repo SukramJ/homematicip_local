@@ -355,7 +355,7 @@ class AioHomematicActionNumber(AioHomematicGenericRestoreEntity[BaseDpActionNumb
         ):
             try:
                 return float(self._restored_state.state)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 pass
 
         if (default := self._data_point.default) is not None:

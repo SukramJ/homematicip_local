@@ -139,7 +139,7 @@ class TestGetAiohomematicVersion:
             }
         )
 
-        async def _fake_get_integration(_hass, _domain):  # noqa: ANN001
+        async def _fake_get_integration(_hass, _domain):
             return integration
 
         # Patch the async_get_integration symbol used inside the module under test

@@ -86,7 +86,7 @@ def create_mock_hub_update(
     unique_id: str = "test_hub_update_123",
     ccu_type: CCUType = CCUType.OPENCCU,
     full_name: str = "CCU Update",
-    backup_directory: str = "backups",  # noqa: S108
+    backup_directory: str = "backups",
 ) -> AioHomematicHubUpdate:
     """Create a mock hub update entity with patched initialization."""
     # Create mock data point

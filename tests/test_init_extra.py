@@ -27,7 +27,7 @@ class _MockEntry:
     data: dict | None = None
     runtime_data: object | None = None
 
-    def add_update_listener(self, fn):  # noqa: ANN001
+    def add_update_listener(self, fn):
         return lambda: None
 
 

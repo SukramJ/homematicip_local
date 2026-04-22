@@ -189,9 +189,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
             return (
                 f"{hm_device.name}-{channel_group_master.name}"
                 if channel_group_master.name.isnumeric()
-                else channel_group_master.name
-                if channel_group_master.name
-                else f"{hm_device.name}-{channel_group_master.group_no}"
+                else channel_group_master.name or f"{hm_device.name}-{channel_group_master.group_no}"
             )
         return hm_device.name
 
@@ -377,7 +375,8 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
     @callback
     def _async_device_removed(self, *, event: DeviceRemovedEvent) -> None:
         """Handle hm device removal."""
-        self.hass.async_create_task(self.async_remove(force_remove=True))
+        # Fire-and-forget: HA tracks the task internally
+        _ = self.hass.async_create_task(self.async_remove(force_remove=True))
 
         if not self.registry_entry:
             return
@@ -404,7 +403,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
                 and (name := self.platform_data.platform_translations.get(self._name_translation_key)) is not None
             ):
                 return bool(name == "")
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception:  # noqa: BLE001  # guard against future HA API changes
             return False
         return False
 
@@ -561,7 +560,8 @@ class AioHomematicGenericHubEntity(Entity):
     @callback
     def _async_hub_device_removed(self, *, event: DeviceRemovedEvent) -> None:
         """Handle hm sysvar entity removal."""
-        self.hass.async_create_task(self.async_remove(force_remove=True))
+        # Fire-and-forget: HA tracks the task internally
+        _ = self.hass.async_create_task(self.async_remove(force_remove=True))
 
         if not self.registry_entry:
             return

@@ -841,7 +841,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             except (NoConnectionException, InvalidConfig, BaseHomematicException) as ex:
                 # Connection/config errors - stay on interface page so user can adjust settings
                 _LOGGER.debug("Validation failed, showing error on interface page: %s", ex)
-                error_msg = str(ex) if str(ex) else self.data.get(CONF_HOST, "")
+                error_msg = str(ex) or self.data.get(CONF_HOST, "")
                 placeholders = _get_step_placeholders(STEP_INTERFACE, TOTAL_STEPS_BASIC)
                 placeholders["detected_interfaces"] = "-"
                 if self._detection_result:
@@ -908,7 +908,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders["invalid_items"] = str(ic)
             except NoConnectionException as exc:
                 errors["base"] = "cannot_connect"
-                description_placeholders["invalid_items"] = str(exc) if str(exc) else self.data.get(CONF_HOST, "")
+                description_placeholders["invalid_items"] = str(exc) or self.data.get(CONF_HOST, "")
             except BaseHomematicException as bhe:
                 errors["base"] = "cannot_connect"
                 description_placeholders["invalid_items"] = bhe.args[0] if bhe.args else self.data.get(CONF_HOST, "")
@@ -986,12 +986,12 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders["retry_hint"] = _get_retry_hint("invalid_auth")
             except NoConnectionException as exc:
                 errors["base"] = "cannot_connect"
-                description_placeholders["invalid_items"] = str(exc) if str(exc) else self.data.get(CONF_HOST, "")
+                description_placeholders["invalid_items"] = str(exc) or self.data.get(CONF_HOST, "")
                 description_placeholders["error_detail"] = ""
                 description_placeholders["retry_hint"] = _get_retry_hint("cannot_connect")
             except ValidationException as ve:
                 errors["base"] = "invalid_config"
-                description_placeholders["invalid_items"] = str(ve) if str(ve) else self.data.get(CONF_HOST, "")
+                description_placeholders["invalid_items"] = str(ve) or self.data.get(CONF_HOST, "")
                 description_placeholders["error_detail"] = ""
                 description_placeholders["retry_hint"] = _get_retry_hint("invalid_config")
             except BaseHomematicException as bhe:
@@ -1040,7 +1040,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_reconfigure_interface()
 
         # Use existing data if available (for returning with errors), otherwise entry data
-        schema_data = self.data if self.data else dict(entry.data)
+        schema_data = self.data or dict(entry.data)
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -1084,7 +1084,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             except (NoConnectionException, InvalidConfig, BaseHomematicException) as ex:
                 # Connection/config errors - show port configuration
                 _LOGGER.debug("Reconfigure: Validation failed with default ports, showing port config: %s", ex)
-                self._validation_error = str(ex) if str(ex) else self.data.get(CONF_HOST, "")
+                self._validation_error = str(ex) or self.data.get(CONF_HOST, "")
                 return await self.async_step_reconfigure_port_config()
 
         return self.async_show_form(
@@ -1128,7 +1128,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders["invalid_items"] = str(ic)
             except NoConnectionException as exc:
                 errors["base"] = "cannot_connect"
-                description_placeholders["invalid_items"] = str(exc) if str(exc) else self.data.get(CONF_HOST, "")
+                description_placeholders["invalid_items"] = str(exc) or self.data.get(CONF_HOST, "")
             except BaseHomematicException as bhe:
                 errors["base"] = "cannot_connect"
                 description_placeholders["invalid_items"] = bhe.args[0] if bhe.args else self.data.get(CONF_HOST, "")
@@ -1219,12 +1219,12 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         except NoConnectionException as ex:
             _LOGGER.warning("Backend detection failed: connection error - %s", ex)
             self._detection_error = "cannot_connect"
-            self._detection_error_detail = str(ex) if str(ex) else self.data[CONF_HOST]
+            self._detection_error_detail = str(ex) or self.data[CONF_HOST]
             return
         except BaseHomematicException as ex:
             _LOGGER.warning("Backend detection failed: %s - %s", type(ex).__name__, ex)
             self._detection_error = "cannot_connect"
-            self._detection_error_detail = str(ex) if str(ex) else self.data[CONF_HOST]
+            self._detection_error_detail = str(ex) or self.data[CONF_HOST]
             return
 
         if self._detection_result:
@@ -1423,7 +1423,7 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
             except (NoConnectionException, InvalidConfig, BaseHomematicException) as ex:
                 # Connection/config errors - show port configuration
                 _LOGGER.debug("Options Flow: Validation failed with default ports, showing port config: %s", ex)
-                self._validation_error = str(ex) if str(ex) else self.data.get(CONF_HOST, "")
+                self._validation_error = str(ex) or self.data.get(CONF_HOST, "")
                 return await self.async_step_interfaces_port_config()
 
         return self.async_show_form(
@@ -1463,7 +1463,7 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
                 description_placeholders["invalid_items"] = str(ic)
             except NoConnectionException as exc:
                 errors["base"] = "cannot_connect"
-                description_placeholders["invalid_items"] = str(exc) if str(exc) else self.data.get(CONF_HOST, "")
+                description_placeholders["invalid_items"] = str(exc) or self.data.get(CONF_HOST, "")
             except BaseHomematicException as bhe:
                 errors["base"] = "cannot_connect"
                 description_placeholders["invalid_items"] = bhe.args[0] if bhe.args else self.data.get(CONF_HOST, "")
@@ -1615,11 +1615,8 @@ def _get_ccu_data(data: ConfigType, user_input: ConfigType) -> ConfigType:
         CONF_ADVANCED_CONFIG: data.get(CONF_ADVANCED_CONFIG, {}),
     }
     # Callback settings: prefer user_input (Options Flow), fall back to data (Config Flow Advanced step)
-    if (
-        (callback_host := user_input.get(CONF_CALLBACK_HOST))
-        and callback_host.strip() != ""
-        or (callback_host := data.get(CONF_CALLBACK_HOST))
-        and callback_host.strip() != ""
+    if ((callback_host := user_input.get(CONF_CALLBACK_HOST)) and callback_host.strip() != "") or (
+        (callback_host := data.get(CONF_CALLBACK_HOST)) and callback_host.strip() != ""
     ):
         ccu_data[CONF_CALLBACK_HOST] = callback_host
     if (callback_port_xml_rpc := user_input.get(CONF_CALLBACK_PORT_XML_RPC)) is not None or (

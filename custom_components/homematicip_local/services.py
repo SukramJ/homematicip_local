@@ -1168,7 +1168,7 @@ async def _async_service_confirm_all_delayed_devices(*, hass: HomeAssistant, ser
         if cb := REPAIR_CALLBACKS.pop(issue_id, None):
             try:
                 await cb(device_name="")
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Failed to confirm delayed device for issue %s", issue_id)
 
         # Delete the repair issue
@@ -1269,11 +1269,13 @@ async def _async_service_create_ccu_backup(*, hass: HomeAssistant, service: Serv
 
             # Save backup to file
             backup_dir = Path(control.backup_directory)
-            backup_dir.mkdir(parents=True, exist_ok=True)
-
             backup_path = backup_dir / backup_data.filename
 
-            await hass.async_add_executor_job(backup_path.write_bytes, backup_data.content)
+            def _write_backup() -> None:
+                backup_dir.mkdir(parents=True, exist_ok=True)
+                backup_path.write_bytes(backup_data.content)
+
+            await hass.async_add_executor_job(_write_backup)
 
             _LOGGER.info("CCU backup saved to %s (%d bytes)", backup_path, len(backup_data.content))
 

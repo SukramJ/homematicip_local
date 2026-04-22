@@ -23,10 +23,10 @@ class _QueryFacadeStub:
         self._mock_dp = mock_dp
         self._paths = paths
 
-    def get_generic_data_point(self, state_path: str):  # noqa: ARG002
+    def get_generic_data_point(self, state_path: str):
         return self._mock_dp
 
-    def get_state_paths(self, rpc_callback_supported: bool = True) -> list[str]:  # noqa: ARG002
+    def get_state_paths(self, rpc_callback_supported: bool = True) -> list[str]:
         return list(self._paths)
 
 
@@ -94,7 +94,7 @@ class TestMQTTConsumer:
         def _noop(*args, **kwargs):
             return None
 
-        async def _async_noop(*args, **kwargs):  # noqa: ANN001, ANN002
+        async def _async_noop(*args, **kwargs):
             return None
 
         # Patch the symbols used by our module (not the HA module) so calls no-op

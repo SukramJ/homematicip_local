@@ -150,7 +150,7 @@ async def async_register_cards(hass: HomeAssistant) -> None:
         _LOGGER.debug("Frontend not yet initialized. Deferring card registration")
 
         @callback
-        def _retry_register_cards(event: Any = None) -> None:  # noqa: ANN401
+        def _retry_register_cards(event: Any = None) -> None:
             """Retry card registration after HA startup is complete."""
             if hass.data.get(CARDS_REGISTERED_KEY):
                 return

@@ -2019,10 +2019,13 @@ async def ws_create_backup(
             return
 
         backup_dir = Path(control.backup_directory)
-        backup_dir.mkdir(parents=True, exist_ok=True)
         backup_path = backup_dir / backup_data.filename
 
-        await hass.async_add_executor_job(backup_path.write_bytes, backup_data.content)
+        def _write_backup() -> None:
+            backup_dir.mkdir(parents=True, exist_ok=True)
+            backup_path.write_bytes(backup_data.content)
+
+        await hass.async_add_executor_job(_write_backup)
 
         _LOGGER.info("CCU backup saved to %s (%d bytes)", backup_path, len(backup_data.content))
 
@@ -2399,7 +2402,8 @@ async def ws_accept_inbox_device(
 
         _LOGGER.warning("Timeout waiting for delayed device callback for %s", device_address)
 
-    hass.async_create_task(
+    # Fire-and-forget: HA tracks the task internally
+    _ = hass.async_create_task(
         _auto_confirm_delayed_device(),
         f"auto_confirm_inbox_{device_address}",
     )

@@ -41,23 +41,19 @@ _LOGGER = logging.getLogger(__name__)
 
 # Re-export for backwards compatibility
 __all__ = [
-    # Public API
-    "get_entity_description",
-    # Registry
-    "EntityDescriptionRule",
+    "KILOJOULS_PERKILOGRAM",
+    "LENGTH_MICROMETER",
+    "NUMBER_CONCENTRATION_CM3",
     "REGISTRY",
-    # Base classes
-    "HmEntityDescription",
-    "HmNameSource",
+    "EntityDescriptionRule",
     "HmBinarySensorEntityDescription",
     "HmButtonEntityDescription",
+    "HmEntityDescription",
+    "HmNameSource",
     "HmNumberEntityDescription",
     "HmSelectEntityDescription",
     "HmSensorEntityDescription",
-    # Constants (for backwards compatibility)
-    "NUMBER_CONCENTRATION_CM3",
-    "LENGTH_MICROMETER",
-    "KILOJOULS_PERKILOGRAM",
+    "get_entity_description",
 ]
 
 # Mutable container to track initialization state (avoids global statement)

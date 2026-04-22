@@ -50,13 +50,13 @@ class TestAsyncSetupServices:
         # Replace registration helpers to capture registrations without HA involvement
         dispatcher_funcs: list[Callable] = []
 
-        def fake_register_admin_service(*, hass, domain, service, service_func, schema, **kwargs):  # noqa: ANN001
+        def fake_register_admin_service(*, hass, domain, service, service_func, schema, **kwargs):
             registered_admin.append((service, schema.schema if hasattr(schema, "schema") else {}))
             dispatcher_funcs.append(service_func)
 
         def fake_register_platform_entity_service(
             *, hass, service_domain, service_name, entity_domain, schema, func, **kwargs
-        ):  # noqa: ANN001
+        ):
             registered_entity.append((service_name, schema))
 
         monkeypatch.setattr(hm_services, "async_register_admin_service", fake_register_admin_service)

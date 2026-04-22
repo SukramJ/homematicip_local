@@ -3,7 +3,6 @@ py-version = "3.14"
 ignore = [
     "tests",
 ]
-extension-pkg-whitelist= ["orjson"]
 # Use a conservative default here; 2 should speed up most setups and not hurt
 # any too bad. Override on command line as appropriate.
 jobs = 2
@@ -22,12 +21,15 @@ load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
     "pylint_strict_informational",
+    "pylint_per_file_ignores",
 ]
 persistent = false
 extension-pkg-allow-list = [
     "av.audio.stream",
+    "av.logging",
     "av.stream",
     "ciso8601",
+    "orjson",
     "cv2",
 ]
 
@@ -67,27 +69,42 @@ good-names = [
 # consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
 # consider-using-assignment-expr (Pylint CodeStyle extension)
 disable = [
-    "format",
-    "abstract-method",
-    "broad-except",
-    "cyclic-import",
-    "duplicate-code",
-    "inconsistent-return-statements",
-    "locally-disabled",
-    "not-context-manager",
-    "too-few-public-methods",
-    "too-many-ancestors",
-    "too-many-arguments",
-    "too-many-instance-attributes",
-    "too-many-lines",
-    "too-many-locals",
-    "too-many-positional-arguments", # R0917
-    "too-many-public-methods",
-    "too-many-boolean-expressions",
-    "wrong-import-order",
-    "consider-using-f-string",
-    "consider-using-namedtuple-or-dataclass",
-    "consider-using-assignment-expr",
+    "format", # Formatting concerns (use ruff instead)
+    "abstract-method", # Allow abstract base classes without all abstract methods implemented
+    "cyclic-import", # Ignore import cycles between modules
+    "duplicate-code", # Allow similar/duplicated code blocks without warning
+    "inconsistent-return-statements", # Allow functions with branches that don't all return explicitly
+    "import-outside-toplevel",  # PLC0415: Allow imports inside functions to avoid heavy top-level imports
+    "locally-disabled", # Allow local `pylint: disable` pragmas without warnings
+    "not-context-manager", # Allow using objects in with-statements without context manager methods
+    "too-few-public-methods", # Allow small data classes/helpers without many public methods
+    "too-many-ancestors", # Allow deep inheritance hierarchies
+    "too-many-arguments", # Permit functions with many parameters when pragmatic
+    "too-many-instance-attributes", # Allow classes with many instance attributes
+    "too-many-lines", # Allow large modules when splitting would hurt readability
+    "too-many-locals", # Allow functions with many local variables
+    "too-many-positional-arguments", # R0917: Permit many positional params when API stability/readability wins
+    "too-many-public-methods", # Allow classes exposing many public methods when warranted
+    "too-many-boolean-expressions", # Permit complex boolean conditions when clearer than refactoring
+    "wrong-import-order", # Enforced by Ruff/isort; allow non-standard ordering here
+    "consider-using-f-string", # PLC0209: Allow str.format/percent formatting when more readable
+    "consider-using-namedtuple-or-dataclass", # Too opinionated; dataclasses/namedtuples by dev choice
+    "consider-using-assignment-expr", # Decision to use := better left to devs
+
+    # Handled by ruff (additional from core)
+    "broad-except", # BLE001
+    "broad-exception-raised", # TRY002
+    "protected-access", # SLF001
+    "no-else-break", # RET508
+    "no-else-continue", # RET507
+    "no-else-raise", # RET506
+    "no-else-return", # RET505
+    "pointless-statement", # B018
+    "expression-not-assigned", # B018
+    "subprocess-run-check", # PLW1510
+    "redefined-builtin", # A001
+    "unnecessary-pass", # PIE790
+    "misplaced-bare-raise", # PLE0704
 
     # Handled by ruff
     # Ref: <https://github.com/astral-sh/ruff/issues/970>
@@ -298,8 +315,14 @@ disable = [
     "wrong-exception-operation",
 ]
 enable = [
-    #"useless-suppression",  # temporarily every now and then to clean them up
+    "useless-suppression",
     "use-symbolic-message-instead",
+]
+per-file-ignores = [
+    # redefined-outer-name: Tests reference fixtures in the test function
+    # use-implicit-booleaness-not-comparison: Tests need to validate that a list
+    # or a dict is returned
+    "/tests/:redefined-outer-name,use-implicit-booleaness-not-comparison",
 ]
 
 [tool.pylint.REPORTS]
@@ -337,25 +360,47 @@ norecursedirs = [
     ".git",
     "testing_config",
 ]
+log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
+log_date_format = "%Y-%m-%d %H:%M:%S"
+asyncio_debug = true
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 addopts = "-n auto --dist loadscope"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "benchmark: performance benchmark tests",
+]
+filterwarnings = [
+    "error::sqlalchemy.exc.SAWarning",
+]
 
 [tool.ruff]
-target-version = "py313"
-line-length = 120
+target-version = "py314" # Target Python version for Ruff
+line-length = 120 # Maximum line length for linting and formatting guidance
+# Locally-installed HACS lives under custom_components/hacs (gitignored); exclude it.
+extend-exclude = ["custom_components/hacs"]
 
-lint.select = [
+[tool.ruff.lint]
+select = [
+    "A", # Variable {name} is shadowing a Python builtin
+    "ASYNC", # flake8-async
     "B002", # Python does not support the unary prefix increment
     "B005", # Using .strip() with multi-character strings is misleading
     "B007", # Loop control variable {name} not used within loop body
+    "B009", # Do not call getattr with a constant attribute value
     "B014", # Exception handler with duplicate exception
     "B015", # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
+    "B017", # pytest.raises(BaseException) should be considered evil
     "B018", # Found useless attribute access. Either assign it to a variable or remove it.
     "B023", # Function definition does not bind loop variable {name}
+    "B024", # `{name}` is an abstract base class, but it has no abstract methods or properties
+    "B025", # try-except* block with duplicate exception {name}
     "B026", # Star-arg unpacking after a keyword argument is strongly discouraged
     "B032", # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
+    "B035", # Dictionary comprehension uses static key
     "B904", # Use raise from to specify exception cause
+    "B905", # zip() without an explicit strict= parameter
+    "BLE", # flake8-blind-except - forbids bare `except Exception:` without context
     "C", # complexity
     "COM818", # Trailing comma on bare tuple prohibited
     "D", # docstrings
@@ -363,7 +408,9 @@ lint.select = [
     "DTZ004", # Use datetime.fromtimestamp(ts, tz=) instead of datetime.utcfromtimestamp(ts)
     "E", # pycodestyle
     "F", # pyflakes/autoflake
+    "F541", # f-string without any placeholders
     "FLY", # flynt
+    "FURB", # refurb - modern Python patterns
     "G", # flake8-logging-format
     "I", # isort
     "INP", # flake8-no-pep420
@@ -378,46 +425,52 @@ lint.select = [
     "PIE", # flake8-pie
     "PL", # pylint
     "PT", # flake8-pytest-style
+    "PTH", # flake8-use-pathlib - prefer pathlib over os.path
     "PYI", # flake8-pyi
     "RET", # flake8-return
     "RSE", # flake8-raise
     "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
+    "RUF007", # Prefer itertools.pairwise() over zip() when iterating over successive pairs
+    "RUF008", # Do not use mutable default values for dataclass attributes
+    "RUF010", # Use explicit conversion flag
     "RUF013", # PEP 484 prohibits implicit Optional
+    "RUF016", # Slice in indexed access uses non-integer type
+    "RUF017", # Avoid quadratic list summation
     "RUF018", # Avoid assignment expressions in assert statements
-    # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
-    "S102", # Use of exec detected
-    "S103", # bad-file-permissions
-    "S108", # hardcoded-temp-file
-    "S306", # suspicious-mktemp-usage
-    "S307", # suspicious-eval-usage
-    "S313", # suspicious-xmlc-element-tree-usage
-    "S314", # suspicious-xml-element-tree-usage
-    "S315", # suspicious-xml-expat-reader-usage
-    "S316", # suspicious-xml-expat-builder-usage
-    "S317", # suspicious-xml-sax-usage
-    "S318", # suspicious-xml-mini-dom-usage
-    "S319", # suspicious-xml-pull-dom-usage
-    "S601", # paramiko-call
-    "S602", # subprocess-popen-with-shell-equals-true
-    "S604", # call-with-shell-equals-true
-    "S608", # hardcoded-sql-expression
-    "S609", # unix-command-wildcard-injection
+    "RUF019", # Unnecessary key check before dictionary access
+    "RUF020", # {never_like} | T is equivalent to T
+    "RUF021", # Parenthesize a and b expressions when chaining and and or together
+    "RUF022", # Sort __all__
+    "RUF023", # Sort __slots__
+    "RUF024", # Do not pass mutable objects as values to dict.fromkeys
+    "RUF026", # default_factory is a positional-only argument to defaultdict
+    "RUF030", # print() call in assert statement is likely unintentional
+    "RUF032", # Decimal() called with float literal argument
+    "RUF033", # __post_init__ method with argument defaults
+    "RUF034", # Useless if-else condition
+    "RUF100", # Unused `noqa` directive
+    "RUF101", # noqa directives that use redirected rule codes
+    "S", # flake8-bandit (full suite)
     "SIM", # flake8-simplify
+    "SLF", # flake8-self - forbid private member access from outside
     "SLOT", # flake8-slots
     "T100", # Trace found: {name} used
     "T20", # flake8-print
-    "TID251", # Banned imports
+    "TC", # flake8-type-checking
+    "TID", # flake8-tidy-imports
     "TRY", # tryceratops
     "UP", # pyupgrade
+    "UP031", # Use format specifiers instead of percent format
+    "UP032", # Use f-string instead of `format` call
     "W", # pycodestyle
 ]
 
-lint.ignore = [
+ignore = [
+    "A005", # Module shadows a Python standard-library module
     "D202", # No blank lines allowed after function docstring
     "D203", # 1 blank line required before class docstring
-    "D212",  # Multi-line docstring summary should start at the second line
-    #"D213",  # Multi-line docstring summary should start at the second line
+    "D212",  # Multi-line docstring summary should start at the first line
     "D406", # Section name should end with a newline
     "D407", # Section name underlining
     "E501", # line too long
@@ -433,58 +486,81 @@ lint.ignore = [
     "PT011", # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
     "PT012", # `pytest.raises()` block should contain a single simple statement
     "PT018", # Assertion should be broken down into multiple parts
-    #"SIM102", # Use a single if statement instead of nested if statements
-    #"SIM108", # Use ternary operator {contents} instead of if-else-block
     "SIM115", # Use context handler for opening files
     "TRY003", # Avoid specifying long messages outside the exception class
     "TRY400", # Use `logging.exception` instead of `logging.error`
     # Ignored due to incompatible with mypy: https://github.com/python/mypy/issues/15238
     "UP040", # Checks for use of TypeAlias annotation for declaring type aliases.
     "UP046", # Non PEP 695 generic class
+
     # May conflict with the formatter, https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
-    "W191",
-    "E111",
-    "E114",
-    "E117",
-    "D206",
-    "D300",
-    "Q",
-    "COM812",
-    "COM819",
-    "ISC001",
+    "W191", # Tabs indentation (formatter enforces spaces)
+    "E111", # Indentation is not a multiple of four
+    "E114", # Indentation is not a multiple of four (comment)
+    "E117", # Over-indented
+    "D206", # Docstring indentation not aligned
+    "D300", # Use triple double quotes for docstrings
+    "Q", # Quote normalization conflicts with formatter
+    "COM812", # Missing trailing comma (formatter handles commas)
+    "COM819", # Trailing comma prohibited in some contexts
+    "ISC001", # Implicit string concatenation check (formatter handles)
 
-    # Disabled because ruff does not understand type of __all__ generated by a function
-    #"PLE0605",
-
-    # temporarily disabled
-    #"PT019",
-    #"PYI024", # Use typing.NamedTuple instead of collections.namedtuple
     "RET503",
-    #"RET502",
-    #"RET501",
-    #"TRY002",
     "TRY301",
-    "PYI041"
+    "PYI041",
+
+    # TC rules - low benefit for this project (mirrors aiohomematic/core)
+    "TC001", # typing-only-first-party-import
+    "TC002", # typing-only-third-party-import
+    "TC003", # typing-only-standard-library-import
+    "TC006", # quote type expressions in cast() - minimal runtime benefit
 ]
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
+mark-parentheses = false
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
 voluptuous = "vol"
-"aiohomematic.central_unit" = "hmcu"
+"aiohomematic.central" = "hmcu"
 "aiohomematic.client" = "hmcl"
-"aiohomematic.exporter" = "hmexp"
-"aiohomematic.platforms.custom.definition" = "hmed"
-"aiohomematic.platforms.custom.entity" = "hmce"
-"aiohomematic.platforms.device" = "hmd"
-"aiohomematic.platforms.entity" = "hme"
-"aiohomematic.platforms.generic.entity" = "hmge"
+"aiohomematic.model.custom.definition" = "hmed"
+"aiohomematic.model.custom.data_point" = "hmce"
+"aiohomematic.model.data_point" = "hme"
 "aiohomematic.support" = "hms"
 
-[tool.ruff.lint.per-file-ignores]
-"script/*" = ["T20"]
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"async_timeout".msg = "use asyncio.timeout instead"
+"pytz".msg = "use zoneinfo instead"
 
+[tool.ruff.lint.per-file-ignores]
+# Relative imports between modules of the same integration are a standard
+# HA custom-component convention (see core's config which does the same).
+"custom_components/homematicip_local/*" = ["TID252"]
+"script/*" = [
+    "T20", # Allow print/debug statements in scripts
+    "S101", # assert usage is fine in dev scripts
+    "S110", "S112", # try-except-pass/continue in dev scripts
+    "S603", # subprocess calls in dev scripts
+    "BLE001", # broad except in dev scripts
+    "PTH", # os.path usage in scripts is not worth refactoring
+    "C901", # complexity limits relaxed in dev scripts
+    "INP001", # implicit namespace package
+]
+"tests/*.py" = [
+    "D100", "D101", "D102", "D103", "D107", # docstring requirements
+    "TRY002", # too-broad exception guidance
+    "S101", # assert usage is expected in tests
+    "S104", # bind-all-interfaces (0.0.0.0) is fine in test fixtures
+    "S105", "S106", # hardcoded passwords in test fixtures
+    "S110", "S112", # try-except-pass/continue in fixture teardown
+    "S311", # non-cryptographic random in tests
+    "BLE001", # broad `except Exception` in tests (fixture cleanup)
+    "PLR2004", # magic values in assertions
+    "C901", # complex test scenarios
+    "PTH", # os.path in tests is not worth refactoring
+    "SLF001", # private member access in tests is sometimes necessary
+]
 
 [tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]
@@ -495,28 +571,62 @@ known-first-party = [
 combine-as-imports = true
 split-on-trailing-comma = false
 
-
 [tool.ruff.lint.mccabe]
-max-complexity = 25
+max-complexity = 15
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
 
 [tool.coverage.run]
+branch = true
 source = ["custom_components/homematicip_local"]
 parallel = true
 concurrency = ["thread"]
 
 [tool.coverage.report]
+show_missing = true
+skip_empty = true
+skip_covered = false
+sort = "cover"
+precision = 2
+
+# Exclude patterns for lines that shouldn't be counted
 exclude_lines = [
     # Have to re-enable the standard pragma
     "pragma: no cover",
+
     # Don't complain about missing debug-only code:
     "def __repr__",
+    "if self\\.debug",
+    "if settings\\.DEBUG",
+
     # Don't complain if tests don't hit defensive assertion code:
     "raise AssertionError",
     "raise NotImplementedError",
+
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if False:",
+    "if __name__ == .__main__.:",
+
     # TYPE_CHECKING and @overload blocks are never executed during pytest run
     "if TYPE_CHECKING:",
     "@overload",
+
+    # Abstract methods
+    "@abstractmethod",
+    "@abc.abstractmethod",
+
+    # Protocol methods (structural subtyping)
+    "\\.\\.\\.",
+
+    # Defensive programming
+    "except ImportError:",
 ]
+
+[tool.coverage.html]
+directory = "htmlcov"
+show_contexts = true
 
 [tool.mypy]
 python_version = "3.14" # Target Python version used for type checking
@@ -537,6 +647,8 @@ enable_error_code = [
     "ignore-without-code",
     "redundant-self",
     "truthy-iterable",
+    "possibly-undefined",
+    "unused-awaitable",
 ]
 # Silence noisy/third-party related errors
 disable_error_code = [

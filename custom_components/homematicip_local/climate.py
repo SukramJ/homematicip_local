@@ -204,8 +204,8 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         if self._data_point.activity and self._data_point.activity in HM_TO_HA_ACTION:
             return HM_TO_HA_ACTION[self._data_point.activity]
         if isinstance(self._data_point, CustomDpIpThermostat) and (
-            getattr(self.data_point, "_peer_level_dp") is not None
-            or getattr(self.data_point, "_peer_state_dp") is not None
+            self.data_point._peer_level_dp is not None  # noqa: SLF001
+            or self.data_point._peer_state_dp is not None  # noqa: SLF001
         ):
             return HVACAction.IDLE
         return None
@@ -252,11 +252,9 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
     @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        if (
-            self._data_point.is_valid
-            and self._data_point.profile in SUPPORTED_HA_PRESET_MODES
-            or str(self._data_point.profile).startswith(PROFILE_PREFIX)
-        ):
+        if (self._data_point.is_valid and self._data_point.profile in SUPPORTED_HA_PRESET_MODES) or str(
+            self._data_point.profile
+        ).startswith(PROFILE_PREFIX):
             return self._data_point.profile
         if self.is_restored and self._restored_state:
             return self._restored_state.attributes.get(ATTR_PRESET_MODE)

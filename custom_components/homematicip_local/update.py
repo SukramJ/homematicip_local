@@ -176,7 +176,8 @@ class AioHomematicUpdate(UpdateEntity):
     @callback
     def _async_device_removed(self, *, event: DeviceRemovedEvent) -> None:
         """Handle hm device removal."""
-        self.hass.async_create_task(self.async_remove(force_remove=True))
+        # Fire-and-forget: HA tracks the task internally
+        _ = self.hass.async_create_task(self.async_remove(force_remove=True))
 
         if not self.registry_entry:
             return
@@ -300,11 +301,13 @@ class AioHomematicHubUpdate(UpdateEntity):
 
             # Save backup to file
             backup_dir = Path(self._cu.backup_directory)
-            backup_dir.mkdir(parents=True, exist_ok=True)
-
             backup_path = backup_dir / backup_data.filename
 
-            await self.hass.async_add_executor_job(backup_path.write_bytes, backup_data.content)
+            def _write_backup() -> None:
+                backup_dir.mkdir(parents=True, exist_ok=True)
+                backup_path.write_bytes(backup_data.content)
+
+            await self.hass.async_add_executor_job(_write_backup)
 
             _LOGGER.info(
                 "CCU backup saved to %s (%d bytes) before firmware update", backup_path, len(backup_data.content)
@@ -315,7 +318,8 @@ class AioHomematicHubUpdate(UpdateEntity):
     @callback
     def _async_device_removed(self, *, event: DeviceRemovedEvent) -> None:
         """Handle hm device removal."""
-        self.hass.async_create_task(self.async_remove(force_remove=True))
+        # Fire-and-forget: HA tracks the task internally
+        _ = self.hass.async_create_task(self.async_remove(force_remove=True))
 
         if not self.registry_entry:
             return

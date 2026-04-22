@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
 import logging
@@ -288,7 +289,7 @@ async def _async_migrate_event_entity_unique_ids(hass: HomeAssistant, entry: Hom
     await async_migrate_entries(hass, entry.entry_id, update_event_entity_unique_id)
 
 
-def _migrate_v11_extract_custom_ports(*, data: dict[str, Any]) -> dict[str, Any]:
+def _migrate_v11_extract_custom_ports(data: dict[str, Any]) -> dict[str, Any]:
     """Extract custom (non-default) ports from v11 config entry data."""
     custom_ports: dict[str, int] = {}
     if interfaces := data.get(CONF_INTERFACE):
@@ -306,7 +307,7 @@ def _migrate_v11_extract_custom_ports(*, data: dict[str, Any]) -> dict[str, Any]
     return data
 
 
-def _migrate_v14_remove_deprecated_optional_settings(*, data: dict[str, Any]) -> dict[str, Any]:
+def _migrate_v14_remove_deprecated_optional_settings(data: dict[str, Any]) -> dict[str, Any]:
     """Remove deprecated OptionalSettings values from v14 config entry data."""
     # Remove deprecated OptionalSettings values that were removed in aiohomematic 2026.1.44
     # - ENABLE_LINKED_ENTITY_CLIMATE_ACTIVITY (now always enabled)
@@ -321,123 +322,155 @@ def _migrate_v14_remove_deprecated_optional_settings(*, data: dict[str, Any]) ->
     return data
 
 
+def _migrate_v1_to_v2_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Migrate config entry data from v1 to v2: enable system notifications by default."""
+    data[CONF_ENABLE_SYSTEM_NOTIFICATIONS] = True
+    return data
+
+
+def _migrate_v3_to_v4_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Migrate config entry data from v3 to v4: introduce un-ignores list."""
+    data[CONF_UN_IGNORES] = []
+    return data
+
+
+def _migrate_v6_to_v7_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Migrate config entry data from v6 to v7: derive program scan from sysvar scan."""
+    if data.get(CONF_ADVANCED_CONFIG):
+        data[CONF_ADVANCED_CONFIG][CONF_ENABLE_PROGRAM_SCAN] = data[CONF_ADVANCED_CONFIG][CONF_ENABLE_SYSVAR_SCAN]
+    return data
+
+
+def _migrate_v2_unique_id(entry: HomematicConfigEntry) -> Callable[[er.RegistryEntry], dict[str, str] | None]:
+    """Return entity-id migration callback used by v2->v3."""
+
+    @callback
+    def update_entity_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+        """Update unique ID of entity entry."""
+        if entity_entry.unique_id.startswith(f"{DOMAIN}_bidcos_wir"):
+            return {
+                "new_unique_id": entity_entry.unique_id.replace(
+                    f"{DOMAIN}_bidcos_wir",
+                    f"{DOMAIN}_{entry.unique_id}_bidcos_wir",
+                )
+            }
+        return None
+
+    return update_entity_unique_id
+
+
+def _migrate_v4_to_v5_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Migrate config entry data from v4 to v5: collapse advanced settings and drop legacy keys."""
+    advanced_config = {
+        CONF_ENABLE_SYSVAR_SCAN: data.get(CONF_ENABLE_SYSVAR_SCAN, DEFAULT_ENABLE_SYSVAR_SCAN),
+        CONF_SYS_SCAN_INTERVAL: data.get(CONF_SYS_SCAN_INTERVAL, DEFAULT_SYS_SCAN_INTERVAL),
+        CONF_ENABLE_SYSTEM_NOTIFICATIONS: data.get(
+            CONF_ENABLE_SYSTEM_NOTIFICATIONS, DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS
+        ),
+        CONF_UN_IGNORES: data.get(CONF_UN_IGNORES, DEFAULT_UN_IGNORES),
+    }
+    default_advanced_config = {
+        CONF_ENABLE_SYSVAR_SCAN: DEFAULT_ENABLE_SYSVAR_SCAN,
+        CONF_SYS_SCAN_INTERVAL: DEFAULT_SYS_SCAN_INTERVAL,
+        CONF_ENABLE_SYSTEM_NOTIFICATIONS: DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS,
+        CONF_UN_IGNORES: DEFAULT_UN_IGNORES,
+    }
+    data[CONF_ADVANCED_CONFIG] = {} if advanced_config == default_advanced_config else advanced_config
+
+    for key in (CONF_ENABLE_SYSVAR_SCAN, CONF_SYS_SCAN_INTERVAL, CONF_ENABLE_SYSTEM_NOTIFICATIONS, CONF_UN_IGNORES):
+        with contextlib.suppress(KeyError):
+            del data[key]
+
+    return data
+
+
+def _migrate_v9_to_v10_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Migrate config entry data from v9 to v10: rename callback_port to CONF_CALLBACK_PORT_XML_RPC."""
+    if callback_port_xml_rpc := data.get("callback_port"):
+        with contextlib.suppress(KeyError):
+            del data["callback_port"]
+        data[CONF_CALLBACK_PORT_XML_RPC] = callback_port_xml_rpc
+    return data
+
+
+def _migrate_v10_to_v11_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Migrate config entry data from v10 to v11: drop delay_new_device_creation."""
+    if CONF_ADVANCED_CONFIG in data:
+        with contextlib.suppress(KeyError):
+            del data[CONF_ADVANCED_CONFIG]["delay_new_device_creation"]
+    return data
+
+
+def _migrate_v12_to_v13_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Migrate config entry data from v12 to v13: drop action_select_values from entry data."""
+    with contextlib.suppress(KeyError):
+        del data[CONF_ACTION_SELECT_VALUES]
+    return data
+
+
+def _migrate_v15_to_v16_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Migrate config entry data from v15 to v16: introduce command throttle interval default."""
+    if CONF_ADVANCED_CONFIG in data:
+        data[CONF_ADVANCED_CONFIG][CONF_COMMAND_THROTTLE_INTERVAL] = DEFAULT_COMMAND_THROTTLE_INTERVAL
+    return data
+
+
+def _migrate_v16_to_v17_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Migrate config entry data from v16 to v17: drop legacy enable_config_panel key."""
+    if CONF_ADVANCED_CONFIG in data:
+        # Panel is now enabled by default
+        data[CONF_ADVANCED_CONFIG].pop("enable_config_panel", None)
+    return data
+
+
+# Dispatch table for pure data-only migrations (no hass / async work).
+# Each entry maps from-version -> data transformer. The to-version is always from + 1.
+_DATA_MIGRATIONS: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = {
+    1: _migrate_v1_to_v2_data,
+    3: _migrate_v3_to_v4_data,
+    6: _migrate_v6_to_v7_data,
+    9: _migrate_v9_to_v10_data,
+    10: _migrate_v10_to_v11_data,
+    11: _migrate_v11_extract_custom_ports,
+    12: _migrate_v12_to_v13_data,
+    14: _migrate_v14_remove_deprecated_optional_settings,
+    15: _migrate_v15_to_v16_data,
+    16: _migrate_v16_to_v17_data,
+}
+
+# Versions whose only side effect is calling cleanup_files() before bumping the version.
+_CLEANUP_FILE_VERSIONS = frozenset({5, 7, 8})
+
+
 async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
 
-    if entry.version == 1:
-        data = dict(entry.data)
-        data.update({CONF_ENABLE_SYSTEM_NOTIFICATIONS: True})
-        hass.config_entries.async_update_entry(entry, version=2, data=data)
-    if entry.version == 2:
+    while entry.version < 17:
+        version = entry.version
+        if migrator := _DATA_MIGRATIONS.get(version):
+            data = migrator(dict(entry.data))
+            hass.config_entries.async_update_entry(entry, version=version + 1, data=data)
+        elif version in _CLEANUP_FILE_VERSIONS:
+            cleanup_files(
+                central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass)
+            )
+            hass.config_entries.async_update_entry(entry, version=version + 1, data=dict(entry.data))
+        elif version == 2:
+            await async_migrate_entries(hass, entry.entry_id, _migrate_v2_unique_id(entry))
+            hass.config_entries.async_update_entry(entry, version=3)
+        elif version == 4:
+            data = _migrate_v4_to_v5_data(data=dict(entry.data))
+            cleanup_files(
+                central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass)
+            )
+            hass.config_entries.async_update_entry(entry, version=5, data=data)
+        elif version == 13:
+            # Migrate event entity unique_ids from channel-based to event_group-based format
+            await _async_migrate_event_entity_unique_ids(hass=hass, entry=entry)
+            hass.config_entries.async_update_entry(entry, version=14)
+        else:
+            break  # Unknown version - stop migrating to avoid infinite loop
 
-        @callback
-        def update_entity_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
-            """Update unique ID of entity entry."""
-            if entity_entry.unique_id.startswith(f"{DOMAIN}_bidcos_wir"):
-                return {
-                    "new_unique_id": entity_entry.unique_id.replace(
-                        f"{DOMAIN}_bidcos_wir",
-                        f"{DOMAIN}_{entry.unique_id}_bidcos_wir",
-                    )
-                }
-            return None
-
-        await async_migrate_entries(hass, entry.entry_id, update_entity_unique_id)
-
-        hass.config_entries.async_update_entry(entry, version=3)
-    if entry.version == 3:
-        data = dict(entry.data)
-        data.update({CONF_UN_IGNORES: []})
-        hass.config_entries.async_update_entry(entry, version=4, data=data)
-    if entry.version == 4:
-        data = dict(entry.data)
-
-        advanced_config = {
-            CONF_ENABLE_SYSVAR_SCAN: data.get(CONF_ENABLE_SYSVAR_SCAN, DEFAULT_ENABLE_SYSVAR_SCAN),
-            CONF_SYS_SCAN_INTERVAL: data.get(CONF_SYS_SCAN_INTERVAL, DEFAULT_SYS_SCAN_INTERVAL),
-            CONF_ENABLE_SYSTEM_NOTIFICATIONS: data.get(
-                CONF_ENABLE_SYSTEM_NOTIFICATIONS, DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS
-            ),
-            CONF_UN_IGNORES: data.get(CONF_UN_IGNORES, DEFAULT_UN_IGNORES),
-        }
-        default_advanced_config = {
-            CONF_ENABLE_SYSVAR_SCAN: DEFAULT_ENABLE_SYSVAR_SCAN,
-            CONF_SYS_SCAN_INTERVAL: DEFAULT_SYS_SCAN_INTERVAL,
-            CONF_ENABLE_SYSTEM_NOTIFICATIONS: DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS,
-            CONF_UN_IGNORES: DEFAULT_UN_IGNORES,
-        }
-        data[CONF_ADVANCED_CONFIG] = {} if advanced_config == default_advanced_config else advanced_config
-
-        def del_param(name: str) -> None:
-            with contextlib.suppress(Exception):
-                del data[name]
-
-        del_param(name=CONF_ENABLE_SYSVAR_SCAN)
-        del_param(name=CONF_SYS_SCAN_INTERVAL)
-        del_param(name=CONF_ENABLE_SYSTEM_NOTIFICATIONS)
-        del_param(name=CONF_UN_IGNORES)
-
-        cleanup_files(central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass))
-        hass.config_entries.async_update_entry(entry, version=5, data=data)
-    if entry.version == 5:
-        data = dict(entry.data)
-        cleanup_files(central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass))
-        hass.config_entries.async_update_entry(entry, version=6, data=data)
-    if entry.version == 6:
-        data = dict(entry.data)
-        if data.get(CONF_ADVANCED_CONFIG):
-            data[CONF_ADVANCED_CONFIG][CONF_ENABLE_PROGRAM_SCAN] = data[CONF_ADVANCED_CONFIG][CONF_ENABLE_SYSVAR_SCAN]
-        hass.config_entries.async_update_entry(entry, version=7, data=data)
-    if entry.version == 7:
-        data = dict(entry.data)
-        cleanup_files(central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass))
-        hass.config_entries.async_update_entry(entry, version=8, data=data)
-    if entry.version == 8:
-        data = dict(entry.data)
-        cleanup_files(central_name=entry.data[CONF_INSTANCE_NAME], storage_directory=get_storage_directory(hass=hass))
-        hass.config_entries.async_update_entry(entry, version=9, data=data)
-    if entry.version == 9:
-        data = dict(entry.data)
-        if callback_port_xml_rpc := data.get("callback_port"):
-            with contextlib.suppress(Exception):
-                del data["callback_port"]
-            data[CONF_CALLBACK_PORT_XML_RPC] = callback_port_xml_rpc
-        hass.config_entries.async_update_entry(entry, version=10, data=data)
-    if entry.version == 10:
-        data = dict(entry.data)
-        # Remove delay_new_device_creation from advanced config (now always True)
-        if CONF_ADVANCED_CONFIG in data:
-            with contextlib.suppress(Exception):
-                del data[CONF_ADVANCED_CONFIG]["delay_new_device_creation"]
-        hass.config_entries.async_update_entry(entry, version=11, data=data)
-    if entry.version == 11:
-        data = _migrate_v11_extract_custom_ports(data=dict(entry.data))
-        hass.config_entries.async_update_entry(entry, version=12, data=data)
-    if entry.version == 12:
-        data = dict(entry.data)
-        # Remove action_select_values from config entry data
-        # Values are now stored in separate storage file to avoid triggering config entry reload
-        with contextlib.suppress(Exception):
-            del data[CONF_ACTION_SELECT_VALUES]
-        hass.config_entries.async_update_entry(entry, version=13, data=data)
-    if entry.version == 13:
-        # Migrate event entity unique_ids from channel-based to event_group-based format
-        await _async_migrate_event_entity_unique_ids(hass=hass, entry=entry)
-        hass.config_entries.async_update_entry(entry, version=14)
-    if entry.version == 14:
-        data = _migrate_v14_remove_deprecated_optional_settings(data=dict(entry.data))
-        hass.config_entries.async_update_entry(entry, version=15, data=data)
-    if entry.version == 15:
-        data = dict(entry.data)
-        if CONF_ADVANCED_CONFIG in data:
-            data[CONF_ADVANCED_CONFIG][CONF_COMMAND_THROTTLE_INTERVAL] = DEFAULT_COMMAND_THROTTLE_INTERVAL
-        hass.config_entries.async_update_entry(entry, version=16, data=data)
-    if entry.version == 16:
-        data = dict(entry.data)
-        if CONF_ADVANCED_CONFIG in data:
-            # Remove old enable_config_panel key; panel is now enabled by default
-            data[CONF_ADVANCED_CONFIG].pop("enable_config_panel", None)
-        hass.config_entries.async_update_entry(entry, version=17, data=data)
     _LOGGER.info("Migration to version %s successful", entry.version)
     return True

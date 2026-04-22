@@ -131,7 +131,8 @@ class AioHomematicEvent(EventEntity):
     @callback
     def _async_device_removed(self, *, event: DeviceRemovedEvent) -> None:
         """Handle hm device removal."""
-        self.hass.async_create_task(self.async_remove(force_remove=True))
+        # Fire-and-forget: HA tracks the task internally
+        _ = self.hass.async_create_task(self.async_remove(force_remove=True))
 
         if not self.registry_entry:
             return

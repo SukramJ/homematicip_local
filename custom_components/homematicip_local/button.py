@@ -148,11 +148,13 @@ class HmipLocalCreateBackupButton(ButtonEntity):
 
             # Save backup to file
             backup_dir = Path(self._cu.backup_directory)
-            backup_dir.mkdir(parents=True, exist_ok=True)
-
             backup_path = backup_dir / backup_data.filename
 
-            await self.hass.async_add_executor_job(backup_path.write_bytes, backup_data.content)
+            def _write_backup() -> None:
+                backup_dir.mkdir(parents=True, exist_ok=True)
+                backup_path.write_bytes(backup_data.content)
+
+            await self.hass.async_add_executor_job(_write_backup)
 
             _LOGGER.info("CCU backup saved to %s (%d bytes)", backup_path, len(backup_data.content))
         except BaseHomematicException as err:

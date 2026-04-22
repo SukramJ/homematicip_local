@@ -33,7 +33,9 @@ repos:
           - --quiet
           - --format=custom
           - --configfile=tests/bandit.yaml
-        files: ^(custom_components/homematicip_local|script|tests)/.+\.py$
+        # Tests contain intentional fixtures (fake tokens, short test passwords)
+        # that bandit flags as B105/B106; ruff `S` rules already guard production code.
+        files: ^(custom_components/homematicip_local|script)/.+\.py$
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -63,10 +65,10 @@ repos:
       - id: python-typing-update
         stages: [manual]
         args:
-          - --py313-plus
+          - --py314-plus
           - --force
           - --keep-updates
-        files: ^(tests|script)/.+\.py$
+        files: ^(custom_components/homematicip_local|tests|script)/.+\.py$
   - repo: local
     hooks:
       # Run mypy through our wrapper script in order to get the possible

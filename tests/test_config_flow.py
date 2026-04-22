@@ -1391,7 +1391,7 @@ class TestAdvancedConfigurationFlow:
 
         # Provide minimal runtime_data with required method for advanced schema
         class _DummyQueryFacade:
-            def get_un_ignore_candidates(self, include_master: bool) -> list[str]:  # noqa: ARG002
+            def get_un_ignore_candidates(self, include_master: bool) -> list[str]:
                 return ["X", "Y"]
 
         class _DummyCentral:

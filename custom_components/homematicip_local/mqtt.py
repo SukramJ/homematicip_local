@@ -71,7 +71,7 @@ class MQTTConsumer:
     def _on_device_mqtt_msg_receive(self, msg: ReceiveMessage) -> None:
         """Do something on message receive."""
         _LOGGER.debug("Device MQTT Message received: %s", msg.payload)
-        state_path = msg.topic[len(self._mqtt_prefix) :] if msg.topic.startswith(self._mqtt_prefix) else msg.topic
+        state_path = msg.topic.removeprefix(self._mqtt_prefix)
         payload_dict = json_loads(msg.payload)
         if (
             (payload_value := cast(dict[str, Any], payload_dict).get("v")) is not None
@@ -87,7 +87,7 @@ class MQTTConsumer:
     def _on_sysvar_mqtt_msg_receive(self, msg: ReceiveMessage) -> None:
         """Do something on message receive."""
         _LOGGER.debug("Sysvar MQTT Message received: %s", msg.payload)
-        state_path = msg.topic[len(self._mqtt_prefix) :] if msg.topic.startswith(self._mqtt_prefix) else msg.topic
+        state_path = msg.topic.removeprefix(self._mqtt_prefix)
         payload_dict = json_loads(msg.payload)
         if (payload_value := cast(dict[str, Any], payload_dict).get("v")) is not None and (
             sv := self._central.hub_coordinator.get_sysvar_data_point(state_path=state_path)
