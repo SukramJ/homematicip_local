@@ -36,7 +36,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.19](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.19)
+#### Bump aiohomematic to [2026.4.20](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.20)
 
 - Added device profile for HmIP-UDI-SMI55
 - Added `ScheduleChannelSwitch` data point for per-channel schedule enable/disable
@@ -56,13 +56,16 @@
 - Fixed HmIP-DLD silently rejecting schedule updates by filtering unsupported schedule fields before `put_paramset`
 - Improved logging for unsupported JSON-RPC methods (warning instead of error) and for devices with failing configurable-channel lookup
 - Internal code quality: stricter linter configuration (ruff `S`/`BLE`/`PTH`, lowered mccabe complexity, additional bandit checks, mypy `possibly-undefined`/`unused-awaitable`), migration of filesystem operations to `pathlib`, narrowed broad exception handlers, and refactored complex functions for readability
+- Adopt the new [openccu-data](https://github.com/sukramj/openccu-data) package as the source-of-truth for CCU translation and easymode metadata; dropped the vendored `aiohomematic/ccu_data/` tree (public API unchanged)
 
-#### Bump aiohomematic-config to [2026.4.6](https://github.com/SukramJ/aiohomematic-config/compare/2026.4.1...2026.4.6)
+#### Bump aiohomematic-config to [2026.4.7](https://github.com/SukramJ/aiohomematic-config/compare/2026.4.1...2026.4.7)
 
 - Per-channel `schedule_enabled` field on `DeviceScheduleData`
 - Added `supported_schedule_fields` on `DeviceScheduleData` exposing which `ScheduleField`s the device advertises
 - Use `get_ui_label_translation()` from aiohomematic
 - Fall back to the locale-aware "Other Settings" label for metadata parameter groups without `label_key` or populated `label` mapping (prevents raw group ids like `group_5` from leaking to the UI)
+- Tightened code quality tooling (ruff/mypy/pylint/bandit/pytest) in line with aiohomematic and HA core
+- Adopt the new [openccu-data](https://github.com/sukramj/openccu-data) package as the source-of-truth for easymode link-profile data; dropped the vendored `aiohomematic_config/profiles/` directory (public API unchanged)
 
 #### Bump homematicip-local-frontend
 

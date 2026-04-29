@@ -10,7 +10,11 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/sukramj/aiohomematic/issues",
   "loggers": ["aiohomematic", "aiohomematic_config"],
-  "requirements": ["aiohomematic-config==2026.4.6", "aiohomematic==2026.4.19"],
+  "requirements": [
+    "openccu-data==2026.4.1",
+    "aiohomematic-config==2026.4.7",
+    "aiohomematic==2026.4.20"
+  ],
   "ssdp": [
     {
       "manufacturer": "OpenCCU",

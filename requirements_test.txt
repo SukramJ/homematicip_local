@@ -1,13 +1,14 @@
 -r requirements_test_pre_commit.txt
 
 async-upnp-client==0.47.0
-aiohomematic==2026.4.19
-aiohomematic-test-support==2026.4.19
-aiohomematic-config==2026.4.6
+aiohomematic==2026.4.20
+aiohomematic-test-support==2026.4.20
+aiohomematic-config==2026.4.7
+openccu-data>=2026.4.1
 isal==1.8.0
-mypy==1.20.1
-prek==0.3.10
-pur==7.3.3
+mypy==1.20.2
+prek==0.3.11
+pur==7.4.0
 pylint==4.0.5
 pylint_strict_informational==0.1
-pytest-homeassistant-custom-component-framework==1.0.13
+pytest-homeassistant-custom-component-framework==1.0.15
