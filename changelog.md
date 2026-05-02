@@ -36,7 +36,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.4.20](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.4.20)
+#### Bump aiohomematic to [2026.5.0](https://github.com/SukramJ/aiohomematic/compare/2026.4.6...2026.5.0)
 
 - Added device profile for HmIP-UDI-SMI55
 - Added `ScheduleChannelSwitch` data point for per-channel schedule enable/disable
@@ -48,6 +48,8 @@
 - Support non-climate link roles (HmIP-RCV-50 virtual remote and other non-climate devices now linkable via "Add Direct Link" wizard)
 - Added `WeekProfile.supported_schedule_fields` exposing the `ScheduleField`s the device advertises; forwarded as entity attribute so frontends can hide non-functional schedule inputs (e.g. HmIP-DLD)
 - Validate schedule writes against paramset description (`check_against_pd=True`) — unsupported `WP_*` parameters now raise a clear `ClientException` instead of being silently rejected
+- Schedule duration encoding now uses natural Homematic time bases and promotes to a coarser base only when the factor would overflow the CCU's `factor=30` cap, so requests like `"40min"` no longer get silently clamped to 31 minutes on the device
+- `SimpleScheduleEntry` rejects unrepresentable durations (e.g. `"31h"`, `"301s"`, sub-100ms) at validation time with a clear `ValueError` instead of letting the CCU clamp them; use `duration=None` for "permanent"
 - Fixed schedule target channels for multi-config lock devices
 - Fixed missing DURATION_UNIT/DURATION_VALUE in putParamset for turn_on and turn_off (HmIP-BSL, HmIP-RGBW, HmIPW-WRC6, HmIP-DRG-DALI)
 - Fixed RAMP_TIME_TO_OFF usage for RGBW and DRG-DALI lights
@@ -79,6 +81,9 @@
 - Config panel now available for all backends (CCU and Homegear); OpenCCU tab only shown for CCU backends
 - Fixed cards showing infinite loading spinner in HA Card Picker and on dashboards
 - Fixed device icons invisible or poorly visible in dark mode
+- Schedule card: switched the `valve` domain from a 0–100% slider to a binary on/off control to match CCU semantics for water valves (HmIP-WSM / ELV-SH-WSM); selecting <100% no longer accidentally closes the valve
+- Schedule editor enforces the CCU's `DURATION_FACTOR`/`RAMP_TIME_FACTOR` cap of 30 per unit (≤30 for `s`/`min`/`h`, ≤3000 in 100 ms steps for `ms`); invalid values are rejected upfront instead of being silently clamped on the device, and switching units clamps to the new unit's max
+- Added a "Permanent"/"Dauerhaft" toggle in the device schedule editor that sets `duration=null` (no auto-revert); the schedule list now displays "Permanent"/"Dauerhaft" instead of `-` for these entries
 
 ---
 
