@@ -5,12 +5,13 @@ from __future__ import annotations
 from typing import Final
 
 from aiohomematic.const import DataPointCategory
+from homeassistant.components.event import EventDeviceClass
 from homeassistant.components.select import SelectEntityDescription
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import EntityDescription
 
-from .base import HmButtonEntityDescription
+from .base import HmButtonEntityDescription, HmEventEntityDescription
 
 # Default descriptions used when no specific rule matches
 DEFAULT_DESCRIPTIONS: Final[dict[DataPointCategory, EntityDescription]] = {
@@ -18,6 +19,10 @@ DEFAULT_DESCRIPTIONS: Final[dict[DataPointCategory, EntityDescription]] = {
         key="button_default",
         entity_registry_enabled_default=False,
         translation_key="button_press",
+    ),
+    DataPointCategory.EVENT_GROUP: HmEventEntityDescription(
+        key="event_default",
+        device_class=EventDeviceClass.BUTTON,
     ),
     DataPointCategory.SWITCH: SwitchEntityDescription(
         key="switch_default",

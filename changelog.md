@@ -4,6 +4,8 @@
 
 ### Integration
 
+- Set `EventDeviceClass.DOORBELL` for HmIP-DBB event entities so they work with the new Home Assistant `doorbell` automation trigger; all other event entities continue to use `EventDeviceClass.BUTTON`
+- Routed the event entity device class through the `EntityDescriptionRegistry` (new `HmEventEntityDescription`, `event()` factory, `EVENT_RULES`, default for `DataPointCategory.EVENT_GROUP`) instead of hardcoding it on the entity class
 - Adapt to the `aiohomematic` event-type/contract extraction: public event types (`DataPointStateChangedEvent`, `DeviceRemovedEvent`, …) now import from `aiohomematic.event_types` instead of `aiohomematic.central.events`
 - New runtime dependency `aiohomematic-contract` (shared contract/event-type definitions)
 

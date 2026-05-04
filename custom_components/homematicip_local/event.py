@@ -9,7 +9,7 @@ from aiohomematic.central.events import SubscriptionGroup
 from aiohomematic.const import DATA_POINT_EVENTS, DataPointCategory
 from aiohomematic.event_types import DataPointStateChangedEvent, DeviceRemovedEvent
 from aiohomematic.interfaces import ChannelEventGroupProtocol
-from homeassistant.components.event import EventDeviceClass, EventEntity
+from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -20,6 +20,8 @@ from homeassistant.helpers.typing import UndefinedType
 from . import HomematicConfigEntry
 from .const import DOMAIN, EVENT_ADDRESS, EVENT_INTERFACE_ID, EVENT_MODEL
 from .control_unit import ControlUnit, signal_new_data_point
+from .entity_helpers.base import HmEventEntityDescription
+from .entity_helpers.registry import REGISTRY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +66,6 @@ async def async_setup_entry(
 class AioHomematicEvent(EventEntity):
     """Representation of the Homematic(IP) Local for OpenCCU event."""
 
-    _attr_device_class = EventDeviceClass.BUTTON
     _attr_entity_registry_enabled_default = True
     _attr_has_entity_name = True
     _attr_should_poll = False
@@ -81,6 +82,13 @@ class AioHomematicEvent(EventEntity):
         self._event_group = event_group
         self._attr_event_types = list(event_group.event_types)
         self._attr_translation_key = event_group.translation_key
+
+        description = REGISTRY.find(
+            category=DataPointCategory.EVENT_GROUP,
+            device_model=event_group.device.model,
+        )
+        if isinstance(description, HmEventEntityDescription) and description.device_class is not None:
+            self._attr_device_class = description.device_class
 
         self._attr_unique_id = f"{DOMAIN}_{event_group.unique_id}"
         self._attr_device_info = DeviceInfo(

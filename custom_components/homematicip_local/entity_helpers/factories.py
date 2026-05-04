@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.event import EventDeviceClass
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import PERCENTAGE, EntityCategory
@@ -12,6 +13,7 @@ from homeassistant.const import PERCENTAGE, EntityCategory
 from .base import (
     HmBinarySensorEntityDescription,
     HmButtonEntityDescription,
+    HmEventEntityDescription,
     HmNameSource,
     HmNumberEntityDescription,
     HmSensorEntityDescription,
@@ -331,6 +333,35 @@ def config_button(
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=enabled_default,
         translation_key=translation_key,
+        **kwargs,
+    )
+
+
+# =============================================================================
+# Event Factories
+# =============================================================================
+
+
+def event(
+    *,
+    key: str,
+    device_class: EventDeviceClass,
+    enabled_default: bool = True,
+    icon: str | None = None,
+    **kwargs: Any,
+) -> HmEventEntityDescription:
+    """
+    Create an event description.
+
+    Example:
+        event(key="event_doorbell", device_class=EventDeviceClass.DOORBELL)
+
+    """
+    return HmEventEntityDescription(
+        key=key,
+        device_class=device_class,
+        entity_registry_enabled_default=enabled_default,
+        icon=icon,
         **kwargs,
     )
 

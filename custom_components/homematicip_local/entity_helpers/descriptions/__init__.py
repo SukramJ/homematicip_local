@@ -7,6 +7,7 @@ from custom_components.homematicip_local.entity_helpers.registry import EntityDe
 from .binary_sensors import BINARY_SENSOR_RULES
 from .buttons import BUTTON_RULES
 from .covers import COVER_RULES
+from .events import EVENT_RULES
 from .hub import HUB_RULES
 from .locks import LOCK_RULES
 from .numbers import NUMBER_RULES
@@ -32,6 +33,7 @@ def get_all_rules() -> list[EntityDescriptionRule]:
         *BINARY_SENSOR_RULES,
         *BUTTON_RULES,
         *COVER_RULES,
+        *EVENT_RULES,
         *SWITCH_RULES,
         *NUMBER_RULES,
         *SELECT_RULES,

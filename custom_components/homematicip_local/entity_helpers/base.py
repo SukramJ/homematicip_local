@@ -7,6 +7,7 @@ from enum import StrEnum
 
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.button import ButtonEntityDescription
+from homeassistant.components.event import EventEntityDescription
 from homeassistant.components.number import NumberEntityDescription
 from homeassistant.components.select import SelectEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
@@ -54,3 +55,8 @@ class HmBinarySensorEntityDescription(HmEntityDescription, BinarySensorEntityDes
 @dataclass(frozen=True, kw_only=True)
 class HmButtonEntityDescription(HmEntityDescription, ButtonEntityDescription):
     """Class describing Homematic(IP) Local button entities."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class HmEventEntityDescription(HmEntityDescription, EventEntityDescription):
+    """Class describing Homematic(IP) Local event entities."""
