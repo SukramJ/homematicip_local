@@ -1,3 +1,11 @@
+# Version [2.7.1](https://github.com/SukramJ/homematicip_local/compare/2.7.0...2.7.1) (2026-05-06)
+
+## What's Changed
+
+### Integration
+
+- Fixed `homematic.device_availability` and `homematic.device_error` events being silently dropped when `event.device_name` from aiohomematic was empty and the user had not overridden the device name in HA: `_fire_device_availability_event` and `_on_device_trigger` now fall back to `device_entry.name` from the HA device registry, so `EVENT_NAME` is always populated and the event passes schema validation
+
 # Version [2.7.0](https://github.com/SukramJ/homematicip_local/compare/2.6.0...2.7.0) (2026-04-22)
 
 ## What's Changed

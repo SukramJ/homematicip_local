@@ -473,10 +473,11 @@ class ControlUnit(BaseControlUnit):
             EVENT_PARAMETER: "AVAILABILITY",
         }
 
-        # Use device_name from event, prefer name_by_user from HA device registry
+        # Use device_name from event, prefer name_by_user from HA device registry,
+        # fall back to the registered HA device name to ensure EVENT_NAME is always set.
         name: str | None = device_name
         if device_entry := self._async_get_device_entry(device_address=device_address):
-            name = device_entry.name_by_user or name
+            name = device_entry.name_by_user or name or device_entry.name
             event_data[EVENT_DEVICE_ID] = device_entry.id
         if name:
             event_data[EVENT_NAME] = name
@@ -873,10 +874,11 @@ class ControlUnit(BaseControlUnit):
             EVENT_VALUE: event.value,
         }
 
-        # Use event.device_name from aiohomematic, prefer name_by_user from HA device registry
+        # Use event.device_name from aiohomematic, prefer name_by_user from HA device registry,
+        # fall back to the registered HA device name to ensure EVENT_NAME is always set.
         name: str | None = event.device_name
         if device_entry := self._async_get_device_entry(device_address=device_address):
-            name = device_entry.name_by_user or name
+            name = device_entry.name_by_user or name or device_entry.name
             event_data[EVENT_DEVICE_ID] = device_entry.id
         if name:
             event_data[EVENT_NAME] = name
