@@ -6,6 +6,13 @@
 
 - Fixed `homematic.device_availability` and `homematic.device_error` events being silently dropped when `event.device_name` from aiohomematic was empty and the user had not overridden the device name in HA: `_fire_device_availability_event` and `_on_device_trigger` now fall back to `device_entry.name` from the HA device registry, so `EVENT_NAME` is always populated and the event passes schema validation
 
+### Dependencies
+
+#### Bump aiohomematic to [2026.5.1](https://github.com/SukramJ/aiohomematic/compare/2026.5.0...2026.5.1)
+
+- Fixed climate `activity` wrongly reporting `HEAT` in cooling mode (HmIP-WTH-1 + HmIP-FALMOT-C12)
+- Fixed RF dimmer entities flickering between target, intermediate, and final values during ramps by treating `LEVEL_REAL` as the authoritative status source
+
 # Version [2.7.0](https://github.com/SukramJ/homematicip_local/compare/2.6.0...2.7.0) (2026-04-22)
 
 ## What's Changed
