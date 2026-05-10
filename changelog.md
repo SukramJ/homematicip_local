@@ -8,11 +8,12 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.5.2](https://github.com/SukramJ/aiohomematic/compare/2026.5.0...2026.5.2)
+#### Bump aiohomematic to [2026.5.3](https://github.com/SukramJ/aiohomematic/compare/2026.5.0...2026.5.3)
 
 - Fixed climate `activity` wrongly reporting `HEAT` in cooling mode (HmIP-WTH-1 + HmIP-FALMOT-C12)
 - Fixed RF dimmer entities flickering between target, intermediate, and final values during ramps by treating `LEVEL_REAL` as the authoritative status source
 - Fixed HmIP `LOWBAT` not being reflected in `MaintenanceData.low_bat` (HmIP devices now correctly report low-battery state to consumers like the config panel)
+- Fixed `HmIP-RGBW`/`HmIP-DRG-DALI` `turn_off` with `transition` being rejected by the CCU (regression from 2026.4.7): the off `putParamset` now uses `RAMP_TIME_VALUE`/`RAMP_TIME_UNIT` again, so ramped turn-off works and no longer requires a second click
 
 # Version [2.7.0](https://github.com/SukramJ/homematicip_local/compare/2.6.0...2.7.0) (2026-04-22)
 
