@@ -11,9 +11,9 @@
   "issue_tracker": "https://github.com/sukramj/aiohomematic/issues",
   "loggers": ["aiohomematic", "aiohomematic_config"],
   "requirements": [
-    "openccu-data==2026.4.1",
+    "openccu-data==2026.5.0",
     "aiohomematic-config==2026.4.7",
-    "aiohomematic==2026.5.1"
+    "aiohomematic==2026.5.2"
   ],
   "ssdp": [
     {
