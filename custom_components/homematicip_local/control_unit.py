@@ -59,7 +59,7 @@ from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 
 # --- Repairs/fix flow support ---
-from homeassistant.helpers import aiohttp_client, device_registry as dr, issue_registry as ir
+from homeassistant.helpers import aiohttp_client, device_registry as dr, entity_registry as er, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.issue_registry import async_delete_issue
@@ -372,6 +372,9 @@ class ControlUnit(BaseControlUnit):
         if self._enable_mqtt:
             self._mqtt_consumer = MQTTConsumer(hass=self._hass, central=self._central, mqtt_prefix=self._mqtt_prefix)
             await self._mqtt_consumer.subscribe()
+        # Remove orphaned entity registry entries (incl. disabled ones) whose
+        # underlying data point no longer exists in the central.
+        self._async_cleanup_orphaned_entity_registry_entries()
 
     async def stop_central(self, *args: Any) -> None:
         """Stop the central unit."""
@@ -429,6 +432,52 @@ class ControlUnit(BaseControlUnit):
                 # Link to the Homematic control unit.
                 via_device=(DOMAIN, self._central.name),
             )
+
+    @callback
+    def _async_cleanup_orphaned_entity_registry_entries(self) -> None:
+        """
+        Remove entity-registry entries whose data point no longer exists in the central.
+
+        HA only auto-cleans entities that successfully go through ``async_added_to_hass``,
+        which never runs for disabled entities. As a result, disabled entries whose
+        underlying data point is gone (e.g. after un_ignore/profile changes or a
+        backend device removal) remain in the entity registry indefinitely and cannot
+        be removed via the UI. This sweep removes them on integration startup.
+        Only runs when the central is fully started so that we don't delete entries
+        whose data points just haven't been loaded yet.
+        """
+        if self._central.state != CentralState.RUNNING:
+            _LOGGER.debug(
+                "Skipping orphan entity registry cleanup, central not RUNNING (state=%s)",
+                self._central.state,
+            )
+            return
+
+        current_unique_ids: set[str] = {
+            f"{DOMAIN}_{dp.unique_id}" for dp in self._central.query_facade.get_data_points()
+        }
+        current_unique_ids.update(
+            f"{DOMAIN}_{dp.unique_id}" for dp in self._central.hub_coordinator.get_hub_data_points()
+        )
+        for event_type in DeviceTriggerEventType:
+            current_unique_ids.update(
+                f"{DOMAIN}_{eg.unique_id}" for eg in self._central.query_facade.get_event_groups(event_type=event_type)
+            )
+
+        entity_registry = er.async_get(self._hass)
+        orphaned_entries: list[er.RegistryEntry] = [
+            entry
+            for entry in er.async_entries_for_config_entry(entity_registry, self._entry_id)
+            if entry.platform == DOMAIN and entry.unique_id not in current_unique_ids
+        ]
+        for entry in orphaned_entries:
+            _LOGGER.info(
+                "Removing orphan entity registry entry %s (unique_id=%s, disabled=%s)",
+                entry.entity_id,
+                entry.unique_id,
+                entry.disabled,
+            )
+            entity_registry.async_remove(entry.entity_id)
 
     @callback
     def _async_get_device_entry(self, *, device_address: str) -> DeviceEntry | None:

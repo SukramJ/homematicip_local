@@ -5,15 +5,25 @@
 ### Integration
 
 - Fixed `homematic.device_availability` and `homematic.device_error` events being silently dropped when `event.device_name` from aiohomematic was empty and the user had not overridden the device name in HA: `_fire_device_availability_event` and `_on_device_trigger` now fall back to `device_entry.name` from the HA device registry, so `EVENT_NAME` is always populated and the event passes schema validation
+- Automatically remove orphaned entity registry entries — including disabled ones — on integration startup (#3176): `ControlUnit.start_central` now runs `_async_cleanup_orphaned_entity_registry_entries` after the central reaches `RUNNING`, removing any entry whose underlying aiohomematic data point, hub data point or channel event group no longer exists. Replaces the previous manual workaround of "enable disabled entity → reload → entity gets deleted"
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.5.3](https://github.com/SukramJ/aiohomematic/compare/2026.5.0...2026.5.3)
+#### Bump aiohomematic to [2026.5.4](https://github.com/SukramJ/aiohomematic/compare/2026.5.0...2026.5.4)
 
 - Fixed climate `activity` wrongly reporting `HEAT` in cooling mode (HmIP-WTH-1 + HmIP-FALMOT-C12)
 - Fixed RF dimmer entities flickering between target, intermediate, and final values during ramps by treating `LEVEL_REAL` as the authoritative status source
-- Fixed HmIP `LOWBAT` not being reflected in `MaintenanceData.low_bat` (HmIP devices now correctly report low-battery state to consumers like the config panel)
+- Fixed HM `LOWBAT` not being reflected in `MaintenanceData.low_bat` (HM devices now correctly report low-battery state to consumers like the config panel)
 - Fixed `HmIP-RGBW`/`HmIP-DRG-DALI` `turn_off` with `transition` being rejected by the CCU (regression from 2026.4.7): the off `putParamset` now uses `RAMP_TIME_VALUE`/`RAMP_TIME_UNIT` again, so ramped turn-off works and no longer requires a second click
+- Fixed RF dimmer `is_on`/`brightness` briefly flipping back to the previous state during a ramp (regression from #3166): `_effective_level` now consults the unconfirmed sent value between optimistic state and the group-level fallback, so the sent target stays authoritative until the CCU echoes a matching value
+
+#### aiohomematic-config remains at [2026.4.7](https://github.com/SukramJ/aiohomematic-config/releases/tag/2026.4.7)
+
+- No API or behavior changes for the integration since 2.7.0
+
+#### homematicip-local-frontend (last commit unchanged since 2.7.0)
+
+- Latest commit is "Schedule Card — Valve as Binary, Duration Limits (#57)", already shipped with 2.7.0
 
 # Version [2.7.0](https://github.com/SukramJ/homematicip_local/compare/2.6.0...2.7.0) (2026-04-22)
 

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from aiohomematic.const import CentralState, DeviceTriggerEventType
 from aiohomematic.exceptions import AuthFailure
 import custom_components.homematicip_local
 from custom_components.homematicip_local.config_flow import DomainConfigFlow
@@ -17,6 +19,7 @@ from custom_components.homematicip_local.const import (
 from custom_components.homematicip_local.control_unit import ControlUnit
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests import const
 
@@ -247,3 +250,143 @@ async def test_reload_entry(hass: HomeAssistant, mock_loaded_config_entry: MockC
     await hass.async_block_till_done()
     assert hass.data[HMIP_DOMAIN]
     assert mock_loaded_config_entry.title == "Reload"
+
+
+def _build_orphan_sweep_self(
+    hass: HomeAssistant,
+    entry_id: str,
+    *,
+    state: CentralState = CentralState.RUNNING,
+    data_point_unique_ids: tuple[str, ...] = (),
+    hub_unique_ids: tuple[str, ...] = (),
+    event_group_unique_ids: tuple[str, ...] = (),
+) -> SimpleNamespace:
+    """Build a minimal ControlUnit-shaped self for _async_cleanup_orphaned_entity_registry_entries."""
+    central = MagicMock()
+    central.state = state
+    central.query_facade.get_data_points.return_value = tuple(
+        SimpleNamespace(unique_id=uid) for uid in data_point_unique_ids
+    )
+    central.hub_coordinator.get_hub_data_points.return_value = tuple(
+        SimpleNamespace(unique_id=uid) for uid in hub_unique_ids
+    )
+    central.query_facade.get_event_groups.return_value = tuple(
+        SimpleNamespace(unique_id=uid) for uid in event_group_unique_ids
+    )
+    return SimpleNamespace(_hass=hass, _entry_id=entry_id, _central=central)
+
+
+async def test_cleanup_orphan_entries_removes_disabled_entity_without_data_point(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+) -> None:
+    """Disabled entity without a corresponding data point is removed."""
+    mock_config_entry_v2.add_to_hass(hass)
+    entry_id = mock_config_entry_v2.entry_id
+
+    entity_registry = er.async_get(hass)
+    alive_entity = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_alive_dp",
+        config_entry=mock_config_entry_v2,
+    )
+    orphan_disabled = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_orphan_dp",
+        config_entry=mock_config_entry_v2,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    assert orphan_disabled.disabled
+
+    fake_self = _build_orphan_sweep_self(hass, entry_id, data_point_unique_ids=("alive_dp",))
+    ControlUnit._async_cleanup_orphaned_entity_registry_entries(fake_self)
+
+    assert entity_registry.async_get(alive_entity.entity_id) is not None
+    assert entity_registry.async_get(orphan_disabled.entity_id) is None
+
+
+async def test_cleanup_orphan_entries_recognizes_hub_and_event_unique_ids(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+) -> None:
+    """Hub data points and event groups must protect their entries from cleanup."""
+    mock_config_entry_v2.add_to_hass(hass)
+    entry_id = mock_config_entry_v2.entry_id
+
+    entity_registry = er.async_get(hass)
+    sysvar_entity = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_sysvar_dp",
+        config_entry=mock_config_entry_v2,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    event_entity = entity_registry.async_get_or_create(
+        domain="event",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_event_group_dp",
+        config_entry=mock_config_entry_v2,
+    )
+
+    fake_self = _build_orphan_sweep_self(
+        hass,
+        entry_id,
+        hub_unique_ids=("sysvar_dp",),
+        event_group_unique_ids=("event_group_dp",),
+    )
+    ControlUnit._async_cleanup_orphaned_entity_registry_entries(fake_self)
+
+    assert entity_registry.async_get(sysvar_entity.entity_id) is not None
+    assert entity_registry.async_get(event_entity.entity_id) is not None
+    # get_event_groups must have been queried for every DeviceTriggerEventType
+    assert fake_self._central.query_facade.get_event_groups.call_count == len(list(DeviceTriggerEventType))
+
+
+async def test_cleanup_orphan_entries_skipped_when_central_not_running(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+) -> None:
+    """No cleanup when central is not RUNNING (avoids deleting entries during degraded startup)."""
+    mock_config_entry_v2.add_to_hass(hass)
+    entry_id = mock_config_entry_v2.entry_id
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_some_dp",
+        config_entry=mock_config_entry_v2,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    fake_self = _build_orphan_sweep_self(hass, entry_id, state=CentralState.DEGRADED)
+    ControlUnit._async_cleanup_orphaned_entity_registry_entries(fake_self)
+
+    # Entry survives because the sweep bailed out early
+    assert entity_registry.async_get(entry.entity_id) is not None
+    fake_self._central.query_facade.get_data_points.assert_not_called()
+
+
+async def test_cleanup_orphan_entries_ignores_other_platforms(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+) -> None:
+    """Entries from other platforms must not be touched even with matching config entry."""
+    mock_config_entry_v2.add_to_hass(hass)
+    entry_id = mock_config_entry_v2.entry_id
+
+    entity_registry = er.async_get(hass)
+    foreign_entry = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="some_other_integration",
+        unique_id="foreign_uid",
+        config_entry=mock_config_entry_v2,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    fake_self = _build_orphan_sweep_self(hass, entry_id)
+    ControlUnit._async_cleanup_orphaned_entity_registry_entries(fake_self)
+
+    assert entity_registry.async_get(foreign_entry.entity_id) is not None
