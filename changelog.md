@@ -10,13 +10,14 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.5.6](https://github.com/SukramJ/aiohomematic/compare/2026.5.0...2026.5.6)
+#### Bump aiohomematic to [2026.5.7](https://github.com/SukramJ/aiohomematic/compare/2026.5.0...2026.5.7)
 
 - Fix climate `activity` reporting `HEAT` in cooling mode (HmIP-WTH-1 + HmIP-FALMOT-C12)
 - Fix RF dimmer flicker during ramps — `LEVEL_REAL` is now the authoritative status source
 - Fix HM `LOWBAT` not propagated to `MaintenanceData.low_bat`
 - Fix `HmIP-RGBW`/`HmIP-DRG-DALI` `turn_off` with `transition` rejected by CCU (regression from 2026.4.7)
 - Three follow-up fixes for residual dimmer flicker during/after ramps (#3177): in-flight command tracking, recency-based `_effective_level` fallback
+- Fix HmIP dimmer brightness showing state-channel summary instead of commanded value (#3181): #3166 mirror logic restricted to RF dimmers (`LEVEL_REAL`); HmIP falls back to action channel
 - Expose `inbox_dp` and `update_dp` as `DelegatedProperty` on `HubCoordinator`
 
 #### aiohomematic-config remains at [2026.4.7](https://github.com/SukramJ/aiohomematic-config/releases/tag/2026.4.7)
