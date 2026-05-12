@@ -4,20 +4,20 @@
 
 ### Integration
 
-- Fixed `homematic.device_availability` and `homematic.device_error` events being silently dropped when `event.device_name` from aiohomematic was empty and the user had not overridden the device name in HA: `_fire_device_availability_event` and `_on_device_trigger` now fall back to `device_entry.name` from the HA device registry, so `EVENT_NAME` is always populated and the event passes schema validation
-- Automatically remove orphaned entity registry entries — including disabled ones — on integration startup (#3176): `ControlUnit.start_central` schedules `_async_cleanup_orphaned_entity_registry_entries` after the central reaches `RUNNING`, removing any entry whose underlying aiohomematic data point, hub data point or channel event group no longer exists. Replaces the previous manual workaround of "enable disabled entity → reload → entity gets deleted"
-- Fixed orphan cleanup wrongly deleting hub-backed entities (`system_update`, `inbox`, `service_messages`, `alarm_messages`, program buttons like `create_backup`) on every HA restart: the aiohomematic scheduler fetches these hub data points asynchronously after `start_central()`, so the cleanup is now deferred via `async_call_later` (120 s) and cancelled in `stop_central`, giving the initial scheduler iteration time to populate `hub_coordinator.get_hub_data_points()` before we evaluate which entries are truly orphaned
+- Fix `homematic.device_availability`/`device_error` events silently dropped when `event.device_name` was empty (fallback to HA device-registry name)
+- Auto-remove orphaned entity-registry entries (incl. disabled) on startup (#3176) — replaces the "enable → reload → delete" workaround
+- Fix orphan cleanup deleting hub-backed entities (`system_update`, `inbox`, `service/alarm_messages`, `install_mode`, metrics, connectivity, program buttons) on every restart: sweep now aggregates all hub singleton/mapping DPs from `hub_coordinator`; delay reduced 120 s → 60 s
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.5.5](https://github.com/SukramJ/aiohomematic/compare/2026.5.0...2026.5.5)
+#### Bump aiohomematic to [2026.5.6](https://github.com/SukramJ/aiohomematic/compare/2026.5.0...2026.5.6)
 
-- Fixed climate `activity` wrongly reporting `HEAT` in cooling mode (HmIP-WTH-1 + HmIP-FALMOT-C12)
-- Fixed RF dimmer entities flickering between target, intermediate, and final values during ramps by treating `LEVEL_REAL` as the authoritative status source
-- Fixed HM `LOWBAT` not being reflected in `MaintenanceData.low_bat` (HM devices now correctly report low-battery state to consumers like the config panel)
-- Fixed `HmIP-RGBW`/`HmIP-DRG-DALI` `turn_off` with `transition` being rejected by the CCU (regression from 2026.4.7): the off `putParamset` now uses `RAMP_TIME_VALUE`/`RAMP_TIME_UNIT` again, so ramped turn-off works and no longer requires a second click
-- Fixed RF dimmer `is_on`/`brightness` briefly flipping back to the previous state during a ramp (regression from #3166): `_effective_level` now consults the unconfirmed sent value between optimistic state and the group-level fallback, so the sent target stays authoritative until the CCU echoes a matching value
-- Fixed residual dimmer flicker not fully resolved by 2026.5.4 (#3177 follow-up): the previous fix relied on `unconfirmed_last_value_send`, but the tracker was only populated after the backend call returned — an echo arriving while we were still awaiting `throttle.acquire()`/`setValue` cleared the optimistic state and `_effective_level` fell back to the stale `_dp_group_level`. A new `_in_flight_commands` map on `InterfaceClient`, populated synchronously before the first suspend point in `set_value`/`put_paramset` and dropped in `finally`, now keeps the sent target authoritative end-to-end
+- Fix climate `activity` reporting `HEAT` in cooling mode (HmIP-WTH-1 + HmIP-FALMOT-C12)
+- Fix RF dimmer flicker during ramps — `LEVEL_REAL` is now the authoritative status source
+- Fix HM `LOWBAT` not propagated to `MaintenanceData.low_bat`
+- Fix `HmIP-RGBW`/`HmIP-DRG-DALI` `turn_off` with `transition` rejected by CCU (regression from 2026.4.7)
+- Three follow-up fixes for residual dimmer flicker during/after ramps (#3177): in-flight command tracking, recency-based `_effective_level` fallback
+- Expose `inbox_dp` and `update_dp` as `DelegatedProperty` on `HubCoordinator`
 
 #### aiohomematic-config remains at [2026.4.7](https://github.com/SukramJ/aiohomematic-config/releases/tag/2026.4.7)
 
@@ -25,7 +25,7 @@
 
 #### homematicip-local-frontend (last commit unchanged since 2.7.0)
 
-- Latest commit is "Schedule Card — Valve as Binary, Duration Limits (#57)", already shipped with 2.7.0
+- Latest commit "Schedule Card — Valve as Binary, Duration Limits (#57)", already shipped with 2.7.0
 
 # Version [2.7.0](https://github.com/SukramJ/homematicip_local/compare/2.6.0...2.7.0) (2026-04-22)
 

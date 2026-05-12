@@ -139,12 +139,12 @@ from .support import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# Delay before pruning orphaned entity registry entries. Hub data points
-# (system update, inbox, service/alarm messages, programs) are fetched
-# asynchronously by the aiohomematic scheduler after start_central(). Running
-# the cleanup immediately would treat their entries as orphaned on every
-# restart. 120s comfortably covers the initial scheduler iteration.
-ORPHAN_CLEANUP_DELAY: Final = 120
+# Delay before pruning orphaned entity registry entries. Most hub data points
+# (inbox, service/alarm messages, install_mode, metrics, connectivity, programs,
+# sysvars) are populated by init_hub() during start_clients(). Only system_update
+# is fetched lazily by the scheduler after the central reaches RUNNING — 60s
+# comfortably covers the first scheduler iteration of fetch_system_update_data.
+ORPHAN_CLEANUP_DELAY: Final = 60
 
 # Event type for device availability (not in DeviceTriggerEventType as it comes from DeviceLifecycleEvent)
 EVENT_TYPE_DEVICE_AVAILABILITY: Final = "homematic.device_availability"
@@ -476,9 +476,33 @@ class ControlUnit(BaseControlUnit):
         current_unique_ids: set[str] = {
             f"{DOMAIN}_{dp.unique_id}" for dp in self._central.query_facade.get_data_points()
         }
+        hub_coordinator = self._central.hub_coordinator
+        # Programs + sysvars
+        current_unique_ids.update(f"{DOMAIN}_{dp.unique_id}" for dp in hub_coordinator.get_hub_data_points())
+        # Singleton hub data points (alarm/service messages, inbox, system update)
+        for single_dp in (
+            hub_coordinator.alarm_messages_dp,
+            hub_coordinator.service_messages_dp,
+            hub_coordinator.inbox_dp,
+            hub_coordinator.update_dp,
+        ):
+            if single_dp is not None:
+                current_unique_ids.add(f"{DOMAIN}_{single_dp.unique_id}")
+        # Metrics (system_health, connection_latency, last_event_age)
+        if (metrics_dps := hub_coordinator.metrics_dps) is not None:
+            current_unique_ids.update(
+                f"{DOMAIN}_{dp.unique_id}"
+                for dp in (metrics_dps.system_health, metrics_dps.connection_latency, metrics_dps.last_event_age)
+            )
+        # Connectivity binary sensors (one per interface)
         current_unique_ids.update(
-            f"{DOMAIN}_{dp.unique_id}" for dp in self._central.hub_coordinator.get_hub_data_points()
+            f"{DOMAIN}_{conn.sensor.unique_id}" for conn in hub_coordinator.connectivity_dps.values()
         )
+        # Install mode button + sensor (one pair per interface)
+        for install_mode in hub_coordinator.install_mode_dps.values():
+            current_unique_ids.add(f"{DOMAIN}_{install_mode.button.unique_id}")
+            current_unique_ids.add(f"{DOMAIN}_{install_mode.sensor.unique_id}")
+        # Device trigger event groups
         for event_type in DeviceTriggerEventType:
             current_unique_ids.update(
                 f"{DOMAIN}_{eg.unique_id}" for eg in self._central.query_facade.get_event_groups(event_type=event_type)

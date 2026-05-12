@@ -260,6 +260,13 @@ def _build_orphan_sweep_self(
     data_point_unique_ids: tuple[str, ...] = (),
     hub_unique_ids: tuple[str, ...] = (),
     event_group_unique_ids: tuple[str, ...] = (),
+    alarm_messages_unique_id: str | None = None,
+    service_messages_unique_id: str | None = None,
+    inbox_unique_id: str | None = None,
+    update_unique_id: str | None = None,
+    metrics_unique_ids: tuple[str, str, str] | None = None,
+    connectivity_unique_ids: tuple[str, ...] = (),
+    install_mode_unique_ids: tuple[tuple[str, str], ...] = (),
 ) -> SimpleNamespace:
     """Build a minimal ControlUnit-shaped self for _async_cleanup_orphaned_entity_registry_entries."""
     central = MagicMock()
@@ -270,6 +277,33 @@ def _build_orphan_sweep_self(
     central.hub_coordinator.get_hub_data_points.return_value = tuple(
         SimpleNamespace(unique_id=uid) for uid in hub_unique_ids
     )
+    central.hub_coordinator.alarm_messages_dp = (
+        SimpleNamespace(unique_id=alarm_messages_unique_id) if alarm_messages_unique_id else None
+    )
+    central.hub_coordinator.service_messages_dp = (
+        SimpleNamespace(unique_id=service_messages_unique_id) if service_messages_unique_id else None
+    )
+    central.hub_coordinator.inbox_dp = SimpleNamespace(unique_id=inbox_unique_id) if inbox_unique_id else None
+    central.hub_coordinator.update_dp = SimpleNamespace(unique_id=update_unique_id) if update_unique_id else None
+    if metrics_unique_ids is None:
+        central.hub_coordinator.metrics_dps = None
+    else:
+        sh, cl, le = metrics_unique_ids
+        central.hub_coordinator.metrics_dps = SimpleNamespace(
+            system_health=SimpleNamespace(unique_id=sh),
+            connection_latency=SimpleNamespace(unique_id=cl),
+            last_event_age=SimpleNamespace(unique_id=le),
+        )
+    central.hub_coordinator.connectivity_dps = {
+        uid: SimpleNamespace(sensor=SimpleNamespace(unique_id=uid)) for uid in connectivity_unique_ids
+    }
+    central.hub_coordinator.install_mode_dps = {
+        button_uid: SimpleNamespace(
+            button=SimpleNamespace(unique_id=button_uid),
+            sensor=SimpleNamespace(unique_id=sensor_uid),
+        )
+        for button_uid, sensor_uid in install_mode_unique_ids
+    }
     central.query_facade.get_event_groups.return_value = tuple(
         SimpleNamespace(unique_id=uid) for uid in event_group_unique_ids
     )
@@ -390,3 +424,51 @@ async def test_cleanup_orphan_entries_ignores_other_platforms(
     ControlUnit._async_cleanup_orphaned_entity_registry_entries(fake_self)
 
     assert entity_registry.async_get(foreign_entry.entity_id) is not None
+
+
+async def test_cleanup_orphan_entries_recognizes_all_hub_data_point_sources(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+) -> None:
+    """Singleton/mapping hub data points (inbox, update, alarm/service messages, metrics, connectivity, install_mode) must protect their entries."""
+    mock_config_entry_v2.add_to_hass(hass)
+    entry_id = mock_config_entry_v2.entry_id
+
+    entity_registry = er.async_get(hass)
+    hub_unique_ids = (
+        "hub_inbox",
+        "hub_system-update",
+        "hub_alarm-messages",
+        "hub_service-messages",
+        "hub_system-health",
+        "hub_connection-latency",
+        "hub_last-event-age",
+        "hub_connectivity-hmip-rf",
+        "install_mode_hmip-button",
+        "install_mode_hmip",
+    )
+    created = [
+        entity_registry.async_get_or_create(
+            domain="sensor",
+            platform=HMIP_DOMAIN,
+            unique_id=f"{HMIP_DOMAIN}_{uid}",
+            config_entry=mock_config_entry_v2,
+        )
+        for uid in hub_unique_ids
+    ]
+
+    fake_self = _build_orphan_sweep_self(
+        hass,
+        entry_id,
+        inbox_unique_id="hub_inbox",
+        update_unique_id="hub_system-update",
+        alarm_messages_unique_id="hub_alarm-messages",
+        service_messages_unique_id="hub_service-messages",
+        metrics_unique_ids=("hub_system-health", "hub_connection-latency", "hub_last-event-age"),
+        connectivity_unique_ids=("hub_connectivity-hmip-rf",),
+        install_mode_unique_ids=(("install_mode_hmip-button", "install_mode_hmip"),),
+    )
+    ControlUnit._async_cleanup_orphaned_entity_registry_entries(fake_self)
+
+    for entry in created:
+        assert entity_registry.async_get(entry.entity_id) is not None, f"{entry.entity_id} was unexpectedly removed"
