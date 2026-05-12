@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from copy import deepcopy
+from datetime import datetime
 from functools import partial
 import logging
 import time
@@ -56,12 +57,13 @@ from aiohomematic.exceptions import AuthFailure, BaseHomematicException
 from aiohomematic.model.data_point import CallbackDataPoint
 from aiohomematic.support.address import get_device_address
 from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
 # --- Repairs/fix flow support ---
 from homeassistant.helpers import aiohttp_client, device_registry as dr, entity_registry as er, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import async_delete_issue
 
 from .const import (
@@ -136,6 +138,13 @@ from .support import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Delay before pruning orphaned entity registry entries. Hub data points
+# (system update, inbox, service/alarm messages, programs) are fetched
+# asynchronously by the aiohomematic scheduler after start_central(). Running
+# the cleanup immediately would treat their entries as orphaned on every
+# restart. 120s comfortably covers the initial scheduler iteration.
+ORPHAN_CLEANUP_DELAY: Final = 120
 
 # Event type for device availability (not in DeviceTriggerEventType as it comes from DeviceLifecycleEvent)
 EVENT_TYPE_DEVICE_AVAILABILITY: Final = "homematic.device_availability"
@@ -264,6 +273,7 @@ class ControlUnit(BaseControlUnit):
         self._subscription_group: Final[SubscriptionGroup] = self._central.event_bus.create_subscription_group(
             name="homematicip_local"
         )
+        self._orphan_cleanup_unsub: CALLBACK_TYPE | None = None
 
     def ensure_via_device_exists(self, identifier: str, suggested_area: str | None, via_device: str) -> None:
         """Create a via device for a device."""
@@ -373,11 +383,21 @@ class ControlUnit(BaseControlUnit):
             self._mqtt_consumer = MQTTConsumer(hass=self._hass, central=self._central, mqtt_prefix=self._mqtt_prefix)
             await self._mqtt_consumer.subscribe()
         # Remove orphaned entity registry entries (incl. disabled ones) whose
-        # underlying data point no longer exists in the central.
-        self._async_cleanup_orphaned_entity_registry_entries()
+        # underlying data point no longer exists in the central. Deferred so
+        # the aiohomematic scheduler can perform its initial hub data fetch
+        # before we evaluate which entries are truly orphaned.
+        self._orphan_cleanup_unsub = async_call_later(
+            hass=self._hass,
+            delay=ORPHAN_CLEANUP_DELAY,
+            action=self._async_scheduled_orphan_cleanup,
+        )
 
     async def stop_central(self, *args: Any) -> None:
         """Stop the central unit."""
+        if self._orphan_cleanup_unsub is not None:
+            self._orphan_cleanup_unsub()
+            self._orphan_cleanup_unsub = None
+
         if self._mqtt_consumer:
             self._mqtt_consumer.unsubscribe()
 
@@ -493,6 +513,12 @@ class ControlUnit(BaseControlUnit):
                 )
             }
         )
+
+    @callback
+    def _async_scheduled_orphan_cleanup(self, _now: datetime) -> None:
+        """Run the deferred orphan entity registry cleanup."""
+        self._orphan_cleanup_unsub = None
+        self._async_cleanup_orphaned_entity_registry_entries()
 
     @callback
     def _cleanup_callback_issues(self) -> None:
