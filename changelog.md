@@ -10,7 +10,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.5.8](https://github.com/SukramJ/aiohomematic/compare/2026.5.0...2026.5.8)
+#### Bump aiohomematic to [2026.5.9](https://github.com/SukramJ/aiohomematic/compare/2026.5.0...2026.5.9)
 
 - Fix climate `activity` reporting `HEAT` in cooling mode (HmIP-WTH-1 + HmIP-FALMOT-C12)
 - Fix RF dimmer flicker during ramps — `LEVEL_REAL` is now the authoritative status source
@@ -20,6 +20,7 @@
 - Fix HmIP dimmer brightness showing state-channel summary instead of commanded value (#3181): #3166 mirror logic restricted to RF dimmers (`LEVEL_REAL`); HmIP falls back to action channel
 - Expose `inbox_dp` and `update_dp` as `DelegatedProperty` on `HubCoordinator`
 - Fix automatic reconnect after startup failure when the CCU is not yet reachable (#3183): `EventBus.publish()`/`publish_batch()` now merge key-specific and wildcard subscribers instead of short-circuiting — the `ConnectionRecoveryCoordinator`'s heartbeat retry loop now actually runs when HA starts before the CCU is ready
+- Fix central stuck in `FAILED` after a startup-failure recovery succeeds (#3183 follow-up): heartbeat recovery path now hops through `RECOVERING` and keeps `_active_recoveries` populated so the final `_transition_to_running()`/`_transition_to_degraded()` actually fires — previously entities stayed unavailable until reload even though every interface reconnected
 
 #### aiohomematic-config remains at [2026.4.7](https://github.com/SukramJ/aiohomematic-config/releases/tag/2026.4.7)
 
