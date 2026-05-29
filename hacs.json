@@ -2,6 +2,6 @@
   "name": "Homematic(IP) Local for OpenCCU",
   "render_readme": true,
   "hide_default_branch": false,
-  "homeassistant": "2026.3.0",
+  "homeassistant": "2026.5.0",
   "hacs": "2.0.5"
 }

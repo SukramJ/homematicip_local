@@ -7,8 +7,7 @@ from typing import Any, Final, override
 
 from aiohomematic.const import DataPointCategory, DataPointType
 from aiohomematic.model.custom import CustomDpIpIrrigationValve
-from homeassistant.components.valve.const import ValveEntityFeature
-from homeassistant.components.valve.entity import ValveEntity
+from homeassistant.components.valve import ValveEntity, ValveEntityFeature
 from homeassistant.const import STATE_CLOSED, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
