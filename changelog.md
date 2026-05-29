@@ -1,3 +1,27 @@
+# Version [2.7.2](https://github.com/SukramJ/homematicip_local/compare/2.7.1...2.7.2) (2026-05-29)
+
+## What's Changed
+
+### Integration
+
+- Dependency-bump release; no behavioral changes in the integration itself
+- Rebuilt bundled frontend (`homematic-config.js`) against the latest `homematicip-local-frontend` commit for HA 2026.6 compatibility
+
+### Dependencies
+
+#### Bump aiohomematic to [2026.5.11](https://github.com/SukramJ/aiohomematic/compare/2026.5.9...2026.5.11)
+
+- Fix Switch/cover/valve schedule round-trip when the CCU paramset advertises fields the device category doesn't support (#3198): `ramp_time` / `level_2` / `duration` are now cleared for `SWITCH`, `LIGHT`, `COVER`, `VALVE`, `LOCK` so reads no longer emit entries that the subsequent `set_schedule()` rejects
+- Fix blocking file I/O in the event loop on first easymode access: the gzip archive (`openccu_data/data/easymode_extract.json.gz`) was loaded lazily via `read_bytes()` on the first `get_*()` call, triggering HA's blocking-call warning during `ws_get_form_schema` — archive is now loaded eagerly at import time, all later lookups are pure dict reads
+
+#### Bump aiohomematic-config to [2026.5.0](https://github.com/SukramJ/aiohomematic-config/compare/2026.4.7...2026.5.0)
+
+- Tracks the `aiohomematic` 2026.5.10 / `openccu-data` 2026.5.0 minimums; no API or behavior changes for the integration
+
+#### homematicip-local-frontend (last commit "HA 2026.6 Compatibility — `ha-radio` Removal")
+
+- Replaces the removed `ha-radio` element (gone in HA 2026.6) in `form-parameter` and `add-link` to keep the config panel working on 2026.6
+
 # Version [2.7.1](https://github.com/SukramJ/homematicip_local/compare/2.7.0...2.7.1) (2026-05-06)
 
 ## What's Changed

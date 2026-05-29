@@ -12,8 +12,8 @@
   "loggers": ["aiohomematic", "aiohomematic_config"],
   "requirements": [
     "openccu-data==2026.5.0",
-    "aiohomematic-config==2026.4.7",
-    "aiohomematic==2026.5.9"
+    "aiohomematic-config==2026.5.0",
+    "aiohomematic==2026.5.11"
   ],
   "ssdp": [
     {
@@ -21,6 +21,6 @@
       "manufacturerURL": "https://openccu.de"
     }
   ],
-  "version": "2.7.1",
+  "version": "2.7.2",
   "zeroconf": []
 }
