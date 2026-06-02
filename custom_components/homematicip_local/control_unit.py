@@ -12,16 +12,7 @@ from typing import Any, Final, Self, TypeVar, cast
 
 from aiohomematic import __version__ as AIOHM_VERSION
 from aiohomematic.central import CentralConfig, CentralUnit, check_config
-from aiohomematic.central.events import (
-    CentralStateChangedEvent,
-    DataPointsCreatedEvent,
-    DeviceLifecycleEvent,
-    DeviceLifecycleEventType,
-    DeviceTriggerEvent,
-    OptimisticRollbackEvent,
-    SubscriptionGroup,
-    SystemStatusChangedEvent,
-)
+from aiohomematic.central.events import SubscriptionGroup
 from aiohomematic.client import InterfaceConfig
 from aiohomematic.const import (
     CONF_PASSWORD,
@@ -52,6 +43,15 @@ from aiohomematic.const import (
     SystemInformation,
     TimeoutConfig,
     get_interface_default_port,
+)
+from aiohomematic.event_types import (
+    CentralStateChangedEvent,
+    DataPointsCreatedEvent,
+    DeviceLifecycleEvent,
+    DeviceLifecycleEventType,
+    DeviceTriggerEvent,
+    OptimisticRollbackEvent,
+    SystemStatusChangedEvent,
 )
 from aiohomematic.exceptions import AuthFailure, BaseHomematicException
 from aiohomematic.model.data_point import CallbackDataPoint

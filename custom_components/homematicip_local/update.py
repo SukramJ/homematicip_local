@@ -6,8 +6,9 @@ import logging
 from pathlib import Path
 from typing import Any, Final, override
 
-from aiohomematic.central.events import DataPointStateChangedEvent, DeviceRemovedEvent, SubscriptionGroup
+from aiohomematic.central.events import SubscriptionGroup
 from aiohomematic.const import CCUType, DataPointCategory, DataPointType
+from aiohomematic.event_types import DataPointStateChangedEvent, DeviceRemovedEvent
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.model.hub import HmUpdate
 from aiohomematic.model.update import DpUpdate

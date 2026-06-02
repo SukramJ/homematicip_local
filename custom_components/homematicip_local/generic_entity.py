@@ -7,8 +7,9 @@ import logging
 from typing import Any, Final, Generic, override
 
 from aiohomematic import ccu_translations
-from aiohomematic.central.events import DataPointStateChangedEvent, DeviceRemovedEvent, SubscriptionGroup
+from aiohomematic.central.events import SubscriptionGroup
 from aiohomematic.const import CallSource, DataPointCategory, DataPointUsage
+from aiohomematic.event_types import DataPointStateChangedEvent, DeviceRemovedEvent
 from aiohomematic.interfaces import (
     CalculatedDataPointProtocol,
     CallbackDataPointProtocol,
