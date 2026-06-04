@@ -54,7 +54,10 @@ from homeassistant.helpers.service_info import ssdp
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    BACKEND_CCU,
+    BACKEND_LOOM,
     CONF_ADVANCED_CONFIG,
+    CONF_BACKEND,
     CONF_BACKUP_PATH,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
@@ -73,6 +76,8 @@ from .const import (
     CONF_INTERFACE,
     CONF_JSON_PORT,
     CONF_LISTEN_ON_ALL_IP,
+    CONF_LOOM_PORT,
+    CONF_LOOM_TOKEN,
     CONF_MQTT_PREFIX,
     CONF_NON_ADMIN_PERMISSIONS,
     CONF_OPTIONAL_SETTINGS,
@@ -176,6 +181,24 @@ def get_domain_schema(data: ConfigType) -> Schema:
             vol.Optional(
                 CONF_SKIP_BACKEND_DETECTION, default=data.get(CONF_SKIP_BACKEND_DETECTION, False)
             ): BOOLEAN_SELECTOR,
+        }
+    )
+
+
+def get_loom_schema(data: ConfigType) -> Schema:
+    """Return the openccu-loom daemon connection schema.
+
+    The daemon owns interfaces, callback ports and CCU credentials, so
+    the user only supplies the daemon endpoint and a bearer token.
+    """
+    return vol.Schema(
+        {
+            vol.Required(CONF_INSTANCE_NAME, default=data.get(CONF_INSTANCE_NAME) or UNDEFINED): TEXT_SELECTOR,
+            vol.Required(CONF_HOST, default=data.get(CONF_HOST)): TEXT_SELECTOR,
+            vol.Optional(CONF_LOOM_PORT, default=data.get(CONF_LOOM_PORT, UNDEFINED)): PORT_SELECTOR_OPTIONAL,
+            vol.Required(CONF_TLS, default=data.get(CONF_TLS, True)): BOOLEAN_SELECTOR,
+            vol.Required(CONF_VERIFY_TLS, default=data.get(CONF_VERIFY_TLS, True)): BOOLEAN_SELECTOR,
+            vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, "")): PASSWORD_SELECTOR,
         }
     )
 
@@ -878,6 +901,44 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=placeholders,
         )
 
+    async def async_step_loom(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Configure an openccu-loom daemon backend."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {
+            "invalid_items": "",
+            "error_detail": "",
+            "retry_hint": "",
+        }
+        if user_input is not None:
+            self.data = {
+                CONF_BACKEND: BACKEND_LOOM,
+                CONF_INSTANCE_NAME: user_input[CONF_INSTANCE_NAME],
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_TLS: user_input.get(CONF_TLS, True),
+                CONF_VERIFY_TLS: user_input.get(CONF_VERIFY_TLS, True),
+                CONF_ADVANCED_CONFIG: {},
+            }
+            if (port := user_input.get(CONF_LOOM_PORT)) is not None:
+                self.data[CONF_LOOM_PORT] = int(port)
+            if token := user_input.get(CONF_LOOM_TOKEN):
+                self.data[CONF_LOOM_TOKEN] = token
+            try:
+                await ControlConfig(hass=self.hass, entry_id="validate", data=self.data).check_config()
+            except (InvalidConfig, BaseHomematicException) as exc:
+                _LOGGER.warning("Loom backend config invalid: %s", exc)
+                errors["base"] = "invalid_config"
+                description_placeholders["invalid_items"] = (exc.args[0] if exc.args else "") or user_input.get(
+                    CONF_HOST, ""
+                )
+            else:
+                return self.async_create_entry(title=self.data[CONF_INSTANCE_NAME], data=self.data)
+        return self.async_show_form(
+            step_id="loom",
+            data_schema=get_loom_schema(data=self.data),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
     async def async_step_port_config(
         self,
         port_input: ConfigType | None = None,
@@ -1176,8 +1237,14 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     async def async_step_user(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
-        """Handle the initial step."""
-        return await self.async_step_central(user_input=user_input)
+        """Pick the backend: direct CCU (aiohomematic) or openccu-loom daemon.
+
+        Discovery and re-entry that already carry CCU data skip straight
+        to the central step; a fresh user-initiated setup gets the menu.
+        """
+        if user_input is not None or self.data.get(CONF_HOST):
+            return await self.async_step_central(user_input=user_input)
+        return self.async_show_menu(step_id="user", menu_options=["central", "loom"])
 
     def _apply_detected_interfaces(self) -> None:
         """Apply detected interfaces to config data."""
@@ -1604,6 +1671,7 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
 def _get_ccu_data(data: ConfigType, user_input: ConfigType) -> ConfigType:
     """Get CCU data from user input. TLS and ports are set from interface step or detection."""
     ccu_data = {
+        CONF_BACKEND: BACKEND_CCU,
         CONF_INSTANCE_NAME: user_input.get(CONF_INSTANCE_NAME, data.get(CONF_INSTANCE_NAME)),
         CONF_HOST: user_input[CONF_HOST],
         CONF_USERNAME: user_input[CONF_USERNAME],

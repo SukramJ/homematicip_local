@@ -7,13 +7,13 @@ from typing import Any
 import voluptuous as vol
 
 from aiohomematic.const import Parameter
-from aiohomematic.model.generic import DpAction, DpButton
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
+from .backend_types import DP_ACTION_OR_BUTTON
 from .const import CONF_SUBTYPE, DOMAIN
 from .control_unit import ControlUnit
 from .support import get_device_address_at_interface_from_identifiers
@@ -47,7 +47,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict[st
                 continue
             if hm_device := control_unit.central.device_coordinator.get_device(address=device_address):
                 for dp in hm_device.generic_data_points:
-                    if not isinstance(dp, DpAction | DpButton):
+                    if not isinstance(dp, DP_ACTION_OR_BUTTON):
                         continue
                     if dp.parameter not in ACTION_PARAMS:
                         continue
@@ -88,7 +88,7 @@ async def async_call_action_from_config(
                 continue
             if hm_device := control_unit.central.device_coordinator.get_device(address=device_address):
                 for dp in hm_device.generic_data_points:
-                    if not isinstance(dp, DpAction | DpButton):
+                    if not isinstance(dp, DP_ACTION_OR_BUTTON):
                         continue
                     if dp.parameter == action_type.upper() and dp.channel.no == action_subtype:
                         await dp.send_value(value=True)

@@ -21,6 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
+from .backend_types import CUSTOM_DP_BLIND, CUSTOM_DP_COVER, CUSTOM_DP_GARAGE, CUSTOM_DP_IP_BLIND
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericEntity, AioHomematicGenericRestoreEntity
 from .support import handle_homematic_errors
@@ -48,7 +49,7 @@ async def async_setup_entry(
         entities: list[AioHomematicBaseCover[Any]] = []
 
         for data_point in data_points:
-            if isinstance(data_point, CustomDpIpBlind):
+            if isinstance(data_point, CUSTOM_DP_IP_BLIND):
                 if data_point.operation_mode and data_point.operation_mode == "SHUTTER":
                     entities.append(
                         AioHomematicCover(
@@ -63,21 +64,21 @@ async def async_setup_entry(
                             data_point=data_point,
                         )
                     )
-            elif isinstance(data_point, CustomDpBlind):
+            elif isinstance(data_point, CUSTOM_DP_BLIND):
                 entities.append(
                     AioHomematicBlind(
                         control_unit=control_unit,
                         data_point=data_point,
                     )
                 )
-            elif isinstance(data_point, CustomDpCover):
+            elif isinstance(data_point, CUSTOM_DP_COVER):
                 entities.append(
                     AioHomematicCover(
                         control_unit=control_unit,
                         data_point=data_point,
                     )
                 )
-            elif isinstance(data_point, CustomDpGarage):
+            elif isinstance(data_point, CUSTOM_DP_GARAGE):
                 entities.append(
                     AioHomematicGarage(
                         control_unit=control_unit,

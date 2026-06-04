@@ -1,3 +1,22 @@
+# Unreleased
+
+## What's Changed
+
+### Integration
+
+- Fix: enum sensors that also report a unit of measurement (e.g. door/window contact `STATE` on the openccu-loom backend) failed to be added — Home Assistant rejects a unit on the non-numeric `enum` device class (`ValueError: … has a unit of measurement … non-numeric device class: enum`). `AioHomematicSensor` no longer assigns a unit when the data point carries enum `values`.
+- Chore: `backend_types._pair` is now generic (`tuple[type[T], ...]`), so `isinstance` checks against the backend-agnostic dispatch tuples narrow to the aiohomematic type — mypy strict passes again across all platform files (27 errors resolved without runtime changes); the loom twin duck-types the aiohomematic class, documented in one place instead of per-call-site casts.
+- Chore: updated tests for the dual-backend flow — config-flow tests navigate the new backend menu (`user` → `central`), device-action tests patch the `DP_ACTION_OR_BUTTON` dispatch tuple, and light tests match the fixed-color dispatch tuple.
+
+### Dependencies
+
+#### Bump openccu-loom-client to 2026.6.1
+
+- Entity names no longer collapse to the device name on the loom backend: the locale-aware `translated_name`/`label_omitted` from the daemon are now surfaced (entities are named "Device + localised label", matching MQTT discovery; "primary" parameters keep the device name alone).
+- Read-only data points are categorised correctly: the client spawns entities off the daemon's authoritative `category` instead of re-deriving it (e.g. a read-only ENUM door `STATE` is now a `binary_sensor`, not a sensor).
+- `Device.firmware` returns the version string (was a `Firmware` object → invalid `sw_version`); climate/light custom entities load again (compat surface completed for `_peer_*` and LED colour attributes).
+- Pulls `openccu-loom-types>=0.1.8` (`DataPointSummary` gains `translated_name` + `label_omitted`).
+
 # Version [2.8.0](https://github.com/SukramJ/homematicip_local/compare/2.7.2...2.8.0) (2026-06-10)
 
 ## What's Changed

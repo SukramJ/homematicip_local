@@ -4,10 +4,10 @@ async-upnp-client==0.47.0
 aiohomematic==2026.6.2
 aiohomematic-test-support==2026.6.2
 aiohomematic-contract==2026.6.1
-aiohomematic-config==2026.5.0
-openccu-data>=2026.5.0
 isal==1.8.0
 mypy==2.1.0
+openccu-data>=2026.5.0
+openccu-loom-client==2026.6.1
 prek==0.4.4
 pur==7.4.0
 pylint==4.0.5

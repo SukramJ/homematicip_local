@@ -113,6 +113,18 @@
                 "description": "Schritt {step_current} von {step_total}: TLS und Schnittstellen konfigurieren. Erkannt: {detected_interfaces}", 
                 "title": "TLS und Schnittstellenauswahl"
             }, 
+            "loom": {
+                "data": {
+                    "host": "Daemon-Hostname/IP", 
+                    "instance_name": "Name der Integrations-Instanz", 
+                    "loom_port": "Daemon-Port (leer = 8443 TLS / 8080 unverschlüsselt)", 
+                    "loom_token": "API-Bearer-Token", 
+                    "tls": "TLS verwenden (HTTPS/WSS)", 
+                    "verify_tls": "TLS-Zertifikat prüfen"
+                }, 
+                "description": "Mit einem openccu-loom-Daemon verbinden. Der Daemon verwaltet CCU-Verbindung, Interfaces und Callbacks.", 
+                "title": "OpenCCU-Loom-Daemon"
+            }, 
             "port_config": {
                 "data": {
                     "bidcos_rf_port": "HM-RF Port", 
@@ -195,6 +207,13 @@
                 }, 
                 "description": "Schnittstellen-Ports konfigurieren (TLS ist {tls_status})", 
                 "title": "Port-Konfiguration"
+            }, 
+            "user": {
+                "menu_options": {
+                    "central": "Direkt mit einer CCU verbinden (aiohomematic)", 
+                    "loom": "Mit einem openccu-loom-Daemon verbinden"
+                }, 
+                "title": "Backend wählen"
             }
         }
     }, 

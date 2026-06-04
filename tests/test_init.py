@@ -5,13 +5,17 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from aiohomematic.const import CentralState, DeviceTriggerEventType
 from aiohomematic.exceptions import AuthFailure
 import custom_components.homematicip_local
+from custom_components.homematicip_local import _loom_migrated_unique_id
 from custom_components.homematicip_local.config_flow import DomainConfigFlow
 from custom_components.homematicip_local.const import (
+    BACKEND_CCU,
+    BACKEND_LOOM,
     CONF_ADVANCED_CONFIG,
     CONF_OPTIONAL_SETTINGS,
     DOMAIN as HMIP_DOMAIN,
@@ -267,6 +271,7 @@ def _build_orphan_sweep_self(
     metrics_unique_ids: tuple[str, str, str] | None = None,
     connectivity_unique_ids: tuple[str, ...] = (),
     install_mode_unique_ids: tuple[tuple[str, str], ...] = (),
+    backend: str = BACKEND_CCU,
 ) -> SimpleNamespace:
     """Build a minimal ControlUnit-shaped self for _async_cleanup_orphaned_entity_registry_entries."""
     central = MagicMock()
@@ -307,7 +312,7 @@ def _build_orphan_sweep_self(
     central.query_facade.get_event_groups.return_value = tuple(
         SimpleNamespace(unique_id=uid) for uid in event_group_unique_ids
     )
-    return SimpleNamespace(_hass=hass, _entry_id=entry_id, _central=central)
+    return SimpleNamespace(_hass=hass, _entry_id=entry_id, _central=central, _config=SimpleNamespace(backend=backend))
 
 
 async def test_cleanup_orphan_entries_removes_disabled_entity_without_data_point(
@@ -339,6 +344,31 @@ async def test_cleanup_orphan_entries_removes_disabled_entity_without_data_point
 
     assert entity_registry.async_get(alive_entity.entity_id) is not None
     assert entity_registry.async_get(orphan_disabled.entity_id) is None
+
+
+async def test_cleanup_orphan_entries_skipped_on_loom_backend(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+) -> None:
+    """The sweep is skipped for the loom backend (partial hub-coordinator surface)."""
+    mock_config_entry_v2.add_to_hass(hass)
+    entry_id = mock_config_entry_v2.entry_id
+
+    entity_registry = er.async_get(hass)
+    orphan_disabled = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_orphan_dp",
+        config_entry=mock_config_entry_v2,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    # No data points reported: on the CCU backend this would orphan the entry,
+    # but the loom backend must skip the sweep entirely and leave it untouched.
+    fake_self = _build_orphan_sweep_self(hass, entry_id, backend=BACKEND_LOOM)
+    ControlUnit._async_cleanup_orphaned_entity_registry_entries(fake_self)
+
+    assert entity_registry.async_get(orphan_disabled.entity_id) is not None
 
 
 async def test_cleanup_orphan_entries_recognizes_hub_and_event_unique_ids(
@@ -508,4 +538,49 @@ async def test_cleanup_orphan_entries_skipped_when_data_load_incomplete(
     for entry in created:
         assert entity_registry.async_get(entry.entity_id) is not None, (
             f"{entry.entity_id} was deleted despite an incomplete device load"
+        )
+
+
+class TestLoomUniqueIdMigration:
+    """``_loom_migrated_unique_id`` maps legacy keys to the loom/serial scheme."""
+
+    _ENTRY_SUFFIX = "a1b2c3d4e5"  # legacy entry_id[-10:] hub prefix
+    _SERIAL_SUFFIX = "11a0001234"  # new serial[-10:]
+    _D = HMIP_DOMAIN  # "homematicip_local"
+
+    @pytest.mark.parametrize(
+        "unique_id",
+        [
+            f"{_D}_loom_vcu1234567_1_state",  # already migrated → idempotent
+            f"{_D}_home_create_backup",  # synthetic backup button
+            f"{_D}_event_group_keypress_vcu1234567_1",  # event group (loom n/a yet)
+            "other_integration_xyz",  # not ours
+        ],
+    )
+    def test_left_untouched(self, unique_id: str) -> None:
+        assert (
+            _loom_migrated_unique_id(unique_id, entry_suffix=self._ENTRY_SUFFIX, serial_suffix=self._SERIAL_SUFFIX)
+            is None
+        )
+
+    @pytest.mark.parametrize(
+        ("old", "expected"),
+        [
+            # Device data point — no central prefix, just the loom_ namespace.
+            (f"{_D}_vcu1234567_1_state", f"{_D}_loom_vcu1234567_1_state"),
+            # Custom DP / channel — no parameter, still no prefix.
+            (f"{_D}_vcu1234567_1", f"{_D}_loom_vcu1234567_1"),
+            # Hub key — entry_id prefix swapped for the serial suffix.
+            (
+                f"{_D}_a1b2c3d4e5_sysvar_aussen-temperatur",
+                f"{_D}_loom_11a0001234_sysvar_aussen-temperatur",
+            ),
+            # Internal address — same prefix swap.
+            (f"{_D}_a1b2c3d4e5_int0001234_1_level", f"{_D}_loom_11a0001234_int0001234_1_level"),
+        ],
+    )
+    def test_rewrites(self, old: str, expected: str) -> None:
+        assert (
+            _loom_migrated_unique_id(old, entry_suffix=self._ENTRY_SUFFIX, serial_suffix=self._SERIAL_SUFFIX)
+            == expected
         )

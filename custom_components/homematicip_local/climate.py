@@ -9,14 +9,7 @@ from typing import Any, Final, override
 
 from aiohomematic.const import DataPointCategory, DataPointType
 from aiohomematic.interfaces import ClimateWeekProfileDataPointProtocol
-from aiohomematic.model.custom import (
-    PROFILE_PREFIX,
-    BaseCustomDpClimate,
-    ClimateActivity,
-    ClimateMode,
-    ClimateProfile,
-    CustomDpIpThermostat,
-)
+from aiohomematic.model.custom import PROFILE_PREFIX, BaseCustomDpClimate, ClimateActivity, ClimateMode, ClimateProfile
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_HUMIDITY,
@@ -43,6 +36,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
+from .backend_types import CUSTOM_DP_IP_THERMOSTAT
 from .const import CLIMATE_SCHEDULE_API_VERSION
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import ATTR_SCHEDULE_DATA, AioHomematicGenericEntity, AioHomematicGenericRestoreEntity
@@ -203,7 +197,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         """Return the hvac action."""
         if self._data_point.activity and self._data_point.activity in HM_TO_HA_ACTION:
             return HM_TO_HA_ACTION[self._data_point.activity]
-        if isinstance(self._data_point, CustomDpIpThermostat) and (
+        if isinstance(self._data_point, CUSTOM_DP_IP_THERMOSTAT) and (
             self.data_point._peer_level_dp is not None  # noqa: SLF001
             or self.data_point._peer_state_dp is not None  # noqa: SLF001
         ):

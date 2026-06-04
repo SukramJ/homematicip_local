@@ -108,6 +108,15 @@ def _get_default_detection_result(
     )
 
 
+async def _async_init_user_flow_at_central(hass: HomeAssistant) -> Any:
+    """Start a user flow and navigate the backend menu to the central form."""
+    result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+    assert result["type"] == FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "central"})
+    assert result["type"] == FlowResultType.FORM
+    return result
+
+
 async def async_check_form(
     hass: HomeAssistant,
     central_data: dict[str, Any] | None = None,
@@ -174,7 +183,7 @@ async def async_check_form(
             return_value=True,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await _async_init_user_flow_at_central(hass)
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] is None
 
@@ -485,7 +494,7 @@ class TestConfigFlowErrorHandling:
 
     async def test_form_cannot_connect(self, hass: HomeAssistant) -> None:
         """Test we handle cannot connect error."""
-        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await _async_init_user_flow_at_central(hass)
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] is None
 
@@ -548,7 +557,7 @@ class TestConfigFlowErrorHandling:
 
     async def test_form_detection_auth_failure(self, hass: HomeAssistant) -> None:
         """Test we handle auth failure during backend detection."""
-        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await _async_init_user_flow_at_central(hass)
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] is None
 
@@ -587,7 +596,7 @@ class TestConfigFlowErrorHandling:
 
     async def test_form_detection_no_backend_found(self, hass: HomeAssistant) -> None:
         """Test we handle case when no backend is found (detection failed)."""
-        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await _async_init_user_flow_at_central(hass)
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] is None
 
@@ -626,7 +635,7 @@ class TestConfigFlowErrorHandling:
 
     async def test_form_detection_no_connection(self, hass: HomeAssistant) -> None:
         """Test we handle connection exception during backend detection."""
-        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await _async_init_user_flow_at_central(hass)
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] is None
 
@@ -665,7 +674,7 @@ class TestConfigFlowErrorHandling:
 
     async def test_form_detection_validation_exception(self, hass: HomeAssistant) -> None:
         """Test we handle validation exception during backend detection."""
-        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await _async_init_user_flow_at_central(hass)
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] is None
 
@@ -704,7 +713,7 @@ class TestConfigFlowErrorHandling:
 
     async def test_form_invalid_auth(self, hass: HomeAssistant) -> None:
         """Test we handle invalid auth during final validation."""
-        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await _async_init_user_flow_at_central(hass)
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] is None
 
@@ -767,7 +776,7 @@ class TestConfigFlowErrorHandling:
 
     async def test_form_invalid_password(self, hass: HomeAssistant) -> None:
         """Test we handle invalid config during final validation."""
-        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await _async_init_user_flow_at_central(hass)
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] is None
 
@@ -1267,7 +1276,7 @@ class TestAdvancedConfigurationFlow:
     async def test_config_flow_advanced_path_and_submit(self, hass: HomeAssistant) -> None:
         """Drive user flow into advanced step and submit advanced settings."""
         # Start flow
-        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await _async_init_user_flow_at_central(hass)
         assert result["type"] == FlowResultType.FORM
         # Submit central step
         with (
@@ -1772,9 +1781,7 @@ class TestPortConfigErrorHandling:
                 side_effect=NoConnectionException("connection failed"),
             ),
         ):
-            result = await hass.config_entries.flow.async_init(
-                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
-            )
+            result = await _async_init_user_flow_at_central(hass)
 
             result2 = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
@@ -1850,9 +1857,7 @@ class TestPortConfigErrorHandling:
                 side_effect=NoConnectionException("connection failed"),
             ),
         ):
-            result = await hass.config_entries.flow.async_init(
-                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
-            )
+            result = await _async_init_user_flow_at_central(hass)
 
             result2 = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
@@ -2311,9 +2316,7 @@ class TestBackendDetectionErrors:
             new_callable=AsyncMock,
             side_effect=BaseHomematicException("generic error"),
         ):
-            result = await hass.config_entries.flow.async_init(
-                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
-            )
+            result = await _async_init_user_flow_at_central(hass)
 
             result2 = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
@@ -2343,9 +2346,7 @@ class TestBackendDetectionErrors:
             new_callable=AsyncMock,
             side_effect=ValidationException("validation error"),
         ):
-            result = await hass.config_entries.flow.async_init(
-                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
-            )
+            result = await _async_init_user_flow_at_central(hass)
 
             result2 = await hass.config_entries.flow.async_configure(
                 result["flow_id"],

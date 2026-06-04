@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+from inspect import isawaitable
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
@@ -262,11 +263,17 @@ async def ws_get_form_schema(
     facade = control.central.configuration
     paramset_key = ParamsetKey(msg["paramset_key"])
 
+    # ``get_paramset_description`` is sync + cached on the aiohomematic
+    # backend, but async (REST-served by the daemon) on the openccu-loom
+    # backend. Await the result only when the backend hands back an
+    # awaitable, so the same call site works against both.
     descriptions = facade.get_paramset_description(
         interface_id=msg["interface_id"],
         channel_address=msg["channel_address"],
         paramset_key=paramset_key,
     )
+    if isawaitable(descriptions):
+        descriptions = await descriptions
     current_values = await facade.get_paramset(
         interface_id=msg["interface_id"],
         channel_address=msg["channel_address"],
@@ -433,11 +440,17 @@ async def ws_session_open(
     facade = control.central.configuration
     paramset_key = ParamsetKey(msg["paramset_key"])
 
+    # ``get_paramset_description`` is sync + cached on the aiohomematic
+    # backend, but async (REST-served by the daemon) on the openccu-loom
+    # backend. Await the result only when the backend hands back an
+    # awaitable, so the same call site works against both.
     descriptions = facade.get_paramset_description(
         interface_id=msg["interface_id"],
         channel_address=msg["channel_address"],
         paramset_key=paramset_key,
     )
+    if isawaitable(descriptions):
+        descriptions = await descriptions
 
     try:
         initial_values = await facade.get_paramset(

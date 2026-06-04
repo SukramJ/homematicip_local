@@ -113,6 +113,18 @@
                 "description": "Step {step_current} of {step_total}: Configure TLS and interfaces. Detected: {detected_interfaces}", 
                 "title": "TLS and interface selection"
             }, 
+            "loom": {
+                "data": {
+                    "host": "Daemon hostname/IP address", 
+                    "instance_name": "Integration instance name", 
+                    "loom_port": "Daemon port (blank = 8443 TLS / 8080 plain)", 
+                    "loom_token": "API bearer token", 
+                    "tls": "Use TLS (HTTPS/WSS)", 
+                    "verify_tls": "Verify TLS certificate"
+                }, 
+                "description": "Connect to an openccu-loom daemon. The daemon owns the CCU connection, interfaces and callbacks.", 
+                "title": "OpenCCU-Loom daemon"
+            }, 
             "port_config": {
                 "data": {
                     "bidcos_rf_port": "HM-RF port", 
@@ -195,6 +207,13 @@
                 }, 
                 "description": "Configure interface ports (TLS is {tls_status})", 
                 "title": "Port configuration"
+            }, 
+            "user": {
+                "menu_options": {
+                    "central": "Connect directly to a CCU (aiohomematic)", 
+                    "loom": "Connect to an openccu-loom daemon"
+                }, 
+                "title": "Select backend"
             }
         }
     }, 

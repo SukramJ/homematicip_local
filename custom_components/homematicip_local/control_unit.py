@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from copy import deepcopy
 from datetime import datetime
 from functools import partial
 import logging
 import time
-from typing import Any, Final, Self, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Final, Self, TypeVar, cast
 
 from aiohomematic import __version__ as AIOHM_VERSION
 from aiohomematic.central import CentralConfig, CentralUnit, check_config
@@ -67,7 +67,9 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import async_delete_issue
 
 from .const import (
+    BACKEND_LOOM,
     CONF_ADVANCED_CONFIG,
+    CONF_BACKEND,
     CONF_BACKUP_PATH,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
@@ -84,6 +86,8 @@ from .const import (
     CONF_INTERFACE,
     CONF_JSON_PORT,
     CONF_LISTEN_ON_ALL_IP,
+    CONF_LOOM_PORT,
+    CONF_LOOM_TOKEN,
     CONF_MQTT_PREFIX,
     CONF_OPTIONAL_SETTINGS,
     CONF_PROGRAM_MARKERS,
@@ -93,6 +97,7 @@ from .const import (
     CONF_UN_IGNORES,
     CONF_USE_GROUP_CHANNEL_FOR_COVER_STATE,
     CONF_VERIFY_TLS,
+    DEFAULT_BACKEND,
     DEFAULT_BACKUP_PATH,
     DEFAULT_COMMAND_RETRY_MAX_ATTEMPTS,
     DEFAULT_COMMAND_THROTTLE_INTERVAL,
@@ -136,6 +141,9 @@ from .support import (
     cleanup_click_event_data,
     is_valid_event,
 )
+
+if TYPE_CHECKING:
+    from openccu_loom_client.compat.aiohomematic.central import CentralConfig as LoomCentralConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -479,6 +487,15 @@ class ControlUnit(BaseControlUnit):
         the device descriptions failed to load despite the central reporting RUNNING
         (see aiohomematic#3215).
         """
+        if self._config.backend == BACKEND_LOOM:
+            # The openccu-loom adapter exposes only a partial hub-coordinator
+            # surface (no alarm/service messages, inbox, metrics, connectivity or
+            # install-mode data points), so the per-singleton accounting below
+            # cannot be built. Skip the sweep until the loom adapter models the
+            # full hub surface rather than risk deleting still-valid entries.
+            _LOGGER.debug("Skipping orphan entity registry cleanup: not supported on the loom backend")
+            return
+
         if self._central.state != CentralState.RUNNING:
             _LOGGER.debug(
                 "Skipping orphan entity registry cleanup, central not RUNNING (state=%s)",
@@ -1135,6 +1152,7 @@ class ControlConfig:
         hass: HomeAssistant,
         entry_id: str,
         data: Mapping[str, Any],
+        serial: str | None = None,
         auto_confirm_until: float | None = None,
         default_callback_port_xml_rpc: int = PORT_ANY,
         enable_device_firmware_check: bool = DEFAULT_ENABLE_DEVICE_FIRMWARE_CHECK,
@@ -1144,18 +1162,30 @@ class ControlConfig:
         self.hass: Final = hass
         self.entry_id: Final = entry_id
         self._data: Final = data
+        # The CCU serial (HA's config-entry unique_id). For the loom backend
+        # it is injected into the adapter to fill the central-id slot of
+        # canonical HA routing keys, so live keys match the one-time
+        # unique_id registry migration. ``None`` on the validate path (no
+        # entry yet) → the adapter falls back to /system/ccu.
+        self._serial: Final = serial
         self.auto_confirm_until: Final = auto_confirm_until
         self._default_callback_port_xml_rpc: Final = default_callback_port_xml_rpc
         self._start_direct: Final = start_direct
         self._enable_device_firmware_check: Final = enable_device_firmware_check
 
-        # central
+        # backend: aiohomematic direct-CCU (default) or openccu-loom daemon
+        self._backend: Final[str] = self._data.get(CONF_BACKEND, DEFAULT_BACKEND)
+        # central — credentials are optional for the loom backend (it
+        # authenticates with a bearer token), so read them defensively.
         self.instance_name: Final[str] = _cleanup_instance_name(instance_name=self._data[CONF_INSTANCE_NAME])
         self._host: Final[str] = self._data[CONF_HOST]
-        self._username: Final[str] = self._data[CONF_USERNAME]
-        self._password: Final[str] = self._data[CONF_PASSWORD]
-        self._tls: Final[bool] = self._data[CONF_TLS]
-        self._verify_tls: Final[bool] = self._data[CONF_VERIFY_TLS]
+        self._username: Final[str] = self._data.get(CONF_USERNAME, "")
+        self._password: Final[str] = self._data.get(CONF_PASSWORD, "")
+        self._tls: Final[bool] = self._data.get(CONF_TLS, False)
+        self._verify_tls: Final[bool] = self._data.get(CONF_VERIFY_TLS, False)
+        # loom-only connection inputs
+        self._loom_token: Final[str | None] = self._data.get(CONF_LOOM_TOKEN)
+        self._loom_port: Final[int | None] = self._data.get(CONF_LOOM_PORT)
         self._callback_host: Final[str | None] = self._data.get(CONF_CALLBACK_HOST)
         self._callback_port_xml_rpc: Final[int | None] = self._data.get(CONF_CALLBACK_PORT_XML_RPC)
         self._json_port: Final[int | None] = self._data.get(CONF_JSON_PORT)
@@ -1212,6 +1242,11 @@ class ControlConfig:
         )
 
     @property
+    def backend(self) -> str:
+        """Return the configured backend (CCU or openccu-loom)."""
+        return self._backend
+
+    @property
     def backup_directory(self) -> str:
         """Return the full path to the backup directory."""
         return f"{get_storage_directory(hass=self.hass)}/{self._backup_path}"
@@ -1225,20 +1260,68 @@ class ControlConfig:
         """Check config. Throws BaseHomematicException on failure."""
         if not self._check_instance_name_is_unique():
             raise InvalidConfig("Instance name must be unique.")
-        if config_failures := await check_config(
-            central_name=self.instance_name,
-            host=self._host,
-            username=self._username,
-            password=self._password,
-            callback_host=self._callback_host,
-            callback_port_xml_rpc=self._callback_port_xml_rpc,
-            json_port=self._json_port,
-            storage_directory=get_storage_directory(hass=self.hass),
-        ):
+        storage_directory = get_storage_directory(hass=self.hass)
+        if self._backend == BACKEND_LOOM:
+            loom_check_config = await self.hass.async_add_import_executor_job(_import_loom_check_config)
+
+            # Credentials are optional for the loom backend; pass None instead of
+            # an empty string so the daemon does not reject a "given but empty"
+            # username (or password).
+            config_failures = await loom_check_config(
+                central_name=self.instance_name,
+                host=self._host,
+                username=self._username or None,
+                password=self._password or None,
+                callback_host=self._callback_host,
+                callback_port_xml_rpc=self._callback_port_xml_rpc,
+                json_port=self._json_port,
+                storage_directory=storage_directory,
+            )
+        else:
+            config_failures = await check_config(
+                central_name=self.instance_name,
+                host=self._host,
+                username=self._username,
+                password=self._password,
+                callback_host=self._callback_host,
+                callback_port_xml_rpc=self._callback_port_xml_rpc,
+                json_port=self._json_port,
+                storage_directory=storage_directory,
+            )
+        if config_failures:
             failures = ", ".join(config_failures)
             raise InvalidConfig(failures)
 
     async def create_central(self) -> CentralUnit:
+        """Create the central unit.
+
+        For the openccu-loom backend the central is the
+        ``LoomCentralAdapter`` from openccu-loom-client's
+        aiohomematic-compatible package; for the default CCU backend it
+        is aiohomematic's own ``CentralUnit``.
+        """
+        if self._backend == BACKEND_LOOM:
+            return await self._create_loom_central()
+        return await self._create_ccu_central()
+
+    async def create_control_unit(self) -> ControlUnit:
+        """Create the control unit asynchronously."""
+        return await ControlUnit.async_create(control_config=self)
+
+    async def create_control_unit_temp(self) -> ControlUnitTemp:
+        """Create a temporary control unit asynchronously."""
+        return await ControlUnitTemp.async_create(control_config=self._temporary_config)
+
+    def _check_instance_name_is_unique(self) -> bool:
+        """Check if instance_name is unique in HA."""
+        for entry in self.hass.config_entries.async_entries(domain=DOMAIN):
+            if entry.entry_id == self.entry_id or len(entry.data) == 0:
+                continue
+            if hasattr(entry.data, CONF_INSTANCE_NAME) and entry.data[CONF_INSTANCE_NAME] == self.instance_name:
+                return False
+        return True
+
+    async def _create_ccu_central(self) -> CentralUnit:
         """Create the central unit for ccu callbacks."""
         interface_configs: set[InterfaceConfig] = set()
         for interface_name in self._interface_config:
@@ -1298,22 +1381,56 @@ class ControlConfig:
             verify_tls=self._verify_tls,
         ).create_central()
 
-    async def create_control_unit(self) -> ControlUnit:
-        """Create the control unit asynchronously."""
-        return await ControlUnit.async_create(control_config=self)
+    async def _create_loom_central(self) -> CentralUnit:
+        """Build the openccu-loom-backed central via the compat adapter.
 
-    async def create_control_unit_temp(self) -> ControlUnitTemp:
-        """Create a temporary control unit asynchronously."""
-        return await ControlUnitTemp.async_create(control_config=self._temporary_config)
+        Imported lazily so a CCU-only install does not need
+        openccu-loom-client present.
+        """
+        try:
+            loom_central_config = await self.hass.async_add_import_executor_job(_import_loom_central_config)
+        except ImportError as err:  # pragma: no cover - install-time guard
+            raise InvalidConfig(
+                "The 'loom' backend requires the 'openccu-loom-client' package to be installed."
+            ) from err
 
-    def _check_instance_name_is_unique(self) -> bool:
-        """Check if instance_name is unique in HA."""
-        for entry in self.hass.config_entries.async_entries(domain=DOMAIN):
-            if entry.entry_id == self.entry_id or len(entry.data) == 0:
-                continue
-            if hasattr(entry.data, CONF_INSTANCE_NAME) and entry.data[CONF_INSTANCE_NAME] == self.instance_name:
-                return False
-        return True
+        central = await loom_central_config(
+            name=self.instance_name,
+            host=self._host,
+            port=self._loom_port,
+            tls=self._tls,
+            verify_tls=self._verify_tls,
+            token=self._loom_token,
+            username=self._username or None,
+            password=self._password or None,
+            serial=self._serial,
+            client_session=aiohttp_client.async_get_clientsession(self.hass),
+        ).create_central()
+        # The loom adapter duck-types CentralUnit; aiohomematic's Protocol
+        # metaclass blocks subclassing, so a cast is the only bridge.
+        return cast(CentralUnit, central)
+
+
+def _import_loom_central_config() -> type[LoomCentralConfig]:
+    """Import the loom-backed CentralConfig.
+
+    Pydantic's lazy submodule imports make this a blocking call, so it must
+    run in Home Assistant's import executor rather than the event loop.
+    """
+    from openccu_loom_client.compat.aiohomematic.central import CentralConfig as LoomCentralConfig  # noqa: PLC0415
+
+    return LoomCentralConfig
+
+
+def _import_loom_check_config() -> Callable[..., Awaitable[list[str]]]:
+    """Import the loom-backed check_config.
+
+    Blocking for the same reason as :func:`_import_loom_central_config`; run
+    it in the import executor.
+    """
+    from openccu_loom_client.compat.aiohomematic.central import check_config as loom_check_config  # noqa: PLC0415
+
+    return loom_check_config
 
 
 def signal_new_data_point(*, entry_id: str, platform: DataPointCategory | str) -> str:

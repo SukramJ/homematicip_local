@@ -15,6 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
+from .backend_types import CUSTOM_DP_IP_IRRIGATION_VALVE
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericEntity, AioHomematicGenericRestoreEntity
 from .support import handle_homematic_errors
@@ -72,7 +73,7 @@ class AioHomematicValve(AioHomematicGenericRestoreEntity[CustomDpIpIrrigationVal
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         attributes = super().extra_state_attributes
-        if isinstance(self._data_point, CustomDpIpIrrigationValve) and (
+        if isinstance(self._data_point, CUSTOM_DP_IP_IRRIGATION_VALVE) and (
             self._data_point.group_value and self._data_point.value != self._data_point.group_value
         ):
             attributes[ATTR_CHANNEL_STATE] = self._data_point.group_value

@@ -49,6 +49,19 @@ CONF_EVENT_TYPE: Final = "event_type"
 CONF_OPTIONAL_SETTINGS: Final = "optional_settings"
 CONF_INSTANCE_NAME: Final = "instance_name"
 CONF_INTERFACE: Final = "interface"
+
+# ---- Backend selection (aiohomematic direct-CCU vs. openccu-loom daemon) ----
+# The integration can talk to a CCU directly via aiohomematic, or to an
+# openccu-loom daemon via openccu-loom-client's aiohomematic-compatible
+# adapter. The backend is chosen once per config entry.
+CONF_BACKEND: Final = "backend"
+BACKEND_CCU: Final = "ccu"  # aiohomematic, direct XML/JSON-RPC to the CCU
+BACKEND_LOOM: Final = "loom"  # openccu-loom daemon via REST/WebSocket
+DEFAULT_BACKEND: Final = BACKEND_CCU
+# Loom-only connection inputs. Host/TLS reuse CONF_HOST/CONF_TLS; the
+# daemon authenticates with a bearer token (or falls back to user/pass).
+CONF_LOOM_TOKEN: Final = "loom_token"  # noqa: S105 - config key name, not a secret
+CONF_LOOM_PORT: Final = "loom_port"
 CONF_INTERFACE_ID: Final = "interface_id"
 CONF_JSON_PORT: Final = "json_port"
 CONF_LISTEN_ON_ALL_IP: Final = "listen_on_all_ip"

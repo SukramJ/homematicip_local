@@ -17,6 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
+from .backend_types import CUSTOM_DP_SWITCH, DP_SWITCH, PROGRAM_DP_SWITCH, SYSVAR_DP_SWITCH
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import (
     AioHomematicGenericEntity,
@@ -61,14 +62,14 @@ async def async_setup_entry(
         if sysvar_entities := [
             AioHomematicSysvarSwitch(control_unit=control_unit, data_point=data_point)
             for data_point in data_points
-            if isinstance(data_point, SysvarDpSwitch)
+            if isinstance(data_point, SYSVAR_DP_SWITCH)
         ]:
             async_add_entities(sysvar_entities)
 
         if program_entities := [
             AioHomematicProgramSwitch(control_unit=control_unit, data_point=data_point)
             for data_point in data_points
-            if isinstance(data_point, ProgramDpSwitch)
+            if isinstance(data_point, PROGRAM_DP_SWITCH)
         ]:
             async_add_entities(program_entities)
 
@@ -133,7 +134,7 @@ class AioHomematicSwitch(AioHomematicGenericRestoreEntity[CustomDpSwitch | DpSwi
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         attributes = super().extra_state_attributes
-        if isinstance(self._data_point, CustomDpSwitch) and (
+        if isinstance(self._data_point, CUSTOM_DP_SWITCH) and (
             self._data_point.group_value and self._data_point.value != self._data_point.group_value
         ):
             attributes[ATTR_CHANNEL_STATE] = self._data_point.group_value
@@ -160,9 +161,9 @@ class AioHomematicSwitch(AioHomematicGenericRestoreEntity[CustomDpSwitch | DpSwi
     @handle_homematic_errors
     async def async_set_on_time(self, on_time: float) -> None:
         """Set the on time of the light."""
-        if isinstance(self._data_point, CustomDpSwitch):
+        if isinstance(self._data_point, CUSTOM_DP_SWITCH):
             self._data_point.set_timer_on_time(on_time=on_time)
-        if isinstance(self._data_point, DpSwitch):
+        if isinstance(self._data_point, DP_SWITCH):
             await self._data_point.set_on_time(on_time=on_time)
 
     @override

@@ -165,7 +165,9 @@ class AioHomematicSensor(
             and self.entity_description.multiplier is not None
             else data_point.multiplier
         )
-        if not hasattr(self, "entity_description") and data_point.unit:
+        # An enum sensor (data_point.values) must not carry a unit of measurement;
+        # Home Assistant rejects a unit on the non-numeric "enum" device class.
+        if not hasattr(self, "entity_description") and data_point.unit and not data_point.values:
             self._attr_native_unit_of_measurement = data_point.unit
 
         if data_point.values:

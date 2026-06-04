@@ -6,7 +6,7 @@ import logging
 from typing import Any, override
 
 from aiohomematic.const import DataPointCategory, DataPointType
-from aiohomematic.model.custom import BaseCustomDpSiren, CustomDpSoundPlayer, PlaySoundArgs, SirenOnArgs
+from aiohomematic.model.custom import BaseCustomDpSiren, PlaySoundArgs, SirenOnArgs
 from homeassistant.components.siren import SirenEntity
 from homeassistant.components.siren.const import ATTR_DURATION, ATTR_TONE, SirenEntityFeature
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -15,6 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
+from .backend_types import CUSTOM_DP_SOUND_PLAYER
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericEntity, AioHomematicGenericRestoreEntity
 from .services import ATTR_AVAILABLE_SOUNDFILES, ATTR_CURRENT_SOUNDFILE, ATTR_HAS_SOUNDFILES, ATTR_LIGHT
@@ -95,7 +96,7 @@ class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], Sir
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes for sound player entities."""
-        if not isinstance(self._data_point, CustomDpSoundPlayer):
+        if not isinstance(self._data_point, CUSTOM_DP_SOUND_PLAYER):
             return {}
         return {
             ATTR_AVAILABLE_SOUNDFILES: self._data_point.available_soundfiles,
@@ -132,7 +133,7 @@ class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], Sir
         repetitions: int | None = None,
     ) -> None:
         """Play a sound on HmIP-MP3P devices."""
-        if not isinstance(self._data_point, CustomDpSoundPlayer):
+        if not isinstance(self._data_point, CUSTOM_DP_SOUND_PLAYER):
             _LOGGER.warning(
                 "play_sound is only supported for HmIP-MP3P sound player entities, not %s",
                 type(self._data_point).__name__,
@@ -156,7 +157,7 @@ class AioHomematicSiren(AioHomematicGenericRestoreEntity[BaseCustomDpSiren], Sir
     @handle_homematic_errors
     async def async_stop_sound(self) -> None:
         """Stop sound playback on HmIP-MP3P devices."""
-        if not isinstance(self._data_point, CustomDpSoundPlayer):
+        if not isinstance(self._data_point, CUSTOM_DP_SOUND_PLAYER):
             _LOGGER.warning(
                 "stop_sound is only supported for HmIP-MP3P sound player entities, not %s",
                 type(self._data_point).__name__,

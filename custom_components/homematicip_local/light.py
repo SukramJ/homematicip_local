@@ -9,8 +9,6 @@ from aiohomematic.const import DataPointCategory, DataPointType
 from aiohomematic.model.custom import (
     FIXED_COLOR_TO_HS_CONVERTER,
     CustomDpDimmer,
-    CustomDpIpFixedColorLight,
-    CustomDpSoundPlayerLed,
     LightOffArgs,
     LightOnArgs,
     SoundPlayerLedOnArgs,
@@ -31,6 +29,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
+from .backend_types import CUSTOM_DP_IP_FIXED_COLOR_LIGHT, CUSTOM_DP_SOUND_PLAYER_LED
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericEntity, AioHomematicGenericRestoreEntity
 from .services import ATTR_AVAILABLE_COLORS
@@ -145,7 +144,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         if self._data_point.group_brightness is not None:
             attributes[ATTR_CHANNEL_BRIGHTNESS] = self._data_point.group_brightness
 
-        if isinstance(self._data_point, CustomDpIpFixedColorLight):
+        if isinstance(self._data_point, CUSTOM_DP_IP_FIXED_COLOR_LIGHT):
             attributes[ATTR_COLOR] = self._data_point.color_name
             if (
                 self._data_point.channel_color_name
@@ -153,7 +152,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
             ):
                 attributes[ATTR_CHANNEL_COLOR] = self._data_point.channel_color_name
 
-        if isinstance(self._data_point, CustomDpSoundPlayerLed):
+        if isinstance(self._data_point, CUSTOM_DP_SOUND_PLAYER_LED):
             attributes[ATTR_AVAILABLE_COLORS] = self._data_point.available_colors
             attributes[ATTR_COLOR] = self._data_point.color_name
 
@@ -249,7 +248,7 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
         flash_time: int | None = None,
     ) -> None:
         """Set LED on HmIP-MP3P devices."""
-        if not isinstance(self._data_point, CustomDpSoundPlayerLed):
+        if not isinstance(self._data_point, CUSTOM_DP_SOUND_PLAYER_LED):
             _LOGGER.warning(
                 "set_led is only supported for HmIP-MP3P LED entities, not %s",
                 type(self._data_point).__name__,

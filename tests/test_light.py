@@ -28,6 +28,12 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UN
 from homeassistant.core import HomeAssistant
 
 
+def _is_fixed_color_light_class(obj: Any, cls: Any) -> bool:
+    """Match the fixed-color-light dispatch tuple (backend-agnostic isinstance stub)."""
+    classes = cls if isinstance(cls, tuple) else (cls,)
+    return any(c.__name__ == "CustomDpIpFixedColorLight" for c in classes)
+
+
 class MockRestoredState:
     """Mock restored state."""
 
@@ -239,10 +245,10 @@ class TestAioHomematicLightExtraStateAttributes:
             color_name="RED",
             channel_color_name="BLUE",
         )
-        # Patch isinstance to return True for CustomDpIpFixedColorLight
+        # Patch isinstance to return True for the fixed-color-light dispatch tuple
         with patch(
             "custom_components.homematicip_local.light.isinstance",
-            side_effect=lambda obj, cls: cls.__name__ == "CustomDpIpFixedColorLight",
+            side_effect=_is_fixed_color_light_class,
         ):
             attrs = light.extra_state_attributes
             assert ATTR_COLOR in attrs
@@ -259,7 +265,7 @@ class TestAioHomematicLightExtraStateAttributes:
         )
         with patch(
             "custom_components.homematicip_local.light.isinstance",
-            side_effect=lambda obj, cls: cls.__name__ == "CustomDpIpFixedColorLight",
+            side_effect=_is_fixed_color_light_class,
         ):
             attrs = light.extra_state_attributes
             assert ATTR_COLOR in attrs

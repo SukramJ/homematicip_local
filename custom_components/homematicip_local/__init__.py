@@ -33,8 +33,10 @@ from homeassistant.util.hass_dict import HassKey
 
 from .backup import async_notify_backup_listeners
 from .const import (
+    BACKEND_LOOM,
     CONF_ACTION_SELECT_VALUES,
     CONF_ADVANCED_CONFIG,
+    CONF_BACKEND,
     CONF_CALLBACK_PORT_XML_RPC,
     CONF_COMMAND_THROTTLE_INTERVAL,
     CONF_CUSTOM_PORTS,
@@ -117,8 +119,12 @@ def _any_entry_has_panel_enabled(*, hass: HomeAssistant) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -> bool:
     """Set up Homematic(IP) Local for OpenCCU from a config entr11y."""
+    # The openccu-loom backend talks to the daemon via openccu-loom-client
+    # and does not depend on the aiohomematic runtime version, so skip the
+    # aiohomematic version gate for it.
+    is_loom_backend = entry.data.get(CONF_BACKEND) == BACKEND_LOOM
     expected_version = await get_aiohomematic_version(hass=hass, domain=entry.domain, package_name="aiohomematic")
-    if AwesomeVersion(expected_version) != AwesomeVersion(HAHM_VERSION):
+    if not is_loom_backend and AwesomeVersion(expected_version) != AwesomeVersion(HAHM_VERSION):
         _LOGGER.error(
             "This release of Homematic(IP) Local for OpenCCU requires aiohomematic version %s, but found version %s. "
             "Looks like HA has a problem with dependency management. "
@@ -144,6 +150,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
     # Clean up stale issues from previous sessions
     _cleanup_stale_issues(hass=hass, entry_id=entry.entry_id)
 
+    # For the openccu-loom backend, migrate any legacy aiohomematic entity
+    # unique_ids to the canonical loom/serial scheme before entities are
+    # (re)created, so existing entities keep their identity on cutover.
+    if is_loom_backend:
+        await _async_migrate_loom_unique_ids(hass, entry)
+
     hass.data.setdefault(HM_KEY, HomematicData())
     if (default_callback_port_xml_rpc := hass.data[HM_KEY].default_callback_port_xml_rpc) is None:
         default_callback_port_xml_rpc = find_free_port()
@@ -166,6 +178,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
         hass=hass,
         entry_id=entry.entry_id,
         data=entry.data,
+        # The config entry's HA unique_id is the CCU serial; inject it so
+        # the loom backend keys entities identically to the unique_id
+        # registry migration above.
+        serial=entry.unique_id,
         auto_confirm_until=auto_confirm_until,
         default_callback_port_xml_rpc=default_callback_port_xml_rpc,
     ).create_control_unit()
@@ -287,6 +303,77 @@ async def _async_migrate_event_entity_unique_ids(hass: HomeAssistant, entry: Hom
         return {"new_unique_id": new_unique_id}
 
     await async_migrate_entries(hass, entry.entry_id, update_event_entity_unique_id)
+
+
+def _loom_migrated_unique_id(unique_id: str, *, entry_suffix: str, serial_suffix: str) -> str | None:
+    """Map a legacy aiohomematic HA ``unique_id`` to the loom/serial scheme.
+
+    HA stores ``{DOMAIN}_<routing-key>``. The openccu-loom backend keys its
+    data points with the canonical ``loom_<routing-key>`` (the CCU serial
+    suffix fills the central-id slot of hub / internal / virtual-remote
+    keys, replacing aiohomematic's ``entry_id[-10:]`` prefix). This rewrites
+    the legacy key to the loom one; see openccu-loom
+    ``docs/external-clients/ha-unique-id-migration.md``.
+
+    Returns ``None`` when no rewrite applies: already migrated, not one of
+    our entities, or a synthetic entity that is not a data-point routing key
+    (the per-central backup button, and the legacy event-group entities the
+    loom backend does not emit yet — those are out of scope here).
+    """
+    prefix = f"{DOMAIN}_"
+    if not unique_id.startswith(prefix):
+        return None
+    key = unique_id[len(prefix) :]
+    if key.startswith("loom_"):  # idempotent
+        return None
+    if key.endswith("_create_backup") or key.startswith("event_group_"):
+        return None
+    # Hub / internal / virtual-remote keys carried the entry_id suffix as
+    # their prefix; swap it for the CCU serial suffix. Everything else
+    # (devices, channels, custom DPs) carried no central prefix.
+    entry_prefix = f"{entry_suffix}_"
+    if key.startswith(entry_prefix):
+        return f"{prefix}loom_{serial_suffix}_{key[len(entry_prefix) :]}"
+    return f"{prefix}loom_{key}"
+
+
+async def _async_migrate_loom_unique_ids(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:
+    """Rewrite legacy entity unique_ids to the loom/serial scheme.
+
+    Runs once, early in setup, for the openccu-loom backend. A config entry
+    switched from the CCU backend still holds aiohomematic-era keys in the
+    entity registry; the loom backend produces canonical ``loom_`` keys, so
+    without this rewrite every entity would orphan (losing history, area and
+    customisations). The rewrite is purely string-level, idempotent, and
+    scoped to this entry, so it is safe to run on every setup.
+    """
+    serial = entry.unique_id  # the config entry's HA unique_id is the CCU serial
+    if not serial:
+        _LOGGER.warning(
+            "Skipping loom unique_id migration for %s: config entry has no serial",
+            entry.data.get(CONF_INSTANCE_NAME),
+        )
+        return
+    entry_suffix = entry.entry_id[-10:]
+    serial_suffix = serial[-10:].lower()
+
+    @callback
+    def _migrator(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+        new_unique_id = _loom_migrated_unique_id(
+            entity_entry.unique_id,
+            entry_suffix=entry_suffix,
+            serial_suffix=serial_suffix,
+        )
+        if new_unique_id is None or new_unique_id == entity_entry.unique_id:
+            return None
+        _LOGGER.debug(
+            "Migrating unique_id to loom scheme: %s -> %s",
+            entity_entry.unique_id,
+            new_unique_id,
+        )
+        return {"new_unique_id": new_unique_id}
+
+    await async_migrate_entries(hass, entry.entry_id, _migrator)
 
 
 def _migrate_v11_extract_custom_ports(data: dict[str, Any]) -> dict[str, Any]:

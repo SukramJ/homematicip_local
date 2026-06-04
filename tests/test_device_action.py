@@ -125,15 +125,14 @@ class TestAsyncGetActions:
         actions = await da.async_get_actions(hass, device_id=device_entry.id)
         assert actions == []
 
-        # Patch DpAction/DpButton in module to our fake so isinstance works with fake objects
+        # Patch the action/button dispatch tuple to our fakes so isinstance works with fake objects
         class MyDpAction(_FakeActionDp):
             pass
 
         class MyDpButton(_FakeActionDp):
             pass
 
-        monkeypatch.setattr(da, "DpAction", MyDpAction)
-        monkeypatch.setattr(da, "DpButton", MyDpButton)
+        monkeypatch.setattr(da, "DP_ACTION_OR_BUTTON", (MyDpAction, MyDpButton))
 
         # 4) hm_device with non-action data points only -> filtered to []
         non_action_dp = object()  # won't match isinstance checks after patching below
@@ -201,15 +200,14 @@ class TestAsyncCallActionFromConfig:
             None,
         )
 
-        # Patch DpAction/DpButton to our fakes
+        # Patch the action/button dispatch tuple to our fakes
         class MyDpAction(_FakeActionDp):
             pass
 
         class MyDpButton(_FakeActionDp):
             pass
 
-        monkeypatch.setattr(da, "DpAction", MyDpAction)
-        monkeypatch.setattr(da, "DpButton", MyDpButton)
+        monkeypatch.setattr(da, "DP_ACTION_OR_BUTTON", (MyDpAction, MyDpButton))
 
         # 3) has_client True but no device -> early return
         entry.runtime_data = _make_runtime_data(has_client=True, hm_device=None)
