@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from aiohomematic.const import DataPointCategory
 from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
-from homeassistant.components.valve import ValveDeviceClass, ValveEntityDescription
+from homeassistant.components.valve.const import ValveDeviceClass
+from homeassistant.components.valve.entity import ValveEntityDescription
 
 VALVE_RULES: list[EntityDescriptionRule] = [
     # Water valve (irrigation)

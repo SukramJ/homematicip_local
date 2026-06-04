@@ -1,3 +1,27 @@
+# Version [2.8.0](https://github.com/SukramJ/homematicip_local/compare/2.7.2...2.8.0) (2026-06-04)
+
+## What's Changed
+
+### Integration
+
+- Adapt to the `aiohomematic` event-type/contract extraction: public event types (`DataPointStateChangedEvent`, `DeviceRemovedEvent`, …) now import from `aiohomematic.event_types` instead of `aiohomematic.central.events`
+- New runtime dependency `aiohomematic-contract` (shared contract/event-type definitions)
+
+### Dependencies
+
+#### Bump aiohomematic to [2026.6.0](https://github.com/SukramJ/aiohomematic/compare/2026.5.11...2026.6.0)
+
+- Contract/event-type extraction (#3214): public event and contract types split into the standalone `aiohomematic-contract` package and re-exposed via `aiohomematic.event_types`
+- Fix HmIP-RGBW / HmIP-DRG-DALI cannot be switched on (#3211)
+
+#### aiohomematic-config remains at [2026.5.0](https://github.com/SukramJ/aiohomematic-config/releases/tag/2026.5.0)
+
+- No API or behavior changes for the integration since 2.7.2
+
+#### homematicip-local-frontend (last commit unchanged since 2.7.2)
+
+- Latest commit "HA 2026.6 Compatibility — `ha-radio` Removal (#60)", already shipped with 2.7.2
+
 # Version [2.7.2](https://github.com/SukramJ/homematicip_local/compare/2.7.1...2.7.2) (2026-05-29)
 
 ## What's Changed

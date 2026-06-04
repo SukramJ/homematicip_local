@@ -24,7 +24,7 @@ This document provides comprehensive guidance for AI assistants working with the
 
 **Project Name:** Homematic(IP) Local for OpenCCU
 **Type:** Home Assistant Custom Integration
-**Version:** 2.3.3
+**Version:** 2.8.0
 **Primary Language:** Python 3.14+
 **Domain:** `homematicip_local`
 
@@ -116,19 +116,21 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2026.3.1) - Core async library for Homematic device communication
-- **Home Assistant Core** - Minimum version: 2025.10.0+
+- **aiohomematic** (v2026.6.0) - Core async library for Homematic device communication
+- **aiohomematic-contract** (v2026.6.1) - Shared contract/event-type definitions
+- **aiohomematic-config** (v2026.5.0) - Device configuration metadata
+- **Home Assistant Core** - Minimum version: 2026.6.0+
 - **Python 3.14+** (target version for development)
 
 ### Development Dependencies
 
-- **pytest-homeassistant-custom-component** (0.13.300) - HA test framework
-- **mypy** (1.19.1) - Static type checker (strict mode)
-- **pylint** (4.0.4) - Code linting
-- **ruff** (0.14.9) - Fast Python linter and formatter
-- **prek** (0.2.28) - Git hooks manager (Rust-based pre-commit alternative)
-- **aiohomematic-test-support** (2026.3.1) - Mock test data
-- **async-upnp-client** (0.46.1) - UPnP discovery
+- **pytest-homeassistant-custom-component-framework** (1.0.25) - HA test framework
+- **mypy** (2.1.0) - Static type checker (strict mode)
+- **pylint** (4.0.5) - Code linting
+- **ruff** (0.15.15) - Fast Python linter and formatter
+- **prek** (0.4.4) - Git hooks manager (Rust-based pre-commit alternative)
+- **aiohomematic-test-support** (2026.6.0) - Mock test data
+- **async-upnp-client** (0.47.0) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
 
 ---
@@ -1084,10 +1086,10 @@ python script/check_translations.py
 
 ### Version Information
 
-- **Current Version:** 2.3.3
-- **Minimum HA Version:** 2026.3.1+
+- **Current Version:** 2.8.0
+- **Minimum HA Version:** 2026.6.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
-- **aiohomematic Version:** 2026.3.1
+- **aiohomematic Version:** 2026.6.0
 
 ### External Resources
 
@@ -1100,5 +1102,5 @@ python script/check_translations.py
 
 ---
 
-**Last Updated**: 2026-02-01
-**Version**: 2.2.4
+**Last Updated**: 2026-06-04
+**Version**: 2.8.0
