@@ -13,8 +13,7 @@
   "requirements": [
     "openccu-data==2026.5.0",
     "aiohomematic-config==2026.5.0",
-    "aiohomematic-contract>=2026.6.0",
-    "aiohomematic==2026.6.0"
+    "aiohomematic==2026.6.2"
   ],
   "ssdp": [
     {

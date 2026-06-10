@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from aiohomematic.event_types import (
+from aiohomematic.central.events import (
     DataPointsCreatedEvent,
     DeviceLifecycleEvent,
     DeviceTriggerEvent,

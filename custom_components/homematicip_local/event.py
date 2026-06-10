@@ -5,9 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Final
 
-from aiohomematic.central.events import SubscriptionGroup
+from aiohomematic.central.events import DataPointStateChangedEvent, DeviceRemovedEvent, SubscriptionGroup
 from aiohomematic.const import DATA_POINT_EVENTS, DataPointCategory
-from aiohomematic.event_types import DataPointStateChangedEvent, DeviceRemovedEvent
 from aiohomematic.interfaces import ChannelEventGroupProtocol
 from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant, callback

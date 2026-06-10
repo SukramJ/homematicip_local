@@ -1,8 +1,8 @@
 -r requirements_test_pre_commit.txt
 
 async-upnp-client==0.47.0
-aiohomematic==2026.6.0
-aiohomematic-test-support==2026.6.0
+aiohomematic==2026.6.2
+aiohomematic-test-support==2026.6.2
 aiohomematic-contract==2026.6.1
 aiohomematic-config==2026.5.0
 openccu-data>=2026.5.0
@@ -12,4 +12,4 @@ prek==0.4.4
 pur==7.4.0
 pylint==4.0.5
 pylint_strict_informational==0.1
-pytest-homeassistant-custom-component-framework==1.0.25
+pytest-homeassistant-custom-component-framework==1.0.27

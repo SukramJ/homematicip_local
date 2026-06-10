@@ -1,4 +1,4 @@
-# Version [2.8.0](https://github.com/SukramJ/homematicip_local/compare/2.7.2...2.8.0) (2026-06-04)
+# Version [2.8.0](https://github.com/SukramJ/homematicip_local/compare/2.7.2...2.8.0) (2026-06-10)
 
 ## What's Changed
 
@@ -7,15 +7,14 @@
 - Fix permanent mass deletion of entity-registry entries after a transient auth error (aiohomematic#3215): the startup orphan cleanup now refuses to run when it would remove more than half of the integration's registry entries — this guards against the central reporting `RUNNING` (clients connected) while the device descriptions failed to load, which previously wiped hundreds of entities and re-detected devices as new
 - Set `EventDeviceClass.DOORBELL` for HmIP-DBB event entities so they work with the new Home Assistant `doorbell` automation trigger; all other event entities continue to use `EventDeviceClass.BUTTON`
 - Routed the event entity device class through the `EntityDescriptionRegistry` (new `HmEventEntityDescription`, `event()` factory, `EVENT_RULES`, default for `DataPointCategory.EVENT_GROUP`) instead of hardcoding it on the entity class
-- Adapt to the `aiohomematic` event-type/contract extraction: public event types (`DataPointStateChangedEvent`, `DeviceRemovedEvent`, …) now import from `aiohomematic.event_types` instead of `aiohomematic.central.events`
-- New runtime dependency `aiohomematic-contract` (shared contract/event-type definitions)
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.6.0](https://github.com/SukramJ/aiohomematic/compare/2026.5.11...2026.6.0)
+#### Bump aiohomematic to [2026.6.2](https://github.com/SukramJ/aiohomematic/compare/2026.5.11...2026.6.2)
 
-- Contract/event-type extraction (#3214): public event and contract types split into the standalone `aiohomematic-contract` package and re-exposed via `aiohomematic.event_types`
-- Fix HmIP-RGBW / HmIP-DRG-DALI cannot be switched on (#3211)
+- Fix HmIP-RGBW / HmIP-DRG-DALI cannot be switched on (briefly flashes, then turns off again) (#3210)
+- Make interrupted device creation observable — `CancelledError` mid-build now logs a clear warning instead of silently abandoning the run with zero entities (#3213)
+- Revert the contract/event-type extraction (#3214): public event types stay in `aiohomematic.central.events`, no separate `aiohomematic-contract` runtime dependency
 
 #### aiohomematic-config remains at [2026.5.0](https://github.com/SukramJ/aiohomematic-config/releases/tag/2026.5.0)
 
