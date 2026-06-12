@@ -1407,6 +1407,7 @@ class ControlConfig:
             client_session=aiohttp_client.async_get_clientsession(self.hass),
             sysvar_markers=self._sysvar_markers,
             program_markers=self._program_markers,
+            locale=self.hass.config.language,
         ).create_central()
         # The loom adapter duck-types CentralUnit; aiohomematic's Protocol
         # metaclass blocks subclassing, so a cast is the only bridge.
