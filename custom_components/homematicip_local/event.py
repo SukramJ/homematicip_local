@@ -95,8 +95,13 @@ class AioHomematicEvent(EventEntity):
             self._attr_device_class = description.device_class
 
         self._attr_unique_id = f"{DOMAIN}_{event_group.unique_id}"
+        # Carry the room: HA applies suggested_area only when the device
+        # entry is first created — if this event entity happens to be the
+        # device's first, a bare DeviceInfo would pin the device area-less
+        # forever (suggested_area is runtime-only and never re-applied).
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, event_group.device.identifier)},
+            suggested_area=event_group.device.room,
         )
         self._attr_extra_state_attributes = {
             EVENT_INTERFACE_ID: event_group.device.interface_id,

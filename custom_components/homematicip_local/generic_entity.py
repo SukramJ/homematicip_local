@@ -599,8 +599,10 @@ class AioHomematicGenericHubEntity(Entity):
         if self._data_point.channel is None:
             return self._cu.device_info
 
+        # suggested_area only applies at device creation — see event.py.
         return DeviceInfo(
             identifiers={(DOMAIN, self._data_point.channel.device.identifier)},
+            suggested_area=self._data_point.channel.device.room,
         )
 
 
