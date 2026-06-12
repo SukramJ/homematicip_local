@@ -101,6 +101,7 @@ from .const import (
     DEFAULT_MQTT_PREFIX,
     DEFAULT_SYS_SCAN_INTERVAL,
     DOMAIN,
+    LOOM_BACKEND_SELECTABLE,
 )
 from .control_unit import ControlConfig, ControlUnit, validate_config_and_get_system_information
 from .support import InvalidConfig
@@ -903,6 +904,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_loom(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
         """Configure an openccu-loom daemon backend."""
+        if not LOOM_BACKEND_SELECTABLE:
+            return await self.async_step_central(user_input=None)
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {
             "invalid_items": "",
@@ -1243,6 +1246,10 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         to the central step; a fresh user-initiated setup gets the menu.
         """
         if user_input is not None or self.data.get(CONF_HOST):
+            return await self.async_step_central(user_input=user_input)
+        if not LOOM_BACKEND_SELECTABLE:
+            # The loom path is compiled out: no backend menu, straight to
+            # the direct-CCU setup.
             return await self.async_step_central(user_input=user_input)
         return self.async_show_menu(step_id="user", menu_options=["central", "loom"])
 
