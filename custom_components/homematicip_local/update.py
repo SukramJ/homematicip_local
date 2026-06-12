@@ -82,6 +82,8 @@ async def async_setup_entry(
 
     async_add_update(data_points=control_unit.get_new_data_points(data_point_type=DataPointType.UPDATE))
 
+    async_add_hub_update(data_points=control_unit.get_new_hub_data_points(data_point_type=HmUpdate))
+
 
 class AioHomematicUpdate(UpdateEntity):
     """Representation of the HomematicIP update entity."""
