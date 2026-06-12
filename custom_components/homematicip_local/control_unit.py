@@ -292,7 +292,13 @@ class ControlUnit(BaseControlUnit):
         )
         self._orphan_cleanup_unsub: CALLBACK_TYPE | None = None
 
-    def ensure_via_device_exists(self, identifier: str, suggested_area: str | None, via_device: str) -> None:
+    def ensure_via_device_exists(
+        self,
+        identifier: str,
+        suggested_area: str | None,
+        via_device: str,
+        via_suggested_area: str | None = None,
+    ) -> None:
         """Create a via device for a device."""
         device_registry = dr.async_get(self._hass)
 
@@ -300,6 +306,9 @@ class ControlUnit(BaseControlUnit):
             return
 
         if via_device != self.central.name:
+            # The parent carries its own room: HA applies suggested_area
+            # only at creation, so seeding the parent with a sub-device's
+            # area (e.g. a channel-group room) would pin the wrong area.
             device_registry.async_get_or_create(
                 config_entry_id=self._entry_id,
                 identifiers={
@@ -308,7 +317,7 @@ class ControlUnit(BaseControlUnit):
                         via_device,
                     )
                 },
-                suggested_area=suggested_area,
+                suggested_area=via_suggested_area,
                 via_device=(DOMAIN, self.central.name),
             )
 

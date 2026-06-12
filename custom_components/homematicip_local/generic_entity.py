@@ -136,7 +136,10 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
             identifier = f"{hm_device.identifier}-schedule"
 
         control_unit.ensure_via_device_exists(
-            identifier=identifier, suggested_area=suggested_area, via_device=via_device
+            identifier=identifier,
+            suggested_area=suggested_area,
+            via_device=via_device,
+            via_suggested_area=hm_device.room,
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identifier)},
