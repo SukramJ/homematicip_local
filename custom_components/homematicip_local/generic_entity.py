@@ -114,10 +114,19 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         via_device = hm_device.central_info.name
         suggested_area = hm_device.room
 
-        if control_unit.enable_sub_devices and hm_device.has_sub_devices and data_point.channel.is_in_multi_group:
+        # data_point.channel is None for some loom-backend data points
+        # (hub singletons ride a different base class, but week-profile
+        # DPs can resolve no channel before the store is fully hydrated)
+        # — guard so the sub-device split never trips on it.
+        if (
+            control_unit.enable_sub_devices
+            and hm_device.has_sub_devices
+            and (dp_channel := data_point.channel) is not None
+            and dp_channel.is_in_multi_group
+        ):
             via_device = hm_device.identifier
 
-            if (channel_group_master := data_point.channel.group_master) is not None:
+            if (channel_group_master := dp_channel.group_master) is not None:
                 identifier = f"{hm_device.identifier}-{channel_group_master.group_no}"
                 if (room := channel_group_master.room) is not None:
                     suggested_area = room
@@ -183,8 +192,9 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         if (
             self._cu.enable_sub_devices
             and hm_device.has_sub_devices
-            and self._data_point.channel.is_in_multi_group
-            and (channel_group_master := self._data_point.channel.group_master)
+            and (dp_channel := self._data_point.channel) is not None
+            and dp_channel.is_in_multi_group
+            and (channel_group_master := dp_channel.group_master)
         ):
             return (
                 f"{hm_device.name}-{channel_group_master.name}"
