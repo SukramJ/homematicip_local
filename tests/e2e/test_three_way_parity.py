@@ -7,6 +7,8 @@ card attributes across all three. Opt-in: ``pytest -m e2e -p no:xdist``.
 
 from __future__ import annotations
 
+from pathlib import Path
+import shutil
 from typing import Any
 
 import pytest
@@ -55,6 +57,11 @@ async def _setup_settle_scrape(
     strip_tokens: tuple[str, ...],
 ) -> Snapshot:
     """Set up an entry, wait for entities to settle, scrape, unload cleanly."""
+    # aiohomematic persists device/paramset caches under the integration storage
+    # dir; the HCC config dir is reused across runs, so a stale cache would pin
+    # the plane to an earlier (possibly partial) device set. Start each plane from
+    # a clean cache so it re-fetches the full set from godevccu.
+    shutil.rmtree(Path(hass.config.path(DOMAIN)), ignore_errors=True)
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id), f"{plane}: setup failed"
     await wait_until_settled(
@@ -119,7 +126,11 @@ async def test_plane_loom(
         CONF_ADVANCED_CONFIG: {},
     }
     entry = MockConfigEntry(domain=DOMAIN, data=data, version=17, unique_id=SERIAL, title="E2eLoom")
-    snap = await _setup_settle_scrape(hass, entry=entry, plane="loom", platform=DOMAIN, strip_tokens=("e2eloom",))
+    # The loom backend keys central/connectivity entities by the daemon's
+    # central name (ccu-e2e), not the HA instance name.
+    snap = await _setup_settle_scrape(
+        hass, entry=entry, plane="loom", platform=DOMAIN, strip_tokens=("e2eloom", "ccu-e2e", "ccu_e2e")
+    )
     _dump(snap)
     parity_results["loom"] = snap
     assert snap.entities
@@ -171,23 +182,47 @@ def test_parity_report(parity_results: dict[str, Any]) -> None:
         assert snap.entities, f"plane {plane} produced no entities"
 
 
+# By-design entity-set residuals between the two homematicip_local backends.
+# The daemon always exposes a hub system-update entity; the aiohomematic backend
+# only creates one when godevccu actually advertises an available firmware.
+_LOOM_SET_ALLOWLIST = frozenset({"update:system"})
+
+
+def test_loom_backend_entity_set_parity(parity_results: dict[str, Any]) -> None:
+    """The two homematicip_local backends expose the same set of entities.
+
+    This is the core enforced parity claim: aiohomematic (direct CCU) and the
+    openccu-loom-client backend, fed by the same godevccu, must materialize the
+    same entities (a single documented hub-update residual aside).
+    """
+    results = _ordered_results(parity_results)
+    report = diff_snapshots({"ccu": results["ccu"], "loom": results["loom"]})["loom"]
+    missing = set(report["missing_vs_ref"]) - _LOOM_SET_ALLOWLIST
+    extra = set(report["extra_vs_ref"]) - _LOOM_SET_ALLOWLIST
+    assert not missing, f"entities on aiohomematic but missing on loom: {sorted(missing)}"
+    assert not extra, f"entities on loom but missing on aiohomematic: {sorted(extra)}"
+
+
 @pytest.mark.xfail(
     reason=(
-        "godevccu's ReGa fetch_all_device_data returns only datapoints with a stored value, "
-        "in a non-CCU shape; the aiohomematic plane creates generic entities data-driven, so it "
-        "under-creates vs the description-driven loom/mqtt planes. Tracked until godevccu emits "
-        "the CCU-shaped, complete device-data payload."
+        "Residual naming/scheme drift, not entity-set drift: the loom-client emits some "
+        "calculated-DP names as raw parameter names (e.g. DEW_POINT) instead of the translated "
+        "name, and channel/virtual-receiver markers differ; the mqtt discovery layer uses its own "
+        "naming and unique-id scheme for schedules, events, sysvars/programs and labels firmware "
+        "updates 'Firmware' vs 'Update'. Tracked for the loom-client / daemon naming layers."
     ),
     strict=False,
 )
 def test_full_entity_parity(parity_results: dict[str, Any]) -> None:
-    """Assert the three planes expose an identical set of entities and names."""
+    """Assert the three planes expose an identical set of entities, names and attrs."""
     ordered = _ordered_results(parity_results)
     report = diff_snapshots(ordered)
     problems: list[str] = []
     for plane in ("loom", "mqtt"):
         section = report[plane]
-        for field_name in ("missing_vs_ref", "extra_vs_ref", "name_drift", "attr_drift"):
-            if section[field_name]:
-                problems.append(f"{plane}.{field_name}={len(section[field_name])}")
+        problems += [
+            f"{plane}.{field_name}={len(section[field_name])}"
+            for field_name in ("missing_vs_ref", "extra_vs_ref", "name_drift", "attr_drift")
+            if section[field_name]
+        ]
     assert not problems, "parity drift vs ccu reference: " + ", ".join(problems)

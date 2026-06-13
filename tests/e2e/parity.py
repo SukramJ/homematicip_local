@@ -64,9 +64,37 @@ def normalize_unique_id(raw: str, *, strip_tokens: tuple[str, ...]) -> str:
     out = re.sub(r"^(openccu-)?loom_", "", out)
     # mqtt discovery prefixes a short hex instance hash.
     out = re.sub(r"^[0-9a-f]{8,12}_", "", out)
+    # calculated/combined DP markers are present on some planes only.
+    out = re.sub(r"^(calculated|combined)_", "", out)
     for token in sorted((t.lower() for t in strip_tokens if t), key=len, reverse=True):
         out = out.replace(token + "_", "").replace("_" + token, "").replace(token, "")
+    # Unify separators: dashes only differ cosmetically between backends.
+    out = out.replace("-", "_")
     return re.sub(r"_{2,}", "_", out).strip("_")
+
+
+def _canonical_key(raw: str, *, domain: str, strip_tokens: tuple[str, ...]) -> str:
+    """Return the cross-plane comparison key for one entity.
+
+    On top of unique-id normalization this drops the ``hub_`` prefix (some
+    planes omit it) and a trailing ``_<domain>`` suffix (mqtt discovery appends
+    the component name) so the same logical entity collapses across planes.
+    """
+    norm = normalize_unique_id(raw, strip_tokens=strip_tokens)
+    norm = re.sub(r"^hub_", "", norm)
+    if norm.endswith(f"_{domain}"):
+        norm = norm[: -(len(domain) + 1)]
+    return f"{domain}:{norm}"
+
+
+def _canonical_name(name: str | None, *, strip_tokens: tuple[str, ...]) -> str:
+    """Return a name with per-plane instance/central tokens removed."""
+    if not name:
+        return ""
+    out = name
+    for token in sorted((t for t in strip_tokens if t), key=len, reverse=True):
+        out = re.sub(re.escape(token), "", out, flags=re.IGNORECASE)
+    return re.sub(r"\s{2,}", " ", out).strip()
 
 
 def scrape(
@@ -80,21 +108,23 @@ def scrape(
         if entry.config_entry_id != config_entry_id or entry.platform != platform:
             continue
         domain = entry.entity_id.split(".", 1)[0]
-        key = f"{domain}:{normalize_unique_id(entry.unique_id, strip_tokens=strip_tokens)}"
+        key = _canonical_key(entry.unique_id, domain=domain, strip_tokens=strip_tokens)
+        # original_name is the stable, integration-assigned entity name; the live
+        # friendly_name depends on a state existing (timing) and prepends the
+        # device name, so it drifts on cosmetics the registry name does not.
+        name = _canonical_name(entry.original_name, strip_tokens=strip_tokens)
         state_obj = hass.states.get(entry.entity_id)
         attrs: dict[str, Any] = {}
-        friendly = None
         state_val = None
         if state_obj is not None:
             state_val = state_obj.state
-            friendly = state_obj.attributes.get("friendly_name")
             for attr in _COMPARE_ATTRS.get(domain, ()):  # only stable card attrs
                 if attr in state_obj.attributes:
                     attrs[attr] = state_obj.attributes[attr]
         snap.entities[key] = EntitySnap(
             domain=domain,
             unique_key=key,
-            friendly_name=friendly,
+            friendly_name=name,
             state=state_val,
             attrs=attrs,
             raw_unique_id=entry.unique_id,

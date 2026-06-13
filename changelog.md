@@ -17,7 +17,7 @@
 
 ### Testing
 
-- Test: **three-way godevccu parity e2e suite** (`tests/e2e/`, opt-in `pytest -m e2e -p no:xdist`). A single godevccu backend feeds three north-bound surfaces — the aiohomematic backend (direct XML-RPC/JSON-RPC), the openccu-loom-client backend (REST/WS via a local openccu-loom daemon) and the daemon's MQTT discovery (via a real Mosquitto broker into HA's `mqtt` integration) — each scraped in its own Home Assistant instance and diffed for identical devices, entities, names and card attributes. Skipped unless the external Go binaries and Mosquitto are present; strict entity-for-entity parity is tracked as `xfail` until godevccu's ReGa `fetch_all_device_data` returns a complete, CCU-shaped device-data payload.
+- Test: **three-way godevccu parity e2e suite** (`tests/e2e/`, opt-in `pytest -m e2e -p no:xdist`). A single godevccu backend feeds three north-bound surfaces — the aiohomematic backend (direct XML-RPC/JSON-RPC), the openccu-loom-client backend (REST/WS via a local openccu-loom daemon) and the daemon's MQTT discovery (via a real Mosquitto broker into HA's `mqtt` integration) — each scraped in its own Home Assistant instance and diffed for identical devices, entities, names and card attributes. Skipped unless the external Go binaries and Mosquitto are present. Enforces entity-set parity between the two `homematicip_local` backends (`test_loom_backend_entity_set_parity`); residual naming/scheme drift (a few loom-client calculated-DP names, the mqtt discovery naming/unique-id scheme) is reported and tracked as `xfail`. Requires godevccu ≥ 0.1.4 (rooms/functions return `channelIds: []`, not `null`).
 
 ### Dependencies
 

@@ -35,15 +35,24 @@ run serially, and its four tests share session state in definition order
 
 Build the Go binaries with `make build` (godevccu) and `make build` /
 `go build ./cmd/...` (openccu-loom). `godevccu-e2e` must be built against a
-godevccu that returns CCU-shaped room/function payloads (`channelIds: []`, not
-`null`).
+godevccu ≥ 0.1.4 that returns CCU-shaped room/function payloads
+(`channelIds: []`, not `null`).
+
+Each plane clears the integration's on-disk cache
+(`<config>/homematicip_local`) before setup, so a stale device/paramset cache
+from an earlier run cannot pin a plane to a partial device set.
 
 ## Status
 
-`test_parity_report` always emits the structured diff. `test_full_entity_parity`
-is currently `xfail`: the aiohomematic plane creates generic entities
-data-driven from godevccu's `fetch_all_device_data`, which today returns only
-datapoints that carry a stored value and in a non-CCU shape — so it
-under-creates relative to the description-driven `loom`/`mqtt` planes. Once
-godevccu emits the complete, CCU-shaped device-data payload the strict test is
-expected to pass.
+- `test_parity_report` — always emits the structured diff (per-plane counts and
+  every missing/extra/name/attr difference).
+- `test_loom_backend_entity_set_parity` — **enforced**: the two
+  `homematicip_local` backends (aiohomematic and openccu-loom-client), fed by
+  the same godevccu, materialize the same set of entities (one documented
+  hub-system-update residual aside).
+- `test_full_entity_parity` — `xfail`: tracks the remaining **naming/scheme**
+  residuals (not entity-set drift). The loom-client emits a few calculated-DP
+  names as raw parameter names and differs on channel/virtual-receiver markers;
+  the mqtt discovery layer uses its own naming and unique-id scheme for
+  schedules, events and sysvars/programs and labels firmware updates "Firmware"
+  vs "Update". These live in the loom-client / daemon naming layers.
