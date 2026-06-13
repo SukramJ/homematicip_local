@@ -369,6 +369,7 @@ addopts = "-n auto --dist loadscope"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "benchmark: performance benchmark tests",
+    "e2e: three-way godevccu parity test; opt-in, needs external binaries (deselect by default, run with '-m e2e -p no:cacheprovider')",
 ]
 filterwarnings = [
     "error::sqlalchemy.exc.SAWarning",
@@ -560,6 +561,21 @@ voluptuous = "vol"
     "C901", # complex test scenarios
     "PTH", # os.path in tests is not worth refactoring
     "SLF001", # private member access in tests is sometimes necessary
+]
+"tests/e2e/*.py" = [
+    "D100", "D101", "D102", "D103", "D107", # docstring requirements
+    "D205", # multi-line fixture docstrings
+    "S101", # assert usage is expected in tests
+    "S105", "S106", # static loopback-only credentials in the e2e stack
+    "S110", "S112", # try-except-pass in process teardown
+    "S603", # spawning trusted local Go/broker binaries is the whole point
+    "BLE001", # broad except during process/cleanup
+    "PLR2004", # magic values in assertions
+    "PTH", "SLF001", # plain paths + private stack accessors are fine here
+    "ASYNC109", # explicit timeout params on the settle helper are intentional
+    "ASYNC230", "ASYNC240", # blocking IO/path use against loopback servers in tests
+    "T201", # print() IS the diagnostic report output
+    "PERF401", # readability over micro-optimised list building in assertions
 ]
 
 [tool.ruff.lint.isort]

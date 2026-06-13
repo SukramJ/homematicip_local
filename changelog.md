@@ -15,6 +15,10 @@
 - Chore: `backend_types._pair` is now generic (`tuple[type[T], ...]`), so `isinstance` checks against the backend-agnostic dispatch tuples narrow to the aiohomematic type — mypy strict passes again across all platform files (27 errors resolved without runtime changes); the loom twin duck-types the aiohomematic class, documented in one place instead of per-call-site casts.
 - Chore: updated tests for the dual-backend flow — config-flow tests navigate the new backend menu (`user` → `central`), device-action tests patch the `DP_ACTION_OR_BUTTON` dispatch tuple, and light tests match the fixed-color dispatch tuple.
 
+### Testing
+
+- Test: **three-way godevccu parity e2e suite** (`tests/e2e/`, opt-in `pytest -m e2e -p no:xdist`). A single godevccu backend feeds three north-bound surfaces — the aiohomematic backend (direct XML-RPC/JSON-RPC), the openccu-loom-client backend (REST/WS via a local openccu-loom daemon) and the daemon's MQTT discovery (via a real Mosquitto broker into HA's `mqtt` integration) — each scraped in its own Home Assistant instance and diffed for identical devices, entities, names and card attributes. Skipped unless the external Go binaries and Mosquitto are present; strict entity-for-entity parity is tracked as `xfail` until godevccu's ReGa `fetch_all_device_data` returns a complete, CCU-shaped device-data payload.
+
 ### Dependencies
 
 #### Bump openccu-loom-client to 2026.6.12 (pins `openccu-loom-types==0.1.17`)
