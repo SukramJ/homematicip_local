@@ -62,7 +62,7 @@ DEFAULT_BACKEND: Final = BACKEND_CCU
 # backend menu is skipped and new entries can only target the direct CCU
 # backend — the loom path behaves as if it did not exist. Existing loom
 # entries are not touched; this gates only the flow.
-LOOM_BACKEND_SELECTABLE: Final = True
+LOOM_BACKEND_SELECTABLE: Final = False
 # Loom-only connection inputs. Host/TLS reuse CONF_HOST/CONF_TLS; the
 # daemon authenticates with a bearer token (or falls back to user/pass).
 CONF_LOOM_TOKEN: Final = "loom_token"  # noqa: S105 - config key name, not a secret
