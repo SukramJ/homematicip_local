@@ -109,11 +109,18 @@ def _get_default_detection_result(
 
 
 async def _async_init_user_flow_at_central(hass: HomeAssistant) -> Any:
-    """Start a user flow and navigate the backend menu to the central form."""
+    """Start a user flow and reach the central form.
+
+    Robust against the ``LOOM_BACKEND_SELECTABLE`` switch: when the loom
+    backend is selectable the user step shows a backend menu (navigate to
+    ``central``); when it is disabled the user step skips straight to the
+    central form.
+    """
     result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
-    assert result["type"] == FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "central"})
+    if result["type"] == FlowResultType.MENU:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "central"})
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "central"
     return result
 
 
@@ -3190,29 +3197,59 @@ class TestReauthFlow:
             yield
 
 
+_SELECTABLE = "custom_components.homematicip_local.config_flow.LOOM_BACKEND_SELECTABLE"
+
+
 class TestLoomBackendSelectable:
-    """The LOOM_BACKEND_SELECTABLE switch gates the loom path in the flow."""
+    """The LOOM_BACKEND_SELECTABLE switch gates the loom path in the flow.
+
+    Both branches are tested explicitly via patch so the suite is
+    independent of the const.py default.
+    """
+
+    # --- LOOM_BACKEND_SELECTABLE = True ---
 
     async def test_disabled_loom_step_redirects_to_central(self, hass: HomeAssistant) -> None:
-        """A direct loom-step entry falls through to the central form."""
-        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
-        assert result["type"] == FlowResultType.MENU
-        with patch("custom_components.homematicip_local.config_flow.LOOM_BACKEND_SELECTABLE", False):
+        """A direct loom-step entry falls through to the central form.
+
+        The menu is reached with the switch on, then the loom step is
+        invoked with the switch off — it must redirect to central.
+        """
+        with patch(_SELECTABLE, True):
+            result = await hass.config_entries.flow.async_init(
+                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+            assert result["type"] == FlowResultType.MENU
+        with patch(_SELECTABLE, False):
             result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "loom"})
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "central"
 
     async def test_disabled_skips_backend_menu(self, hass: HomeAssistant) -> None:
         """With the switch off a fresh user flow goes straight to central."""
-        with patch("custom_components.homematicip_local.config_flow.LOOM_BACKEND_SELECTABLE", False):
+        with patch(_SELECTABLE, False):
             result = await hass.config_entries.flow.async_init(
                 HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
             )
-            assert result["type"] == FlowResultType.FORM
-            assert result["step_id"] == "central"
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "central"
+
+    async def test_enabled_loom_step_shows_loom_form(self, hass: HomeAssistant) -> None:
+        """With the switch on, the loom menu entry opens the loom form."""
+        with patch(_SELECTABLE, True):
+            result = await hass.config_entries.flow.async_init(
+                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+            assert result["type"] == FlowResultType.MENU
+            result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "loom"})
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "loom"
 
     async def test_enabled_shows_backend_menu(self, hass: HomeAssistant) -> None:
-        """Default: the backend menu offers central and loom."""
-        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        """With the switch on, the user step shows the central/loom menu."""
+        with patch(_SELECTABLE, True):
+            result = await hass.config_entries.flow.async_init(
+                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
         assert result["type"] == FlowResultType.MENU
         assert set(result["menu_options"]) == {"central", "loom"}
