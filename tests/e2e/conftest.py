@@ -26,7 +26,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     """
     if "e2e" in (config.getoption("markexpr") or ""):
         return
-    skip = pytest.mark.skip(reason="three-way parity e2e suite: run explicitly with -m e2e -p no:xdist")
+    skip = pytest.mark.skip(reason="three-way parity e2e suite: run explicitly with -m e2e -n0")
     for item in items:
         if "e2e" in item.keywords:
             item.add_marker(skip)

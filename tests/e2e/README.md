@@ -18,12 +18,14 @@ serial, so a single registry would collide). The shared backend stack
 It is **opt-in** and skipped unless the external binaries are present:
 
 ```bash
-venv/bin/pytest tests/e2e -m e2e -p no:xdist -s
+venv/bin/pytest tests/e2e -m e2e -n0 -s
 ```
 
-`-p no:xdist` is required: the suite manages real processes and ports and must
-run serially, and its four tests share session state in definition order
-(`ccu` → `loom` → `mqtt` → report).
+`-n0` is required: the suite manages real processes and ports and must run
+serially, and its tests share session state in definition order (`ccu` →
+`loom` → `mqtt` → parity). (Don't use `-p no:xdist` — the repo's default
+`addopts` passes `-n auto --dist loadscope`, which then errors as unrecognized
+once the xdist plugin is disabled; `-n0` keeps xdist loaded but runs in-process.)
 
 ## Prerequisites
 

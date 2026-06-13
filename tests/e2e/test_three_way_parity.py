@@ -2,7 +2,7 @@
 
 A single godevccu backend feeds three north-bound surfaces; this suite
 asserts Home Assistant produces the same devices, entities, names and
-card attributes across all three. Opt-in: ``pytest -m e2e -p no:xdist``.
+card attributes across all three. Opt-in: ``pytest -m e2e -n0``.
 """
 
 from __future__ import annotations
