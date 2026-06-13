@@ -219,11 +219,13 @@ def test_entity_set_parity(parity_results: dict[str, Any]) -> None:
 
 @pytest.mark.xfail(
     reason=(
-        "Residual naming/attribute drift, not entity-set drift. loom: the schedule-switch "
-        "target-channel name and the multi-channel ` chN` marker need per-channel data the daemon "
-        "does not put on the wire. mqtt: the discovery layer uses HA-idiomatic naming (sysvar "
-        "display names, no channel-type/`P `/`SV ` prefixes, `Firmware` vs `Update`) and sets "
-        "units/state_class on sysvars. Tracked for the daemon wire/discovery naming layers."
+        "Residual naming/attribute drift, not entity-set drift. loom: only the multi-channel "
+        "` chN` marker remains — it needs paramset-description-level presence (a parameter defined "
+        "on several channels even when active on one), which the daemon's active-data-point model "
+        "does not expose; the schedule-switch target-channel names are fixed via api 1.7.0. mqtt: "
+        "the discovery layer uses HA-idiomatic naming (sysvar display names, no channel-type/`P `/"
+        "`SV ` prefixes, `Firmware` vs `Update`) and sets units/state_class on sysvars. Tracked for "
+        "the daemon wire/discovery naming layers."
     ),
     strict=False,
 )

@@ -54,8 +54,11 @@ from an earlier run cannot pin a plane to a partial device set.
   *buttons*, the install-mode button + sensor, the backup button).
 - `test_full_entity_parity` — `xfail`: tracks the remaining **name/attribute**
   residuals (not entity-set drift):
-  - **loom** — the schedule-switch target-channel name and the multi-channel
-    ` chN` marker need per-channel data the daemon does not put on the wire.
+  - **loom** — only the multi-channel ` chN` marker remains. It needs
+    paramset-description-level presence (a parameter defined on several channels
+    even when active on one), which the daemon's active-data-point model does not
+    expose. The schedule-switch target-channel names are fixed (daemon api 1.7.0
+    ships `available_target_channels`).
   - **mqtt** — the discovery layer uses HA-idiomatic naming (sysvar display
     names, no channel-type / `P ` / `SV ` prefixes, `Firmware` vs `Update`) and
     sets `unit`/`state_class` on sysvars.
