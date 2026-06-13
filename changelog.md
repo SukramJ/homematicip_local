@@ -5,6 +5,11 @@
 ### Integration
 
 - Feat: **`sub_devices_enabled` now works with the openccu-loom backend.** The loom client models the daemon's channel groups (`Device.has_sub_devices`, `Channel.is_in_multi_group` / `group_master` with aiohomematic `ChannelNameData` naming), so multi-group devices split into the same HA sub-devices as the direct-CCU backend (verified: 45/45 devices split identically, 0 entity-to-sub-device assignment diffs across 1728 matched entities). The advanced-settings options step no longer crashes for loom entries (the loom `query_facade.get_un_ignore_candidates` was an async coroutine; it is now synchronous with the aiohomematic signature).
+- Feat: **`LOOM_BACKEND_SELECTABLE` master switch** (`const.py`). When `False`, the config-flow backend menu is skipped — a fresh setup goes straight to the direct-CCU step and the loom path behaves as if it did not exist (existing loom entries are untouched).
+- Feat: the loom `CentralConfig` receives the Home Assistant UI language (`hass.config.language`), so the loom backend composes locale-aware schedule/parameter names (e.g. "Zeitplan").
+- Feat: sysvar/program description markers are passed into the loom backend (marker-driven hub-entity visibility, parity with the direct-CCU backend).
+- Fix: **sub-device areas** — `suggested_area` is now carried on every device-creating `DeviceInfo` (event, device-update and channel-bound hub entities, not just the generic path). HA applies `suggested_area` only at device creation, so on the loom backend — where devices are recreated on every fresh spawn — room-assigned devices previously lost their area whenever one of those entities registered first. The via device is seeded with its own room (maintenance channel) instead of the calling sub-device's area.
+- Fix: the device-update (`HUB_UPDATE`) platform fetches existing hub data points at setup, not only via the new-data-point signal — the loom adapter emits `DataPointsCreatedEvent` during `central.start`, before the platforms subscribe, so the system-update entity was previously lost.
 - Fix: `generic_entity` guards `data_point.channel` against `None` in the sub-device split (loom data points may resolve no channel; aiohomematic data points are unaffected).
 - Fix: enum sensors that also report a unit of measurement (e.g. door/window contact `STATE` on the openccu-loom backend) failed to be added — Home Assistant rejects a unit on the non-numeric `enum` device class (`ValueError: … has a unit of measurement … non-numeric device class: enum`). `AioHomematicSensor` no longer assigns a unit when the data point carries enum `values`.
 - Chore: `backend_types._pair` is now generic (`tuple[type[T], ...]`), so `isinstance` checks against the backend-agnostic dispatch tuples narrow to the aiohomematic type — mypy strict passes again across all platform files (27 errors resolved without runtime changes); the loom twin duck-types the aiohomematic class, documented in one place instead of per-call-site casts.
@@ -12,12 +17,18 @@
 
 ### Dependencies
 
-#### Bump openccu-loom-client to 2026.6.1
+#### Bump openccu-loom-client to 2026.6.12 (pins `openccu-loom-types==0.1.17`)
 
-- Entity names no longer collapse to the device name on the loom backend: the locale-aware `translated_name`/`label_omitted` from the daemon are now surfaced (entities are named "Device + localised label", matching MQTT discovery; "primary" parameters keep the device name alone).
-- Read-only data points are categorised correctly: the client spawns entities off the daemon's authoritative `category` instead of re-deriving it (e.g. a read-only ENUM door `STATE` is now a `binary_sensor`, not a sensor).
-- `Device.firmware` returns the version string (was a `Firmware` object → invalid `sw_version`); climate/light custom entities load again (compat surface completed for `_peer_*` and LED colour attributes).
-- Pulls `openccu-loom-types>=0.1.8` (`DataPointSummary` gains `translated_name` + `label_omitted`).
+Cumulative loom-backend parity work since 2026.6.1, bringing the openccu-loom backend in line with the direct-CCU (aiohomematic) backend across structure, values, names, attributes and HA cards (final fresh-spawn measurement: 1962 entities matched, residuals are by-design instance differences). Highlights:
+
+- **Live state delivery:** value and custom-DP pushes reach Home Assistant — the default WS subscriptions now carry the `datapoint.*` / `custom_data_point.*` topic prefixes (entities no longer froze on their bootstrap value). Channel-group switch CDPs (`STATE@3/4/5`) read `is_on` from the channel's generic `STATE` data point as a fallback, so a switched actuator no longer snaps back to off.
+- **Climate cards** populate current/target temperature and humidity (read from the daemon's CDP state with a field-DP fallback); `preset_modes` always lists `none`; `modes`/`profiles` carry real aiohomematic enum members.
+- **Hub layer:** system variables, programs, per-device firmware updates, event groups, calculated data points, and hub singletons (alarm/service messages, inbox, metrics, connectivity, install mode, system update) spawn as HA entities with aiohomematic-parity unique ids and names.
+- **Visibility parity:** the daemon's `usage` verdict gates entity creation (`no_create`/`ignored`/`event` skipped, `ce_primary`/`ce_secondary` absorbed by the custom DP); sysvars classify by type with the extended marker (read-only sensor/binary_sensor vs. writable switch/select/number/text) and exclude CCU-internal/scratch variables (`${…}`, `OldVal`/`pcCCUID`, fixed ids 40/41).
+- **Naming:** generic, custom, calculated and combined data points compose locale-aware names matching aiohomematic (channel `chN`/`vchN` markers, `label_omitted` collapse, calculated/combined `translated_name`).
+- **Schedule layer:** week-profile sensors and per-channel schedule switches; **combined duration** number for sirens.
+- **Multi-central correctness:** foreign-central sysvars/programs/connectivity no longer leak into an entry; `SystemInformation.ccu_type` defaults to OpenCCU so the system-update entity spawns.
+- Pulls `openccu-loom-types==0.1.17` (`DataPointSummary.translated_name`/`label_omitted`/`usage`, `SysvarSummary.is_internal`/`is_extended`/`vid`, `CalculatedDPSummary.translated_name`, channel-group + room fields, hub-singleton/schedule contract; daemon API 1.6.0).
 
 # Version [2.8.0](https://github.com/SukramJ/homematicip_local/compare/2.7.2...2.8.0) (2026-06-10)
 
