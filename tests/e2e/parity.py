@@ -41,6 +41,7 @@ class EntitySnap:
     attrs: dict[str, Any]
     raw_unique_id: str
     entity_id: str
+    has_state: bool = True
 
 
 @dataclass(slots=True)
@@ -77,13 +78,29 @@ def _canonical_key(raw: str, *, domain: str, strip_tokens: tuple[str, ...]) -> s
     """Return the cross-plane comparison key for one entity.
 
     On top of unique-id normalization this drops the ``hub_`` prefix (some
-    planes omit it) and a trailing ``_<domain>`` suffix (mqtt discovery appends
-    the component name) so the same logical entity collapses across planes.
+    planes omit it), a trailing ``_<domain>`` suffix (mqtt discovery appends the
+    component name) and collapses the event / schedule / week-profile unique-id
+    schemes — which differ between the aiohomematic and mqtt-discovery layers
+    for the same logical entity — to one shape.
     """
     norm = normalize_unique_id(raw, strip_tokens=strip_tokens)
     norm = re.sub(r"^hub_", "", norm)
     if norm.endswith(f"_{domain}"):
         norm = norm[: -(len(domain) + 1)]
+    # event groups: ccu 'event_group_keypress_<addr>_<ch>' vs mqtt '<addr>_<ch>'.
+    norm = re.sub(r"^event_group_(?:keypress|impulse|press|device_error)_", "", norm)
+    # schedule switch: 'schedule_channel_switch_<addr>_schedule_channel_lock_<a>_<b>'
+    # (aiohomematic) vs '<addr>_<ch>_schedule_<a>_<b>' (mqtt) -> 'sched_<addr>_<a>_<b>'.
+    if (m := re.match(r"^schedule_channel_switch_([0-9a-z]+)_schedule_channel_lock_(\d+_\d+)$", norm)) or (
+        m := re.match(r"^([0-9a-z]+)_\d+_schedule_(\d+_\d+)$", norm)
+    ):
+        norm = f"sched_{m.group(1)}_{m.group(2)}"
+    # week-profile sensor: 'week_profile_<addr>_week_profile' (aiohomematic) vs
+    # '<addr>_<ch>_schedule' (mqtt) -> 'wp_<addr>'.
+    elif (m := re.match(r"^week_profile_([0-9a-z]+)_week_profile$", norm)) or (
+        m := re.match(r"^([0-9a-z]+)_\d+_schedule$", norm)
+    ):
+        norm = f"wp_{m.group(1)}"
     return f"{domain}:{norm}"
 
 
@@ -94,7 +111,11 @@ def _canonical_name(name: str | None, *, strip_tokens: tuple[str, ...]) -> str:
     out = name
     for token in sorted((t for t in strip_tokens if t), key=len, reverse=True):
         out = re.sub(re.escape(token), "", out, flags=re.IGNORECASE)
-    return re.sub(r"\s{2,}", " ", out).strip()
+    # A removed central/instance token can orphan its joining separator
+    # (e.g. "Connectivity ccu-e2e-HmIP-RF" -> "Connectivity -HmIP-RF"); drop a
+    # separator left dangling after a space without touching real ones (HmIP-RF).
+    out = re.sub(r"(?<=\s)[-_]+(?=\S)", "", out)
+    return re.sub(r"\s{2,}", " ", out).strip(" -_")
 
 
 def scrape(
@@ -129,6 +150,7 @@ def scrape(
             attrs=attrs,
             raw_unique_id=entry.unique_id,
             entity_id=entry.entity_id,
+            has_state=state_obj is not None,
         )
         if entry.device_id and (device := dev_reg.async_get(entry.device_id)) is not None:
             snap.device_keys.add(device.name or device.id)
@@ -186,7 +208,10 @@ def diff_snapshots(snaps: Mapping[str, Snapshot]) -> dict[str, Any]:
             r, o = ref.entities[key], other.entities[key]
             if (r.friendly_name or "") != (o.friendly_name or ""):
                 name_drift.append((key, r.friendly_name, o.friendly_name))
-            if r.attrs != o.attrs:
+            # Card attributes are only comparable when both sides actually have a
+            # state object; a secondary channel that has not reported yet carries
+            # no attributes, which is a timing artifact, not a real drift.
+            if r.has_state and o.has_state and r.attrs != o.attrs:
                 attr_drift.append((key, r.attrs, o.attrs))
         report[other_name] = {
             "missing_vs_ref": sorted(ref_keys - other_keys),

@@ -46,13 +46,25 @@ from an earlier run cannot pin a plane to a partial device set.
 
 - `test_parity_report` — always emits the structured diff (per-plane counts and
   every missing/extra/name/attr difference).
-- `test_loom_backend_entity_set_parity` — **enforced**: the two
-  `homematicip_local` backends (aiohomematic and openccu-loom-client), fed by
-  the same godevccu, materialize the same set of entities (one documented
-  hub-system-update residual aside).
-- `test_full_entity_parity` — `xfail`: tracks the remaining **naming/scheme**
-  residuals (not entity-set drift). The loom-client emits a few calculated-DP
-  names as raw parameter names and differs on channel/virtual-receiver markers;
-  the mqtt discovery layer uses its own naming and unique-id scheme for
-  schedules, events and sysvars/programs and labels firmware updates "Firmware"
-  vs "Update". These live in the loom-client / daemon naming layers.
+- `test_entity_set_parity` — **enforced**: all three planes — aiohomematic,
+  openccu-loom-client and the daemon's mqtt discovery, fed by the same godevccu
+  — materialize the same set of entities. A small documented by-design allowlist
+  applies: the hub system-update (only the daemon-backed planes create it) and
+  the admin/maintenance entities the mqtt discovery deliberately omits (program
+  *buttons*, the install-mode button + sensor, the backup button).
+- `test_full_entity_parity` — `xfail`: tracks the remaining **name/attribute**
+  residuals (not entity-set drift):
+  - **loom** — the schedule-switch target-channel name and the multi-channel
+    ` chN` marker need per-channel data the daemon does not put on the wire.
+  - **mqtt** — the discovery layer uses HA-idiomatic naming (sysvar display
+    names, no channel-type / `P ` / `SV ` prefixes, `Firmware` vs `Update`) and
+    sets `unit`/`state_class` on sysvars.
+
+The comparison normalizes away per-run instance/central/serial tokens, the
+`calculated`/`combined` markers, the mqtt domain suffix and the differing
+event / schedule / week-profile unique-id schemes, and compares the stable
+registry `original_name` (not the timing-dependent live `friendly_name`); card
+attributes are compared only when both planes have reported a state.
+
+Requires openccu-loom-client ≥ 2026.6.13 (calculated-DP names match the
+direct-CCU twin).

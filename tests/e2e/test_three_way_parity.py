@@ -182,39 +182,53 @@ def test_parity_report(parity_results: dict[str, Any]) -> None:
         assert snap.entities, f"plane {plane} produced no entities"
 
 
-# By-design entity-set residuals between the two homematicip_local backends.
-# The daemon always exposes a hub system-update entity; the aiohomematic backend
-# only creates one when godevccu actually advertises an available firmware.
-_LOOM_SET_ALLOWLIST = frozenset({"update:system"})
+def _is_by_design_residual(*, plane: str, key: str) -> bool:
+    """Return whether an entity-set difference is an accepted by-design residual.
+
+    * ``update:system`` — the daemon-backed planes always expose a hub
+      system-update; the aiohomematic backend only creates one when godevccu
+      advertises an available firmware.
+    * The mqtt discovery layer deliberately does not surface admin/maintenance
+      entities: program *buttons* (it exposes programs as switches), the
+      install-mode button + sensor and the backup button.
+    """
+    if key == "update:system":
+        return True
+    if plane == "mqtt":
+        return key.startswith("button:program_") or key == "button:create_backup" or "install_mode" in key
+    return False
 
 
-def test_loom_backend_entity_set_parity(parity_results: dict[str, Any]) -> None:
-    """The two homematicip_local backends expose the same set of entities.
+def test_entity_set_parity(parity_results: dict[str, Any]) -> None:
+    """All three planes expose the same set of entities (by-design residuals aside).
 
-    This is the core enforced parity claim: aiohomematic (direct CCU) and the
-    openccu-loom-client backend, fed by the same godevccu, must materialize the
-    same entities (a single documented hub-update residual aside).
+    The core parity claim: one godevccu, fed through the aiohomematic backend,
+    the openccu-loom-client backend and the daemon's mqtt discovery, yields the
+    same Home Assistant entities. Naming/attribute drift is asserted separately.
     """
     results = _ordered_results(parity_results)
-    report = diff_snapshots({"ccu": results["ccu"], "loom": results["loom"]})["loom"]
-    missing = set(report["missing_vs_ref"]) - _LOOM_SET_ALLOWLIST
-    extra = set(report["extra_vs_ref"]) - _LOOM_SET_ALLOWLIST
-    assert not missing, f"entities on aiohomematic but missing on loom: {sorted(missing)}"
-    assert not extra, f"entities on loom but missing on aiohomematic: {sorted(extra)}"
+    problems: list[str] = []
+    for plane in ("loom", "mqtt"):
+        report = diff_snapshots({"ccu": results["ccu"], plane: results[plane]})[plane]
+        for field_name, label in (("missing_vs_ref", "missing on"), ("extra_vs_ref", "extra on")):
+            residual = [k for k in report[field_name] if not _is_by_design_residual(plane=plane, key=k)]
+            if residual:
+                problems.append(f"{plane} {label} {field_name}: {residual}")
+    assert not problems, "entity-set drift vs ccu reference: " + " | ".join(problems)
 
 
 @pytest.mark.xfail(
     reason=(
-        "Residual naming/scheme drift, not entity-set drift: the loom-client emits some "
-        "calculated-DP names as raw parameter names (e.g. DEW_POINT) instead of the translated "
-        "name, and channel/virtual-receiver markers differ; the mqtt discovery layer uses its own "
-        "naming and unique-id scheme for schedules, events, sysvars/programs and labels firmware "
-        "updates 'Firmware' vs 'Update'. Tracked for the loom-client / daemon naming layers."
+        "Residual naming/attribute drift, not entity-set drift. loom: the schedule-switch "
+        "target-channel name and the multi-channel ` chN` marker need per-channel data the daemon "
+        "does not put on the wire. mqtt: the discovery layer uses HA-idiomatic naming (sysvar "
+        "display names, no channel-type/`P `/`SV ` prefixes, `Firmware` vs `Update`) and sets "
+        "units/state_class on sysvars. Tracked for the daemon wire/discovery naming layers."
     ),
     strict=False,
 )
 def test_full_entity_parity(parity_results: dict[str, Any]) -> None:
-    """Assert the three planes expose an identical set of entities, names and attrs."""
+    """Assert the three planes expose identical entity names and card attributes."""
     ordered = _ordered_results(parity_results)
     report = diff_snapshots(ordered)
     problems: list[str] = []
@@ -222,7 +236,7 @@ def test_full_entity_parity(parity_results: dict[str, Any]) -> None:
         section = report[plane]
         problems += [
             f"{plane}.{field_name}={len(section[field_name])}"
-            for field_name in ("missing_vs_ref", "extra_vs_ref", "name_drift", "attr_drift")
+            for field_name in ("name_drift", "attr_drift")
             if section[field_name]
         ]
-    assert not problems, "parity drift vs ccu reference: " + ", ".join(problems)
+    assert not problems, "name/attr drift vs ccu reference: " + ", ".join(problems)
