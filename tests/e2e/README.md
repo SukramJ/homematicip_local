@@ -40,6 +40,28 @@ Build the Go binaries with `make build` (godevccu) and `make build` /
 godevccu ≥ 0.1.4 that returns CCU-shaped room/function payloads
 (`channelIds: []`, not `null`).
 
+## Device set
+
+By default the suite uses `godevccu-e2e`'s fixed **4-device** set (one per HA
+domain shape) — fast (~1 min), deterministic, and the basis for the enforced
+parity assertions.
+
+Set `GODEVCCU_E2E_DEVICES` to widen coverage:
+
+```bash
+# comprehensive: every embedded godevccu type (~399), ~2 min
+GODEVCCU_E2E_DEVICES=all venv/bin/pytest tests/e2e -m e2e -n0 -s
+# a specific subset
+GODEVCCU_E2E_DEVICES=HmIP-BDT,HmIP-SWDO venv/bin/pytest tests/e2e -m e2e -n0 -s
+```
+
+The `all` run is a **diagnostic report**, not a green gate: at full scale the
+backends diverge substantially (the aiohomematic plane exposes ~750
+`PRESS_SHORT`/`PRESS_LONG` virtual-key button entities the loom-client/mqtt
+planes do not; calc-DP/virtual-key name doubling; cover/light feature-flag and
+unit differences). Read `test_parity_report`'s output to triage; the strict
+`test_entity_set_parity` is expected to fail there until those gaps are closed.
+
 Each plane clears the integration's on-disk cache
 (`<config>/homematicip_local`) before setup, so a stale device/paramset cache
 from an earlier run cannot pin a plane to a partial device set.

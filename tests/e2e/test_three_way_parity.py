@@ -17,6 +17,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.homematicip_local.const import (
     CONF_ADVANCED_CONFIG,
     CONF_BACKEND,
+    CONF_COMMAND_THROTTLE_INTERVAL,
     CONF_ENABLE_PROGRAM_SCAN,
     CONF_ENABLE_SYSTEM_NOTIFICATIONS,
     CONF_ENABLE_SYSVAR_SCAN,
@@ -34,12 +35,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .parity import Snapshot, diff_snapshots, scrape, wait_until_settled
-from .stack import CCU_PASSWORD, CCU_USERNAME, DAEMON_TOKEN, BackendStack
+from .stack import CCU_DEVICES, CCU_PASSWORD, CCU_USERNAME, DAEMON_TOKEN, BackendStack
 
 pytestmark = pytest.mark.e2e
 
 # The godevccu serial both homematicip_local backends key their entities to.
 SERIAL = "GODEVCCU0001"
+
+# The full ~399-device set loads in big bursts with a long up-front
+# paramset-fetch gap on the aiohomematic plane; the fixed 4-device set settles
+# almost immediately. Widen the stability window only when the large set is used.
+_SETTLE_STABLE = 20.0 if CCU_DEVICES else 5.0
 
 
 def _entities_for(hass: HomeAssistant, *, config_entry_id: str, platform: str) -> int:
@@ -67,6 +73,10 @@ async def _setup_settle_scrape(
     await wait_until_settled(
         hass,
         predicate=lambda: _entities_for(hass, config_entry_id=entry.entry_id, platform=platform),
+        timeout=900.0,
+        # Bridge the gap between the hub-entity burst and the device-entity burst
+        # while aiohomematic fetches all paramset descriptions up front.
+        stable_for=_SETTLE_STABLE,
     )
     # The config-entry id (its last 10 chars are the central_id) and instance
     # name are random/per-plane and leak into hub/program/sysvar unique_ids.
@@ -102,6 +112,10 @@ async def test_plane_aiohomematic(
             CONF_ENABLE_SYSVAR_SCAN: True,
             CONF_ENABLE_PROGRAM_SCAN: True,
             CONF_ENABLE_SYSTEM_NOTIFICATIONS: True,
+            # Drop the 0.1 s inter-command throttle: against a local godevccu
+            # with the full ~399-device set the throttled paramset fetch would
+            # otherwise take many minutes before any device entity appears.
+            CONF_COMMAND_THROTTLE_INTERVAL: 0.0,
         },
     }
     entry = MockConfigEntry(domain=DOMAIN, data=data, version=17, unique_id=SERIAL, title="E2eCcu")

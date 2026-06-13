@@ -51,6 +51,12 @@ MQTT_TOPIC_BASE = "openccu-loom"
 CCU_USERNAME = "Admin"
 CCU_PASSWORD = "test"
 
+# Which godevccu device types to expose. The default empty string keeps
+# godevccu-e2e's fixed 4-device fast set (deterministic, green, CI-friendly).
+# Set GODEVCCU_E2E_DEVICES=all for the comprehensive ~399-type parity report,
+# or a comma-separated list to restrict to specific types.
+CCU_DEVICES = os.environ.get("GODEVCCU_E2E_DEVICES", "")
+
 
 def binaries_available() -> tuple[bool, str]:
     """Return (ok, reason) describing whether the stack can be started."""
@@ -176,7 +182,7 @@ def _start_godevccu(stack: BackendStack) -> None:
     """Start godevccu-e2e and resolve its advertised ports."""
     managed = _spawn(
         "godevccu",
-        [GODEVCCU_E2E_BIN, "-username", CCU_USERNAME, "-password", CCU_PASSWORD],
+        [GODEVCCU_E2E_BIN, "-username", CCU_USERNAME, "-password", CCU_PASSWORD, "-devices", CCU_DEVICES],
         workdir=stack.workdir,
     )
     stack._managed.append(managed)
@@ -282,7 +288,8 @@ def _start_daemon(stack: BackendStack) -> None:
         workdir=stack.workdir,
     )
     stack._managed.append(managed)
-    _wait_for_http_ok(f"{stack.daemon_url}/api/v1/health", timeout=90.0)
+    # Seeding the full ~399-device set over JSON-RPC takes a while.
+    _wait_for_http_ok(f"{stack.daemon_url}/api/v1/health", timeout=300.0)
 
 
 @contextlib.contextmanager
