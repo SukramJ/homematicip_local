@@ -1,7 +1,8 @@
 -r requirements_test_pre_commit.txt
 
-aiohomematic==2026.6.2
 aiohomematic-test-support==2026.6.2
+aiohomematic==2026.6.2
+aiohomematic_config==2026.5.0
 isal==1.8.0
 mypy==2.1.0
 openccu-data>=2026.5.0
@@ -10,4 +11,4 @@ prek==0.4.4
 pur==7.4.0
 pylint==4.0.5
 pylint_strict_informational==0.1
-pytest-homeassistant-custom-component-framework==1.0.27
+pytest-homeassistant-custom-component-framework==1.0.28
