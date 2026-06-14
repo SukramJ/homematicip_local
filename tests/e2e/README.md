@@ -12,7 +12,7 @@ north-bound surfaces and compares the Home Assistant output of each:
 Each plane runs in its own Home Assistant instance (the three share the godevccu
 serial, so a single registry would collide). The shared backend stack
 (godevccu + Mosquitto + daemon) is started once per session.
-
+  
 ## Running
 
 It is **opt-in** and skipped unless the external binaries are present:
