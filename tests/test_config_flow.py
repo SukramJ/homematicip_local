@@ -33,9 +33,12 @@ from custom_components.homematicip_local.config_flow import (
     CONF_ENABLE_VIRTUAL_DEVICES,
     CONF_HMIP_RF_PORT,
     CONF_INSTANCE_NAME,
+    CONF_LOOM_BASE_PATH,
+    CONF_LOOM_DAEMON,
     CONF_VIRTUAL_DEVICES_PATH,
     CONF_VIRTUAL_DEVICES_PORT,
     IF_VIRTUAL_DEVICES_PATH,
+    LOOM_MANUAL_DAEMON,
     InvalidConfig,
     _async_loom_list_ccus,
     _async_validate_config_and_get_system_information,
@@ -3247,8 +3250,8 @@ class TestLoomBackendSelectable:
         assert result["step_id"] == "central"
 
     async def test_enabled_loom_step_shows_loom_form(self, hass: HomeAssistant) -> None:
-        """With the switch on, the loom menu entry opens the loom form."""
-        with patch(_SELECTABLE, True):
+        """With the switch on and no daemon discovered, the loom form opens."""
+        with patch(_SELECTABLE, True), patch(_BROWSE, return_value=[]):
             result = await hass.config_entries.flow.async_init(
                 HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
             )
@@ -3589,3 +3592,95 @@ class TestAsyncLoomListCcus:
         with patch(_LOOM_LIST.replace("_async_loom_list_ccus", "_import_loom_list_ccus"), return_value=fake):
             result = await _async_loom_list_ccus(hass, host="h", port=1, tls=False, token="t", base_path="/api/v1")
         assert result == [{"serial": "X", "name": "n", "host": "h", "model": "m", "available": True}]
+
+
+_BROWSE = "custom_components.homematicip_local.config_flow._async_browse_loom_daemons"
+
+
+def _loom_daemon(host: str, port: int, instance: str) -> dict:
+    return {
+        CONF_HOST: host,
+        CONF_LOOM_PORT: port,
+        CONF_TLS: False,
+        CONF_LOOM_BASE_PATH: "/api/v1",
+        CONF_INSTANCE_NAME: instance,
+    }
+
+
+class TestLoomActiveBrowse:
+    """User-initiated loom flow actively browses for daemons via mDNS."""
+
+    async def test_manual_entry_creates_entry(self, hass: HomeAssistant) -> None:
+        with (
+            patch(_LOOM_ENABLED, True),
+            patch(_BROWSE, return_value=[]),
+            patch("custom_components.homematicip_local.config_flow.ControlConfig") as control_config,
+            patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
+        ):
+            control_config.return_value.check_config = AsyncMock(return_value=None)
+            form = await self._init_loom(hass)
+            assert form["step_id"] == "loom"
+            done = await hass.config_entries.flow.async_configure(
+                form["flow_id"],
+                {
+                    CONF_INSTANCE_NAME: "Manual Loom",
+                    CONF_HOST: "daemon.local",
+                    CONF_LOOM_PORT: 8080,
+                    CONF_TLS: False,
+                    CONF_VERIFY_TLS: False,
+                    CONF_LOOM_TOKEN: "tok",
+                },
+            )
+            await hass.async_block_till_done()
+        assert done["type"] == FlowResultType.CREATE_ENTRY
+        assert done["title"] == "Manual Loom"
+        assert done["result"].data[CONF_HOST] == "daemon.local"
+
+    async def test_multi_daemon_pick_then_token_then_entry(self, hass: HomeAssistant) -> None:
+        daemons = [_loom_daemon("h1", 8080, "D1"), _loom_daemon("h2", 8081, "D2")]
+        ccus = [{"name": "Home", "serial": "ABC123", "host": "ccu", "model": "CCU3", "available": True}]
+        with (
+            patch(_LOOM_ENABLED, True),
+            patch(_BROWSE, return_value=daemons),
+            patch(_LOOM_LIST, return_value=ccus),
+            patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
+        ):
+            pick = await self._init_loom(hass)
+            assert pick["step_id"] == "loom_pick"
+            token = await hass.config_entries.flow.async_configure(pick["flow_id"], {CONF_LOOM_DAEMON: "h2:8081"})
+            assert token["step_id"] == "loom_token"
+            done = await hass.config_entries.flow.async_configure(token["flow_id"], {CONF_LOOM_TOKEN: "tok"})
+            await hass.async_block_till_done()
+        assert done["type"] == FlowResultType.CREATE_ENTRY
+        entry = done["result"]
+        assert entry.data[CONF_HOST] == "h2"
+        assert entry.data[CONF_LOOM_PORT] == 8081
+        assert entry.data[CONF_INSTANCE_NAME] == "Home"
+        assert entry.unique_id == "ABC123"
+
+    async def test_no_daemons_falls_back_to_manual(self, hass: HomeAssistant) -> None:
+        with patch(_LOOM_ENABLED, True), patch(_BROWSE, return_value=[]):
+            step = await self._init_loom(hass)
+        assert step["type"] == FlowResultType.FORM
+        assert step["step_id"] == "loom"
+
+    async def test_pick_manual_shows_manual_form(self, hass: HomeAssistant) -> None:
+        daemons = [_loom_daemon("h1", 8080, "D1"), _loom_daemon("h2", 8081, "D2")]
+        with patch(_LOOM_ENABLED, True), patch(_BROWSE, return_value=daemons):
+            pick = await self._init_loom(hass)
+            assert pick["step_id"] == "loom_pick"
+            manual = await hass.config_entries.flow.async_configure(
+                pick["flow_id"], {CONF_LOOM_DAEMON: LOOM_MANUAL_DAEMON}
+            )
+        assert manual["type"] == FlowResultType.FORM
+        assert manual["step_id"] == "loom"
+
+    async def test_single_daemon_auto_selects_to_token(self, hass: HomeAssistant) -> None:
+        with patch(_LOOM_ENABLED, True), patch(_BROWSE, return_value=[_loom_daemon("h1", 8080, "D1")]):
+            step = await self._init_loom(hass)
+        assert step["type"] == FlowResultType.FORM
+        assert step["step_id"] == "loom_token"
+
+    async def _init_loom(self, hass: HomeAssistant) -> dict:
+        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        return await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "loom"})

@@ -155,6 +155,9 @@ ZEROCONF_TYPE = "_openccu-loom._tcp.local."
 DEFAULT_LOOM_BASE_PATH = "/api/v1"
 CONF_LOOM_BASE_PATH = "loom_base_path"  # internal discovery-state key (not persisted)
 CONF_LOOM_CCU = "serial"  # CCU-selection form field
+CONF_LOOM_DAEMON = "daemon"  # daemon-selection form field (active browse)
+LOOM_MANUAL_DAEMON = "__manual__"  # sentinel select value for manual entry
+LOOM_BROWSE_SECONDS = 3.0  # active mDNS browse window in the user-initiated flow
 PORT_SELECTOR = vol.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535)),
     vol.Coerce(int),
@@ -286,6 +289,63 @@ async def _async_loom_list_ccus(
             raise AuthFailure(str(exc)) from exc
         raise NoConnectionException(str(exc)) from exc
     return result
+
+
+def _loom_daemon_key(daemon: dict[str, Any]) -> str:
+    """Return the select-option key identifying a discovered daemon."""
+    return f"{daemon[CONF_HOST]}:{daemon[CONF_LOOM_PORT]}"
+
+
+async def _async_browse_loom_daemons(hass: HomeAssistant) -> list[dict[str, Any]]:  # pragma: no cover - live mDNS
+    """Browse the LAN for openccu-loom daemons (short window).
+
+    Returns one discovery-state dict per daemon (host / port / tls /
+    base_path / instance) — the same shape :meth:`async_step_zeroconf`
+    builds — so the daemon-selection step can route straight into the
+    shared token / CCU-selection steps. Live mDNS, hence not unit-tested.
+    """
+    from zeroconf import ServiceStateChange  # noqa: PLC0415
+    from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo  # noqa: PLC0415
+
+    from homeassistant.components import zeroconf  # noqa: PLC0415
+
+    aiozc = await zeroconf.async_get_async_instance(hass)
+    names: set[str] = set()
+
+    @callback
+    def _on_change(_zc: Any, _service_type: str, name: str, state_change: Any) -> None:
+        if state_change is not ServiceStateChange.Removed:
+            names.add(name)
+
+    browser = AsyncServiceBrowser(aiozc.zeroconf, ZEROCONF_TYPE, handlers=[_on_change])
+    try:
+        await asyncio.sleep(LOOM_BROWSE_SECONDS)
+    finally:
+        await browser.async_cancel()
+
+    daemons: list[dict[str, Any]] = []
+    for name in names:
+        info = AsyncServiceInfo(ZEROCONF_TYPE, name)
+        if not await info.async_request(aiozc.zeroconf, 3000):
+            continue
+        host = next((str(ip) for ip in info.parsed_addresses()), None)
+        if not host or not info.port:
+            continue
+        props = {
+            key.decode(): (value.decode() if isinstance(value, bytes) else value)
+            for key, value in (info.properties or {}).items()
+            if isinstance(key, bytes)
+        }
+        daemons.append(
+            {
+                CONF_HOST: host,
+                CONF_LOOM_PORT: info.port,
+                CONF_TLS: str(props.get("tls", "0")).lower() not in ("0", "", "false"),
+                CONF_LOOM_BASE_PATH: props.get("path") or DEFAULT_LOOM_BASE_PATH,
+                CONF_INSTANCE_NAME: props.get("instance") or name.removesuffix(f".{ZEROCONF_TYPE}"),
+            }
+        )
+    return daemons
 
 
 def get_reconfigure_schema(data: ConfigType) -> Schema:
@@ -754,6 +814,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         self._loom_discovery: dict[str, Any] = {}
         self._loom_token: str | None = None
         self._loom_ccus: list[dict[str, Any]] = []
+        self._loom_discovered_daemons: list[dict[str, Any]] = []
+        self._loom_skip_browse: bool = False
         self._detection_result: BackendDetectionResult | None = None
         self._detection_task: asyncio.Task[None] | None = None
         self._detection_start_time: float | None = None
@@ -1007,9 +1069,19 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_loom(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
-        """Configure an openccu-loom daemon backend."""
+        """Configure an openccu-loom daemon backend (mDNS browse → manual)."""
         if not LOOM_BACKEND_SELECTABLE:
             return await self.async_step_central(user_input=None)
+        # On entry (no input yet) actively browse for daemons and offer a
+        # selection; fall back to the manual form when none are found or the
+        # user opted out of discovery in the pick step.
+        if (
+            user_input is None
+            and not self._loom_skip_browse
+            and (daemons := await _async_browse_loom_daemons(self.hass))
+        ):
+            self._loom_discovered_daemons = daemons
+            return await self.async_step_loom_pick()
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {
             "invalid_items": "",
@@ -1044,6 +1116,38 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=get_loom_schema(data=self.data),
             errors=errors,
             description_placeholders=description_placeholders,
+        )
+
+    async def async_step_loom_pick(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Pick a discovered openccu-loom daemon (or choose manual entry)."""
+        daemons = self._loom_discovered_daemons
+        if len(daemons) == 1:
+            self._loom_discovery = daemons[0]
+            return await self.async_step_loom_token()
+        if user_input is not None:
+            choice = user_input[CONF_LOOM_DAEMON]
+            if choice == LOOM_MANUAL_DAEMON:
+                self._loom_skip_browse = True
+                return await self.async_step_loom()
+            self._loom_discovery = next(d for d in daemons if _loom_daemon_key(d) == choice)
+            return await self.async_step_loom_token()
+        options = [
+            SelectOptionDict(
+                value=_loom_daemon_key(d),
+                label=f"{d[CONF_INSTANCE_NAME]} ({d[CONF_HOST]}:{d[CONF_LOOM_PORT]})",
+            )
+            for d in daemons
+        ]
+        options.append(SelectOptionDict(value=LOOM_MANUAL_DAEMON, label="Manual entry"))
+        return self.async_show_form(
+            step_id="loom_pick",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_LOOM_DAEMON): SelectSelector(
+                        SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
+                    )
+                }
+            ),
         )
 
     async def async_step_loom_select_ccu(self, user_input: ConfigType | None = None) -> ConfigFlowResult:

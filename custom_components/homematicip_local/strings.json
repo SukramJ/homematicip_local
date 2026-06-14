@@ -128,6 +128,13 @@
                 "description": "Connect to an openccu-loom daemon. The daemon owns the CCU connection, interfaces and callbacks.", 
                 "title": "OpenCCU-Loom daemon"
             }, 
+            "loom_pick": {
+                "data": {
+                    "daemon": "Daemon"
+                }, 
+                "description": "Choose a discovered openccu-loom daemon, or pick manual entry.", 
+                "title": "Select daemon"
+            }, 
             "loom_select_ccu": {
                 "data": {
                     "serial": "CCU"

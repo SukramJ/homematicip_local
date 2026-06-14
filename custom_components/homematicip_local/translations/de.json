@@ -128,6 +128,13 @@
                 "description": "Mit einem openccu-loom-Daemon verbinden. Der Daemon verwaltet CCU-Verbindung, Interfaces und Callbacks.", 
                 "title": "OpenCCU-Loom-Daemon"
             }, 
+            "loom_pick": {
+                "data": {
+                    "daemon": "Daemon"
+                }, 
+                "description": "Wähle einen gefundenen openccu-loom-Daemon oder manuelle Eingabe.", 
+                "title": "Daemon auswählen"
+            }, 
             "loom_select_ccu": {
                 "data": {
                     "serial": "CCU"

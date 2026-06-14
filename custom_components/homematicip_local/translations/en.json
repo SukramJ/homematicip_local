@@ -231,6 +231,13 @@
         "data": {
           "serial": "CCU"
         }
+      },
+      "loom_pick": {
+        "title": "Select daemon",
+        "description": "Choose a discovered openccu-loom daemon, or pick manual entry.",
+        "data": {
+          "daemon": "Daemon"
+        }
       }
     }
   },
