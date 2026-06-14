@@ -206,6 +206,9 @@ def mock_control_unit() -> ControlUnit:
     control_unit = Mock(
         spec=ControlUnit,
     )
+    # The connected CCU serial matches the config entry's stored serial in
+    # normal operation, so the serial-change re-anchor stays a no-op.
+    control_unit.central.system_information.serial = const.CONFIG_ENTRY_UNIQUE_ID
     control_unit.central.get_data_points.return_value = []
     control_unit.central.get_hub_entities.return_value = []
     control_unit.central.get_channel_events.return_value = []

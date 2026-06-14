@@ -156,7 +156,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
     if is_loom_backend:
         await _async_migrate_loom_unique_ids(hass, entry)
     else:
+        # Switched back from loom: strip the loom_ namespace. Then align any
+        # legacy entry_id-anchored hub keys onto the CCU-serial scheme.
         await _async_restore_aiohomematic_unique_ids(hass, entry)
+        await _async_migrate_aiohomematic_hub_unique_ids(hass, entry)
 
     hass.data.setdefault(HM_KEY, HomematicData())
     if (default_callback_port_xml_rpc := hass.data[HM_KEY].default_callback_port_xml_rpc) is None:
@@ -197,6 +200,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
             entry.data.get(CONF_INSTANCE_NAME),
         )
         raise ConfigEntryAuthFailed("Authentication failed") from err
+    if not is_loom_backend:
+        await _async_reanchor_hub_unique_ids_on_serial_change(hass, entry, control)
     await async_setup_services(hass)
 
     # Register WebSocket commands once (HA raises on duplicate registration)
@@ -378,14 +383,14 @@ async def _async_migrate_loom_unique_ids(hass: HomeAssistant, entry: HomematicCo
     await async_migrate_entries(hass, entry.entry_id, _migrator)
 
 
-def _aiohomematic_restored_unique_id(unique_id: str, *, entry_suffix: str, serial_suffix: str) -> str | None:
-    """Map a loom/serial HA ``unique_id`` back to the legacy aiohomematic scheme.
+def _aiohomematic_restored_unique_id(unique_id: str) -> str | None:
+    """Strip the ``loom_`` namespace from an HA ``unique_id``.
 
-    The exact inverse of :func:`_loom_migrated_unique_id`: it strips the
-    ``loom_`` namespace and restores the central-id slot of hub / internal /
-    virtual-remote keys from the CCU serial suffix back to aiohomematic's
-    ``entry_id[-10:]`` prefix. Device / channel / custom-DP keys carried no
-    central prefix, so they only lose the ``loom_`` namespace.
+    The inverse of :func:`_loom_migrated_unique_id`. Both backends now anchor
+    hub / internal / virtual-remote entities on the CCU serial (see
+    ``central_id`` in :mod:`.control_unit`), so the two schemes differ only by
+    the ``loom_`` namespace and restoring a key is a plain prefix strip — the
+    serial-anchored central-id slot is already correct, no swap needed.
 
     Returns ``None`` when no rewrite applies: not one of our entities, or
     already in the aiohomematic scheme (no ``loom_`` namespace).
@@ -397,43 +402,51 @@ def _aiohomematic_restored_unique_id(unique_id: str, *, entry_suffix: str, seria
     if not key.startswith("loom_"):  # idempotent: already aiohomematic-scheme
         return None
     body = key[len("loom_") :]
-    # Hub / internal / virtual-remote keys carry the serial suffix in the
-    # central-id slot; swap it back for the entry_id suffix. Everything else
-    # (devices, channels, custom DPs) carried no central prefix.
-    serial_prefix = f"{serial_suffix}_"
-    if body.startswith(serial_prefix):
-        return f"{prefix}{entry_suffix}_{body[len(serial_prefix) :]}"
     return f"{prefix}{body}"
 
 
+def _reanchored_hub_unique_id(unique_id: str, *, old_suffix: str, new_suffix: str) -> str | None:
+    """Swap the central-id slot of an aiohomematic hub ``unique_id``.
+
+    Hub / install-mode / program / sysvar / internal (``INT000*``) and
+    virtual-remote entities carry a ``<suffix>_`` central-id prefix; devices,
+    channels and custom DPs carry none. This swaps that prefix from
+    ``old_suffix`` to ``new_suffix`` and leaves everything else untouched, so
+    it serves both the legacy ``entry_id[-10:]`` → serial migration and a
+    later serial → serial re-anchor after a radio-module swap.
+
+    Returns ``None`` when nothing applies (no central prefix, a ``loom_`` key,
+    or the suffixes are identical).
+    """
+    if old_suffix == new_suffix:
+        return None
+    prefix = f"{DOMAIN}_"
+    if not unique_id.startswith(prefix):
+        return None
+    key = unique_id[len(prefix) :]
+    if key.startswith("loom_"):
+        return None
+    old_prefix = f"{old_suffix}_"
+    if not key.startswith(old_prefix):
+        return None
+    return f"{prefix}{new_suffix}_{key[len(old_prefix) :]}"
+
+
 async def _async_restore_aiohomematic_unique_ids(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:
-    """Rewrite loom/serial entity unique_ids back to the aiohomematic scheme.
+    """Rewrite loom entity unique_ids back to the aiohomematic scheme.
 
     Runs once, early in setup, for the aiohomematic backend. A config entry
     switched back from the openccu-loom backend still holds canonical
-    ``loom_`` keys in the entity registry; aiohomematic produces legacy keys,
-    so without this rewrite every entity would orphan (losing history, area
-    and customisations). The inverse of :func:`_async_migrate_loom_unique_ids`,
-    it is purely string-level, idempotent, and scoped to this entry, so it is
-    safe to run on every setup.
+    ``loom_`` keys in the entity registry; aiohomematic produces un-namespaced
+    keys, so without this rewrite every entity would orphan (losing history,
+    area and customisations). The inverse of
+    :func:`_async_migrate_loom_unique_ids`, it is purely string-level,
+    idempotent, and scoped to this entry, so it is safe to run on every setup.
     """
-    serial = entry.unique_id  # the config entry's HA unique_id is the CCU serial
-    if not serial:
-        _LOGGER.warning(
-            "Skipping aiohomematic unique_id restore for %s: config entry has no serial",
-            entry.data.get(CONF_INSTANCE_NAME),
-        )
-        return
-    entry_suffix = entry.entry_id[-10:]
-    serial_suffix = serial[-10:].lower()
 
     @callback
     def _migrator(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
-        new_unique_id = _aiohomematic_restored_unique_id(
-            entity_entry.unique_id,
-            entry_suffix=entry_suffix,
-            serial_suffix=serial_suffix,
-        )
+        new_unique_id = _aiohomematic_restored_unique_id(entity_entry.unique_id)
         if new_unique_id is None or new_unique_id == entity_entry.unique_id:
             return None
         _LOGGER.debug(
@@ -444,6 +457,88 @@ async def _async_restore_aiohomematic_unique_ids(hass: HomeAssistant, entry: Hom
         return {"new_unique_id": new_unique_id}
 
     await async_migrate_entries(hass, entry.entry_id, _migrator)
+
+
+async def _async_migrate_aiohomematic_hub_unique_ids(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:
+    """Re-anchor legacy entry_id-prefixed hub unique_ids onto the CCU serial.
+
+    aiohomematic historically prefixed hub / sysvar / program / install-mode /
+    internal / virtual-remote entity unique_ids with ``entry_id[-10:]``, which
+    orphans them on an integration delete + re-add (the entry_id is
+    regenerated). The backend now anchors them on the CCU serial (see
+    ``central_id`` in :mod:`.control_unit`); this one-time, idempotent,
+    entry-scoped rewrite aligns existing registries. Device / channel keys
+    carry no central prefix and are left untouched.
+    """
+    serial = entry.unique_id  # the config entry's HA unique_id is the CCU serial
+    if not serial:
+        return
+    old_suffix = entry.entry_id[-10:]
+    new_suffix = serial[-10:].lower()
+
+    @callback
+    def _migrator(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+        new_unique_id = _reanchored_hub_unique_id(
+            entity_entry.unique_id,
+            old_suffix=old_suffix,
+            new_suffix=new_suffix,
+        )
+        if new_unique_id is None or new_unique_id == entity_entry.unique_id:
+            return None
+        _LOGGER.debug(
+            "Re-anchoring hub unique_id onto the CCU serial: %s -> %s",
+            entity_entry.unique_id,
+            new_unique_id,
+        )
+        return {"new_unique_id": new_unique_id}
+
+    await async_migrate_entries(hass, entry.entry_id, _migrator)
+
+
+async def _async_reanchor_hub_unique_ids_on_serial_change(
+    hass: HomeAssistant, entry: HomematicConfigEntry, control: ControlUnit
+) -> None:
+    """Re-anchor hub unique_ids when the connected CCU serial has changed.
+
+    The CCU serial (read from the radio module) anchors hub / sysvar /
+    program / install-mode / internal / virtual-remote unique_ids and the
+    config-entry identity. It is stable in normal operation but changes on a
+    radio-module (Funkmodul) swap. When the freshly-connected serial differs
+    from the stored one, this rewrites those keys from the old serial to the
+    new, updates the entry's unique_id and reloads so the running central
+    rebuilds on the new anchor. A no-op when the serial is unchanged or
+    unknown.
+    """
+    old_serial = entry.unique_id
+    new_serial = control.central.system_information.serial
+    if not old_serial or not new_serial or new_serial.lower() == "unknown":
+        return
+    if new_serial.lower() == old_serial.lower():
+        return
+
+    old_suffix = old_serial[-10:].lower()
+    new_suffix = new_serial[-10:].lower()
+
+    @callback
+    def _migrator(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+        new_unique_id = _reanchored_hub_unique_id(
+            entity_entry.unique_id,
+            old_suffix=old_suffix,
+            new_suffix=new_suffix,
+        )
+        if new_unique_id is None or new_unique_id == entity_entry.unique_id:
+            return None
+        return {"new_unique_id": new_unique_id}
+
+    _LOGGER.warning(
+        "CCU serial for %s changed (%s -> %s); re-anchoring hub entities and reloading",
+        entry.data.get(CONF_INSTANCE_NAME),
+        old_serial,
+        new_serial,
+    )
+    await async_migrate_entries(hass, entry.entry_id, _migrator)
+    hass.config_entries.async_update_entry(entry, unique_id=new_serial)
+    hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 def _migrate_v11_extract_custom_ports(data: dict[str, Any]) -> dict[str, Any]:

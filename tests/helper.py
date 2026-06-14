@@ -103,8 +103,13 @@ class Factory:
             return_value=_HAHM_VERSION,
         ).start()
 
-        # Start integration in hass
+        # Start integration in hass. In production the config entry's HA
+        # unique_id is the connected CCU serial (config flow sets it from the
+        # same system_information.serial), so align it here too — otherwise the
+        # serial-change re-anchor in async_setup_entry would fire and reload.
         self.mock_config_entry.add_to_hass(self._hass)
+        if (serial := central.system_information.serial) and serial.lower() != "unknown":
+            self._hass.config_entries.async_update_entry(self.mock_config_entry, unique_id=serial)
         await self._hass.config_entries.async_setup(self.mock_config_entry.entry_id)
         await self._hass.async_block_till_done()
         assert self.mock_config_entry.state == ConfigEntryState.LOADED

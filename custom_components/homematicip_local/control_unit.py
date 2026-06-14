@@ -1350,8 +1350,11 @@ class ControlConfig:
                     remote_path=interface.get(CONF_PATH),
                 )
             )
-        # use last 10 chars of entry_id for central_id uniqueness
-        central_id = self.entry_id[-10:]
+        # The CCU serial anchors hub / sysvar / program / virtual-remote
+        # entity unique_ids so they survive an integration delete + re-add
+        # (the entry_id is regenerated then); fall back to the entry_id while
+        # the serial is not yet known. aiohomematic lower-cases the key.
+        central_id = (self._serial or self.entry_id)[-10:]
         return await CentralConfig(
             callback_host=self._callback_host if self._callback_host != IP_ANY_V4 else None,
             callback_port_xml_rpc=self._callback_port_xml_rpc if self._callback_port_xml_rpc != PORT_ANY else None,
