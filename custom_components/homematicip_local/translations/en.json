@@ -220,7 +220,7 @@
       },
       "loom_token": {
         "title": "OpenCCU-Loom daemon token",
-        "description": "Enter the API bearer token for the discovered daemon '{name}' at {host}.",
+        "description": "Enter the API bearer token for the discovered daemon {name} at {host}.",
         "data": {
           "loom_token": "API bearer token"
         }
