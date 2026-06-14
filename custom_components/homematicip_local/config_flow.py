@@ -215,6 +215,24 @@ def get_options_schema(data: ConfigType) -> Schema:
     )
 
 
+def get_loom_options_schema(data: ConfigType) -> Schema:
+    """Return the openccu-loom daemon connection schema for the options flow.
+
+    Mirrors :func:`get_loom_schema` without the (fixed) instance name: the
+    daemon owns interfaces, callbacks and CCU credentials, so only the daemon
+    endpoint and bearer token are editable.
+    """
+    return vol.Schema(
+        {
+            vol.Required(CONF_HOST, default=data.get(CONF_HOST)): TEXT_SELECTOR,
+            vol.Optional(CONF_LOOM_PORT, default=data.get(CONF_LOOM_PORT, UNDEFINED)): PORT_SELECTOR_OPTIONAL,
+            vol.Required(CONF_TLS, default=data.get(CONF_TLS, True)): BOOLEAN_SELECTOR,
+            vol.Required(CONF_VERIFY_TLS, default=data.get(CONF_VERIFY_TLS, True)): BOOLEAN_SELECTOR,
+            vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, "")): PASSWORD_SELECTOR,
+        }
+    )
+
+
 def get_reconfigure_schema(data: ConfigType) -> Schema:
     """Return the reconfigure schema with only connection settings (TLS on next step)."""
     return vol.Schema(
@@ -615,6 +633,33 @@ def get_advanced_settings_schema(data: ConfigType, all_un_ignore_parameters: lis
     if not all_un_ignore_parameters:
         del advanced_settings_schema.schema[CONF_UN_IGNORES]
     return advanced_settings_schema
+
+
+def get_loom_advanced_settings_schema(data: ConfigType) -> Schema:
+    """Return the reduced advanced-settings schema for the openccu-loom backend.
+
+    The daemon owns CCU-behaviour parity (hub scans, markers, light/cover
+    behaviour, firmware, device creation) per-central, so only the HA-side
+    toggles remain configurable here. Callbacks, MQTT, command pacing and
+    interface/parameter options are the daemon's concern and are omitted.
+    """
+    advanced_config = data.get(CONF_ADVANCED_CONFIG, {})
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_ENABLE_SYSTEM_NOTIFICATIONS,
+                default=advanced_config.get(CONF_ENABLE_SYSTEM_NOTIFICATIONS, DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS),
+            ): BOOLEAN_SELECTOR,
+            vol.Optional(
+                CONF_ENABLE_SUB_DEVICES,
+                default=advanced_config.get(CONF_ENABLE_SUB_DEVICES, DEFAULT_ENABLE_SUB_DEVICES),
+            ): BOOLEAN_SELECTOR,
+            vol.Optional(
+                CONF_DISABLE_CONFIG_PANEL,
+                default=advanced_config.get(CONF_DISABLE_CONFIG_PANEL, DEFAULT_DISABLE_CONFIG_PANEL),
+            ): BOOLEAN_SELECTOR,
+        }
+    )
 
 
 async def _async_validate_config_and_get_system_information(
@@ -1380,8 +1425,23 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
         self.data: ConfigType = deepcopy(dict(self.entry.data))
         self._validation_error: str | None = None
 
+    @property
+    def _is_loom(self) -> bool:
+        """Return whether this entry uses the openccu-loom backend."""
+        return self.entry.data.get(CONF_BACKEND) == BACKEND_LOOM
+
     async def async_step_advanced_settings(self, advanced_input: ConfigType | None = None) -> ConfigFlowResult:
         """Handle advanced settings (MQTT, device options, etc.)."""
+        if self._is_loom:
+            if advanced_input is not None:
+                _update_loom_advanced_settings_input(data=self.data, advanced_input=advanced_input)
+                self.hass.config_entries.async_update_entry(entry=self.entry, data=self.data)
+                return self.async_create_entry(title="", data=dict(self.entry.options))
+            return self.async_show_form(
+                step_id="advanced_settings",
+                data_schema=get_loom_advanced_settings_schema(data=self.data),
+            )
+
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
@@ -1457,6 +1517,13 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
         """Show menu for options configuration."""
+        if self._is_loom:
+            # The daemon owns interfaces and program/sysvar scanning, so those
+            # steps are omitted; the connection step targets the daemon.
+            return self.async_show_menu(
+                step_id="init",
+                menu_options=["loom_connection", "advanced_settings", "permissions"],
+            )
         return self.async_show_menu(
             step_id="init",
             menu_options=["connection", "interfaces", "programs_sysvars", "advanced_settings", "permissions"],
@@ -1561,6 +1628,31 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="interfaces_port_config",
             data_schema=get_port_config_schema(data=self.data),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_loom_connection(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Handle openccu-loom daemon connection settings (host, port, TLS, token)."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {"invalid_items": ""}
+
+        if user_input is not None:
+            self.data = _get_loom_data(self.data, user_input=user_input)
+            try:
+                await ControlConfig(hass=self.hass, entry_id=self.entry.entry_id, data=self.data).check_config()
+            except (InvalidConfig, BaseHomematicException) as exc:
+                errors["base"] = "invalid_config"
+                description_placeholders["invalid_items"] = (exc.args[0] if exc.args else "") or self.data.get(
+                    CONF_HOST, ""
+                )
+            else:
+                self.hass.config_entries.async_update_entry(entry=self.entry, data=self.data)
+                return self.async_create_entry(title="", data=dict(self.entry.options))
+
+        return self.async_show_form(
+            step_id="loom_connection",
+            data_schema=get_loom_options_schema(data=self.data),
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -1673,6 +1765,40 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
             errors=errors,
             description_placeholders=description_placeholders,
         )
+
+
+def _get_loom_data(data: ConfigType, user_input: ConfigType) -> ConfigType:
+    """Merge openccu-loom daemon connection input into the existing entry data."""
+    loom_data = dict(data)
+    loom_data[CONF_HOST] = user_input[CONF_HOST]
+    loom_data[CONF_TLS] = user_input.get(CONF_TLS, True)
+    loom_data[CONF_VERIFY_TLS] = user_input.get(CONF_VERIFY_TLS, True)
+    if (port := user_input.get(CONF_LOOM_PORT)) is not None:
+        loom_data[CONF_LOOM_PORT] = int(port)
+    elif CONF_LOOM_PORT in loom_data:
+        del loom_data[CONF_LOOM_PORT]
+    if token := user_input.get(CONF_LOOM_TOKEN):
+        loom_data[CONF_LOOM_TOKEN] = token
+    elif CONF_LOOM_TOKEN in loom_data:
+        del loom_data[CONF_LOOM_TOKEN]
+    return loom_data
+
+
+def _update_loom_advanced_settings_input(data: ConfigType, advanced_input: ConfigType) -> None:
+    """Update data with the loom backend's HA-side advanced settings only.
+
+    The daemon owns CCU-behaviour parity, so only the HA-side toggles are
+    written; existing advanced-config keys are preserved untouched.
+    """
+    if not advanced_input:
+        return
+    advanced_config = dict(data.get(CONF_ADVANCED_CONFIG, {}))
+    advanced_config[CONF_ENABLE_SYSTEM_NOTIFICATIONS] = advanced_input[CONF_ENABLE_SYSTEM_NOTIFICATIONS]
+    advanced_config[CONF_ENABLE_SUB_DEVICES] = advanced_input.get(CONF_ENABLE_SUB_DEVICES, DEFAULT_ENABLE_SUB_DEVICES)
+    advanced_config[CONF_DISABLE_CONFIG_PANEL] = advanced_input.get(
+        CONF_DISABLE_CONFIG_PANEL, DEFAULT_DISABLE_CONFIG_PANEL
+    )
+    data[CONF_ADVANCED_CONFIG] = advanced_config
 
 
 def _get_ccu_data(data: ConfigType, user_input: ConfigType) -> ConfigType:

@@ -671,6 +671,7 @@
                     "advanced_settings": "Erweiterte Einstellungen", 
                     "connection": "Verbindungseinstellungen", 
                     "interfaces": "Schnittstellenkonfiguration", 
+                    "loom_connection": "Daemon-Verbindung", 
                     "permissions": "Zeitplan-Bearbeitung", 
                     "programs_sysvars": "Programme & Systemvariablen"
                 }, 
@@ -714,6 +715,17 @@
                 }, 
                 "description": "Schnittstellen-Ports konfigurieren (TLS ist {tls_status})", 
                 "title": "Port-Konfiguration"
+            }, 
+            "loom_connection": {
+                "data": {
+                    "host": "Daemon-Hostname/IP", 
+                    "loom_port": "Daemon-Port (leer = 8443 TLS / 8080 unverschlüsselt)", 
+                    "loom_token": "API-Bearer-Token", 
+                    "tls": "TLS verwenden (HTTPS/WSS)", 
+                    "verify_tls": "TLS-Zertifikat prüfen"
+                }, 
+                "description": "Mit einem openccu-loom-Daemon verbinden. Der Daemon verwaltet CCU-Verbindung, Interfaces und Callbacks.", 
+                "title": "OpenCCU-Loom-Daemon"
             }, 
             "permissions": {
                 "data": {

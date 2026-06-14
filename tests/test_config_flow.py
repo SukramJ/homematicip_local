@@ -39,14 +39,20 @@ from custom_components.homematicip_local.config_flow import (
     _async_validate_config_and_get_system_information,
     _get_ccu_data,
     _get_instance_name,
+    _get_loom_data,
     _get_serial,
     _update_advanced_input,
     _update_interface_input,
+    _update_loom_advanced_settings_input,
     get_advanced_schema,
     get_interface_schema,
+    get_loom_advanced_settings_schema,
+    get_loom_options_schema,
 )
 from custom_components.homematicip_local.const import (
+    BACKEND_LOOM,
     CONF_ADVANCED_CONFIG as CONST_ADVANCED_CONFIG,
+    CONF_BACKEND,
     CONF_CALLBACK_HOST,
     CONF_CALLBACK_PORT_XML_RPC,
     CONF_COMMAND_THROTTLE_INTERVAL,
@@ -60,6 +66,8 @@ from custom_components.homematicip_local.const import (
     CONF_INTERFACE,
     CONF_JSON_PORT,
     CONF_LISTEN_ON_ALL_IP,
+    CONF_LOOM_PORT,
+    CONF_LOOM_TOKEN,
     CONF_MQTT_PREFIX,
     CONF_OPTIONAL_SETTINGS,
     CONF_PROGRAM_MARKERS,
@@ -3253,3 +3261,164 @@ class TestLoomBackendSelectable:
             )
         assert result["type"] == FlowResultType.MENU
         assert set(result["menu_options"]) == {"central", "loom"}
+
+
+class TestOptionsFlowLoom:
+    """Options flow for the openccu-loom backend (backend-aware steps)."""
+
+    @staticmethod
+    def _loom_entry(advanced_config: dict[str, object] | None = None) -> MockConfigEntry:
+        entry = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            entry_id=const.CONFIG_ENTRY_ID,
+            unique_id=const.CONFIG_ENTRY_UNIQUE_ID,
+            data={
+                CONF_BACKEND: BACKEND_LOOM,
+                CONF_INSTANCE_NAME: const.INSTANCE_NAME,
+                CONF_HOST: const.HOST,
+                CONF_LOOM_PORT: 8443,
+                CONF_TLS: True,
+                CONF_VERIFY_TLS: True,
+                CONF_LOOM_TOKEN: "old-token",
+                CONST_ADVANCED_CONFIG: advanced_config or {},
+            },
+        )
+        entry.runtime_data = "123"
+        return entry
+
+    async def test_loom_advanced_settings_reduced(self, hass: HomeAssistant) -> None:
+        """The loom advanced step exposes only the HA-side toggles and persists them."""
+        entry = self._loom_entry()
+        entry.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        form = await hass.config_entries.options.async_configure(
+            result["flow_id"], {"next_step_id": "advanced_settings"}
+        )
+        assert form["type"] == FlowResultType.FORM
+        assert form["step_id"] == "advanced_settings"
+        keys = {str(k.schema) for k in form["data_schema"].schema}
+        assert keys == {CONF_ENABLE_SYSTEM_NOTIFICATIONS, CONF_ENABLE_SUB_DEVICES, CONF_DISABLE_CONFIG_PANEL}
+
+        done = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_ENABLE_SYSTEM_NOTIFICATIONS: False,
+                CONF_ENABLE_SUB_DEVICES: True,
+                CONF_DISABLE_CONFIG_PANEL: True,
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert done["type"] == FlowResultType.CREATE_ENTRY
+        advanced = entry.data[CONST_ADVANCED_CONFIG]
+        assert advanced[CONF_ENABLE_SYSTEM_NOTIFICATIONS] is False
+        assert advanced[CONF_ENABLE_SUB_DEVICES] is True
+        assert advanced[CONF_DISABLE_CONFIG_PANEL] is True
+
+    async def test_loom_connection_invalid(self, hass: HomeAssistant) -> None:
+        """An invalid loom connection surfaces an error and re-shows the form."""
+        entry = self._loom_entry()
+        entry.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        with patch("custom_components.homematicip_local.config_flow.ControlConfig") as control_config:
+            control_config.return_value.check_config = AsyncMock(side_effect=InvalidConfig("bad token"))
+            await hass.config_entries.options.async_configure(result["flow_id"], {"next_step_id": "loom_connection"})
+            failed = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {CONF_HOST: const.HOST, CONF_TLS: True, CONF_VERIFY_TLS: True},
+            )
+            await hass.async_block_till_done()
+
+        assert failed["type"] == FlowResultType.FORM
+        assert failed["errors"] == {"base": "invalid_config"}
+
+    async def test_loom_connection_success(self, hass: HomeAssistant) -> None:
+        """A valid loom connection update is persisted to the entry data."""
+        entry = self._loom_entry()
+        entry.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        with patch("custom_components.homematicip_local.config_flow.ControlConfig") as control_config:
+            control_config.return_value.check_config = AsyncMock(return_value=None)
+            menu = await hass.config_entries.options.async_configure(
+                result["flow_id"], {"next_step_id": "loom_connection"}
+            )
+            assert menu["type"] == FlowResultType.FORM
+            assert menu["step_id"] == "loom_connection"
+
+            done = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                {
+                    CONF_HOST: "daemon.local",
+                    CONF_LOOM_PORT: 9999,
+                    CONF_TLS: False,
+                    CONF_VERIFY_TLS: False,
+                    CONF_LOOM_TOKEN: "new-token",
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert done["type"] == FlowResultType.CREATE_ENTRY
+        assert entry.data[CONF_HOST] == "daemon.local"
+        assert entry.data[CONF_LOOM_PORT] == 9999
+        assert entry.data[CONF_TLS] is False
+        assert entry.data[CONF_LOOM_TOKEN] == "new-token"
+
+    async def test_loom_menu_omits_ccu_only_steps(self, hass: HomeAssistant) -> None:
+        """The loom menu drops interfaces and programs_sysvars (daemon-owned)."""
+        entry = self._loom_entry()
+        entry.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert result["type"] == FlowResultType.MENU
+        assert result["menu_options"] == ["loom_connection", "advanced_settings", "permissions"]
+
+
+class TestLoomFlowHelpers:
+    """Unit tests for the loom flow schema/data helpers."""
+
+    def test_get_loom_advanced_settings_schema_fields(self) -> None:
+        schema = get_loom_advanced_settings_schema(data={})
+        keys = {str(k.schema) for k in schema.schema}
+        assert keys == {CONF_ENABLE_SYSTEM_NOTIFICATIONS, CONF_ENABLE_SUB_DEVICES, CONF_DISABLE_CONFIG_PANEL}
+
+    def test_get_loom_data_sets_and_clears(self) -> None:
+        base = {CONF_LOOM_PORT: 1, CONF_LOOM_TOKEN: "x"}
+        # blank port + token are removed; tls/verify default to True
+        cleared = _get_loom_data(base, user_input={CONF_HOST: "h"})
+        assert cleared[CONF_HOST] == "h"
+        assert CONF_LOOM_PORT not in cleared
+        assert CONF_LOOM_TOKEN not in cleared
+        assert cleared[CONF_TLS] is True
+        # explicit port + token are set
+        filled = _get_loom_data({}, user_input={CONF_HOST: "h", CONF_LOOM_PORT: 7, CONF_LOOM_TOKEN: "t"})
+        assert filled[CONF_LOOM_PORT] == 7
+        assert filled[CONF_LOOM_TOKEN] == "t"
+        # absent in both input and existing data → keys simply stay absent
+        absent = _get_loom_data({}, user_input={CONF_HOST: "h"})
+        assert CONF_LOOM_PORT not in absent
+        assert CONF_LOOM_TOKEN not in absent
+
+    def test_get_loom_options_schema_fields(self) -> None:
+        schema = get_loom_options_schema(data={})
+        keys = {str(k.schema) for k in schema.schema}
+        assert keys == {CONF_HOST, CONF_LOOM_PORT, CONF_TLS, CONF_VERIFY_TLS, CONF_LOOM_TOKEN}
+
+    def test_update_loom_advanced_settings_input(self) -> None:
+        data: dict[str, object] = {CONST_ADVANCED_CONFIG: {"keep_me": 1}}
+        _update_loom_advanced_settings_input(
+            data,
+            advanced_input={
+                CONF_ENABLE_SYSTEM_NOTIFICATIONS: True,
+                CONF_ENABLE_SUB_DEVICES: True,
+                CONF_DISABLE_CONFIG_PANEL: False,
+            },
+        )
+        advanced = data[CONST_ADVANCED_CONFIG]
+        assert advanced["keep_me"] == 1  # existing keys preserved
+        assert advanced[CONF_ENABLE_SYSTEM_NOTIFICATIONS] is True
+        assert advanced[CONF_ENABLE_SUB_DEVICES] is True
+        # empty input is a no-op
+        _update_loom_advanced_settings_input(data, advanced_input={})
+        assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_SYSTEM_NOTIFICATIONS] is True
