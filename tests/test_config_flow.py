@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ipaddress import ip_address
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -36,11 +37,13 @@ from custom_components.homematicip_local.config_flow import (
     CONF_VIRTUAL_DEVICES_PORT,
     IF_VIRTUAL_DEVICES_PATH,
     InvalidConfig,
+    _async_loom_list_ccus,
     _async_validate_config_and_get_system_information,
     _get_ccu_data,
     _get_instance_name,
     _get_loom_data,
     _get_serial,
+    _import_loom_list_ccus,
     _update_advanced_input,
     _update_interface_input,
     _update_loom_advanced_settings_input,
@@ -87,6 +90,7 @@ from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests import const
 
@@ -3422,3 +3426,166 @@ class TestLoomFlowHelpers:
         # empty input is a no-op
         _update_loom_advanced_settings_input(data, advanced_input={})
         assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_SYSTEM_NOTIFICATIONS] is True
+
+
+def _loom_zeroconf_info(
+    *,
+    properties: dict[str, str] | None = None,
+    port: int = 8080,
+    name: str = "Loom._openccu-loom._tcp.local.",
+) -> ZeroconfServiceInfo:
+    return ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
+        port=port,
+        hostname="daemon.local.",
+        type="_openccu-loom._tcp.local.",
+        name=name,
+        properties=properties if properties is not None else {"instance": "Loom", "path": "/api/v1", "tls": "0"},
+    )
+
+
+_LOOM_ENABLED = "custom_components.homematicip_local.config_flow.LOOM_BACKEND_SELECTABLE"
+_LOOM_LIST = "custom_components.homematicip_local.config_flow._async_loom_list_ccus"
+
+
+class TestLoomZeroconfDiscovery:
+    """mDNS (zeroconf) discovery of an openccu-loom daemon."""
+
+    async def test_cannot_connect(self, hass: HomeAssistant) -> None:
+        with (
+            patch(_LOOM_ENABLED, True),
+            patch(_LOOM_LIST, side_effect=NoConnectionException("unreachable")),
+        ):
+            init = await self._init_zeroconf(hass, _loom_zeroconf_info())
+            result = await hass.config_entries.flow.async_configure(init["flow_id"], {CONF_LOOM_TOKEN: "x"})
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+    async def test_disabled_aborts(self, hass: HomeAssistant) -> None:
+        with patch(_LOOM_ENABLED, False):
+            result = await self._init_zeroconf(hass, _loom_zeroconf_info())
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "loom_not_enabled"
+
+    async def test_empty_token_omits_token_in_entry(self, hass: HomeAssistant) -> None:
+        ccus = [{"name": "Home", "serial": "ABC123", "host": "ccu.local", "model": "CCU3", "available": True}]
+        with (
+            patch(_LOOM_ENABLED, True),
+            patch(_LOOM_LIST, return_value=ccus),
+            patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
+        ):
+            init = await self._init_zeroconf(hass, _loom_zeroconf_info())
+            done = await hass.config_entries.flow.async_configure(init["flow_id"], {CONF_LOOM_TOKEN: ""})
+            await hass.async_block_till_done()
+        assert done["type"] == FlowResultType.CREATE_ENTRY
+        assert CONF_LOOM_TOKEN not in done["result"].data
+
+    async def test_invalid_auth(self, hass: HomeAssistant) -> None:
+        with (
+            patch(_LOOM_ENABLED, True),
+            patch(_LOOM_LIST, side_effect=AuthFailure("bad token")),
+        ):
+            init = await self._init_zeroconf(hass, _loom_zeroconf_info())
+            result = await hass.config_entries.flow.async_configure(init["flow_id"], {CONF_LOOM_TOKEN: "x"})
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {"base": "invalid_auth"}
+
+    async def test_missing_port_aborts(self, hass: HomeAssistant) -> None:
+        with patch(_LOOM_ENABLED, True):
+            result = await self._init_zeroconf(hass, _loom_zeroconf_info(port=0))
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "invalid_discovery_info"
+
+    async def test_multi_ccu_selection(self, hass: HomeAssistant) -> None:
+        ccus = [
+            {"name": "Home", "serial": "AAA", "host": "h1", "model": "CCU3", "available": True},
+            {"name": "Office", "serial": "BBB", "host": "h2", "model": "CCU3", "available": True},
+        ]
+        with (
+            patch(_LOOM_ENABLED, True),
+            patch(_LOOM_LIST, return_value=ccus),
+            patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
+        ):
+            init = await self._init_zeroconf(hass, _loom_zeroconf_info())
+            form = await hass.config_entries.flow.async_configure(init["flow_id"], {CONF_LOOM_TOKEN: "tok"})
+            assert form["type"] == FlowResultType.FORM
+            assert form["step_id"] == "loom_select_ccu"
+            done = await hass.config_entries.flow.async_configure(form["flow_id"], {"serial": "BBB"})
+            await hass.async_block_till_done()
+        assert done["type"] == FlowResultType.CREATE_ENTRY
+        entry = done["result"]
+        assert entry.unique_id == "BBB"
+        assert entry.data[CONF_INSTANCE_NAME] == "Office"
+
+    async def test_no_ccus(self, hass: HomeAssistant) -> None:
+        with (
+            patch(_LOOM_ENABLED, True),
+            patch(_LOOM_LIST, return_value=[]),
+        ):
+            init = await self._init_zeroconf(hass, _loom_zeroconf_info())
+            result = await hass.config_entries.flow.async_configure(init["flow_id"], {CONF_LOOM_TOKEN: "x"})
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {"base": "no_ccus"}
+
+    async def test_shows_token_form(self, hass: HomeAssistant) -> None:
+        with patch(_LOOM_ENABLED, True):
+            result = await self._init_zeroconf(hass, _loom_zeroconf_info())
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "loom_token"
+
+    async def test_single_ccu_creates_entry(self, hass: HomeAssistant) -> None:
+        ccus = [{"name": "Home", "serial": "ABC123", "host": "ccu.local", "model": "CCU3", "available": True}]
+        with (
+            patch(_LOOM_ENABLED, True),
+            patch(_LOOM_LIST, return_value=ccus),
+            patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
+        ):
+            init = await self._init_zeroconf(hass, _loom_zeroconf_info())
+            done = await hass.config_entries.flow.async_configure(init["flow_id"], {CONF_LOOM_TOKEN: "tok"})
+            await hass.async_block_till_done()
+        assert done["type"] == FlowResultType.CREATE_ENTRY
+        assert done["title"] == "Home"
+        entry = done["result"]
+        assert entry.unique_id == "ABC123"
+        assert entry.data[CONF_BACKEND] == BACKEND_LOOM
+        assert entry.data[CONF_INSTANCE_NAME] == "Home"
+        assert entry.data[CONF_HOST] == "192.168.1.50"
+        assert entry.data[CONF_LOOM_PORT] == 8080
+        assert entry.data[CONF_LOOM_TOKEN] == "tok"
+
+    async def _init_zeroconf(self, hass: HomeAssistant, info: ZeroconfServiceInfo) -> dict:
+        return await hass.config_entries.flow.async_init(
+            HMIP_DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=info
+        )
+
+
+class TestAsyncLoomListCcus:
+    """The `_async_loom_list_ccus` helper maps loom-client errors."""
+
+    def test_import_helper_returns_callable(self) -> None:
+        assert callable(_import_loom_list_ccus())
+
+    async def test_maps_auth_error(self, hass: HomeAssistant) -> None:
+        from openccu_loom_client import LoomAuthError
+
+        fake = AsyncMock(side_effect=LoomAuthError(status=401))
+        with (
+            patch(_LOOM_LIST.replace("_async_loom_list_ccus", "_import_loom_list_ccus"), return_value=fake),
+            pytest.raises(AuthFailure),
+        ):
+            await _async_loom_list_ccus(hass, host="h", port=1, tls=False, token="t", base_path="/api/v1")
+
+    async def test_maps_other_error(self, hass: HomeAssistant) -> None:
+        fake = AsyncMock(side_effect=RuntimeError("boom"))
+        with (
+            patch(_LOOM_LIST.replace("_async_loom_list_ccus", "_import_loom_list_ccus"), return_value=fake),
+            pytest.raises(NoConnectionException),
+        ):
+            await _async_loom_list_ccus(hass, host="h", port=1, tls=False, token="t", base_path="/api/v1")
+
+    async def test_returns_result(self, hass: HomeAssistant) -> None:
+        fake = AsyncMock(return_value=[{"serial": "X", "name": "n", "host": "h", "model": "m", "available": True}])
+        with patch(_LOOM_LIST.replace("_async_loom_list_ccus", "_import_loom_list_ccus"), return_value=fake):
+            result = await _async_loom_list_ccus(hass, host="h", port=1, tls=False, token="t", base_path="/api/v1")
+        assert result == [{"serial": "X", "name": "n", "host": "h", "model": "m", "available": True}]

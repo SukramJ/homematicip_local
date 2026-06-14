@@ -5,7 +5,9 @@
       "reauth_failed": "Could not find the configuration entry to reauthenticate",
       "reauth_successful": "Reauthentication successful. Connection restored.",
       "reconfigure_failed": "Could not find the configuration entry to reconfigure",
-      "reconfigure_successful": "Connection settings updated successfully"
+      "reconfigure_successful": "Connection settings updated successfully",
+      "loom_not_enabled": "The openccu-loom backend is not enabled.",
+      "invalid_discovery_info": "Incomplete discovery information."
     },
     "error": {
       "cannot_connect": "Cannot connect to CCU [{invalid_items}]. Please verify: 1) The hostname/IP address is correct, 2) The CCU is powered on and reachable, 3) No firewall is blocking the connection.",
@@ -13,7 +15,8 @@
       "interface_not_available": "The following interfaces are not available on the CCU: [{invalid_items}]. These interfaces were not detected during backend discovery. Please disable them or verify they are installed and running on your CCU.",
       "invalid_auth": "Authentication failed for CCU [{invalid_items}]. Please verify: 1) Username and password are correct (case-sensitive), 2) The user has admin privileges on the CCU, 3) Password only contains allowed characters: A-Z, a-z, 0-9 and .!$():;#-",
       "invalid_config": "Invalid configuration: [{invalid_items}]. Please check the entered values and try again.",
-      "unknown": "An unexpected error occurred. Please check the Home Assistant logs for more details."
+      "unknown": "An unexpected error occurred. Please check the Home Assistant logs for more details.",
+      "no_ccus": "The daemon reports no CCUs."
     },
     "flow_title": "{name}/{host}",
     "progress": {
@@ -214,6 +217,20 @@
           "loom": "Connect to an openccu-loom daemon"
         },
         "title": "Select backend"
+      },
+      "loom_token": {
+        "title": "OpenCCU-Loom daemon token",
+        "description": "Enter the API bearer token for the discovered daemon '{name}' at {host}.",
+        "data": {
+          "loom_token": "API bearer token"
+        }
+      },
+      "loom_select_ccu": {
+        "title": "Select CCU",
+        "description": "Choose which CCU served by the daemon to add.",
+        "data": {
+          "serial": "CCU"
+        }
       }
     }
   },

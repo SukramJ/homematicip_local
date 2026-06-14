@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Eintrag mit der Seriennummer {serial} ist bereits konfiguriert", 
+            "invalid_discovery_info": "Unvollständige Discovery-Informationen.", 
+            "loom_not_enabled": "Das openccu-loom-Backend ist nicht aktiviert.", 
             "reauth_failed": "Der Konfigurationseintrag zur erneuten Authentifizierung konnte nicht gefunden werden", 
             "reauth_successful": "Erneute Authentifizierung erfolgreich. Verbindung wiederhergestellt.", 
             "reconfigure_failed": "Der zu ändernde Konfigurationseintrag konnte nicht gefunden werden", 
@@ -13,6 +15,7 @@
             "interface_not_available": "Die folgenden Schnittstellen sind auf der CCU nicht verfügbar: [{invalid_items}]. Diese Schnittstellen wurden bei der Backend-Erkennung nicht gefunden. Bitte deaktiviere sie oder überprüfe, ob sie auf deiner CCU installiert und gestartet sind.", 
             "invalid_auth": "Authentifizierung bei CCU [{invalid_items}] fehlgeschlagen. Bitte überprüfe: 1) Benutzername und Passwort sind korrekt (Groß-/Kleinschreibung beachten), 2) Der Benutzer hat Admin-Rechte auf der CCU, 3) Das Passwort enthält nur erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
             "invalid_config": "Ungültige Konfiguration: [{invalid_items}]. Bitte überprüfe die eingegebenen Werte und versuche es erneut.", 
+            "no_ccus": "Der Daemon meldet keine CCUs.", 
             "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Home Assistant Protokolle für weitere Details."
         }, 
         "flow_title": "{name}/{host}", 
@@ -124,6 +127,20 @@
                 }, 
                 "description": "Mit einem openccu-loom-Daemon verbinden. Der Daemon verwaltet CCU-Verbindung, Interfaces und Callbacks.", 
                 "title": "OpenCCU-Loom-Daemon"
+            }, 
+            "loom_select_ccu": {
+                "data": {
+                    "serial": "CCU"
+                }, 
+                "description": "Wähle, welche vom Daemon bediente CCU hinzugefügt werden soll.", 
+                "title": "CCU auswählen"
+            }, 
+            "loom_token": {
+                "data": {
+                    "loom_token": "API-Bearer-Token"
+                }, 
+                "description": "Gib den API-Bearer-Token für den gefundenen Daemon „{name}\" unter {host} ein.", 
+                "title": "OpenCCU-Loom-Daemon-Token"
             }, 
             "port_config": {
                 "data": {

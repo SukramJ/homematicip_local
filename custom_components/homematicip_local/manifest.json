@@ -12,7 +12,7 @@
   "loggers": ["aiohomematic", "aiohomematic_config", "openccu_loom_client"],
   "requirements": [
     "openccu-data==2026.5.0",
-    "openccu-loom-client==2026.6.15",
+    "openccu-loom-client==2026.6.16",
     "aiohomematic-config==2026.5.0",
     "aiohomematic==2026.6.2"
   ],
@@ -23,5 +23,5 @@
     }
   ],
   "version": "2.8.0",
-  "zeroconf": []
+  "zeroconf": ["_openccu-loom._tcp.local."]
 }

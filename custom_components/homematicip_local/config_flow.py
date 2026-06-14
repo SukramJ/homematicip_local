@@ -43,6 +43,7 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -51,6 +52,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 from homeassistant.helpers.service_info import ssdp
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -147,6 +149,12 @@ IF_VIRTUAL_DEVICES_PATH: Final = "/groups"
 TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 BOOLEAN_SELECTOR = BooleanSelector()
+
+# openccu-loom mDNS discovery
+ZEROCONF_TYPE = "_openccu-loom._tcp.local."
+DEFAULT_LOOM_BASE_PATH = "/api/v1"
+CONF_LOOM_BASE_PATH = "loom_base_path"  # internal discovery-state key (not persisted)
+CONF_LOOM_CCU = "serial"  # CCU-selection form field
 PORT_SELECTOR = vol.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535)),
     vol.Coerce(int),
@@ -231,6 +239,53 @@ def get_loom_options_schema(data: ConfigType) -> Schema:
             vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, "")): PASSWORD_SELECTOR,
         }
     )
+
+
+def get_loom_token_schema(data: ConfigType) -> Schema:
+    """Return the token-only schema for a discovered openccu-loom daemon.
+
+    Host / port / TLS come from the mDNS advertisement, so the user only
+    supplies the bearer token.
+    """
+    return vol.Schema(
+        {
+            vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, "")): PASSWORD_SELECTOR,
+        }
+    )
+
+
+def _import_loom_list_ccus() -> Any:
+    """Import the loom CCU-listing helper (blocking pydantic submodule import)."""
+    from openccu_loom_client.compat.aiohomematic.central import list_ccus  # noqa: PLC0415
+
+    return list_ccus
+
+
+async def _async_loom_list_ccus(
+    hass: HomeAssistant,
+    *,
+    host: str,
+    port: int | None,
+    tls: bool,
+    token: str | None,
+    base_path: str | None,
+) -> list[dict[str, Any]]:
+    """Return a daemon's CCUs for the discovery flow's CCU-selection step.
+
+    Surfaces the loom client's connection failures as the aiohomematic
+    exceptions the config flow already maps (``AuthFailure`` → invalid_auth,
+    ``NoConnectionException`` → cannot_connect).
+    """
+    list_ccus = await hass.async_add_import_executor_job(_import_loom_list_ccus)
+    try:
+        result: list[dict[str, Any]] = await list_ccus(host=host, port=port, tls=tls, token=token, base_path=base_path)
+    except Exception as exc:  # normalise loom-client errors to aiohomematic ones
+        from openccu_loom_client import LoomAuthError  # noqa: PLC0415
+
+        if isinstance(exc, LoomAuthError):
+            raise AuthFailure(str(exc)) from exc
+        raise NoConnectionException(str(exc)) from exc
+    return result
 
 
 def get_reconfigure_schema(data: ConfigType) -> Schema:
@@ -695,6 +750,10 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         """Init the ConfigFlow."""
         self.data: ConfigType = {}
         self.serial: str | None = None
+        # openccu-loom mDNS discovery state (carried across token/CCU steps).
+        self._loom_discovery: dict[str, Any] = {}
+        self._loom_token: str | None = None
+        self._loom_ccus: list[dict[str, Any]] = []
         self._detection_result: BackendDetectionResult | None = None
         self._detection_task: asyncio.Task[None] | None = None
         self._detection_start_time: float | None = None
@@ -983,6 +1042,66 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="loom",
             data_schema=get_loom_schema(data=self.data),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_loom_select_ccu(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Pick which CCU served by the discovered daemon to add."""
+        ccus = self._loom_ccus
+        if len(ccus) == 1:
+            return await self._async_create_loom_entry(ccus[0])
+        if user_input is not None:
+            # The SelectSelector restricts input to a valid serial.
+            chosen = next(c for c in ccus if c["serial"] == user_input[CONF_LOOM_CCU])
+            return await self._async_create_loom_entry(chosen)
+        options = [SelectOptionDict(value=c["serial"], label=f"{c['name']} ({c['serial']})") for c in ccus]
+        return self.async_show_form(
+            step_id="loom_select_ccu",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_LOOM_CCU): SelectSelector(
+                        SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
+                    )
+                }
+            ),
+        )
+
+    async def async_step_loom_token(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Collect the bearer token for a discovered daemon, then list its CCUs."""
+        errors: dict[str, str] = {}
+        disc = self._loom_discovery
+        description_placeholders: dict[str, str] = {
+            CONF_NAME: disc.get(CONF_INSTANCE_NAME, ""),
+            CONF_HOST: disc.get(CONF_HOST, ""),
+            "invalid_items": "",
+        }
+        if user_input is not None:
+            token = user_input.get(CONF_LOOM_TOKEN) or ""
+            try:
+                ccus = await _async_loom_list_ccus(
+                    self.hass,
+                    host=disc[CONF_HOST],
+                    port=disc.get(CONF_LOOM_PORT),
+                    tls=disc[CONF_TLS],
+                    token=token,
+                    base_path=disc.get(CONF_LOOM_BASE_PATH),
+                )
+            except AuthFailure:
+                errors["base"] = "invalid_auth"
+            except BaseHomematicException as exc:
+                errors["base"] = "cannot_connect"
+                description_placeholders["invalid_items"] = (exc.args[0] if exc.args else "") or disc[CONF_HOST]
+            else:
+                if not ccus:
+                    errors["base"] = "no_ccus"
+                else:
+                    self._loom_token = token
+                    self._loom_ccus = ccus
+                    return await self.async_step_loom_select_ccu()
+        return self.async_show_form(
+            step_id="loom_token",
+            data_schema=get_loom_token_schema(data=disc),
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -1298,6 +1417,33 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_central(user_input=user_input)
         return self.async_show_menu(step_id="user", menu_options=["central", "loom"])
 
+    async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> ConfigFlowResult:
+        """Handle an openccu-loom daemon discovered via mDNS."""
+        if not LOOM_BACKEND_SELECTABLE:
+            return self.async_abort(reason="loom_not_enabled")
+        host = discovery_info.host
+        port = discovery_info.port
+        if not host or not port:
+            return self.async_abort(reason="invalid_discovery_info")
+        props = discovery_info.properties
+        instance = props.get("instance") or discovery_info.name.removesuffix(f".{ZEROCONF_TYPE}")
+        base_path = props.get("path") or DEFAULT_LOOM_BASE_PATH
+        # The daemon listener is plain (TLS is terminated upstream), so tls is
+        # advertised as 0; honour the TXT but it is effectively always plain.
+        tls = str(props.get("tls", "0")).lower() not in ("0", "", "false")
+        # Dedup the discovery card per daemon; per-CCU dedup (the entry's
+        # serial) happens in the CCU-selection step.
+        await self.async_set_unique_id(f"loom-daemon-{host}-{port}")
+        self._loom_discovery = {
+            CONF_HOST: host,
+            CONF_LOOM_PORT: port,
+            CONF_TLS: tls,
+            CONF_LOOM_BASE_PATH: base_path,
+            CONF_INSTANCE_NAME: instance,
+        }
+        self.context["title_placeholders"] = {CONF_NAME: instance, CONF_HOST: host}
+        return await self.async_step_loom_token()
+
     def _apply_detected_interfaces(self) -> None:
         """Apply detected interfaces to config data."""
         if not self._detection_result:
@@ -1316,6 +1462,25 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 interfaces[interface] = interface_config
 
         self.data[CONF_INTERFACE] = interfaces
+
+    async def _async_create_loom_entry(self, ccu: dict[str, Any]) -> ConfigFlowResult:
+        """Create the config entry for the chosen CCU on a discovered daemon."""
+        disc = self._loom_discovery
+        await self.async_set_unique_id(ccu["serial"])
+        self._abort_if_unique_id_configured()
+        data: ConfigType = {
+            CONF_BACKEND: BACKEND_LOOM,
+            CONF_INSTANCE_NAME: ccu["name"],
+            CONF_HOST: disc[CONF_HOST],
+            CONF_TLS: disc[CONF_TLS],
+            CONF_VERIFY_TLS: True,
+            # mDNS always advertises a port (validated in async_step_zeroconf).
+            CONF_LOOM_PORT: int(disc[CONF_LOOM_PORT]),
+            CONF_ADVANCED_CONFIG: {},
+        }
+        if self._loom_token:
+            data[CONF_LOOM_TOKEN] = self._loom_token
+        return self.async_create_entry(title=ccu["name"], data=data)
 
     async def _async_run_detection(self) -> None:
         """Run backend detection as background task."""
