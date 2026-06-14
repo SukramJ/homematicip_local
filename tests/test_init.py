@@ -11,7 +11,11 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from aiohomematic.const import CentralState, DeviceTriggerEventType
 from aiohomematic.exceptions import AuthFailure
 import custom_components.homematicip_local
-from custom_components.homematicip_local import _loom_migrated_unique_id
+from custom_components.homematicip_local import (
+    _aiohomematic_restored_unique_id,
+    _async_restore_aiohomematic_unique_ids,
+    _loom_migrated_unique_id,
+)
 from custom_components.homematicip_local.config_flow import DomainConfigFlow
 from custom_components.homematicip_local.const import (
     BACKEND_CCU,
@@ -584,3 +588,118 @@ class TestLoomUniqueIdMigration:
             _loom_migrated_unique_id(old, entry_suffix=self._ENTRY_SUFFIX, serial_suffix=self._SERIAL_SUFFIX)
             == expected
         )
+
+
+class TestAioHomematicUniqueIdRestore:
+    """``_aiohomematic_restored_unique_id`` is the inverse of the loom migration."""
+
+    _ENTRY_SUFFIX = "a1b2c3d4e5"  # legacy entry_id[-10:] hub prefix
+    _SERIAL_SUFFIX = "11a0001234"  # serial[-10:] in the loom scheme
+    _D = HMIP_DOMAIN  # "homematicip_local"
+
+    @pytest.mark.parametrize(
+        "unique_id",
+        [
+            f"{_D}_vcu1234567_1_state",  # already aiohomematic-scheme → idempotent
+            f"{_D}_a1b2c3d4e5_sysvar_aussen-temperatur",  # legacy hub key, no loom_ namespace
+            f"{_D}_home_create_backup",  # synthetic backup button (never loom-keyed)
+            f"{_D}_event_group_keypress_vcu1234567_1",  # event group (never loom-keyed)
+            "other_integration_xyz",  # not ours
+        ],
+    )
+    def test_left_untouched(self, unique_id: str) -> None:
+        assert (
+            _aiohomematic_restored_unique_id(
+                unique_id, entry_suffix=self._ENTRY_SUFFIX, serial_suffix=self._SERIAL_SUFFIX
+            )
+            is None
+        )
+
+    @pytest.mark.parametrize(
+        ("old", "expected"),
+        [
+            # Device data point — only the loom_ namespace is stripped.
+            (f"{_D}_loom_vcu1234567_1_state", f"{_D}_vcu1234567_1_state"),
+            # Custom DP / channel — no parameter, still no prefix.
+            (f"{_D}_loom_vcu1234567_1", f"{_D}_vcu1234567_1"),
+            # Hub key — serial suffix swapped back for the entry_id prefix.
+            (
+                f"{_D}_loom_11a0001234_sysvar_aussen-temperatur",
+                f"{_D}_a1b2c3d4e5_sysvar_aussen-temperatur",
+            ),
+            # Internal address — same prefix swap.
+            (f"{_D}_loom_11a0001234_int0001234_1_level", f"{_D}_a1b2c3d4e5_int0001234_1_level"),
+        ],
+    )
+    def test_rewrites(self, old: str, expected: str) -> None:
+        assert (
+            _aiohomematic_restored_unique_id(old, entry_suffix=self._ENTRY_SUFFIX, serial_suffix=self._SERIAL_SUFFIX)
+            == expected
+        )
+
+    @pytest.mark.parametrize(
+        "original",
+        [
+            f"{_D}_vcu1234567_1_state",
+            f"{_D}_vcu1234567_1",
+            f"{_D}_a1b2c3d4e5_sysvar_aussen-temperatur",
+            f"{_D}_a1b2c3d4e5_int0001234_1_level",
+            f"{_D}_a1b2c3d4e5_bidcos_rf_1_press_short",
+        ],
+    )
+    def test_round_trip(self, original: str) -> None:
+        """Round-trip aiohomematic → loom → aiohomematic restores the original key."""
+        loom = _loom_migrated_unique_id(original, entry_suffix=self._ENTRY_SUFFIX, serial_suffix=self._SERIAL_SUFFIX)
+        assert loom is not None
+        restored = _aiohomematic_restored_unique_id(
+            loom, entry_suffix=self._ENTRY_SUFFIX, serial_suffix=self._SERIAL_SUFFIX
+        )
+        assert restored == original
+
+
+async def test_async_restore_aiohomematic_unique_ids_rewrites_registry(hass: HomeAssistant) -> None:
+    """The registry rewrite restores loom keys back to the aiohomematic scheme."""
+    serial = "3014F711A0001234"
+    entry = MockConfigEntry(domain=HMIP_DOMAIN, unique_id=serial)
+    entry.add_to_hass(hass)
+    serial_suffix = serial[-10:].lower()
+    entry_suffix = entry.entry_id[-10:]
+
+    entity_registry = er.async_get(hass)
+    device = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_loom_vcu1234567_1_state",
+        config_entry=entry,
+    )
+    hub = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_loom_{serial_suffix}_sysvar_aussen-temperatur",
+        config_entry=entry,
+    )
+
+    await _async_restore_aiohomematic_unique_ids(hass, entry)
+
+    assert entity_registry.async_get(device.entity_id).unique_id == f"{HMIP_DOMAIN}_vcu1234567_1_state"
+    assert (
+        entity_registry.async_get(hub.entity_id).unique_id == f"{HMIP_DOMAIN}_{entry_suffix}_sysvar_aussen-temperatur"
+    )
+
+
+async def test_async_restore_aiohomematic_unique_ids_skips_without_serial(hass: HomeAssistant) -> None:
+    """Without a serial the restore is a safe no-op (entry has no CCU serial)."""
+    entry = MockConfigEntry(domain=HMIP_DOMAIN, unique_id=None)
+    entry.add_to_hass(hass)
+
+    entity_registry = er.async_get(hass)
+    kept = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_loom_vcu1234567_1_state",
+        config_entry=entry,
+    )
+
+    await _async_restore_aiohomematic_unique_ids(hass, entry)
+
+    assert entity_registry.async_get(kept.entity_id).unique_id == f"{HMIP_DOMAIN}_loom_vcu1234567_1_state"

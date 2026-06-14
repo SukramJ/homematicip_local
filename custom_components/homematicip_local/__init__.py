@@ -155,6 +155,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
     # (re)created, so existing entities keep their identity on cutover.
     if is_loom_backend:
         await _async_migrate_loom_unique_ids(hass, entry)
+    else:
+        await _async_restore_aiohomematic_unique_ids(hass, entry)
 
     hass.data.setdefault(HM_KEY, HomematicData())
     if (default_callback_port_xml_rpc := hass.data[HM_KEY].default_callback_port_xml_rpc) is None:
@@ -368,6 +370,74 @@ async def _async_migrate_loom_unique_ids(hass: HomeAssistant, entry: HomematicCo
             return None
         _LOGGER.debug(
             "Migrating unique_id to loom scheme: %s -> %s",
+            entity_entry.unique_id,
+            new_unique_id,
+        )
+        return {"new_unique_id": new_unique_id}
+
+    await async_migrate_entries(hass, entry.entry_id, _migrator)
+
+
+def _aiohomematic_restored_unique_id(unique_id: str, *, entry_suffix: str, serial_suffix: str) -> str | None:
+    """Map a loom/serial HA ``unique_id`` back to the legacy aiohomematic scheme.
+
+    The exact inverse of :func:`_loom_migrated_unique_id`: it strips the
+    ``loom_`` namespace and restores the central-id slot of hub / internal /
+    virtual-remote keys from the CCU serial suffix back to aiohomematic's
+    ``entry_id[-10:]`` prefix. Device / channel / custom-DP keys carried no
+    central prefix, so they only lose the ``loom_`` namespace.
+
+    Returns ``None`` when no rewrite applies: not one of our entities, or
+    already in the aiohomematic scheme (no ``loom_`` namespace).
+    """
+    prefix = f"{DOMAIN}_"
+    if not unique_id.startswith(prefix):
+        return None
+    key = unique_id[len(prefix) :]
+    if not key.startswith("loom_"):  # idempotent: already aiohomematic-scheme
+        return None
+    body = key[len("loom_") :]
+    # Hub / internal / virtual-remote keys carry the serial suffix in the
+    # central-id slot; swap it back for the entry_id suffix. Everything else
+    # (devices, channels, custom DPs) carried no central prefix.
+    serial_prefix = f"{serial_suffix}_"
+    if body.startswith(serial_prefix):
+        return f"{prefix}{entry_suffix}_{body[len(serial_prefix) :]}"
+    return f"{prefix}{body}"
+
+
+async def _async_restore_aiohomematic_unique_ids(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:
+    """Rewrite loom/serial entity unique_ids back to the aiohomematic scheme.
+
+    Runs once, early in setup, for the aiohomematic backend. A config entry
+    switched back from the openccu-loom backend still holds canonical
+    ``loom_`` keys in the entity registry; aiohomematic produces legacy keys,
+    so without this rewrite every entity would orphan (losing history, area
+    and customisations). The inverse of :func:`_async_migrate_loom_unique_ids`,
+    it is purely string-level, idempotent, and scoped to this entry, so it is
+    safe to run on every setup.
+    """
+    serial = entry.unique_id  # the config entry's HA unique_id is the CCU serial
+    if not serial:
+        _LOGGER.warning(
+            "Skipping aiohomematic unique_id restore for %s: config entry has no serial",
+            entry.data.get(CONF_INSTANCE_NAME),
+        )
+        return
+    entry_suffix = entry.entry_id[-10:]
+    serial_suffix = serial[-10:].lower()
+
+    @callback
+    def _migrator(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+        new_unique_id = _aiohomematic_restored_unique_id(
+            entity_entry.unique_id,
+            entry_suffix=entry_suffix,
+            serial_suffix=serial_suffix,
+        )
+        if new_unique_id is None or new_unique_id == entity_entry.unique_id:
+            return None
+        _LOGGER.debug(
+            "Restoring unique_id to aiohomematic scheme: %s -> %s",
             entity_entry.unique_id,
             new_unique_id,
         )
