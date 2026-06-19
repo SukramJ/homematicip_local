@@ -1,9 +1,12 @@
-# Unreleased
+# Version [2.8.0](https://github.com/SukramJ/homematicip_local/compare/2.7.2...2.8.0) (2026-06-19)
 
 ## What's Changed
 
 ### Integration
 
+- Fix permanent mass deletion of entity-registry entries after a transient auth error (aiohomematic#3215): the startup orphan cleanup now refuses to run when it would remove more than half of the integration's registry entries — this guards against the central reporting `RUNNING` (clients connected) while the device descriptions failed to load, which previously wiped hundreds of entities and re-detected devices as new
+- Set `EventDeviceClass.DOORBELL` for HmIP-DBB event entities so they work with the new Home Assistant `doorbell` automation trigger; all other event entities continue to use `EventDeviceClass.BUTTON`
+- Routed the event entity device class through the `EntityDescriptionRegistry` (new `HmEventEntityDescription`, `event()` factory, `EVENT_RULES`, default for `DataPointCategory.EVENT_GROUP`) instead of hardcoding it on the entity class
 - Chore: **sysvar/program marker filtering is now fully daemon-side for the openccu-loom backend.** The integration no longer threads `sysvar_markers`/`program_markers` into the loom `CentralConfig` — the daemon (api ≥ 1.9.0) applies the marker + internal filter and resolves enabled-by-default itself, which the loom client reads off the wire. The direct-CCU backend is unchanged (it still passes the markers to aiohomematic). Requires `openccu-loom-client==2026.6.18` (2026.6.18 fixes a keyword-only regression where `make_sysvar_data_point` applied `enabled_default` positionally and raised at sysvar spawn time, and adopts aiohomematic's lint suite + keyword-only enforcement across the client's public surface; pins `openccu-loom-types==0.1.20`).
 - Feat: **active mDNS browse in the user-initiated loom setup.** Choosing the openccu-loom backend from the menu now browses the LAN for `_openccu-loom._tcp.local.` daemons: exactly one auto-selects straight to the token step, several are offered in a selection list (with a "manual entry" escape), and none falls back to the manual connection form. Selecting a daemon continues into the same token → CCU-selection steps as the passive discovery.
 - Feat: **mDNS (zeroconf) discovery of openccu-loom daemons.** Daemons advertising `_openccu-loom._tcp.local.` are discovered automatically; after the user supplies the daemon's bearer token, the flow reads `GET /system/ccu` and lets the user pick which CCU to add (name/serial) instead of typing an instance name — the chosen CCU's name becomes the central selector and its serial the entry's unique_id. Host/port/TLS come from the mDNS advertisement (the daemon listener is plain). Requires `openccu-loom-client==2026.6.16` (new `list_ccus` helper). The discovery path is gated by the loom-backend master switch.
@@ -27,33 +30,22 @@
 
 ### Dependencies
 
-#### Bump openccu-loom-client to 2026.6.12 (pins `openccu-loom-types==0.1.17`)
+#### New runtime dependency: `openccu-loom-client==2026.6.19` (pins `openccu-loom-types==0.1.22`)
 
-Cumulative loom-backend parity work since 2026.6.1, bringing the openccu-loom backend in line with the direct-CCU (aiohomematic) backend across structure, values, names, attributes and HA cards (final fresh-spawn measurement: 1962 entities matched, residuals are by-design instance differences). Highlights:
+The openccu-loom backend is new in 2.8.0 — an alternative to the direct-CCU (aiohomematic) backend that talks to an openccu-loom daemon over REST/WS. The client reached full parity with the direct-CCU backend across structure, values, names, attributes and HA cards over the 2.8.0 beta cycle (final fresh-spawn measurement: 1962 entities matched, residuals are by-design instance differences). Highlights:
 
-  - **Live state delivery:** value and custom-DP pushes reach Home Assistant — the default WS subscriptions now carry the `datapoint.*` / `custom_data_point.*` topic prefixes (entities no longer froze on their bootstrap value). Channel-group switch CDPs (`STATE@3/4/5`) read `is_on` from the channel's generic `STATE` data point as a fallback, so a switched actuator no longer snaps back to off.
+- **Live state delivery:** value and custom-DP pushes reach Home Assistant — the default WS subscriptions now carry the `datapoint.*` / `custom_data_point.*` topic prefixes (entities no longer froze on their bootstrap value). Channel-group switch CDPs (`STATE@3/4/5`) read `is_on` from the channel's generic `STATE` data point as a fallback, so a switched actuator no longer snaps back to off.
 - **Climate cards** populate current/target temperature and humidity (read from the daemon's CDP state with a field-DP fallback); `preset_modes` always lists `none`; `modes`/`profiles` carry real aiohomematic enum members.
 - **Hub layer:** system variables, programs, per-device firmware updates, event groups, calculated data points, and hub singletons (alarm/service messages, inbox, metrics, connectivity, install mode, system update) spawn as HA entities with aiohomematic-parity unique ids and names.
 - **Visibility parity:** the daemon's `usage` verdict gates entity creation (`no_create`/`ignored`/`event` skipped, `ce_primary`/`ce_secondary` absorbed by the custom DP); sysvars classify by type with the extended marker (read-only sensor/binary_sensor vs. writable switch/select/number/text) and exclude CCU-internal/scratch variables (`${…}`, `OldVal`/`pcCCUID`, fixed ids 40/41).
 - **Naming:** generic, custom, calculated and combined data points compose locale-aware names matching aiohomematic (channel `chN`/`vchN` markers, `label_omitted` collapse, calculated/combined `translated_name`).
 - **Schedule layer:** week-profile sensors and per-channel schedule switches; **combined duration** number for sirens.
 - **Multi-central correctness:** foreign-central sysvars/programs/connectivity no longer leak into an entry; `SystemInformation.ccu_type` defaults to OpenCCU so the system-update entity spawns.
-- Pulls `openccu-loom-types==0.1.17` (`DataPointSummary.translated_name`/`label_omitted`/`usage`, `SysvarSummary.is_internal`/`is_extended`/`vid`, `CalculatedDPSummary.translated_name`, channel-group + room fields, hub-singleton/schedule contract; daemon API 1.6.0).
+- Final pin `openccu-loom-types==0.1.22` (daemon api ≥ 1.9.0): sysvar/program `enabled_default` is resolved daemon-side (the marker + internal-inclusion filter is no longer applied client-side), on top of the channel-group, schedule, hub-singleton and `available_target_channels` contract accumulated since 0.1.17. `openccu-loom-client==2026.6.19` is a dependency-bump release over 2026.6.18 (types 0.1.21 → 0.1.22, ruff, pytest); 2026.6.18 adopted aiohomematic's lint suite and fixed a keyword-only `make_sysvar_data_point` regression.
 
-# Version [2.8.0](https://github.com/SukramJ/homematicip_local/compare/2.7.2...2.8.0) (2026-06-10)
+#### Bump aiohomematic to [2026.6.3](https://github.com/SukramJ/aiohomematic/compare/2026.5.11...2026.6.3)
 
-## What's Changed
-
-### Integration
-
-- Fix permanent mass deletion of entity-registry entries after a transient auth error (aiohomematic#3215): the startup orphan cleanup now refuses to run when it would remove more than half of the integration's registry entries — this guards against the central reporting `RUNNING` (clients connected) while the device descriptions failed to load, which previously wiped hundreds of entities and re-detected devices as new
-- Set `EventDeviceClass.DOORBELL` for HmIP-DBB event entities so they work with the new Home Assistant `doorbell` automation trigger; all other event entities continue to use `EventDeviceClass.BUTTON`
-- Routed the event entity device class through the `EntityDescriptionRegistry` (new `HmEventEntityDescription`, `event()` factory, `EVENT_RULES`, default for `DataPointCategory.EVENT_GROUP`) instead of hardcoding it on the entity class
-
-### Dependencies
-
-#### Bump aiohomematic to [2026.6.2](https://github.com/SukramJ/aiohomematic/compare/2026.5.11...2026.6.2)
-
+- Sensors no longer report a spurious `0` after a CCU restart (#3228): the `fetch_all_device_data` bulk-load script now skips empty (not-yet-measured) numeric values instead of coercing them to `"0"`, so a data point such as `ACTUAL_TEMPERATURE` stays unset and Home Assistant keeps the restored last value until a real measurement arrives (a real `0` reading is unaffected)
 - Fix HmIP-RGBW / HmIP-DRG-DALI cannot be switched on (briefly flashes, then turns off again) (#3210)
 - Make interrupted device creation observable — `CancelledError` mid-build now logs a clear warning instead of silently abandoning the run with zero entities (#3213)
 - Revert the contract/event-type extraction (#3214): public event types stay in `aiohomematic.central.events`, no separate `aiohomematic-contract` runtime dependency
@@ -62,9 +54,9 @@ Cumulative loom-backend parity work since 2026.6.1, bringing the openccu-loom ba
 
 - No API or behavior changes for the integration since 2.7.2
 
-#### homematicip-local-frontend (last commit unchanged since 2.7.2)
+#### homematicip-local-frontend
 
-- Latest commit "HA 2026.6 Compatibility — `ha-radio` Removal (#60)", already shipped with 2.7.2
+- Bundled `homematic-config.js` rebuilt; the prior 2.7.2 build already covered HA 2026.6 compatibility ("HA 2026.6 Compatibility — `ha-radio` Removal (#60)")
 
 # Version [2.7.2](https://github.com/SukramJ/homematicip_local/compare/2.7.1...2.7.2) (2026-05-29)
 
