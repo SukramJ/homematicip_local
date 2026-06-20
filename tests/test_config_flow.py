@@ -3455,6 +3455,21 @@ _LOOM_LIST = "custom_components.homematicip_local.config_flow._async_loom_list_c
 class TestLoomZeroconfDiscovery:
     """mDNS (zeroconf) discovery of an openccu-loom daemon."""
 
+    async def test_already_configured_aborts_with_serial(self, hass: HomeAssistant) -> None:
+        """A CCU whose serial is already configured aborts and renders the serial placeholder."""
+        existing = MockConfigEntry(domain=HMIP_DOMAIN, unique_id="ABC123", data={CONF_HOST: "ccu.local"})
+        existing.add_to_hass(hass)
+        ccus = [{"name": "Home", "serial": "ABC123", "host": "ccu.local", "model": "CCU3", "available": True}]
+        with (
+            patch(_LOOM_ENABLED, True),
+            patch(_LOOM_LIST, return_value=ccus),
+        ):
+            init = await self._init_zeroconf(hass, _loom_zeroconf_info())
+            result = await hass.config_entries.flow.async_configure(init["flow_id"], {CONF_LOOM_TOKEN: "tok"})
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+        assert result["description_placeholders"] == {"serial": "ABC123"}
+
     async def test_cannot_connect(self, hass: HomeAssistant) -> None:
         with (
             patch(_LOOM_ENABLED, True),

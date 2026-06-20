@@ -1570,8 +1570,12 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_create_loom_entry(self, ccu: dict[str, Any]) -> ConfigFlowResult:
         """Create the config entry for the chosen CCU on a discovered daemon."""
         disc = self._loom_discovery
-        await self.async_set_unique_id(ccu["serial"])
-        self._abort_if_unique_id_configured()
+        serial = ccu["serial"]
+        await self.async_set_unique_id(serial)
+        self._abort_if_unique_id_configured(
+            error="already_configured",
+            description_placeholders={"serial": serial or "unknown"},
+        )
         data: ConfigType = {
             CONF_BACKEND: BACKEND_LOOM,
             CONF_INSTANCE_NAME: ccu["name"],
