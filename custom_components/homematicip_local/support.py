@@ -12,7 +12,17 @@ from typing import Any, Final, TypeAlias, TypeVar
 from pydantic import ValidationError
 import voluptuous as vol
 
-from aiohomematic.const import CHANNEL_ADDRESS_PATTERN, DEVICE_ADDRESS_PATTERN, IDENTIFIER_SEPARATOR, ParamsetKey
+from aiohomematic.const import (
+    CHANNEL_ADDRESS_PATTERN,
+    DEVICE_ADDRESS_PATTERN,
+    HUB_ADDRESS,
+    IDENTIFIER_SEPARATOR,
+    INSTALL_MODE_ADDRESS,
+    PROGRAM_ADDRESS,
+    SYSVAR_ADDRESS,
+    VIRTUAL_REMOTE_ADDRESSES,
+    ParamsetKey,
+)
 from aiohomematic.exceptions import BaseHomematicException
 from aiohomematic.interfaces import (
     CalculatedDataPointProtocol,
@@ -32,6 +42,7 @@ from homeassistant.loader import async_get_integration
 
 from .const import (
     CONF_SUBTYPE,
+    DOMAIN,
     EVENT_ADDRESS,
     EVENT_CHANNEL_NO,
     EVENT_DEVICE_ADDRESS,
@@ -56,6 +67,63 @@ _CHANNEL_NO_MIN: Final = 0
 _CHANNEL_NO_MAX: Final = 255
 _WAIT_FOR_MIN: Final = 0
 _WAIT_FOR_MAX: Final = 120
+
+# aiohomematic prefixes only these routing-key kinds with the central id (see
+# ``generate_unique_id``); after the central-id slot the key starts with one of
+# these infixes. The virtual-remote ones are derived from
+# ``VIRTUAL_REMOTE_ADDRESSES`` in the HA unique_id spelling (``:``/``-`` → ``_``,
+# lower-cased); ``int000`` matches the ``INT000*`` internal devices (incl. heating
+# groups). Keys without one of these carry no central-id slot.
+_VIRTUAL_REMOTE_INFIXES: Final[tuple[str, ...]] = tuple(
+    f"{address.replace(':', '_').replace('-', '_').lower()}_" for address in VIRTUAL_REMOTE_ADDRESSES
+)
+_HUB_KEY_INFIXES: Final[tuple[str, ...]] = (
+    f"{HUB_ADDRESS}_",
+    f"{INSTALL_MODE_ADDRESS}_",
+    f"{PROGRAM_ADDRESS}_",
+    f"{SYSVAR_ADDRESS}_",
+    "int000",
+    *_VIRTUAL_REMOTE_INFIXES,
+)
+_EVENT_GROUP_PREFIX: Final = "event_group_"
+
+
+def realign_hub_unique_id(unique_id: str, *, central_id: str) -> str | None:
+    """Rewrite the central-id slot of a hub / virtual-remote ``unique_id`` onto ``central_id``.
+
+    Hub / install-mode / program / sysvar / internal (``INT000*``) and
+    virtual-remote entities carry a ``<central-id>_`` slot; the matching
+    virtual-remote event groups carry it after their ``event_group_<type>_``
+    prefix. This rewrites whatever value currently fills that slot onto
+    ``central_id``, independent of the old value, so a registry inherited from any
+    earlier anchor (legacy ``entry_id[-10:]``, a prior serial, or a stale slot from
+    a delete + re-add) realigns onto the live key instead of orphaning. Devices,
+    channels and custom DPs carry no slot, ``loom_`` keys are out of scope and the
+    per-central backup button is not a routing key, so all return ``None``. Also
+    ``None`` when the slot already holds ``central_id``.
+    """
+    prefix = f"{DOMAIN}_"
+    if not unique_id.startswith(prefix):
+        return None
+    key = unique_id[len(prefix) :]
+    if key.startswith("loom_"):
+        return None
+    # Virtual-remote event groups: event_group_<type>_<central-id>_<vr-address>_<rest>.
+    if key.startswith(_EVENT_GROUP_PREFIX):
+        event_type, sep, after = key[len(_EVENT_GROUP_PREFIX) :].partition("_")
+        if not sep:
+            return None
+        _slot, sep2, rest = after.partition("_")
+        if not sep2 or not rest.startswith(_VIRTUAL_REMOTE_INFIXES):
+            return None
+        rebuilt = f"{prefix}{_EVENT_GROUP_PREFIX}{event_type}_{central_id}_{rest}"
+        return rebuilt if rebuilt != unique_id else None
+    # Standard hub / virtual-remote keys: <central-id>_<infix>...
+    _slot, sep, rest = key.partition("_")
+    if not sep or not rest.startswith(_HUB_KEY_INFIXES):
+        return None
+    rebuilt = f"{prefix}{central_id}_{rest}"
+    return rebuilt if rebuilt != unique_id else None
 
 
 def validate_channel_no(value: Any) -> int:

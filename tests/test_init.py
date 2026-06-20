@@ -17,7 +17,6 @@ from custom_components.homematicip_local import (
     _async_reanchor_hub_unique_ids_on_serial_change,
     _async_restore_aiohomematic_unique_ids,
     _loom_migrated_unique_id,
-    _reanchored_hub_unique_id,
 )
 from custom_components.homematicip_local.config_flow import DomainConfigFlow
 from custom_components.homematicip_local.const import (
@@ -28,6 +27,7 @@ from custom_components.homematicip_local.const import (
     DOMAIN as HMIP_DOMAIN,
 )
 from custom_components.homematicip_local.control_unit import ControlUnit
+from custom_components.homematicip_local.support import realign_hub_unique_id
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -279,6 +279,7 @@ def _build_orphan_sweep_self(
     connectivity_unique_ids: tuple[str, ...] = (),
     install_mode_unique_ids: tuple[tuple[str, str], ...] = (),
     backend: str = BACKEND_CCU,
+    central_id: str = "11a0001234",
 ) -> SimpleNamespace:
     """Build a minimal ControlUnit-shaped self for _async_cleanup_orphaned_entity_registry_entries."""
     central = MagicMock()
@@ -319,7 +320,12 @@ def _build_orphan_sweep_self(
     central.query_facade.get_event_groups.return_value = tuple(
         SimpleNamespace(unique_id=uid) for uid in event_group_unique_ids
     )
-    return SimpleNamespace(_hass=hass, _entry_id=entry_id, _central=central, _config=SimpleNamespace(backend=backend))
+    return SimpleNamespace(
+        _hass=hass,
+        _entry_id=entry_id,
+        _central=central,
+        _config=SimpleNamespace(backend=backend, central_id=central_id),
+    )
 
 
 async def test_cleanup_orphan_entries_removes_disabled_entity_without_data_point(
@@ -461,6 +467,60 @@ async def test_cleanup_orphan_entries_ignores_other_platforms(
     ControlUnit._async_cleanup_orphaned_entity_registry_entries(fake_self)
 
     assert entity_registry.async_get(foreign_entry.entity_id) is not None
+
+
+async def test_cleanup_orphan_entries_keeps_native_backup_button(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+) -> None:
+    """The integration-native backup button has no data point but must never be swept."""
+    mock_config_entry_v2.add_to_hass(hass)
+    entry_id = mock_config_entry_v2.entry_id
+
+    entity_registry = er.async_get(hass)
+    backup_button = entity_registry.async_get_or_create(
+        domain="button",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_openccu_create_backup",
+        config_entry=mock_config_entry_v2,
+    )
+
+    # No data points reported at all -> without the guard the backup button would orphan.
+    fake_self = _build_orphan_sweep_self(hass, entry_id)
+    ControlUnit._async_cleanup_orphaned_entity_registry_entries(fake_self)
+
+    assert entity_registry.async_get(backup_button.entity_id) is not None
+
+
+async def test_cleanup_orphan_entries_keeps_central_id_drift(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+) -> None:
+    """A hub entry on a stale central-id anchor whose data point still exists must not be deleted."""
+    mock_config_entry_v2.add_to_hass(hass)
+    entry_id = mock_config_entry_v2.entry_id
+
+    entity_registry = er.async_get(hass)
+    # Registry anchored on a stale central id; the live data point uses the current one.
+    drifted = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_w78v4413eq_sysvar_x",
+        config_entry=mock_config_entry_v2,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    fake_self = _build_orphan_sweep_self(
+        hass,
+        entry_id,
+        central_id="11a0001234",
+        hub_unique_ids=("11a0001234_sysvar_x",),
+    )
+    ControlUnit._async_cleanup_orphaned_entity_registry_entries(fake_self)
+
+    # The drifted entry stays (the setup-time realign migration owns re-anchoring it),
+    # rather than being permanently deleted.
+    assert entity_registry.async_get(drifted.entity_id) is not None
 
 
 async def test_cleanup_orphan_entries_recognizes_all_hub_data_point_sources(
@@ -647,42 +707,53 @@ class TestAioHomematicUniqueIdRestore:
         assert _aiohomematic_restored_unique_id(loom) == original
 
 
-class TestReanchoredHubUniqueId:
-    """``_reanchored_hub_unique_id`` swaps the hub central-id prefix."""
+class TestRealignedHubUniqueId:
+    """``_realigned_hub_unique_id`` forces the hub central-id slot onto the live anchor."""
 
     _D = HMIP_DOMAIN
-    _OLD = "a1b2c3d4e5"  # e.g. legacy entry_id[-10:] or old serial[-10:]
-    _NEW = "11a0001234"  # serial[-10:]
+    _NEW = "11a0001234"  # the live central id (serial[-10:])
 
-    def test_identical_suffixes_is_noop(self) -> None:
-        assert _reanchored_hub_unique_id(f"{self._D}_aaa_sysvar_x", old_suffix="aaa", new_suffix="aaa") is None
+    def test_already_aligned_is_noop(self) -> None:
+        assert realign_hub_unique_id(f"{self._D}_11a0001234_sysvar_x", central_id="11a0001234") is None
 
     @pytest.mark.parametrize(
         "unique_id",
         [
-            f"{_D}_vcu1234567_1_state",  # device key — no central prefix
+            f"{_D}_vcu1234567_1_state",  # device key — no central slot
             f"{_D}_loom_a1b2c3d4e5_sysvar_x",  # loom-namespaced — not ours here
-            f"{_D}_11a0001234_sysvar_x",  # already on the new suffix
+            f"{_D}_11a0001234_sysvar_x",  # already on the live anchor
+            f"{_D}_openccu_create_backup",  # synthetic native button — not a routing key
+            f"{_D}_event_group_keypress_0008dd8997b338_1",  # device event group — no central slot
             "other_integration_xyz",  # not ours
         ],
     )
     def test_left_untouched(self, unique_id: str) -> None:
-        assert self._swap(unique_id) is None
+        assert self._realign(unique_id) is None
 
     @pytest.mark.parametrize(
         ("old", "expected"),
         [
+            # Any stale slot value is rewritten onto the live anchor, regardless of
+            # whether it was a legacy entry_id, an old serial or a re-add leftover.
             (f"{_D}_a1b2c3d4e5_sysvar_x", f"{_D}_11a0001234_sysvar_x"),
+            (f"{_D}_w78v4413eq_hub_system-update", f"{_D}_11a0001234_hub_system-update"),
+            (f"{_D}_w78v4413eq_install_mode_hmip", f"{_D}_11a0001234_install_mode_hmip"),
             (f"{_D}_a1b2c3d4e5_program_my-prog", f"{_D}_11a0001234_program_my-prog"),
             (f"{_D}_a1b2c3d4e5_int0001234_1_level", f"{_D}_11a0001234_int0001234_1_level"),
             (f"{_D}_a1b2c3d4e5_bidcos_rf_1_press_short", f"{_D}_11a0001234_bidcos_rf_1_press_short"),
+            (f"{_D}_w78v4413eq_hmip_rcv_1_9_press_long", f"{_D}_11a0001234_hmip_rcv_1_9_press_long"),
+            # Virtual-remote event groups keep their event_group_<type>_ prefix.
+            (
+                f"{_D}_event_group_keypress_w78v4413eq_bidcos_rf_1",
+                f"{_D}_event_group_keypress_11a0001234_bidcos_rf_1",
+            ),
         ],
     )
     def test_rewrites(self, old: str, expected: str) -> None:
-        assert self._swap(old) == expected
+        assert self._realign(old) == expected
 
-    def _swap(self, unique_id: str) -> str | None:
-        return _reanchored_hub_unique_id(unique_id, old_suffix=self._OLD, new_suffix=self._NEW)
+    def _realign(self, unique_id: str) -> str | None:
+        return realign_hub_unique_id(unique_id, central_id=self._NEW)
 
 
 async def test_async_restore_aiohomematic_unique_ids_rewrites_registry(hass: HomeAssistant) -> None:
@@ -745,11 +816,11 @@ async def test_async_migrate_aiohomematic_hub_unique_ids_reanchors_onto_serial(h
     assert entity_registry.async_get(device.entity_id).unique_id == f"{HMIP_DOMAIN}_vcu1234567_1_state"
 
 
-async def test_async_migrate_aiohomematic_hub_unique_ids_skips_without_serial(hass: HomeAssistant) -> None:
-    """Without a serial the hub re-anchor is a safe no-op."""
+async def test_async_migrate_aiohomematic_hub_unique_ids_without_serial_uses_entry_id(hass: HomeAssistant) -> None:
+    """Without a serial the live anchor is ``entry_id[-10:]``; a key already there is a no-op."""
     entry = MockConfigEntry(domain=HMIP_DOMAIN, unique_id=None)
     entry.add_to_hass(hass)
-    entry_suffix = entry.entry_id[-10:]
+    entry_suffix = entry.entry_id[-10:].lower()  # the live anchor when no serial is known
 
     entity_registry = er.async_get(hass)
     hub = entity_registry.async_get_or_create(
@@ -762,6 +833,95 @@ async def test_async_migrate_aiohomematic_hub_unique_ids_skips_without_serial(ha
     await _async_migrate_aiohomematic_hub_unique_ids(hass, entry)
 
     assert entity_registry.async_get(hub.entity_id).unique_id == f"{HMIP_DOMAIN}_{entry_suffix}_sysvar_x"
+
+
+async def test_async_migrate_aiohomematic_hub_unique_ids_realigns_stale_anchor(hass: HomeAssistant) -> None:
+    """A stale central-id slot (not the live anchor) is realigned, not left to orphan.
+
+    Regression for the disappearing hub / virtual-remote entities: after #1166 the
+    live central anchors these keys on the CCU serial. A registry left on an
+    unrelated slot (e.g. a prior entry_id from a delete + re-add, or a stale
+    serial) fell through the entry_id-only migration and was then permanently
+    deleted by the orphan-cleanup sweep. The realign must rewrite whatever slot is
+    present onto the live serial — for plain hub keys, virtual-remote keys and the
+    virtual-remote event groups alike.
+    """
+    serial = "3014F711A0001234"
+    entry = MockConfigEntry(domain=HMIP_DOMAIN, unique_id=serial)
+    entry.add_to_hass(hass)
+    serial_suffix = serial[-10:].lower()  # 11a0001234
+    stale = "w78v4413eq"  # neither entry_id[-10:] nor the serial suffix
+    assert stale not in (entry.entry_id[-10:].lower(), serial_suffix)
+
+    entity_registry = er.async_get(hass)
+    hub = entity_registry.async_get_or_create(
+        domain="update",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_{stale}_hub_system-update",
+        config_entry=entry,
+    )
+    vremote = entity_registry.async_get_or_create(
+        domain="button",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_{stale}_bidcos_rf_9_press_long",
+        config_entry=entry,
+    )
+    event_group = entity_registry.async_get_or_create(
+        domain="event",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_event_group_keypress_{stale}_bidcos_rf_1",
+        config_entry=entry,
+    )
+    device = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_0008dd8997b338_1_state",
+        config_entry=entry,
+    )
+
+    await _async_migrate_aiohomematic_hub_unique_ids(hass, entry)
+
+    assert entity_registry.async_get(hub.entity_id).unique_id == f"{HMIP_DOMAIN}_{serial_suffix}_hub_system-update"
+    assert (
+        entity_registry.async_get(vremote.entity_id).unique_id
+        == f"{HMIP_DOMAIN}_{serial_suffix}_bidcos_rf_9_press_long"
+    )
+    assert (
+        entity_registry.async_get(event_group.entity_id).unique_id
+        == f"{HMIP_DOMAIN}_event_group_keypress_{serial_suffix}_bidcos_rf_1"
+    )
+    # device keys carry no central slot -> untouched
+    assert entity_registry.async_get(device.entity_id).unique_id == f"{HMIP_DOMAIN}_0008dd8997b338_1_state"
+
+
+async def test_async_migrate_aiohomematic_hub_unique_ids_skips_on_collision(hass: HomeAssistant) -> None:
+    """A stale key whose live-anchored target already exists is left as-is (no crash)."""
+    serial = "3014F711A0001234"
+    entry = MockConfigEntry(domain=HMIP_DOMAIN, unique_id=serial)
+    entry.add_to_hass(hass)
+    serial_suffix = serial[-10:].lower()
+    stale = "w78v4413eq"
+
+    entity_registry = er.async_get(hass)
+    live = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_{serial_suffix}_sysvar_x",
+        config_entry=entry,
+    )
+    stale_entry = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_{stale}_sysvar_x",
+        config_entry=entry,
+    )
+
+    await _async_migrate_aiohomematic_hub_unique_ids(hass, entry)
+
+    # No collision crash: the pre-existing live entry keeps the target id and the
+    # stale duplicate is left untouched (the sweep can retire it later).
+    assert entity_registry.async_get(live.entity_id).unique_id == f"{HMIP_DOMAIN}_{serial_suffix}_sysvar_x"
+    assert entity_registry.async_get(stale_entry.entity_id).unique_id == f"{HMIP_DOMAIN}_{stale}_sysvar_x"
 
 
 async def test_async_reanchor_on_serial_change_rewrites_and_updates_entry(hass: HomeAssistant) -> None:

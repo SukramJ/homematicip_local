@@ -62,7 +62,7 @@ from .control_unit import ControlConfig, ControlUnit, get_storage_directory
 from .device_icon import ICON_VIEW_REGISTERED_KEY, DeviceIconView
 from .panel import async_register_cards, async_register_panel, async_unregister_cards, async_unregister_panel
 from .services import async_get_loaded_config_entries, async_setup_services, async_unload_services
-from .support import get_aiohomematic_version, get_device_address_at_interface_from_identifiers
+from .support import get_aiohomematic_version, get_device_address_at_interface_from_identifiers, realign_hub_unique_id
 from .websocket_api import async_register_websocket_commands
 
 HA_VERSION = AwesomeVersion(HA_VERSION_STR)
@@ -405,33 +405,6 @@ def _aiohomematic_restored_unique_id(unique_id: str) -> str | None:
     return f"{prefix}{body}"
 
 
-def _reanchored_hub_unique_id(unique_id: str, *, old_suffix: str, new_suffix: str) -> str | None:
-    """Swap the central-id slot of an aiohomematic hub ``unique_id``.
-
-    Hub / install-mode / program / sysvar / internal (``INT000*``) and
-    virtual-remote entities carry a ``<suffix>_`` central-id prefix; devices,
-    channels and custom DPs carry none. This swaps that prefix from
-    ``old_suffix`` to ``new_suffix`` and leaves everything else untouched, so
-    it serves both the legacy ``entry_id[-10:]`` → serial migration and a
-    later serial → serial re-anchor after a radio-module swap.
-
-    Returns ``None`` when nothing applies (no central prefix, a ``loom_`` key,
-    or the suffixes are identical).
-    """
-    if old_suffix == new_suffix:
-        return None
-    prefix = f"{DOMAIN}_"
-    if not unique_id.startswith(prefix):
-        return None
-    key = unique_id[len(prefix) :]
-    if key.startswith("loom_"):
-        return None
-    old_prefix = f"{old_suffix}_"
-    if not key.startswith(old_prefix):
-        return None
-    return f"{prefix}{new_suffix}_{key[len(old_prefix) :]}"
-
-
 async def _async_restore_aiohomematic_unique_ids(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:
     """Rewrite loom entity unique_ids back to the aiohomematic scheme.
 
@@ -459,40 +432,61 @@ async def _async_restore_aiohomematic_unique_ids(hass: HomeAssistant, entry: Hom
     await async_migrate_entries(hass, entry.entry_id, _migrator)
 
 
-async def _async_migrate_aiohomematic_hub_unique_ids(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:
-    """Re-anchor legacy entry_id-prefixed hub unique_ids onto the CCU serial.
+async def _async_realign_hub_unique_ids(hass: HomeAssistant, entry: HomematicConfigEntry, *, central_id: str) -> None:
+    """Force the central-id slot of every hub / virtual-remote registry key onto ``central_id``.
 
-    aiohomematic historically prefixed hub / sysvar / program / install-mode /
-    internal / virtual-remote entity unique_ids with ``entry_id[-10:]``, which
-    orphans them on an integration delete + re-add (the entry_id is
-    regenerated). The backend now anchors them on the CCU serial (see
-    ``central_id`` in :mod:`.control_unit`); this one-time, idempotent,
-    entry-scoped rewrite aligns existing registries. Device / channel keys
-    carry no central prefix and are left untouched.
+    Entry-scoped, idempotent and collision-safe. Hub / install-mode / program /
+    sysvar / internal / virtual-remote keys (and the virtual-remote event groups)
+    carry a central-id slot; this rewrites whatever value sits there onto the live
+    ``central_id`` regardless of the old value, so a registry inherited from an
+    earlier anchor (legacy ``entry_id[-10:]``, a prior serial, or a stale slot from
+    a delete + re-add) realigns onto the live key instead of orphaning and being
+    deleted by the orphan-cleanup sweep. Device / channel / custom-DP keys carry no
+    slot and are left untouched.
     """
-    serial = entry.unique_id  # the config entry's HA unique_id is the CCU serial
-    if not serial:
-        return
-    old_suffix = entry.entry_id[-10:]
-    new_suffix = serial[-10:].lower()
+    entity_registry = er.async_get(hass)
 
     @callback
     def _migrator(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
-        new_unique_id = _reanchored_hub_unique_id(
-            entity_entry.unique_id,
-            old_suffix=old_suffix,
-            new_suffix=new_suffix,
-        )
+        new_unique_id = realign_hub_unique_id(entity_entry.unique_id, central_id=central_id)
         if new_unique_id is None or new_unique_id == entity_entry.unique_id:
             return None
+        # A live-anchored entry may already exist (e.g. created under the live
+        # anchor by an earlier setup); HA raises on a duplicate unique_id, so skip
+        # rather than abort the whole migration.
+        if entity_registry.async_get_entity_id(entity_entry.domain, entity_entry.platform, new_unique_id):
+            _LOGGER.debug(
+                "Skipping hub unique_id realign, target already exists: %s -> %s",
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+            return None
         _LOGGER.debug(
-            "Re-anchoring hub unique_id onto the CCU serial: %s -> %s",
+            "Realigning hub unique_id onto the live central id: %s -> %s",
             entity_entry.unique_id,
             new_unique_id,
         )
         return {"new_unique_id": new_unique_id}
 
     await async_migrate_entries(hass, entry.entry_id, _migrator)
+
+
+async def _async_migrate_aiohomematic_hub_unique_ids(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:
+    """Realign hub / virtual-remote unique_ids onto the live central id.
+
+    aiohomematic anchors hub / sysvar / program / install-mode / internal /
+    virtual-remote entities (and their event groups) on the central id — the CCU
+    serial when known, else ``entry_id[-10:]`` (see ``central_id`` in
+    :mod:`.control_unit`). A registry inherited from a different anchor (legacy
+    ``entry_id``-prefixed keys, or a stale slot left by a delete + re-add) would
+    otherwise no longer match the live keys, orphan, and be permanently deleted by
+    the orphan-cleanup sweep. This one-time, entry-scoped, collision-safe rewrite
+    runs early in setup, before entities are (re)created, and is a no-op once
+    everything is on the live anchor. Device / channel keys carry no central slot
+    and are left untouched.
+    """
+    central_id = (entry.unique_id or entry.entry_id)[-10:].lower()
+    await _async_realign_hub_unique_ids(hass, entry, central_id=central_id)
 
 
 async def _async_reanchor_hub_unique_ids_on_serial_change(
@@ -504,10 +498,9 @@ async def _async_reanchor_hub_unique_ids_on_serial_change(
     program / install-mode / internal / virtual-remote unique_ids and the
     config-entry identity. It is stable in normal operation but changes on a
     radio-module (Funkmodul) swap. When the freshly-connected serial differs
-    from the stored one, this rewrites those keys from the old serial to the
-    new, updates the entry's unique_id and reloads so the running central
-    rebuilds on the new anchor. A no-op when the serial is unchanged or
-    unknown.
+    from the stored one, this realigns those keys onto the new serial, updates
+    the entry's unique_id and reloads so the running central rebuilds on the new
+    anchor. A no-op when the serial is unchanged or unknown.
     """
     old_serial = entry.unique_id
     new_serial = control.central.system_information.serial
@@ -516,27 +509,13 @@ async def _async_reanchor_hub_unique_ids_on_serial_change(
     if new_serial.lower() == old_serial.lower():
         return
 
-    old_suffix = old_serial[-10:].lower()
-    new_suffix = new_serial[-10:].lower()
-
-    @callback
-    def _migrator(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
-        new_unique_id = _reanchored_hub_unique_id(
-            entity_entry.unique_id,
-            old_suffix=old_suffix,
-            new_suffix=new_suffix,
-        )
-        if new_unique_id is None or new_unique_id == entity_entry.unique_id:
-            return None
-        return {"new_unique_id": new_unique_id}
-
     _LOGGER.warning(
         "CCU serial for %s changed (%s -> %s); re-anchoring hub entities and reloading",
         entry.data.get(CONF_INSTANCE_NAME),
         old_serial,
         new_serial,
     )
-    await async_migrate_entries(hass, entry.entry_id, _migrator)
+    await _async_realign_hub_unique_ids(hass, entry, central_id=new_serial[-10:].lower())
     hass.config_entries.async_update_entry(entry, unique_id=new_serial)
     hass.config_entries.async_schedule_reload(entry.entry_id)
 

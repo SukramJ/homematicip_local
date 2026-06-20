@@ -140,6 +140,7 @@ from .support import (
     InvalidConfig,
     cleanup_click_event_data,
     is_valid_event,
+    realign_hub_unique_id,
 )
 
 if TYPE_CHECKING:
@@ -553,9 +554,25 @@ class ControlUnit(BaseControlUnit):
             for entry in er.async_entries_for_config_entry(entity_registry, self._entry_id)
             if entry.platform == DOMAIN
         ]
-        orphaned_entries: list[er.RegistryEntry] = [
-            entry for entry in platform_entries if entry.unique_id not in current_unique_ids
-        ]
+        central_id = self._config.central_id
+
+        def _is_true_orphan(entry: er.RegistryEntry) -> bool:
+            """Return True only for entries whose data point is genuinely gone."""
+            if entry.unique_id in current_unique_ids:
+                return False
+            # The per-central backup button is integration-native (not an
+            # aiohomematic routing key) and is recreated on every setup, so it must
+            # never be swept.
+            if entry.unique_id.endswith("_create_backup"):
+                return False
+            # Central-id drift: the data point still exists but the registry entry
+            # is on a stale central-id anchor (a prior entry_id / serial). The
+            # setup-time realign migration owns this; deleting here would discard
+            # the user's customisations permanently, so never treat it as an orphan.
+            realigned = realign_hub_unique_id(entry.unique_id, central_id=central_id)
+            return realigned is None or realigned not in current_unique_ids
+
+        orphaned_entries: list[er.RegistryEntry] = [entry for entry in platform_entries if _is_true_orphan(entry)]
 
         # Refuse implausibly large sweeps: a near-total wipe almost always means the
         # central is RUNNING (clients connected) while the device descriptions failed
@@ -1261,6 +1278,17 @@ class ControlConfig:
         return f"{get_storage_directory(hass=self.hass)}/{self._backup_path}"
 
     @property
+    def central_id(self) -> str:
+        """Return the central id that anchors hub / virtual-remote unique_ids.
+
+        The CCU serial when known, else the entry_id, truncated to the last 10
+        chars and lower-cased to match aiohomematic's key slot (it lower-cases the
+        whole unique_id). Survives an integration delete + re-add when a serial is
+        available (the entry_id is regenerated then).
+        """
+        return (self._serial or self.entry_id)[-10:].lower()
+
+    @property
     def interface_config(self) -> Mapping[str, Any]:
         """Return the interface configuration."""
         return self._interface_config
@@ -1352,9 +1380,9 @@ class ControlConfig:
             )
         # The CCU serial anchors hub / sysvar / program / virtual-remote
         # entity unique_ids so they survive an integration delete + re-add
-        # (the entry_id is regenerated then); fall back to the entry_id while
-        # the serial is not yet known. aiohomematic lower-cases the key.
-        central_id = (self._serial or self.entry_id)[-10:]
+        # (the entry_id is regenerated then); falls back to the entry_id while
+        # the serial is not yet known. See :attr:`central_id`.
+        central_id = self.central_id
         return await CentralConfig(
             callback_host=self._callback_host if self._callback_host != IP_ANY_V4 else None,
             callback_port_xml_rpc=self._callback_port_xml_rpc if self._callback_port_xml_rpc != PORT_ANY else None,
