@@ -158,7 +158,7 @@ This includes:
 ## Pull Request Guidelines
 
 ### Target Branch
-- **Always target**: `devel` (NOT `master`)
+- **Always target**: `main`
 
 ### Commit Message Format
 

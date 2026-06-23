@@ -3,13 +3,11 @@ name: Pre-commit checks
 # yamllint disable-line rule:truthy
 on:
   pull_request:
-    branches-ignore:
-      - master
-      - devel
+    branches:
+      - main
   push:
     branches-ignore:
-      - master
-      - devel
+      - main
     tags-ignore:
       - "**"
 permissions:

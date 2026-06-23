@@ -6,7 +6,7 @@ blueprint:
   domain: automation
   homeassistant:
     min_version: "2026.3.0"
-  source_url: https://github.com/sukramj/homematicip_local/blob/devel/blueprints/automation/homematicip_local_show_device_error.yaml
+  source_url: https://github.com/sukramj/homematicip_local/blob/main/blueprints/automation/homematicip_local_show_device_error.yaml
 
 mode: restart
 max_exceeded: silent

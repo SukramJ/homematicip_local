@@ -752,8 +752,7 @@ prek run prettier --all-files
 
 ### Branch Structure
 
-- **Main Branch**: `master` (protected)
-- **Development Branch**: `devel` (protected)
+- **Default Branch**: `main` (protected)
 - **Feature Branches**: `feature/description`
 - **Bug Fix Branches**: `fix/description`
 
@@ -790,12 +789,12 @@ Added retry logic with exponential backoff for validation calls.
 
 ### Pull Request Process
 
-1. **Create feature branch** from `devel`
+1. **Create feature branch** from `main`
 2. **Make changes** with tests
 3. **Run prek hooks**: `prek run --all-files`
 4. **Commit changes** with descriptive messages
 5. **Push to remote**: `git push -u origin feature/branch-name`
-6. **Create Pull Request** to `devel` branch
+6. **Create Pull Request** to `main` branch
 7. **Wait for CI** to pass
 8. **Request review** from maintainers
 
@@ -961,7 +960,7 @@ These rules govern how the AI assistant communicates and works with the develope
 
 ❌ **Never** commit without type annotations
 ❌ **Never** skip prek hooks
-❌ **Never** commit to `master` or `devel` directly
+❌ **Never** commit to `main` directly
 ❌ **Never** use `Any` type without justification
 ❌ **Never** use bare `except:` clauses
 ❌ **Never** break backward compatibility without major version bump
