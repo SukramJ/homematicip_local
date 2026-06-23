@@ -8,6 +8,8 @@ updates:
       day: "monday"
       time: "04:00"
       timezone: "Europe/Berlin"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     reviewers:
       - "SukramJ"
