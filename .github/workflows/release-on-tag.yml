@@ -83,7 +83,7 @@ jobs:
           echo "$BODY" > /tmp/release_body.md
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b
         with:
           name: ${{ steps.version.outputs.version }}
           body_path: /tmp/release_body.md

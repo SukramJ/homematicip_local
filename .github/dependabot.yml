@@ -1,6 +1,24 @@
 version: 2
 updates:
+  # Keep GitHub Actions (including SHA-pinned ones) up to date
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "04:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "SukramJ"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      # Group all GitHub Actions updates into a single PR
+      github-actions:
+        patterns:
+          - "*"
