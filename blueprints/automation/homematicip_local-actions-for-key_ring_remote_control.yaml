@@ -10,7 +10,7 @@ blueprint:
   domain: automation
   homeassistant:
     min_version: "2026.3.0"
-  source_url: https://github.com/sukramj/homematicip_local/blob/devel/blueprints/automation/homematicip_local-actions-for-key_ring_remote_control.yaml
+  source_url: https://github.com/sukramj/homematicip_local/blob/main/blueprints/automation/homematicip_local-actions-for-key_ring_remote_control.yaml
   input:
     remote:
       name: 4-Button Device (e.g. HmIP-KRCA)

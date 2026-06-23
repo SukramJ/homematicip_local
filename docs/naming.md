@@ -1,6 +1,6 @@
 # Naming of devices and entities
 
-This document explains how Homematic(IP) Local for OpenCCU names devices and entities in Home Assistant. It is inspired by and largely aligned with the AIOhomematic naming documentation: https://github.com/SukramJ/aiohomematic/blob/devel/docs/naming.md. Where Homematic(IP) Local for OpenCCU behaves differently, this is highlighted.
+This document explains how Homematic(IP) Local for OpenCCU names devices and entities in Home Assistant. It is inspired by and largely aligned with the AIOhomematic naming documentation: https://github.com/SukramJ/aiohomematic/blob/main/docs/naming.md. Where Homematic(IP) Local for OpenCCU behaves differently, this is highlighted.
 
 ## Terminology
 - Device: A physical device registered on the CCU (or a hub-level pseudo device). In HA this is the Device entry in the device registry.

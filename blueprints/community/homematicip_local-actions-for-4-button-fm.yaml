@@ -10,7 +10,7 @@ blueprint:
   domain: automation
   homeassistant:
     min_version: "2026.3.0"
-  source_url: https://github.com/sukramj/homematicip_local/blob/devel/blueprints/community/homematicip_local-actions-for-4-button-fm.yaml
+  source_url: https://github.com/sukramj/homematicip_local/blob/main/blueprints/community/homematicip_local-actions-for-4-button-fm.yaml
   input:
     remote:
       name: 4-Button Device (e.g. HM-PBI-4-FM)

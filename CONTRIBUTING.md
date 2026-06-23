@@ -242,18 +242,17 @@ open htmlcov/index.html
 
 ### Branch Structure
 
-- **`master`**: Stable release branch (protected)
-- **`devel`**: Development branch (protected)
+- **`main`**: Default branch (protected)
 - **Feature branches**: `feature/description` or `fix/description`
 
 ### Workflow
 
 1. **Fork the repository** (external contributors) or create a branch (maintainers)
 
-2. **Create a feature branch** from `devel`:
+2. **Create a feature branch** from `main`:
    ```bash
-   git checkout devel
-   git pull origin devel
+   git checkout main
+   git pull origin main
    git checkout -b feature/my-feature
    ```
 
@@ -282,7 +281,7 @@ open htmlcov/index.html
    git push -u origin feature/my-feature
    ```
 
-7. **Create a Pull Request** to the `devel` branch
+7. **Create a Pull Request** to the `main` branch
 
 ### Commit Message Format
 
@@ -321,7 +320,7 @@ connection validation during config flow.
 - **Title**: Clear, descriptive title
 - **Description**: Explain what and why (not how)
 - **Link issues**: Reference related issues with `Closes #123`
-- **Target branch**: Always target `devel`, not `master`
+- **Target branch**: Always target `main`
 - **Pass CI checks**: All automated checks must pass
 - **Code review**: Be responsive to feedback
 
@@ -330,8 +329,8 @@ connection validation during config flow.
 1. **Automated CI checks** run (tests, linting, type checking)
 2. **Code review** by maintainers
 3. **Discussion and iteration** if changes are needed
-4. **Merge to `devel`** once approved
-5. **Release to `master`** in next version
+4. **Merge to `main`** once approved
+5. **Tag a release** from `main` in next version
 
 ---
 
