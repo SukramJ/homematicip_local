@@ -1,4 +1,4 @@
-# Version [2.8.0](https://github.com/SukramJ/homematicip_local/compare/2.7.2...2.8.0) (2026-06-19)
+# Version [2.8.0](https://github.com/SukramJ/homematicip_local/compare/2.7.2...2.8.0) (2026-06-23)
 
 ## What's Changed
 
@@ -12,13 +12,13 @@
 
 ### Dependencies
 
-#### New bundled dependency: `openccu-loom-client==2026.6.19` (pins `openccu-loom-types==0.1.22`)
+#### New bundled dependency: `openccu-loom-client==2026.6.24` (pins `openccu-loom-types==0.1.29`)
 
-- Bundled for the not-yet-enabled openccu-loom backend (see Integration); it has no runtime effect while the backend master switch is off. Pulls `openccu-loom-types==0.1.22` transitively.
+- Bundled for the not-yet-enabled openccu-loom backend (see Integration); it has no runtime effect while the backend master switch is off. Pulls `openccu-loom-types==0.1.29` transitively.
 
-#### Bump aiohomematic to [2026.6.3](https://github.com/SukramJ/aiohomematic/compare/2026.5.11...2026.6.3)
+#### Bump aiohomematic to [2026.6.6](https://github.com/SukramJ/aiohomematic/compare/2026.5.11...2026.6.6)
 
-- Sensors no longer report a spurious `0` after a CCU restart (#3228): the `fetch_all_device_data` bulk-load script now skips empty (not-yet-measured) numeric values instead of coercing them to `"0"`, so a data point such as `ACTUAL_TEMPERATURE` stays unset and Home Assistant keeps the restored last value until a real measurement arrives (a real `0` reading is unaffected)
+- Fully fix sensors reporting a spurious `0` after a CCU restart (#3228): the initial `2026.6.3` fix only covered the ReGa bulk-load path, but the placeholder also arrived through the per-parameter `getValue` fallback. Three follow-ups complete it — (a) the paired `*_STATUS` parameter is now loaded on init so a freshly loaded default whose status is `UNKNOWN` no longer overwrites an already known value (#3233), (b) the bulk-load ReGa script was reworked to v2.5 because the earlier `vDPValue == ""` skip also dropped legitimate numeric zeros (an empty string coerces to `0` in ReGa) — it now only coerces genuine string variables and gates `VirtualDevices` on a valid `LastTimestamp()`, and (c) the `getValue` fallback is skipped entirely for `VirtualDevices`, whose aggregated `ACTUAL_TEMPERATURE` has no physical device behind it and could therefore only ever return the CCU default `0`. The gated ReGa bulk fetch is now the single source of truth, and such a data point stays unavailable until a real reading arrives via event. Physical interfaces and real `0` readings are unaffected
 - Fix HmIP-RGBW / HmIP-DRG-DALI cannot be switched on (briefly flashes, then turns off again) (#3210)
 - Make interrupted device creation observable — `CancelledError` mid-build now logs a clear warning instead of silently abandoning the run with zero entities (#3213)
 - Revert the contract/event-type extraction (#3214): public event types stay in `aiohomematic.central.events`, no separate `aiohomematic-contract` runtime dependency
