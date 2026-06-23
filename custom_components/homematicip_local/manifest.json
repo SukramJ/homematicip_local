@@ -14,7 +14,7 @@
     "openccu-data==2026.5.0",
     "openccu-loom-client==2026.6.24",
     "aiohomematic-config==2026.5.0",
-    "aiohomematic==2026.6.5"
+    "aiohomematic==2026.6.6"
   ],
   "ssdp": [
     {
