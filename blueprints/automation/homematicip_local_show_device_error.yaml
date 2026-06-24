@@ -1,19 +1,65 @@
 blueprint:
   name: Homematic(IP) Local Show device error
-  description:
-    Display errors emitted by devices. This is an unfiltered blueprint. More filters should be added to the trigger.
-    v2026-04-14
+  description: >
+    Display errors emitted by Homematic(IP) devices as persistent notifications.
+
+    Optionally restrict the notifications to specific devices and/or ignore selected
+    error parameters to reduce noise.
+
+    Note: Some errors are expected and resolve on their own. For example, after
+    deleting a direct link (Direktverknüpfung) in the CCU/OCCU, the change is sent
+    to the device via a configuration transfer; until that completes, CONFIG_PENDING
+    stays true and the link still lives in the device. For battery/RF devices the
+    transfer only runs on the next radio contact - press a button on the device so
+    the CCU can deliver the pending configuration, then the notification clears
+    automatically. No factory reset is required.
+
+    v2026-06-24
   domain: automation
   homeassistant:
     min_version: "2026.3.0"
   source_url: https://github.com/sukramj/homematicip_local/blob/main/blueprints/automation/homematicip_local_show_device_error.yaml
+  input:
+    target_devices:
+      name: Devices (optional)
+      description: Only show errors for these devices. Leave empty to show errors for all devices.
+      default: []
+      selector:
+        device:
+          integration: homematicip_local
+          multiple: true
+    ignored_parameters:
+      name: Ignored error parameters (optional)
+      description:
+        Comma-separated list of error parameter names to ignore (e.g. CONFIG_PENDING, STICKY_UNREACH).
+        Case-insensitive. Leave empty to show all error parameters.
+      default: ""
+      selector:
+        text:
+          type: text
 
 mode: restart
 max_exceeded: silent
 
+variables:
+  target_devices: !input target_devices
+  ignored_parameters_raw: !input ignored_parameters
+  ignored_parameters: >
+    {{ ignored_parameters_raw.split(',') | map('trim') | reject('eq', '') | map('upper') | list }}
+
 trigger:
   - platform: event
     event_type: homematic.device_error
+
+condition:
+  # Device filter: pass when no devices are selected, or the event's device is one of them.
+  - condition: template
+    value_template: >
+      {{ target_devices | length == 0 or trigger.event.data.device_id in target_devices }}
+  # Parameter filter: pass when the error parameter is not in the ignore list.
+  - condition: template
+    value_template: >
+      {{ trigger.event.data.parameter | upper not in ignored_parameters }}
 
 action:
   - choose:

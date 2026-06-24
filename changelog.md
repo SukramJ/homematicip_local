@@ -10,6 +10,10 @@
 - Routed the event entity device class through the `EntityDescriptionRegistry` (new `HmEventEntityDescription`, `event()` factory, `EVENT_RULES`, default for `DataPointCategory.EVENT_GROUP`) instead of hardcoding it on the entity class
 - The **openccu-loom backend** (loom client + integration adapter) is bundled as groundwork for a future alternative to the direct-CCU (aiohomematic) backend, but is **not user-selectable in 2.8.0**: the backend master switch (`LOOM_BACKEND_SELECTABLE` in `const.py`) is off, so a fresh setup goes straight to the direct-CCU step and the loom path behaves as if it were absent. No user-facing behaviour change.
 
+### Blueprints
+
+- The **Show device error** blueprint gains two optional filters — a device selector (`target_devices`, empty = all devices) and a comma-separated, case-insensitive ignore list of error parameters (`ignored_parameters`, e.g. `CONFIG_PENDING, STICKY_UNREACH`) — so noisy or expected errors can be suppressed without disabling the automation. The description now also explains that some errors are expected and self-resolve: after deleting a direct link (Direktverknüpfung) in the CCU/OCCU the removal is delivered to the device via a configuration transfer, and until that completes `CONFIG_PENDING` stays true and the link still lives in the device; for battery/RF devices the transfer only runs on the next radio contact (e.g. a button press), after which the notification clears automatically — no factory reset required (aiohomematic#3246)
+
 ### Dependencies
 
 #### New bundled dependency: `openccu-loom-client==2026.6.24` (pins `openccu-loom-types==0.1.29`)
