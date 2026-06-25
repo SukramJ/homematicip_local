@@ -7,7 +7,7 @@ from custom_components.homematicip_local.entity_helpers.base import HmSensorEnti
 from custom_components.homematicip_local.entity_helpers.factories import measurement_sensor, simple_sensor
 from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import UnitOfRatio
 
 # Device groups for LEVEL parameter handling
 _THERMOSTAT_DEVICES: tuple[str, ...] = (
@@ -57,7 +57,7 @@ LEVEL_SENSOR_RULES: list[EntityDescriptionRule] = [
             key="LEVEL",
             entity_registry_enabled_default=False,
             multiplier=100,
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="pipe_level",
         ),
@@ -72,7 +72,7 @@ LEVEL_SENSOR_RULES: list[EntityDescriptionRule] = [
             key="LEVEL",
             entity_registry_enabled_default=False,
             multiplier=100,
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="cover_level",
         ),
@@ -87,7 +87,7 @@ LEVEL_SENSOR_RULES: list[EntityDescriptionRule] = [
             key="LEVEL",
             entity_registry_enabled_default=False,
             multiplier=100,
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="light_level",
         ),
@@ -102,7 +102,7 @@ LEVEL_SENSOR_RULES: list[EntityDescriptionRule] = [
             key="LEVEL",
             entity_registry_enabled_default=False,
             multiplier=100,
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="cover_tilt",
         ),
@@ -125,7 +125,7 @@ LEVEL_SENSOR_RULES: list[EntityDescriptionRule] = [
         description=HmSensorEntityDescription(
             key="LEVEL",
             multiplier=100,
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
@@ -135,7 +135,7 @@ LEVEL_SENSOR_RULES: list[EntityDescriptionRule] = [
         parameters=("FILLING_LEVEL",),
         description=measurement_sensor(
             key="FILLING_LEVEL",
-            unit=PERCENTAGE,
+            unit=UnitOfRatio.PERCENTAGE,
         ),
     ),
     # Valve state (HM-CC-RT-DN, HM-CC-VD)
@@ -146,7 +146,7 @@ LEVEL_SENSOR_RULES: list[EntityDescriptionRule] = [
         priority=10,
         description=measurement_sensor(
             key="VALVE_STATE",
-            unit=PERCENTAGE,
+            unit=UnitOfRatio.PERCENTAGE,
             translation_key="pipe_level",
         ),
     ),

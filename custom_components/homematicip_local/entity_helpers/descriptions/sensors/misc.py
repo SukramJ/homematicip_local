@@ -12,7 +12,7 @@ from custom_components.homematicip_local.entity_helpers.factories import (
 )
 from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT, EntityCategory, UnitOfTime
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, EntityCategory, UnitOfRatio, UnitOfTime
 
 MISC_SENSOR_RULES: list[EntityDescriptionRule] = [
     # RSSI signal strength
@@ -31,7 +31,7 @@ MISC_SENSOR_RULES: list[EntityDescriptionRule] = [
         parameters=("CARRIER_SENSE_LEVEL",),
         description=diagnostic_sensor(
             key="CARRIER_SENSE_LEVEL",
-            unit=PERCENTAGE,
+            unit=UnitOfRatio.PERCENTAGE,
             icon="mdi:radio-tower",
             enabled_default=True,
         ),
@@ -42,7 +42,7 @@ MISC_SENSOR_RULES: list[EntityDescriptionRule] = [
         parameters=("DUTY_CYCLE_LEVEL",),
         description=diagnostic_sensor(
             key="DUTY_CYCLE_LEVEL",
-            unit=PERCENTAGE,
+            unit=UnitOfRatio.PERCENTAGE,
             icon="mdi:radio-tower",
             enabled_default=True,
         ),

@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.event import EventDeviceClass
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import EntityCategory, UnitOfRatio
 
 from .base import (
     HmBinarySensorEntityDescription,
@@ -411,7 +411,7 @@ def percentage_number(
 
     Automatically sets:
     - multiplier = 100
-    - native_unit_of_measurement = PERCENTAGE
+    - native_unit_of_measurement = UnitOfRatio.PERCENTAGE
 
     Example:
         percentage_number("LEVEL", translation_key="brightness_level")
@@ -420,7 +420,7 @@ def percentage_number(
     return HmNumberEntityDescription(
         key=key,
         multiplier=100,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_registry_enabled_default=enabled_default,
         translation_key=translation_key,
         **kwargs,

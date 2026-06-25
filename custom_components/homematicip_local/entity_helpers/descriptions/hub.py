@@ -19,7 +19,7 @@ from custom_components.homematicip_local.entity_helpers.factories import diagnos
 from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfLength, UnitOfTime
+from homeassistant.const import UnitOfEnergy, UnitOfLength, UnitOfRatio, UnitOfTime
 
 HUB_RULES: list[EntityDescriptionRule] = [
     # Hub buttons
@@ -187,7 +187,7 @@ HUB_RULES: list[EntityDescriptionRule] = [
         var_name_contains=METRICS_SENSOR_SYSTEM_HEALTH_NAME,
         description=diagnostic_sensor(
             key="SYSTEM_HEALTH",
-            unit=PERCENTAGE,
+            unit=UnitOfRatio.PERCENTAGE,
             icon="mdi:heart-pulse",
             translation_key="system_health",
             enabled_default=True,

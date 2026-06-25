@@ -11,7 +11,7 @@ from aiohomematic.const import DataPointCategory
 from custom_components.homematicip_local.entity_helpers.factories import measurement_sensor
 from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import CONCENTRATION_GRAMS_PER_CUBIC_METER, PERCENTAGE, UnitOfPressure, UnitOfTemperature
+from homeassistant.const import UnitOfDensity, UnitOfPressure, UnitOfRatio, UnitOfTemperature
 
 # Priority for fallback rules (very low, so they only match when nothing else does)
 _FALLBACK_PRIORITY = -100
@@ -21,11 +21,11 @@ FALLBACK_SENSOR_RULES: list[EntityDescriptionRule] = [
     # Percentage fallback
     EntityDescriptionRule(
         category=DataPointCategory.SENSOR,
-        unit=PERCENTAGE,
+        unit=UnitOfRatio.PERCENTAGE,
         priority=_FALLBACK_PRIORITY,
         description=measurement_sensor(
             key="PERCENTAGE_FALLBACK",
-            unit=PERCENTAGE,
+            unit=UnitOfRatio.PERCENTAGE,
         ),
     ),
     # Pressure (bar) fallback
@@ -53,11 +53,11 @@ FALLBACK_SENSOR_RULES: list[EntityDescriptionRule] = [
     # Absolute humidity (g/m³) fallback
     EntityDescriptionRule(
         category=DataPointCategory.SENSOR,
-        unit=CONCENTRATION_GRAMS_PER_CUBIC_METER,
+        unit=UnitOfDensity.GRAMS_PER_CUBIC_METER,
         priority=_FALLBACK_PRIORITY,
         description=measurement_sensor(
             key="CONCENTRATION_FALLBACK",
-            unit=CONCENTRATION_GRAMS_PER_CUBIC_METER,
+            unit=UnitOfDensity.GRAMS_PER_CUBIC_METER,
         ),
     ),
 ]

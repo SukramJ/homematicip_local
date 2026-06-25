@@ -8,13 +8,7 @@ from aiohomematic.const import DataPointCategory
 from custom_components.homematicip_local.entity_helpers.factories import measurement_sensor
 from custom_components.homematicip_local.entity_helpers.registry import EntityDescriptionRule
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import (
-    CONCENTRATION_GRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
-    UnitOfPressure,
-)
+from homeassistant.const import UnitOfDensity, UnitOfPressure, UnitOfRatio
 
 # Custom units
 NUMBER_CONCENTRATION_CM3: Final = "1/cm\u00b3"  # HmIP-SFD
@@ -31,7 +25,7 @@ AIR_QUALITY_SENSOR_RULES: list[EntityDescriptionRule] = [
         description=measurement_sensor(
             key="CONCENTRATION",
             device_class=SensorDeviceClass.CO2,
-            unit=CONCENTRATION_PARTS_PER_MILLION,
+            unit=UnitOfRatio.PARTS_PER_MILLION,
         ),
     ),
     # Humidity
@@ -41,7 +35,7 @@ AIR_QUALITY_SENSOR_RULES: list[EntityDescriptionRule] = [
         description=measurement_sensor(
             key="HUMIDITY",
             device_class=SensorDeviceClass.HUMIDITY,
-            unit=PERCENTAGE,
+            unit=UnitOfRatio.PERCENTAGE,
         ),
     ),
     # Vapor concentration (absolute humidity)
@@ -51,7 +45,7 @@ AIR_QUALITY_SENSOR_RULES: list[EntityDescriptionRule] = [
         description=measurement_sensor(
             key="VAPOR_CONCENTRATION",
             device_class=SensorDeviceClass.ABSOLUTE_HUMIDITY,
-            unit=CONCENTRATION_GRAMS_PER_CUBIC_METER,
+            unit=UnitOfDensity.GRAMS_PER_CUBIC_METER,
             entity_registry_enabled_default=False,
         ),
     ),
@@ -73,7 +67,7 @@ AIR_QUALITY_SENSOR_RULES: list[EntityDescriptionRule] = [
         description=measurement_sensor(
             key="MASS_CONCENTRATION_PM_1",
             device_class=SensorDeviceClass.PM1,
-            unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         ),
     ),
     # PM10 mass concentration
@@ -83,7 +77,7 @@ AIR_QUALITY_SENSOR_RULES: list[EntityDescriptionRule] = [
         description=measurement_sensor(
             key="MASS_CONCENTRATION_PM_10",
             device_class=SensorDeviceClass.PM10,
-            unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         ),
     ),
     # PM2.5 mass concentration
@@ -93,7 +87,7 @@ AIR_QUALITY_SENSOR_RULES: list[EntityDescriptionRule] = [
         description=measurement_sensor(
             key="MASS_CONCENTRATION_PM_2_5",
             device_class=SensorDeviceClass.PM25,
-            unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         ),
     ),
     # PM number concentrations
@@ -146,7 +140,7 @@ AIR_QUALITY_SENSOR_RULES: list[EntityDescriptionRule] = [
         parameters=("DIRT_LEVEL",),
         description=measurement_sensor(
             key="DIRT_LEVEL",
-            unit=PERCENTAGE,
+            unit=UnitOfRatio.PERCENTAGE,
         ),
     ),
     # Smoke level (e.g., smoke detector sensors)
@@ -155,7 +149,7 @@ AIR_QUALITY_SENSOR_RULES: list[EntityDescriptionRule] = [
         parameters=("SMOKE_LEVEL",),
         description=measurement_sensor(
             key="SMOKE_LEVEL",
-            unit=PERCENTAGE,
+            unit=UnitOfRatio.PERCENTAGE,
         ),
     ),
 ]
