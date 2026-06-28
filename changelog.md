@@ -1,4 +1,4 @@
-# Version [2.8.0](https://github.com/SukramJ/homematicip_local/compare/2.7.2...2.8.0) (2026-06-23)
+# Version [2.8.0](https://github.com/SukramJ/homematicip_local/compare/2.7.2...2.8.0) (2026-06-28)
 
 ## What's Changed
 
@@ -16,9 +16,9 @@
 
 ### Dependencies
 
-#### New bundled dependency: `openccu-loom-client==2026.6.24` (pins `openccu-loom-types==0.1.29`)
+#### New bundled dependency: `openccu-loom-client==2026.6.25` (pins `openccu-loom-types==0.1.44`)
 
-- Bundled for the not-yet-enabled openccu-loom backend (see Integration); it has no runtime effect while the backend master switch is off. Pulls `openccu-loom-types==0.1.29` transitively.
+- Bundled for the not-yet-enabled openccu-loom backend (see Integration); it has no runtime effect while the backend master switch is off. Pulls `openccu-loom-types==0.1.44` transitively.
 
 #### Bump aiohomematic to [2026.6.8](https://github.com/SukramJ/aiohomematic/compare/2026.5.11...2026.6.8)
 
@@ -28,6 +28,11 @@
 - Fix HmIP-RGBW / HmIP-DRG-DALI cannot be switched on (briefly flashes, then turns off again) (#3210)
 - Make interrupted device creation observable — `CancelledError` mid-build now logs a clear warning instead of silently abandoning the run with zero entities (#3213)
 - Revert the contract/event-type extraction (#3214): public event types stay in `aiohomematic.central.events`, no separate `aiohomematic-contract` runtime dependency
+
+#### Bump openccu-data to [2026.6.1](https://github.com/SukramJ/openccu-data/compare/2026.5.0...2026.6.1)
+
+- Restore the curated device-model labels for `HmIP-DLP`, `HmIP-UDI-SMI55`, `HmIP-SMO230` and `HmIP-SWDO-PL-2`: these models ship only as `device_icons` in the OCCU extract (no `device_models` entry), so without the curated overlay label they fell back to the raw model id in downstream consumers
+- Regenerate the bundled `easymode_extract.json.gz` and `translation_extract.json.gz` from the latest OCCU sources
 
 #### aiohomematic-config remains at [2026.5.0](https://github.com/SukramJ/aiohomematic-config/releases/tag/2026.5.0)
 
