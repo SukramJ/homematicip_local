@@ -153,6 +153,10 @@ Enhance your Home Assistant dashboard with custom cards designed for this integr
 | **Contributing** | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | **Sponsor** | [GitHub Sponsors](https://github.com/sponsors/SukramJ) |
 
+## Development
+
+Parts of Homematic(IP) Local for OpenCCU are developed with agentic AI assistance, primarily [Claude Code](https://www.anthropic.com/claude-code). Submitted issues are also triaged and analysed with agentic help. Every change is still reviewed by a human maintainer and must pass the project's tests before it lands — AI accelerates the work, it does not replace the review gate.
+
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
