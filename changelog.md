@@ -1,9 +1,10 @@
-# Version [2.8.0](https://github.com/SukramJ/homematicip_local/compare/2.7.2...2.8.0) (2026-07-03)
+# Version [2.8.0](https://github.com/SukramJ/homematicip_local/compare/2.7.2...2.8.0) (2026-07-05)
 
 ## What's Changed
 
 ### Integration
 
+- **Requires Home Assistant 2026.7.0 or newer** (was 2026.6.0): all sensor/number unit constants were migrated from the deprecated top-level constants (`PERCENTAGE`, `CONCENTRATION_PARTS_PER_MILLION`, `CONCENTRATION_GRAMS_PER_CUBIC_METER`, `CONCENTRATION_MICROGRAMS_PER_CUBIC_METER`) to the `UnitOfRatio` / `UnitOfDensity` enums introduced in HA 2026.7 — across the entity-description registry (hub metrics, air-quality, battery, level/valve and duty-cycle/carrier-sense sensors, the percentage-number factory and the unit fallbacks). The rendered units are identical, so there is no user-facing change beyond the raised minimum version (enforced by both `hacs.json` and the integration's startup check)
 - Fix hub, system-variable, install-mode, virtual-remote and virtual-remote event-group entities disappearing on upgrade (frontend#63): after the move to serial-anchored hub `unique_id`s, the one-time re-anchor migration only matched registries anchored on the *current* `entry_id[-10:]`. A registry inherited from any other anchor (a prior `entry_id` after a delete + re-add, or a stale serial) fell through, no longer matched the live keys, and was then permanently deleted by the startup orphan cleanup. The migration now realigns whatever value fills the central-id slot onto the live anchor (covering plain hub keys *and* the virtual-remote event groups), runs before entities are recreated, and skips on a `unique_id` collision instead of aborting. As defence-in-depth the orphan cleanup no longer deletes an entry whose data point still exists under a different central-id anchor (it leaves the realign migration to re-anchor it), and no longer deletes the integration-native `create_backup` button (which has no aiohomematic data point and is recreated on every setup)
 - Fix permanent mass deletion of entity-registry entries after a transient auth error (aiohomematic#3215): the startup orphan cleanup now refuses to run when it would remove more than half of the integration's registry entries — this guards against the central reporting `RUNNING` (clients connected) while the device descriptions failed to load, which previously wiped hundreds of entities and re-detected devices as new
 - Set `EventDeviceClass.DOORBELL` for HmIP-DBB event entities so they work with the new Home Assistant `doorbell` automation trigger; all other event entities continue to use `EventDeviceClass.BUTTON`
@@ -16,9 +17,9 @@
 
 ### Dependencies
 
-#### New bundled dependency: `openccu-loom-client==2026.6.25` (pins `openccu-loom-types==0.1.44`)
+#### New bundled dependency: `openccu-loom-client==2026.7.1` (pins `openccu-loom-types==0.1.50`)
 
-- Bundled for the not-yet-enabled openccu-loom backend (see Integration); it has no runtime effect while the backend master switch is off. Pulls `openccu-loom-types==0.1.44` transitively.
+- Bundled for the not-yet-enabled openccu-loom backend (see Integration); it has no runtime effect while the backend master switch is off. Pulls `openccu-loom-types==0.1.50` transitively.
 
 #### Bump aiohomematic to [2026.7.1](https://github.com/SukramJ/aiohomematic/compare/2026.5.11...2026.7.1)
 

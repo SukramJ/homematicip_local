@@ -9,7 +9,7 @@ from aiohomematic.const import CATEGORIES
 from homeassistant.const import Platform
 
 DOMAIN: Final = "homematicip_local"
-HMIP_LOCAL_MIN_HA_VERSION: Final = "2026.6.0"
+HMIP_LOCAL_MIN_HA_VERSION: Final = "2026.7.0"
 ENABLE_EXPERIMENTAL_FEATURES: Final = False
 CLIMATE_SCHEDULE_API_VERSION: Final = "v2.0"
 SCHEDULE_API_VERSION: Final = "v1.0"

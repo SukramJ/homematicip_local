@@ -119,7 +119,7 @@ homematicip_local/
 - **aiohomematic** (v2026.6.0) - Core async library for Homematic device communication
 - **aiohomematic-contract** (v2026.6.1) - Shared contract/event-type definitions
 - **aiohomematic-config** (v2026.5.0) - Device configuration metadata
-- **Home Assistant Core** - Minimum version: 2026.6.0+
+- **Home Assistant Core** - Minimum version: 2026.7.0+
 - **Python 3.14+** (target version for development)
 
 ### Development Dependencies
@@ -1086,7 +1086,7 @@ python script/check_translations.py
 ### Version Information
 
 - **Current Version:** 2.8.0
-- **Minimum HA Version:** 2026.6.0+
+- **Minimum HA Version:** 2026.7.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
 - **aiohomematic Version:** 2026.6.0
 
