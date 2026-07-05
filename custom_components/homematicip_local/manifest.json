@@ -12,7 +12,7 @@
   "loggers": ["aiohomematic", "aiohomematic_config", "openccu_loom_client"],
   "requirements": [
     "openccu-data==2026.6.1",
-    "openccu-loom-client==2026.6.25",
+    "openccu-loom-client==2026.7.1",
     "aiohomematic-config==2026.5.0",
     "aiohomematic==2026.7.1"
   ],

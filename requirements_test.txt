@@ -7,9 +7,9 @@ aiohomematic_config==2026.5.0
 isal==1.8.0
 mypy==2.1.0
 openccu-data>=2026.6.1
-openccu-loom-client==2026.6.25
-prek==0.4.6
+openccu-loom-client==2026.7.1
+prek==0.4.8
 pur==7.4.0
 pylint==4.0.6
 pylint_strict_informational==0.1
-pytest-homeassistant-custom-component-framework==1.0.33
+pytest-homeassistant-custom-component-framework==1.0.34
