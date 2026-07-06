@@ -27,6 +27,7 @@ BATTERY_SENSOR_RULES: list[EntityDescriptionRule] = [
         description=diagnostic_sensor(
             key="OPERATING_VOLTAGE_LEVEL",
             device_class=SensorDeviceClass.BATTERY,
+            suggested_display_precision=0,
             unit=UnitOfRatio.PERCENTAGE,
         ),
     ),
