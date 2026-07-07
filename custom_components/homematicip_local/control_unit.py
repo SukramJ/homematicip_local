@@ -34,6 +34,7 @@ from aiohomematic.const import (
     DEFAULT_SYSVAR_MARKERS,
     DEFAULT_UN_IGNORES,
     DEFAULT_USE_GROUP_CHANNEL_FOR_COVER_STATE,
+    IDENTIFIER_SEPARATOR,
     IP_ANY_V4,
     PORT_ANY,
     CentralState,
@@ -491,11 +492,16 @@ class ControlUnit(BaseControlUnit):
         backend device removal) remain in the entity registry indefinitely and cannot
         be removed via the UI. This sweep removes them on integration startup.
         Only runs when the central is fully started so that we don't delete entries
-        whose data points just haven't been loaded yet. As an additional safeguard it
-        refuses to run when it would remove more than ``ORPHAN_CLEANUP_MAX_DELETE_RATIO``
-        of the registry entries, which protects against a permanent mass deletion when
-        the device descriptions failed to load despite the central reporting RUNNING
-        (see aiohomematic#3215).
+        whose data points just haven't been loaded yet. Device-anchored entries are
+        additionally cross-checked against the devices the central currently exposes:
+        an entry whose backing device is not (yet) loaded is kept, because a device
+        that is merely still materialising (e.g. after a paramset-cache rebuild on
+        upgrade) is indistinguishable from a removed one by unique_id alone, and
+        deleting would re-create the entity disabled and under a fresh entity_id. As
+        an additional safeguard it refuses to run when it would remove more than
+        ``ORPHAN_CLEANUP_MAX_DELETE_RATIO`` of the registry entries, which protects
+        against a permanent mass deletion when the device descriptions failed to load
+        despite the central reporting RUNNING (see aiohomematic#3215).
         """
         if self._config.backend == BACKEND_LOOM:
             # The openccu-loom adapter exposes only a partial hub-coordinator
@@ -549,6 +555,7 @@ class ControlUnit(BaseControlUnit):
             )
 
         entity_registry = er.async_get(self._hass)
+        device_registry = dr.async_get(self._hass)
         platform_entries: list[er.RegistryEntry] = [
             entry
             for entry in er.async_entries_for_config_entry(entity_registry, self._entry_id)
@@ -556,23 +563,26 @@ class ControlUnit(BaseControlUnit):
         ]
         central_id = self._config.central_id
 
-        def _is_true_orphan(entry: er.RegistryEntry) -> bool:
-            """Return True only for entries whose data point is genuinely gone."""
-            if entry.unique_id in current_unique_ids:
-                return False
-            # The per-central backup button is integration-native (not an
-            # aiohomematic routing key) and is recreated on every setup, so it must
-            # never be swept.
-            if entry.unique_id.endswith("_create_backup"):
-                return False
-            # Central-id drift: the data point still exists but the registry entry
-            # is on a stale central-id anchor (a prior entry_id / serial). The
-            # setup-time realign migration owns this; deleting here would discard
-            # the user's customisations permanently, so never treat it as an orphan.
-            realigned = realign_hub_unique_id(entry.unique_id, central_id=central_id)
-            return realigned is None or realigned not in current_unique_ids
+        # Device addresses the central currently exposes. A device data point can be
+        # absent from current_unique_ids for two very different reasons: its device
+        # is gone (genuine orphan) or its device simply has not finished
+        # materialising yet (e.g. a slow start or a paramset-cache rebuild after an
+        # upgrade, where the central reports RUNNING before every device is built).
+        # The two are indistinguishable from unique_ids alone, so device entries are
+        # cross-checked against this set below.
+        known_device_addresses: set[str] = {device.address for device in self._central.device_coordinator.devices}
 
-        orphaned_entries: list[er.RegistryEntry] = [entry for entry in platform_entries if _is_true_orphan(entry)]
+        orphaned_entries: list[er.RegistryEntry] = [
+            entry
+            for entry in platform_entries
+            if _is_orphan_registry_entry(
+                entry,
+                current_unique_ids=current_unique_ids,
+                known_device_addresses=known_device_addresses,
+                device_registry=device_registry,
+                central_id=central_id,
+            )
+        ]
 
         # Refuse implausibly large sweeps: a near-total wipe almost always means the
         # central is RUNNING (clients connected) while the device descriptions failed
@@ -1503,3 +1513,56 @@ def _cleanup_instance_name(*, instance_name: str) -> str:
     for char in ("/", "\\"):
         instance_name = instance_name.replace(char, "")
     return instance_name
+
+
+def _entry_device_address(*, entry: er.RegistryEntry, device_registry: dr.DeviceRegistry) -> str | None:
+    """
+    Return the backing device address of a device-anchored registry entry, else None.
+
+    Returns None for hub / program / sysvar / install-mode / virtual-remote entries
+    (their HA device is the central pseudo-device, whose identifier carries no
+    ``IDENTIFIER_SEPARATOR``) and for entries whose HA device no longer exists
+    (``device_id`` unset or the device already removed) — a genuine removal, which
+    must stay subject to the normal orphan rules.
+    """
+    if entry.device_id is None or (device := device_registry.async_get(entry.device_id)) is None:
+        return None
+    for domain, identifier in device.identifiers:
+        if domain != DOMAIN:
+            continue
+        address, separator, _interface_id = identifier.partition(IDENTIFIER_SEPARATOR)
+        if separator:
+            return address
+    return None
+
+
+def _is_orphan_registry_entry(
+    entry: er.RegistryEntry,
+    *,
+    current_unique_ids: set[str],
+    known_device_addresses: set[str],
+    device_registry: dr.DeviceRegistry,
+    central_id: str,
+) -> bool:
+    """Return True only for entries whose data point is genuinely gone."""
+    if entry.unique_id in current_unique_ids:
+        return False
+    # The per-central backup button is integration-native (not an aiohomematic
+    # routing key) and is recreated on every setup, so it must never be swept.
+    if entry.unique_id.endswith("_create_backup"):
+        return False
+    # Central-id drift: the data point still exists but the registry entry is on a
+    # stale central-id anchor (a prior entry_id / serial). The setup-time realign
+    # migration owns this; deleting here would discard the user's customisations
+    # permanently, so never treat it as an orphan.
+    realigned = realign_hub_unique_id(entry.unique_id, central_id=central_id)
+    if realigned is not None and realigned in current_unique_ids:
+        return False
+    # Device-presence guard: when the entry is backed by a device the central does
+    # not currently expose, the missing data point most likely means the device is
+    # still materialising rather than gone. Skipping avoids permanently deleting
+    # (and re-creating, disabled, under a fresh entity_id) entities whenever a
+    # device loads slowly. A genuine removal drops the HA device too, so the address
+    # resolves to None there and the entry stays sweepable.
+    device_address = _entry_device_address(entry=entry, device_registry=device_registry)
+    return device_address is None or device_address in known_device_addresses

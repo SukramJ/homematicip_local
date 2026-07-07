@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from aiohomematic.const import CentralState, DeviceTriggerEventType
+from aiohomematic.const import IDENTIFIER_SEPARATOR, CentralState, DeviceTriggerEventType
 from aiohomematic.exceptions import AuthFailure
 import custom_components.homematicip_local
 from custom_components.homematicip_local import (
@@ -30,7 +30,7 @@ from custom_components.homematicip_local.control_unit import ControlUnit
 from custom_components.homematicip_local.support import realign_hub_unique_id
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests import const
 
@@ -278,12 +278,14 @@ def _build_orphan_sweep_self(
     metrics_unique_ids: tuple[str, str, str] | None = None,
     connectivity_unique_ids: tuple[str, ...] = (),
     install_mode_unique_ids: tuple[tuple[str, str], ...] = (),
+    known_device_addresses: tuple[str, ...] = (),
     backend: str = BACKEND_CCU,
     central_id: str = "11a0001234",
 ) -> SimpleNamespace:
     """Build a minimal ControlUnit-shaped self for _async_cleanup_orphaned_entity_registry_entries."""
     central = MagicMock()
     central.state = state
+    central.device_coordinator.devices = tuple(SimpleNamespace(address=address) for address in known_device_addresses)
     central.query_facade.get_data_points.return_value = tuple(
         SimpleNamespace(unique_id=uid) for uid in data_point_unique_ids
     )
@@ -606,6 +608,138 @@ async def test_cleanup_orphan_entries_skipped_when_data_load_incomplete(
         assert entity_registry.async_get(entry.entity_id) is not None, (
             f"{entry.entity_id} was deleted despite an incomplete device load"
         )
+
+
+def _create_alive_entities(
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    count: int,
+) -> tuple[str, ...]:
+    """Create ``count`` entities whose data points are reported alive; return their unique_id stems."""
+    stems = tuple(f"alive_{index}" for index in range(count))
+    for stem in stems:
+        entity_registry.async_get_or_create(
+            domain="sensor",
+            platform=HMIP_DOMAIN,
+            unique_id=f"{HMIP_DOMAIN}_{stem}",
+            config_entry=mock_config_entry,
+        )
+    return stems
+
+
+async def test_cleanup_orphan_entries_keeps_entry_of_not_yet_loaded_device(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+) -> None:
+    """
+    A device entry whose device is not (yet) loaded must be kept, not swept.
+
+    When the central reports RUNNING before every device is materialised (e.g. a
+    paramset-cache rebuild on upgrade), the device's data points are missing from
+    ``get_data_points()``. Deleting the (disabled) entry would re-create the entity
+    disabled and under a fresh entity_id, breaking dashboards/automations/history.
+    The device-presence guard keeps it because the backing device is still known to
+    HA but absent from the central's loaded devices.
+    """
+    mock_config_entry_v2.add_to_hass(hass)
+    entry_id = mock_config_entry_v2.entry_id
+
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+    alive = _create_alive_entities(entity_registry, mock_config_entry_v2, count=3)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_id,
+        identifiers={(HMIP_DOMAIN, f"ABC0000001{IDENTIFIER_SEPARATOR}CCU-Homematic")},
+    )
+    calculated_disabled = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_calculated_abc0000001_1_dew_point",
+        config_entry=mock_config_entry_v2,
+        device_id=device.id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    # Device ABC0000001 is NOT among the central's loaded devices -> not-yet-loaded.
+    fake_self = _build_orphan_sweep_self(hass, entry_id, data_point_unique_ids=alive)
+    ControlUnit._async_cleanup_orphaned_entity_registry_entries(fake_self)
+
+    assert entity_registry.async_get(calculated_disabled.entity_id) is not None
+
+
+async def test_cleanup_orphan_entries_removes_entry_when_device_loaded_but_data_point_gone(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+) -> None:
+    """A device entry whose device IS loaded but whose data point is gone stays sweepable.
+
+    This is the genuine-orphan case (e.g. un_ignore / profile change removed the
+    data point while the device itself is present), which must still be cleaned up.
+    """
+    mock_config_entry_v2.add_to_hass(hass)
+    entry_id = mock_config_entry_v2.entry_id
+
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+    alive = _create_alive_entities(entity_registry, mock_config_entry_v2, count=3)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_id,
+        identifiers={(HMIP_DOMAIN, f"ABC0000001{IDENTIFIER_SEPARATOR}CCU-Homematic")},
+    )
+    orphan_disabled = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_abc0000001_1_gone_parameter",
+        config_entry=mock_config_entry_v2,
+        device_id=device.id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    # Device ABC0000001 IS loaded, but its data point is not reported -> real orphan.
+    fake_self = _build_orphan_sweep_self(
+        hass, entry_id, data_point_unique_ids=alive, known_device_addresses=("ABC0000001",)
+    )
+    ControlUnit._async_cleanup_orphaned_entity_registry_entries(fake_self)
+
+    assert entity_registry.async_get(orphan_disabled.entity_id) is None
+
+
+async def test_cleanup_orphan_entries_removes_hub_anchored_entry_regardless_of_devices(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+) -> None:
+    """A hub-anchored orphan is still swept: the guard only shields real device entries.
+
+    Hub / program / sysvar entries hang off the central pseudo-device, whose
+    identifier carries no ``IDENTIFIER_SEPARATOR``, so the device-presence guard must
+    not shield them even when no devices are loaded.
+    """
+    mock_config_entry_v2.add_to_hass(hass)
+    entry_id = mock_config_entry_v2.entry_id
+
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+    alive = _create_alive_entities(entity_registry, mock_config_entry_v2, count=3)
+
+    hub_device = device_registry.async_get_or_create(
+        config_entry_id=entry_id,
+        identifiers={(HMIP_DOMAIN, "CCU-Homematic")},
+    )
+    hub_orphan = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_deleted_sysvar",
+        config_entry=mock_config_entry_v2,
+        device_id=hub_device.id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    fake_self = _build_orphan_sweep_self(hass, entry_id, data_point_unique_ids=alive)
+    ControlUnit._async_cleanup_orphaned_entity_registry_entries(fake_self)
+
+    assert entity_registry.async_get(hub_orphan.entity_id) is None
 
 
 class TestLoomUniqueIdMigration:

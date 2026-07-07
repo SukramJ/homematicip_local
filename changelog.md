@@ -1,3 +1,11 @@
+# Version [2.8.1](https://github.com/SukramJ/homematicip_local/compare/2.8.0...2.8.1)
+
+## What's Changed
+
+### Integration
+
+- Fix the startup orphan cleanup permanently deleting entities of devices that are only still loading (e.g. a paramset-cache rebuild on upgrade, when the central reports `RUNNING` before every device is built), which re-created them disabled and under a new `entity_id`. Device entries whose device is not yet loaded are now kept; genuine orphans (device present but data point gone, or device removed) stay sweepable
+
 # Version [2.8.0](https://github.com/SukramJ/homematicip_local/compare/2.7.2...2.8.0) (2026-07-05)
 
 ## What's Changed
