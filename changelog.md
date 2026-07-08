@@ -5,6 +5,13 @@
 ### Integration
 
 - Expose the HmIP-DSD-PCB doorbell sensor's event with the `doorbell` event device class instead of the generic `button` (#3276). Its ring input channel produces an event group that previously fell back to the `button` default; it now matches the doorbell rule alongside the HmIP-DBB
+- Expose color temperature for the HmIP-LSC (#3277). `supported_color_modes` now also honours the light's static color capabilities (`capabilities.hs_color`/`capabilities.color_temperature`), so a light that supports both color and color temperature — like the HmIP-LSC, which has no `DEVICE_OPERATION_MODE` and switches between the two at runtime — advertises `{hs, color_temp}` statically while `color_mode` keeps reporting the currently active mode via `has_*`. Lights with a single, mode-based color capability are unaffected
+
+### Dependencies
+
+#### Bump aiohomematic to [2026.7.3](https://github.com/SukramJ/aiohomematic/compare/2026.7.2...2026.7.3)
+
+- HmIP-LSC now exposes color temperature in addition to color (#3277): a dedicated `CustomDpIpRGBWColorTempLight` advertises both color modes statically and derives the active mode from the value the device reports
 
 # Version [2.8.2](https://github.com/SukramJ/homematicip_local/compare/2.8.1...2.8.2) (2026-07-08)
 

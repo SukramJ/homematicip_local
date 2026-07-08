@@ -57,6 +57,8 @@ def create_mock_light(
     supports_color_temperature: bool = False,
     supports_brightness: bool = True,
     supports_effects: bool = False,
+    capability_hs_color: bool = False,
+    capability_color_temperature: bool = False,
     is_restored: bool = False,
     restored_state: MockRestoredState | None = None,
     is_fixed_color_light: bool = False,
@@ -82,6 +84,8 @@ def create_mock_light(
     # Static capabilities
     mock_capabilities = MagicMock()
     mock_capabilities.brightness = supports_brightness
+    mock_capabilities.hs_color = capability_hs_color
+    mock_capabilities.color_temperature = capability_color_temperature
     mock_data_point.capabilities = mock_capabilities
     mock_data_point.turn_on = AsyncMock()
     mock_data_point.turn_off = AsyncMock()
@@ -390,6 +394,29 @@ class TestAioHomematicLightSupportedColorModes:
         """Test supported color modes with ONOFF only."""
         light = create_mock_light(supports_hs_color=False, supports_color_temperature=False, supports_brightness=False)
         assert ColorMode.ONOFF in light.supported_color_modes
+
+    def test_supported_color_modes_static_capabilities_advertise_both(self) -> None:
+        """Test that static capabilities advertise both modes even when only one is active (HmIP-LSC)."""
+        # Color temperature is the active mode (has_*), but the light statically
+        # supports both. supported_color_modes must stay {HS, COLOR_TEMP}.
+        light = create_mock_light(
+            supports_hs_color=False,
+            supports_color_temperature=True,
+            capability_hs_color=True,
+            capability_color_temperature=True,
+        )
+        assert light.supported_color_modes == {ColorMode.HS, ColorMode.COLOR_TEMP}
+        assert light.color_mode == ColorMode.COLOR_TEMP
+
+        # Switching the active mode to hs must keep the same static supported set.
+        light = create_mock_light(
+            supports_hs_color=True,
+            supports_color_temperature=False,
+            capability_hs_color=True,
+            capability_color_temperature=True,
+        )
+        assert light.supported_color_modes == {ColorMode.HS, ColorMode.COLOR_TEMP}
+        assert light.color_mode == ColorMode.HS
 
 
 class TestAioHomematicLightSupportedFeatures:

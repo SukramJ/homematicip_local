@@ -200,13 +200,20 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
     @override
     def supported_color_modes(self) -> set[ColorMode] | None:
         """Flag supported color modes."""
+        data_point = self._data_point
+        capabilities = data_point.capabilities
+        # supported_color_modes must be static, so it also honours the light's
+        # static color capabilities. Lights whose active color mode is dynamic
+        # (e.g. HmIP-LSC, which switches between hs and color_temp at runtime)
+        # advertise both modes via capabilities while has_* reports the currently
+        # active one for color_mode below.
         supported_color_modes: set[ColorMode] = set()
-        if self._data_point.has_hs_color:
+        if data_point.has_hs_color or capabilities.hs_color:
             supported_color_modes.add(ColorMode.HS)
-        if self._data_point.has_color_temperature:
+        if data_point.has_color_temperature or capabilities.color_temperature:
             supported_color_modes.add(ColorMode.COLOR_TEMP)
 
-        if len(supported_color_modes) == 0 and self._data_point.capabilities.brightness:
+        if len(supported_color_modes) == 0 and capabilities.brightness:
             supported_color_modes.add(ColorMode.BRIGHTNESS)
         if len(supported_color_modes) == 0:
             supported_color_modes.add(ColorMode.ONOFF)
