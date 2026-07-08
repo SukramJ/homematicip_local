@@ -489,7 +489,7 @@ class TestAioHomematicLightTurnOn:
 
     @pytest.mark.asyncio
     async def test_turn_on_all_kwargs(self) -> None:
-        """Test turn on with all kwargs."""
+        """Test turn on with all kwargs; color modes are mutually exclusive (color_temp wins)."""
         light = create_mock_light(color_temp_kelvin=None, hs_color=None, brightness=None)
         await light.async_turn_on(
             **{
@@ -504,7 +504,8 @@ class TestAioHomematicLightTurnOn:
         call_kwargs = light._data_point.turn_on.call_args[1]
         assert call_kwargs.get("brightness") == 200
         assert call_kwargs.get("color_temp_kelvin") == 4500
-        assert call_kwargs.get("hs_color") == (240.0, 100.0)
+        # hs_color is NOT forwarded alongside color_temp_kelvin (mutually exclusive, #3277).
+        assert "hs_color" not in call_kwargs
         assert call_kwargs.get("ramp_time") == 2
         assert call_kwargs.get("effect") == "Strobe"
 
@@ -516,6 +517,16 @@ class TestAioHomematicLightTurnOn:
         light._data_point.turn_on.assert_called_once()
 
     @pytest.mark.asyncio
+    async def test_turn_on_color_temp_while_in_hs_mode_excludes_hs(self) -> None:
+        """Requesting a color temperature while in HS mode must not also send hs_color (#3277)."""
+        # Device currently in HS mode: color_temp_kelvin is None, hs_color is set.
+        light = create_mock_light(color_temp_kelvin=None, hs_color=(19.0, 92.0))
+        await light.async_turn_on(**{ATTR_COLOR_TEMP_KELVIN: 3300})
+        call_kwargs = light._data_point.turn_on.call_args[1]
+        assert call_kwargs.get("color_temp_kelvin") == 3300
+        assert "hs_color" not in call_kwargs
+
+    @pytest.mark.asyncio
     async def test_turn_on_defaults_brightness_to_255(self) -> None:
         """Test turn on defaults brightness to 255 when None."""
         light = create_mock_light(is_valid=True, brightness=None)
@@ -525,6 +536,16 @@ class TestAioHomematicLightTurnOn:
         light._data_point.turn_on.assert_called_once()
         call_kwargs = light._data_point.turn_on.call_args[1]
         assert call_kwargs.get("brightness") == 255
+
+    @pytest.mark.asyncio
+    async def test_turn_on_hs_while_in_color_temp_mode_excludes_color_temp(self) -> None:
+        """Requesting an hs color while in color-temp mode must not also send color_temp_kelvin."""
+        # Device currently in color-temp mode: hs_color is None, color_temp_kelvin is set.
+        light = create_mock_light(color_temp_kelvin=3300, hs_color=None)
+        await light.async_turn_on(**{ATTR_HS_COLOR: (180.0, 50.0)})
+        call_kwargs = light._data_point.turn_on.call_args[1]
+        assert call_kwargs.get("hs_color") == (180.0, 50.0)
+        assert "color_temp_kelvin" not in call_kwargs
 
     @pytest.mark.asyncio
     async def test_turn_on_uses_current_brightness(self) -> None:
@@ -597,6 +618,22 @@ class TestAioHomematicLightTurnOn:
         light._data_point.turn_on.assert_called_once()
         call_kwargs = light._data_point.turn_on.call_args[1]
         assert call_kwargs.get("ramp_time") == 3
+
+    @pytest.mark.asyncio
+    async def test_turn_on_without_color_restores_active_mode(self) -> None:
+        """A plain turn_on (no color requested) restores the currently active mode's value."""
+        # color-temp mode: only color_temp_kelvin is restored
+        light = create_mock_light(color_temp_kelvin=3300, hs_color=None)
+        await light.async_turn_on(**{ATTR_BRIGHTNESS: 100})
+        call_kwargs = light._data_point.turn_on.call_args[1]
+        assert call_kwargs.get("color_temp_kelvin") == 3300
+        assert "hs_color" not in call_kwargs
+        # hs mode: only hs_color is restored
+        light = create_mock_light(color_temp_kelvin=None, hs_color=(19.0, 92.0))
+        await light.async_turn_on(**{ATTR_BRIGHTNESS: 100})
+        call_kwargs = light._data_point.turn_on.call_args[1]
+        assert call_kwargs.get("hs_color") == (19.0, 92.0)
+        assert "color_temp_kelvin" not in call_kwargs
 
 
 class TestAsyncSetupEntry:

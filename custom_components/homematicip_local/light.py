@@ -307,12 +307,21 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         hm_kwargs = LightOnArgs()
-        # Use color_temp_kelvin from kwargs, if not applicable use current color_temp_kelvin.
-        if color_temp_kelvin := kwargs.get(ATTR_COLOR_TEMP_KELVIN, self.color_temp_kelvin):
-            hm_kwargs["color_temp_kelvin"] = color_temp_kelvin
-        # Use hs_color from kwargs, if not applicable use current hs_color.
-        if hs_color := kwargs.get(ATTR_HS_COLOR, self.hs_color):
-            hm_kwargs["hs_color"] = hs_color
+        # Color modes are mutually exclusive: Home Assistant sends at most one of
+        # hs_color / color_temp_kelvin per turn_on. An explicit request must NOT be
+        # paired with the *other* mode's current value — a light that supports both
+        # (e.g. HmIP-LSC) would otherwise receive HUE/SATURATION and COLOR_TEMPERATURE
+        # together in one putParamset and keep the old mode instead of switching
+        # (#3277). Only when no color is requested do we restore the current value(s).
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            hm_kwargs["color_temp_kelvin"] = kwargs[ATTR_COLOR_TEMP_KELVIN]
+        elif ATTR_HS_COLOR in kwargs:
+            hm_kwargs["hs_color"] = kwargs[ATTR_HS_COLOR]
+        else:
+            if color_temp_kelvin := self.color_temp_kelvin:
+                hm_kwargs["color_temp_kelvin"] = color_temp_kelvin
+            if hs_color := self.hs_color:
+                hm_kwargs["hs_color"] = hs_color
         # Use brightness from kwargs, with optional last_brightness fallback when light is off.
         brightness: int | None = kwargs.get(ATTR_BRIGHTNESS)
         if brightness is None:

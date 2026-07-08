@@ -6,6 +6,7 @@
 
 - Expose the HmIP-DSD-PCB doorbell sensor's event with the `doorbell` event device class instead of the generic `button` (#3276). Its ring input channel produces an event group that previously fell back to the `button` default; it now matches the doorbell rule alongside the HmIP-DBB
 - Expose color temperature for the HmIP-LSC (#3277). `supported_color_modes` now also honours the light's static color capabilities (`capabilities.hs_color`/`capabilities.color_temperature`), so a light that supports both color and color temperature — like the HmIP-LSC, which has no `DEVICE_OPERATION_MODE` and switches between the two at runtime — advertises `{hs, color_temp}` statically while `color_mode` keeps reporting the currently active mode via `has_*`. Lights with a single, mode-based color capability are unaffected
+- Fix `light.turn_on` not switching the HmIP-LSC from color to color temperature (#3277). `async_turn_on` treated the two color modes as independent and, when only a color temperature was requested, still forwarded the *current* `hs_color` — so `HUE`/`SATURATION` and `COLOR_TEMPERATURE` were written together in one `putParamset` and the device kept the old color. The modes are now mutually exclusive: an explicit `color_temp_kelvin` or `hs_color` request is sent on its own, and the current value is only restored when no color is requested
 
 ### Dependencies
 
