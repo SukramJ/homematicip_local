@@ -858,6 +858,7 @@ class TestRealignedHubUniqueId:
             f"{_D}_11a0001234_sysvar_x",  # already on the live anchor
             f"{_D}_openccu_create_backup",  # synthetic native button — not a routing key
             f"{_D}_event_group_keypress_0008dd8997b338_1",  # device event group — no central slot
+            f"{_D}_calculated_0008dd8997b338_1_dew_point",  # device-anchored calculated DP — no central slot
             "other_integration_xyz",  # not ours
         ],
     )
@@ -876,6 +877,16 @@ class TestRealignedHubUniqueId:
             (f"{_D}_a1b2c3d4e5_int0001234_1_level", f"{_D}_11a0001234_int0001234_1_level"),
             (f"{_D}_a1b2c3d4e5_bidcos_rf_1_press_short", f"{_D}_11a0001234_bidcos_rf_1_press_short"),
             (f"{_D}_w78v4413eq_hmip_rcv_1_9_press_long", f"{_D}_11a0001234_hmip_rcv_1_9_press_long"),
+            # Calculated DPs on internal/hub channels: the central-id slot sits before
+            # the `calculated_` marker and must be realigned like any other hub key.
+            (
+                f"{_D}_a1b2c3d4e5_calculated_int0001234_1_dew_point",
+                f"{_D}_11a0001234_calculated_int0001234_1_dew_point",
+            ),
+            (
+                f"{_D}_w78v4413eq_calculated_int0001234_1_vapor_concentration",
+                f"{_D}_11a0001234_calculated_int0001234_1_vapor_concentration",
+            ),
             # Virtual-remote event groups keep their event_group_<type>_ prefix.
             (
                 f"{_D}_event_group_keypress_w78v4413eq_bidcos_rf_1",
@@ -1000,6 +1011,14 @@ async def test_async_migrate_aiohomematic_hub_unique_ids_realigns_stale_anchor(h
         unique_id=f"{HMIP_DOMAIN}_{stale}_bidcos_rf_9_press_long",
         config_entry=entry,
     )
+    # Calculated DP on an internal heating-group channel: <central-id>_calculated_int...
+    # (regression for #3272 — these fell through the realign and were orphan-deleted).
+    calculated = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_{stale}_calculated_int0001234_1_dew_point",
+        config_entry=entry,
+    )
     event_group = entity_registry.async_get_or_create(
         domain="event",
         platform=HMIP_DOMAIN,
@@ -1019,6 +1038,10 @@ async def test_async_migrate_aiohomematic_hub_unique_ids_realigns_stale_anchor(h
     assert (
         entity_registry.async_get(vremote.entity_id).unique_id
         == f"{HMIP_DOMAIN}_{serial_suffix}_bidcos_rf_9_press_long"
+    )
+    assert (
+        entity_registry.async_get(calculated.entity_id).unique_id
+        == f"{HMIP_DOMAIN}_{serial_suffix}_calculated_int0001234_1_dew_point"
     )
     assert (
         entity_registry.async_get(event_group.entity_id).unique_id

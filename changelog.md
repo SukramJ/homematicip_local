@@ -4,6 +4,7 @@
 
 ### Integration
 
+- Fix calculated data points on internal / heating-group channels (Taupunkt/dew point, Dampfkonzentration/vapor concentration, Enthalpie/enthalpy, Taupunkt-Spreizung/dew-point spread) being orphan-deleted and re-created disabled under a new, name-doubled `entity_id` after the central-id realign migration (#3272). Their unique_ids carry a `calculated_` marker between the central-id slot and the channel infix (`<central-id>_calculated_int000…`), which `realign_hub_unique_id` did not recognise, so — unlike every other hub/internal key — they were left on the stale anchor, no longer matched the live central id, and were swept away by the orphan cleanup (losing manual enablement and history). The realign now handles the `calculated_` variant; device-anchored calculated DPs (`calculated_<serial>_…`, no central-id slot) stay untouched
 - Relax the aiohomematic version gate in `async_setup_entry` from an exact-match check to a minimum-version check. Setup is now only blocked when the installed aiohomematic is **older** than the version this release was built against; a newer (patch) aiohomematic no longer aborts setup. This fixes spurious "requires aiohomematic version X, but found version Y / setup blocked" failures (#3275) that occurred when HA/pip resolved a newer aiohomematic than the manifest pin via transitive, upper-bound-less dependencies
 
 ### Dependencies

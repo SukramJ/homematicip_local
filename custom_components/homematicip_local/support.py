@@ -86,6 +86,10 @@ _HUB_KEY_INFIXES: Final[tuple[str, ...]] = (
     *_VIRTUAL_REMOTE_INFIXES,
 )
 _EVENT_GROUP_PREFIX: Final = "event_group_"
+# Calculated data points on internal / hub channels insert this marker between the
+# central-id slot and the infix: ``<central-id>_calculated_<infix>...``. Device-anchored
+# calculated DPs are spelled ``calculated_<serial>_...`` (no central-id slot) instead.
+_CALCULATED_MARKER: Final = "calculated_"
 
 
 def realign_hub_unique_id(unique_id: str, *, central_id: str) -> str | None:
@@ -119,10 +123,20 @@ def realign_hub_unique_id(unique_id: str, *, central_id: str) -> str | None:
         rebuilt = f"{prefix}{_EVENT_GROUP_PREFIX}{event_type}_{central_id}_{rest}"
         return rebuilt if rebuilt != unique_id else None
     # Standard hub / virtual-remote keys: <central-id>_<infix>...
+    # Calculated DPs on internal / hub channels carry an extra ``calculated_`` marker
+    # between the central-id slot and the infix (<central-id>_calculated_<infix>...);
+    # device-anchored calculated DPs (``calculated_<serial>_...``) have no central-id
+    # slot and fall through untouched.
     _slot, sep, rest = key.partition("_")
-    if not sep or not rest.startswith(_HUB_KEY_INFIXES):
+    if not sep:
         return None
-    rebuilt = f"{prefix}{central_id}_{rest}"
+    marker = ""
+    if rest.startswith(_CALCULATED_MARKER):
+        marker = _CALCULATED_MARKER
+        rest = rest[len(_CALCULATED_MARKER) :]
+    if not rest.startswith(_HUB_KEY_INFIXES):
+        return None
+    rebuilt = f"{prefix}{central_id}_{marker}{rest}"
     return rebuilt if rebuilt != unique_id else None
 
 
