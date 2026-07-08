@@ -1,3 +1,11 @@
+# Version [2.8.3](https://github.com/SukramJ/homematicip_local/compare/2.8.2...2.8.3) (2026-07-08)
+
+## What's Changed
+
+### Integration
+
+- Expose the HmIP-DSD-PCB doorbell sensor's event with the `doorbell` event device class instead of the generic `button` (#3276). Its ring input channel produces an event group that previously fell back to the `button` default; it now matches the doorbell rule alongside the HmIP-DBB
+
 # Version [2.8.2](https://github.com/SukramJ/homematicip_local/compare/2.8.1...2.8.2) (2026-07-08)
 
 ## What's Changed

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import pytest
+
 from aiohomematic.const import DataPointCategory
 from custom_components.homematicip_local.entity_helpers import REGISTRY
+from homeassistant.components.event import EventDeviceClass
 
 
 class TestEntityHelper:
@@ -40,6 +43,29 @@ class TestEntityHelper:
 
         assert description is not None
         assert description.key == "BLIND"
+
+    @pytest.mark.parametrize("device_model", ["HmIP-DBB", "HmIP-DSD-PCB"])
+    def test_registry_find_doorbell_event(self, device_model: str) -> None:
+        """Doorbell devices expose their event group with the doorbell device class."""
+        description = REGISTRY.find(
+            category=DataPointCategory.EVENT_GROUP,
+            device_model=device_model,
+        )
+
+        assert description is not None
+        assert description.key == "event_doorbell"
+        assert description.device_class == EventDeviceClass.DOORBELL
+
+    def test_registry_find_event_defaults_to_button(self) -> None:
+        """A non-doorbell keypress device keeps the default button device class."""
+        description = REGISTRY.find(
+            category=DataPointCategory.EVENT_GROUP,
+            device_model="HmIP-WRC2",
+        )
+
+        assert description is not None
+        assert description.key == "event_default"
+        assert description.device_class == EventDeviceClass.BUTTON
 
     def test_registry_find_sensor(self) -> None:
         """Test finding a sensor description."""

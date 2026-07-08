@@ -10,7 +10,9 @@ from homeassistant.components.event import EventDeviceClass
 EVENT_RULES: list[EntityDescriptionRule] = [
     EntityDescriptionRule(
         category=DataPointCategory.EVENT_GROUP,
-        devices=("HmIP-DBB",),
+        # HmIP-DBB: wireless doorbell button. HmIP-DSD-PCB: doorbell sensor PCB whose
+        # input channel signals a ring — both are doorbells, not generic buttons.
+        devices=("HmIP-DBB", "HmIP-DSD-PCB"),
         description=event(
             key="event_doorbell",
             device_class=EventDeviceClass.DOORBELL,
