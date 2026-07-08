@@ -1,3 +1,14 @@
+# Version [2.8.2](https://github.com/SukramJ/homematicip_local/compare/2.8.1...2.8.2) (2026-07-08)
+
+## What's Changed
+
+### Dependencies
+
+#### Bump aiohomematic to [2026.7.2](https://github.com/SukramJ/aiohomematic/compare/2026.7.1...2026.7.2)
+
+- Fix CUxD/CCU-Jack devices going unavailable after init (#3228): the per-parameter `getValue` fallback is now disabled for these JSON-RPC interfaces (added to `INTERFACES_SKIPPING_INIT_GETVALUE_FALLBACK`), which previously flooded the CCU session pool during initialization and marked the devices unavailable. Values now arrive via the bulk `get_all_device_data` fetch and MQTT events instead, and a contract test guards the behaviour
+- Fix a JSON-RPC session login race on cold start: concurrent login attempts previously created multiple CCU sessions simultaneously, risking "too many sessions" errors. `_login_or_renew` now serializes login/renew with an `asyncio.Lock` (with a lock-free fast path for recently refreshed sessions), so only one session is created at startup
+
 # Version [2.8.1](https://github.com/SukramJ/homematicip_local/compare/2.8.0...2.8.1)
 
 ## What's Changed
