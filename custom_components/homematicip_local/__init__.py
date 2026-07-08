@@ -124,9 +124,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
     # aiohomematic version gate for it.
     is_loom_backend = entry.data.get(CONF_BACKEND) == BACKEND_LOOM
     expected_version = await get_aiohomematic_version(hass=hass, domain=entry.domain, package_name="aiohomematic")
-    if not is_loom_backend and AwesomeVersion(expected_version) != AwesomeVersion(HAHM_VERSION):
+    # Only block when the installed aiohomematic is OLDER than the version this
+    # release was built against. A newer (patch) version is fine and must not
+    # abort setup - HA/pip can legitimately resolve a newer aiohomematic than
+    # the manifest pin via transitive, upper-bound-less dependencies.
+    if (
+        not is_loom_backend
+        and expected_version is not None
+        and AwesomeVersion(HAHM_VERSION) < AwesomeVersion(expected_version)
+    ):
         _LOGGER.error(
-            "This release of Homematic(IP) Local for OpenCCU requires aiohomematic version %s, but found version %s. "
+            "This release of Homematic(IP) Local for OpenCCU requires aiohomematic version %s or newer, "
+            "but found the older version %s. "
             "Looks like HA has a problem with dependency management. "
             "This is NOT an issue of the integration.",
             expected_version,

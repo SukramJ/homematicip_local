@@ -997,6 +997,20 @@ These rules govern how the AI assistant communicates and works with the develope
    - Sync with translations/en.json and translations/de.json
    - Run check-translations hook
 
+6. **Don't reorder `manifest.json` requirements — keep `aiohomematic` LAST:**
+   - The `aiohomematic==...` pin MUST remain the final entry in the `requirements` list.
+   - HA installs each requirement as its own `uv pip install --upgrade <req>` call (no
+     atomic resolve, no `--constraint`). The sub-packages `aiohomematic-config` and
+     `openccu-loom-client` depend on `aiohomematic` via open, upper-bound-less `>=` ranges,
+     so a sibling install can pull a *newer* aiohomematic than the manifest pin. Whichever
+     `aiohomematic` line runs LAST wins, so keeping the exact pin last lets it override any
+     newer transitively-pulled version.
+   - Moving it earlier reopens the dependency-version bug fixed in aiohomematic#2981 (and
+     related to the version gate in `__init__.py`, see aiohomematic#3275).
+   - The version gate in `async_setup_entry` is a **minimum-version** check: setup is only
+     blocked when the installed aiohomematic is *older* than the manifest pin; a newer patch
+     is allowed.
+
 ### Refactoring Workflow
 
 When performing a refactoring task, follow this workflow:

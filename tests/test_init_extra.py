@@ -35,17 +35,22 @@ class TestAsyncSetupEntry:
     """Tests for async_setup_entry edge cases."""
 
     @pytest.mark.asyncio
-    async def test_blocks_on_dependency_mismatch(self, hass) -> None:
-        """When expected aiohomematic version != actual, setup should return False and log warning."""
+    async def test_allows_newer_installed_version(self, hass, caplog) -> None:
+        """When installed aiohomematic is NEWER than required, the version gate must not block."""
         entry = _MockEntry(entry_id="1", data={})
 
-        # Simulate mismatch: expected != installed
+        # expected (required minimum) older than installed -> gate must pass.
+        # Force the *next* gate (HA min version) to abort so we do not run real
+        # setup, then assert the aiohomematic gate did not fire.
         with (
             patch("custom_components.homematicip_local.get_aiohomematic_version", return_value="1.2.3"),
             patch("custom_components.homematicip_local.HAHM_VERSION", "9.9.9"),
+            patch("custom_components.homematicip_local.HMIP_LOCAL_MIN_HA_VERSION", "9999.1.1"),
         ):
             ok = await hm_init.async_setup_entry(hass, entry)  # type: ignore[arg-type]
             assert ok is False
+
+        assert "requires aiohomematic version" not in caplog.text
 
     @pytest.mark.asyncio
     async def test_blocks_on_low_ha_version(self, hass) -> None:
@@ -55,6 +60,19 @@ class TestAsyncSetupEntry:
         with (
             patch("custom_components.homematicip_local.get_aiohomematic_version", return_value=hm_init.HAHM_VERSION),
             patch("custom_components.homematicip_local.HMIP_LOCAL_MIN_HA_VERSION", "9999.1.1"),
+        ):
+            ok = await hm_init.async_setup_entry(hass, entry)  # type: ignore[arg-type]
+            assert ok is False
+
+    @pytest.mark.asyncio
+    async def test_blocks_on_older_installed_version(self, hass) -> None:
+        """When installed aiohomematic is OLDER than required, setup should return False."""
+        entry = _MockEntry(entry_id="1", data={})
+
+        # expected (required minimum) newer than installed -> block
+        with (
+            patch("custom_components.homematicip_local.get_aiohomematic_version", return_value="9.9.9"),
+            patch("custom_components.homematicip_local.HAHM_VERSION", "1.2.3"),
         ):
             ok = await hm_init.async_setup_entry(hass, entry)  # type: ignore[arg-type]
             assert ok is False

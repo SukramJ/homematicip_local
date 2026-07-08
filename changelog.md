@@ -2,6 +2,10 @@
 
 ## What's Changed
 
+### Integration
+
+- Relax the aiohomematic version gate in `async_setup_entry` from an exact-match check to a minimum-version check. Setup is now only blocked when the installed aiohomematic is **older** than the version this release was built against; a newer (patch) aiohomematic no longer aborts setup. This fixes spurious "requires aiohomematic version X, but found version Y / setup blocked" failures (#3275) that occurred when HA/pip resolved a newer aiohomematic than the manifest pin via transitive, upper-bound-less dependencies
+
 ### Dependencies
 
 #### Bump aiohomematic to [2026.7.2](https://github.com/SukramJ/aiohomematic/compare/2026.7.1...2026.7.2)
