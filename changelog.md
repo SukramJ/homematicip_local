@@ -1,4 +1,4 @@
-# Version [2.8.3](https://github.com/SukramJ/homematicip_local/compare/2.8.2...2.8.3) (2026-07-09)
+# Version [2.8.3](https://github.com/SukramJ/homematicip_local/compare/2.8.2...2.8.3) (2026-07-10)
 
 ## What's Changed
 
@@ -10,8 +10,10 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.7.4](https://github.com/SukramJ/aiohomematic/compare/2026.7.2...2026.7.4)
+#### Bump aiohomematic to [2026.7.5](https://github.com/SukramJ/aiohomematic/compare/2026.7.2...2026.7.5)
 
+- Fix the climate entity for HmIP-WTH-B (and other thermostats) failing to load — staying permanently `unavailable` — when the device's SETPOINT paramset description is incomplete (missing `MAX`, e.g. after a failed `getParamsetDescription`) (#3281). `max_temp` returned `None`, so caching the week profile raised an uncaught `TypeError` out of Home Assistant's entity setup, while an identical device with a complete paramset description worked fine. `max_temp` now falls back to a fixed upper bound (`30.5`) when neither a `TEMPERATURE_MAXIMUM` value nor a SETPOINT `MAX` is available (mirroring the existing `min_temp` guard), and the week-profile conversion now degrades gracefully — the entity loads and only the schedule stays uncached
+- Internal aiohomematic simplification (−5,800 LOC) from a consumer-surface audit against this integration: removes the unused `hmcli` console script, the `HomematicAPI` facade, `SysvarStateChangedEvent`, the `tracing` / `logging_context` modules and the Kind/payload property-metadata subsystem, and flattens 37 zero-use interface protocols (120 → 83). Every removed symbol was verified to have zero usage in homematicip_local, so there is no user-facing effect
 - Fix valve-only `HmIP-HEATING` groups (built from `HmIP-eTRV` valves without a wall thermostat) freezing `current_temperature` / `current_humidity` at the last-(re)start value (#3279). Follow-up to #3255: these groups always expose `HUMIDITY` and `HEATING_COOLING` on the group channel, but only a group containing a wall thermostat (`HmIP-WTH`/`STHD`) ever receives events for them — in a valve-only group those readable data points never refresh, and since #3228 `VirtualDevices` get no `getValue` fallback, so they dragged the whole custom climate data point to `is_valid=False` (leaving the climate entity in `value_state=restored` with a frozen current temperature) even though `ACTUAL_TEMPERATURE` kept arriving via events. #3255 only excluded the actuator values `LEVEL` / `STATE`; the climate validity check now also ignores `HUMIDITY` / `HEATING_COOLING`, so a group's climate validity follows its aggregated `ACTUAL_TEMPERATURE` regardless of whether a wall thermostat is present
 - HmIP-LSC now exposes color temperature in addition to color (#3277): a dedicated `CustomDpIpRGBWColorTempLight` advertises both color modes statically and derives the active mode from the value the device reports
 
