@@ -1,3 +1,13 @@
+# Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-12)
+
+## What's Changed
+
+### Dependencies
+
+#### Bump openccu-loom-client to `2026.7.7` (pins `openccu-loom-types==0.1.54`)
+
+- Groundwork bump for the still-disabled openccu-loom backend; it has no runtime effect while the backend master switch (`LOOM_BACKEND_SELECTABLE` in `const.py`) stays off. Advances the bundled loom client from `2026.7.6` to `2026.7.7` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.1.54`
+
 # Version [2.8.3](https://github.com/SukramJ/homematicip_local/compare/2.8.2...2.8.3) (2026-07-10)
 
 ## What's Changed
