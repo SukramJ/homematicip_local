@@ -5148,36 +5148,48 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
         `}}static{this.styles=n`
     :host {
       display: block;
-      padding: 16px;
-      max-width: 1200px;
-      margin: 0 auto;
       font-family: var(--paper-font-body1_-_font-family, "Roboto", sans-serif);
       color: var(--primary-text-color);
       background-color: var(--primary-background-color);
     }
 
+    /* The toolbar spans the full width; every sibling below it shares one centered column. */
+    .entry-selector,
+    .tab-bar,
+    hm-breadcrumb,
+    .view-content {
+      max-width: 1200px;
+      margin-inline: auto;
+      padding-inline: 16px;
+      box-sizing: border-box;
+    }
+
     .toolbar {
       display: flex;
+      height: var(--header-height, 56px);
       align-items: center;
-      height: 48px;
-      margin: -16px -16px 16px -16px;
-      padding: 0 4px;
       background-color: var(--app-header-background-color, var(--primary-color));
       color: var(--app-header-text-color, var(--text-primary-color, #fff));
       font-size: 20px;
       --ha-icon-button-color: var(--app-header-text-color, var(--text-primary-color, #fff));
+      border-bottom: var(--app-header-border-bottom);
+      box-sizing: border-box;
     }
 
     .main-title {
-      margin-left: 8px;
       font-weight: 400;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      padding-inline-start: var(--ha-space-6, 24px);
+    }
+
+    hm-breadcrumb {
+      display: block;
     }
 
     .entry-selector {
-      margin-bottom: 16px;
+      padding-block: 16px 0;
     }
 
     .entry-selector ha-select {
@@ -5187,9 +5199,8 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
     .tab-bar {
       display: flex;
       gap: 4px;
-      margin-bottom: 16px;
+      padding-block: 16px 0;
       border-bottom: 2px solid var(--divider-color);
-      padding-bottom: 0;
     }
 
     .tab {
@@ -5230,21 +5241,26 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
 
     .view-content {
       animation: fadeIn 0.2s ease-out;
+      padding-block: 16px;
     }
 
     @media (max-width: 600px) {
-      :host {
-        padding: 8px;
+      .entry-selector,
+      .tab-bar,
+      hm-breadcrumb,
+      .view-content {
+        padding-inline: 8px;
       }
 
-      .toolbar {
-        margin: -8px -8px 8px -8px;
+      .entry-selector {
+        padding-block: 8px 0;
       }
 
       .tab-bar {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
+        padding-block: 8px 0;
       }
 
       .tab-bar::-webkit-scrollbar {
@@ -5255,6 +5271,10 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
         padding: 8px 12px;
         font-size: 13px;
         white-space: nowrap;
+      }
+
+      .view-content {
+        padding-block: 8px;
       }
     }
   `}};var mi;e([he({attribute:!1})],vi.prototype,"hass",void 0),e([he({attribute:!1})],vi.prototype,"panel",void 0),e([he({type:Boolean,reflect:!0})],vi.prototype,"narrow",void 0),e([pe()],vi.prototype,"_tab",void 0),e([pe()],vi.prototype,"_view",void 0),e([pe()],vi.prototype,"_entryId",void 0),e([pe()],vi.prototype,"_entries",void 0),e([pe()],vi.prototype,"_selectedDevice",void 0),e([pe()],vi.prototype,"_selectedInterfaceId",void 0),e([pe()],vi.prototype,"_selectedChannel",void 0),e([pe()],vi.prototype,"_selectedChannelType",void 0),e([pe()],vi.prototype,"_selectedParamsetKey",void 0),e([pe()],vi.prototype,"_selectedDeviceName",void 0),e([pe()],vi.prototype,"_selectedSenderAddress",void 0),e([pe()],vi.prototype,"_selectedReceiverAddress",void 0),e([pe()],vi.prototype,"_permissions",void 0),e([pe()],vi.prototype,"_senderDeviceName",void 0),e([pe()],vi.prototype,"_senderDeviceModel",void 0),e([pe()],vi.prototype,"_senderChannelTypeLabel",void 0),e([pe()],vi.prototype,"_receiverDeviceName",void 0),e([pe()],vi.prototype,"_receiverDeviceModel",void 0),e([pe()],vi.prototype,"_receiverChannelTypeLabel",void 0),vi=_i=e([we("homematic-config")],vi);let gi=class extends oe{constructor(){super(...arguments),this.entryId="",this._subTab="general",this._sysInfo=null,this._installMode=null,this._signalDevices=null,this._firmware=null,this._inboxDevices=[],this._serviceMessages=[],this._alarmMessages=[],this._loading=!0,this._error="",this._backupRunning=!1,this._refreshingFirmware=!1,this._signalSortColumn="name",this._signalSortAsc=!0,this._signalFilter="",this._signalInterfaceFilter="",this._signalReachableFilter="",this._signalBatteryFilter="",this._firmwareSortColumn="name",this._firmwareSortAsc=!0,this._firmwareFilter="",this._firmwareStateFilter=""}static{mi=this}static{this._POLL_INTERVAL=3e4}disconnectedCallback(){super.disconnectedCallback(),this._stopInstallModePolling(),this._stopPolling()}updated(e){e.has("entryId")&&this.entryId&&(this._stopPolling(),this._fetchAll())}_scheduleNextPoll(){this._stopPolling(),this._pollTimer=setTimeout(()=>this._fetchAll(),mi._POLL_INTERVAL)}_stopPolling(){void 0!==this._pollTimer&&(clearTimeout(this._pollTimer),this._pollTimer=void 0)}async _fetchAll(){if(this.entryId){null===this._sysInfo&&(this._loading=!0),this._error="";try{const[e,t,i,s,a,r,n]=await Promise.all([Oe(this.hass,this.entryId),je(this.hass,this.entryId),Ke(this.hass,this.entryId),Ye(this.hass,this.entryId),Ge(this.hass,this.entryId).catch(()=>[]),Ze(this.hass,this.entryId).catch(()=>[]),qe(this.hass,this.entryId).catch(()=>[])]);this._sysInfo=e,this._installMode=t,this._signalDevices=i,this._firmware=s,this._inboxDevices=a,this._serviceMessages=r,this._alarmMessages=n,(t.hmip.active||t.bidcos.active)&&this._startInstallModePolling()}catch(e){this._error=String(e)}finally{this._loading=!1,this._scheduleNextPoll()}}}_l(e,t){return tt(this.hass,e,t)}async _handleCreateBackup(){if(await at(0,{title:this._l("ccu.create_backup_title"),text:this._l("ccu.create_backup_text"),confirmText:this._l("ccu.create_backup"),dismissText:this._l("common.cancel")})){this._backupRunning=!0;try{const e=await async function(e,t){return e.callWS({type:"homematicip_local/ccu/create_backup",entry_id:t})}(this.hass,this.entryId);if(e.success){const t=(e.size/1024/1024).toFixed(1);nt(this,{message:this._l("ccu.backup_success",{filename:e.filename,size:t})})}}catch{nt(this,{message:this._l("ccu.backup_failed")})}finally{this._backupRunning=!1}}}async _handleTriggerInstallMode(e){const t="hmip"===e?"HmIP-RF":"BidCos-RF";if(await at(0,{title:this._l("ccu.install_mode_title"),text:this._l("ccu.install_mode_text",{interface:t}),confirmText:this._l("ccu.activate"),dismissText:this._l("common.cancel")}))try{await async function(e,t,i){return e.callWS({type:"homematicip_local/ccu/trigger_install_mode",entry_id:t,interface:i})}(this.hass,this.entryId,e),nt(this,{message:this._l("ccu.install_mode_activated",{interface:t})}),this._installMode=await je(this.hass,this.entryId),this._startInstallModePolling()}catch{nt(this,{message:this._l("ccu.action_failed")})}}_startInstallModePolling(){this._stopInstallModePolling(),this._installModeTimer=setInterval(async()=>{try{this._installMode=await je(this.hass,this.entryId),this._installMode.hmip.active||this._installMode.bidcos.active||this._stopInstallModePolling()}catch{this._stopInstallModePolling()}},1e3)}_stopInstallModePolling(){void 0!==this._installModeTimer&&(clearInterval(this._installModeTimer),this._installModeTimer=void 0)}async _handleRefreshFirmware(){this._refreshingFirmware=!0;try{await async function(e,t){return e.callWS({type:"homematicip_local/ccu/refresh_firmware_data",entry_id:t})}(this.hass,this.entryId),nt(this,{message:this._l("ccu.firmware_refreshed")}),this._firmware=await Ye(this.hass,this.entryId)}catch{nt(this,{message:this._l("ccu.action_failed")})}finally{this._refreshingFirmware=!1}}async _handleUpdateFirmware(e){if(await at(0,{title:this._l("ccu.update_firmware"),text:this._l("ccu.update_firmware_confirm",{device:e.name}),confirmText:this._l("ccu.update_firmware"),dismissText:this._l("common.cancel")}))try{await async function(e,t,i){return e.callWS({type:"homematicip_local/ccu/update_firmware",entry_id:t,device_address:i})}(this.hass,this.entryId,e.address),nt(this,{message:this._l("ccu.update_firmware_success",{device:e.name})})}catch{nt(this,{message:this._l("ccu.update_firmware_failed")})}}_switchSubTab(e){this._subTab=e}_renderSubTabs(){const e=[{id:"general",label:this._l("ccu.tab_general")},{id:"messages",label:this._l("ccu.tab_messages"),badge:this._serviceMessages.length+this._alarmMessages.length},{id:"pairing",label:this._l("ccu.tab_pairing"),badge:this._inboxDevices.length},{id:"signal",label:this._l("ccu.tab_signal")},{id:"firmware",label:this._l("ccu.tab_firmware")}];return F`
