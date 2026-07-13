@@ -1,12 +1,21 @@
-# Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-12)
+# Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-13)
 
 ## What's Changed
 
+### Development
+
+- Added a `Makefile` as the entry point for all development tasks (`make help` lists every target): setup, code quality (ruff, mypy, pylint, bandit, codespell, yamllint, prettier, translations, prek), tests (incl. coverage, CI mode and the opt-in e2e suite), hassfest/HACS validation, running Home Assistant against `./config`, and housekeeping. Targets run through `script/run-in-env.sh`, so they work with or without an activated virtual environment. `CLAUDE.md` and `CONTRIBUTING.md` document the targets; the broken `cov.sh` (it referenced a non-existent `.coveragerc`) is superseded by `make test-cov-html` and was removed
+
 ### Dependencies
 
-#### Bump openccu-loom-client to `2026.7.7` (pins `openccu-loom-types==0.1.54`)
+#### Bump openccu-loom-client to `2026.7.10` (pins `openccu-loom-types==0.1.55`)
 
-- Groundwork bump for the still-disabled openccu-loom backend; it has no runtime effect while the backend master switch (`LOOM_BACKEND_SELECTABLE` in `const.py`) stays off. Advances the bundled loom client from `2026.7.6` to `2026.7.7` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.1.54`
+- Groundwork bump for the still-disabled openccu-loom backend; it has no runtime effect while the backend master switch (`LOOM_BACKEND_SELECTABLE` in `const.py`) stays off. Advances the bundled loom client from `2026.7.6` to `2026.7.10` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.1.55`
+
+#### homematicip-local-frontend
+
+- Bundled `homematic-config.js` rebuilt. The device list now renders virtualized (new `hm-device-row` element behind `ha-list-virtualized`) once more than 100 filtered devices are shown and Home Assistant provides the element, which keeps large installations responsive; below that threshold the existing grouped rendering is unchanged
+- The unsaved-changes warning in the channel and link configuration now also triggers when navigating away or closing the tab (capture-phase `click` interception plus `beforeunload`), not only via the panel's own back button
 
 # Version [2.8.3](https://github.com/SukramJ/homematicip_local/compare/2.8.2...2.8.3) (2026-07-10)
 
