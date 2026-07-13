@@ -1480,12 +1480,19 @@ async def ws_get_linkable_channels(
         connection.send_error(msg["id"], "not_found", "Config entry not found")
         return
 
+    # ``get_linkable_channels`` is sync on the aiohomematic backend (answered
+    # from the cached model), but async on the openccu-loom backend — the daemon
+    # computes the candidates from link-peer role metadata the client does not
+    # hold. Await only when the backend hands back an awaitable, so the same call
+    # site works against both (same accommodation as ``get_paramset_description``).
     channels = control.central.link.get_linkable_channels(
         interface_id=msg["interface_id"],
         source_channel_address=msg["channel_address"],
         role=msg["role"],
         locale=hass.config.language,
     )
+    if isawaitable(channels):
+        channels = await channels
     connection.send_result(msg["id"], {"channels": [dataclasses.asdict(ch) for ch in channels]})
 
 
