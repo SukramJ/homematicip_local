@@ -92,6 +92,7 @@ homematicip_local/
 │   └── check_translations.py             # Translation validation
 │   │
 ├── Configuration Files:
+│   ├── Makefile                          # Entry point for all dev tasks (`make help`)
 │   ├── pyproject.toml                    # Project config (Python, testing, linting)
 │   ├── .pre-commit-config.yaml           # Pre-commit hooks
 │   ├── .yamllint                         # YAML linting rules
@@ -159,19 +160,22 @@ homematicip_local/
    git clone https://github.com/sukramj/homematicip_local.git
    cd homematicip_local
 
-   # Create virtual environment
-   python3.14 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   # Create virtual environment (./venv, Python 3.14)
+   make venv
 
-   # Install dependencies
-   pip install -r requirements_test.txt
-
-   # Or use uv (faster)
-   uv pip install -r requirements_test.txt
-
-   # Setup prek hooks
-   prek install
+   # Install dependencies and prek hooks
+   make setup
    ```
+
+### The Makefile
+
+The `Makefile` is the entry point for every development task; `make help` lists all
+targets grouped by topic (setup, code quality, tests, validation, run, housekeeping).
+
+Targets run through `script/run-in-env.sh`, which activates `./venv` (or `.venv`) if
+present, so they work with or without an activated virtual environment. The command
+examples throughout this document use `make`; the underlying commands still work if
+run directly.
 
 ---
 
@@ -309,14 +313,14 @@ devices = [d for d in all_devices if d.is_ready]
 - **Auto-fix enabled** in prek
 
 ```bash
-# Auto-format all code
-ruff format custom_components/homematicip_local/
+# Auto-format and auto-fix all code (ruff format + ruff check --fix)
+make format
 
-# Lint code
-ruff check --fix custom_components/homematicip_local/
+# Lint code without auto-fix
+make lint
 
 # Check formatting without changes
-ruff format --check custom_components/homematicip_local/
+make format-check
 ```
 
 ### Prek Hooks (Run on Every Commit)
@@ -337,7 +341,7 @@ The following hooks run automatically before each commit:
 **To run all hooks manually:**
 
 ```bash
-prek run --all-files
+make prek
 ```
 
 **Bypass hooks** (NOT recommended):
@@ -445,23 +449,26 @@ def fetch_value(...): """Return parameter value."""
 ### Running Tests
 
 ```bash
-# Run all tests with coverage
-pytest --cov=custom_components tests
+# Run all tests
+make test
 
-# Run with asyncio mode (as in CI)
-pytest --cov=custom_components tests --asyncio-mode=legacy
+# Run all tests with coverage
+make test-cov
+
+# Run exactly as in CI (asyncio-mode=legacy)
+make test-ci
 
 # Run specific test file
-pytest tests/test_config_flow.py
+make test-file FILE=tests/test_config_flow.py
 
-# Run with verbose output
-pytest -v tests/
+# Pass extra pytest arguments
+make test PYTEST_ARGS="-x -vv"
 
-# Generate coverage report
-pytest --cov=custom_components --cov-report=html tests/
+# Generate HTML coverage report (htmlcov/index.html)
+make test-cov-html
 
-# View HTML report
-open htmlcov/index.html
+# Run the opt-in three-way parity e2e tests (see tests/e2e/README.md)
+make test-e2e
 ```
 
 ### Test Configuration
@@ -613,11 +620,8 @@ Events fired by the integration:
 5. **Run quality checks before committing:**
 
    ```bash
-   # Run prek hooks
-   prek run --all-files
-
-   # Run tests
-   pytest --cov=custom_components tests
+   # Run prek hooks and tests with coverage
+   make check
    ```
 
 ### When Modifying Entity Platforms
@@ -684,7 +688,11 @@ Events fired by the integration:
 2. **Validate translations**:
 
    ```bash
-   python script/check_translations.py
+   # Validate strings.json / en.json / de.json (use `make translations-fix` to sort and sync)
+   make translations
+
+   # Validate config flow & repair translations
+   make flow-translations
    ```
 
 ### Updating Documentation
@@ -743,7 +751,7 @@ grep -r "2025.12.33" CLAUDE.md README.md docs/
 grep -r "TODO\|FIXME\|XXX" *.md docs/*.md
 
 # Validate markdown formatting
-prek run prettier --all-files
+make prettier
 ```
 
 ---
@@ -791,7 +799,7 @@ Added retry logic with exponential backoff for validation calls.
 
 1. **Create feature branch** from `main`
 2. **Make changes** with tests
-3. **Run prek hooks**: `prek run --all-files`
+3. **Run the quality gate**: `make check` (prek hooks + tests with coverage)
 4. **Commit changes** with descriptive messages
 5. **Push to remote**: `git push -u origin feature/branch-name`
 6. **Create Pull Request** to `main` branch
@@ -810,8 +818,8 @@ This section defines mandatory rules for all implementations in this project.
 
 ```
 □ 1. Clean Code    - No legacy compatibility layers, deprecated aliases, or shims
-□ 2. Tests         - pytest tests/ passes without errors
-□ 3. Linting       - prek run --all-files passes without errors
+□ 2. Tests         - make test passes without errors
+□ 3. Linting       - make prek passes without errors
 □ 4. Documentation - Docstrings, CLAUDE.md, README.md, docs/*.md updated as needed
 □ 5. Changelog     - changelog.md updated with version entry
 ```
@@ -880,16 +888,13 @@ When implementing new features or refactoring existing code:
 Run these commands before considering any implementation complete:
 
 ```bash
-# 1. Run all tests
-pytest --cov=custom_components tests
+# 1. Run all prek hooks (ruff, mypy, pylint, etc.) and tests with coverage
+make check
 
-# 2. Run all prek hooks (includes ruff, mypy, pylint, etc.)
-prek run --all-files
-
-# 3. Verify no TODO/FIXME related to migration
+# 2. Verify no TODO/FIXME related to migration
 grep -r "TODO.*migration\|FIXME.*migration\|TODO.*remove\|TODO.*deprecated" custom_components/
 
-# 4. Check for unused imports/code
+# 3. Check for unused imports/code
 ruff check --select F401,F841 custom_components/
 ```
 
@@ -1019,8 +1024,8 @@ When performing a refactoring task, follow this workflow:
 2. **Clarify**: Resolve ALL ambiguities before starting implementation
 3. **Implement**: Make all changes following the exact plan
 4. **Clean**: Remove all legacy code, aliases, and compatibility shims
-5. **Test**: Run `pytest tests/` - all tests must pass
-6. **Lint**: Run `prek run --all-files` - no errors allowed
+5. **Test**: Run `make test` - all tests must pass
+6. **Lint**: Run `make prek` - no errors allowed
 7. **Document**: Update changelog.md
 8. **Verify**: Check for leftover TODOs related to migration
 
@@ -1040,8 +1045,8 @@ Before finalizing any implementation plan, verify:
 ### When in Doubt
 
 1. **Check existing patterns**: Review similar code in the codebase
-2. **Run the tests**: `pytest tests/`
-3. **Check the type hints**: `mypy` will guide you
+2. **Run the tests**: `make test`
+3. **Check the type hints**: `make mypy` will guide you
 4. **Review the changelog**: `changelog.md` for recent changes
 
 ---
@@ -1050,36 +1055,47 @@ Before finalizing any implementation plan, verify:
 
 ### Running Common Commands
 
+All development tasks run via the `Makefile`. `make help` lists every target.
+
 ```bash
-# Setup development environment
-script/setup
-script/bootstrap
+# Show all available targets
+make help
 
-# Install dependencies
-pip install -r requirements_test.txt
-# Or with uv (faster)
-uv pip install -r requirements_test.txt
+# Setup development environment (dependencies + prek hooks)
+make setup
 
-# Format code
-ruff format custom_components/homematicip_local/
+# (Re-)install dependencies via uv
+make install
+
+# Format and auto-fix code
+make format
 
 # Lint code
-ruff check --fix custom_components/homematicip_local/
+make lint
 
-# Type check
-mypy custom_components/homematicip_local/
+# Type check (mypy strict)
+make mypy
 
-# Run all checks
-prek run --all-files
+# Run all prek hooks
+make prek
 
-# Run tests
-pytest --cov=custom_components tests
+# Run tests with coverage
+make test-cov
 
 # Run specific test file
-pytest tests/test_config_flow.py
+make test-file FILE=tests/test_config_flow.py
 
 # Check translations
-python script/check_translations.py
+make translations
+
+# Full quality gate (prek + tests with coverage)
+make check
+
+# Validate manifest/repository like CI (requires Docker)
+make validate
+
+# Start Home Assistant against the local ./config directory
+make hass
 ```
 
 ### Important Files Reference

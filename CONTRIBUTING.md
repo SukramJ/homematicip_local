@@ -65,29 +65,30 @@ If you use VS Code with the DevContainer extension:
 git clone https://github.com/sukramj/homematicip_local.git
 cd homematicip_local
 
-# Create virtual environment
-python3.14 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Create virtual environment (./venv, Python 3.14)
+make venv
 
-# Install dependencies
-pip install -r requirements_test.txt
-
-# Or use uv (faster)
-uv pip install -r requirements_test.txt
-
-# Setup prek hooks
-prek install
+# Install dependencies and prek hooks
+make setup
 ```
 
 ### Verify Installation
 
 ```bash
 # Run tests
-pytest tests/
+make test
 
 # Run code quality checks
-prek run --all-files
+make prek
 ```
+
+### The Makefile
+
+All development tasks run through the `Makefile` — `make help` lists every target,
+grouped by topic (setup, code quality, tests, validation, run, housekeeping).
+
+Targets activate `./venv` automatically (via `script/run-in-env.sh`), so they work
+whether or not your virtual environment is activated.
 
 ---
 
@@ -195,7 +196,7 @@ Prek hooks run automatically on every commit. They enforce:
 **Run manually:**
 
 ```bash
-prek run --all-files
+make prek
 ```
 
 **Do NOT bypass** hooks with `--no-verify` unless absolutely necessary.
@@ -209,17 +210,20 @@ All code changes must include tests.
 ### Running Tests
 
 ```bash
+# Run all tests
+make test
+
 # Run all tests with coverage
-pytest --cov=custom_components tests
+make test-cov
 
 # Run specific test file
-pytest tests/test_config_flow.py
+make test-file FILE=tests/test_config_flow.py
 
-# Run with verbose output
-pytest -v tests/
+# Pass extra pytest arguments
+make test PYTEST_ARGS="-x -vv"
 
 # Generate HTML coverage report
-pytest --cov=custom_components --cov-report=html tests/
+make test-cov-html
 open htmlcov/index.html
 ```
 
@@ -263,11 +267,8 @@ open htmlcov/index.html
 
 4. **Run quality checks**:
    ```bash
-   # Run tests
-   pytest --cov=custom_components tests
-
-   # Run prek hooks
-   prek run --all-files
+   # Run prek hooks and tests with coverage
+   make check
    ```
 
 5. **Commit your changes**:
@@ -399,29 +400,36 @@ logger:
 ### Common Commands
 
 ```bash
-# Format code
-ruff format custom_components/homematicip_local/
+# Show all available targets
+make help
+
+# Format and auto-fix code
+make format
 
 # Lint code
-ruff check --fix custom_components/homematicip_local/
+make lint
 
 # Type check
-mypy custom_components/homematicip_local/
+make mypy
 
 # Run all quality checks
-prek run --all-files
+make prek
 
-# Run tests
-pytest --cov=custom_components tests
+# Run tests with coverage
+make test-cov
 
 # Check translations
-python script/check_translations.py
+make translations
+
+# Full quality gate before a PR (prek + tests with coverage)
+make check
 ```
 
 ### Key Files
 
 | File | Purpose |
 |------|---------|
+| `Makefile` | Entry point for all development tasks (`make help`) |
 | `custom_components/homematicip_local/__init__.py` | Integration entry point |
 | `custom_components/homematicip_local/config_flow.py` | Configuration UI |
 | `custom_components/homematicip_local/control_unit.py` | Central control logic |
