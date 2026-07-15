@@ -1,4 +1,4 @@
-# Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-13)
+# Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-15)
 
 ## What's Changed
 
@@ -16,6 +16,9 @@
 
 - Bundled `homematic-config.js` rebuilt. The device list now renders virtualized (new `hm-device-row` element behind `ha-list-virtualized`) once more than 100 filtered devices are shown and Home Assistant provides the element, which keeps large installations responsive; below that threshold the existing grouped rendering is unchanged
 - The unsaved-changes warning in the channel and link configuration now also triggers when navigating away or closing the tab (capture-phase `click` interception plus `beforeunload`), not only via the panel's own back button
+- The config panel header was restyled to match Home Assistant's standard toolbar/header design ([frontend #73](https://github.com/SukramJ/homematicip-local-frontend/pull/73), [@smoki3](https://github.com/smoki3))
+- The device list and interface group headers now use Home Assistant's standard `ha-card` styling for visual consistency with the rest of HA, via a new `<hm-interface-header>` component ([frontend #75](https://github.com/SukramJ/homematicip-local-frontend/pull/75), [@smoki3](https://github.com/smoki3))
+- Removed a duplicated view title in the device list ([frontend #76](https://github.com/SukramJ/homematicip-local-frontend/pull/76), [@smoki3](https://github.com/smoki3))
 
 # Version [2.8.3](https://github.com/SukramJ/homematicip_local/compare/2.8.2...2.8.3) (2026-07-10)
 
