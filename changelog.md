@@ -1,3 +1,37 @@
+# Version 2.8.5 (unreleased)
+
+## What's Changed
+
+### Features
+
+- **Alarm control panel (openccu-loom backend only).** The openccu-loom daemon
+  (≥ 0.42.0) ships a native, local-first alarm engine and models every alarm
+  area — plus, with two or more areas, an aggregate master panel — as a
+  first-class panel entity. The new `alarm_control_panel` platform spawns one
+  HA panel per loom panel: state tokens come daemon-computed and map 1:1 onto
+  `AlarmControlPanelState`; the configured protection modes map onto the arm
+  features (`perimeter` → home, `full` → away, `night`, `vacation`, `custom` →
+  custom bypass); live detail (mode, countdown, per-mode readiness, last
+  incident, walk test) lands in the extra state attributes; panels removed on
+  the daemon (area deleted) remove their entity. Dispatch runs on the loom
+  twin alone (`LOOM_DP_ALARM_CONTROL_PANEL`, a loom-only tuple that degrades
+  to empty on a CCU-only install — aiohomematic has no alarm engine, so the
+  direct-CCU path is untouched).
+
+### Dependencies
+
+#### Bump aiohomematic to `2026.7.7`
+
+- Adds the `ALARM_CONTROL_PANEL` category/type vocabulary the platform list
+  derives from (pure vocabulary, no behaviour change on the CCU path).
+
+#### Bump openccu-loom-client to `2026.7.12` (pins `openccu-loom-types==0.1.56`)
+
+- Full client-side alarm surface: `/alarm` REST facade, nine `alarm.*`
+  WebSocket events, store panel section, the categorised
+  `LoomDpAlarmControlPanel` twin and the refresh/removal bridging this
+  platform consumes.
+
 # Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-15)
 
 ## What's Changed

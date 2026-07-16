@@ -18,7 +18,7 @@ aiohomematic class alone, so a CCU-only install is unaffected.
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohomematic.model.custom import (
     CustomDpBlind,
@@ -35,21 +35,27 @@ from aiohomematic.model.custom import (
 from aiohomematic.model.generic import DpAction, DpButton, DpSwitch
 from aiohomematic.model.hub import ProgramDpSwitch, SysvarDpSwitch
 
+if TYPE_CHECKING:
+    from openccu_loom_client.compat.aiohomematic.model.alarm_panel import LoomDpAlarmControlPanel
+
 _g: object | None
 _c: object | None
 _h: object | None
+_a: object | None
 try:
     from openccu_loom_client.compat.aiohomematic.model import (
+        alarm_panel as _loom_alarm_panel,
         custom as _loom_custom,
         generic as _loom_generic,
         hub as _loom_hub,
     )
 except ImportError:  # pragma: no cover - CCU-only install
-    _g = _c = _h = None
+    _g = _c = _h = _a = None
 else:
     _g = _loom_generic
     _c = _loom_custom
     _h = _loom_hub
+    _a = _loom_alarm_panel
 
 
 def _pair[T](aio_cls: type[T], loom_attr: str, loom_module: object | None) -> tuple[type[T], ...]:
@@ -67,6 +73,23 @@ def _pair[T](aio_cls: type[T], loom_attr: str, loom_module: object | None) -> tu
     return (aio_cls,)
 
 
+def _loom_only(loom_attr: str, loom_module: object | None) -> tuple[type[Any], ...]:
+    """Return ``(loom_cls,)`` for a loom-native surface with no aiohomematic class.
+
+    Used for surfaces that exist only on the openccu-loom backend (the alarm
+    control panel: the CCU has no alarm engine, so aiohomematic ships no class
+    to pair with). Degrades to the *empty* tuple on a CCU-only install —
+    ``isinstance(x, ())`` is always ``False``, so the platform simply spawns
+    nothing. Callers annotate the constant with the concrete loom type so
+    ``isinstance`` narrows.
+    """
+    if loom_module is not None:
+        loom_cls = getattr(loom_module, loom_attr, None)
+        if loom_cls is not None:
+            return (cast("type[Any]", loom_cls),)
+    return ()
+
+
 # ---- generic ----
 DP_SWITCH = _pair(DpSwitch, "DpSwitch", _g)
 DP_ACTION = _pair(DpAction, "DpAction", _g)
@@ -76,6 +99,9 @@ DP_ACTION_OR_BUTTON: tuple[type[DpAction | DpButton], ...] = (*DP_ACTION, *DP_BU
 # ---- hub ----
 SYSVAR_DP_SWITCH = _pair(SysvarDpSwitch, "SysvarDpSwitch", _h)
 PROGRAM_DP_SWITCH = _pair(ProgramDpSwitch, "ProgramDpSwitch", _h)
+
+# ---- loom-only (no aiohomematic class) ----
+LOOM_DP_ALARM_CONTROL_PANEL: tuple[type[LoomDpAlarmControlPanel], ...] = _loom_only("LoomDpAlarmControlPanel", _a)
 
 # ---- custom ----
 CUSTOM_DP_SWITCH = _pair(CustomDpSwitch, "CustomDpSwitch", _c)
