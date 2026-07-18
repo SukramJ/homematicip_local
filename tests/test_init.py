@@ -14,6 +14,7 @@ import custom_components.homematicip_local
 from custom_components.homematicip_local import (
     _aiohomematic_restored_unique_id,
     _async_migrate_aiohomematic_hub_unique_ids,
+    _async_migrate_loom_unique_ids,
     _async_reanchor_hub_unique_ids_on_serial_change,
     _async_restore_aiohomematic_unique_ids,
     _loom_migrated_unique_id,
@@ -755,6 +756,11 @@ class TestLoomUniqueIdMigration:
             f"{_D}_loom_vcu1234567_1_state",  # already migrated → idempotent
             f"{_D}_home_create_backup",  # synthetic backup button
             f"{_D}_event_group_keypress_vcu1234567_1",  # event group (loom n/a yet)
+            # Daemon-computed alarm-panel ids are backend-agnostic — never
+            # legacy keys. Prefixing them orphaned the entity and
+            # crash-looped setup ("unique id already in use").
+            f"{_D}_openccu-loom_alarm_55f96726-76d9-43b9-8b20-71f6266e24d9",
+            f"{_D}_openccu-loom_alarm_master",
             "other_integration_xyz",  # not ours
         ],
     )
@@ -899,6 +905,104 @@ class TestRealignedHubUniqueId:
 
     def _realign(self, unique_id: str) -> str | None:
         return realign_hub_unique_id(unique_id, central_id=self._NEW)
+
+
+async def test_async_migrate_loom_unique_ids_repairs_wrongly_prefixed_panel(hass: HomeAssistant) -> None:
+    """The repair sweep restores a wrongly loom_-prefixed panel and removes its duplicate.
+
+    Regression: the pre-fix sweep prefixed the daemon-computed alarm-panel
+    ids with loom_, orphaning the original entity; once the platform had
+    spawned a correctly keyed duplicate, the next setup crash-looped with
+    "Unique id ... is already in use".
+    """
+    serial = "3014F711A0001234"
+    entry = MockConfigEntry(domain=HMIP_DOMAIN, unique_id=serial)
+    entry.add_to_hass(hass)
+    entity_registry = er.async_get(hass)
+    area = "55f96726-76d9-43b9-8b20-71f6266e24d9"
+    correct_unique_id = f"{HMIP_DOMAIN}_openccu-loom_alarm_{area}"
+    # The original entity, wrongly renamed by the pre-fix sweep — it keeps
+    # the user's entity_id, history and customisations and must win.
+    original = entity_registry.async_get_or_create(
+        domain="alarm_control_panel",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_loom_openccu-loom_alarm_{area}",
+        config_entry=entry,
+        suggested_object_id="ottoloom_obergeschoss",
+    )
+    # The duplicate the platform spawned after the original stopped matching.
+    duplicate = entity_registry.async_get_or_create(
+        domain="alarm_control_panel",
+        platform=HMIP_DOMAIN,
+        unique_id=correct_unique_id,
+        config_entry=entry,
+        suggested_object_id="ottoloom_obergeschoss_2",
+    )
+    # A genuine legacy key must still migrate in the same pass.
+    legacy = entity_registry.async_get_or_create(
+        domain="switch",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_vcu1234567_1_state",
+        config_entry=entry,
+    )
+
+    await _async_migrate_loom_unique_ids(hass, entry)
+
+    assert entity_registry.async_get(duplicate.entity_id) is None
+    repaired = entity_registry.async_get(original.entity_id)
+    assert repaired is not None
+    assert repaired.unique_id == correct_unique_id
+    migrated = entity_registry.async_get(legacy.entity_id)
+    assert migrated is not None
+    assert migrated.unique_id == f"{HMIP_DOMAIN}_loom_vcu1234567_1_state"
+
+
+async def test_async_migrate_loom_unique_ids_repairs_without_duplicate(hass: HomeAssistant) -> None:
+    """A damaged panel with no duplicate is renamed straight back."""
+    serial = "3014F711A0001234"
+    entry = MockConfigEntry(domain=HMIP_DOMAIN, unique_id=serial)
+    entry.add_to_hass(hass)
+    entity_registry = er.async_get(hass)
+    original = entity_registry.async_get_or_create(
+        domain="alarm_control_panel",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_loom_openccu-loom_alarm_master",
+        config_entry=entry,
+    )
+
+    await _async_migrate_loom_unique_ids(hass, entry)
+
+    repaired = entity_registry.async_get(original.entity_id)
+    assert repaired is not None
+    assert repaired.unique_id == f"{HMIP_DOMAIN}_openccu-loom_alarm_master"
+
+
+async def test_async_migrate_loom_unique_ids_skips_on_collision(hass: HomeAssistant) -> None:
+    """A legacy key whose loom target is already taken is skipped, not fatal."""
+    serial = "3014F711A0001234"
+    entry = MockConfigEntry(domain=HMIP_DOMAIN, unique_id=serial)
+    entry.add_to_hass(hass)
+    entity_registry = er.async_get(hass)
+    legacy = entity_registry.async_get_or_create(
+        domain="switch",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_vcu1234567_1_state",
+        config_entry=entry,
+    )
+    occupant = entity_registry.async_get_or_create(
+        domain="switch",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_loom_vcu1234567_1_state",
+        config_entry=entry,
+    )
+
+    # Must not raise ("unique id already in use" would fail the whole setup).
+    await _async_migrate_loom_unique_ids(hass, entry)
+
+    unchanged = entity_registry.async_get(legacy.entity_id)
+    assert unchanged is not None
+    assert unchanged.unique_id == f"{HMIP_DOMAIN}_vcu1234567_1_state"
+    assert entity_registry.async_get(occupant.entity_id) is not None
 
 
 async def test_async_restore_aiohomematic_unique_ids_rewrites_registry(hass: HomeAssistant) -> None:

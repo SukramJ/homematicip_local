@@ -27,6 +27,20 @@
   when the daemon will demand a code, mirroring the daemon's own MQTT
   discovery (`code: REMOTE_CODE`). Requires openccu-loom-client 2026.7.13.
 
+### Fixes
+
+- **Setup crash-loop after adding an alarm area (loom backend).** The
+  loom unique_id migration treated the daemon-computed alarm-panel ids
+  (`openccu-loom_alarm_<area>`) as legacy aiohomematic keys and prefixed
+  them with `loom_` — orphaning the live panel entity; once the platform
+  had spawned a correctly keyed duplicate, every subsequent setup died
+  with `ValueError: Unique id ... is already in use` and the whole config
+  entry failed to load. The sweep now skips the backend-agnostic
+  `openccu-loom_` namespace, a repair pass renames damaged entries back
+  (removing the history-less duplicate so the original entity keeps its
+  entity_id, area and customisations), and both unique_id migrators skip
+  on target collisions instead of aborting the setup.
+
 ### Dependencies
 
 #### Bump openccu-loom-client to `2026.7.13` (pins `openccu-loom-types==0.1.61`, daemon ≥ 0.43.2)
