@@ -344,6 +344,13 @@ def _loom_migrated_unique_id(unique_id: str, *, entry_suffix: str, serial_suffix
         return None
     if key.endswith("_create_backup") or key.startswith("event_group_"):
         return None
+    if key.startswith("openccu-loom_"):
+        # Daemon-computed ids (the alarm panels: ``openccu-loom_alarm_<area>``)
+        # are deliberately NOT loom_-routing-scheme keys and never existed on
+        # the CCU backend — there is nothing legacy to migrate. Prefixing them
+        # orphaned the live entity and crash-looped setup once the correctly
+        # keyed duplicate spawned (repaired in _async_migrate_loom_unique_ids).
+        return None
     # Hub / internal / virtual-remote keys carried the entry_id suffix as
     # their prefix; swap it for the CCU serial suffix. Everything else
     # (devices, channels, custom DPs) carried no central prefix.
@@ -372,6 +379,35 @@ async def _async_migrate_loom_unique_ids(hass: HomeAssistant, entry: HomematicCo
         return
     entry_suffix = entry.entry_id[-10:]
     serial_suffix = serial[-10:].lower()
+    entity_registry = er.async_get(hass)
+
+    # Repair the damage a pre-fix sweep did to alarm panels: it treated the
+    # daemon-computed ``openccu-loom_alarm_<area>`` ids as legacy keys and
+    # prefixed ``loom_`` — orphaning the original entity (which keeps the
+    # user's entity_id, history, area and customisations) and crash-looping
+    # setup with "unique id already in use" once the platform had spawned a
+    # correctly keyed duplicate. Strip the wrong prefix back off; a duplicate
+    # spawned in the meantime loses (it is the one without history).
+    wrong_prefix = f"{DOMAIN}_loom_openccu-loom_"
+    for entity_entry in list(er.async_entries_for_config_entry(entity_registry, entry.entry_id)):
+        if not entity_entry.unique_id.startswith(wrong_prefix):
+            continue
+        corrected = f"{DOMAIN}_openccu-loom_{entity_entry.unique_id[len(wrong_prefix) :]}"
+        duplicate_id = entity_registry.async_get_entity_id(entity_entry.domain, entity_entry.platform, corrected)
+        if duplicate_id is not None and duplicate_id != entity_entry.entity_id:
+            _LOGGER.warning(
+                "Removing duplicate %s so %s can reclaim its unique_id %s",
+                duplicate_id,
+                entity_entry.entity_id,
+                corrected,
+            )
+            entity_registry.async_remove(duplicate_id)
+        _LOGGER.warning(
+            "Repairing wrongly migrated alarm-panel unique_id: %s -> %s",
+            entity_entry.unique_id,
+            corrected,
+        )
+        entity_registry.async_update_entity(entity_entry.entity_id, new_unique_id=corrected)
 
     @callback
     def _migrator(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
@@ -381,6 +417,16 @@ async def _async_migrate_loom_unique_ids(hass: HomeAssistant, entry: HomematicCo
             serial_suffix=serial_suffix,
         )
         if new_unique_id is None or new_unique_id == entity_entry.unique_id:
+            return None
+        # HA raises on a duplicate unique_id, which would abort the whole
+        # migration and fail the config-entry setup — skip instead (same
+        # guard as _async_realign_hub_unique_ids).
+        if entity_registry.async_get_entity_id(entity_entry.domain, entity_entry.platform, new_unique_id):
+            _LOGGER.warning(
+                "Skipping loom unique_id migration, target already exists: %s -> %s",
+                entity_entry.unique_id,
+                new_unique_id,
+            )
             return None
         _LOGGER.debug(
             "Migrating unique_id to loom scheme: %s -> %s",
@@ -426,10 +472,22 @@ async def _async_restore_aiohomematic_unique_ids(hass: HomeAssistant, entry: Hom
     idempotent, and scoped to this entry, so it is safe to run on every setup.
     """
 
+    entity_registry = er.async_get(hass)
+
     @callback
     def _migrator(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
         new_unique_id = _aiohomematic_restored_unique_id(entity_entry.unique_id)
         if new_unique_id is None or new_unique_id == entity_entry.unique_id:
+            return None
+        # HA raises on a duplicate unique_id, which would abort the whole
+        # migration and fail the config-entry setup — skip instead (same
+        # guard as _async_realign_hub_unique_ids).
+        if entity_registry.async_get_entity_id(entity_entry.domain, entity_entry.platform, new_unique_id):
+            _LOGGER.warning(
+                "Skipping aiohomematic unique_id restore, target already exists: %s -> %s",
+                entity_entry.unique_id,
+                new_unique_id,
+            )
             return None
         _LOGGER.debug(
             "Restoring unique_id to aiohomematic scheme: %s -> %s",
