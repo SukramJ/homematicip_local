@@ -23,7 +23,11 @@ from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohomematic.const import DataPointCategory, DataPointType
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
-from homeassistant.components.alarm_control_panel.const import AlarmControlPanelEntityFeature, AlarmControlPanelState
+from homeassistant.components.alarm_control_panel.const import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+    CodeFormat,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -96,12 +100,6 @@ async def async_setup_entry(
 class AioHomematicAlarmControlPanel(AioHomematicGenericHubEntity, AlarmControlPanelEntity):
     """Representation of the HomematicIP alarm control panel entity (openccu-loom)."""
 
-    # The daemon enforces its per-area code policy server-side either way
-    # (an arm/disarm without a required code answers 403, surfaced as a
-    # toast); the flag only drives HA's code-prompt UX and follows the
-    # panel twin once the daemon exposes the policy on the entity.
-    _attr_code_arm_required = False
-
     def __init__(
         self,
         control_unit: ControlUnit,
@@ -119,7 +117,6 @@ class AioHomematicAlarmControlPanel(AioHomematicGenericHubEntity, AlarmControlPa
         for mode in data_point.supported_modes:
             features |= _FEATURE_BY_MODE.get(mode, AlarmControlPanelEntityFeature(0))
         self._attr_supported_features = features
-        self._attr_code_arm_required = data_point.code_arm_required
 
     @property
     def _panel(self) -> LoomDpAlarmControlPanel:
@@ -135,6 +132,34 @@ class AioHomematicAlarmControlPanel(AioHomematicGenericHubEntity, AlarmControlPa
         except ValueError:
             _LOGGER.debug("Unknown alarm panel state token: %s", self._panel.state)
             return None
+
+    @property
+    @override
+    def code_arm_required(self) -> bool:
+        """
+        Return whether arming prompts for a code.
+
+        Daemon-computed effective policy (openccu-loom-client ≥ 2026.7.13:
+        area policy AND an applicable enabled PIN exists; the master panel
+        aggregates any-area). Live policy edits ride ``alarm.panel_changed``,
+        so this stays a property rather than a spawn-time ``_attr_``.
+        """
+        return self._panel.code_arm_required
+
+    @property
+    @override
+    def code_format(self) -> CodeFormat | None:
+        """
+        Return the code-prompt format: numeric while any verb needs a code.
+
+        Mirrors the daemon's own MQTT discovery (``code: REMOTE_CODE`` — a
+        numeric code validated remotely). ``None`` hides the code field
+        entirely; the daemon still enforces server-side either way (403 →
+        error toast).
+        """
+        if self._panel.code_arm_required or self._panel.code_disarm_required:
+            return CodeFormat.NUMBER
+        return None
 
     @property
     @override
