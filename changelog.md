@@ -18,7 +18,21 @@
   to empty on a CCU-only install — aiohomematic has no alarm engine, so the
   direct-CCU path is untouched).
 
+- **Alarm panel code-prompt UX (openccu-loom backend).** The daemon (≥ 0.43.x)
+  now ships the effective per-area code policy on the panel entity
+  (`code_arm_required` / `code_disarm_required` — area policy AND an applicable
+  enabled PIN exists; the master panel aggregates any-area). The panel entity
+  reads it live (policy edits ride `alarm.panel_changed`) and exposes
+  `code_format: NUMBER` while any verb needs a code — HA now prompts exactly
+  when the daemon will demand a code, mirroring the daemon's own MQTT
+  discovery (`code: REMOTE_CODE`). Requires openccu-loom-client 2026.7.13.
+
 ### Dependencies
+
+#### Bump openccu-loom-client to `2026.7.13` (pins `openccu-loom-types==0.1.61`, daemon ≥ 0.43.2)
+
+- Effective code policy on the panel twin, `alarm.v1` capability gate,
+  `alarm.notification` event binding, setup-wizard candidate routes.
 
 #### Bump aiohomematic to `2026.7.7`
 
