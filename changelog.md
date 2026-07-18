@@ -1,66 +1,4 @@
-# Version 2.8.5 (unreleased)
-
-## What's Changed
-
-### Features
-
-- **Alarm control panel (openccu-loom backend only).** The openccu-loom daemon
-  (≥ 0.42.0) ships a native, local-first alarm engine and models every alarm
-  area — plus, with two or more areas, an aggregate master panel — as a
-  first-class panel entity. The new `alarm_control_panel` platform spawns one
-  HA panel per loom panel: state tokens come daemon-computed and map 1:1 onto
-  `AlarmControlPanelState`; the configured protection modes map onto the arm
-  features (`perimeter` → home, `full` → away, `night`, `vacation`, `custom` →
-  custom bypass); live detail (mode, countdown, per-mode readiness, last
-  incident, walk test) lands in the extra state attributes; panels removed on
-  the daemon (area deleted) remove their entity. Dispatch runs on the loom
-  twin alone (`LOOM_DP_ALARM_CONTROL_PANEL`, a loom-only tuple that degrades
-  to empty on a CCU-only install — aiohomematic has no alarm engine, so the
-  direct-CCU path is untouched).
-
-- **Alarm panel code-prompt UX (openccu-loom backend).** The daemon (≥ 0.43.x)
-  now ships the effective per-area code policy on the panel entity
-  (`code_arm_required` / `code_disarm_required` — area policy AND an applicable
-  enabled PIN exists; the master panel aggregates any-area). The panel entity
-  reads it live (policy edits ride `alarm.panel_changed`) and exposes
-  `code_format: NUMBER` while any verb needs a code — HA now prompts exactly
-  when the daemon will demand a code, mirroring the daemon's own MQTT
-  discovery (`code: REMOTE_CODE`). Requires openccu-loom-client 2026.7.13.
-
-### Fixes
-
-- **Setup crash-loop after adding an alarm area (loom backend).** The
-  loom unique_id migration treated the daemon-computed alarm-panel ids
-  (`openccu-loom_alarm_<area>`) as legacy aiohomematic keys and prefixed
-  them with `loom_` — orphaning the live panel entity; once the platform
-  had spawned a correctly keyed duplicate, every subsequent setup died
-  with `ValueError: Unique id ... is already in use` and the whole config
-  entry failed to load. The sweep now skips the backend-agnostic
-  `openccu-loom_` namespace, a repair pass renames damaged entries back
-  (removing the history-less duplicate so the original entity keeps its
-  entity_id, area and customisations), and both unique_id migrators skip
-  on target collisions instead of aborting the setup.
-
-### Dependencies
-
-#### Bump openccu-loom-client to `2026.7.13` (pins `openccu-loom-types==0.1.61`, daemon ≥ 0.43.2)
-
-- Effective code policy on the panel twin, `alarm.v1` capability gate,
-  `alarm.notification` event binding, setup-wizard candidate routes.
-
-#### Bump aiohomematic to `2026.7.7`
-
-- Adds the `ALARM_CONTROL_PANEL` category/type vocabulary the platform list
-  derives from (pure vocabulary, no behaviour change on the CCU path).
-
-#### Bump openccu-loom-client to `2026.7.12` (pins `openccu-loom-types==0.1.56`)
-
-- Full client-side alarm surface: `/alarm` REST facade, nine `alarm.*`
-  WebSocket events, store panel section, the categorised
-  `LoomDpAlarmControlPanel` twin and the refresh/removal bridging this
-  platform consumes.
-
-# Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-15)
+# Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-18)
 
 ## What's Changed
 
@@ -70,9 +8,13 @@
 
 ### Dependencies
 
-#### Bump openccu-loom-client to `2026.7.10` (pins `openccu-loom-types==0.1.55`)
+#### Bump aiohomematic to [2026.7.7](https://github.com/SukramJ/aiohomematic/compare/2026.7.6...2026.7.7)
 
-- Groundwork bump for the still-disabled openccu-loom backend; it has no runtime effect while the backend master switch (`LOOM_BACKEND_SELECTABLE` in `const.py`) stays off. Advances the bundled loom client from `2026.7.6` to `2026.7.10` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.1.55`
+- Adds the `ALARM_CONTROL_PANEL` category/type vocabulary — pure vocabulary, no behaviour change on the CCU path
+
+#### Bump openccu-loom-client to `2026.7.12` (pins `openccu-loom-types==0.1.56`)
+
+- Groundwork bump for the still-disabled openccu-loom backend; it has no runtime effect while the backend master switch (`LOOM_BACKEND_SELECTABLE` in `const.py`) stays off. Advances the bundled loom client from `2026.7.6` to `2026.7.12` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.1.56`
 
 #### homematicip-local-frontend
 
