@@ -2,6 +2,10 @@
 
 ## What's Changed
 
+### Integration
+
+- Doorbell event entities (HmIP-DBB, HmIP-DSD-PCB) now expose and fire the standard `ring` event type instead of `press_short` (#3300). Home Assistant requires doorbell event entities to support `ring` (deprecation warning today, mandatory from HA 2027.4) and its new doorbell triggers listen for it. Other event types such as `press_long` are unchanged, as are the device triggers. **Breaking:** automations that trigger on the `press_short` event type of these _event entities_ must be switched to `ring`
+
 ### Development
 
 - Added a `Makefile` as the entry point for all development tasks (`make help` lists every target): setup, code quality (ruff, mypy, pylint, bandit, codespell, yamllint, prettier, translations, prek), tests (incl. coverage, CI mode and the opt-in e2e suite), hassfest/HACS validation, running Home Assistant against `./config`, and housekeeping. Targets run through `script/run-in-env.sh`, so they work with or without an activated virtual environment. `CLAUDE.md` and `CONTRIBUTING.md` document the targets; the broken `cov.sh` (it referenced a non-existent `.coveragerc`) is superseded by `make test-cov-html` and was removed

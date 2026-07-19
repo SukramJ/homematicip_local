@@ -6,9 +6,9 @@ import logging
 from typing import Final
 
 from aiohomematic.central.events import DataPointStateChangedEvent, DeviceRemovedEvent, SubscriptionGroup
-from aiohomematic.const import DATA_POINT_EVENTS, DataPointCategory
+from aiohomematic.const import DATA_POINT_EVENTS, DataPointCategory, Parameter
 from aiohomematic.interfaces import ChannelEventGroupProtocol
-from homeassistant.components.event import EventEntity
+from homeassistant.components.event import DoorbellEventType, EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -23,6 +23,11 @@ from .entity_helpers.base import HmEventEntityDescription
 from .entity_helpers.registry import REGISTRY
 
 _LOGGER = logging.getLogger(__name__)
+
+# The Homematic keypress that represents the ring on doorbell devices. HA requires
+# doorbell event entities to support the standard 'ring' event type (mandatory from
+# HA 2027.4), so this type is exposed and fired as 'ring' instead of 'press_short'.
+_DOORBELL_RING_SOURCE: Final = Parameter.PRESS_SHORT.lower()
 
 
 async def async_setup_entry(
@@ -93,6 +98,11 @@ class AioHomematicEvent(EventEntity):
         )
         if isinstance(description, HmEventEntityDescription) and description.device_class is not None:
             self._attr_device_class = description.device_class
+            if description.device_class == EventDeviceClass.DOORBELL:
+                self._attr_event_types = [
+                    DoorbellEventType.RING if event_type == _DOORBELL_RING_SOURCE else event_type
+                    for event_type in self._attr_event_types
+                ]
 
         self._attr_unique_id = f"{DOMAIN}_{event_group.unique_id}"
         # Carry the room: HA applies suggested_area only when the device
@@ -168,7 +178,10 @@ class AioHomematicEvent(EventEntity):
         # Don't update disabled entities
         if self.enabled:
             if triggered := self._event_group.last_triggered_event:
-                self._trigger_event(triggered.parameter.lower())
+                event_type = triggered.parameter.lower()
+                if self.device_class == EventDeviceClass.DOORBELL and event_type == _DOORBELL_RING_SOURCE:
+                    event_type = DoorbellEventType.RING
+                self._trigger_event(event_type)
                 _LOGGER.debug("Device event emitted %s", self.name)
                 self.async_schedule_update_ha_state()
         else:
