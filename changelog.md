@@ -5,6 +5,7 @@
 ### Integration
 
 - Doorbell event entities (HmIP-DBB, HmIP-DSD-PCB) now expose and fire the standard `ring` event type instead of `press_short` (#3300). Home Assistant requires doorbell event entities to support `ring` (deprecation warning today, mandatory from HA 2027.4) and its new doorbell triggers listen for it. Other event types such as `press_long` are unchanged, as are the device triggers. **Breaking:** automations that trigger on the `press_short` event type of these _event entities_ must be switched to `ring`
+- Event entities now carry the full device identity (name, manufacturer, model, serial number, firmware) in their `DeviceInfo`. Previously they registered only the device identifiers — if an event entity happened to be the device's first registration, the device entry was created without a name and the generated (sticky) entity_id degraded to the config-entry title (e.g. `event.<instance_name>_ch1` instead of `event.<device_name>_ch1`)
 
 ### Development
 

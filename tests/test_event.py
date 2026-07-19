@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components.event import DoorbellEventType
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import async_get_platforms
 
 from tests import const
 from tests.helper import Factory
@@ -87,6 +88,35 @@ class TestAioHomematicEvent:
             interface_id=const.INTERFACE_ID, channel_address="VCU4567298:1", parameter="PRESS_LONG", value=True
         )
         await _wait_for_event_type(hass=hass, entity_id=entity_id, expected="press_long")
+
+    @pytest.mark.asyncio
+    async def test_event_device_info_carries_device_name(
+        self,
+        factory_homegear: Factory,
+    ) -> None:
+        """
+        Event entities carry the device name in their DeviceInfo.
+
+        When the event platform registers its entities before any other
+        platform creates the device entry, a name-less DeviceInfo would
+        create the device without a name and the generated (sticky)
+        entity_id degrades to the config-entry title (e.g.
+        event.centraltest_ch1).
+        """
+        hass, _control = await factory_homegear.setup_environment(TEST_DEVICES)
+        entity_id = await _wait_for_entity(hass=hass, unique_id="homematicip_local_event_group_keypress_vcu4567298_1")
+
+        entity = next(
+            entity
+            for platform in async_get_platforms(hass, "homematicip_local")
+            for entity in platform.entities.values()
+            if entity.entity_id == entity_id
+        )
+        device_info = entity.device_info
+        assert device_info is not None
+        assert device_info.get("name") == "HmIP-DBB_VCU4567298"
+        assert device_info.get("model") == "HmIP-DBB"
+        assert device_info.get("serial_number") == "VCU4567298"
 
     @pytest.mark.asyncio
     async def test_non_doorbell_event_keeps_native_event_types(
