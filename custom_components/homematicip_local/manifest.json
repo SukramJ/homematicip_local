@@ -11,10 +11,10 @@
   "issue_tracker": "https://github.com/sukramj/aiohomematic/issues",
   "loggers": ["aiohomematic", "aiohomematic_config", "openccu_loom_client"],
   "requirements": [
-    "openccu-data==2026.6.1",
+    "openccu-data==2026.7.0",
     "openccu-loom-client==2026.7.13",
     "aiohomematic-config==2026.5.0",
-    "aiohomematic==2026.7.7"
+    "aiohomematic==2026.7.9"
   ],
   "ssdp": [
     {

@@ -1,3 +1,11 @@
+# Version 2.8.5 (unreleased)
+
+## What's Changed
+
+### Integration
+
+- The doorbell device list now comes from openccu-data's curated `device_semantics` extract (via `aiohomematic.device_semantics.DOORBELL_MODELS`, aiohomematic 2026.7.9) instead of a hardcoded tuple — one source of truth shared with openccu-loom's MQTT discovery. The classic `HM-Sen-DB-PCB` joins `HmIP-DBB` and `HmIP-DSD-PCB`: its short press now fires the standard `ring` event type on its doorbell event entity (#3300 follow-up)
+
 # Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-18)
 
 ## What's Changed
