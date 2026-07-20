@@ -1,12 +1,12 @@
 -r requirements_test_pre_commit.txt
 
 async_upnp_client==0.47.0
-aiohomematic-test-support==2026.7.9
-aiohomematic==2026.7.9
+aiohomematic-test-support==2026.7.10
+aiohomematic==2026.7.10
 aiohomematic_config==2026.5.0
 isal==1.8.0
 openccu-data>=2026.7.0
-openccu-loom-client==2026.7.13
+openccu-loom-client==2026.7.15
 mypy<=2.1.0
 prek==0.4.10
 pur==7.4.0
