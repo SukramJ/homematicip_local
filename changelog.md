@@ -1,18 +1,11 @@
-# Version 2.8.5 (unreleased)
-
-## What's Changed
-
-### Integration
-
-- The doorbell device list now comes from openccu-data's curated `device_semantics` extract (via `aiohomematic.device_semantics.DOORBELL_MODELS`, aiohomematic 2026.7.9) instead of a hardcoded tuple — one source of truth shared with openccu-loom's MQTT discovery. The classic `HM-Sen-DB-PCB` joins `HmIP-DBB` and `HmIP-DSD-PCB`: its short press now fires the standard `ring` event type on its doorbell event entity (#3300 follow-up)
-
-# Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-18)
+# Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-20)
 
 ## What's Changed
 
 ### Integration
 
 - Doorbell event entities (HmIP-DBB, HmIP-DSD-PCB) now expose and fire the standard `ring` event type instead of `press_short` (#3300). Home Assistant requires doorbell event entities to support `ring` (deprecation warning today, mandatory from HA 2027.4) and its new doorbell triggers listen for it. Other event types such as `press_long` are unchanged, as are the device triggers. **Breaking:** automations that trigger on the `press_short` event type of these _event entities_ must be switched to `ring`
+- The doorbell device list now comes from openccu-data's curated `device_semantics` extract (via `aiohomematic.device_semantics.DOORBELL_MODELS`) instead of a hardcoded tuple — one source of truth shared with openccu-loom's MQTT discovery. The classic `HM-Sen-DB-PCB` joins `HmIP-DBB` and `HmIP-DSD-PCB`: its short press now fires the standard `ring` event type on its doorbell event entity (#3300 follow-up)
 - Event entities now carry the full device identity (name, manufacturer, model, serial number, firmware) in their `DeviceInfo`. Previously they registered only the device identifiers — if an event entity happened to be the device's first registration, the device entry was created without a name and the generated (sticky) entity_id degraded to the config-entry title (e.g. `event.<instance_name>_ch1` instead of `event.<device_name>_ch1`)
 
 ### Development
@@ -21,13 +14,19 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.7.7](https://github.com/SukramJ/aiohomematic/compare/2026.7.6...2026.7.7)
+#### Bump aiohomematic to [2026.7.10](https://github.com/SukramJ/aiohomematic/compare/2026.7.6...2026.7.10)
 
+- Fix data point names getting a redundant `ch<no>` postfix even when the channel's custom name is already unique (#3313). The postfix for parameters that exist on multiple channels of a device is now only appended when the channel name alone does not identify the channel — device-derived names, names following the `<name>:<no>` scheme, or several same-named channels providing the same parameter. A channel with a unique custom name (e.g. a status channel named `<sub device> Status`) keeps its clean entity name again
+- New `aiohomematic.device_semantics` module exposing the curated device-semantics classifications from openccu-data — first classification: `DOORBELL_MODELS`, the basis for the doorbell-model change above (#3304)
 - Adds the `ALARM_CONTROL_PANEL` category/type vocabulary — pure vocabulary, no behaviour change on the CCU path
 
-#### Bump openccu-loom-client to `2026.7.12` (pins `openccu-loom-types==0.1.56`)
+#### Bump openccu-data to [2026.7.0](https://github.com/SukramJ/openccu-data/compare/2026.6.1...2026.7.0)
 
-- Groundwork bump for the still-disabled openccu-loom backend; it has no runtime effect while the backend master switch (`LOOM_BACKEND_SELECTABLE` in `const.py`) stays off. Advances the bundled loom client from `2026.7.6` to `2026.7.12` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.1.56`
+- Adds the curated `device_semantics` extract (doorbell classification) that aiohomematic's new `device_semantics` module reads
+
+#### Bump openccu-loom-client to `2026.7.14` (pins `openccu-loom-types==0.1.61`)
+
+- Groundwork bump for the still-disabled openccu-loom backend; it has no runtime effect while the backend master switch (`LOOM_BACKEND_SELECTABLE` in `const.py`) stays off. Advances the bundled loom client from `2026.7.6` to `2026.7.14` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.1.61`
 
 #### homematicip-local-frontend
 
