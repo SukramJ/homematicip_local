@@ -7,7 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import MockConfigEntry, flush_store
 
 from aiohomematic.backend_detection import BackendDetectionResult
 from aiohomematic.const import (
@@ -3150,6 +3150,7 @@ class TestReauthFlow:
                     CONF_PASSWORD: "new_password",
                 },
             )
+            await hass.async_block_till_done()
 
         assert result2["type"] == FlowResultType.ABORT
         assert result2["reason"] == "reauth_successful"
@@ -3157,6 +3158,10 @@ class TestReauthFlow:
         # Verify credentials were updated
         assert entry.data[CONF_USERNAME] == "new_username"
         assert entry.data[CONF_PASSWORD] == "new_password"
+
+        # The entry update schedules a delayed config-entry store write; flush it so
+        # the pending timer does not linger into teardown.
+        await flush_store(hass.config_entries._store)
 
     async def test_reauth_flow_validation_failure(self, hass: HomeAssistant) -> None:
         """Test reauthentication flow with validation failure."""
