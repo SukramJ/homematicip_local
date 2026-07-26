@@ -246,7 +246,7 @@ def _reorder_methods(methods: list[MethodSeg]) -> list[MethodSeg]:
         setters = [m for m in grp if m.subgroup == "setter"]
         deleters = [m for m in grp if m.subgroup == "deleter"]
         # Determine the kind from the primary getter (if multiple, choose first by name for stability)
-        primary_getter = sorted(getters, key=lambda m: m.name)[0] if getters else None
+        primary_getter = min(getters, key=lambda m: m.name) if getters else None
         kind = primary_getter.prop_kind if primary_getter else None
         prio = PRIORITY_INDEX.get(kind or "", len(PRIORITY))
         # Strict order within a property group: getter(s) -> setter(s) -> deleter(s)
