@@ -24,7 +24,7 @@ This document provides comprehensive guidance for AI assistants working with the
 
 **Project Name:** Homematic(IP) Local for OpenCCU
 **Type:** Home Assistant Custom Integration
-**Version:** 2.8.5
+**Version:** 2.8.4
 **Primary Language:** Python 3.14+
 **Domain:** `homematicip_local`
 
@@ -1116,7 +1116,7 @@ make hass
 
 ### Version Information
 
-- **Current Version:** 2.8.5
+- **Current Version:** 2.8.4
 - **Minimum HA Version:** 2026.7.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
 - **aiohomematic Version:** 2026.7.11
@@ -1133,4 +1133,4 @@ make hass
 ---
 
 **Last Updated**: 2026-07-27
-**Version**: 2.8.5
+**Version**: 2.8.4

@@ -1,4 +1,4 @@
-# Version [2.8.5](https://github.com/SukramJ/homematicip_local/compare/2.8.4...2.8.5) (2026-07-27)
+# Version [2.8.5](https://github.com/SukramJ/homematicip_local/compare/2.8.4...2.8.5) (unreleased)
 
 ## What's Changed
 
