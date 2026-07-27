@@ -1,3 +1,21 @@
+# Version [2.8.5](https://github.com/SukramJ/homematicip_local/compare/2.8.4...2.8.5) (unreleased)
+
+## What's Changed
+
+### Integration
+
+- Diagnostics download no longer crashes on the openccu-loom backend: the compat adapter exposes neither `device_registry` nor `metrics_aggregator`, so the payload now derives the model list from the registered devices and omits the in-process metrics section instead of raising `AttributeError`
+
+### Development
+
+Dual-backend parity hardening — the full integration surface is now verified against **both** backends (aiohomematic direct-CCU and openccu-loom):
+
+- **Backend surface contract tests** (`tests/contract/test_backend_surface_contract.py`): the `central.*` member and facade-call surface the integration actually uses is inventoried from the sources via AST on every run and checked against both backend classes — member presence, call-shape compatibility (as written at each call site), `backend_types.py` loom-twin completeness, and a ban on `isinstance` dispatch against concrete aiohomematic model classes outside `backend_types.py`. Four real, reachable loom call-shape gaps are documented as tracked exemptions (`device_coordinator.delete_device`, `create_central_links`/`remove_central_links` central-wide calls, `configuration.get_link_paramset_description`) — each raises `TypeError` on a loom entry today and needs an openccu-loom-client compat fix
+- **Behavioral parity probes** in the three-way e2e suite (`tests/e2e/actions.py`): identical HA service calls (switch toggle, cover position, climate target temperature), a CCU-side push via the godevccu control API, and the config-surface paramset description are now asserted to behave identically across the ccu/loom/mqtt planes (`test_action_parity`, `test_config_surface_parity`)
+- **Parity ratchet** (`tests/e2e/enforced_models.py`): widened runs (`GODEVCCU_E2E_DEVICES=all`) enforce entity-set parity for the enforced model list (plus all hub entities) and report `promotable_models` / `regressed_enforced_models`, so coverage can only grow — the end state is the full ~399-model set as a green gate
+- **CI workflow** `.github/workflows/e2e-parity.yaml`: the parity suite now runs as a gate on dependency-bump PRs (manifest / requirements paths) and nightly, plus a nightly full-set report job (informational via `continue-on-error` until the aiohomematic plane completes its full-scale initial load — the ~399-model paramset fetch currently exceeds the settle budget) that uploads the ratchet summary as an artifact; the backend stack (godevccu-e2e + daemon) is built from `SukramJ/openccu-loom`
+- e2e backend-stack requirements: openccu-loom daemon > 0.48.8 (channel-level custom-DP `unique_id`s matching aiohomematic's key shape — parameter-suffixed keys would re-create every custom entity on a backend switch) and godevccu > 0.1.8 (dedicated `get_alarm_messages.fn` handler; CCU-semantics 10-char serial). The e2e conftest tolerates live-backend teardown races (lingering client executor thread, double-stop `InvalidStateTransitionError`) that the strict HA test verifier would turn into failures
+
 # Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-26)
 
 ## What's Changed

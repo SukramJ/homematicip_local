@@ -3,6 +3,8 @@ Tests for diagnostics module to achieve 100% coverage.
 
 This suite validates:
 - async_get_config_entry_diagnostics composes the diagnostics payload and redacts sensitive config fields.
+- The payload degrades gracefully on the openccu-loom backend, whose compat
+  adapter exposes neither a device registry nor a metrics aggregator.
 """
 
 from __future__ import annotations
@@ -134,3 +136,52 @@ class TestAsyncGetConfigEntryDiagnostics:
         assert throttle_data["burst_count"] == 1
         assert throttle_data["burst_threshold"] == 5
         assert throttle_data["burst_window"] == 0.5
+
+    @pytest.mark.asyncio
+    async def test_degrades_on_loom_shaped_central(self, hass, mock_loaded_config_entry) -> None:
+        """It should build a payload when the central lacks the ccu-only surfaces.
+
+        The openccu-loom compat adapter exposes neither ``device_registry`` nor
+        ``metrics_aggregator``; the diagnostics download must degrade instead of
+        raising ``AttributeError``.
+        """
+        entry = mock_loaded_config_entry
+        control_unit = entry.runtime_data
+        central = control_unit.central
+
+        # A deleted MagicMock attribute raises AttributeError on access — the
+        # exact shape of the loom compat adapter for these two members.
+        del central.device_registry
+        del central.metrics_aggregator
+
+        device_a = MagicMock()
+        device_a.model = "HmIP-SWDO"
+        device_b = MagicMock()
+        device_b.model = "HmIP-BSM"
+        central.device_coordinator.devices = (device_a, device_b)
+
+        central.system_information = _SystemInformation(serial="ABC123", version="1.2.3")
+
+        mock_health = MagicMock()
+        mock_health.to_dict.return_value = {"overall_score": 100}
+        central.health = mock_health
+
+        mock_incident_store = MagicMock()
+        mock_incident_store.get_diagnostics = AsyncMock(return_value={"incidents": []})
+        mock_cache_coordinator = MagicMock()
+        mock_cache_coordinator.incident_store = mock_incident_store
+        central.cache_coordinator = mock_cache_coordinator
+
+        mock_client_coordinator = MagicMock()
+        mock_client_coordinator.clients = ()
+        central.client_coordinator = mock_client_coordinator
+
+        diag = await async_get_config_entry_diagnostics(hass, entry)
+
+        # Models fall back to the device-derived set, sorted and deduplicated.
+        assert diag["models"] == ("HmIP-BSM", "HmIP-SWDO")
+        # No in-process metrics aggregator -> no metrics section.
+        assert "metrics" not in diag
+        assert diag["system_health"] == {"overall_score": 100}
+        assert diag["incident_store"] == {"incidents": []}
+        assert diag["command_throttle"] == {}

@@ -42,6 +42,7 @@ class EntitySnap:
     raw_unique_id: str
     entity_id: str
     has_state: bool = True
+    model: str | None = None
 
 
 @dataclass(slots=True)
@@ -142,6 +143,10 @@ def scrape(
             for attr in _COMPARE_ATTRS.get(domain, ()):  # only stable card attrs
                 if attr in state_obj.attributes:
                     attrs[attr] = state_obj.attributes[attr]
+        model: str | None = None
+        if entry.device_id and (device := dev_reg.async_get(entry.device_id)) is not None:
+            snap.device_keys.add(device.name or device.id)
+            model = device.model
         snap.entities[key] = EntitySnap(
             domain=domain,
             unique_key=key,
@@ -151,9 +156,8 @@ def scrape(
             raw_unique_id=entry.unique_id,
             entity_id=entry.entity_id,
             has_state=state_obj is not None,
+            model=model,
         )
-        if entry.device_id and (device := dev_reg.async_get(entry.device_id)) is not None:
-            snap.device_keys.add(device.name or device.id)
     return snap
 
 
@@ -164,12 +168,19 @@ async def wait_until_settled(
     timeout: float = 120.0,
     stable_for: float = 3.0,
     poll: float = 0.5,
+    floor: Callable[[], bool] | None = None,
 ) -> None:
     """Wait until predicate() has held a stable value for stable_for seconds.
 
     predicate() should return a comparable snapshot of progress (e.g. an entity
     count). The wait resolves once it stops changing for stable_for seconds, or
     raises TimeoutError after timeout.
+
+    When ``floor`` is given, stability only counts once it returns True. This
+    bridges arbitrarily long silent gaps in the load (aiohomematic's up-front
+    paramset-description fetch produces no new entities for minutes on a large
+    device set) that would otherwise satisfy any fixed stability window while
+    the plane is still far from loaded.
     """
     loop = asyncio.get_running_loop()
     deadline = loop.time() + timeout
@@ -182,10 +193,46 @@ async def wait_until_settled(
         if value != last_value:
             last_value = value
             stable_since = now
-        elif value and (now - stable_since) >= stable_for:
+        elif value and (floor is None or floor()) and (now - stable_since) >= stable_for:
             return
         await asyncio.sleep(poll)
     raise TimeoutError(f"plane did not settle within {timeout}s (last value: {last_value})")
+
+
+def entity_model(snaps: Mapping[str, Snapshot], *, key: str) -> str | None:
+    """Return the device model behind a canonical key, from the first plane that knows it."""
+    for snap in snaps.values():
+        if (entity := snap.entities.get(key)) is not None and entity.model:
+            return entity.model
+    return None
+
+
+def per_model_entity_set_report(
+    snaps: Mapping[str, Snapshot],
+    *,
+    is_by_design_residual: Callable[[str, str], bool],
+) -> tuple[set[str], set[str]]:
+    """Return (clean, dirty) device models by cross-plane entity-set parity.
+
+    The first plane is the reference. A model is *dirty* when any of its
+    entities is missing/extra on another plane (by-design residuals aside);
+    every other model seen on the reference plane is *clean*. Entities without
+    a device model (hub entities) do not participate — they are always
+    enforced directly by the parity test.
+    """
+    planes = list(snaps)
+    reference = snaps[planes[0]]
+    dirty: set[str] = set()
+    for other in planes[1:]:
+        report = diff_snapshots({planes[0]: reference, other: snaps[other]})[other]
+        for field_name in ("missing_vs_ref", "extra_vs_ref"):
+            for key in report[field_name]:
+                if is_by_design_residual(other, key):
+                    continue
+                if (model := entity_model(snaps, key=key)) is not None:
+                    dirty.add(model)
+    all_models = {entity.model for entity in reference.entities.values() if entity.model}
+    return all_models - dirty, dirty
 
 
 def diff_snapshots(snaps: Mapping[str, Snapshot]) -> dict[str, Any]:

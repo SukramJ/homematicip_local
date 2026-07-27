@@ -1,0 +1,153 @@
+name: "E2E-Parity"
+
+# Three-way backend parity gate: one godevccu backend driven through the
+# aiohomematic (direct CCU), openccu-loom-client and mqtt-discovery planes
+# must materialize and behave as the same Home Assistant integration.
+# See tests/e2e/README.md.
+#
+# The backend stack (godevccu-e2e + openccu-loom daemon) is built from the
+# openccu-loom repository at LOOM_REF. A red run after a dependency bump means
+# the pinned aiohomematic / openccu-loom-client versions drifted against each
+# other or against the daemon — exactly what this gate exists to catch.
+
+# yamllint disable-line rule:truthy
+on:
+  pull_request:
+    paths:
+      - "custom_components/homematicip_local/manifest.json"
+      - "requirements_test.txt"
+      - "tests/e2e/**"
+      - ".github/workflows/e2e-parity.yaml"
+  schedule:
+    # Nightly: catches drift landing in openccu-loom main without any PR here.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+    inputs:
+      loom_ref:
+        description: "openccu-loom ref to build the backend stack from"
+        default: "main"
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-parity-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  LOOM_REPO: SukramJ/openccu-loom
+  LOOM_REF: ${{ github.event.inputs.loom_ref || 'main' }}
+
+jobs:
+  parity-gate:
+    name: "Parity gate (default device set)"
+    if: github.repository_owner == 'SukramJ'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check out openccu-loom (backend stack sources)
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ env.LOOM_REPO }}
+          ref: ${{ env.LOOM_REF }}
+          path: openccu-loom
+      - name: Set up Go
+        # actions/setup-go v7.0.0
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version-file: openccu-loom/go.mod
+          cache-dependency-path: openccu-loom/go.sum
+      - name: Build backend binaries (godevccu-e2e + daemon)
+        run: |
+          cd openccu-loom
+          mkdir -p bin
+          go build -o bin/godevccu-e2e ./cmd/godevccu-e2e
+          go build -o bin/openccu-loom ./cmd/openccu-loom
+      - name: Install Mosquitto broker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mosquitto
+          sudo systemctl stop mosquitto || true
+      - name: Set up Python
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_test.txt
+      - name: Run three-way parity suite
+        env:
+          GODEVCCU_E2E_BINARY: ${{ github.workspace }}/openccu-loom/bin/godevccu-e2e
+          OPENCCU_LOOM_E2E_BINARY: ${{ github.workspace }}/openccu-loom/bin/openccu-loom
+          MOSQUITTO_BINARY: /usr/sbin/mosquitto
+        run: pytest tests/e2e -m e2e -n0 -s 2>&1 | tee parity-gate.log
+      - name: Upload parity log
+        if: always()
+        # actions/upload-artifact v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: parity-gate-log
+          path: parity-gate.log
+
+  parity-full:
+    name: "Full-set parity report (~399 models, ratchet-enforced)"
+    if: >-
+      github.repository_owner == 'SukramJ' &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    # Informational until the aiohomematic plane completes its initial load
+    # against godevccu at full scale (the ~399-model paramset fetch currently
+    # exceeds the settle budget; the 4-device gate above is the enforced one).
+    # Flip to blocking once the full-set run is green and models are promoted.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check out openccu-loom (backend stack sources)
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ env.LOOM_REPO }}
+          ref: ${{ env.LOOM_REF }}
+          path: openccu-loom
+      - name: Set up Go
+        # actions/setup-go v7.0.0
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version-file: openccu-loom/go.mod
+          cache-dependency-path: openccu-loom/go.sum
+      - name: Build backend binaries (godevccu-e2e + daemon)
+        run: |
+          cd openccu-loom
+          mkdir -p bin
+          go build -o bin/godevccu-e2e ./cmd/godevccu-e2e
+          go build -o bin/openccu-loom ./cmd/openccu-loom
+      - name: Install Mosquitto broker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mosquitto
+          sudo systemctl stop mosquitto || true
+      - name: Set up Python
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_test.txt
+      - name: Run three-way parity suite (all godevccu models)
+        env:
+          GODEVCCU_E2E_BINARY: ${{ github.workspace }}/openccu-loom/bin/godevccu-e2e
+          OPENCCU_LOOM_E2E_BINARY: ${{ github.workspace }}/openccu-loom/bin/openccu-loom
+          MOSQUITTO_BINARY: /usr/sbin/mosquitto
+          GODEVCCU_E2E_DEVICES: all
+        run: pytest tests/e2e -m e2e -n0 -s 2>&1 | tee parity-full.log
+      - name: Upload parity report (promotable models, full diff)
+        if: always()
+        # actions/upload-artifact v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: parity-full-log
+          path: parity-full.log

@@ -24,7 +24,7 @@ This document provides comprehensive guidance for AI assistants working with the
 
 **Project Name:** Homematic(IP) Local for OpenCCU
 **Type:** Home Assistant Custom Integration
-**Version:** 2.8.0
+**Version:** 2.8.4
 **Primary Language:** Python 3.14+
 **Domain:** `homematicip_local`
 
@@ -79,6 +79,7 @@ homematicip_local/
 │   │
 ├── .github/workflows/                    # CI/CD pipelines
 │   ├── test-run.yaml                     # Main test pipeline (Python 3.14)
+│   ├── e2e-parity.yaml                   # Three-way backend parity gate (see tests/e2e/README.md)
 │   ├── pre-commit.yml                    # Code quality gate
 │   ├── hacs_validate.yaml                # HACS validation
 │   └── hassfest.yaml                     # HA manifest validation
@@ -117,7 +118,7 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2026.6.0) - Core async library for Homematic device communication
+- **aiohomematic** (v2026.7.11) - Core async library for Homematic device communication
 - **aiohomematic-contract** (v2026.6.1) - Shared contract/event-type definitions
 - **aiohomematic-config** (v2026.5.0) - Device configuration metadata
 - **Home Assistant Core** - Minimum version: 2026.7.0+
@@ -130,7 +131,7 @@ homematicip_local/
 - **pylint** (4.0.5) - Code linting
 - **ruff** (0.15.15) - Fast Python linter and formatter
 - **prek** (0.4.4) - Git hooks manager (Rust-based pre-commit alternative)
-- **aiohomematic-test-support** (2026.6.0) - Mock test data
+- **aiohomematic-test-support** (2026.7.11) - Mock test data
 - **async-upnp-client** (0.47.0) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
 
@@ -1115,10 +1116,10 @@ make hass
 
 ### Version Information
 
-- **Current Version:** 2.8.0
+- **Current Version:** 2.8.4
 - **Minimum HA Version:** 2026.7.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
-- **aiohomematic Version:** 2026.6.0
+- **aiohomematic Version:** 2026.7.11
 
 ### External Resources
 
@@ -1131,5 +1132,5 @@ make hass
 
 ---
 
-**Last Updated**: 2026-06-04
-**Version**: 2.8.0
+**Last Updated**: 2026-07-27
+**Version**: 2.8.4
