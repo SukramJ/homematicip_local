@@ -146,6 +146,21 @@ class BackendStack:
         """Return the daemon REST base URL."""
         return f"http://127.0.0.1:{self.daemon_rest_port}"
 
+    def parent_device_count(self) -> int:
+        """Return the number of parent devices godevccu currently exposes.
+
+        Queried live over XML-RPC; used as the settle floor for every plane —
+        each device materializes at least one entity, so a plane that has
+        fewer entities than devices is still loading (e.g. inside
+        aiohomematic's silent up-front paramset-description fetch).
+        """
+        import xmlrpc.client
+
+        with xmlrpc.client.ServerProxy(f"http://127.0.0.1:{self.ccu_xml_rpc_port}") as proxy:
+            devices = proxy.listDevices()
+        assert isinstance(devices, list)
+        return sum(1 for device in devices if ":" not in str(device.get("ADDRESS", "")))
+
     def set_ccu_value(self, *, address: str, value_key: str, value: object) -> None:
         """Drive a CCU-side state change via the godevccu control API."""
         body = json.dumps({"address": address, "value_key": value_key, "value": value}).encode()

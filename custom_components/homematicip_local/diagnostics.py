@@ -19,13 +19,20 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: Homemat
     """Return diagnostics for a config entry."""
     control_unit: ControlUnit = entry.runtime_data
     central = control_unit.central
-    metrics = central.metrics_aggregator.snapshot()
     diag: dict[str, Any] = {"config": async_redact_data(entry.as_dict(), REDACT_CONFIG)}
 
-    diag["models"] = central.device_registry.models
+    # The openccu-loom compat adapter exposes neither a device registry nor an
+    # in-process metrics aggregator (metrics live in the daemon), so both are
+    # optional here: models fall back to the device-derived set, metrics are
+    # omitted.
+    if (device_registry := getattr(central, "device_registry", None)) is not None:
+        diag["models"] = device_registry.models
+    else:
+        diag["models"] = tuple(sorted({device.model for device in central.device_coordinator.devices}))
     diag["system_information"] = async_redact_data(asdict(central.system_information), "serial")
     diag["system_health"] = central.health.to_dict()
-    diag["metrics"] = metrics.to_dict()
+    if (metrics_aggregator := getattr(central, "metrics_aggregator", None)) is not None:
+        diag["metrics"] = metrics_aggregator.snapshot().to_dict()
     diag["incident_store"] = await central.cache_coordinator.incident_store.get_diagnostics()
 
     # Command throttle statistics per interface
