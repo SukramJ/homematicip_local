@@ -24,6 +24,8 @@ DEFAULT_ENABLE_MQTT: Final = False
 DEFAULT_MQTT_PREFIX: Final = ""
 DEFAULT_DISABLE_CONFIG_PANEL: Final = False
 DEFAULT_ENABLE_SUB_DEVICES: Final = False
+# The loom backend defaults sub-device entities to enabled in its setup flow.
+DEFAULT_LOOM_ENABLE_SUB_DEVICES: Final = True
 DEFAULT_COMMAND_RETRY_MAX_ATTEMPTS: Final = 3
 DEFAULT_COMMAND_THROTTLE_INTERVAL: Final = 0.1
 

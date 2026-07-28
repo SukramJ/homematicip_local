@@ -5,6 +5,11 @@
 ### Integration
 
 - Diagnostics download no longer crashes on the openccu-loom backend: the compat adapter exposes neither `device_registry` nor `metrics_aggregator`, so the payload now derives the model list from the registered devices and omits the in-process metrics section instead of raising `AttributeError`
+- Discovery cards now show which backend a discovered instance targets: the flow title carries a `{backend}` placeholder (`aiohomematic` for a CCU found via SSDP, `openccu-loom` for a daemon found via mDNS), so two cards for the same CCU are distinguishable before clicking. Reauth and reconfigure flow titles carry the entry's backend the same way
+- **In-place backend switch**: setting up a CCU whose serial is already configured on the *other* backend no longer aborts with `already_configured` — the existing entry switches backend in place and reloads. The entry keeps its entry_id, instance name and advanced config (incl. `sub_devices_enabled`), so entities, history and customisations survive the CCU ⇄ loom round-trip; the stale connection keys of the previous backend stay in the entry, making a switch back lossless. Adding a serial already configured on the *same* backend still aborts
+- The openccu-loom setup flow (manual form and discovered-daemon token step) now offers **Create sub-device entities** directly, enabled by default; on a backend switch an explicit choice stored on the existing entry wins over the form default
+- The **manual** openccu-loom form now validates the daemon connection, lists its CCUs and routes into the shared CCU-selection step. Manual entries are therefore serial-keyed like discovered ones — duplicate setups abort, the in-place backend switch applies, and auth/connection/no-CCU errors surface on the form. The user-chosen instance name is kept; a blank daemon port stays absent from the entry (the loom client applies its TLS-dependent default)
+- Config entry updates from the reauth and backend-switch flows now reload the entry exactly once: a shared helper schedules a reload only when the registered update listener will not already do so (unloaded entry or unchanged data), replacing `ConfigFlow.async_update_reload_and_abort`, whose extra reload schedule alongside an update listener double-reloaded and is deprecated with HA 2026.12
 
 ### Development
 

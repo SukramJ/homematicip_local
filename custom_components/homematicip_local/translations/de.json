@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Eintrag mit der Seriennummer {serial} ist bereits konfiguriert", 
+            "backend_switched": "Backend für die bereits konfigurierte CCU gewechselt. Der bestehende Eintrag behält Einstellungen, Entitäten und Verlauf.", 
             "invalid_discovery_info": "Unvollständige Discovery-Informationen.", 
             "loom_not_enabled": "Das openccu-loom-Backend ist nicht aktiviert.", 
             "reauth_failed": "Der Konfigurationseintrag zur erneuten Authentifizierung konnte nicht gefunden werden", 
@@ -18,7 +19,7 @@
             "no_ccus": "Der Daemon meldet keine CCUs.", 
             "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Home Assistant Protokolle für weitere Details."
         }, 
-        "flow_title": "{name}/{host}", 
+        "flow_title": "{name}/{host} ({backend})", 
         "progress": {
             "detect_backend": "Backend-Typ und verfügbare Schnittstellen werden erkannt..."
         }, 
@@ -122,8 +123,12 @@
                     "instance_name": "Name der Integrations-Instanz", 
                     "loom_port": "Daemon-Port (leer = 8443 TLS / 8080 unverschlüsselt)", 
                     "loom_token": "API-Bearer-Token", 
+                    "sub_devices_enabled": "Untergeräte-Entitäten erstellen", 
                     "tls": "TLS verwenden (HTTPS/WSS)", 
                     "verify_tls": "TLS-Zertifikat prüfen"
+                }, 
+                "data_description": {
+                    "sub_devices_enabled": "Teilt Geräte mit mehreren Kanalgruppen in ein Hauptgerät mit Untergeräten auf. Entitäten werden basierend auf ihrer Kanalgruppe dem entsprechenden Untergerät zugeordnet."
                 }, 
                 "description": "Mit einem openccu-loom-Daemon verbinden. Der Daemon verwaltet CCU-Verbindung, Interfaces und Callbacks.", 
                 "title": "OpenCCU-Loom-Daemon"
@@ -144,7 +149,11 @@
             }, 
             "loom_token": {
                 "data": {
-                    "loom_token": "API-Bearer-Token"
+                    "loom_token": "API-Bearer-Token", 
+                    "sub_devices_enabled": "Untergeräte-Entitäten erstellen"
+                }, 
+                "data_description": {
+                    "sub_devices_enabled": "Teilt Geräte mit mehreren Kanalgruppen in ein Hauptgerät mit Untergeräten auf. Entitäten werden basierend auf ihrer Kanalgruppe dem entsprechenden Untergerät zugeordnet."
                 }, 
                 "description": "Gib den API-Bearer-Token für den gefundenen Daemon „{name}\" unter {host} ein.", 
                 "title": "OpenCCU-Loom-Daemon-Token"
