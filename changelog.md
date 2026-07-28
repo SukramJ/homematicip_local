@@ -1,27 +1,4 @@
-# Version [2.8.5](https://github.com/SukramJ/homematicip_local/compare/2.8.4...2.8.5) (unreleased)
-
-## What's Changed
-
-### Integration
-
-- Diagnostics download no longer crashes on the openccu-loom backend: the compat adapter exposes neither `device_registry` nor `metrics_aggregator`, so the payload now derives the model list from the registered devices and omits the in-process metrics section instead of raising `AttributeError`
-- Discovery cards now show which backend a discovered instance targets: the flow title carries a `{backend}` placeholder (`aiohomematic` for a CCU found via SSDP, `openccu-loom` for a daemon found via mDNS), so two cards for the same CCU are distinguishable before clicking. Reauth and reconfigure flow titles carry the entry's backend the same way
-- **In-place backend switch**: setting up a CCU whose serial is already configured on the *other* backend no longer aborts with `already_configured` — the existing entry switches backend in place and reloads. The entry keeps its entry_id, instance name and advanced config (incl. `sub_devices_enabled`), so entities, history and customisations survive the CCU ⇄ loom round-trip; the stale connection keys of the previous backend stay in the entry, making a switch back lossless. Adding a serial already configured on the *same* backend still aborts
-- The openccu-loom setup flow (manual form and discovered-daemon token step) now offers **Create sub-device entities** directly, enabled by default; on a backend switch an explicit choice stored on the existing entry wins over the form default
-- The **manual** openccu-loom form now validates the daemon connection, lists its CCUs and routes into the shared CCU-selection step. Manual entries are therefore serial-keyed like discovered ones — duplicate setups abort, the in-place backend switch applies, and auth/connection/no-CCU errors surface on the form. The user-chosen instance name is kept; a blank daemon port stays absent from the entry (the loom client applies its TLS-dependent default)
-- Config entry updates from the reauth and backend-switch flows now reload the entry exactly once: a shared helper schedules a reload only when the registered update listener will not already do so (unloaded entry or unchanged data), replacing `ConfigFlow.async_update_reload_and_abort`, whose extra reload schedule alongside an update listener double-reloaded and is deprecated with HA 2026.12
-
-### Development
-
-Dual-backend parity hardening — the full integration surface is now verified against **both** backends (aiohomematic direct-CCU and openccu-loom):
-
-- **Backend surface contract tests** (`tests/contract/test_backend_surface_contract.py`): the `central.*` member and facade-call surface the integration actually uses is inventoried from the sources via AST on every run and checked against both backend classes — member presence, call-shape compatibility (as written at each call site), `backend_types.py` loom-twin completeness, and a ban on `isinstance` dispatch against concrete aiohomematic model classes outside `backend_types.py`. Four real, reachable loom call-shape gaps are documented as tracked exemptions (`device_coordinator.delete_device`, `create_central_links`/`remove_central_links` central-wide calls, `configuration.get_link_paramset_description`) — each raises `TypeError` on a loom entry today and needs an openccu-loom-client compat fix
-- **Behavioral parity probes** in the three-way e2e suite (`tests/e2e/actions.py`): identical HA service calls (switch toggle, cover position, climate target temperature), a CCU-side push via the godevccu control API, and the config-surface paramset description are now asserted to behave identically across the ccu/loom/mqtt planes (`test_action_parity`, `test_config_surface_parity`)
-- **Parity ratchet** (`tests/e2e/enforced_models.py`): widened runs (`GODEVCCU_E2E_DEVICES=all`) enforce entity-set parity for the enforced model list (plus all hub entities) and report `promotable_models` / `regressed_enforced_models`, so coverage can only grow — the end state is the full ~399-model set as a green gate
-- **CI workflow** `.github/workflows/e2e-parity.yaml`: the parity suite now runs as a gate on dependency-bump PRs (manifest / requirements paths) and nightly, plus a nightly full-set report job (informational via `continue-on-error` until the aiohomematic plane completes its full-scale initial load — the ~399-model paramset fetch currently exceeds the settle budget) that uploads the ratchet summary as an artifact; the backend stack (godevccu-e2e + daemon) is built from `SukramJ/openccu-loom`
-- e2e backend-stack requirements: openccu-loom daemon > 0.48.8 (channel-level custom-DP `unique_id`s matching aiohomematic's key shape — parameter-suffixed keys would re-create every custom entity on a backend switch) and godevccu > 0.1.8 (dedicated `get_alarm_messages.fn` handler; CCU-semantics 10-char serial). The e2e conftest tolerates live-backend teardown races (lingering client executor thread, double-stop `InvalidStateTransitionError`) that the strict HA test verifier would turn into failures
-
-# Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-26)
+# Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-28)
 
 ## What's Changed
 
@@ -30,10 +7,13 @@ Dual-backend parity hardening — the full integration surface is now verified a
 - Doorbell event entities (HmIP-DBB, HmIP-DSD-PCB) now expose and fire the standard `ring` event type instead of `press_short` (#3300). Home Assistant requires doorbell event entities to support `ring` (deprecation warning today, mandatory from HA 2027.4) and its new doorbell triggers listen for it. Other event types such as `press_long` are unchanged, as are the device triggers. **Breaking:** automations that trigger on the `press_short` event type of these _event entities_ must be switched to `ring`
 - The doorbell device list now comes from openccu-data's curated `device_semantics` extract (via `aiohomematic.device_semantics.DOORBELL_MODELS`) instead of a hardcoded tuple — one source of truth shared with openccu-loom's MQTT discovery. The classic `HM-Sen-DB-PCB` joins `HmIP-DBB` and `HmIP-DSD-PCB`: its short press now fires the standard `ring` event type on its doorbell event entity (#3300 follow-up)
 - Event entities now carry the full device identity (name, manufacturer, model, serial number, firmware) in their `DeviceInfo`. Previously they registered only the device identifiers — if an event entity happened to be the device's first registration, the device entry was created without a name and the generated (sticky) entity_id degraded to the config-entry title (e.g. `event.<instance_name>_ch1` instead of `event.<device_name>_ch1`)
+- Reauthentication now reloads the config entry exactly once. The flow's entry update schedules a reload only when the registered update listener will not already do so (unloaded entry or unchanged data), replacing `ConfigFlow.async_update_reload_and_abort`, whose extra reload schedule alongside an update listener caused a double reload and is deprecated with HA 2026.12
 
 ### Development
 
 - Added a `Makefile` as the entry point for all development tasks (`make help` lists every target): setup, code quality (ruff, mypy, pylint, bandit, codespell, yamllint, prettier, translations, prek), tests (incl. coverage, CI mode and the opt-in e2e suite), hassfest/HACS validation, running Home Assistant against `./config`, and housekeeping. Targets run through `script/run-in-env.sh`, so they work with or without an activated virtual environment. `CLAUDE.md` and `CONTRIBUTING.md` document the targets; the broken `cov.sh` (it referenced a non-existent `.coveragerc`) is superseded by `make test-cov-html` and was removed
+- Dual-backend parity hardening: a backend surface contract test (`tests/contract/test_backend_surface_contract.py`) inventories the `central.*` member and call surface the integration actually uses from the sources via AST and checks it against both backend classes, the three-way e2e suite gained behavioral parity probes (identical HA service calls, a CCU-side push, the config-surface paramset description) plus an entity-set parity ratchet that lets model coverage only grow, and the new `.github/workflows/e2e-parity.yaml` runs the suite as a gate on dependency-bump PRs and nightly. Test infrastructure only — no runtime effect
+- Config flow and diagnostics groundwork for the still-disabled openccu-loom backend (backend-aware flow titles, in-place backend switch on a matching CCU serial, sub-device toggle, serial-keyed manual setup, diagnostics on the compat adapter). Inactive while the backend master switch (`LOOM_BACKEND_SELECTABLE` in `const.py`) stays off; the user-facing details will be documented once the backend becomes selectable
 
 ### Dependencies
 
@@ -49,9 +29,9 @@ Dual-backend parity hardening — the full integration surface is now verified a
 - Adds the curated `device_semantics` extract (doorbell classification) that aiohomematic's new `device_semantics` module reads
 - Regenerates the easymode and translation extracts as well as the `BLIND_VIRTUAL_RECEIVER`, `SHUTTER_VIRTUAL_RECEIVER` and `WATER_SWITCH_VIRTUAL_RECEIVER` profiles from the latest OCCU sources: a new `SHORT_OUTPUT_BEHAVIOUR` parameter in the water-switch profiles, `LONG_PROFILE_ACTION_TYPE` narrowed to a fixed value in the blind/shutter profiles, plus revised German/English help texts and value labels
 
-#### Bump openccu-loom-client to `2026.7.16` (pins `openccu-loom-types==0.1.68`)
+#### Bump openccu-loom-client to `2026.7.18` (pins `openccu-loom-types==0.2.1`)
 
-- Groundwork bump for the still-disabled openccu-loom backend; it has no runtime effect while the backend master switch (`LOOM_BACKEND_SELECTABLE` in `const.py`) stays off. Advances the bundled loom client from `2026.7.6` to `2026.7.16` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.1.68`
+- Groundwork bump for the still-disabled openccu-loom backend; it has no runtime effect while the backend master switch (`LOOM_BACKEND_SELECTABLE` in `const.py`) stays off. Advances the bundled loom client from `2026.7.6` to `2026.7.18` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.2.1`
 
 #### homematicip-local-frontend
 
