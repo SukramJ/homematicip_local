@@ -570,6 +570,11 @@ The integration uses a modern, user-friendly multi-step configuration flow:
 - ✅ **Progress Indicators**: Each step shows "Step X of Y"
 - ✅ **Menu-Based Navigation**: Clear choice between finishing setup or accessing advanced options
 - ✅ **Reconfigure Flow**: Update connection settings without deleting and re-adding integration
+- ✅ **Backend-Aware Flow Titles**: `flow_title` carries a `{backend}` placeholder (`aiohomematic` / `openccu-loom`), so discovery cards (SSDP vs. mDNS), reauth and reconfigure dialogs show which backend a flow targets
+- ✅ **In-Place Backend Switch**: Setting up a CCU whose serial is already configured on the *other* backend switches the existing entry in place (abort reason `backend_switched`) instead of aborting with `already_configured`. The entry keeps its entry_id, instance name and advanced config (incl. `sub_devices_enabled`); the previous backend's connection keys stay in the entry so a switch back is lossless
+- ✅ **Loom Sub-Device Toggle**: The openccu-loom setup flow (manual form and discovered-daemon token step) offers `sub_devices_enabled` directly, defaulting to enabled (`DEFAULT_LOOM_ENABLE_SUB_DEVICES`)
+- ✅ **Serial-Keyed Manual Loom Setup**: The manual loom form validates the daemon, lists its CCUs and routes into the shared CCU-selection step, so manual entries get the same serial-based dedup and in-place backend switch as discovered daemons (the user-chosen instance name is kept)
+- ✅ **Single-Reload Entry Updates**: `_async_update_reload_and_abort_entry` (used by reauth and both backend-switch paths) schedules a reload only when the entry's update listener will not already reload it — never use `ConfigFlow.async_update_reload_and_abort` here (double reload, deprecated with HA 2026.12)
 
 ### Service Registration Pattern
 

@@ -7,7 +7,8 @@
       "reconfigure_failed": "Could not find the configuration entry to reconfigure",
       "reconfigure_successful": "Connection settings updated successfully",
       "loom_not_enabled": "The openccu-loom backend is not enabled.",
-      "invalid_discovery_info": "Incomplete discovery information."
+      "invalid_discovery_info": "Incomplete discovery information.",
+      "backend_switched": "Backend switched for the already configured CCU. The existing entry keeps its settings, entities and history."
     },
     "error": {
       "cannot_connect": "Cannot connect to CCU [{invalid_items}]. Please verify: 1) The hostname/IP address is correct, 2) The CCU is powered on and reachable, 3) No firewall is blocking the connection.",
@@ -18,7 +19,7 @@
       "unknown": "An unexpected error occurred. Please check the Home Assistant logs for more details.",
       "no_ccus": "The daemon reports no CCUs."
     },
-    "flow_title": "{name}/{host}",
+    "flow_title": "{name}/{host} ({backend})",
     "progress": {
       "detect_backend": "Detecting backend type and available interfaces..."
     },
@@ -123,10 +124,14 @@
           "loom_port": "Daemon port (blank = 8443 TLS / 8080 plain)",
           "loom_token": "API bearer token",
           "tls": "Use TLS (HTTPS/WSS)",
-          "verify_tls": "Verify TLS certificate"
+          "verify_tls": "Verify TLS certificate",
+          "sub_devices_enabled": "Create sub-device entities"
         },
         "description": "Connect to an openccu-loom daemon. The daemon owns the CCU connection, interfaces and callbacks.",
-        "title": "OpenCCU-Loom daemon"
+        "title": "OpenCCU-Loom daemon",
+        "data_description": {
+          "sub_devices_enabled": "Splits devices with multiple channel groups into a main device with sub-devices. Entities are assigned to their corresponding sub-device based on channel group."
+        }
       },
       "port_config": {
         "data": {
@@ -222,7 +227,11 @@
         "title": "OpenCCU-Loom daemon token",
         "description": "Enter the API bearer token for the discovered daemon {name} at {host}.",
         "data": {
-          "loom_token": "API bearer token"
+          "loom_token": "API bearer token",
+          "sub_devices_enabled": "Create sub-device entities"
+        },
+        "data_description": {
+          "sub_devices_enabled": "Splits devices with multiple channel groups into a main device with sub-devices. Entities are assigned to their corresponding sub-device based on channel group."
         }
       },
       "loom_select_ccu": {

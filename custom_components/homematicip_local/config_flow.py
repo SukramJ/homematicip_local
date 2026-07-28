@@ -35,7 +35,14 @@ from aiohomematic.const import (
     is_interface_default_port,
 )
 from aiohomematic.exceptions import AuthFailure, BaseHomematicException, NoConnectionException, ValidationException
-from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    CONN_CLASS_LOCAL_PUSH,
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PATH, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
@@ -100,6 +107,7 @@ from .const import (
     DEFAULT_ENABLE_SUB_DEVICES,
     DEFAULT_ENABLE_SYSTEM_NOTIFICATIONS,
     DEFAULT_LISTEN_ON_ALL_IP,
+    DEFAULT_LOOM_ENABLE_SUB_DEVICES,
     DEFAULT_MQTT_PREFIX,
     DEFAULT_SYS_SCAN_INTERVAL,
     DOMAIN,
@@ -149,6 +157,10 @@ IF_VIRTUAL_DEVICES_PATH: Final = "/groups"
 TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 BOOLEAN_SELECTOR = BooleanSelector()
+
+# User-facing backend labels for the {backend} placeholder in flow_title
+TITLE_BACKEND_CCU: Final = "aiohomematic"
+TITLE_BACKEND_LOOM: Final = "openccu-loom"
 
 # openccu-loom mDNS discovery
 ZEROCONF_TYPE = "_openccu-loom._tcp.local."
@@ -201,7 +213,8 @@ def get_loom_schema(data: ConfigType) -> Schema:
     """Return the openccu-loom daemon connection schema.
 
     The daemon owns interfaces, callback ports and CCU credentials, so
-    the user only supplies the daemon endpoint and a bearer token.
+    the user only supplies the daemon endpoint, a bearer token and the
+    sub-device toggle (enabled by default on the loom backend).
     """
     return vol.Schema(
         {
@@ -211,6 +224,12 @@ def get_loom_schema(data: ConfigType) -> Schema:
             vol.Required(CONF_TLS, default=data.get(CONF_TLS, True)): BOOLEAN_SELECTOR,
             vol.Required(CONF_VERIFY_TLS, default=data.get(CONF_VERIFY_TLS, True)): BOOLEAN_SELECTOR,
             vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, "")): PASSWORD_SELECTOR,
+            vol.Required(
+                CONF_ENABLE_SUB_DEVICES,
+                default=data.get(CONF_ADVANCED_CONFIG, {}).get(
+                    CONF_ENABLE_SUB_DEVICES, DEFAULT_LOOM_ENABLE_SUB_DEVICES
+                ),
+            ): BOOLEAN_SELECTOR,
         }
     )
 
@@ -245,14 +264,16 @@ def get_loom_options_schema(data: ConfigType) -> Schema:
 
 
 def get_loom_token_schema(data: ConfigType) -> Schema:
-    """Return the token-only schema for a discovered openccu-loom daemon.
+    """Return the schema for a discovered openccu-loom daemon.
 
     Host / port / TLS come from the mDNS advertisement, so the user only
-    supplies the bearer token.
+    supplies the bearer token and the sub-device toggle (enabled by
+    default on the loom backend).
     """
     return vol.Schema(
         {
             vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, "")): PASSWORD_SELECTOR,
+            vol.Required(CONF_ENABLE_SUB_DEVICES, default=DEFAULT_LOOM_ENABLE_SUB_DEVICES): BOOLEAN_SELECTOR,
         }
     )
 
@@ -386,6 +407,11 @@ def _get_retry_hint(error_type: str) -> str:
         "invalid_config": "check_config_values",
     }
     return hints.get(error_type, "check_settings")
+
+
+def _get_backend_title(*, backend: str | None) -> str:
+    """Return the user-facing backend label for the {backend} flow-title placeholder."""
+    return TITLE_BACKEND_LOOM if backend == BACKEND_LOOM else TITLE_BACKEND_CCU
 
 
 def _get_effective_port(interface: Interface, tls: bool, data: ConfigType) -> int:
@@ -813,6 +839,10 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         # openccu-loom mDNS discovery state (carried across token/CCU steps).
         self._loom_discovery: dict[str, Any] = {}
         self._loom_token: str | None = None
+        self._loom_enable_sub_devices: bool = DEFAULT_LOOM_ENABLE_SUB_DEVICES
+        # User-chosen instance name from the manual loom form; discovered
+        # daemons name the entry after the selected CCU instead.
+        self._loom_instance_name: str | None = None
         self._loom_ccus: list[dict[str, Any]] = []
         self._loom_discovered_daemons: list[dict[str, Any]] = []
         self._loom_skip_browse: bool = False
@@ -1069,7 +1099,12 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_loom(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
-        """Configure an openccu-loom daemon backend (mDNS browse → manual)."""
+        """Configure an openccu-loom daemon backend (mDNS browse → manual).
+
+        The manual form validates the daemon connection, lists its CCUs and
+        routes into the shared CCU-selection step, so manual setups are
+        serial-keyed (dedup, in-place backend switch) like discovered ones.
+        """
         if not LOOM_BACKEND_SELECTABLE:
             return await self.async_step_central(user_input=None)
         # On entry (no input yet) actively browse for daemons and offer a
@@ -1095,7 +1130,9 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_TLS: user_input.get(CONF_TLS, True),
                 CONF_VERIFY_TLS: user_input.get(CONF_VERIFY_TLS, True),
-                CONF_ADVANCED_CONFIG: {},
+                CONF_ADVANCED_CONFIG: {
+                    CONF_ENABLE_SUB_DEVICES: user_input.get(CONF_ENABLE_SUB_DEVICES, DEFAULT_LOOM_ENABLE_SUB_DEVICES)
+                },
             }
             if (port := user_input.get(CONF_LOOM_PORT)) is not None:
                 self.data[CONF_LOOM_PORT] = int(port)
@@ -1103,14 +1140,48 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.data[CONF_LOOM_TOKEN] = token
             try:
                 await ControlConfig(hass=self.hass, entry_id="validate", data=self.data).check_config()
-            except (InvalidConfig, BaseHomematicException) as exc:
+                ccus = await _async_loom_list_ccus(
+                    self.hass,
+                    host=self.data[CONF_HOST],
+                    port=self.data.get(CONF_LOOM_PORT),
+                    tls=self.data[CONF_TLS],
+                    token=self.data.get(CONF_LOOM_TOKEN, ""),
+                    base_path=None,
+                )
+            except AuthFailure:
+                errors["base"] = "invalid_auth"
+                description_placeholders["invalid_items"] = self.data.get(CONF_HOST, "")
+            except InvalidConfig as exc:
                 _LOGGER.warning("Loom backend config invalid: %s", exc)
                 errors["base"] = "invalid_config"
-                description_placeholders["invalid_items"] = (exc.args[0] if exc.args else "") or user_input.get(
+                description_placeholders["invalid_items"] = (exc.args[0] if exc.args else "") or self.data.get(
+                    CONF_HOST, ""
+                )
+            except BaseHomematicException as exc:
+                errors["base"] = "cannot_connect"
+                description_placeholders["invalid_items"] = (exc.args[0] if exc.args else "") or self.data.get(
                     CONF_HOST, ""
                 )
             else:
-                return self.async_create_entry(title=self.data[CONF_INSTANCE_NAME], data=self.data)
+                if not ccus:
+                    errors["base"] = "no_ccus"
+                else:
+                    # Route into the shared CCU-selection step so manual
+                    # setups get the same serial-keyed dedup and in-place
+                    # backend switch as discovered daemons.
+                    self._loom_token = self.data.get(CONF_LOOM_TOKEN)
+                    self._loom_enable_sub_devices = self.data[CONF_ADVANCED_CONFIG][CONF_ENABLE_SUB_DEVICES]
+                    self._loom_instance_name = user_input[CONF_INSTANCE_NAME]
+                    self._loom_discovery = {
+                        CONF_HOST: self.data[CONF_HOST],
+                        CONF_TLS: self.data[CONF_TLS],
+                        CONF_VERIFY_TLS: self.data[CONF_VERIFY_TLS],
+                        CONF_INSTANCE_NAME: user_input[CONF_INSTANCE_NAME],
+                    }
+                    if (port := self.data.get(CONF_LOOM_PORT)) is not None:
+                        self._loom_discovery[CONF_LOOM_PORT] = port
+                    self._loom_ccus = ccus
+                    return await self.async_step_loom_select_ccu()
         return self.async_show_form(
             step_id="loom",
             data_schema=get_loom_schema(data=self.data),
@@ -1182,6 +1253,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         if user_input is not None:
             token = user_input.get(CONF_LOOM_TOKEN) or ""
+            self._loom_enable_sub_devices = user_input.get(CONF_ENABLE_SUB_DEVICES, DEFAULT_LOOM_ENABLE_SUB_DEVICES)
             try:
                 ccus = await _async_loom_list_ccus(
                     self.hass,
@@ -1281,6 +1353,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {
             CONF_NAME: self.data.get(CONF_INSTANCE_NAME, ""),
             CONF_HOST: self.data.get(CONF_HOST, ""),
+            CONF_BACKEND: _get_backend_title(backend=self.data.get(CONF_BACKEND)),
         }
 
         return await self.async_step_reauth_confirm()
@@ -1306,10 +1379,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                     hass=self.hass, data=self.data, entry_id=entry.entry_id
                 )
                 # Validation successful - update entry and finish
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data=self.data,
-                    reason="reauth_successful",
+                return self._async_update_reload_and_abort_entry(
+                    entry=entry, data=self.data, reason="reauth_successful"
                 )
             except AuthFailure:
                 errors["base"] = "invalid_auth"
@@ -1349,6 +1420,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {
             CONF_NAME: entry.data.get(CONF_INSTANCE_NAME, ""),
             CONF_HOST: entry.data.get(CONF_HOST, ""),
+            CONF_BACKEND: _get_backend_title(backend=entry.data.get(CONF_BACKEND)),
         }
 
         errors: dict[str, str] = {}
@@ -1504,7 +1576,11 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         self.data = {CONF_INSTANCE_NAME: instance_name, CONF_HOST: host}
-        self.context["title_placeholders"] = {CONF_NAME: instance_name, CONF_HOST: host}
+        self.context["title_placeholders"] = {
+            CONF_NAME: instance_name,
+            CONF_HOST: host,
+            CONF_BACKEND: _get_backend_title(backend=BACKEND_CCU),
+        }
         return await self.async_step_user()
 
     async def async_step_user(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
@@ -1545,7 +1621,11 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_LOOM_BASE_PATH: base_path,
             CONF_INSTANCE_NAME: instance,
         }
-        self.context["title_placeholders"] = {CONF_NAME: instance, CONF_HOST: host}
+        self.context["title_placeholders"] = {
+            CONF_NAME: instance,
+            CONF_HOST: host,
+            CONF_BACKEND: _get_backend_title(backend=BACKEND_LOOM),
+        }
         return await self.async_step_loom_token()
 
     def _apply_detected_interfaces(self) -> None:
@@ -1568,31 +1648,59 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data[CONF_INTERFACE] = interfaces
 
     async def _async_create_loom_entry(self, ccu: dict[str, Any]) -> ConfigFlowResult:
-        """Create the config entry for the chosen CCU on a discovered daemon."""
+        """Create the config entry for the chosen CCU on a discovered daemon.
+
+        A serial already configured on the direct-CCU backend is switched
+        to the loom backend in place: the existing entry keeps its
+        entry_id, instance name and advanced config (incl.
+        sub_devices_enabled), so entities and history survive the switch.
+        """
         disc = self._loom_discovery
         serial = ccu["serial"]
         # A concurrent CCU discovery (e.g. SSDP) may hold an in-progress flow
         # with this serial; we have already committed to the loom backend here,
-        # so do not abort our own flow. Creating the entry below auto-aborts the
-        # now-redundant discovery card.
-        await self.async_set_unique_id(serial, raise_on_progress=False)
-        self._abort_if_unique_id_configured(
-            error="already_configured",
-            description_placeholders={"serial": serial or "unknown"},
-        )
+        # so do not abort our own flow. Finishing the flow below auto-aborts
+        # the now-redundant discovery card.
+        existing_entry = await self.async_set_unique_id(serial, raise_on_progress=False)
+        instance_name = self._loom_instance_name or ccu["name"]
         data: ConfigType = {
             CONF_BACKEND: BACKEND_LOOM,
-            CONF_INSTANCE_NAME: ccu["name"],
+            CONF_INSTANCE_NAME: instance_name,
             CONF_HOST: disc[CONF_HOST],
             CONF_TLS: disc[CONF_TLS],
-            CONF_VERIFY_TLS: True,
-            # mDNS always advertises a port (validated in async_step_zeroconf).
-            CONF_LOOM_PORT: int(disc[CONF_LOOM_PORT]),
-            CONF_ADVANCED_CONFIG: {},
+            CONF_VERIFY_TLS: disc.get(CONF_VERIFY_TLS, True),
+            CONF_ADVANCED_CONFIG: {CONF_ENABLE_SUB_DEVICES: self._loom_enable_sub_devices},
         }
+        # mDNS always advertises a port; the manual form may leave it blank
+        # (the loom client applies its TLS-dependent default at runtime).
+        if (port := disc.get(CONF_LOOM_PORT)) is not None:
+            data[CONF_LOOM_PORT] = int(port)
         if self._loom_token:
             data[CONF_LOOM_TOKEN] = self._loom_token
-        return self.async_create_entry(title=ccu["name"], data=data)
+        if existing_entry is not None:
+            if existing_entry.data.get(CONF_BACKEND, BACKEND_CCU) == BACKEND_LOOM:
+                return self.async_abort(
+                    reason="already_configured",
+                    description_placeholders={"serial": serial or "unknown"},
+                )
+            # In-place backend switch CCU -> loom. The stale CCU connection
+            # keys (credentials, interfaces) stay in the entry so a switch
+            # back is lossless; the reload re-keys the entities via the
+            # unique_id migration in __init__.
+            switched = dict(existing_entry.data)
+            switched.update(data)
+            # The instance name keys entity naming - keep it stable.
+            switched[CONF_INSTANCE_NAME] = existing_entry.data[CONF_INSTANCE_NAME]
+            # Migrate the advanced config; an explicit sub_devices_enabled
+            # choice on the entry wins over the form value.
+            switched[CONF_ADVANCED_CONFIG] = {
+                CONF_ENABLE_SUB_DEVICES: self._loom_enable_sub_devices,
+                **existing_entry.data.get(CONF_ADVANCED_CONFIG, {}),
+            }
+            return self._async_update_reload_and_abort_entry(
+                entry=existing_entry, data=switched, reason="backend_switched"
+            )
+        return self.async_create_entry(title=instance_name, data=data)
 
     async def _async_run_detection(self) -> None:
         """Run backend detection as background task."""
@@ -1645,6 +1753,23 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             self._detection_error = "detection_failed"
             self._detection_error_detail = self.data[CONF_HOST]
 
+    @callback
+    def _async_update_reload_and_abort_entry(
+        self, *, entry: ConfigEntry, data: ConfigType, reason: str
+    ) -> ConfigFlowResult:
+        """Update the entry, trigger exactly one reload and abort the flow.
+
+        Replaces :meth:`ConfigFlow.async_update_reload_and_abort` for this
+        integration: a loaded entry already reloads through the registered
+        update listener when its data changes, so scheduling a reload as
+        well would reload twice (deprecated with HA 2026.12). Only unloaded
+        entries and unchanged data need the explicit reload.
+        """
+        changed = self.hass.config_entries.async_update_entry(entry, data=data)
+        if not (changed and entry.state is ConfigEntryState.LOADED):
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        return self.async_abort(reason=reason)
+
     def _get_undetected_interfaces(self) -> list[Interface]:
         """Return list of enabled interfaces that were not detected on the CCU."""
         if not self._detection_result:
@@ -1656,7 +1781,13 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         return sorted(configured - detected, key=lambda i: i.value)
 
     async def _validate_and_finish_config_flow(self) -> ConfigFlowResult:
-        """Validate and finish the config flow."""
+        """Validate and finish the config flow.
+
+        A serial already configured on the loom backend is switched to the
+        direct-CCU backend in place: the existing entry keeps its entry_id,
+        instance name and advanced config (incl. sub_devices_enabled), so
+        entities and history survive the switch.
+        """
 
         errors = {}
         description_placeholders = {}
@@ -1666,12 +1797,31 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 hass=self.hass, data=self.data, entry_id="validate"
             )
             if system_information is not None:
-                await self.async_set_unique_id(system_information.serial)
-                self._abort_if_unique_id_configured(
-                    updates={},
-                    error="already_configured",
-                    description_placeholders={"serial": system_information.serial or "unknown"},
-                )
+                serial = system_information.serial
+                existing_entry = await self.async_set_unique_id(serial)
+                if existing_entry is not None:
+                    if existing_entry.data.get(CONF_BACKEND, BACKEND_CCU) != BACKEND_LOOM:
+                        return self.async_abort(
+                            reason="already_configured",
+                            description_placeholders={"serial": serial or "unknown"},
+                        )
+                    # In-place backend switch loom -> CCU. The stale loom
+                    # connection keys (daemon port, token) stay in the entry
+                    # so a switch back is lossless; the reload re-keys the
+                    # entities via the unique_id migration in __init__.
+                    switched = dict(existing_entry.data)
+                    switched.update(self.data)
+                    # The instance name keys entity naming - keep it stable.
+                    switched[CONF_INSTANCE_NAME] = existing_entry.data[CONF_INSTANCE_NAME]
+                    # Migrate the advanced config; settings collected in this
+                    # flow's advanced step win over the entry's values.
+                    switched[CONF_ADVANCED_CONFIG] = {
+                        **existing_entry.data.get(CONF_ADVANCED_CONFIG, {}),
+                        **self.data.get(CONF_ADVANCED_CONFIG, {}),
+                    }
+                    return self._async_update_reload_and_abort_entry(
+                        entry=existing_entry, data=switched, reason="backend_switched"
+                    )
         except AuthFailure:
             errors["base"] = "invalid_auth"
             description_placeholders["invalid_items"] = self.data[CONF_HOST]
