@@ -151,11 +151,12 @@ Enhance your Home Assistant dashboard with custom cards designed for this integr
 | **Discussions** | [GitHub Discussions](https://github.com/sukramj/aiohomematic/discussions) |
 | **Documentation** | [sukramj.github.io/aiohomematic](https://sukramj.github.io/aiohomematic/) |
 | **Contributing** | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| **AI Contribution Policy** | [AI_POLICY.md](AI_POLICY.md) |
 | **Sponsor** | [GitHub Sponsors](https://github.com/sponsors/SukramJ) |
 
 ## Development
 
-Parts of Homematic(IP) Local for OpenCCU are developed with agentic AI assistance, primarily [Claude Code](https://www.anthropic.com/claude-code). Submitted issues are also triaged and analysed with agentic help. Every change is still reviewed by a human maintainer and must pass the project's tests before it lands — AI accelerates the work, it does not replace the review gate.
+Parts of Homematic(IP) Local for OpenCCU are developed with agentic AI assistance, primarily [Claude Code](https://www.anthropic.com/claude-code). Submitted issues are also triaged and analysed with agentic help. Every change is still reviewed by a human maintainer and must pass the project's tests before it lands — AI accelerates the work, it does not replace the review gate. The rules for AI use in contributions are documented in [AI_POLICY.md](AI_POLICY.md).
 
 ## License
 
