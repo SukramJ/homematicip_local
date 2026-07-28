@@ -2,6 +2,10 @@
 
 Thank you for your interest in contributing to the Homematic(IP) Local integration! This document provides guidelines for contributing to the project.
 
+> **Note on AI tools:** AI-assisted contributions are welcome, but fully autonomous agent
+> submissions (unreviewed AI-generated pull requests or issues) are not accepted. See
+> [AI_POLICY.md](AI_POLICY.md) for the full AI contribution policy.
+
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
