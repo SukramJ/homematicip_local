@@ -3485,6 +3485,77 @@ class TestLoomZeroconfDiscovery:
         assert result["reason"] == "already_configured"
         assert result["description_placeholders"] == {"serial": "ABC123"}
 
+    async def test_announced_serial_on_ccu_backend_keeps_card(self, hass: HomeAssistant) -> None:
+        """A serial configured on the CCU backend keeps the card (backend-switch path)."""
+        existing = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="ABC123",
+            version=DomainConfigFlow.VERSION,
+            data={CONF_INSTANCE_NAME: const.INSTANCE_NAME, CONF_HOST: "ccu.local"},
+        )
+        existing.add_to_hass(hass)
+        with patch(_LOOM_ENABLED, True):
+            result = await self._init_zeroconf(
+                hass, _loom_zeroconf_info(properties={"instance": "Loom", "ccus": "ABC123"})
+            )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "loom_token"
+
+    async def test_announced_serials_all_configured_aborts(self, hass: HomeAssistant) -> None:
+        """The card is suppressed once every announced CCU is set up on loom."""
+        existing = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="ABC123",
+            version=DomainConfigFlow.VERSION,
+            data={CONF_BACKEND: BACKEND_LOOM, CONF_HOST: "192.168.1.50", CONF_LOOM_PORT: 8080},
+        )
+        existing.add_to_hass(hass)
+        with patch(_LOOM_ENABLED, True):
+            result = await self._init_zeroconf(
+                hass, _loom_zeroconf_info(properties={"instance": "Loom", "ccus": "ABC123"})
+            )
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+        assert result["description_placeholders"] == {"serial": "ABC123"}
+
+    async def test_announced_serials_follow_daemon_host(self, hass: HomeAssistant) -> None:
+        """A configured loom entry follows the daemon's announced endpoint."""
+        existing = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="ABC123",
+            version=DomainConfigFlow.VERSION,
+            data={CONF_BACKEND: BACKEND_LOOM, CONF_HOST: "old.local", CONF_LOOM_PORT: 9999},
+        )
+        existing.add_to_hass(hass)
+        with (
+            patch(_LOOM_ENABLED, True),
+            patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
+        ):
+            result = await self._init_zeroconf(
+                hass, _loom_zeroconf_info(properties={"instance": "Loom", "ccus": "ABC123"})
+            )
+            await hass.async_block_till_done()
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+        assert existing.data[CONF_HOST] == "192.168.1.50"
+        assert existing.data[CONF_LOOM_PORT] == 8080
+
+    async def test_announced_serials_partially_configured_keeps_card(self, hass: HomeAssistant) -> None:
+        """With an unconfigured CCU on the daemon the card stays offered."""
+        existing = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="AAA",
+            version=DomainConfigFlow.VERSION,
+            data={CONF_BACKEND: BACKEND_LOOM, CONF_HOST: "192.168.1.50", CONF_LOOM_PORT: 8080},
+        )
+        existing.add_to_hass(hass)
+        with patch(_LOOM_ENABLED, True):
+            result = await self._init_zeroconf(
+                hass, _loom_zeroconf_info(properties={"instance": "Loom", "ccus": "AAA,BBB"})
+            )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "loom_token"
+
     async def test_cannot_connect(self, hass: HomeAssistant) -> None:
         with (
             patch(_LOOM_ENABLED, True),
@@ -3535,6 +3606,21 @@ class TestLoomZeroconfDiscovery:
         assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_SUB_DEVICES] is False
         assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_MQTT] is True
 
+    async def test_daemon_endpoint_already_configured_aborts(self, hass: HomeAssistant) -> None:
+        """Without announced serials the daemon endpoint dedups the card."""
+        existing = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="ABC123",
+            version=DomainConfigFlow.VERSION,
+            data={CONF_BACKEND: BACKEND_LOOM, CONF_HOST: "192.168.1.50", CONF_LOOM_PORT: 8080},
+        )
+        existing.add_to_hass(hass)
+        with patch(_LOOM_ENABLED, True):
+            result = await self._init_zeroconf(hass, _loom_zeroconf_info())
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+        assert result["description_placeholders"] == {"serial": "ABC123"}
+
     async def test_disabled_aborts(self, hass: HomeAssistant) -> None:
         with patch(_LOOM_ENABLED, False):
             result = await self._init_zeroconf(hass, _loom_zeroconf_info())
@@ -3553,6 +3639,27 @@ class TestLoomZeroconfDiscovery:
             await hass.async_block_till_done()
         assert done["type"] == FlowResultType.CREATE_ENTRY
         assert CONF_LOOM_TOKEN not in done["result"].data
+
+    async def test_entry_creation_aborts_stale_daemon_card(self, hass: HomeAssistant) -> None:
+        """Setting up the daemon via the user flow clears its lingering discovery card."""
+        ccus = [{"name": "Home", "serial": "ABC123", "host": "ccu.local", "model": "CCU3", "available": True}]
+        with (
+            patch(_LOOM_ENABLED, True),
+            patch(_LOOM_LIST, return_value=ccus),
+            patch(_BROWSE, return_value=[_loom_daemon("192.168.1.50", 8080, "Loom")]),
+            patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
+        ):
+            card = await self._init_zeroconf(hass, _loom_zeroconf_info())
+            assert card["type"] == FlowResultType.FORM
+            user = await hass.config_entries.flow.async_init(
+                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+            token = await hass.config_entries.flow.async_configure(user["flow_id"], {"next_step_id": "loom"})
+            assert token["step_id"] == "loom_token"
+            done = await hass.config_entries.flow.async_configure(token["flow_id"], {CONF_LOOM_TOKEN: "tok"})
+            await hass.async_block_till_done()
+        assert done["type"] == FlowResultType.CREATE_ENTRY
+        assert not [f for f in hass.config_entries.flow.async_progress() if f["flow_id"] == card["flow_id"]]
 
     async def test_invalid_auth(self, hass: HomeAssistant) -> None:
         with (

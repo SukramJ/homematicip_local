@@ -1,4 +1,4 @@
-# Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-28)
+# Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-29)
 
 ## What's Changed
 
@@ -29,9 +29,9 @@
 - Adds the curated `device_semantics` extract (doorbell classification) that aiohomematic's new `device_semantics` module reads
 - Regenerates the easymode and translation extracts as well as the `BLIND_VIRTUAL_RECEIVER`, `SHUTTER_VIRTUAL_RECEIVER` and `WATER_SWITCH_VIRTUAL_RECEIVER` profiles from the latest OCCU sources: a new `SHORT_OUTPUT_BEHAVIOUR` parameter in the water-switch profiles, `LONG_PROFILE_ACTION_TYPE` narrowed to a fixed value in the blind/shutter profiles, plus revised German/English help texts and value labels
 
-#### Bump openccu-loom-client to `2026.7.18` (pins `openccu-loom-types==0.2.1`)
+#### Bump openccu-loom-client to `2026.7.19` (pins `openccu-loom-types==0.2.2`)
 
-- Groundwork bump for the still-disabled openccu-loom backend; it has no runtime effect while the backend master switch (`LOOM_BACKEND_SELECTABLE` in `const.py`) stays off. Advances the bundled loom client from `2026.7.6` to `2026.7.18` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.2.1`
+- Groundwork bump for the still-disabled openccu-loom backend; it has no runtime effect while the backend master switch (`LOOM_BACKEND_SELECTABLE` in `const.py`) stays off. Advances the bundled loom client from `2026.7.6` to `2026.7.19` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.2.2`
 
 #### homematicip-local-frontend
 
