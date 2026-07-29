@@ -1598,7 +1598,16 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_menu(step_id="user", menu_options=["central", "loom"])
 
     async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> ConfigFlowResult:
-        """Handle an openccu-loom daemon discovered via mDNS."""
+        """Handle an openccu-loom daemon discovered via mDNS.
+
+        Daemons that announce their served CCU serials (TXT key ``ccus``)
+        are deduplicated per CCU: configured loom entries follow the
+        daemon's announced host/port, and the card is suppressed once every
+        announced CCU is set up on the loom backend. A serial configured on
+        the direct-CCU backend keeps the card as the discovery path to the
+        in-place backend switch. Pre-``ccus`` daemons fall back to a
+        host/port match against existing loom entries.
+        """
         if not LOOM_BACKEND_SELECTABLE:
             return self.async_abort(reason="loom_not_enabled")
         host = discovery_info.host
@@ -1611,8 +1620,35 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         # The daemon listener is plain (TLS is terminated upstream), so tls is
         # advertised as 0; honour the TXT but it is effectively always plain.
         tls = str(props.get("tls", "0")).lower() not in ("0", "", "false")
-        # Dedup the discovery card per daemon; per-CCU dedup (the entry's
-        # serial) happens in the CCU-selection step.
+        loom_entries = [
+            entry
+            for entry in self._async_current_entries(include_ignore=False)
+            if entry.data.get(CONF_BACKEND) == BACKEND_LOOM
+        ]
+        if announced_serials := [s for s in (props.get("ccus") or "").replace(" ", "").split(",") if s]:
+            entries_by_serial = {entry.unique_id: entry for entry in loom_entries if entry.unique_id}
+            for entry in (entries_by_serial[s] for s in announced_serials if s in entries_by_serial):
+                if entry.data.get(CONF_HOST) != host or entry.data.get(CONF_LOOM_PORT) != port:
+                    # Follow the daemon to its announced endpoint (IP change).
+                    self._async_update_entry_and_reload(
+                        entry=entry, data={**entry.data, CONF_HOST: host, CONF_LOOM_PORT: port}
+                    )
+            if all(s in entries_by_serial for s in announced_serials):
+                # Every announced CCU is already set up on the loom backend.
+                return self.async_abort(
+                    reason="already_configured",
+                    description_placeholders={"serial": ", ".join(announced_serials)},
+                )
+        else:
+            # Pre-`ccus` daemons: best-effort dedup on the daemon endpoint.
+            for entry in loom_entries:
+                if entry.data.get(CONF_HOST) == host and entry.data.get(CONF_LOOM_PORT) == port:
+                    return self.async_abort(
+                        reason="already_configured",
+                        description_placeholders={"serial": entry.unique_id or "unknown"},
+                    )
+        # Dedup repeat announcements of the same daemon; per-CCU dedup (the
+        # entry's serial) happens above and in the CCU-selection step.
         await self.async_set_unique_id(f"loom-daemon-{host}-{port}")
         self._loom_discovery = {
             CONF_HOST: host,
@@ -1647,6 +1683,21 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.data[CONF_INTERFACE] = interfaces
 
+    @callback
+    def _async_abort_daemon_discovery_flows(self) -> None:
+        """Abort lingering mDNS discovery cards for the daemon in use.
+
+        A passively discovered card stays in progress when the same daemon
+        is set up through another path (active browse, manual form); once
+        the CCU decision is made in :meth:`_async_create_loom_entry`, such
+        cards are stale.
+        """
+        disc = self._loom_discovery
+        daemon_unique_id = f"loom-daemon-{disc.get(CONF_HOST)}-{disc.get(CONF_LOOM_PORT)}"
+        for flow in self._async_in_progress(include_uninitialized=True):
+            if flow["context"].get("unique_id") == daemon_unique_id:
+                self.hass.config_entries.flow.async_abort(flow["flow_id"])
+
     async def _async_create_loom_entry(self, ccu: dict[str, Any]) -> ConfigFlowResult:
         """Create the config entry for the chosen CCU on a discovered daemon.
 
@@ -1662,6 +1713,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         # so do not abort our own flow. Finishing the flow below auto-aborts
         # the now-redundant discovery card.
         existing_entry = await self.async_set_unique_id(serial, raise_on_progress=False)
+        # The daemon's discovery card is stale in every outcome below.
+        self._async_abort_daemon_discovery_flows()
         instance_name = self._loom_instance_name or ccu["name"]
         data: ConfigType = {
             CONF_BACKEND: BACKEND_LOOM,
@@ -1754,10 +1807,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             self._detection_error_detail = self.data[CONF_HOST]
 
     @callback
-    def _async_update_reload_and_abort_entry(
-        self, *, entry: ConfigEntry, data: ConfigType, reason: str
-    ) -> ConfigFlowResult:
-        """Update the entry, trigger exactly one reload and abort the flow.
+    def _async_update_entry_and_reload(self, *, entry: ConfigEntry, data: ConfigType) -> None:
+        """Update the entry and trigger exactly one reload.
 
         Replaces :meth:`ConfigFlow.async_update_reload_and_abort` for this
         integration: a loaded entry already reloads through the registered
@@ -1768,6 +1819,13 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         changed = self.hass.config_entries.async_update_entry(entry, data=data)
         if not (changed and entry.state is ConfigEntryState.LOADED):
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    @callback
+    def _async_update_reload_and_abort_entry(
+        self, *, entry: ConfigEntry, data: ConfigType, reason: str
+    ) -> ConfigFlowResult:
+        """Update the entry, trigger exactly one reload and abort the flow."""
+        self._async_update_entry_and_reload(entry=entry, data=data)
         return self.async_abort(reason=reason)
 
     def _get_undetected_interfaces(self) -> list[Interface]:
