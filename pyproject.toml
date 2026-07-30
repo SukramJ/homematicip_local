@@ -683,3 +683,12 @@ disallow_untyped_defs = true  # Disallow defining functions without type annotat
 warn_return_any = true  # Warn when returning values of type Any
 warn_unreachable = true  # Warn about code paths that are statically unreachable
 
+# Home Assistant re-exports public API symbols via `# noqa: F401` instead of `__all__`
+# (e.g. `StaticPathConfig`, moved to `http.server` in 2026.8.0 and re-exported from
+# `http/__init__.py`). Strict mode rejects such implicit re-exports, so allow them for
+# the HA namespace; importing from the private submodule instead would break the
+# declared minimum version (2026.7.0).
+[[tool.mypy.overrides]]
+module = "homeassistant.*"
+implicit_reexport = true
+
