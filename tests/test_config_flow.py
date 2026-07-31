@@ -128,10 +128,9 @@ def _get_default_detection_result(
 async def _async_init_user_flow_at_central(hass: HomeAssistant) -> Any:
     """Start a user flow and reach the central form.
 
-    Robust against the ``LOOM_BACKEND_SELECTABLE`` switch: when the loom
-    backend is selectable the user step shows a backend menu (navigate to
-    ``central``); when it is disabled the user step skips straight to the
-    central form.
+    Robust against the loom backend gate: when the loom backend is
+    relevant the user step shows a backend menu (navigate to ``central``);
+    otherwise the user step skips straight to the central form.
     """
     result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
     if result["type"] == FlowResultType.MENU:
@@ -3223,60 +3222,52 @@ class TestReauthFlow:
             yield
 
 
-_SELECTABLE = "custom_components.homematicip_local.config_flow.LOOM_BACKEND_SELECTABLE"
+_LOOM_RELEVANT = "custom_components.homematicip_local.config_flow.DomainConfigFlow._loom_is_relevant"
 
 
-class TestLoomBackendSelectable:
-    """The LOOM_BACKEND_SELECTABLE switch gates the loom path in the flow.
+class TestLoomBackendGate:
+    """The user step offers the loom backend only when it is relevant.
 
-    Both branches are tested explicitly via patch so the suite is
-    independent of the const.py default.
+    Relevance is derived from real state — a configured loom entry or a
+    daemon discovery flow in progress — so these tests drive the gate
+    through that state rather than patching it.
     """
 
-    # --- LOOM_BACKEND_SELECTABLE = True ---
-
-    async def test_disabled_loom_step_redirects_to_central(self, hass: HomeAssistant) -> None:
-        """A direct loom-step entry falls through to the central form.
-
-        The menu is reached with the switch on, then the loom step is
-        invoked with the switch off — it must redirect to central.
-        """
-        with patch(_SELECTABLE, True):
-            result = await hass.config_entries.flow.async_init(
-                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
-            )
-            assert result["type"] == FlowResultType.MENU
-        with patch(_SELECTABLE, False):
-            result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "loom"})
+    async def test_ccu_entry_alone_skips_backend_menu(self, hass: HomeAssistant) -> None:
+        """A direct-CCU entry is no evidence for loom — no menu."""
+        MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="ABC123",
+            data={CONF_INSTANCE_NAME: const.INSTANCE_NAME, CONF_HOST: "ccu.local"},
+        ).add_to_hass(hass)
+        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "central"
 
-    async def test_disabled_skips_backend_menu(self, hass: HomeAssistant) -> None:
-        """With the switch off a fresh user flow goes straight to central."""
-        with patch(_SELECTABLE, False):
-            result = await hass.config_entries.flow.async_init(
-                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
-            )
+    async def test_configured_loom_entry_shows_backend_menu(self, hass: HomeAssistant) -> None:
+        """An existing loom entry makes the backend menu appear."""
+        MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="ABC123",
+            data={CONF_BACKEND: BACKEND_LOOM, CONF_HOST: "daemon.local"},
+        ).add_to_hass(hass)
+        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
+        assert result["type"] == FlowResultType.MENU
+        assert set(result["menu_options"]) == {"central", "loom"}
+
+    async def test_no_evidence_skips_backend_menu(self, hass: HomeAssistant) -> None:
+        """Without a daemon or loom entry a fresh flow goes straight to central."""
+        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "central"
 
-    async def test_enabled_loom_step_shows_loom_form(self, hass: HomeAssistant) -> None:
-        """With the switch on and no daemon discovered, the loom form opens."""
-        with patch(_SELECTABLE, True), patch(_BROWSE, return_value=[]):
-            result = await hass.config_entries.flow.async_init(
-                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
-            )
-            assert result["type"] == FlowResultType.MENU
-            result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "loom"})
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "loom"
-
-    async def test_enabled_shows_backend_menu(self, hass: HomeAssistant) -> None:
-        """With the switch on, the user step shows the central/loom menu."""
-        with patch(_SELECTABLE, True):
-            result = await hass.config_entries.flow.async_init(
-                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
-            )
+    async def test_pending_zeroconf_flow_shows_backend_menu(self, hass: HomeAssistant) -> None:
+        """A daemon discovery flow in progress makes the backend menu appear."""
+        discovery = await hass.config_entries.flow.async_init(
+            HMIP_DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=_loom_zeroconf_info()
+        )
+        assert discovery["step_id"] == "loom_token"
+        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
         assert result["type"] == FlowResultType.MENU
         assert set(result["menu_options"]) == {"central", "loom"}
 
@@ -3459,7 +3450,6 @@ def _loom_zeroconf_info(
     )
 
 
-_LOOM_ENABLED = "custom_components.homematicip_local.config_flow.LOOM_BACKEND_SELECTABLE"
 _LOOM_LIST = "custom_components.homematicip_local.config_flow._async_loom_list_ccus"
 
 
@@ -3476,7 +3466,6 @@ class TestLoomZeroconfDiscovery:
         existing.add_to_hass(hass)
         ccus = [{"name": "Home", "serial": "ABC123", "host": "ccu.local", "model": "CCU3", "available": True}]
         with (
-            patch(_LOOM_ENABLED, True),
             patch(_LOOM_LIST, return_value=ccus),
         ):
             init = await self._init_zeroconf(hass, _loom_zeroconf_info())
@@ -3494,10 +3483,7 @@ class TestLoomZeroconfDiscovery:
             data={CONF_INSTANCE_NAME: const.INSTANCE_NAME, CONF_HOST: "ccu.local"},
         )
         existing.add_to_hass(hass)
-        with patch(_LOOM_ENABLED, True):
-            result = await self._init_zeroconf(
-                hass, _loom_zeroconf_info(properties={"instance": "Loom", "ccus": "ABC123"})
-            )
+        result = await self._init_zeroconf(hass, _loom_zeroconf_info(properties={"instance": "Loom", "ccus": "ABC123"}))
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "loom_token"
 
@@ -3510,10 +3496,7 @@ class TestLoomZeroconfDiscovery:
             data={CONF_BACKEND: BACKEND_LOOM, CONF_HOST: "192.168.1.50", CONF_LOOM_PORT: 8080},
         )
         existing.add_to_hass(hass)
-        with patch(_LOOM_ENABLED, True):
-            result = await self._init_zeroconf(
-                hass, _loom_zeroconf_info(properties={"instance": "Loom", "ccus": "ABC123"})
-            )
+        result = await self._init_zeroconf(hass, _loom_zeroconf_info(properties={"instance": "Loom", "ccus": "ABC123"}))
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
         assert result["description_placeholders"] == {"serial": "ABC123"}
@@ -3528,7 +3511,6 @@ class TestLoomZeroconfDiscovery:
         )
         existing.add_to_hass(hass)
         with (
-            patch(_LOOM_ENABLED, True),
             patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
         ):
             result = await self._init_zeroconf(
@@ -3549,16 +3531,14 @@ class TestLoomZeroconfDiscovery:
             data={CONF_BACKEND: BACKEND_LOOM, CONF_HOST: "192.168.1.50", CONF_LOOM_PORT: 8080},
         )
         existing.add_to_hass(hass)
-        with patch(_LOOM_ENABLED, True):
-            result = await self._init_zeroconf(
-                hass, _loom_zeroconf_info(properties={"instance": "Loom", "ccus": "AAA,BBB"})
-            )
+        result = await self._init_zeroconf(
+            hass, _loom_zeroconf_info(properties={"instance": "Loom", "ccus": "AAA,BBB"})
+        )
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "loom_token"
 
     async def test_cannot_connect(self, hass: HomeAssistant) -> None:
         with (
-            patch(_LOOM_ENABLED, True),
             patch(_LOOM_LIST, side_effect=NoConnectionException("unreachable")),
         ):
             init = await self._init_zeroconf(hass, _loom_zeroconf_info())
@@ -3584,7 +3564,6 @@ class TestLoomZeroconfDiscovery:
         existing.add_to_hass(hass)
         ccus = [{"name": "Home", "serial": "ABC123", "host": "ccu.local", "model": "CCU3", "available": True}]
         with (
-            patch(_LOOM_ENABLED, True),
             patch(_LOOM_LIST, return_value=ccus),
             patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
         ):
@@ -3615,22 +3594,14 @@ class TestLoomZeroconfDiscovery:
             data={CONF_BACKEND: BACKEND_LOOM, CONF_HOST: "192.168.1.50", CONF_LOOM_PORT: 8080},
         )
         existing.add_to_hass(hass)
-        with patch(_LOOM_ENABLED, True):
-            result = await self._init_zeroconf(hass, _loom_zeroconf_info())
+        result = await self._init_zeroconf(hass, _loom_zeroconf_info())
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
         assert result["description_placeholders"] == {"serial": "ABC123"}
 
-    async def test_disabled_aborts(self, hass: HomeAssistant) -> None:
-        with patch(_LOOM_ENABLED, False):
-            result = await self._init_zeroconf(hass, _loom_zeroconf_info())
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "loom_not_enabled"
-
     async def test_empty_token_omits_token_in_entry(self, hass: HomeAssistant) -> None:
         ccus = [{"name": "Home", "serial": "ABC123", "host": "ccu.local", "model": "CCU3", "available": True}]
         with (
-            patch(_LOOM_ENABLED, True),
             patch(_LOOM_LIST, return_value=ccus),
             patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
         ):
@@ -3644,7 +3615,6 @@ class TestLoomZeroconfDiscovery:
         """Setting up the daemon via the user flow clears its lingering discovery card."""
         ccus = [{"name": "Home", "serial": "ABC123", "host": "ccu.local", "model": "CCU3", "available": True}]
         with (
-            patch(_LOOM_ENABLED, True),
             patch(_LOOM_LIST, return_value=ccus),
             patch(_BROWSE, return_value=[_loom_daemon("192.168.1.50", 8080, "Loom")]),
             patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
@@ -3663,7 +3633,6 @@ class TestLoomZeroconfDiscovery:
 
     async def test_invalid_auth(self, hass: HomeAssistant) -> None:
         with (
-            patch(_LOOM_ENABLED, True),
             patch(_LOOM_LIST, side_effect=AuthFailure("bad token")),
         ):
             init = await self._init_zeroconf(hass, _loom_zeroconf_info())
@@ -3672,8 +3641,7 @@ class TestLoomZeroconfDiscovery:
         assert result["errors"] == {"base": "invalid_auth"}
 
     async def test_missing_port_aborts(self, hass: HomeAssistant) -> None:
-        with patch(_LOOM_ENABLED, True):
-            result = await self._init_zeroconf(hass, _loom_zeroconf_info(port=0))
+        result = await self._init_zeroconf(hass, _loom_zeroconf_info(port=0))
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "invalid_discovery_info"
 
@@ -3683,7 +3651,6 @@ class TestLoomZeroconfDiscovery:
             {"name": "Office", "serial": "BBB", "host": "h2", "model": "CCU3", "available": True},
         ]
         with (
-            patch(_LOOM_ENABLED, True),
             patch(_LOOM_LIST, return_value=ccus),
             patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
         ):
@@ -3700,7 +3667,6 @@ class TestLoomZeroconfDiscovery:
 
     async def test_no_ccus(self, hass: HomeAssistant) -> None:
         with (
-            patch(_LOOM_ENABLED, True),
             patch(_LOOM_LIST, return_value=[]),
         ):
             init = await self._init_zeroconf(hass, _loom_zeroconf_info())
@@ -3726,7 +3692,6 @@ class TestLoomZeroconfDiscovery:
             }
         ]
         with (
-            patch(_LOOM_ENABLED, True),
             patch(_LOOM_LIST, return_value=ccus),
             patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
         ):
@@ -3739,15 +3704,13 @@ class TestLoomZeroconfDiscovery:
         assert not hass.config_entries.flow.async_progress()
 
     async def test_shows_token_form(self, hass: HomeAssistant) -> None:
-        with patch(_LOOM_ENABLED, True):
-            result = await self._init_zeroconf(hass, _loom_zeroconf_info())
+        result = await self._init_zeroconf(hass, _loom_zeroconf_info())
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "loom_token"
 
     async def test_single_ccu_creates_entry(self, hass: HomeAssistant) -> None:
         ccus = [{"name": "Home", "serial": "ABC123", "host": "ccu.local", "model": "CCU3", "available": True}]
         with (
-            patch(_LOOM_ENABLED, True),
             patch(_LOOM_LIST, return_value=ccus),
             patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
         ):
@@ -3778,7 +3741,6 @@ class TestLoomZeroconfDiscovery:
         existing.mock_state(hass, config_entries.ConfigEntryState.LOADED)
         ccus = [{"name": "Home", "serial": "ABC123", "host": "ccu.local", "model": "CCU3", "available": True}]
         with (
-            patch(_LOOM_ENABLED, True),
             patch(_LOOM_LIST, return_value=ccus),
             patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload,
         ):
@@ -3793,7 +3755,6 @@ class TestLoomZeroconfDiscovery:
         """Unchecking the sub-device toggle in the token step is persisted."""
         ccus = [{"name": "Home", "serial": "ABC123", "host": "ccu.local", "model": "CCU3", "available": True}]
         with (
-            patch(_LOOM_ENABLED, True),
             patch(_LOOM_LIST, return_value=ccus),
             patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
         ):
@@ -4044,7 +4005,6 @@ class TestLoomActiveBrowse:
         daemons = [_loom_daemon("h1", 8080, "D1"), _loom_daemon("h2", 8081, "D2")]
         ccus = [{"name": "Home", "serial": "ABC123", "host": "ccu", "model": "CCU3", "available": True}]
         with (
-            patch(_LOOM_ENABLED, True),
             patch(_BROWSE, return_value=daemons),
             patch(_LOOM_LIST, return_value=ccus),
             patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
@@ -4063,14 +4023,14 @@ class TestLoomActiveBrowse:
         assert entry.unique_id == "ABC123"
 
     async def test_no_daemons_falls_back_to_manual(self, hass: HomeAssistant) -> None:
-        with patch(_LOOM_ENABLED, True), patch(_BROWSE, return_value=[]):
+        with patch(_LOOM_RELEVANT, return_value=True), patch(_BROWSE, return_value=[]):
             step = await self._init_loom(hass)
         assert step["type"] == FlowResultType.FORM
         assert step["step_id"] == "loom"
 
     async def test_pick_manual_shows_manual_form(self, hass: HomeAssistant) -> None:
         daemons = [_loom_daemon("h1", 8080, "D1"), _loom_daemon("h2", 8081, "D2")]
-        with patch(_LOOM_ENABLED, True), patch(_BROWSE, return_value=daemons):
+        with patch(_LOOM_RELEVANT, return_value=True), patch(_BROWSE, return_value=daemons):
             pick = await self._init_loom(hass)
             assert pick["step_id"] == "loom_pick"
             manual = await hass.config_entries.flow.async_configure(
@@ -4080,14 +4040,23 @@ class TestLoomActiveBrowse:
         assert manual["step_id"] == "loom"
 
     async def test_single_daemon_auto_selects_to_token(self, hass: HomeAssistant) -> None:
-        with patch(_LOOM_ENABLED, True), patch(_BROWSE, return_value=[_loom_daemon("h1", 8080, "D1")]):
+        with patch(_LOOM_RELEVANT, return_value=True), patch(_BROWSE, return_value=[_loom_daemon("h1", 8080, "D1")]):
             step = await self._init_loom(hass)
         assert step["type"] == FlowResultType.FORM
         assert step["step_id"] == "loom_token"
 
     async def _init_loom(self, hass: HomeAssistant) -> dict:
-        result = await hass.config_entries.flow.async_init(HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER})
-        return await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "loom"})
+        """Reach the loom step via the backend menu.
+
+        The gate itself is covered by :class:`TestLoomBackendGate`; here it
+        is forced open so these tests stay focused on the loom path.
+        """
+        with patch(_LOOM_RELEVANT, return_value=True):
+            result = await hass.config_entries.flow.async_init(
+                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+            assert result["type"] == FlowResultType.MENU
+            return await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "loom"})
 
     async def _submit_manual(
         self,
@@ -4109,7 +4078,6 @@ class TestLoomActiveBrowse:
             }
         loom_kwargs = {"side_effect": loom_list} if isinstance(loom_list, Exception) else {"return_value": loom_list}
         with (
-            patch(_LOOM_ENABLED, True),
             patch(_BROWSE, return_value=[]),
             patch(_LOOM_LIST, **loom_kwargs),
             patch("custom_components.homematicip_local.config_flow.ControlConfig") as control_config,

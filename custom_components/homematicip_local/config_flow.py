@@ -37,6 +37,7 @@ from aiohomematic.const import (
 from aiohomematic.exceptions import AuthFailure, BaseHomematicException, NoConnectionException, ValidationException
 from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_PUSH,
+    SOURCE_ZEROCONF,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -111,7 +112,6 @@ from .const import (
     DEFAULT_MQTT_PREFIX,
     DEFAULT_SYS_SCAN_INTERVAL,
     DOMAIN,
-    LOOM_BACKEND_SELECTABLE,
 )
 from .control_unit import ControlConfig, ControlUnit, validate_config_and_get_system_information
 from .support import InvalidConfig
@@ -158,9 +158,11 @@ TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 BOOLEAN_SELECTOR = BooleanSelector()
 
-# User-facing backend labels for the {backend} placeholder in flow_title
+# User-facing backend labels for the {backend} placeholder in flow_title.
+# The loom label carries the Beta marker so the discovery card shows it before
+# the user opens the flow. No parentheses — flow_title already brackets it.
 TITLE_BACKEND_CCU: Final = "aiohomematic"
-TITLE_BACKEND_LOOM: Final = "openccu-loom"
+TITLE_BACKEND_LOOM: Final = "openccu-loom Beta"
 
 # openccu-loom mDNS discovery
 ZEROCONF_TYPE = "_openccu-loom._tcp.local."
@@ -1105,8 +1107,6 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         routes into the shared CCU-selection step, so manual setups are
         serial-keyed (dedup, in-place backend switch) like discovered ones.
         """
-        if not LOOM_BACKEND_SELECTABLE:
-            return await self.async_step_central(user_input=None)
         # On entry (no input yet) actively browse for daemons and offer a
         # selection; fall back to the manual form when none are found or the
         # user opted out of discovery in the pick step.
@@ -1587,13 +1587,13 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         """Pick the backend: direct CCU (aiohomematic) or openccu-loom daemon.
 
         Discovery and re-entry that already carry CCU data skip straight
-        to the central step; a fresh user-initiated setup gets the menu.
+        to the central step. A fresh user-initiated setup gets the backend
+        menu only when the loom backend is relevant; otherwise it goes
+        straight to the direct-CCU setup.
         """
         if user_input is not None or self.data.get(CONF_HOST):
             return await self.async_step_central(user_input=user_input)
-        if not LOOM_BACKEND_SELECTABLE:
-            # The loom path is compiled out: no backend menu, straight to
-            # the direct-CCU setup.
+        if not self._loom_is_relevant():
             return await self.async_step_central(user_input=user_input)
         return self.async_show_menu(step_id="user", menu_options=["central", "loom"])
 
@@ -1608,8 +1608,6 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         in-place backend switch. Pre-``ccus`` daemons fall back to a
         host/port match against existing loom entries.
         """
-        if not LOOM_BACKEND_SELECTABLE:
-            return self.async_abort(reason="loom_not_enabled")
         host = discovery_info.host
         port = discovery_info.port
         if not host or not port:
@@ -1837,6 +1835,24 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         configured = set(self.data.get(CONF_INTERFACE, {}).keys())
 
         return sorted(configured - detected, key=lambda i: i.value)
+
+    def _loom_is_relevant(self) -> bool:
+        """Return whether the openccu-loom backend should be offered.
+
+        The backend is surfaced only when there is evidence that it is in
+        use: a daemon currently announcing itself via mDNS (a discovery
+        flow is in progress) or an already configured loom entry. Setups
+        without a daemon never see a backend choice.
+        """
+        if any(
+            entry.data.get(CONF_BACKEND) == BACKEND_LOOM for entry in self._async_current_entries(include_ignore=False)
+        ):
+            return True
+        return bool(
+            self.hass.config_entries.flow.async_progress_by_handler(
+                DOMAIN, include_uninitialized=True, match_context={"source": SOURCE_ZEROCONF}
+            )
+        )
 
     async def _validate_and_finish_config_flow(self) -> ConfigFlowResult:
         """Validate and finish the config flow.
