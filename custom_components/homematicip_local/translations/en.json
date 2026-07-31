@@ -6,7 +6,6 @@
       "reauth_successful": "Reauthentication successful. Connection restored.",
       "reconfigure_failed": "Could not find the configuration entry to reconfigure",
       "reconfigure_successful": "Connection settings updated successfully",
-      "loom_not_enabled": "The openccu-loom backend is not enabled.",
       "invalid_discovery_info": "Incomplete discovery information.",
       "backend_switched": "Backend switched for the already configured CCU. The existing entry keeps its settings, entities and history."
     },
@@ -127,8 +126,8 @@
           "verify_tls": "Verify TLS certificate",
           "sub_devices_enabled": "Create sub-device entities"
         },
-        "description": "Connect to an openccu-loom daemon. The daemon owns the CCU connection, interfaces and callbacks.",
-        "title": "OpenCCU-Loom daemon",
+        "description": "**Beta:** The openccu-loom backend is still under evaluation — the direct CCU connection remains the recommended setup.\n\nConnect to an openccu-loom daemon. The daemon owns the CCU connection, interfaces and callbacks.",
+        "title": "OpenCCU-Loom daemon (Beta)",
         "data_description": {
           "sub_devices_enabled": "Splits devices with multiple channel groups into a main device with sub-devices. Entities are assigned to their corresponding sub-device based on channel group."
         }
@@ -219,13 +218,13 @@
       "user": {
         "menu_options": {
           "central": "Connect directly to a CCU (aiohomematic)",
-          "loom": "Connect to an openccu-loom daemon"
+          "loom": "Connect to an openccu-loom daemon (Beta)"
         },
         "title": "Select backend"
       },
       "loom_token": {
-        "title": "OpenCCU-Loom daemon token",
-        "description": "Enter the API bearer token for the discovered daemon {name} at {host}.",
+        "title": "OpenCCU-Loom daemon token (Beta)",
+        "description": "**Beta:** The openccu-loom backend is still under evaluation — the direct CCU connection remains the recommended setup.\n\nEnter the API bearer token for the discovered daemon {name} at {host}.",
         "data": {
           "loom_token": "API bearer token",
           "sub_devices_enabled": "Create sub-device entities"

@@ -4,7 +4,6 @@
             "already_configured": "Eintrag mit der Seriennummer {serial} ist bereits konfiguriert", 
             "backend_switched": "Backend für die bereits konfigurierte CCU gewechselt. Der bestehende Eintrag behält Einstellungen, Entitäten und Verlauf.", 
             "invalid_discovery_info": "Unvollständige Discovery-Informationen.", 
-            "loom_not_enabled": "Das openccu-loom-Backend ist nicht aktiviert.", 
             "reauth_failed": "Der Konfigurationseintrag zur erneuten Authentifizierung konnte nicht gefunden werden", 
             "reauth_successful": "Erneute Authentifizierung erfolgreich. Verbindung wiederhergestellt.", 
             "reconfigure_failed": "Der zu ändernde Konfigurationseintrag konnte nicht gefunden werden", 
@@ -130,8 +129,8 @@
                 "data_description": {
                     "sub_devices_enabled": "Teilt Geräte mit mehreren Kanalgruppen in ein Hauptgerät mit Untergeräten auf. Entitäten werden basierend auf ihrer Kanalgruppe dem entsprechenden Untergerät zugeordnet."
                 }, 
-                "description": "Mit einem openccu-loom-Daemon verbinden. Der Daemon verwaltet CCU-Verbindung, Interfaces und Callbacks.", 
-                "title": "OpenCCU-Loom-Daemon"
+                "description": "**Beta:** Das openccu-loom-Backend befindet sich noch in Erprobung – die direkte CCU-Verbindung bleibt der empfohlene Weg.\n\nMit einem openccu-loom-Daemon verbinden. Der Daemon verwaltet CCU-Verbindung, Interfaces und Callbacks.", 
+                "title": "OpenCCU-Loom-Daemon (Beta)"
             }, 
             "loom_pick": {
                 "data": {
@@ -155,8 +154,8 @@
                 "data_description": {
                     "sub_devices_enabled": "Teilt Geräte mit mehreren Kanalgruppen in ein Hauptgerät mit Untergeräten auf. Entitäten werden basierend auf ihrer Kanalgruppe dem entsprechenden Untergerät zugeordnet."
                 }, 
-                "description": "Gib den API-Bearer-Token für den gefundenen Daemon „{name}\" unter {host} ein.", 
-                "title": "OpenCCU-Loom-Daemon-Token"
+                "description": "**Beta:** Das openccu-loom-Backend befindet sich noch in Erprobung – die direkte CCU-Verbindung bleibt der empfohlene Weg.\n\nGib den API-Bearer-Token für den gefundenen Daemon „{name}\" unter {host} ein.", 
+                "title": "OpenCCU-Loom-Daemon-Token (Beta)"
             }, 
             "port_config": {
                 "data": {
@@ -244,7 +243,7 @@
             "user": {
                 "menu_options": {
                     "central": "Direkt mit einer CCU verbinden (aiohomematic)", 
-                    "loom": "Mit einem openccu-loom-Daemon verbinden"
+                    "loom": "Mit einem openccu-loom-Daemon verbinden (Beta)"
                 }, 
                 "title": "Backend wählen"
             }

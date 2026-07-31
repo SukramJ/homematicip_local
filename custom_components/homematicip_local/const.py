@@ -60,11 +60,8 @@ CONF_BACKEND: Final = "backend"
 BACKEND_CCU: Final = "ccu"  # aiohomematic, direct XML/JSON-RPC to the CCU
 BACKEND_LOOM: Final = "loom"  # openccu-loom daemon via REST/WebSocket
 DEFAULT_BACKEND: Final = BACKEND_CCU
-# Master switch for the loom backend in the config flow: when False the
-# backend menu is skipped and new entries can only target the direct CCU
-# backend — the loom path behaves as if it did not exist. Existing loom
-# entries are not touched; this gates only the flow.
-LOOM_BACKEND_SELECTABLE: Final = False
+# The loom backend needs no master switch: the config flow offers it exactly
+# when it is relevant — an mDNS-discovered daemon or an existing loom entry.
 # Loom-only connection inputs. Host/TLS reuse CONF_HOST/CONF_TLS; the
 # daemon authenticates with a bearer token (or falls back to user/pass).
 CONF_LOOM_TOKEN: Final = "loom_token"  # noqa: S105 - config key name, not a secret

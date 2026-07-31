@@ -18,6 +18,14 @@ integration v2.8.0): the Loom backend is **bundled but not user-selectable** —
 `LOOM_BACKEND_SELECTABLE = False` (`custom_components/homematicip_local/const.py:65`).
 It is groundwork for a future alternative, not a shipping feature.
 
+> **Update (2026-07-31, integration v2.8.4).** The master switch was removed.
+> The config flow now offers the Loom backend when it is relevant: an
+> mDNS-discovered daemon yields a discovery card, and the manual backend menu
+> appears when a Loom entry exists or a daemon discovery flow is in progress.
+> Setups without a daemon still go straight to the direct-CCU step. The
+> parity assessments below are unchanged and still describe the state as of
+> 2026-06-21.
+
 > **Method note.** This document was produced by reading the installed package
 > sources (`venv/.../aiohomematic`, `.../openccu_loom_client`,
 > `.../openccu_loom_types`), the integration code under
@@ -367,10 +375,11 @@ new DP class.
 ## 9. Maturity & feature parity
 
 - **`aiohomematic`:** the production default — 10/10 in this dimension.
-- **Loom:** bundled but **disabled** (`LOOM_BACKEND_SELECTABLE = False`,
-  `const.py:65`; `changelog.md` "not user-selectable in 2.8.0 … behaves as if it
-  were absent"). UI/flow/i18n are fully prepared (zeroconf `_openccu-loom._tcp`,
-  active mDNS browse, token flow, all strings in en/de).
+- **Loom:** bundled and, as of v2.8.4, reachable without a source-code change —
+  the flow surfaces it on daemon discovery or an existing loom entry (it was
+  gated behind `LOOM_BACKEND_SELECTABLE = False` when this section was written).
+  UI/flow/i18n are fully prepared (zeroconf `_openccu-loom._tcp`, active mDNS
+  browse, token flow, all strings in en/de).
 
 **Where the parity gaps stand.** The catalogue was filed against the daemon as
 [`docs/parity/ha-client-wire-gaps.md`](https://github.com/SukramJ/openccu-loom)
@@ -397,8 +406,9 @@ turned out to be already-implemented or a client-side shape fix — the client's
 own `"the daemon does not surface … yet"` comments were stale. The remaining work
 has therefore shifted from **daemon-side exposure** to **client-side
 consumption**: read the new G1 `color`/`color_mode`, consume `/hub/data-points`,
-`/event-groups` and the new hub push topics, wire `set_on_time`, and flip
-`LOOM_BACKEND_SELECTABLE`. (Caveat: verified at the source level; the installed
+`/event-groups` and the new hub push topics, and wire `set_on_time`. (The
+backend gate itself is gone as of v2.8.4 — see the update note in section 1.)
+(Caveat: verified at the source level; the installed
 client `2026.6.21` / types `0.1.22` already reads `is_extended` and
 `color_temp_kelvin`/`effect`, but does not yet consume the brand-new
 1.18.0 endpoints.)
@@ -537,7 +547,7 @@ north-bound traffic.
 - **The remaining work is now client-side, not daemon-side.** As of daemon
   0.7.1 / API 1.18.0 the real daemon parity gaps are closed (hub data-points,
   event-groups, text-display options, hub push topics), and two suspected daemon
-  gaps were already-implemented or a client shape fix. What is left before
-  flipping `LOOM_BACKEND_SELECTABLE` is a defensible product decision: have the
-  Python client consume the new 1.18.0 wire surface, accept the daemon's
-  operational/SPOF costs, and enable the backend.
+  gaps were already-implemented or a client shape fix. What is left is a
+  defensible product decision: have the Python client consume the new 1.18.0
+  wire surface and accept the daemon's operational/SPOF costs. The flow-level
+  gate is no longer part of that decision — it was removed in v2.8.4.
