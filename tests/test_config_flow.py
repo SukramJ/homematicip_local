@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from ipaddress import ip_address
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry, flush_store
@@ -39,8 +39,10 @@ from custom_components.homematicip_local.config_flow import (
     CONF_VIRTUAL_DEVICES_PORT,
     IF_VIRTUAL_DEVICES_PATH,
     LOOM_MANUAL_DAEMON,
+    ZEROCONF_TYPE,
     DomainConfigFlow,
     InvalidConfig,
+    _async_browse_loom_daemons,
     _async_loom_list_ccus,
     _async_validate_config_and_get_system_information,
     _get_ccu_data,
@@ -3912,6 +3914,64 @@ def _loom_daemon(host: str, port: int, instance: str) -> dict:
         CONF_LOOM_BASE_PATH: "/api/v1",
         CONF_INSTANCE_NAME: instance,
     }
+
+
+class TestLoomBrowseCallbackContract:
+    """The mDNS browse handler must honour zeroconf's callback contract.
+
+    ``zeroconf`` fires state changes with keyword arguments only
+    (``zeroconf=``, ``service_type=``, ``name=``, ``state_change=``), and it
+    fires them from the browser constructor when the shared cache already
+    holds matching services — which is the normal case in Home Assistant,
+    since the integration's manifest makes HA browse this service type. A
+    mismatched parameter name therefore raises synchronously inside the
+    config-flow step rather than being swallowed in a background task.
+    """
+
+    async def test_handler_accepts_keyword_call_from_constructor(self, hass: HomeAssistant) -> None:
+        """A cache-warm constructor callback must be accepted and collected."""
+        from zeroconf import ServiceStateChange
+
+        service_name = f"Daemon.{ZEROCONF_TYPE}"
+
+        class _CacheWarmBrowser:
+            """Stand-in for AsyncServiceBrowser that fires from its constructor."""
+
+            def __init__(self, _zc: Any, service_type: str, handlers: list[Any]) -> None:
+                for handler in handlers:
+                    handler(
+                        zeroconf=_zc,
+                        service_type=service_type,
+                        name=service_name,
+                        state_change=ServiceStateChange.Added,
+                    )
+
+            async def async_cancel(self) -> None:
+                return None
+
+        info = MagicMock()
+        info.async_request = AsyncMock(return_value=True)
+        info.parsed_addresses = MagicMock(return_value=["192.168.1.50"])
+        info.port = 8119
+        info.properties = {b"instance": b"Daemon", b"path": b"/api/v1", b"tls": b"0"}
+
+        with (
+            patch("zeroconf.asyncio.AsyncServiceBrowser", _CacheWarmBrowser),
+            patch("zeroconf.asyncio.AsyncServiceInfo", return_value=info),
+            patch("homeassistant.components.zeroconf.async_get_async_instance", return_value=MagicMock()),
+            patch("custom_components.homematicip_local.config_flow.LOOM_BROWSE_SECONDS", 0),
+        ):
+            daemons = await _async_browse_loom_daemons(hass)
+
+        assert daemons == [
+            {
+                CONF_HOST: "192.168.1.50",
+                CONF_LOOM_PORT: 8119,
+                CONF_TLS: False,
+                CONF_LOOM_BASE_PATH: "/api/v1",
+                CONF_INSTANCE_NAME: "Daemon",
+            }
+        ]
 
 
 class TestLoomActiveBrowse:
