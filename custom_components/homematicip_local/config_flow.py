@@ -330,13 +330,16 @@ async def _async_browse_loom_daemons(hass: HomeAssistant) -> list[dict[str, Any]
     from zeroconf import ServiceStateChange  # noqa: PLC0415
     from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo  # noqa: PLC0415
 
-    from homeassistant.components import zeroconf  # noqa: PLC0415
+    from homeassistant.components import zeroconf as ha_zeroconf  # noqa: PLC0415
 
-    aiozc = await zeroconf.async_get_async_instance(hass)
+    aiozc = await ha_zeroconf.async_get_async_instance(hass)
     names: set[str] = set()
 
+    # zeroconf fires state changes with keyword arguments only
+    # (zeroconf=, service_type=, name=, state_change=), so the parameter
+    # names are part of the contract — renaming them breaks the callback.
     @callback
-    def _on_change(_zc: Any, _service_type: str, name: str, state_change: Any) -> None:
+    def _on_change(zeroconf: Any, service_type: str, name: str, state_change: Any) -> None:
         if state_change is not ServiceStateChange.Removed:
             names.add(name)
 
