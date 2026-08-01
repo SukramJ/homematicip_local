@@ -13,25 +13,32 @@
 
 - Added a `Makefile` as the entry point for all development tasks (`make help` lists every target): setup, code quality (ruff, mypy, pylint, bandit, codespell, yamllint, prettier, translations, prek), tests (incl. coverage, CI mode and the opt-in e2e suite), hassfest/HACS validation, running Home Assistant against `./config`, and housekeeping. Targets run through `script/run-in-env.sh`, so they work with or without an activated virtual environment. `CLAUDE.md` and `CONTRIBUTING.md` document the targets; the broken `cov.sh` (it referenced a non-existent `.coveragerc`) is superseded by `make test-cov-html` and was removed
 - Dual-backend parity hardening: a backend surface contract test (`tests/contract/test_backend_surface_contract.py`) inventories the `central.*` member and call surface the integration actually uses from the sources via AST and checks it against both backend classes, the three-way e2e suite gained behavioral parity probes (identical HA service calls, a CCU-side push, the config-surface paramset description) plus an entity-set parity ratchet that lets model coverage only grow, and the new `.github/workflows/e2e-parity.yaml` runs the suite as a gate on dependency-bump PRs and nightly. Test infrastructure only — no runtime effect
-- Config flow and diagnostics groundwork for the openccu-loom backend (backend-aware flow titles, in-place backend switch on a matching CCU serial, sub-device toggle, serial-keyed manual setup, diagnostics on the compat adapter). The compile-time master switch `LOOM_BACKEND_SELECTABLE` is replaced by a discovery-based gate — the flow offers the backend when a daemon announces itself via mDNS or a loom entry already exists — and every entry point is marked Beta. The user-facing details stay out of scope for this changelog until the backend leaves Beta
+- Config flow and diagnostics groundwork for the openccu-loom backend (backend-aware flow titles, in-place backend switch on a matching CCU serial, sub-device toggle, serial-keyed manual setup, diagnostics on the compat adapter). The compile-time master switch `LOOM_BACKEND_SELECTABLE` is replaced by a discovery-based gate — the flow offers the backend when a daemon announces itself via mDNS or a loom entry already exists — and every entry point is marked Beta. A callback-signature fix in the active mDNS browse makes the daemon selection usable — zeroconf fires state changes with keyword arguments only, and it fires them from the browser constructor once the shared cache is warm, so the mismatched parameter names raised synchronously inside the flow step. The user-facing details stay out of scope for this changelog until the backend leaves Beta
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.7.11](https://github.com/SukramJ/aiohomematic/compare/2026.7.6...2026.7.11)
+#### Bump aiohomematic to [2026.8.0](https://github.com/SukramJ/aiohomematic/compare/2026.7.6...2026.8.0)
 
 - Fix XML-RPC commands hanging forever when a connection goes half-open. The operational XML-RPC proxy is now created with a socket timeout (`rpc_timeout`, 60 s by default), matching backend detection; previously it had none, so a silently dropped or half-open (TLS) keep-alive connection made a `setValue`/`putParamset` block indefinitely in the proxy's single worker thread. Since each interface has exactly one worker, that wedged the interface's entire outgoing command path until Home Assistant was restarted — commands were neither sent nor failed, the only visible symptom being the 30 s optimistic rollback, while incoming events kept arriving over the separate callback path. A stuck request now aborts as a retryable `NoConnectionException`, which frees the worker thread and lets the command retry handler react
 - Fix data point names getting a redundant `ch<no>` postfix even when the channel's custom name is already unique (#3313). The postfix for parameters that exist on multiple channels of a device is now only appended when the channel name alone does not identify the channel — device-derived names, names following the `<name>:<no>` scheme, or several same-named channels providing the same parameter. A channel with a unique custom name (e.g. a status channel named `<sub device> Status`) keeps its clean entity name again
 - New `aiohomematic.device_semantics` module exposing the curated device-semantics classifications from openccu-data — first classification: `DOORBELL_MODELS`, the basis for the doorbell-model change above (#3304)
 - Adds the `ALARM_CONTROL_PANEL` category/type vocabulary — pure vocabulary, no behaviour change on the CCU path
+- Raises the minimum `openccu-data` to `2026.7.2`, pulling in the corrected CCU translation and easymode artifacts (see below). The package is a transitive dependency, so the manifest bump is what applies it
+- Unhandled task exceptions are logged with an explicit `exc_info` instead of `_LOGGER.exception()`. The handler runs from a task done-callback, i.e. outside an active exception handler, where `exception()` has no ambient traceback to draw on — some task failures previously lost their traceback in the log. Log level and output are otherwise unchanged
 
-#### Bump openccu-data to [2026.7.1](https://github.com/SukramJ/openccu-data/compare/2026.6.1...2026.7.1)
+#### Bump openccu-data to [2026.7.2](https://github.com/SukramJ/openccu-data/compare/2026.6.1...2026.7.2)
 
 - Adds the curated `device_semantics` extract (doorbell classification) that aiohomematic's new `device_semantics` module reads
 - Regenerates the easymode and translation extracts as well as the `BLIND_VIRTUAL_RECEIVER`, `SHUTTER_VIRTUAL_RECEIVER` and `WATER_SWITCH_VIRTUAL_RECEIVER` profiles from the latest OCCU sources: a new `SHORT_OUTPUT_BEHAVIOUR` parameter in the water-switch profiles, `LONG_PROFILE_ACTION_TYPE` narrowed to a fixed value in the blind/shutter profiles, plus revised German/English help texts and value labels
+- Fixes HTML character references leaking into display strings: the easymode and profile extractors now decode `&auml;`, `&amp;`, `&nbsp;` and friends, matching what the translation extractor always did. 36 profile files (197 strings) and the easymode archive were regenerated, so German umlauts and ampersands in parameter help texts and value labels render as characters instead of escape sequences
 
-#### Bump openccu-loom-client to `2026.7.19` (pins `openccu-loom-types==0.2.2`)
+#### Bump aiohomematic-config to `2026.8.0`
 
-- Groundwork bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend. Advances the bundled loom client from `2026.7.6` to `2026.7.19` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.2.2`
+- Tracking bump that raises its own `aiohomematic` and `openccu-data` floors to match the versions above. No functional change
+
+#### Bump openccu-loom-client to `2026.8.0` (pins `openccu-loom-types==0.2.4`)
+
+- Groundwork bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend. Advances the bundled loom client from `2026.7.6` to `2026.8.0` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.2.4`
 
 #### homematicip-local-frontend
 
