@@ -90,6 +90,7 @@ The complete documentation is available at **[sukramj.github.io/aiohomematic](ht
 |-------|------|
 | **Home Assistant Integration** | [User Guide](https://sukramj.github.io/aiohomematic/user/homeassistant_integration/) |
 | **Actions Reference** | [Actions](https://sukramj.github.io/aiohomematic/user/features/homeassistant_actions/) |
+| **Events Reference** | [Events](https://sukramj.github.io/aiohomematic/user/features/homeassistant_events/) |
 | **Troubleshooting** | [Troubleshooting Guide](https://sukramj.github.io/aiohomematic/user/troubleshooting/homeassistant_troubleshooting/) |
 | **Week Profiles** | [Week Profiles](https://sukramj.github.io/aiohomematic/user/features/week_profile/) |
 | **Naming Conventions** | [Naming](https://sukramj.github.io/aiohomematic/user/advanced/homeassistant_naming/) |
@@ -132,6 +133,12 @@ Ready-to-use automation blueprints are available in the [blueprints/automation](
 - Error event handlers
 
 Copy the desired blueprint files to your `config/blueprints/automation` directory.
+
+Blueprints that react to devices are driven by the integration's events — see the
+[Events Reference](https://sukramj.github.io/aiohomematic/user/features/homeassistant_events/)
+for which parameters trigger which event. Note that CCU service messages (`CONFIG_PENDING`,
+`UPDATE_PENDING`, …) are not events; they are available through the
+`sensor.<instance>_hub_service_messages` sensor.
 
 Community blueprints are welcome via pull request in [blueprints/community](blueprints/community).
 

@@ -9,6 +9,14 @@
 - Event entities now carry the full device identity (name, manufacturer, model, serial number, firmware) in their `DeviceInfo`. Previously they registered only the device identifiers — if an event entity happened to be the device's first registration, the device entry was created without a name and the generated (sticky) entity_id degraded to the config-entry title (e.g. `event.<instance_name>_ch1` instead of `event.<device_name>_ch1`)
 - Reauthentication now reloads the config entry exactly once. The flow's entry update schedules a reload only when the registered update listener will not already do so (unloaded entry or unchanged data), replacing `ConfigFlow.async_update_reload_and_abort`, whose extra reload schedule alongside an update listener caused a double reload and is deprecated with HA 2026.12
 
+### Blueprints
+
+- `Show device error` no longer suggests parameters it can never receive. Its "Ignored error parameters" field named `CONFIG_PENDING` and `STICKY_UNREACH` as examples, and its description explained at length how a `CONFIG_PENDING` notification clears after a configuration transfer — but `homematic.device_error` only carries parameters whose name starts with `ERROR` or `SENSOR_ERROR`, so neither can ever reach this blueprint. The examples are now `ERROR_OVERHEAT` and `SENSOR_ERROR`, and the description states which parameters the event covers, that `ERROR_CODE` is excluded, and where CCU service messages are actually available (the `hub_service_messages` sensor). Reported in aiohomematic#3333; behaviour of the blueprint is unchanged
+
+### Documentation
+
+- README links the new [Events Reference](https://sukramj.github.io/aiohomematic/user/features/homeassistant_events/), which documents all seven events the integration fires on the HA event bus with their triggering parameters and payloads, and the Blueprints section now points to it — including the note that CCU service messages are not events
+
 ### Development
 
 - Added a `Makefile` as the entry point for all development tasks (`make help` lists every target): setup, code quality (ruff, mypy, pylint, bandit, codespell, yamllint, prettier, translations, prek), tests (incl. coverage, CI mode and the opt-in e2e suite), hassfest/HACS validation, running Home Assistant against `./config`, and housekeeping. Targets run through `script/run-in-env.sh`, so they work with or without an activated virtual environment. `CLAUDE.md` and `CONTRIBUTING.md` document the targets; the broken `cov.sh` (it referenced a non-existent `.coveragerc`) is superseded by `make test-cov-html` and was removed

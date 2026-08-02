@@ -6,15 +6,19 @@ blueprint:
     Optionally restrict the notifications to specific devices and/or ignore selected
     error parameters to reduce noise.
 
-    Note: Some errors are expected and resolve on their own. For example, after
-    deleting a direct link (Direktverknüpfung) in the CCU/OCCU, the change is sent
-    to the device via a configuration transfer; until that completes, CONFIG_PENDING
-    stays true and the link still lives in the device. For battery/RF devices the
-    transfer only runs on the next radio contact - press a button on the device so
-    the CCU can deliver the pending configuration, then the notification clears
-    automatically. No factory reset is required.
+    Scope: The homematic.device_error event only carries device parameters whose name
+    starts with ERROR or SENSOR_ERROR - for example ERROR_OVERHEAT, ERROR_OVERLOAD,
+    ERROR_JAMMED, ERROR_NON_FLAT_POSITIONING or SENSOR_ERROR. ERROR_CODE is excluded
+    by the integration because it is a raw numeric code without a stable meaning.
 
-    v2026-06-24
+    Not covered: CCU service messages such as CONFIG_PENDING, UPDATE_PENDING,
+    STICKY_UNREACH, LOW_BAT or SABOTAGE never arrive as a device_error event. Use the
+    hub sensor sensor.<instance>_hub_service_messages for those - its state is the
+    number of active service messages and its attributes message_1, message_2, ...
+    list them individually. Device reachability has its own event,
+    homematic.device_availability.
+
+    v2026-08-02
   domain: automation
   homeassistant:
     min_version: "2026.3.0"
@@ -31,7 +35,7 @@ blueprint:
     ignored_parameters:
       name: Ignored error parameters (optional)
       description:
-        Comma-separated list of error parameter names to ignore (e.g. CONFIG_PENDING, STICKY_UNREACH).
+        Comma-separated list of error parameter names to ignore (e.g. ERROR_OVERHEAT, SENSOR_ERROR).
         Case-insensitive. Leave empty to show all error parameters.
       default: ""
       selector:
