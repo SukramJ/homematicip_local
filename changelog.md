@@ -1,4 +1,4 @@
-# Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-07-29)
+# Version [2.8.4](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.8.4) (2026-08-02)
 
 ## What's Changed
 
@@ -25,8 +25,10 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.8.0](https://github.com/SukramJ/aiohomematic/compare/2026.7.6...2026.8.0)
+#### Bump aiohomematic to [2026.8.1](https://github.com/SukramJ/aiohomematic/compare/2026.7.6...2026.8.1)
 
+- Fix calculated sensors (`OPERATING_VOLTAGE_LEVEL`, `VAPOR_CONCENTRATION`, `DEW_POINT`, …) staying `unknown` after a Home Assistant restart instead of restoring their previous state (#3332). `CalculatedDataPoint` inherited its validity from `BaseDataPoint`, where `is_valid` only aggregates `is_refreshed` and `is_status_valid` of the source data points — a source that was read at startup but returned no usable value still counts as refreshed, so the calculated data point reported itself valid while its value was `None`. Since a previous state is only restored for data points that report themselves as invalid, the restore path never ran and the entity waited for the physical device to send again. Validity now requires every state-carrying source to be valid itself
+- Calculated data point validity is no longer gated by MASTER sources. Applying the ADR-0025 reasoning, only the readable VALUES sources carry state; MASTER paramset entries such as `LOW_BAT_LIMIT` are configuration inputs that a sleeping battery device may never deliver, and previously blocked `is_valid`, `is_refreshed` and `state_uncertain` of the whole calculated data point. A calculated data point without any readable VALUES source is now invalid rather than valid with `None`
 - Fix XML-RPC commands hanging forever when a connection goes half-open. The operational XML-RPC proxy is now created with a socket timeout (`rpc_timeout`, 60 s by default), matching backend detection; previously it had none, so a silently dropped or half-open (TLS) keep-alive connection made a `setValue`/`putParamset` block indefinitely in the proxy's single worker thread. Since each interface has exactly one worker, that wedged the interface's entire outgoing command path until Home Assistant was restarted — commands were neither sent nor failed, the only visible symptom being the 30 s optimistic rollback, while incoming events kept arriving over the separate callback path. A stuck request now aborts as a retryable `NoConnectionException`, which frees the worker thread and lets the command retry handler react
 - Fix data point names getting a redundant `ch<no>` postfix even when the channel's custom name is already unique (#3313). The postfix for parameters that exist on multiple channels of a device is now only appended when the channel name alone does not identify the channel — device-derived names, names following the `<name>:<no>` scheme, or several same-named channels providing the same parameter. A channel with a unique custom name (e.g. a status channel named `<sub device> Status`) keeps its clean entity name again
 - New `aiohomematic.device_semantics` module exposing the curated device-semantics classifications from openccu-data — first classification: `DOORBELL_MODELS`, the basis for the doorbell-model change above (#3304)
@@ -44,9 +46,9 @@
 
 - Tracking bump that raises its own `aiohomematic` and `openccu-data` floors to match the versions above. No functional change
 
-#### Bump openccu-loom-client to `2026.8.0` (pins `openccu-loom-types==0.2.4`)
+#### Bump openccu-loom-client to `2026.8.1` (pins `openccu-loom-types==0.2.5`)
 
-- Groundwork bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend. Advances the bundled loom client from `2026.7.6` to `2026.8.0` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.2.4`
+- Groundwork bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend. Advances the bundled loom client from `2026.7.6` to `2026.8.1` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.2.5`
 
 #### homematicip-local-frontend
 
