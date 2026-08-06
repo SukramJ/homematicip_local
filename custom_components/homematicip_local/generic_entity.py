@@ -526,6 +526,23 @@ class AioHomematicGenericHubEntity(Entity):
         This translated parameter will be used in the combined name.
         """
 
+        # A backend may have resolved the name itself. openccu-loom is the
+        # naming authority for its own hub entities and hands the localized
+        # name over the wire, in the language this integration asked for.
+        # Rendering it verbatim is what keeps the same words from living
+        # here and in the daemon's catalogue at once, drifting apart on the
+        # first edit to either. The data point keeps its English token in
+        # `name`, so the entity-description lookup in __init__ still matches
+        # on it and the entity keeps its icon, device class and category.
+        # aiohomematic data points carry no such attribute and fall through
+        # to the behaviour below unchanged.
+        #
+        # The isinstance check is not belt-and-braces: `getattr` on a mock
+        # answers with a truthy mock, and a bare truthiness test would make
+        # every mocked data point in a test suite take this branch.
+        if isinstance(resolved_name := getattr(self._data_point, "resolved_name", None), str) and resolved_name:
+            return resolved_name
+
         entity_name = self._data_point.name
 
         if (translated_name := super().name) is not None and not isinstance(translated_name, UndefinedType):

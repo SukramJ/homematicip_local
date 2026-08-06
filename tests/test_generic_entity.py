@@ -9,7 +9,7 @@ import pytest
 from aiohomematic.const import DataPointCategory
 from custom_components.homematicip_local.const import DOMAIN
 from custom_components.homematicip_local.control_unit import ControlUnit
-from custom_components.homematicip_local.generic_entity import AioHomematicGenericEntity
+from custom_components.homematicip_local.generic_entity import AioHomematicGenericEntity, AioHomematicGenericHubEntity
 
 # pylint: disable=protected-access
 
@@ -224,3 +224,88 @@ class TestScheduleSubdevice:
         # Entity stays on main device, not a separate schedule sub-device
         assert device_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
         assert device_info["via_device"] == (DOMAIN, _CENTRAL_NAME)
+
+
+def _create_mock_hub_data_point(
+    *,
+    name: str = "alarm_messages",
+    resolved_name: str | None = None,
+) -> MagicMock:
+    """Create a mock hub data point (no channel, no device-scoped naming)."""
+    mock_dp = MagicMock()
+    mock_dp.category = DataPointCategory.HUB_SENSOR
+    mock_dp.unique_id = "loom_abc1234567_hub_alarm-messages"
+    mock_dp.configure_mock(name=name)
+    mock_dp.available = True
+    mock_dp.enabled_default = True
+    mock_dp.is_valid = True
+    mock_dp.channel = None
+    # A mock answers every attribute, so an unset resolved_name has to be
+    # spelled out — otherwise the test cannot distinguish "the backend
+    # resolved a name" from "the backend has no such attribute at all".
+    mock_dp.resolved_name = resolved_name
+    return mock_dp
+
+
+def _create_hub_entity(*, mock_dp: MagicMock) -> AioHomematicGenericHubEntity:
+    """Create a hub entity with patched get_data_point + entity-description lookup."""
+    mock_cu = _create_mock_control_unit()
+    mock_central = MagicMock()
+    mock_central.event_bus.create_subscription_group.return_value = MagicMock()
+    mock_cu.central = mock_central
+    with (
+        patch(
+            "custom_components.homematicip_local.generic_entity.get_data_point",
+            side_effect=lambda data_point: data_point,
+        ),
+        patch(
+            "custom_components.homematicip_local.generic_entity.get_entity_description",
+            return_value=None,
+        ),
+        patch.object(AioHomematicGenericHubEntity, "_get_device_info", return_value={}),
+    ):
+        return AioHomematicGenericHubEntity(control_unit=mock_cu, data_point=mock_dp)
+
+
+class TestHubEntityNameFromBackend:
+    """
+    A backend that resolves its own entity names is rendered verbatim.
+
+    openccu-loom is the naming authority for its own hub entities and
+    hands the localized name over the wire. Rendering it here is what
+    keeps the same words from living in this integration and in the
+    daemon's catalogue at once, drifting apart on the first edit to
+    either.
+    """
+
+    def test_an_empty_resolved_name_does_not_blank_the_entity(self) -> None:
+        mock_dp = _create_mock_hub_data_point(name="alarm_messages", resolved_name="")
+        entity = _create_hub_entity(mock_dp=mock_dp)
+
+        assert entity.name == "alarm messages"
+
+    def test_resolved_name_wins(self) -> None:
+        mock_dp = _create_mock_hub_data_point(name="alarm_messages", resolved_name="Alarmmeldungen")
+        entity = _create_hub_entity(mock_dp=mock_dp)
+
+        assert entity.name == "Alarmmeldungen"
+
+    def test_the_token_is_untouched_so_descriptions_still_match(self) -> None:
+        """
+        The data point keeps its English token in `name`.
+
+        The entity-description lookup matches on it (`var_name_contains`),
+        and a localized token there would cost the entity its icon, device
+        class and category.
+        """
+        mock_dp = _create_mock_hub_data_point(name="alarm_messages", resolved_name="Alarmmeldungen")
+        _create_hub_entity(mock_dp=mock_dp)
+
+        assert mock_dp.name == "alarm_messages"
+
+    def test_without_a_resolved_name_the_previous_behaviour_stands(self) -> None:
+        """Aiohomematic data points carry no such attribute; nothing may change for them."""
+        mock_dp = _create_mock_hub_data_point(name="alarm_messages", resolved_name=None)
+        entity = _create_hub_entity(mock_dp=mock_dp)
+
+        assert entity.name == "alarm messages"
