@@ -46,9 +46,9 @@
 
 - Tracking bump that raises its own `aiohomematic` and `openccu-data` floors to match the versions above. No functional change
 
-#### Bump openccu-loom-client to `2026.8.3` (pins `openccu-loom-types==0.2.7`)
+#### Bump openccu-loom-client to `2026.8.6` (pins `openccu-loom-types==0.3.3`)
 
-- Groundwork bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend. Advances the bundled loom client from `2026.7.6` to `2026.8.3` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.2.7`
+- Groundwork bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend. Advances the bundled loom client from `2026.7.6` to `2026.8.6` and its transitively pinned `openccu-loom-types` from `0.1.53` to `0.3.3`
 
 #### homematicip-local-frontend
 
