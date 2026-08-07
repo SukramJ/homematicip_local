@@ -18,7 +18,7 @@ integration v2.8.0): the Loom backend is **bundled but not user-selectable** —
 `LOOM_BACKEND_SELECTABLE = False` (`custom_components/homematicip_local/const.py:65`).
 It is groundwork for a future alternative, not a shipping feature.
 
-> **Update (2026-07-31, integration v2.8.4).** The master switch was removed.
+> **Update (2026-07-31, integration v2.9.0).** The master switch was removed.
 > The config flow now offers the Loom backend when it is relevant: an
 > mDNS-discovered daemon yields a discovery card, and the manual backend menu
 > appears when a Loom entry exists or a daemon discovery flow is in progress.
@@ -375,7 +375,7 @@ new DP class.
 ## 9. Maturity & feature parity
 
 - **`aiohomematic`:** the production default — 10/10 in this dimension.
-- **Loom:** bundled and, as of v2.8.4, reachable without a source-code change —
+- **Loom:** bundled and, as of v2.9.0, reachable without a source-code change —
   the flow surfaces it on daemon discovery or an existing loom entry (it was
   gated behind `LOOM_BACKEND_SELECTABLE = False` when this section was written).
   UI/flow/i18n are fully prepared (zeroconf `_openccu-loom._tcp`, active mDNS
@@ -407,7 +407,7 @@ own `"the daemon does not surface … yet"` comments were stale. The remaining w
 has therefore shifted from **daemon-side exposure** to **client-side
 consumption**: read the new G1 `color`/`color_mode`, consume `/hub/data-points`,
 `/event-groups` and the new hub push topics, and wire `set_on_time`. (The
-backend gate itself is gone as of v2.8.4 — see the update note in section 1.)
+backend gate itself is gone as of v2.9.0 — see the update note in section 1.)
 (Caveat: verified at the source level; the installed
 client `2026.6.21` / types `0.1.22` already reads `is_extended` and
 `color_temp_kelvin`/`effect`, but does not yet consume the brand-new
@@ -550,4 +550,4 @@ north-bound traffic.
   gaps were already-implemented or a client shape fix. What is left is a
   defensible product decision: have the Python client consume the new 1.18.0
   wire surface and accept the daemon's operational/SPOF costs. The flow-level
-  gate is no longer part of that decision — it was removed in v2.8.4.
+  gate is no longer part of that decision — it was removed in v2.9.0.
