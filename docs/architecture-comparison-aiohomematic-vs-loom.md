@@ -398,6 +398,8 @@ daemon gaps and *reclassified* two items that were never daemon gaps. Status:
 | Generic `set_on_time` no-op (`generic/__init__.py:215-227`) | unknown side | **Reclassified — client wiring** — daemon exposes `ON_TIME` via the generic value route |
 | Reduced advanced settings (`config_flow.py:753-777`) | — | **By design** — callbacks/MQTT/pacing/interfaces are the daemon's concern, configured per-central |
 | Trimmed options menu (`config_flow.py:1789`) | — | **By design** — daemon owns interfaces + program/sysvar scan |
+| No CCU tab in the config panel on loom (`homematic-config.ts`) | — | **By design (2.9.1)** — the daemon's own Config UI covers inbox, firmware, signal quality, service messages and backups for *every* CCU it serves; this tab only ever showed the one behind the selected entry |
+| Reduced Integration tab on loom (`views/integration-dashboard.ts`) | — | **By design (2.9.1)** — health, throttling and incidents are daemon state read through the adapter and shown in the daemon's Diagnostics view; what remains is what HA itself knows (this entry's device statistics and the radio levels of its own entities) |
 
 **This revises the earlier "predominantly daemon-side" reading.** The four real
 daemon gaps are now closed in daemon 0.7.1 / API 1.18.0, and two items that the

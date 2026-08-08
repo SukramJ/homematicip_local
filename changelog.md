@@ -1,3 +1,17 @@
+# Version [2.9.1](https://github.com/SukramJ/homematicip_local/compare/2.9.0...2.9.1) (2026-08-08)
+
+## What's Changed
+
+### Config panel
+
+- The **CCU** tab is no longer shown for entries running on the openccu-loom backend. It listed inbox, service and alarm messages, install mode, firmware, signal quality, backup and system information for the one CCU behind the selected entry — all of which the loom daemon's own Config UI covers for **every** CCU it serves. Two surfaces claiming the same capability, one of them narrower, is worse than one; the daemon is the side that owns the state. Entries on the direct-CCU backend are unaffected
+- The **Integration** tab keeps only what Home Assistant itself knows when the backend is openccu-loom: the device statistics of this config entry and the duty-cycle / carrier-sense levels of its own entities. System health, command throttling, incidents and the cache/incident actions read the daemon's state through the adapter and are shown in the loom Config UI under Diagnostics — for all CCUs rather than one. A short note in the tab says where they went. The three websocket calls behind them are no longer made on loom entries at all
+- The **Devices** tab is unchanged on both backends. Paramsets, direct links and schedules with native session undo/redo are the surface Home Assistant genuinely owns
+
+### Dependencies
+
+- Bump `openccu-loom-client` to `2026.8.7`
+
 # Version [2.9.0](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.9.0) (2026-08-07)
 
 ## What's Changed
