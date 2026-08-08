@@ -1455,9 +1455,10 @@ class ControlConfig:
             password=self._password or None,
             serial=self._serial,
             client_session=aiohttp_client.async_get_clientsession(self.hass),
-            # Sysvar/program marker filtering + enabled-by-default is resolved
-            # daemon-side (api >= 1.9.0, openccu-loom-client >= 2026.6.17), so
-            # the markers are no longer threaded into the loom backend.
+            # Sysvar/program marker filtering and enabled-by-default are
+            # resolved daemon-side, so this backend threads no markers
+            # through the way the direct-CCU path does. The versions that
+            # guarantee it are the pins in manifest.json.
             locale=self.hass.config.language,
         ).create_central()
         # The loom adapter duck-types CentralUnit; aiohomematic's Protocol
