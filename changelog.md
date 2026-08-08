@@ -10,7 +10,13 @@
 
 ### Dependencies
 
-- Bump `openccu-loom-client` to `2026.8.7`
+- Bump `openccu-loom-client` to `2026.8.8` (pins `openccu-loom-types==0.3.6`,
+  daemon API 5.9.0). **This raises the minimum daemon: openccu-loom 0.55.1 or
+  newer.** The client refuses to connect to a lower API minor rather than
+  half-initializing against it, so an older daemon fails at `connect()` with a
+  clear message instead of producing bootstrap errors later. Entries on the
+  direct-CCU backend are unaffected — the client is only loaded for the loom
+  backend
 
 # Version [2.9.0](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.9.0) (2026-08-07)
 
