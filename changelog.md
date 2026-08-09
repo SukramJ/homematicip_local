@@ -4,19 +4,25 @@
 
 ### Config panel
 
-- The **CCU** tab is no longer shown for entries running on the openccu-loom backend. It listed inbox, service and alarm messages, install mode, firmware, signal quality, backup and system information for the one CCU behind the selected entry — all of which the loom daemon's own Config UI covers for **every** CCU it serves. Two surfaces claiming the same capability, one of them narrower, is worse than one; the daemon is the side that owns the state. Entries on the direct-CCU backend are unaffected
-- The **Integration** tab keeps only what Home Assistant itself knows when the backend is openccu-loom: the device statistics of this config entry and the duty-cycle / carrier-sense levels of its own entities. System health, command throttling, incidents and the cache/incident actions read the daemon's state through the adapter and are shown in the loom Config UI under Diagnostics — for all CCUs rather than one. A short note in the tab says where they went. The three websocket calls behind them are no longer made on loom entries at all
-- The **Devices** tab is unchanged on both backends. Paramsets, direct links and schedules with native session undo/redo are the surface Home Assistant genuinely owns
+- **The config panel is no longer shown at all for entries running on the openccu-loom backend.** It listed inbox, service and alarm messages, install mode, firmware, signal quality, backup and system information, plus paramsets, direct links, schedules and change history — for the one CCU behind the selected entry. The loom daemon's own Config UI covers every one of those for **every** CCU it serves, including the radio load and device statistics, which it shows per interface rather than per config entry. Two surfaces claiming the same capability, the visible one narrower, is worse than one; the daemon is the side that owns the state
+- The panel is unchanged for entries on the direct-CCU backend. It is registered once for the whole integration, so a mixed installation still has it — its entry picker simply no longer offers the loom entries
+- The advanced-settings option "Disable config panel" is gone from the loom flow. It offered a choice that no longer exists there
+
+### Devices
+
+- **A device page's "Configure" link now opens the openccu-loom Config UI** for entries on that backend, at that device's own page, instead of a config panel that is no longer registered for them. Direct-CCU entries keep the panel link
+- The address comes from the daemon (`config_ui_url`, derived from its `north.rest.public_url`) rather than being guessed here. The address this integration connects on may be a container or proxy-internal one that no browser can follow; only the operator knows the public one. Without it the link falls back to the connection address, which is right for a LAN-direct install — and when neither is available no link is offered, rather than one that leads nowhere
 
 ### Dependencies
 
-- Bump `openccu-loom-client` to `2026.8.8` (pins `openccu-loom-types==0.3.6`,
-  daemon API 5.9.0). **This raises the minimum daemon: openccu-loom 0.55.1 or
+- Bump `openccu-loom-client` to `2026.8.9` (pins `openccu-loom-types==0.3.10`,
+  daemon API 5.14.0). **This raises the minimum daemon: openccu-loom 0.57.0 or
   newer.** The client refuses to connect to a lower API minor rather than
   half-initializing against it, so an older daemon fails at `connect()` with a
-  clear message instead of producing bootstrap errors later. Entries on the
-  direct-CCU backend are unaffected — the client is only loaded for the loom
-  backend
+  clear message instead of producing bootstrap errors later. It also carries the
+  daemon's `config_ui_url` through to `central.config_ui_url`, which is what the
+  device link below reads. Entries on the direct-CCU backend are unaffected —
+  the client is only loaded for the loom backend
 
 # Version [2.9.0](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.9.0) (2026-08-07)
 

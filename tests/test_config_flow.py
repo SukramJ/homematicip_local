@@ -3309,14 +3309,14 @@ class TestOptionsFlowLoom:
         assert form["type"] == FlowResultType.FORM
         assert form["step_id"] == "advanced_settings"
         keys = {str(k.schema) for k in form["data_schema"].schema}
-        assert keys == {CONF_ENABLE_SYSTEM_NOTIFICATIONS, CONF_ENABLE_SUB_DEVICES, CONF_DISABLE_CONFIG_PANEL}
+        # The config-panel toggle is absent: loom entries register no panel.
+        assert keys == {CONF_ENABLE_SYSTEM_NOTIFICATIONS, CONF_ENABLE_SUB_DEVICES}
 
         done = await hass.config_entries.options.async_configure(
             result["flow_id"],
             {
                 CONF_ENABLE_SYSTEM_NOTIFICATIONS: False,
                 CONF_ENABLE_SUB_DEVICES: True,
-                CONF_DISABLE_CONFIG_PANEL: True,
             },
         )
         await hass.async_block_till_done()
@@ -3325,7 +3325,6 @@ class TestOptionsFlowLoom:
         advanced = entry.data[CONST_ADVANCED_CONFIG]
         assert advanced[CONF_ENABLE_SYSTEM_NOTIFICATIONS] is False
         assert advanced[CONF_ENABLE_SUB_DEVICES] is True
-        assert advanced[CONF_DISABLE_CONFIG_PANEL] is True
 
     async def test_loom_connection_invalid(self, hass: HomeAssistant) -> None:
         """An invalid loom connection surfaces an error and re-shows the form."""
@@ -3392,7 +3391,10 @@ class TestLoomFlowHelpers:
     def test_get_loom_advanced_settings_schema_fields(self) -> None:
         schema = get_loom_advanced_settings_schema(data={})
         keys = {str(k.schema) for k in schema.schema}
-        assert keys == {CONF_ENABLE_SYSTEM_NOTIFICATIONS, CONF_ENABLE_SUB_DEVICES, CONF_DISABLE_CONFIG_PANEL}
+        # No config-panel toggle: the panel is not registered for loom
+        # entries at all, so the switch would offer a choice that does not
+        # exist. Device pages link at the daemon's Config UI instead.
+        assert keys == {CONF_ENABLE_SYSTEM_NOTIFICATIONS, CONF_ENABLE_SUB_DEVICES}
 
     def test_get_loom_data_sets_and_clears(self) -> None:
         base = {CONF_LOOM_PORT: 1, CONF_LOOM_TOKEN: "x"}
