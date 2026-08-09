@@ -250,6 +250,36 @@ class BaseControlUnit:
         """Return the Homematic(IP) Local config entry id."""
         return self._entry_id
 
+    def device_configuration_url(self, *, address: str, interface_id: str) -> str | None:
+        """
+        Return the "Configure" target for a device page, or ``None``.
+
+        The two backends answer differently because they own different
+        editors. On the direct-CCU backend that is this integration's own
+        config panel. On openccu-loom the panel is not registered at all —
+        the daemon's Config UI covers the same ground for every CCU it
+        serves — so the link points there instead.
+
+        The loom address is the daemon's own answer (``config_ui_url``,
+        from the operator's ``north.rest.public_url``) before it is a
+        guess: the address this integration uses to reach the daemon may
+        be a container or proxy-internal one that a browser cannot follow.
+        Guessing from it is the fallback, not the first choice, and
+        returning ``None`` is better than a link into nothing.
+        """
+        if self._config.backend == BACKEND_LOOM:
+            if base := _loom_config_ui_base(central=self._central):
+                return f"{base}#/devices/{address}"
+            return None
+        if self._disable_config_panel:
+            return None
+        return (
+            f"homeassistant://homematic-config#view=device-detail"
+            f"&entry={self._entry_id}"
+            f"&device={address}"
+            f"&interface={interface_id}"
+        )
+
     async def start_central(self) -> None:
         """Start the central unit."""
         _LOGGER.debug(
@@ -1507,6 +1537,24 @@ async def validate_config_and_get_system_information(
 def get_storage_directory(*, hass: HomeAssistant) -> str:
     """Return the base path where to store files for this integration."""
     return f"{hass.config.config_dir}/{DOMAIN}"
+
+
+def _loom_config_ui_base(*, central: Any) -> str:
+    """
+    Return the loom Config-UI base URL, or ``""`` when none can be built.
+
+    Prefers the daemon's own answer over anything derived here. The
+    address this integration connects on may be a container or
+    proxy-internal one that no browser can follow, which is precisely the
+    case ``north.rest.public_url`` exists to record.
+    """
+    if configured := str(getattr(central, "config_ui_url", "") or ""):
+        return configured
+    # Derived fallback: correct for a LAN-direct install, wrong behind a
+    # reverse proxy. Better than nothing, worse than a declared value.
+    if not (url := str(getattr(central, "url", "") or "")):
+        return ""
+    return url.removesuffix("/api/v1").rstrip("/") + "/app/"
 
 
 def _cleanup_instance_name(*, instance_name: str) -> str:

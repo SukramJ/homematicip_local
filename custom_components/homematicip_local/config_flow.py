@@ -788,6 +788,10 @@ def get_loom_advanced_settings_schema(data: ConfigType) -> Schema:
     behaviour, firmware, device creation) per-central, so only the HA-side
     toggles remain configurable here. Callbacks, MQTT, command pacing and
     interface/parameter options are the daemon's concern and are omitted.
+
+    The config-panel toggle is omitted too: the panel is not registered
+    for loom entries at all, so the switch would offer a choice that does
+    not exist. Device pages link at the daemon's own Config UI instead.
     """
     advanced_config = data.get(CONF_ADVANCED_CONFIG, {})
     return vol.Schema(
@@ -799,10 +803,6 @@ def get_loom_advanced_settings_schema(data: ConfigType) -> Schema:
             vol.Optional(
                 CONF_ENABLE_SUB_DEVICES,
                 default=advanced_config.get(CONF_ENABLE_SUB_DEVICES, DEFAULT_ENABLE_SUB_DEVICES),
-            ): BOOLEAN_SELECTOR,
-            vol.Optional(
-                CONF_DISABLE_CONFIG_PANEL,
-                default=advanced_config.get(CONF_DISABLE_CONFIG_PANEL, DEFAULT_DISABLE_CONFIG_PANEL),
             ): BOOLEAN_SELECTOR,
         }
     )
