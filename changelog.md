@@ -2,47 +2,20 @@
 
 ## What's Changed
 
-### Config panel
+### Development
 
-- **The config panel is no longer shown at all for entries running on the openccu-loom backend.** It listed inbox, service and alarm messages, install mode, firmware, signal quality, backup and system information, plus paramsets, direct links, schedules and change history — for the one CCU behind the selected entry. The loom daemon's own Config UI covers every one of those for **every** CCU it serves, including the radio load and device statistics, which it shows per interface rather than per config entry. Two surfaces claiming the same capability, the visible one narrower, is worse than one; the daemon is the side that owns the state
-- The panel is unchanged for entries on the direct-CCU backend. It is registered once for the whole integration, so a mixed installation still has it — its entry picker simply no longer offers the loom entries
-- The advanced-settings option "Disable config panel" is gone from the loom flow. It offered a choice that no longer exists there
-
-### Devices
-
-- **A device page's "Configure" link now opens the openccu-loom Config UI** for entries on that backend, at that device's own page, instead of a config panel that is no longer registered for them. Direct-CCU entries keep the panel link
-- The address comes from the daemon (`config_ui_url`, derived from its `north.rest.public_url`) rather than being guessed here. The address this integration connects on may be a container or proxy-internal one that no browser can follow; only the operator knows the public one. Without it the link falls back to the connection address, which is right for a LAN-direct install — and when neither is available no link is offered, rather than one that leads nowhere
+- The openccu-loom backend (Beta) hands its CCU, diagnostics and configuration surfaces to the daemon, which owns that state and covers it for every CCU it serves: the config panel is no longer registered for loom entries, and their device pages link to the daemon's own Config UI instead. Entries on the direct-CCU backend are unchanged — the panel is registered once for the whole integration, so a mixed installation keeps it. The user-facing details stay out of scope for this changelog until the backend leaves Beta
 
 ### Dependencies
 
 #### Bump aiohomematic to [2026.8.2](https://github.com/SukramJ/aiohomematic/compare/2026.8.1...2026.8.2)
 
-- Fix the calculated sensors (`DEW_POINT`, `VAPOR_CONCENTRATION`, `FROST_POINT`,
-  `ENTHALPY`, `DEW_POINT_SPREAD`, `APPARENT_TEMPERATURE`, `OPERATING_VOLTAGE_LEVEL`)
-  freezing on their restored state after the update to 2026.8.1, while the underlying
-  temperature and humidity entities kept updating (#3343). Their source data points were
-  resolved lazily on first value access, which the climate sensors never triggered — and
-  with the stricter validity gating of 2026.8.1 an unresolved source set reported
-  `is_valid=False`. Home Assistant reads validity before the value, so it kept serving
-  the restored state and never performed the read that would have resolved the sources;
-  the per-source update subscription is created during that same resolution, so no source
-  update reached the calculated data point either. Sources are now resolved when the
-  calculated data point is constructed. This regression affects everyone who updated to
-  2.9.1's predecessor dependency set — **updating is recommended for all installations**
-- The change is backed by a new contract test in aiohomematic that pins source resolution
-  and subscription at construction time, so a calculated data point can report its
-  validity without a prior value read
+- Fix the calculated sensors (`DEW_POINT`, `VAPOR_CONCENTRATION`, `FROST_POINT`, `ENTHALPY`, `DEW_POINT_SPREAD`, `APPARENT_TEMPERATURE`, `OPERATING_VOLTAGE_LEVEL`) freezing on their restored state after the update to 2026.8.1, while the underlying temperature and humidity entities kept updating (#3343). Their source data points were resolved lazily on first value access, which the climate sensors never triggered — and with the stricter validity gating of 2026.8.1 an unresolved source set reported `is_valid=False`. Home Assistant reads validity before the value, so it kept serving the restored state and never performed the read that would have resolved the sources; the per-source update subscription is created during that same resolution, so no source update reached the calculated data point either. Sources are now resolved when the calculated data point is constructed. The regression affects every installation running 2.9.0 — **updating is recommended for all installations**
+- The change is backed by a new contract test in aiohomematic that pins source resolution and subscription at construction time, so a calculated data point can report its validity without a prior value read
 
-#### Other dependencies
+#### Bump openccu-loom-client to `2026.8.9` (pins `openccu-loom-types==0.3.10`)
 
-- Bump `openccu-loom-client` to `2026.8.9` (pins `openccu-loom-types==0.3.10`,
-  daemon API 5.14.0). **This raises the minimum daemon: openccu-loom 0.57.0 or
-  newer.** The client refuses to connect to a lower API minor rather than
-  half-initializing against it, so an older daemon fails at `connect()` with a
-  clear message instead of producing bootstrap errors later. It also carries the
-  daemon's `config_ui_url` through to `central.config_ui_url`, which is what the
-  device link below reads. Entries on the direct-CCU backend are unaffected —
-  the client is only loaded for the loom backend
+- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. Advances the bundled loom client from `2026.8.6` to `2026.8.9` and its transitively pinned `openccu-loom-types` from `0.3.3` to `0.3.10`. **It raises the minimum daemon to openccu-loom 0.57.0 or newer** — the client refuses to connect to a lower API minor rather than half-initializing against it
 
 # Version [2.9.0](https://github.com/SukramJ/homematicip_local/compare/2.8.3...2.9.0) (2026-08-07)
 
