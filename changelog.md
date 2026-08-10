@@ -1,4 +1,4 @@
-# Version [2.9.1](https://github.com/SukramJ/homematicip_local/compare/2.9.0...2.9.1) (2026-08-08)
+# Version [2.9.1](https://github.com/SukramJ/homematicip_local/compare/2.9.0...2.9.1) (2026-08-10)
 
 ## What's Changed
 
@@ -14,6 +14,26 @@
 - The address comes from the daemon (`config_ui_url`, derived from its `north.rest.public_url`) rather than being guessed here. The address this integration connects on may be a container or proxy-internal one that no browser can follow; only the operator knows the public one. Without it the link falls back to the connection address, which is right for a LAN-direct install — and when neither is available no link is offered, rather than one that leads nowhere
 
 ### Dependencies
+
+#### Bump aiohomematic to [2026.8.2](https://github.com/SukramJ/aiohomematic/compare/2026.8.1...2026.8.2)
+
+- Fix the calculated sensors (`DEW_POINT`, `VAPOR_CONCENTRATION`, `FROST_POINT`,
+  `ENTHALPY`, `DEW_POINT_SPREAD`, `APPARENT_TEMPERATURE`, `OPERATING_VOLTAGE_LEVEL`)
+  freezing on their restored state after the update to 2026.8.1, while the underlying
+  temperature and humidity entities kept updating (#3343). Their source data points were
+  resolved lazily on first value access, which the climate sensors never triggered — and
+  with the stricter validity gating of 2026.8.1 an unresolved source set reported
+  `is_valid=False`. Home Assistant reads validity before the value, so it kept serving
+  the restored state and never performed the read that would have resolved the sources;
+  the per-source update subscription is created during that same resolution, so no source
+  update reached the calculated data point either. Sources are now resolved when the
+  calculated data point is constructed. This regression affects everyone who updated to
+  2.9.1's predecessor dependency set — **updating is recommended for all installations**
+- The change is backed by a new contract test in aiohomematic that pins source resolution
+  and subscription at construction time, so a calculated data point can report its
+  validity without a prior value read
+
+#### Other dependencies
 
 - Bump `openccu-loom-client` to `2026.8.9` (pins `openccu-loom-types==0.3.10`,
   daemon API 5.14.0). **This raises the minimum daemon: openccu-loom 0.57.0 or
