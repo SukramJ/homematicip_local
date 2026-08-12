@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 import logging
-from typing import Any, Final, cast, override
+from typing import TYPE_CHECKING, Any, Final, cast, override
 
 from aiohomematic.const import DEFAULT_MULTIPLIER, DataPointCategory, DataPointType, HubValueType, ParameterType
 from aiohomematic.interfaces import (
@@ -17,24 +17,33 @@ from aiohomematic.interfaces import (
 from aiohomematic.model.hub import SysvarDpSensor
 from aiohomematic.model.week_profile_data_point import WeekProfileDataPoint
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass, SensorEntity, SensorStateClass
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType, UndefinedType
 
 from . import HomematicConfigEntry
-from .const import CLIMATE_SCHEDULE_API_VERSION, SCHEDULE_API_VERSION, HmEntityState
+from .backend_types import LOOM_DP_ALARM_CONTROL_PANEL
+from .const import CLIMATE_SCHEDULE_API_VERSION, DOMAIN, SCHEDULE_API_VERSION, HmEntityState
 from .control_unit import ControlUnit, signal_new_data_point
 from .entity_helpers import HmSensorEntityDescription
 from .generic_entity import (
     ATTR_SCHEDULE_DATA,
     ATTR_VALUE_STATE,
+    AioHomematicAlarmEntity,
     AioHomematicGenericEntity,
     AioHomematicGenericHubEntity,
     AioHomematicGenericSysvarEntity,
     get_schedule_name,
 )
+
+if TYPE_CHECKING:
+    # Typing-only: the loom twin is absent on a CCU-only install, where the
+    # dispatch tuple is empty and this entity is never constructed.
+    from openccu_loom_client.compat.aiohomematic.model.alarm_panel import LoomDpAlarmControlPanel
+
+    from aiohomematic.interfaces.model import GenericHubDataPointProtocol
 
 ATTR_CURRENT_SCHEDULE_PROFILE: Final = "active_profile"
 ATTR_AVAILABLE_PROFILES: Final = "available_profiles"
@@ -103,6 +112,19 @@ async def async_setup_entry(
         ]:
             async_add_entities(entities)
 
+    @callback
+    def async_add_alarm_triggered_motion_sensor(data_points: tuple[Any, ...]) -> None:
+        """Add a latched-detector counter per alarm panel (openccu-loom only)."""
+        _LOGGER.debug("ASYNC_ADD_ALARM_TRIGGERED_MOTION_SENSOR: Adding %i data points", len(data_points))
+
+        if entities := [
+            AioHomematicAlarmTriggeredMotionSensor(control_unit=control_unit, data_point=data_point)
+            for data_point in data_points
+            # Loom-only surface: the tuple is empty on a CCU-only install.
+            if isinstance(data_point, LOOM_DP_ALARM_CONTROL_PANEL)
+        ]:
+            async_add_entities(entities)
+
     entry.async_on_unload(
         func=async_dispatcher_connect(
             hass=hass,
@@ -124,6 +146,15 @@ async def async_setup_entry(
             target=async_add_week_profile_sensor,
         )
     )
+    # The counter rides the alarm panel data point, so it spawns off the same
+    # announce a panel does — including a zone created at runtime.
+    entry.async_on_unload(
+        func=async_dispatcher_connect(
+            hass=hass,
+            signal=signal_new_data_point(entry_id=entry.entry_id, platform=DataPointCategory.ALARM_CONTROL_PANEL),
+            target=async_add_alarm_triggered_motion_sensor,
+        )
+    )
 
     async_add_sensor(
         data_points=control_unit.get_new_data_points(
@@ -137,6 +168,10 @@ async def async_setup_entry(
         data_points=control_unit.get_new_data_points(
             data_point_type=DataPointType.SENSOR, category=DataPointCategory.WEEK_PROFILE
         )
+    )
+
+    async_add_alarm_triggered_motion_sensor(
+        data_points=control_unit.get_new_data_points(data_point_type=DataPointType.ALARM_CONTROL_PANEL)
     )
 
 
@@ -328,3 +363,65 @@ class AioHomematicWeekProfileSensor(AioHomematicGenericEntity[WeekProfileDataPoi
     def native_value(self) -> int:
         """Return the number of active schedule entries."""
         return self._data_point.value
+
+
+class AioHomematicAlarmTriggeredMotionSensor(AioHomematicAlarmEntity, SensorEntity):
+    """
+    Counts the latched detectors a motion reset would clear (openccu-loom).
+
+    The number beside the reset button, and the answer to "why will this
+    zone not arm": a detector holding its ``MOTION`` flag reads as open
+    and blocks arming until the flag clears. The master panel's counter
+    covers every zone, which is the scope its aggregate reset writes.
+
+    Diagnostic on purpose — unlike the button next to it, this reports
+    rather than acts. The count and the reset come from one daemon-side
+    predicate, so it can never name a detector the button would skip.
+    """
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "alarm_triggered_motion"
+
+    def __init__(
+        self,
+        control_unit: ControlUnit,
+        data_point: LoomDpAlarmControlPanel,
+    ) -> None:
+        """Initialize the latched-detector counter."""
+        super().__init__(
+            control_unit=control_unit,
+            # Same structural-satisfaction cast the panel platform makes:
+            # only the enum homes differ nominally.
+            data_point=cast("GenericHubDataPointProtocol", data_point),
+        )
+        # The base keys the unique id on the data point alone, which the
+        # panel entity already claims — this rides the same data point.
+        self._attr_unique_id = f"{DOMAIN}_{data_point.unique_id}_triggered_motion"
+        # One device holds every zone, so the zone has to be in the entity
+        # name or the counters are indistinguishable.
+        self._attr_translation_placeholders = {"zone": data_point.name}
+
+    @property
+    def _panel(self) -> LoomDpAlarmControlPanel:
+        """Return the data point as its concrete loom type."""
+        return cast("LoomDpAlarmControlPanel", self._data_point)
+
+    @property
+    @override
+    def name(self) -> str | UndefinedType | None:
+        """
+        Return Home Assistant's own composed name.
+
+        The hub base prefers the data point's daemon-resolved name, which
+        belongs to the *panel* this entity rides — taking it would leave
+        the counter and the panel sharing one name. This entity is named
+        by the integration, so the normal translation lookup applies.
+        """
+        return super(AioHomematicGenericHubEntity, self).name
+
+    @property
+    @override
+    def native_value(self) -> int:
+        """Return how many detectors are currently latched."""
+        return self._panel.triggered_motion_count

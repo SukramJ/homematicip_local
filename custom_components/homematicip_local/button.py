@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohomematic.const import DataPointCategory, DataPointType
 from aiohomematic.exceptions import BaseHomematicException
@@ -15,11 +15,27 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UndefinedType
 
 from . import HomematicConfigEntry
+from .backend_types import LOOM_DP_ALARM_CONTROL_PANEL
 from .const import DOMAIN
 from .control_unit import ControlUnit, signal_new_data_point
-from .generic_entity import ATTR_DESCRIPTION, ATTR_NAME, AioHomematicGenericEntity, AioHomematicGenericHubEntity
+from .generic_entity import (
+    ATTR_DESCRIPTION,
+    ATTR_NAME,
+    AioHomematicAlarmEntity,
+    AioHomematicGenericEntity,
+    AioHomematicGenericHubEntity,
+)
+from .support import handle_homematic_errors
+
+if TYPE_CHECKING:
+    # Typing-only: the loom twin is absent on a CCU-only install, where the
+    # dispatch tuple is empty and this entity is never constructed.
+    from openccu_loom_client.compat.aiohomematic.model.alarm_panel import LoomDpAlarmControlPanel
+
+    from aiohomematic.interfaces.model import GenericHubDataPointProtocol
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,11 +72,34 @@ async def async_setup_entry(
         ]:
             async_add_entities(entities)
 
+    @callback
+    def async_add_alarm_motion_reset_button(data_points: tuple[Any, ...]) -> None:
+        """Add a motion-reset button per alarm panel (openccu-loom only)."""
+        _LOGGER.debug("ASYNC_ADD_ALARM_MOTION_RESET_BUTTON: Adding %i data points", len(data_points))
+
+        if entities := [
+            AioHomematicAlarmMotionResetButton(control_unit=control_unit, data_point=data_point)
+            for data_point in data_points
+            # Loom-only surface: the tuple is empty on a CCU-only install.
+            if isinstance(data_point, LOOM_DP_ALARM_CONTROL_PANEL)
+        ]:
+            async_add_entities(entities)
+
     entry.async_on_unload(
         func=async_dispatcher_connect(
             hass=hass,
             signal=signal_new_data_point(entry_id=entry.entry_id, platform=DataPointCategory.BUTTON),
             target=async_add_button,
+        )
+    )
+
+    # The reset button rides the alarm panel data point, so it spawns off the
+    # same announce a panel does — including a zone created at runtime.
+    entry.async_on_unload(
+        func=async_dispatcher_connect(
+            hass=hass,
+            signal=signal_new_data_point(entry_id=entry.entry_id, platform=DataPointCategory.ALARM_CONTROL_PANEL),
+            target=async_add_alarm_motion_reset_button,
         )
     )
 
@@ -79,6 +118,10 @@ async def async_setup_entry(
     )
 
     async_add_program_button(data_points=control_unit.get_new_hub_data_points(data_point_type=ProgramDpButton))
+
+    async_add_alarm_motion_reset_button(
+        data_points=control_unit.get_new_data_points(data_point_type=DataPointType.ALARM_CONTROL_PANEL)
+    )
 
     # Add hub-level backup button
     async_add_entities([HmipLocalCreateBackupButton(control_unit=control_unit)])
@@ -116,6 +159,84 @@ class AioHomematicProgramButton(AioHomematicGenericHubEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Execute a button press."""
         await self._data_point.press()
+
+
+class AioHomematicAlarmMotionResetButton(AioHomematicAlarmEntity, ButtonEntity):
+    """
+    Clears a zone's latched motion/presence detectors (openccu-loom).
+
+    A detector holds its ``MOTION`` flag until the device's own blocking
+    time expires, and reads as open until then — which blocks an arm or
+    forces an auto-bypass with nothing to do but wait. This is the
+    control that ends the wait; the daemon offers the same one in its own
+    UI and over MQTT.
+
+    Deliberately **not** ``EntityCategory.CONFIG``. openccu-loom shipped
+    it that way first and nobody found it: Home Assistant files config
+    entities into a collapsed section of the device page and keeps them
+    out of dashboards. This is an operator control, so it stays a plain
+    one; only the counter beside it is diagnostic.
+
+    Rides the panel data point, so it inherits the panel's availability,
+    its refresh subscription and its removal when a zone disappears.
+    """
+
+    _attr_translation_key = "alarm_reset_motion"
+
+    def __init__(
+        self,
+        control_unit: ControlUnit,
+        data_point: LoomDpAlarmControlPanel,
+    ) -> None:
+        """Initialize the motion-reset button."""
+        super().__init__(
+            control_unit=control_unit,
+            # Same structural-satisfaction cast the panel platform makes:
+            # only the enum homes differ nominally.
+            data_point=cast("GenericHubDataPointProtocol", data_point),
+        )
+        # The base keys the unique id on the data point alone, which the
+        # panel entity already claims — this rides the same data point.
+        self._attr_unique_id = f"{DOMAIN}_{data_point.unique_id}_reset_motion"
+        # One device holds every zone, so the zone has to be in the entity
+        # name or the buttons are indistinguishable. Mirrors the daemon's
+        # own MQTT naming ("<zone> — Reset motion").
+        self._attr_translation_placeholders = {"zone": data_point.name}
+
+    @property
+    def _panel(self) -> LoomDpAlarmControlPanel:
+        """Return the data point as its concrete loom type."""
+        return cast("LoomDpAlarmControlPanel", self._data_point)
+
+    @property
+    @override
+    def name(self) -> str | UndefinedType | None:
+        """
+        Return Home Assistant's own composed name.
+
+        The hub base prefers the data point's daemon-resolved name, which
+        belongs to the *panel* this entity rides — taking it would leave
+        the button and the panel sharing one name. This entity is named by
+        the integration, so the normal translation lookup applies.
+        """
+        return super(AioHomematicGenericHubEntity, self).name
+
+    @handle_homematic_errors
+    @override
+    async def async_press(self) -> None:
+        """Clear this zone's latched detectors (master: every zone)."""
+        result = await self._panel.reset_motion()
+        if result.failed:
+            # Not an error: the verb ran and the daemon reports the partial
+            # outcome in the body. Raising would claim nothing happened.
+            _LOGGER.warning(
+                "Motion reset for %s: %i detector(s) cleared, %i did not answer",
+                self._panel.name,
+                result.reset,
+                result.failed,
+            )
+        else:
+            _LOGGER.debug("Motion reset for %s: %i detector(s) cleared", self._panel.name, result.reset)
 
 
 class HmipLocalCreateBackupButton(ButtonEntity):

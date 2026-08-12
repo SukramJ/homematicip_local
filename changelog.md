@@ -1,3 +1,22 @@
+# Version [2.9.2](https://github.com/SukramJ/homematicip_local/compare/2.9.1...2.9.2) (2026-08-12)
+
+## What's Changed
+
+### Development
+
+- The openccu-loom alarm system (Beta) gets a device of its own, `OpenCCU-Loom Alarm`, and every alarm entity moves onto it. Alarm zones are daemon-level and may hold sensors of several CCUs, so listing the panels under one central stated a belonging that does not exist — and buried them among dozens of system variables, programs and diagnostic values. The device identifier is the daemon's own, so an installation that also runs the daemon's MQTT bridge sees one alarm device rather than two describing the same zones ([#89](https://github.com/SukramJ/openccu-loom-client/issues/89))
+- Latched motion detectors can be cleared from Home Assistant: a reset button per alarm zone plus one for the aggregate, and a diagnostic counter beside each. A motion detector holds its `MOTION` flag until the device's own blocking time expires, and reads as open until then — which blocks an arm or forces an auto-bypass with nothing to do but wait. The button ends the wait; the counter answers why a zone will not arm. Presence detectors are covered too, door contacts fall out by construction. Requires an openccu-loom daemon ≥ 0.58.1 — 0.58.0 shipped the routes but they were inert on real hardware ([#88](https://github.com/SukramJ/openccu-loom-client/issues/88))
+- The reset button is deliberately a plain control, not a config entity: the daemon shipped it as `config` first and nobody found it, because Home Assistant files such entities into a collapsed section of the device page and keeps them out of dashboards. Only the counter is diagnostic
+- The user-facing details of the loom backend stay out of scope for this changelog until it leaves Beta
+
+### Dependencies
+
+#### Bump openccu-loom-client to `2026.8.11` (pins `openccu-loom-types==0.3.14`)
+
+- Adds the alarm motion-reset surface the two entities above are built on: the REST verbs, `AlarmPanel.reset_motion()`, and the per-zone latched-detector count
+- The count is refreshed by re-reading rather than pushed — the daemon broadcasts no latch event — and the client schedules that read off the alarm events that can plausibly move a latch, coalescing bursts into one call
+- **This raises the daemon floor: the client refuses to connect to an openccu-loom below 0.58.3.** Installations on an older daemon should stay on 2.9.1 until the daemon is updated
+
 # Version [2.9.1](https://github.com/SukramJ/homematicip_local/compare/2.9.0...2.9.1) (2026-08-10)
 
 ## What's Changed

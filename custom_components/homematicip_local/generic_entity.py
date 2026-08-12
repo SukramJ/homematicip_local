@@ -27,7 +27,14 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UndefinedType
 
-from .const import DOMAIN, ENTITY_TRANSLATION_KEYS, HmEntityState
+from .const import (
+    ALARM_DEVICE_IDENTIFIER,
+    ALARM_DEVICE_MANUFACTURER,
+    ALARM_DEVICE_NAME,
+    DOMAIN,
+    ENTITY_TRANSLATION_KEYS,
+    HmEntityState,
+)
 from .control_unit import ControlUnit
 from .entity_helpers import get_entity_description
 from .support import (
@@ -619,6 +626,28 @@ class AioHomematicGenericHubEntity(Entity):
         return DeviceInfo(
             identifiers={(DOMAIN, self._data_point.channel.device.identifier)},
             suggested_area=self._data_point.channel.device.room,
+        )
+
+
+class AioHomematicAlarmEntity(AioHomematicGenericHubEntity):
+    """
+    Base for every openccu-loom alarm surface (panel, reset button, counter).
+
+    Exists for one reason: the alarm system is not part of any CCU. Its
+    zones live in the daemon and may hold sensors of several centrals, so
+    the hub default of attaching to the central's device states a
+    belonging that does not exist — and buries the panels among dozens of
+    sysvars and diagnostics while it is at it. Everything alarm-related
+    goes on one device of its own instead, matching the block the daemon
+    publishes over MQTT.
+    """
+
+    def _get_device_info(self) -> DeviceInfo | None:
+        """Return the shared alarm device instead of the central's."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, ALARM_DEVICE_IDENTIFIER)},
+            manufacturer=ALARM_DEVICE_MANUFACTURER,
+            name=ALARM_DEVICE_NAME,
         )
 
 
