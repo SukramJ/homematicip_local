@@ -35,7 +35,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomematicConfigEntry
 from .backend_types import LOOM_DP_ALARM_CONTROL_PANEL
 from .control_unit import ControlUnit, signal_new_data_point
-from .generic_entity import AioHomematicGenericHubEntity
+from .generic_entity import AioHomematicAlarmEntity
 from .support import handle_homematic_errors
 
 if TYPE_CHECKING:
@@ -97,7 +97,7 @@ async def async_setup_entry(
     )
 
 
-class AioHomematicAlarmControlPanel(AioHomematicGenericHubEntity, AlarmControlPanelEntity):
+class AioHomematicAlarmControlPanel(AioHomematicAlarmEntity, AlarmControlPanelEntity):
     """Representation of the HomematicIP alarm control panel entity (openccu-loom)."""
 
     def __init__(

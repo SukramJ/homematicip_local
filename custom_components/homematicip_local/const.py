@@ -10,6 +10,20 @@ from homeassistant.const import Platform
 
 DOMAIN: Final = "homematicip_local"
 HMIP_LOCAL_MIN_HA_VERSION: Final = "2026.7.0"
+
+# The openccu-loom alarm system gets a device registry object of its own
+# instead of hanging off a CCU. Alarm zones are daemon-level and may hold
+# sensors of several CCUs, so attributing them to one central states a
+# belonging that does not exist — which is also why the daemon's MQTT plane
+# omits the `<central>` segment from its alarm topics. The identifier is the
+# daemon's own (`alarm_discovery.go`, `alarmDeviceBlock`), so an installation
+# running both bridges sees one alarm device rather than two; it also matches
+# the scope of the panel unique_ids, which the daemon computes daemon-wide
+# rather than per central.
+ALARM_DEVICE_IDENTIFIER: Final = "openccu-loom_alarm"
+ALARM_DEVICE_MANUFACTURER: Final = "OpenCCU-Loom"
+ALARM_DEVICE_NAME: Final = "OpenCCU-Loom Alarm"
+
 ENABLE_EXPERIMENTAL_FEATURES: Final = False
 CLIMATE_SCHEDULE_API_VERSION: Final = "v2.0"
 SCHEDULE_API_VERSION: Final = "v1.0"

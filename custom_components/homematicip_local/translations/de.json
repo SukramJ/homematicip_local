@@ -272,6 +272,9 @@
             }
         }, 
         "button": {
+            "alarm_reset_motion": {
+                "name": "{zone} Bewegung zurücksetzen"
+            }, 
             "create_backup": {
                 "name": "Backup erstellen"
             }, 
@@ -369,6 +372,9 @@
         "sensor": {
             "alarm_messages": {
                 "name": "Alarmmeldungen"
+            }, 
+            "alarm_triggered_motion": {
+                "name": "{zone} Ausgelöste Bewegungsmelder"
             }, 
             "carrier_sense_level": {
                 "name": "Carrier Sense Level"

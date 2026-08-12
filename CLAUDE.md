@@ -24,7 +24,7 @@ This document provides comprehensive guidance for AI assistants working with the
 
 **Project Name:** Homematic(IP) Local for OpenCCU
 **Type:** Home Assistant Custom Integration
-**Version:** 2.9.1
+**Version:** 2.9.2
 **Primary Language:** Python 3.14+
 **Domain:** `homematicip_local`
 
@@ -118,7 +118,7 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2026.8.1) - Core async library for Homematic device communication
+- **aiohomematic** (v2026.8.2) - Core async library for Homematic device communication
 - **aiohomematic-config** (v2026.8.0) - Device configuration metadata
 - **Home Assistant Core** - Minimum version: 2026.7.0+
 - **Python 3.14+** (target version for development)
@@ -1123,10 +1123,10 @@ make hass
 
 ### Version Information
 
-- **Current Version:** 2.9.1
+- **Current Version:** 2.9.2
 - **Minimum HA Version:** 2026.7.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
-- **aiohomematic Version:** 2026.8.1
+- **aiohomematic Version:** 2026.8.2
 
 ### External Resources
 
@@ -1139,5 +1139,5 @@ make hass
 
 ---
 
-**Last Updated**: 2026-08-07
-**Version**: 2.9.1
+**Last Updated**: 2026-08-12
+**Version**: 2.9.2
