@@ -20,8 +20,20 @@ from custom_components.homematicip_local.sensor import AioHomematicAlarmTriggere
 _PANEL_UNIQUE_ID = "openccu-loom_alarm_erdgeschoss"
 
 
-def _create_mock_panel(*, zone_name: str = "Erdgeschoss", triggered_motion_count: int = 0) -> MagicMock:
-    """Create a mock LoomDpAlarmControlPanel."""
+def _create_mock_panel(
+    *,
+    zone_name: str = "Erdgeschoss",
+    triggered_motion_count: int = 0,
+    daemon_names: bool = False,
+) -> MagicMock:
+    """
+    Create a mock LoomDpAlarmControlPanel.
+
+    ``daemon_names`` decides whether the daemon's entity-name catalogue
+    reached the client: without it the panel answers ``None`` for both
+    companion names, which is what a daemon older than api 5.2.0 leaves
+    behind.
+    """
     mock_dp = MagicMock()
     mock_dp.unique_id = _PANEL_UNIQUE_ID
     mock_dp.configure_mock(name=zone_name)
@@ -32,6 +44,8 @@ def _create_mock_panel(*, zone_name: str = "Erdgeschoss", triggered_motion_count
     mock_dp.resolved_name = zone_name
     mock_dp.triggered_motion_count = triggered_motion_count
     mock_dp.reset_motion = AsyncMock(return_value=MagicMock(reset=0, failed=0))
+    mock_dp.reset_motion_name = f"{zone_name} — Bewegung zurücksetzen" if daemon_names else None
+    mock_dp.triggered_motion_name = f"{zone_name} — Ausgelöste Bewegungsmelder" if daemon_names else None
     return mock_dp
 
 
@@ -118,6 +132,35 @@ class TestMotionResetButton:
         await button.async_press()
         panel.reset_motion.assert_awaited_once_with()
 
+    def test_the_daemon_names_the_button(self) -> None:
+        """
+        openccu-loom is the naming authority for its own entities.
+
+        The same words live in the daemon's i18n catalogue and in this
+        integration's `strings.json`; rendering the daemon's copy is what
+        keeps a zone reading identically whether Home Assistant learned it
+        through this backend or through the daemon's MQTT bridge.
+        """
+        button = _create_entity(
+            AioHomematicAlarmMotionResetButton,
+            mock_dp=_create_mock_panel(zone_name="Obergeschoss", daemon_names=True),
+        )
+        assert button.name == "Obergeschoss — Bewegung zurücksetzen"
+
+    def test_the_translated_name_is_not_shadowed(self) -> None:
+        """
+        A translation key alone does not name an entity.
+
+        `Entity.name` hands back `_attr_name` before it ever consults the
+        catalogue, and the hub base sets that attribute from the data
+        point — which here is the *panel* this button rides. Left in
+        place it leaves the button, the counter and the panel all called
+        after the bare zone, and it would shadow the local fallback the
+        moment the daemon has no name to offer.
+        """
+        button = _create_entity(AioHomematicAlarmMotionResetButton, mock_dp=_create_mock_panel())
+        assert not hasattr(button, "_attr_name")
+
     def test_the_zone_reaches_the_entity_name(self) -> None:
         """One device holds every zone, so the name has to carry it."""
         button = _create_entity(
@@ -151,6 +194,32 @@ class TestTriggeredMotionSensor:
             AioHomematicAlarmTriggeredMotionSensor, mock_dp=_create_mock_panel(triggered_motion_count=3)
         )
         assert sensor.native_value == 3
+
+    def test_the_daemon_names_the_counter(self) -> None:
+        """Same naming authority as the button beside it."""
+        sensor = _create_entity(
+            AioHomematicAlarmTriggeredMotionSensor,
+            mock_dp=_create_mock_panel(zone_name="Obergeschoss", daemon_names=True),
+        )
+        assert sensor.name == "Obergeschoss — Ausgelöste Bewegungsmelder"
+
+    def test_the_translated_name_is_not_shadowed(self) -> None:
+        """
+        Same shadowing as the button beside it — see that test.
+
+        A counter named after the bare zone is worse than useless on the
+        diagnostics list: three of them, all reading like the panels.
+        """
+        sensor = _create_entity(AioHomematicAlarmTriggeredMotionSensor, mock_dp=_create_mock_panel())
+        assert not hasattr(sensor, "_attr_name")
+
+    def test_the_zone_reaches_the_entity_name(self) -> None:
+        """One device holds every zone, so the name has to carry it."""
+        sensor = _create_entity(
+            AioHomematicAlarmTriggeredMotionSensor, mock_dp=_create_mock_panel(zone_name="Obergeschoss")
+        )
+        assert sensor._attr_translation_key == "alarm_triggered_motion"
+        assert sensor._attr_translation_placeholders == {"zone": "Obergeschoss"}
 
     def test_unique_id_does_not_collide_with_the_panel(self) -> None:
         sensor = _create_entity(AioHomematicAlarmTriggeredMotionSensor, mock_dp=_create_mock_panel())

@@ -399,7 +399,8 @@ class AioHomematicAlarmTriggeredMotionSensor(AioHomematicAlarmEntity, SensorEnti
         # panel entity already claims — this rides the same data point.
         self._attr_unique_id = f"{DOMAIN}_{data_point.unique_id}_triggered_motion"
         # One device holds every zone, so the zone has to be in the entity
-        # name or the counters are indistinguishable.
+        # name or the counters are indistinguishable. Only used when the
+        # daemon's own name is unavailable — see `name`.
         self._attr_translation_placeholders = {"zone": data_point.name}
 
     @property
@@ -411,13 +412,15 @@ class AioHomematicAlarmTriggeredMotionSensor(AioHomematicAlarmEntity, SensorEnti
     @override
     def name(self) -> str | UndefinedType | None:
         """
-        Return Home Assistant's own composed name.
+        Return the daemon's name for this counter, else compose one here.
 
-        The hub base prefers the data point's daemon-resolved name, which
-        belongs to the *panel* this entity rides — taking it would leave
-        the counter and the panel sharing one name. This entity is named
-        by the integration, so the normal translation lookup applies.
+        Same naming authority as the button beside it — see
+        `AioHomematicAlarmMotionResetButton.name` for why the daemon's
+        copy wins, why the local translation is the fallback rather than
+        the rule, and why the panel's own resolved name is not used.
         """
+        if isinstance(daemon_name := self._panel.triggered_motion_name, str) and daemon_name:
+            return daemon_name
         return super(AioHomematicGenericHubEntity, self).name
 
     @property

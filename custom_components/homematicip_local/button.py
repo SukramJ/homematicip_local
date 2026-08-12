@@ -199,8 +199,8 @@ class AioHomematicAlarmMotionResetButton(AioHomematicAlarmEntity, ButtonEntity):
         # panel entity already claims — this rides the same data point.
         self._attr_unique_id = f"{DOMAIN}_{data_point.unique_id}_reset_motion"
         # One device holds every zone, so the zone has to be in the entity
-        # name or the buttons are indistinguishable. Mirrors the daemon's
-        # own MQTT naming ("<zone> — Reset motion").
+        # name or the buttons are indistinguishable. Only used when the
+        # daemon's own name is unavailable — see `name`.
         self._attr_translation_placeholders = {"zone": data_point.name}
 
     @property
@@ -212,13 +212,27 @@ class AioHomematicAlarmMotionResetButton(AioHomematicAlarmEntity, ButtonEntity):
     @override
     def name(self) -> str | UndefinedType | None:
         """
-        Return Home Assistant's own composed name.
+        Return the daemon's name for this button, else compose one here.
 
-        The hub base prefers the data point's daemon-resolved name, which
-        belongs to the *panel* this entity rides — taking it would leave
-        the button and the panel sharing one name. This entity is named by
-        the integration, so the normal translation lookup applies.
+        openccu-loom is the naming authority for its own entities and has
+        named this button in its i18n catalogue all along — the words
+        just never left the MQTT discovery plane, so this integration
+        wrote them a second time. Rendering the daemon's copy is what
+        keeps a zone reading the same whether Home Assistant learned it
+        through this backend or through the daemon's MQTT bridge.
+
+        The fallback below is the local translation, which a daemon
+        without the catalogue route leaves in charge. Note what is *not*
+        used: the hub base prefers the data point's own resolved name,
+        and that name belongs to the *panel* this entity rides — taking
+        it would leave the button and the panel sharing one name.
+
+        The isinstance check is not belt-and-braces: `getattr` on a mock
+        answers with a truthy mock, and a bare truthiness test would make
+        every mocked panel in a test suite take this branch.
         """
+        if isinstance(daemon_name := self._panel.reset_motion_name, str) and daemon_name:
+            return daemon_name
         return super(AioHomematicGenericHubEntity, self).name
 
     @handle_homematic_errors
