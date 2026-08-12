@@ -273,7 +273,7 @@
     },
     "button": {
       "alarm_reset_motion": {
-        "name": "{zone} reset motion"
+        "name": "{zone} — Reset motion"
       },
       "create_backup": {
         "name": "Create Backup"
@@ -374,7 +374,7 @@
         "name": "Alarm messages"
       },
       "alarm_triggered_motion": {
-        "name": "{zone} triggered motion detectors"
+        "name": "{zone} — Triggered motion detectors"
       },
       "carrier_sense_level": {
         "name": "Carrier Sense Level"

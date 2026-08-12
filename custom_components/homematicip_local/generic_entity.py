@@ -502,7 +502,14 @@ class AioHomematicGenericHubEntity(Entity):
             self._attr_entity_registry_enabled_default = data_point.enabled_default
             if isinstance(data_point, GenericSysvarDataPointProtocol):
                 self._attr_translation_key = data_point.name.lower()
-            else:
+            elif getattr(self, "_attr_translation_key", None) is None:
+                # A subclass that declares its own translation key names itself
+                # out of this integration's catalogue. Setting `_attr_name` here
+                # would silently win over that: `Entity.name` hands the attribute
+                # back before it ever looks a key up. Entities riding another
+                # entity's data point — the alarm reset button and its counter
+                # ride the panel — would end up named after that data point,
+                # indistinguishable from the entity they accompany.
                 self._attr_name = data_point.name
 
         self._attr_device_info = self._get_device_info()
