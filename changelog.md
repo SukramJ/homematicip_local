@@ -1,16 +1,22 @@
-# Version [2.9.2](https://github.com/SukramJ/homematicip_local/compare/2.9.1...2.9.2) (2026-08-12)
+# Version [2.9.2](https://github.com/SukramJ/homematicip_local/compare/2.9.1...2.9.2) (2026-08-16)
 
 ## What's Changed
 
 ### Development
 
-- This release is openccu-loom backend (Beta) work only; the direct-CCU backend is unchanged. The user-facing details of the loom backend stay out of scope for this changelog until it leaves Beta
+- The integration's own changes in this release are openccu-loom backend (Beta) work; the direct-CCU backend gains support for two new devices through the aiohomematic bump below. The user-facing details of the loom backend stay out of scope for this changelog until it leaves Beta
 
 ### Dependencies
 
-#### Bump openccu-loom-client to `2026.8.12` (pins `openccu-loom-types==0.3.14`)
+#### Bump aiohomematic to [2026.8.3](https://github.com/SukramJ/aiohomematic/compare/2026.8.2...2026.8.3)
 
-- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. Advances the bundled loom client from `2026.8.9` to `2026.8.12` and its transitively pinned `openccu-loom-types` from `0.3.10` to `0.3.14`. **It raises the minimum daemon to openccu-loom 0.58.3 or newer** — the client refuses to connect to a lower API minor rather than half-initializing against it. Installations on an older daemon should stay on 2.9.1 until the daemon is updated
+- Add support for the flush-mount switch actuators `HmIP-FS6` and `HmIP-FSI6`. `HmIP-FS6` has no input channel, so it shares the channel layout of `HmIP-FSM` and is now registered as a switch profile on channel 2 — without that registration it only produced generic data points. `OPERATING_VOLTAGE` is ignored for it as well, consistent with the other mains-powered actuators
+- Expose `CHANNEL_OPERATION_MODE` on channel 1 of `HmIP-FSI6`. The custom switch data point of that device already worked, but the un-ignore rule was keyed on `HmIP-FSI16` only — model keys are matched with `str.startswith`, and `"hmip-fsi6".startswith("hmip-fsi16")` is `False`, so the operation mode of the push-button input stayed hidden
+
+#### Bump openccu-loom-client to `2026.8.13` (pins `openccu-loom-types==0.4.0`)
+
+- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. Advances the bundled loom client from `2026.8.9` to `2026.8.13` and its transitively pinned `openccu-loom-types` from `0.3.10` to `0.4.0`
+- **This raises the minimum daemon to openccu-loom 0.61.1 or newer.** The daemon's API major went from 5 to 6, and the client refuses to connect across a major rather than half-initializing against an incompatible daemon — so unlike the previous bumps, an older daemon is now rejected outright rather than merely missing newer surface. Installations that cannot update the daemon should stay on 2.9.1
 
 # Version [2.9.1](https://github.com/SukramJ/homematicip_local/compare/2.9.0...2.9.1) (2026-08-10)
 
