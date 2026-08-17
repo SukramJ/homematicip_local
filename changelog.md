@@ -1,3 +1,11 @@
+# Version [2.9.3](https://github.com/SukramJ/homematicip_local/compare/2.9.2...2.9.3) (2026-08-17)
+
+## What's Changed
+
+### Bug Fixes
+
+- Fix the "Create backup" button staying `unavailable` forever on the openccu-loom backend (Beta). Home Assistant sets the button up before the central is started, so it read `unavailable` at add time; with no data point, no polling and no subscription it never re-evaluated — and the loom backend reaches its running state without emitting a state event, so nothing prompted a refresh. The control unit now fans out a central-state-changed signal once the central has started and on every later transition, and the button re-renders on it (#579). The direct-CCU backend was unaffected
+
 # Version [2.9.2](https://github.com/SukramJ/homematicip_local/compare/2.9.1...2.9.2) (2026-08-16)
 
 ## What's Changed

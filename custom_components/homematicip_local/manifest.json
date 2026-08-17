@@ -22,6 +22,6 @@
       "manufacturerURL": "https://openccu.de"
     }
   ],
-  "version": "2.9.2",
+  "version": "2.9.3",
   "zeroconf": ["_openccu-loom._tcp.local."]
 }
