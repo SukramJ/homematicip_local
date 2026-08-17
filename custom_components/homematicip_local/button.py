@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import UndefinedType
 from . import HomematicConfigEntry
 from .backend_types import LOOM_DP_ALARM_CONTROL_PANEL
 from .const import DOMAIN
-from .control_unit import ControlUnit, signal_new_data_point
+from .control_unit import ControlUnit, signal_central_state_changed, signal_new_data_point
 from .generic_entity import (
     ATTR_DESCRIPTION,
     ATTR_NAME,
@@ -274,6 +274,26 @@ class HmipLocalCreateBackupButton(ButtonEntity):
         return self._cu.central.available
 
     @override
+    async def async_added_to_hass(self) -> None:
+        """Re-evaluate availability whenever the central's state changes.
+
+        Home Assistant sets this platform up before the central is started, so
+        at add time the central is still stopped and ``available`` reads False.
+        This entity rides no data point and does not poll, so without a
+        subscription it would keep that first reading forever — across restarts
+        and reloads. The control unit fans a signal out once the central has
+        started and on every later state transition; re-render on each.
+        """
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                hass=self.hass,
+                signal=signal_central_state_changed(entry_id=self._cu.entry_id),
+                target=self._async_central_state_changed,
+            )
+        )
+
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         try:
@@ -294,3 +314,8 @@ class HmipLocalCreateBackupButton(ButtonEntity):
             _LOGGER.info("CCU backup saved to %s (%d bytes)", backup_path, len(backup_data.content))
         except BaseHomematicException as err:
             raise HomeAssistantError(f"Failed to create CCU backup: {err}") from err
+
+    @callback
+    def _async_central_state_changed(self) -> None:
+        """Write the entity state after the central's availability may have changed."""
+        self.async_write_ha_state()

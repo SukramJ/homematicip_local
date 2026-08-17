@@ -437,6 +437,12 @@ class ControlUnit(BaseControlUnit):
         )
         self._async_add_central_to_device_registry()
         await super().start_central()
+        # The central is available now. Standalone hub entities that key their
+        # availability on it (the backup button) are added before this runs,
+        # have no data point to refresh on and do not poll — so tell them to
+        # re-evaluate. The loom backend in particular reaches its running state
+        # without emitting a state event, so nothing else would.
+        self._async_signal_central_state_changed()
         if self._enable_mqtt:
             self._mqtt_consumer = MQTTConsumer(hass=self._hass, central=self._central, mqtt_prefix=self._mqtt_prefix)
             await self._mqtt_consumer.subscribe()
@@ -657,6 +663,17 @@ class ControlUnit(BaseControlUnit):
         """Run the deferred orphan entity registry cleanup."""
         self._orphan_cleanup_unsub = None
         self._async_cleanup_orphaned_entity_registry_entries()
+
+    @callback
+    def _async_signal_central_state_changed(self) -> None:
+        """Fan out that the central's availability may have changed.
+
+        Standalone hub entities that have no data point of their own — the
+        backup button — key their availability directly on ``central.available``
+        and cannot subscribe to a per-data-point refresh. They connect to this
+        dispatcher signal instead and re-render on it.
+        """
+        async_dispatcher_send(self._hass, signal_central_state_changed(entry_id=self._entry_id))
 
     @callback
     def _cleanup_callback_issues(self) -> None:
@@ -963,6 +980,9 @@ class ControlUnit(BaseControlUnit):
 
     async def _on_central_state_changed(self, *, event: CentralStateChangedEvent) -> None:
         """Handle central state transitions."""
+        # Every transition can flip central.available, so re-notify availability
+        # dependent standalone entities regardless of the specific target state.
+        self._async_signal_central_state_changed()
         if event.new_state == CentralState.RECOVERING:
             await self._on_central_recovering()
         elif event.new_state == CentralState.RUNNING:
@@ -1522,6 +1542,11 @@ def signal_new_data_point(*, entry_id: str, platform: DataPointCategory | str) -
     """Gateway specific event to signal new device."""
     platform_value = platform.value if isinstance(platform, DataPointCategory) else platform
     return f"{DOMAIN}-new-data-point-{entry_id}-{platform_value}"
+
+
+def signal_central_state_changed(*, entry_id: str) -> str:
+    """Gateway specific event to signal that the central's availability changed."""
+    return f"{DOMAIN}-central-state-changed-{entry_id}"
 
 
 async def validate_config_and_get_system_information(
