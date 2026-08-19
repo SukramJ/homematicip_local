@@ -10,7 +10,7 @@ Homematic(IP) Local for OpenCCU is a custom [integration](https://www.home-assis
 
 ## At a Glance
 
-- Local Home Assistant integration for Homematic(IP) hubs (CCU2/3, OpenCCU, Debmatic, Homegear). No cloud required.
+- Local Home Assistant integration for Homematic(IP) hubs (CCU2/3, OpenCCU, Debmatic, Homegear). No cloud required. See [Supported Hardware](#supported-hardware) for the complete, exhaustive list.
 - Communication: Local XML-RPC for control and push state updates; JSON-RPC for names and rooms.
 - Installation: HACS recommended; manual installation supported.
 - Auto-discovery: Supported for CCU and compatible hubs.
@@ -63,6 +63,8 @@ After installation, add the integration via **Settings** > **Devices & Services*
 - Debmatic
 - Homegear
 - Home Assistant OS/Supervised with suitable add-on + communication device
+
+> **Note:** This list is exhaustive. Third-party hubs that reimplement the CCU interfaces (XML-RPC, JSON-RPC, ReGa) are not supported, even if they appear to work. Issues reported against such a setup are closed without further assessment.
 
 ### Required Ports
 
