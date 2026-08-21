@@ -379,6 +379,27 @@ class ControlUnit(BaseControlUnit):
             registered=False,
         )
 
+    def get_data_points_by_type(
+        self,
+        *,
+        data_point_type: DataPointType,
+        category: DataPointCategory | None = None,
+    ) -> tuple[Any, ...]:
+        """
+        Return all data points by type, optionally filtered by category, regardless of registration status.
+
+        Unlike get_new_data_points, this does not filter by registration state.
+        Use this when a data point is expected to back more than one platform
+        entity (e.g. a companion select for a custom cover data point), since
+        the first entity that registers would otherwise hide the data point
+        from every later discovery pass.
+        """
+        return self.central.query_facade.get_data_points(
+            data_point_type=data_point_type,
+            category=category,
+            exclude_no_create=True,
+        )
+
     def get_new_hub_data_points(
         self,
         *,

@@ -325,6 +325,14 @@
       }
     },
     "select": {
+      "garage_door_mode": {
+        "name": "Door mode",
+        "state": {
+          "closed": "Closed",
+          "open": "Open",
+          "ventilation": "Ventilation"
+        }
+      },
       "acoustic_alarm_selection": {
         "name": "Siren Tone",
         "state": {

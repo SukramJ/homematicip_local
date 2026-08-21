@@ -7,6 +7,7 @@ import logging
 from typing import Any, Final, override
 
 from aiohomematic.const import DataPointCategory, DataPointType
+from aiohomematic.model.custom import CustomDpGarage
 from aiohomematic.model.generic import DpActionSelect, DpSelect
 from aiohomematic.model.hub import SysvarDpSelect
 from homeassistant.components.select import SelectEntity
@@ -17,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.storage import Store
 
 from . import HomematicConfigEntry
+from .backend_types import CUSTOM_DP_GARAGE
 from .const import CONF_ACTION_SELECT_VALUES, DP_ACTION_SELECT_WHITELIST
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericRestoreEntity, AioHomematicGenericSysvarEntity
@@ -133,11 +135,44 @@ async def async_setup_entry(
         ]:
             async_add_entities(entities)
 
+    @callback
+    def async_add_garage_door_mode_select(data_points: tuple[CustomDpGarage, ...]) -> None:
+        """
+        Add a garage door mode select for each garage cover data point.
+
+        This is a companion entity to the cover platform's garage entity: Home
+        Assistant's cover platform has no native ventilation state (see
+        home-assistant/architecture#502), so the door's three discrete physical
+        states (closed/ventilation/open) are exposed here instead. Garage cover
+        data points arrive on the COVER category signal (their own category),
+        not the SELECT one, so this listens to that signal directly rather than
+        the select-specific ones above.
+        """
+        _LOGGER.debug("ASYNC_ADD_GARAGE_DOOR_MODE_SELECT: Adding %i data points", len(data_points))
+
+        if entities := [
+            AioHomematicGarageDoorModeSelect(
+                control_unit=control_unit,
+                data_point=data_point,
+            )
+            for data_point in data_points
+            if isinstance(data_point, CUSTOM_DP_GARAGE)
+        ]:
+            async_add_entities(entities)
+
     entry.async_on_unload(
         func=async_dispatcher_connect(
             hass=hass,
             signal=signal_new_data_point(entry_id=entry.entry_id, platform=DataPointCategory.SELECT),
             target=async_add_select,
+        )
+    )
+
+    entry.async_on_unload(
+        func=async_dispatcher_connect(
+            hass=hass,
+            signal=signal_new_data_point(entry_id=entry.entry_id, platform=DataPointCategory.COVER),
+            target=async_add_garage_door_mode_select,
         )
     )
 
@@ -168,6 +203,17 @@ async def async_setup_entry(
     async_add_action_select(
         data_points=control_unit.get_new_data_points(
             data_point_type=DataPointType.SELECT, category=DataPointCategory.ACTION_SELECT
+        )
+    )
+
+    # get_data_points_by_type (not get_new_data_points!) is required here: the
+    # underlying CustomDpGarage data point is already claimed by the cover
+    # platform's garage entity, which flips its registration state. Filtering
+    # by registration status would make this pass find nothing whenever the
+    # cover platform's setup already ran.
+    async_add_garage_door_mode_select(
+        data_points=control_unit.get_data_points_by_type(
+            data_point_type=DataPointType.COVER, category=DataPointCategory.COVER
         )
     )
 
@@ -338,3 +384,66 @@ class AioHomematicActionSelect(AioHomematicGenericRestoreEntity[DpActionSelect],
                 channel_address,
                 parameter,
             )
+
+
+# Door positions reported by CustomDpGarage.current_position (aiohomematic's
+# _CoverPosition enum values, mirrored here since that enum is private).
+_GARAGE_POSITION_CLOSED: Final = 0
+_GARAGE_POSITION_VENTILATION: Final = 10
+_GARAGE_POSITION_OPEN: Final = 100
+
+GARAGE_DOOR_MODE_CLOSED: Final = "closed"
+GARAGE_DOOR_MODE_VENTILATION: Final = "ventilation"
+GARAGE_DOOR_MODE_OPEN: Final = "open"
+
+_GARAGE_DOOR_MODE_BY_POSITION: Final[dict[int, str]] = {
+    _GARAGE_POSITION_CLOSED: GARAGE_DOOR_MODE_CLOSED,
+    _GARAGE_POSITION_VENTILATION: GARAGE_DOOR_MODE_VENTILATION,
+    _GARAGE_POSITION_OPEN: GARAGE_DOOR_MODE_OPEN,
+}
+
+
+class AioHomematicGarageDoorModeSelect(AioHomematicGenericRestoreEntity[CustomDpGarage], SelectEntity):
+    """
+    Representation of a garage door's discrete mode as a select entity.
+
+    Companion entity to the cover platform's garage entity (AioHomematicGarage
+    in cover.py): exposes the door's three physical states (closed/ventilation/
+    open) directly, since Home Assistant's cover platform has no native
+    ventilation state and the position-based workaround (setting a cover
+    position between the closed and open thresholds) is not discoverable.
+    """
+
+    _attr_translation_key = "garage_door_mode"
+
+    def __init__(self, *, control_unit: ControlUnit, data_point: CustomDpGarage) -> None:
+        """Initialize the garage door mode select entity."""
+        super().__init__(control_unit=control_unit, data_point=data_point)
+        # Distinct from the cover entity's unique_id, which is derived from
+        # the same underlying CustomDpGarage data point.
+        self._attr_unique_id = f"{self._attr_unique_id}_door_mode"
+
+    @property
+    @override
+    def current_option(self) -> str | None:
+        """Return the currently selected door mode."""
+        if (position := self._data_point.current_position) is None:
+            return None
+        return _GARAGE_DOOR_MODE_BY_POSITION.get(position)
+
+    @property
+    @override
+    def options(self) -> list[str]:
+        """Return the available door modes."""
+        return [GARAGE_DOOR_MODE_CLOSED, GARAGE_DOOR_MODE_VENTILATION, GARAGE_DOOR_MODE_OPEN]
+
+    @override
+    @handle_homematic_errors
+    async def async_select_option(self, option: str) -> None:
+        """Move the garage door to the selected mode."""
+        if option == GARAGE_DOOR_MODE_CLOSED:
+            await self._data_point.close()
+        elif option == GARAGE_DOOR_MODE_VENTILATION:
+            await self._data_point.vent()
+        elif option == GARAGE_DOOR_MODE_OPEN:
+            await self._data_point.open()

@@ -1,3 +1,11 @@
+# Version [Unreleased](https://github.com/SukramJ/homematicip_local/compare/2.9.2...HEAD)
+
+## What's Changed
+
+### Features
+
+- Expose the garage door's discrete ventilation mode as a companion `select` entity. Home Assistant's `cover` platform has no native ventilation state (see home-assistant/architecture#502), so the three physical states of a Hörmann-style garage door (`closed`/`ventilation`/`open`) are currently only reachable via the undiscoverable position-range workaround (setting a cover position between the closed and open thresholds). Each `HmIP-MOD-HO`/`HmIP-MOD-TM` garage cover now additionally gets a `select.<garage>_door_mode` entity that reads `CustomDpGarage.current_position` and writes via `close()`/`vent()`/`open()`, so the ventilation command is a first-class, tappable action. Both entities attach to the same HA device. The underlying `CustomDpGarage` data point is already claimed by the cover platform, so discovery uses a registration-agnostic lookup (`ControlUnit.get_data_points_by_type`) and listens to the `COVER` category new-data-point signal directly
+
 # Version [2.9.2](https://github.com/SukramJ/homematicip_local/compare/2.9.1...2.9.2) (2026-08-18)
 
 ## What's Changed
