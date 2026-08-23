@@ -1,22 +1,32 @@
-# Version [2.9.2](https://github.com/SukramJ/homematicip_local/compare/2.9.1...2.9.2) (2026-08-18)
+# Version [2.9.2](https://github.com/SukramJ/homematicip_local/compare/2.9.1...2.9.2) (2026-08-23)
 
 ## What's Changed
 
+### Integration
+
+- Garage doors (`HmIP-MOD-HO`, `HmIP-MOD-TM`) gain a **Door Mode** select entity that exposes the door's three physical states — closed, open and ventilation position — as a first-class, tappable control. Home Assistant's `cover` platform has no native ventilation state ([architecture#502](https://github.com/home-assistant/architecture/discussions/502)), so ventilation was previously only reachable by setting a cover position inside an undiscoverable range. The data point itself comes with the aiohomematic bump below; the integration contributes the entity name and its state translations. Suggested in [#1252](https://github.com/SukramJ/homematicip_local/pull/1252) by [@ANierbeck](https://github.com/ANierbeck)
+
+### Config Panel
+
+- The climate schedule editor no longer discards unsaved edits when a second weekday is opened ([frontend#95](https://github.com/SukramJ/homematicip-local-frontend/issues/95)). Each weekday now keeps its own draft, including its undo history, so several days can be edited in one dialog session; changed tabs carry a dot and the footer button becomes "Save all". Closing the dialog with unsaved changes asks first, and the inline row button is labelled "Apply" / "Übernehmen" so that "Save" means only the action that writes to the CCU. This affects the config panel and the climate schedule card alike, since both render the same schedule editor
+
 ### Development
 
-- The integration's own changes in this release are openccu-loom backend (Beta) work; the direct-CCU backend gains support for two new devices through the aiohomematic bump below. The user-facing details of the loom backend stay out of scope for this changelog until it leaves Beta
+- Beyond the entries above, the integration's own changes in this release are openccu-loom backend (Beta) work; the direct-CCU backend gains support for two new devices through the aiohomematic bump below. The user-facing details of the loom backend stay out of scope for this changelog until it leaves Beta
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.8.3](https://github.com/SukramJ/aiohomematic/compare/2026.8.2...2026.8.3)
+#### Bump aiohomematic to [2026.8.4](https://github.com/SukramJ/aiohomematic/compare/2026.8.2...2026.8.4)
 
+- Expose the garage door's discrete mode as a `SELECT`-category combined data point. `CustomDpGarage` now declares a `CombinedDpGarageDoorMode` that reads `DOOR_STATE` and writes `DOOR_COMMAND` under its own parameter name `DOOR_MODE`, so the integration's generic select dispatch picks it up without any platform-side wiring — and the entity is named after what it does rather than borrowing the identity of either source parameter. While the door is travelling the select keeps reporting the mode the door is heading for instead of dropping to `unknown`; a `STOP` clears that held mode
+- Fix `GarageDoorState.POSITION_UNKNOWN`, which carried a stray leading underscore and therefore never matched the `DOOR_STATE` value reported by the CCU
 - Add support for the flush-mount switch actuators `HmIP-FS6` and `HmIP-FSI6`. `HmIP-FS6` has no input channel, so it shares the channel layout of `HmIP-FSM` and is now registered as a switch profile on channel 2 — without that registration it only produced generic data points. `OPERATING_VOLTAGE` is ignored for it as well, consistent with the other mains-powered actuators
 - Expose `CHANNEL_OPERATION_MODE` on channel 1 of `HmIP-FSI6`. The custom switch data point of that device already worked, but the un-ignore rule was keyed on `HmIP-FSI16` only — model keys are matched with `str.startswith`, and `"hmip-fsi6".startswith("hmip-fsi16")` is `False`, so the operation mode of the push-button input stayed hidden
 
-#### Bump openccu-loom-client to `2026.8.19` (pins `openccu-loom-types==0.5.0`)
+#### Bump openccu-loom-client to `2026.8.20` (pins `openccu-loom-types==0.5.2`)
 
-- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. Advances the bundled loom client from `2026.8.9` to `2026.8.18` and its transitively pinned `openccu-loom-types` from `0.3.10` to `0.4.2`
-- **This raises the minimum daemon to openccu-loom 0.61.3 or newer.** The daemon's API major went from 5 to 6 and the client is generated against API 6.2, so it refuses to connect to a daemon reporting an older API (a different major, or major 6 below minor 2) rather than half-initializing against an incompatible daemon — an older daemon is rejected outright rather than merely missing newer surface. Installations that cannot update the daemon should stay on 2.9.1
+- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. Advances the bundled loom client from `2026.8.9` to `2026.8.20` and its transitively pinned `openccu-loom-types` from `0.3.10` to `0.5.2`
+- **This raises the minimum daemon to openccu-loom 0.64.1 or newer.** The client is generated against the daemon's API 7.7.0 and checks that version at connect time, so it refuses a daemon reporting an older API rather than half-initializing against an incompatible one — an older daemon is rejected outright rather than merely missing newer surface. Installations that cannot update the daemon should stay on 2.9.1
 
 # Version [2.9.1](https://github.com/SukramJ/homematicip_local/compare/2.9.0...2.9.1) (2026-08-10)
 

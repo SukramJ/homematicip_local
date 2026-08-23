@@ -348,6 +348,14 @@
                     "low_battery": "Niedriger Batteriestand"
                 }
             }, 
+            "door_mode": {
+                "name": "Türmodus", 
+                "state": {
+                    "closed": "Geschlossen", 
+                    "open": "Offen", 
+                    "ventilation_position": "Belüftung"
+                }
+            }, 
             "heating_cooling": {
                 "name": "Betriebsmodus", 
                 "state": {

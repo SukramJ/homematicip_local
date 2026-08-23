@@ -348,6 +348,14 @@
                     "low_battery": "Low battery"
                 }
             }, 
+            "door_mode": {
+                "name": "Door Mode", 
+                "state": {
+                    "closed": "Closed", 
+                    "open": "Open", 
+                    "ventilation_position": "Ventilation position"
+                }
+            }, 
             "heating_cooling": {
                 "name": "Operating mode", 
                 "state": {
