@@ -194,6 +194,7 @@ ENTITY_TRANSLATION_KEYS: Final[frozenset[str]] = frozenset(
         "status",  # sensor
         # Sensor state value translations
         "direction",
+        "door_mode",
         "door_state",
         "lock_state",
         "sec_direction",

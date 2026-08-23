@@ -118,20 +118,20 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2026.8.3) - Core async library for Homematic device communication
+- **aiohomematic** (v2026.8.4) - Core async library for Homematic device communication
 - **aiohomematic-config** (v2026.8.0) - Device configuration metadata
-- **openccu-loom-client** (v2026.8.13) - Client for the openccu-loom backend (Beta)
+- **openccu-loom-client** (v2026.8.20) - Client for the openccu-loom backend (Beta)
 - **Home Assistant Core** - Minimum version: 2026.7.0+
 - **Python 3.14+** (target version for development)
 
 ### Development Dependencies
 
-- **pytest-homeassistant-custom-component-framework** (1.0.45) - HA test framework
+- **pytest-homeassistant-custom-component-framework** (1.0.46) - HA test framework
 - **mypy** (2.1.0) - Static type checker (strict mode)
 - **pylint** (4.0.7) - Code linting
-- **ruff** (0.16.3) - Fast Python linter and formatter
-- **prek** (0.4.13) - Git hooks manager (Rust-based pre-commit alternative)
-- **aiohomematic-test-support** (2026.8.3) - Mock test data
+- **ruff** (0.16.4) - Fast Python linter and formatter
+- **prek** (0.4.14) - Git hooks manager (Rust-based pre-commit alternative)
+- **aiohomematic-test-support** (2026.8.4) - Mock test data
 - **async-upnp-client** (0.48.0) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
 
@@ -1127,8 +1127,8 @@ make hass
 - **Current Version:** 2.9.3
 - **Minimum HA Version:** 2026.7.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
-- **aiohomematic Version:** 2026.8.3
-- **openccu-loom-client Version:** 2026.8.13 (requires an openccu-loom daemon ≥ 0.61.1)
+- **aiohomematic Version:** 2026.8.4
+- **openccu-loom-client Version:** 2026.8.20 (requires an openccu-loom daemon ≥ 0.64.1)
 
 ### External Resources
 
