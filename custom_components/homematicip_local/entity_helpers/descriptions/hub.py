@@ -113,6 +113,91 @@ HUB_RULES: list[EntityDescriptionRule] = [
             device_class=BinarySensorDeviceClass.CONNECTIVITY,
         ),
     ),
+    # Hub binary sensors - Security & Safety hazard classes (openccu-loom
+    # backend). One sensor per class the daemon folds its sources into.
+    #
+    # Each carries the device class Home Assistant already knows for that
+    # hazard, so the entity gets the right icon, the right on/off wording
+    # and the semantics voice assistants and automation blueprints match
+    # on. Without one they are bare on/off toggles, and "on" — which here
+    # means a detector has fired — reads as the good state.
+    #
+    # Two have no exact counterpart: HA knows neither "intrusion" nor
+    # "panic". SAFETY is the closest — it renders as Safe/Unsafe, which is
+    # the right polarity for both — and is chosen over leaving them blank
+    # because a wrong-but-close icon still beats no state semantics at all.
+    EntityDescriptionRule(
+        category=DataPointCategory.HUB_BINARY_SENSOR,
+        var_name_contains="security_smoke",
+        description=HmBinarySensorEntityDescription(
+            key="SECURITY_SMOKE",
+            device_class=BinarySensorDeviceClass.SMOKE,
+        ),
+    ),
+    EntityDescriptionRule(
+        category=DataPointCategory.HUB_BINARY_SENSOR,
+        var_name_contains="security_water",
+        description=HmBinarySensorEntityDescription(
+            key="SECURITY_WATER",
+            device_class=BinarySensorDeviceClass.MOISTURE,
+        ),
+    ),
+    EntityDescriptionRule(
+        category=DataPointCategory.HUB_BINARY_SENSOR,
+        var_name_contains="security_gas",
+        description=HmBinarySensorEntityDescription(
+            key="SECURITY_GAS",
+            device_class=BinarySensorDeviceClass.GAS,
+        ),
+    ),
+    EntityDescriptionRule(
+        category=DataPointCategory.HUB_BINARY_SENSOR,
+        var_name_contains="security_co",
+        description=HmBinarySensorEntityDescription(
+            key="SECURITY_CO",
+            device_class=BinarySensorDeviceClass.CO,
+        ),
+    ),
+    EntityDescriptionRule(
+        category=DataPointCategory.HUB_BINARY_SENSOR,
+        var_name_contains="security_tamper",
+        description=HmBinarySensorEntityDescription(
+            key="SECURITY_TAMPER",
+            device_class=BinarySensorDeviceClass.TAMPER,
+        ),
+    ),
+    EntityDescriptionRule(
+        category=DataPointCategory.HUB_BINARY_SENSOR,
+        var_name_contains="security_battery",
+        description=HmBinarySensorEntityDescription(
+            key="SECURITY_BATTERY",
+            device_class=BinarySensorDeviceClass.BATTERY,
+        ),
+    ),
+    EntityDescriptionRule(
+        category=DataPointCategory.HUB_BINARY_SENSOR,
+        var_name_contains="security_technical",
+        description=HmBinarySensorEntityDescription(
+            key="SECURITY_TECHNICAL",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+    ),
+    EntityDescriptionRule(
+        category=DataPointCategory.HUB_BINARY_SENSOR,
+        var_name_contains="security_intrusion",
+        description=HmBinarySensorEntityDescription(
+            key="SECURITY_INTRUSION",
+            device_class=BinarySensorDeviceClass.SAFETY,
+        ),
+    ),
+    EntityDescriptionRule(
+        category=DataPointCategory.HUB_BINARY_SENSOR,
+        var_name_contains="security_panic",
+        description=HmBinarySensorEntityDescription(
+            key="SECURITY_PANIC",
+            device_class=BinarySensorDeviceClass.SAFETY,
+        ),
+    ),
     # Hub sensors - Energy counter (system variables)
     EntityDescriptionRule(
         category=DataPointCategory.HUB_SENSOR,

@@ -101,6 +101,37 @@ class TestEntityHelper:
         assert description.key == "CONNECTIVITY_SENSOR"
         assert description.device_class == BinarySensorDeviceClass.CONNECTIVITY
 
+    @pytest.mark.parametrize(
+        ("security_class", "device_class"),
+        [
+            ("smoke", BinarySensorDeviceClass.SMOKE),
+            ("water", BinarySensorDeviceClass.MOISTURE),
+            ("gas", BinarySensorDeviceClass.GAS),
+            ("co", BinarySensorDeviceClass.CO),
+            ("tamper", BinarySensorDeviceClass.TAMPER),
+            ("battery", BinarySensorDeviceClass.BATTERY),
+            ("technical", BinarySensorDeviceClass.PROBLEM),
+            ("intrusion", BinarySensorDeviceClass.SAFETY),
+            ("panic", BinarySensorDeviceClass.SAFETY),
+        ],
+    )
+    def test_registry_find_security_class(self, security_class: str, device_class: BinarySensorDeviceClass) -> None:
+        """
+        Each Security & Safety hazard class carries its own device class.
+
+        Without one the sensor is a bare on/off, and "on" — a detector has
+        fired — reads as the good state. The table is spelled out rather
+        than derived so that changing a mapping has to change a test: a
+        loop over the rules would agree with whatever the rules say.
+        """
+        description = REGISTRY.find(
+            category=DataPointCategory.HUB_BINARY_SENSOR,
+            var_name=f"security_{security_class}",
+        )
+
+        assert description is not None
+        assert description.device_class == device_class
+
     def test_registry_find_sensor(self) -> None:
         """Test finding a sensor description."""
         description = REGISTRY.find(
@@ -147,3 +178,22 @@ class TestEntityHelper:
         assert stats["SENSOR"] > 50
         assert stats["BINARY_SENSOR"] > 10
         assert stats["BUTTON"] > 0
+
+    def test_registry_security_classes_do_not_shadow_connectivity(self) -> None:
+        """
+        The security rules must not swallow the connectivity sensors.
+
+        Both families are HUB_BINARY_SENSOR and matched by substring, and
+        the first matching rule wins — so a rule matched on a shorter
+        fragment would quietly take entities it was never meant to.
+        """
+        for var_name, expected in (
+            ("daemon_connection", "DAEMON_CONNECTION"),
+            ("Connectivity HmIP-RF", "CONNECTIVITY_SENSOR"),
+        ):
+            description = REGISTRY.find(
+                category=DataPointCategory.HUB_BINARY_SENSOR,
+                var_name=var_name,
+            )
+            assert description is not None
+            assert description.key == expected
