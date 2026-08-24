@@ -23,10 +23,10 @@
 - Add support for the flush-mount switch actuators `HmIP-FS6` and `HmIP-FSI6`. `HmIP-FS6` has no input channel, so it shares the channel layout of `HmIP-FSM` and is now registered as a switch profile on channel 2 — without that registration it only produced generic data points. `OPERATING_VOLTAGE` is ignored for it as well, consistent with the other mains-powered actuators
 - Expose `CHANNEL_OPERATION_MODE` on channel 1 of `HmIP-FSI6`. The custom switch data point of that device already worked, but the un-ignore rule was keyed on `HmIP-FSI16` only — model keys are matched with `str.startswith`, and `"hmip-fsi6".startswith("hmip-fsi16")` is `False`, so the operation mode of the push-button input stayed hidden
 
-#### Bump openccu-loom-client to `2026.8.20` (pins `openccu-loom-types==0.5.2`)
+#### Bump openccu-loom-client to `2026.8.24` (pins `openccu-loom-types==0.5.3`)
 
-- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. Advances the bundled loom client from `2026.8.9` to `2026.8.20` and its transitively pinned `openccu-loom-types` from `0.3.10` to `0.5.2`
-- **This raises the minimum daemon to openccu-loom 0.64.1 or newer.** The client is generated against the daemon's API 7.7.0 and checks that version at connect time, so it refuses a daemon reporting an older API rather than half-initializing against an incompatible one — an older daemon is rejected outright rather than merely missing newer surface. Installations that cannot update the daemon should stay on 2.9.1
+- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. Advances the bundled loom client from `2026.8.9` to `2026.8.24` and its transitively pinned `openccu-loom-types` from `0.3.10` to `0.5.3`
+- **This raises the minimum daemon to openccu-loom 0.64.2 or newer.** The client is generated against the daemon's API 7.7.0 and checks that version at connect time, so it refuses a daemon reporting an older API rather than half-initializing against an incompatible one — an older daemon is rejected outright rather than merely missing newer surface. Installations that cannot update the daemon should stay on 2.9.1
 
 # Version [2.9.1](https://github.com/SukramJ/homematicip_local/compare/2.9.0...2.9.1) (2026-08-10)
 
