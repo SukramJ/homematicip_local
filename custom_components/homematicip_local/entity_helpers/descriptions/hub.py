@@ -93,6 +93,26 @@ HUB_RULES: list[EntityDescriptionRule] = [
             device_class=BinarySensorDeviceClass.CONNECTIVITY,
         ),
     ),
+    # Hub binary sensor - daemon reachability (openccu-loom backend only).
+    #
+    # It answers the same question as the per-interface connectivity
+    # sensors one layer up — is the thing we talk to there — so it carries
+    # the same device class. Without it the entity renders as a bare
+    # on/off, and Home Assistant cannot tell that "off" is the bad state.
+    #
+    # It needs its own rule because the connectivity rule above matches on
+    # the "Connectivity" name prefix, and this singleton is named
+    # "daemon_connection": "connectivity" is not a substring of
+    # "daemon_connection", so it was falling through to no description at
+    # all.
+    EntityDescriptionRule(
+        category=DataPointCategory.HUB_BINARY_SENSOR,
+        var_name_contains="daemon_connection",
+        description=HmBinarySensorEntityDescription(
+            key="DAEMON_CONNECTION",
+            device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        ),
+    ),
     # Hub sensors - Energy counter (system variables)
     EntityDescriptionRule(
         category=DataPointCategory.HUB_SENSOR,

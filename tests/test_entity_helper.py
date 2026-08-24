@@ -6,6 +6,7 @@ import pytest
 
 from aiohomematic.const import DataPointCategory
 from custom_components.homematicip_local.entity_helpers import REGISTRY
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.event import EventDeviceClass
 
 
@@ -44,6 +45,28 @@ class TestEntityHelper:
         assert description is not None
         assert description.key == "BLIND"
 
+    def test_registry_find_daemon_connection(self) -> None:
+        """
+        The openccu-loom daemon-reachability sensor carries CONNECTIVITY.
+
+        It answers the same question as the per-interface connectivity
+        sensors one layer up, so it needs the same device class — without
+        one Home Assistant renders a bare on/off and cannot tell that
+        "off" is the bad state.
+
+        It needs a rule of its own because the interface rule matches the
+        ``Connectivity`` name prefix and this singleton is named
+        ``daemon_connection``; the one is not a substring of the other.
+        """
+        description = REGISTRY.find(
+            category=DataPointCategory.HUB_BINARY_SENSOR,
+            var_name="daemon_connection",
+        )
+
+        assert description is not None
+        assert description.key == "DAEMON_CONNECTION"
+        assert description.device_class == BinarySensorDeviceClass.CONNECTIVITY
+
     @pytest.mark.parametrize("device_model", ["HmIP-DBB", "HmIP-DSD-PCB"])
     def test_registry_find_doorbell_event(self, device_model: str) -> None:
         """Doorbell devices expose their event group with the doorbell device class."""
@@ -66,6 +89,17 @@ class TestEntityHelper:
         assert description is not None
         assert description.key == "event_default"
         assert description.device_class == EventDeviceClass.BUTTON
+
+    def test_registry_find_interface_connectivity(self) -> None:
+        """The per-interface sensor keeps its own rule — the two must not collapse."""
+        description = REGISTRY.find(
+            category=DataPointCategory.HUB_BINARY_SENSOR,
+            var_name="Connectivity HmIP-RF",
+        )
+
+        assert description is not None
+        assert description.key == "CONNECTIVITY_SENSOR"
+        assert description.device_class == BinarySensorDeviceClass.CONNECTIVITY
 
     def test_registry_find_sensor(self) -> None:
         """Test finding a sensor description."""
