@@ -24,7 +24,7 @@ This document provides comprehensive guidance for AI assistants working with the
 
 **Project Name:** Homematic(IP) Local for OpenCCU
 **Type:** Home Assistant Custom Integration
-**Version:** 2.10.0
+**Version:** 2.10.1
 **Primary Language:** Python 3.14+
 **Domain:** `homematicip_local`
 
@@ -120,7 +120,7 @@ homematicip_local/
 
 - **aiohomematic** (v2026.8.5) - Core async library for Homematic device communication
 - **aiohomematic-config** (v2026.8.0) - Device configuration metadata
-- **openccu-loom-client** (v2026.8.26) - Client for the openccu-loom backend (Beta)
+- **openccu-loom-client** (v2026.8.27) - Client for the openccu-loom backend (Beta)
 - **Home Assistant Core** - Minimum version: 2026.8.0+
 - **Python 3.14+** (target version for development)
 
@@ -1124,11 +1124,11 @@ make hass
 
 ### Version Information
 
-- **Current Version:** 2.10.0
+- **Current Version:** 2.10.1
 - **Minimum HA Version:** 2026.8.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
 - **aiohomematic Version:** 2026.8.5
-- **openccu-loom-client Version:** 2026.8.26 (requires an openccu-loom daemon ≥ 0.65.1; pins `openccu-loom-types==0.5.5`, checks daemon API 7.13.0 at connect time)
+- **openccu-loom-client Version:** 2026.8.27 (requires an openccu-loom daemon ≥ 0.65.3; pins `openccu-loom-types==0.5.7`, checks daemon API 7.15.0 at connect time)
 
 ### External Resources
 
@@ -1142,4 +1142,4 @@ make hass
 ---
 
 **Last Updated**: 2026-08-27
-**Version**: 2.10.0
+**Version**: 2.10.1
