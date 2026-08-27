@@ -326,44 +326,55 @@ class ControlUnit(BaseControlUnit):
 
     def ensure_via_device_exists(
         self,
+        *,
         identifier: str,
         suggested_area: str | None,
         via_device: str,
         via_suggested_area: str | None = None,
-    ) -> None:
-        """Create a via device for a device."""
+    ) -> str:
+        """
+        Create the via device of a device and return its device registry id.
+
+        A device info links its via device by registry id, and HA rejects the
+        whole device info when that id is not a registered device — so the via
+        device (and, one rung further up, the central it hangs off) has to
+        exist before the entity carrying the link is added.
+        """
         device_registry = dr.async_get(self._hass)
 
-        if device_registry.async_get_device(identifiers={(DOMAIN, via_device)}) is not None:
-            return
+        if (via_entry := device_registry.async_get_device_by_identifier((DOMAIN, via_device), self._entry_id)) is None:
+            central_entry = self._async_add_central_to_device_registry()
+            if via_device == self.central.name:
+                via_entry = central_entry
+            else:
+                # The parent carries its own room: HA applies suggested_area
+                # only at creation, so seeding the parent with a sub-device's
+                # area (e.g. a channel-group room) would pin the wrong area.
+                via_entry = device_registry.async_get_or_create(
+                    config_entry_id=self._entry_id,
+                    identifiers={
+                        (
+                            DOMAIN,
+                            via_device,
+                        )
+                    },
+                    suggested_area=via_suggested_area,
+                    via_device_id=central_entry.id,
+                )
 
-        if via_device != self.central.name:
-            # The parent carries its own room: HA applies suggested_area
-            # only at creation, so seeding the parent with a sub-device's
-            # area (e.g. a channel-group room) would pin the wrong area.
             device_registry.async_get_or_create(
                 config_entry_id=self._entry_id,
                 identifiers={
                     (
                         DOMAIN,
-                        via_device,
+                        identifier,
                     )
                 },
-                suggested_area=via_suggested_area,
-                via_device=(DOMAIN, self.central.name),
+                suggested_area=suggested_area,
+                via_device_id=via_entry.id,
             )
 
-        device_registry.async_get_or_create(
-            config_entry_id=self._entry_id,
-            identifiers={
-                (
-                    DOMAIN,
-                    identifier,
-                )
-            },
-            suggested_area=suggested_area,
-            via_device=(DOMAIN, via_device),
-        )
+        return via_entry.id
 
     def get_new_data_points(
         self,
@@ -470,10 +481,10 @@ class ControlUnit(BaseControlUnit):
         await super().stop_central(*args)
 
     @callback
-    def _async_add_central_to_device_registry(self) -> None:
-        """Add the central to device registry."""
+    def _async_add_central_to_device_registry(self) -> DeviceEntry:
+        """Add the central to device registry and return its entry."""
         device_registry = dr.async_get(self._hass)
-        device_registry.async_get_or_create(
+        return device_registry.async_get_or_create(
             config_entry_id=self._entry_id,
             identifiers={
                 (
@@ -500,6 +511,7 @@ class ControlUnit(BaseControlUnit):
             return
 
         device_registry = dr.async_get(self._hass)
+        central_device_id = self._async_add_central_to_device_registry().id
         for virtual_remote in self._central.device_coordinator.get_virtual_remotes():
             device_registry.async_get_or_create(
                 config_entry_id=self._entry_id,
@@ -514,7 +526,7 @@ class ControlUnit(BaseControlUnit):
                 model=virtual_remote.model,
                 sw_version=virtual_remote.firmware,
                 # Link to the Homematic control unit.
-                via_device=(DOMAIN, self._central.name),
+                via_device_id=central_device_id,
             )
 
     @callback
@@ -649,13 +661,12 @@ class ControlUnit(BaseControlUnit):
         if (hm_device := self._central.device_coordinator.get_device(address=device_address)) is None:
             return None
         device_registry = dr.async_get(self._hass)
-        return device_registry.async_get_device(
-            identifiers={
-                (
-                    DOMAIN,
-                    hm_device.identifier,
-                )
-            }
+        return device_registry.async_get_device_by_identifier(
+            (
+                DOMAIN,
+                hm_device.identifier,
+            ),
+            self._entry_id,
         )
 
     @callback
@@ -1034,7 +1045,7 @@ class ControlUnit(BaseControlUnit):
             for address in event.device_addresses:
                 # Device identifier format is: {address}@{interface_id}
                 expected_identifier = f"{address}@{interface_id}"
-                if device_registry.async_get_device(identifiers={(DOMAIN, expected_identifier)}):
+                if device_registry.async_get_device_by_identifier((DOMAIN, expected_identifier), self._entry_id):
                     existing_addresses.append(address)
                 else:
                     new_addresses.append(address)

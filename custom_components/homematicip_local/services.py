@@ -30,7 +30,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, Supp
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.service import (
     async_register_admin_service,
     async_register_platform_entity_service,
@@ -1389,7 +1388,9 @@ def _async_get_cu_by_interface_id(*, hass: HomeAssistant, interface_id: str) -> 
 @callback
 def _asnyc_get_hm_device_by_id(*, hass: HomeAssistant, device_id: str) -> DeviceProtocol | None:
     """Return the Homematic device."""
-    device_entry: DeviceEntry | None = dr.async_get(hass).async_get(device_id)
+    # No annotation: HA returns a main or a child device entry here, and the
+    # union type naming that is younger than the supported HA range.
+    device_entry = dr.async_get(hass).async_get(device_id)
     if not device_entry:
         return None
     if (data := get_device_address_at_interface_from_identifiers(identifiers=device_entry.identifiers)) is None:

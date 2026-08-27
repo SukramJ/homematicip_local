@@ -246,7 +246,7 @@ class TestAioHomematicUpdateCallbacks:
         update.registry_entry = mock_registry_entry
 
         mock_device_registry = MagicMock()
-        mock_device_registry.devices = {}  # Device not in registry
+        mock_device_registry.async_get.return_value = None  # Device not in registry
 
         mock_event = MagicMock()
         with (
@@ -284,7 +284,7 @@ class TestAioHomematicUpdateCallbacks:
         update.registry_entry = mock_registry_entry
 
         mock_device_registry = MagicMock()
-        mock_device_registry.devices = {"device_123": MagicMock()}
+        mock_device_registry.async_get.return_value = MagicMock()
 
         mock_event = MagicMock()
         with (
@@ -533,7 +533,7 @@ class TestAioHomematicHubUpdateCallbacks:
         hub_update.registry_entry = mock_registry_entry
 
         mock_device_registry = MagicMock()
-        mock_device_registry.devices = {"hub_device_123": MagicMock()}
+        mock_device_registry.async_get.return_value = MagicMock()
 
         mock_event = MagicMock()
         with (

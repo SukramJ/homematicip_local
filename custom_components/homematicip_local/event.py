@@ -177,7 +177,7 @@ class AioHomematicEvent(EventEntity):
         if device_id := self.registry_entry.device_id:
             # Remove from device registry.
             device_registry = dr.async_get(self.hass)
-            if device_id in device_registry.devices:
+            if device_registry.async_get(device_id) is not None:
                 # This will also remove associated entities from entity registry.
                 device_registry.async_remove_device(device_id)
 
