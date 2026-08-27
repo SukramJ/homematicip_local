@@ -24,7 +24,7 @@ This document provides comprehensive guidance for AI assistants working with the
 
 **Project Name:** Homematic(IP) Local for OpenCCU
 **Type:** Home Assistant Custom Integration
-**Version:** 2.9.3
+**Version:** 2.10.0
 **Primary Language:** Python 3.14+
 **Domain:** `homematicip_local`
 
@@ -118,10 +118,10 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2026.8.4) - Core async library for Homematic device communication
+- **aiohomematic** (v2026.8.5) - Core async library for Homematic device communication
 - **aiohomematic-config** (v2026.8.0) - Device configuration metadata
-- **openccu-loom-client** (v2026.8.20) - Client for the openccu-loom backend (Beta)
-- **Home Assistant Core** - Minimum version: 2026.7.0+
+- **openccu-loom-client** (v2026.8.26) - Client for the openccu-loom backend (Beta)
+- **Home Assistant Core** - Minimum version: 2026.8.0+
 - **Python 3.14+** (target version for development)
 
 ### Development Dependencies
@@ -131,7 +131,7 @@ homematicip_local/
 - **pylint** (4.0.7) - Code linting
 - **ruff** (0.16.4) - Fast Python linter and formatter
 - **prek** (0.4.14) - Git hooks manager (Rust-based pre-commit alternative)
-- **aiohomematic-test-support** (2026.8.4) - Mock test data
+- **aiohomematic-test-support** (2026.8.5) - Mock test data
 - **async-upnp-client** (0.48.0) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
 
@@ -1124,11 +1124,11 @@ make hass
 
 ### Version Information
 
-- **Current Version:** 2.9.3
-- **Minimum HA Version:** 2026.7.0+
+- **Current Version:** 2.10.0
+- **Minimum HA Version:** 2026.8.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
-- **aiohomematic Version:** 2026.8.4
-- **openccu-loom-client Version:** 2026.8.20 (requires an openccu-loom daemon ≥ 0.64.1)
+- **aiohomematic Version:** 2026.8.5
+- **openccu-loom-client Version:** 2026.8.26 (requires an openccu-loom daemon ≥ 0.65.1; pins `openccu-loom-types==0.5.5`, checks daemon API 7.13.0 at connect time)
 
 ### External Resources
 
@@ -1141,5 +1141,5 @@ make hass
 
 ---
 
-**Last Updated**: 2026-08-17
-**Version**: 2.9.3
+**Last Updated**: 2026-08-27
+**Version**: 2.10.0

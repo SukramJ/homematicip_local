@@ -15,6 +15,7 @@ from custom_components.homematicip_local.generic_entity import AioHomematicGener
 
 _DEVICE_IDENTIFIER = "TEST_DEVICE"
 _CENTRAL_NAME = "test_central"
+_VIA_DEVICE_ID = "via-device-registry-id"
 
 
 def _create_mock_data_point(
@@ -71,6 +72,7 @@ def _create_mock_control_unit(*, enable_sub_devices: bool = False) -> MagicMock:
     mock_cu = MagicMock(spec=ControlUnit)
     mock_cu.enable_sub_devices = enable_sub_devices
     mock_cu.disable_config_panel = True
+    mock_cu.ensure_via_device_exists.return_value = _VIA_DEVICE_ID
     return mock_cu
 
 
@@ -180,7 +182,8 @@ class TestScheduleSubdevice:
         device_info = entity._attr_device_info
         assert device_info is not None
         assert device_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
-        assert device_info["via_device"] == (DOMAIN, _CENTRAL_NAME)
+        assert device_info["via_device_id"] == _VIA_DEVICE_ID
+        assert mock_cu.ensure_via_device_exists.call_args.kwargs["via_device"] == _CENTRAL_NAME
 
     @pytest.mark.parametrize(
         "category",
@@ -201,7 +204,8 @@ class TestScheduleSubdevice:
         device_info = entity._attr_device_info
         assert device_info is not None
         assert device_info["identifiers"] == {(DOMAIN, f"{_DEVICE_IDENTIFIER}-schedule")}
-        assert device_info["via_device"] == (DOMAIN, _DEVICE_IDENTIFIER)
+        assert device_info["via_device_id"] == _VIA_DEVICE_ID
+        assert mock_cu.ensure_via_device_exists.call_args.kwargs["via_device"] == _DEVICE_IDENTIFIER
 
     @pytest.mark.parametrize(
         "category",
@@ -223,7 +227,8 @@ class TestScheduleSubdevice:
         assert device_info is not None
         # Entity stays on main device, not a separate schedule sub-device
         assert device_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
-        assert device_info["via_device"] == (DOMAIN, _CENTRAL_NAME)
+        assert device_info["via_device_id"] == _VIA_DEVICE_ID
+        assert mock_cu.ensure_via_device_exists.call_args.kwargs["via_device"] == _CENTRAL_NAME
 
 
 def _create_mock_hub_data_point(

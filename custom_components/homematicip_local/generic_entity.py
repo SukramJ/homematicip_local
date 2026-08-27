@@ -142,7 +142,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
             via_device = hm_device.identifier
             identifier = f"{hm_device.identifier}-schedule"
 
-        control_unit.ensure_via_device_exists(
+        via_device_id = control_unit.ensure_via_device_exists(
             identifier=identifier,
             suggested_area=suggested_area,
             via_device=via_device,
@@ -162,7 +162,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
             sw_version=hm_device.firmware,
             suggested_area=suggested_area,
             # Link to the Homematic control unit.
-            via_device=(DOMAIN, via_device),
+            via_device_id=via_device_id,
         )
 
         self._static_state_attributes = self._get_static_state_attributes()
@@ -400,7 +400,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         if device_id := self.registry_entry.device_id:
             # Remove from device registry.
             device_registry = dr.async_get(self.hass)
-            if device_id in device_registry.devices:
+            if device_registry.async_get(device_id) is not None:
                 # This will also remove associated entities from entity registry.
                 device_registry.async_remove_device(device_id)
 

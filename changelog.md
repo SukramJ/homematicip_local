@@ -1,9 +1,14 @@
-# Version [2.9.2](https://github.com/SukramJ/homematicip_local/compare/2.9.1...2.9.2) (2026-08-23)
+# Version [2.10.0](https://github.com/SukramJ/homematicip_local/compare/2.9.1...2.10.0) (unreleased)
 
 ## What's Changed
 
 ### Integration
 
+- **Fix: on Home Assistant 2026.9 no entity was added any more** — a startup produced hundreds of `Error adding entity None for domain …` with `RuntimeError: Detected code that calls device_registry.async_get_or_create with a deprecated via_device parameter` ([aiohomematic#3365](https://github.com/SukramJ/aiohomematic/issues/3365)). The deprecation notice promises a warning until 2027.8, but that promise only holds while HA can find the integration in the call stack: the `via_device` of a `DeviceInfo` is passed on by HA's own `entity_platform`, so no integration frame is left, and HA then falls back to its core behaviour — which raises. Devices are now linked by registry id: `ControlUnit.ensure_via_device_exists()` returns the id of the via device it made sure exists, and the central is created on demand so a link never points at an unregistered device
+- **Breaking: the minimum Home Assistant version is now 2026.8.0.** The device registry APIs this release moves to (`via_device_id` on `DeviceInfo` and `async_get_or_create`, plus `async_get_device_by_identifier`) do not exist in 2026.7
+- **Fix: devices were no longer removed from the device registry when their last entity disappeared.** The removal path tested `device_id in device_registry.devices`, and on HA 2026.9 `devices` iterates device entries instead of being a mapping, so the membership test silently never matched. It now asks the registry directly
+- Replace `device_registry.async_get_device(identifiers=…)` with `async_get_device_by_identifier(identifier, config_entry_id)`. Identifiers are no longer unique across config entries, so the lookup is now scoped to this integration's own entry — which is what all three call sites (via-device creation, device-action/-trigger resolution, and the known-device check after a cache clear) meant all along
+- Side effect of the id-based links, measured against the full test device set: devices that so far ended up with no via device at all — the virtual remotes among them — now hang off the central like every other device (7 of 439 devices in that run; entity count unchanged at 4705)
 - Garage doors (`HmIP-MOD-HO`, `HmIP-MOD-TM`) gain a **Door Mode** select entity that exposes the door's three physical states — closed, open and ventilation position — as a first-class, tappable control. Home Assistant's `cover` platform has no native ventilation state ([architecture#502](https://github.com/home-assistant/architecture/discussions/502)), so ventilation was previously only reachable by setting a cover position inside an undiscoverable range. The data point itself comes with the aiohomematic bump below; the integration contributes the entity name and its state translations. Suggested in [#1252](https://github.com/SukramJ/homematicip_local/pull/1252) by [@ANierbeck](https://github.com/ANierbeck)
 
 ### Config Panel
@@ -16,17 +21,19 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.8.4](https://github.com/SukramJ/aiohomematic/compare/2026.8.2...2026.8.4)
+#### Bump aiohomematic to [2026.8.5](https://github.com/SukramJ/aiohomematic/compare/2026.8.2...2026.8.5)
 
+- **Fix: `HM-CC-TC` climate entities stayed frozen at their restored state.** `CustomDpSimpleRfThermostat` gated its validity on `TEMPERATURE` **and** `SETPOINT`, but `HM-CC-TC` reports `SETPOINT` only when the wheel is turned on the device — never periodically. On a device nobody had touched since the last CCU restart, `SETPOINT` therefore stayed unrefreshed forever, which dragged the whole climate data point to `is_valid=False`: the entity kept `value_state=restored` and froze `current_temperature`, `target_temperature` and `hvac_mode`, while the sibling `sensor.*` entities kept updating from the very same `TEMPERATURE` events. Validity now follows `TEMPERATURE` alone, and `target_temperature` stays `None` until a real `SETPOINT` arrives instead of reporting a stale value
+- **Fix: classic RF thermostats hung at the restored state while the operating mode stayed untouched.** Same failure class for `CustomDpRfThermostat` (`HM-CC-RT-DN`, `HM-TC-IT-WM-W-EU`, `HM-CC-VG-1`, `BC-RT-TRX-*`, `BC-TC-C-WM`), which gated its validity on `CONTROL_MODE` — a parameter these devices only send when the mode actually changes. After a CCU restart it could stay unrefreshed for as long as nobody switched between AUTO and MANU. Validity now follows `TEMPERATURE` and `SETPOINT`; until `CONTROL_MODE` arrives, `mode` reports its existing `AUTO` fallback
 - Expose the garage door's discrete mode as a `SELECT`-category combined data point. `CustomDpGarage` now declares a `CombinedDpGarageDoorMode` that reads `DOOR_STATE` and writes `DOOR_COMMAND` under its own parameter name `DOOR_MODE`, so the integration's generic select dispatch picks it up without any platform-side wiring — and the entity is named after what it does rather than borrowing the identity of either source parameter. While the door is travelling the select keeps reporting the mode the door is heading for instead of dropping to `unknown`; a `STOP` clears that held mode
 - Fix `GarageDoorState.POSITION_UNKNOWN`, which carried a stray leading underscore and therefore never matched the `DOOR_STATE` value reported by the CCU
 - Add support for the flush-mount switch actuators `HmIP-FS6` and `HmIP-FSI6`. `HmIP-FS6` has no input channel, so it shares the channel layout of `HmIP-FSM` and is now registered as a switch profile on channel 2 — without that registration it only produced generic data points. `OPERATING_VOLTAGE` is ignored for it as well, consistent with the other mains-powered actuators
 - Expose `CHANNEL_OPERATION_MODE` on channel 1 of `HmIP-FSI6`. The custom switch data point of that device already worked, but the un-ignore rule was keyed on `HmIP-FSI16` only — model keys are matched with `str.startswith`, and `"hmip-fsi6".startswith("hmip-fsi16")` is `False`, so the operation mode of the push-button input stayed hidden
 
-#### Bump openccu-loom-client to `2026.8.25` (pins `openccu-loom-types==0.5.4`)
+#### Bump openccu-loom-client to `2026.8.26` (pins `openccu-loom-types==0.5.5`)
 
-- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. Advances the bundled loom client from `2026.8.9` to `2026.8.25` and its transitively pinned `openccu-loom-types` from `0.3.10` to `0.5.4`
-- **This raises the minimum daemon to openccu-loom 0.64.2 or newer.** The client is generated against the daemon's API 7.7.0 and checks that version at connect time, so it refuses a daemon reporting an older API rather than half-initializing against an incompatible one — an older daemon is rejected outright rather than merely missing newer surface. Installations that cannot update the daemon should stay on 2.9.1
+- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. Advances the bundled loom client from `2026.8.9` to `2026.8.26` and its transitively pinned `openccu-loom-types` from `0.3.10` to `0.5.5`
+- **This raises the minimum daemon to openccu-loom 0.65.1 or newer.** The client is generated against the daemon's API 7.13.0 and checks that version at connect time, so it refuses a daemon reporting an older API rather than half-initializing against an incompatible one — an older daemon is rejected outright rather than merely missing newer surface. Installations that cannot update the daemon should stay on 2.9.1
 
 # Version [2.9.1](https://github.com/SukramJ/homematicip_local/compare/2.9.0...2.9.1) (2026-08-10)
 

@@ -9,7 +9,7 @@ from aiohomematic.const import CATEGORIES
 from homeassistant.const import Platform
 
 DOMAIN: Final = "homematicip_local"
-HMIP_LOCAL_MIN_HA_VERSION: Final = "2026.7.0"
+HMIP_LOCAL_MIN_HA_VERSION: Final = "2026.8.0"
 
 # The openccu-loom alarm system gets a device registry object of its own
 # instead of hanging off a CCU. Alarm zones are daemon-level and may hold
