@@ -1,4 +1,14 @@
-# Version [2.10.0](https://github.com/SukramJ/homematicip_local/compare/2.9.1...2.10.0) (unreleased)
+# Version [2.10.1](https://github.com/SukramJ/homematicip_local/compare/2.10.0...2.10.1) (unreleased)
+
+## What's Changed
+
+### Dependencies
+
+#### Bump openccu-loom-client to `2026.8.27` (pins `openccu-loom-types==0.5.7`)
+
+- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It completes reconnect recovery ([client#104](https://github.com/SukramJ/openccu-loom-client/pull/104)) and is generated against daemon API 7.15.0, up from 7.13.0, which it checks at connect time. The backend's details stay out of scope for this changelog until it leaves Beta
+
+# Version [2.10.0](https://github.com/SukramJ/homematicip_local/compare/2.9.1...2.10.0) (2026-08-27)
 
 ## What's Changed
 
