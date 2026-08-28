@@ -8,10 +8,20 @@ from aiohomematic.const import DataPointCategory
 from custom_components.homematicip_local.entity_helpers import REGISTRY
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.event import EventDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import UnitOfTime
 
 
 class TestEntityHelper:
     """Tests for entity helper functions."""
+
+    def test_daemon_and_ccu_latency_do_not_share_a_description(self) -> None:
+        """The rule must match the daemon sensor only, not the CCU one beside it."""
+        daemon = REGISTRY.find(category=DataPointCategory.HUB_SENSOR, var_name="daemon_latency")
+        ccu = REGISTRY.find(category=DataPointCategory.HUB_SENSOR, var_name="connection_latency")
+        assert daemon is not None
+        assert ccu is not None
+        assert daemon.key != ccu.key
 
     def test_registry_defaults(self) -> None:
         """Test that defaults are returned when no rule matches."""
@@ -66,6 +76,26 @@ class TestEntityHelper:
         assert description is not None
         assert description.key == "DAEMON_CONNECTION"
         assert description.device_class == BinarySensorDeviceClass.CONNECTIVITY
+
+    def test_registry_find_daemon_latency(self) -> None:
+        """
+        The client-to-daemon latency sensor is distinct from the CCU one.
+
+        Two legs with unrelated causes: a slow reverse proxy between Home
+        Assistant and the daemon is invisible in the CCU figure, and a
+        struggling CCU is invisible in this one. They are therefore two
+        sensors, and each needs its own description — without one the entity
+        renders with no unit, device class or icon.
+        """
+        description = REGISTRY.find(
+            category=DataPointCategory.HUB_SENSOR,
+            var_name="daemon_latency",
+        )
+
+        assert description is not None
+        assert description.key == "DAEMON_LATENCY"
+        assert description.device_class == SensorDeviceClass.DURATION
+        assert description.native_unit_of_measurement == UnitOfTime.MILLISECONDS
 
     @pytest.mark.parametrize("device_model", ["HmIP-DBB", "HmIP-DSD-PCB"])
     def test_registry_find_doorbell_event(self, device_model: str) -> None:

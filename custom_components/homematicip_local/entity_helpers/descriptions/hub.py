@@ -312,6 +312,28 @@ HUB_RULES: list[EntityDescriptionRule] = [
             suggested_display_precision=1,
         ),
     ),
+    # Round-trip latency to the daemon itself (openccu-loom backend only).
+    #
+    # Deliberately separate from the connection-latency rule above, which
+    # measures the daemon-to-CCU leg. The two have unrelated causes — a slow
+    # reverse proxy or a congested link between here and the daemon is
+    # invisible in the CCU figure, and a struggling CCU is invisible in this
+    # one — so they are two sensors rather than one, and each needs its own
+    # description. Matched on a literal because the singleton is loom-specific
+    # and aiohomematic has no constant for it.
+    EntityDescriptionRule(
+        category=DataPointCategory.HUB_SENSOR,
+        var_name_contains="daemon_latency",
+        description=diagnostic_sensor(
+            key="DAEMON_LATENCY",
+            device_class=SensorDeviceClass.DURATION,
+            unit=UnitOfTime.MILLISECONDS,
+            icon="mdi:lan-connect",
+            translation_key="daemon_latency",
+            enabled_default=True,
+            suggested_display_precision=1,
+        ),
+    ),
     EntityDescriptionRule(
         category=DataPointCategory.HUB_SENSOR,
         var_name_contains=METRICS_SENSOR_LAST_EVENT_AGE_NAME,

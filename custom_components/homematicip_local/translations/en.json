@@ -396,6 +396,9 @@
       "cover_tilt": {
         "name": "Tilt level"
       },
+      "daemon_latency": {
+          "name": "Daemon Latency"
+      },
       "direction": {
         "name": "Direction",
         "state": {

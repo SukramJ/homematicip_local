@@ -9,9 +9,9 @@
 
 ### Dependencies
 
-#### Bump openccu-loom-client to `2026.8.31` (pins `openccu-loom-types==0.5.9`)
+#### Bump openccu-loom-client to `2026.8.32` (pins `openccu-loom-types==0.5.9`)
 
-- **This raises the minimum daemon to openccu-loom 0.66.1 or newer.** Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It completes reconnect recovery, adopts the daemon's onboarding release state and fixes a double-scaled `hs_color`; it is generated against daemon API 7.21.0, up from 7.13.0, which it checks at connect time — an older daemon is rejected outright. Installations that cannot update the daemon should stay on 2.10.0. The backend's details stay out of scope for this changelog until it leaves Beta
+- **This raises the minimum daemon to openccu-loom 0.66.1 or newer.** Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It completes reconnect recovery, adopts the daemon's onboarding release state, adds a sensor for the latency to the daemon, and fixes a double-scaled `hs_color`; it is generated against daemon API 7.21.0, up from 7.13.0, which it checks at connect time — an older daemon is rejected outright. Installations that cannot update the daemon should stay on 2.10.0. The backend's details stay out of scope for this changelog until it leaves Beta
 
 #### Bump aiohomematic to [2026.8.6](https://github.com/SukramJ/aiohomematic/compare/2026.8.5...2026.8.6)
 
