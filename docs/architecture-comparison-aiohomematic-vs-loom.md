@@ -9,7 +9,7 @@ power (or are being prepared to power) the Home Assistant integration
    in-process inside Home Assistant.
 2. **OpenCCU-Loom** — a newer split architecture: a standalone **Go daemon**
    (`openccu-loom`) that owns the CCU connection and exposes a REST + WebSocket
-   API, consumed by a **thin Python client** (`openccu-loom-client`) whose
+   API, consumed by a **Python client** (`openccu-loom-client`) whose
    `compat/aiohomematic` layer mimics the aiohomematic API so the integration
    can use either backend.
 
@@ -17,6 +17,29 @@ power (or are being prepared to power) the Home Assistant integration
 integration v2.8.0): the Loom backend is **bundled but not user-selectable** —
 `LOOM_BACKEND_SELECTABLE = False` (`custom_components/homematicip_local/const.py:65`).
 It is groundwork for a future alternative, not a shipping feature.
+
+**Re-measured 2026-08-28.** The code-size rows in §1 and §7 were taken again
+with one method across all five packages — `wc -l` over package sources,
+excluding tests, `venv/`, `build/`, `*.egg-info/`, `__pycache__/`, and
+`*_test.go` on the Go side. Only those rows changed; nothing else here has
+been re-verified against the current tree, and the daemon versions cited
+further down (0.7.1 / API 1.18.0) are long superseded — daemon 0.67.1 and API
+7.23.0 at the time of writing.
+
+The number worth calling out, because this document leans on it: the loom
+client is no longer thin. It was ~14,000 LOC when this was written. It peaked
+at 22,663 and sits at **21,730** after a round of deletions, of which
+`compat/` is 10,034 — 46 %, up from 34.5 % three months earlier, and growing
+faster than the core. The "thin adapter" premise in the original §1 and §7 has
+eroded by about 55 %.
+
+That does not overturn this document's central claim. A two-round
+architecture review of the six coupled repositories (2026-08-28) tested
+exactly that claim and confirmed it: measured against the four deployment
+goals, moving the compat shim into this repository, turning the daemon's
+north surface into an HA entity projection, and generating the client's REST
+façade all failed. §13's *"Loom does not reduce complexity; it relocates it"*
+stands as written.
 
 > **Update (2026-07-31, integration v2.9.0).** The master switch was removed.
 > The config flow now offers the Loom backend when it is relevant: an
@@ -43,8 +66,8 @@ It is groundwork for a future alternative, not a shipping feature.
 | | `aiohomematic` (direct) | OpenCCU-Loom (daemon + thin client) |
 |---|---|---|
 | **Shape** | One in-process library, HA ↔ CCU | Standalone Go daemon between HA and CCU |
-| **Code size** | ~74,130 LOC Python (200 files) | Client ~13,985 LOC Python + types ~2,479 LOC + **daemon ~231,923 LOC Go** |
-| **HA-process footprint** | Heavy (full library) | Thin (~14k LOC adapter) |
+| **Code size** | ~72,730 LOC Python (199 files) | Client ~21,730 LOC Python + types ~6,033 LOC + **daemon ~329,997 LOC Go** |
+| **HA-process footprint** | Heavy (full library) | ~21.7k LOC adapter, 46 % of it the compat shim |
 | **South-bound (to CCU)** | XML-RPC + JSON-RPC | XML-RPC + **BIN-RPC** + JSON-RPC |
 | **North-bound (to HA)** | n/a (is in-process) | REST + WebSocket (JSON, delta push) |
 | **Inbound listener in HA?** | **Yes** (local XML-RPC callback server) | **No** (single outgoing WebSocket) |
@@ -331,8 +354,8 @@ pays an N×M REST fan-out between daemon and client on the first connect.
 
 | | `aiohomematic` | Loom |
 |---|---|---|
-| Lines in the HA process | ~74,130 (full library) | ~14,000 (thin adapter) |
-| Lines total in the system | ~74,130 | ~14,000 + ~2,479 + **~231,923 (daemon)** |
+| Lines in the HA process | ~72,730 (full library) | ~21,730 (adapter) |
+| Lines total in the system | ~72,730 | ~21,730 + ~6,033 + **~329,997 (daemon)** |
 | Heavy logic location | in-process | in the Go daemon |
 | Moving parts | 1 | 3 (daemon, client, types) + SQLite |
 | Language(s) | Python | Go (daemon) + Python (client) |

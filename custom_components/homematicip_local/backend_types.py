@@ -2,10 +2,23 @@
 
 With the openccu-loom backend the data points handed to the platforms
 are instances of openccu-loom-client's aiohomematic-*compatible*
-classes, not of aiohomematic's own classes. aiohomematic's
-Protocol-based metaclass blocks both subclassing (C-level slot-layout
-conflict) and ``ABCMeta.register`` virtual subclassing, so platform
-dispatch cannot rely on a shared class identity.
+classes, not of aiohomematic's own classes, and there is no way to make
+one class identity cover both.
+
+Not for the reason this docstring used to give. Subclassing an
+aiohomematic model class works — measured twice, 15 of 15 dispatch
+classes — so the "C-level slot-layout conflict" claim was wrong. Two
+other things are true and are what actually rule the alternatives out:
+
+* ``ABCMeta.register`` fails *silently*. ``CustomDpCover.register(cls)``
+  returns without error and ``isinstance`` stays ``False``, so a virtual
+  registration would read as working and dispatch nothing.
+* Inheriting is worse than useless. On a subclass that skips
+  ``__init__`` — which a daemon-mediated twin must, since aiohomematic's
+  constructors want a live ``CentralUnit`` — 93 of 153 members raise on
+  access, 42 of them public, including the ones the platforms read:
+  ``current_position``, ``is_closed``, ``unique_id``, ``name``,
+  ``available``, ``usage``.
 
 Instead, each dispatch checks ``isinstance`` against a tuple pairing the
 aiohomematic class with its openccu-loom-client twin. This is purely
@@ -18,6 +31,7 @@ aiohomematic class alone, so a CCU-only install is unaffected.
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any, cast
 
 from aiohomematic.model.custom import (
@@ -58,6 +72,9 @@ else:
     _a = _loom_alarm_panel
 
 
+_LOGGER = logging.getLogger(__name__)
+
+
 def _pair[T](aio_cls: type[T], loom_attr: str, loom_module: object | None) -> tuple[type[T], ...]:
     """Return ``(aio_cls, loom_cls)`` if the loom twin exists, else ``(aio_cls,)``.
 
@@ -70,6 +87,17 @@ def _pair[T](aio_cls: type[T], loom_attr: str, loom_module: object | None) -> tu
         loom_cls = getattr(loom_module, loom_attr, None)
         if loom_cls is not None:
             return (aio_cls, cast("type[T]", loom_cls))
+        # The module imported, so openccu-loom-client is installed and this
+        # twin is expected — it has been renamed or removed. Degrading to the
+        # aiohomematic class alone would silently drop every loom entity of
+        # this type out of its platform: a blind loses tilt, a garage loses
+        # its class, a sound player loses its soundfiles, and nothing says so.
+        _LOGGER.warning(
+            "openccu-loom-client is installed but exposes no %s; entities of this type will not be "
+            "dispatched on the openccu-loom backend. This is a version mismatch between the "
+            "integration and openccu-loom-client",
+            loom_attr,
+        )
     return (aio_cls,)
 
 
