@@ -396,6 +396,9 @@
             "cover_tilt": {
                 "name": "Lamellenposition"
             }, 
+            "daemon_latency": {
+                "name": "Daemon-Latenz"
+            }, 
             "direction": {
                 "name": "Richtung", 
                 "state": {
