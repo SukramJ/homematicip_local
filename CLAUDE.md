@@ -1128,7 +1128,7 @@ make hass
 - **Minimum HA Version:** 2026.8.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
 - **aiohomematic Version:** 2026.8.5
-- **openccu-loom-client Version:** 2026.8.29 (pins `openccu-loom-types==0.5.9`, checks daemon API 7.21.0 at connect time)
+- **openccu-loom-client Version:** 2026.8.29 (requires an openccu-loom daemon ≥ 0.66.1; pins `openccu-loom-types==0.5.9`, checks daemon API 7.21.0 at connect time)
 
 ### External Resources
 
