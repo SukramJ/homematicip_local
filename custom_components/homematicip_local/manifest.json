@@ -12,8 +12,8 @@
   "loggers": ["aiohomematic", "aiohomematic_config", "openccu_loom_client"],
   "requirements": [
     "openccu-data==2026.7.2",
-    "openccu-loom-client==2026.8.27",
-    "aiohomematic-config==2026.8.0",
+    "openccu-loom-client==2026.8.29",
+    "aiohomematic-config==2026.8.1",
     "aiohomematic==2026.8.5"
   ],
   "ssdp": [
