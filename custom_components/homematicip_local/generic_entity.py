@@ -130,13 +130,16 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
             and hm_device.has_sub_devices
             and (dp_channel := data_point.channel) is not None
             and dp_channel.is_in_multi_group
+            # No group master means no sub device to split off, and moving the
+            # via device up to the device itself would then make the device its
+            # own via device — which HA rejects with a HomeAssistantError that
+            # no platform catches. Stay on the device, below the central.
+            and (channel_group_master := dp_channel.group_master) is not None
         ):
             via_device = hm_device.identifier
-
-            if (channel_group_master := dp_channel.group_master) is not None:
-                identifier = f"{hm_device.identifier}-{channel_group_master.group_no}"
-                if (room := channel_group_master.room) is not None:
-                    suggested_area = room
+            identifier = f"{hm_device.identifier}-{channel_group_master.group_no}"
+            if (room := channel_group_master.room) is not None:
+                suggested_area = room
 
         if control_unit.enable_sub_devices and data_point.category in _SCHEDULE_CATEGORIES:
             via_device = hm_device.identifier

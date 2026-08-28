@@ -2,6 +2,10 @@
 
 ## What's Changed
 
+### Integration
+
+- **Fix: a sub-device channel without a group master could make its device its own via device.** With sub devices enabled, the via device was moved up to the Homematic device as soon as a channel reported itself as part of a multi-channel group — before the group master, which supplies the sub-device identifier, was resolved. Without a master the identifier stayed on the device, so device and via device were the same. HA used to ignore such a self-reference with a log line; since 2026.9 it raises a `HomeAssistantError` that no platform catches, which would take down the whole platform setup ([device registry follow-up changes](https://developers.home-assistant.io/blog/2026/08/24/device-registry-follow-up-changes/)). The split is now conditional on the group master, so a channel without one simply stays on its device, below the central
+
 ### Dependencies
 
 #### Bump openccu-loom-client to `2026.8.27` (pins `openccu-loom-types==0.5.7`)

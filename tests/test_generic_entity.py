@@ -173,6 +173,22 @@ class TestHaDeviceName:
 class TestScheduleSubdevice:
     """Tests for schedule sub-device creation logic."""
 
+    def test_multi_group_channel_without_group_master_stays_on_the_device(self) -> None:
+        """Test that a group-master-less channel does not make the device its own via device."""
+        mock_dp = _create_mock_data_point(category=DataPointCategory.SWITCH)
+        mock_dp.device.has_sub_devices = True
+        mock_dp.channel.is_in_multi_group = True
+        mock_dp.channel.group_master = None
+        mock_cu = _create_mock_control_unit(enable_sub_devices=True)
+        entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
+
+        device_info = entity._attr_device_info
+        assert device_info is not None
+        # Without a group master there is no sub device to split off, so the
+        # entity stays on the device — which hangs off the central, not itself.
+        assert device_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
+        assert mock_cu.ensure_via_device_exists.call_args.kwargs["via_device"] == _CENTRAL_NAME
+
     def test_non_schedule_no_subdevice(self) -> None:
         """Test that non-schedule entities do not create a sub-device."""
         mock_dp = _create_mock_data_point(category=DataPointCategory.SWITCH)
