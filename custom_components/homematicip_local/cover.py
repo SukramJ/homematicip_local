@@ -6,7 +6,7 @@ import logging
 from typing import Any, Final, TypeVar, override
 
 from aiohomematic.const import DataPointCategory, DataPointType
-from aiohomematic.model.custom import CustomDpBlind, CustomDpCover, CustomDpGarage, CustomDpIpBlind
+from aiohomematic.interfaces.custom import CoverDataPointProtocol, GarageDataPointProtocol, TiltCoverDataPointProtocol
 from aiohomematic.model.data_point import CallParameterCollector
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -21,7 +21,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
-from .backend_types import CUSTOM_DP_BLIND, CUSTOM_DP_COVER, CUSTOM_DP_GARAGE, CUSTOM_DP_IP_BLIND
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import AioHomematicGenericEntity, AioHomematicGenericRestoreEntity
 from .support import handle_homematic_errors
@@ -31,7 +30,10 @@ ATTR_CHANNEL_TILT_POSITION: Final = "channel_tilt_position"
 
 _LOGGER = logging.getLogger(__name__)
 
-HmGenericCover = TypeVar("HmGenericCover", bound=CustomDpCover | CustomDpGarage)
+# Bound to the category protocols rather than the concrete classes: both
+# backends satisfy them structurally, so the platform stops depending on
+# which implementation produced the data point.
+HmGenericCover = TypeVar("HmGenericCover", bound=CoverDataPointProtocol | GarageDataPointProtocol)
 
 
 async def async_setup_entry(
@@ -49,8 +51,26 @@ async def async_setup_entry(
         entities: list[AioHomematicBaseCover[Any]] = []
 
         for data_point in data_points:
-            if isinstance(data_point, CUSTOM_DP_IP_BLIND):
-                if data_point.operation_mode and data_point.operation_mode == "SHUTTER":
+            # Dispatch on what the device can do, not on which class produced
+            # it. The category protocols discriminate the three cases the same
+            # way on both backends — verified structurally: only a garage
+            # satisfies GarageDataPointProtocol, only a blind satisfies
+            # TiltCoverDataPointProtocol, and every cover satisfies
+            # CoverDataPointProtocol — so the order below is Garage, then tilt,
+            # then plain cover.
+            if isinstance(data_point, GarageDataPointProtocol):
+                entities.append(
+                    AioHomematicGarage(
+                        control_unit=control_unit,
+                        data_point=data_point,
+                    )
+                )
+            elif isinstance(data_point, TiltCoverDataPointProtocol):
+                # An IP blind configured as a shutter presents no tilt to the
+                # user, so it becomes a plain cover. `operation_mode` lives on
+                # the concrete IP-blind class and on no protocol, which is why
+                # this reads it defensively rather than narrowing to a type.
+                if getattr(data_point, "operation_mode", None) == "SHUTTER":
                     entities.append(
                         AioHomematicCover(
                             control_unit=control_unit,
@@ -64,23 +84,9 @@ async def async_setup_entry(
                             data_point=data_point,
                         )
                     )
-            elif isinstance(data_point, CUSTOM_DP_BLIND):
-                entities.append(
-                    AioHomematicBlind(
-                        control_unit=control_unit,
-                        data_point=data_point,
-                    )
-                )
-            elif isinstance(data_point, CUSTOM_DP_COVER):
+            elif isinstance(data_point, CoverDataPointProtocol):
                 entities.append(
                     AioHomematicCover(
-                        control_unit=control_unit,
-                        data_point=data_point,
-                    )
-                )
-            elif isinstance(data_point, CUSTOM_DP_GARAGE):
-                entities.append(
-                    AioHomematicGarage(
                         control_unit=control_unit,
                         data_point=data_point,
                     )
@@ -197,11 +203,11 @@ class AioHomematicBaseCover(AioHomematicGenericRestoreEntity[HmGenericCover], Co
         await self._data_point.stop()
 
 
-class AioHomematicCover(AioHomematicBaseCover[CustomDpCover]):
+class AioHomematicCover(AioHomematicBaseCover[CoverDataPointProtocol]):
     """Representation of the HomematicIP cover entity."""
 
 
-class AioHomematicBlind(AioHomematicBaseCover[CustomDpBlind | CustomDpIpBlind]):
+class AioHomematicBlind(AioHomematicBaseCover[TiltCoverDataPointProtocol]):
     """Representation of the HomematicIP blind entity."""
 
     @property
@@ -251,5 +257,5 @@ class AioHomematicBlind(AioHomematicBaseCover[CustomDpBlind | CustomDpIpBlind]):
         await self._data_point.stop_tilt()
 
 
-class AioHomematicGarage(AioHomematicBaseCover[CustomDpGarage]):
+class AioHomematicGarage(AioHomematicBaseCover[GarageDataPointProtocol]):
     """Representation of the HomematicIP garage entity."""
