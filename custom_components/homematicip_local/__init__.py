@@ -25,7 +25,7 @@ from aiohomematic.support import find_free_port
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, __version__ as HA_VERSION_STR
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_registry import async_migrate_entries
 from homeassistant.helpers.issue_registry import async_delete_issue
@@ -132,6 +132,26 @@ def _any_entry_has_panel_enabled(*, hass: HomeAssistant) -> bool:
     return False
 
 
+class _NeverRaised(Exception):
+    """Placeholder type so an `except` clause can be written unconditionally."""
+
+
+def _loom_incompatible_version_error() -> type[Exception]:
+    """
+    Return the loom client's incompatible-version error, or an unraisable stand-in.
+
+    Imported lazily like every other `openccu_loom_client` reference in this
+    integration, and degraded to a type nothing raises when the package is
+    absent — the `except` clause then simply never matches, which is the
+    correct behaviour on a backend that has no daemon.
+    """
+    try:
+        from openccu_loom_client import LoomIncompatibleVersionError  # noqa: PLC0415
+    except ImportError:
+        return _NeverRaised
+    return LoomIncompatibleVersionError
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -> bool:
     """Set up Homematic(IP) Local for OpenCCU from a config entr11y."""
     # The openccu-loom backend talks to the daemon via openccu-loom-client
@@ -224,6 +244,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
             entry.data.get(CONF_INSTANCE_NAME),
         )
         raise ConfigEntryAuthFailed("Authentication failed") from err
+    except _loom_incompatible_version_error() as err:
+        # Not a transient failure: the daemon on the other end speaks a
+        # contract this build cannot, and retrying reaches the same daemon
+        # with the same answer until somebody upgrades one side. Raising
+        # ConfigEntryError stops the retry loop and tells the user, where
+        # ConfigEntryNotReady would retry forever behind a spinner.
+        #
+        # Must be caught after AuthFailure and before any handler for the
+        # general loom transport error, which it subclasses.
+        _LOGGER.error(
+            "The openccu-loom daemon for %s is not compatible with this integration: %s",
+            entry.data.get(CONF_INSTANCE_NAME),
+            err,
+        )
+        raise ConfigEntryError(str(err)) from err
     if not is_loom_backend:
         await _async_reanchor_hub_unique_ids_on_serial_change(hass, entry, control)
     await async_setup_services(hass)
