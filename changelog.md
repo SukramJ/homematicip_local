@@ -5,12 +5,17 @@
 ### Integration
 
 - **Fix: a sub-device channel without a group master could make its device its own via device.** With sub devices enabled, the via device was moved up to the Homematic device as soon as a channel reported itself as part of a multi-channel group — before the group master, which supplies the sub-device identifier, was resolved. Without a master the identifier stayed on the device, so device and via device were the same. HA used to ignore such a self-reference with a log line; since 2026.9 it raises a `HomeAssistantError` that no platform catches, which would take down the whole platform setup ([device registry follow-up changes](https://developers.home-assistant.io/blog/2026/08/24/device-registry-follow-up-changes/)). The split is now conditional on the group master, so a channel without one simply stays on its device, below the central
+- **Fix: setup no longer retries forever against an incompatible openccu-loom daemon.** Only an authentication failure had its own case, so a daemon speaking a contract this build cannot ended up on the generic "not ready" path and was retried indefinitely with nothing saying why. It is reported as a setup error now. openccu-loom backend only
 
 ### Dependencies
 
-#### Bump openccu-loom-client to `2026.8.29` (pins `openccu-loom-types==0.5.9`)
+#### Bump openccu-loom-client to `2026.8.31` (pins `openccu-loom-types==0.5.9`)
 
-- **This raises the minimum daemon to openccu-loom 0.66.1 or newer.** Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It completes reconnect recovery, adopts the onboarding release state and fixes a double-scaled `hs_color`; it is generated against daemon API 7.21.0, up from 7.13.0, which it checks at connect time — an older daemon is rejected outright. Installations that cannot update the daemon should stay on 2.10.0. The backend's details stay out of scope for this changelog until it leaves Beta
+- **This raises the minimum daemon to openccu-loom 0.66.1 or newer.** Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It completes reconnect recovery, adopts the daemon's onboarding release state and fixes a double-scaled `hs_color`; it is generated against daemon API 7.21.0, up from 7.13.0, which it checks at connect time — an older daemon is rejected outright. Installations that cannot update the daemon should stay on 2.10.0. The backend's details stay out of scope for this changelog until it leaves Beta
+
+#### Bump aiohomematic to [2026.8.6](https://github.com/SukramJ/aiohomematic/compare/2026.8.5...2026.8.6)
+
+- One added field, `InboxDeviceData.awaiting_release`, for the openccu-loom backend's onboarding states. It defaults to false and no direct-CCU path sets it
 
 #### Bump aiohomematic-config to [2026.8.1](https://github.com/SukramJ/aiohomematic-config/compare/2026.8.0...2026.8.1)
 
