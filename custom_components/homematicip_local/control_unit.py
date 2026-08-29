@@ -616,7 +616,8 @@ class ControlUnit(BaseControlUnit):
         }
         hub_coordinator = self._central.hub_coordinator
         # Programs + sysvars
-        current_unique_ids.update(f"{DOMAIN}_{dp.unique_id}" for dp in hub_coordinator.get_hub_data_points())
+        hub_data_points = hub_coordinator.get_hub_data_points()
+        current_unique_ids.update(f"{DOMAIN}_{dp.unique_id}" for dp in hub_data_points)
         # Singleton hub data points (alarm/service messages, inbox, system update)
         for single_dp in (
             hub_coordinator.alarm_messages_dp,
@@ -646,6 +647,19 @@ class ControlUnit(BaseControlUnit):
                 f"{DOMAIN}_{eg.unique_id}" for eg in self._central.query_facade.get_event_groups(event_type=event_type)
             )
 
+        # The pre-id keys the slug-to-id migration would rename onto one of the
+        # live data points above. It runs at the end of start_central(), so an
+        # entry still holding one here means it did not: it raised, or that data
+        # point yielded no old key. Deletion is permanent and the next start
+        # retries the migration, so these are kept rather than swept — the same
+        # reasoning as the central-id drift exemption below.
+        migratable_unique_ids: set[str] = {
+            f"{DOMAIN}_{old_unique_id}"
+            for dp in hub_data_points
+            if (legacy_name := getattr(dp, "legacy_name", None))
+            and (old_unique_id := hub_key_from_name_slug(dp.unique_id, legacy_name=legacy_name)) is not None
+        }
+
         entity_registry = er.async_get(self._hass)
         device_registry = dr.async_get(self._hass)
         platform_entries: list[er.RegistryEntry] = [
@@ -670,6 +684,7 @@ class ControlUnit(BaseControlUnit):
             if _is_orphan_registry_entry(
                 entry,
                 current_unique_ids=current_unique_ids,
+                migratable_unique_ids=migratable_unique_ids,
                 known_device_addresses=known_device_addresses,
                 device_registry=device_registry,
                 central_id=central_id,
@@ -1743,12 +1758,18 @@ def _is_orphan_registry_entry(
     entry: er.RegistryEntry,
     *,
     current_unique_ids: set[str],
+    migratable_unique_ids: set[str],
     known_device_addresses: set[str],
     device_registry: dr.DeviceRegistry,
     central_id: str,
 ) -> bool:
     """Return True only for entries whose data point is genuinely gone."""
     if entry.unique_id in current_unique_ids:
+        return False
+    # Pre-id hub key whose data point is right there under its id key: the
+    # slug-to-id migration has not taken it yet. The entry carries the history
+    # and the migration is retried on every start, so never sweep it.
+    if entry.unique_id in migratable_unique_ids:
         return False
     # The per-central backup button is integration-native (not an aiohomematic
     # routing key) and is recreated on every setup, so it must never be swept.
