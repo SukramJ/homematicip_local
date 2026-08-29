@@ -20,9 +20,12 @@ The manifest still pinned `2026.8.7` while CI already ran `2026.8.8` — across 
 `tests/test_dependency_pins.py` now pins the two files together, the way the sister client repository does. Bite proof: restoring `2026.8.7` in the manifest fails it by name.
 
 
-#### Bump openccu-loom-client to `2026.8.32` (pins `openccu-loom-types==0.5.9`)
+#### Bump openccu-loom-client to `2026.8.34`
 
-- **This raises the minimum daemon to openccu-loom 0.66.1 or newer.** Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It completes reconnect recovery, adopts the daemon's onboarding release state, adds a sensor for the latency to the daemon, and fixes a double-scaled `hs_color`; it is generated against daemon API 7.21.0, up from 7.13.0, which it checks at connect time — an older daemon is rejected outright. Installations that cannot update the daemon should stay on 2.10.0. The backend's details stay out of scope for this changelog until it leaves Beta
+- **This raises the minimum daemon to openccu-loom 0.67.0 or newer.** Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. The client is generated against daemon API 7.23.0, up from 7.13.0, and checks it at connect time — an older daemon is rejected outright rather than half-working. Installations that cannot update the daemon should stay on 2.10.0.
+- **CUxD entities re-key once**, and the migration for it is in this release. The client's own key rebuild now scopes `CUX*` addresses by the central, matching what the daemon always emitted; without the pass those entities would have orphaned instead of moving. An installation without CUxD devices sees nothing.
+- The client no longer ships `openccu-loom-types` as a separate dependency — it is folded in — so this bump removes a package from the install rather than pinning one. It also floors `aiohomematic` at `2026.8.8`, which this release already pins.
+- The rest is not user-visible from here: a bootstrap that is one request instead of one per device, six admin API façades and thirteen unreachable modules removed from the wheel. The backend's details stay out of scope for this changelog until it leaves Beta.
 
 #### Bump aiohomematic to [2026.8.6](https://github.com/SukramJ/aiohomematic/compare/2026.8.5...2026.8.6)
 
