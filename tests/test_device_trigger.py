@@ -16,6 +16,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry, mock_device_registry
 
+from aiohomematic.const import IDENTIFIER_SEPARATOR
 from custom_components.homematicip_local import DOMAIN as HMIP_DOMAIN
 from custom_components.homematicip_local.device_trigger import TRIGGER_SCHEMA
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
@@ -62,16 +63,12 @@ class _FakeClickEvent:
         return self._event_data
 
 
-def _make_runtime_data(has_client: bool, *, hm_device: Any | None) -> Any:
-    """Create a ControlUnit-like object with a .central supporting has_client/get_device."""
-    client_coordinator = Mock()
-    client_coordinator.has_client.return_value = has_client
-
+def _make_runtime_data(*, hm_device: Any | None) -> Any:
+    """Create a ControlUnit-like object whose central resolves a device by address."""
     device_coordinator = Mock()
     device_coordinator.get_device.return_value = hm_device
 
     central = Mock()
-    central.client_coordinator = client_coordinator
     central.device_coordinator = device_coordinator
 
     runtime_data = Mock()
@@ -120,13 +117,9 @@ class TestAsyncGetTriggers:
         triggers = await dt.async_get_triggers(hass, device_id=dev.id)
         assert triggers == []
 
-        # 3) Proper identifiers but has_client False -> []
         device_entry = _add_device_with_identifiers(
             hass, device_reg, entry, address="ABC0002", interface_id=INTERFACE_ID
         )
-        entry.runtime_data = _make_runtime_data(has_client=False, hm_device=None)
-        triggers = await dt.async_get_triggers(hass, device_id=device_entry.id)
-        assert triggers == []
 
         # Prepare fake DataPointUsage and ClickEvent used in module
         class MyDataPointUsage:
@@ -134,8 +127,8 @@ class TestAsyncGetTriggers:
 
         monkeypatch.setattr(dt, "DataPointUsage", MyDataPointUsage)
 
-        # 4) has client but no device -> []
-        entry.runtime_data = _make_runtime_data(has_client=True, hm_device=None)
+        # 3) The central knows no device at that address -> []
+        entry.runtime_data = _make_runtime_data(hm_device=None)
         triggers = await dt.async_get_triggers(hass, device_id=device_entry.id)
         assert triggers == []
 
@@ -149,7 +142,7 @@ class TestAsyncGetTriggers:
         hm_device = Mock()
         hm_device.generic_events = [object()]  # List with non-ClickEvent object
 
-        entry.runtime_data = _make_runtime_data(has_client=True, hm_device=hm_device)
+        entry.runtime_data = _make_runtime_data(hm_device=hm_device)
         triggers = await dt.async_get_triggers(hass, device_id=device_entry.id)
         assert triggers == []
 
@@ -228,3 +221,24 @@ class TestAsyncAttachTrigger:
             CONF_TYPE: "press_short",
             "subtype": 1,
         }
+
+
+class TestAsyncGetTriggersForeignConfigEntry:
+    """A device can belong to several config entries; only ours is asked."""
+
+    @pytest.mark.asyncio
+    async def test_config_entry_of_another_domain_is_skipped(
+        self, hass: HomeAssistant, device_reg: dr.DeviceRegistry
+    ) -> None:
+        """Without the domain guard the loop would read a foreign integration's runtime_data."""
+        from custom_components.homematicip_local import device_trigger as dt
+
+        foreign = MockConfigEntry(domain="other_domain", data={})
+        foreign.add_to_hass(hass)
+        foreign.runtime_data = "not a control unit"
+        device_entry = device_reg.async_get_or_create(
+            config_entry_id=foreign.entry_id,
+            identifiers={(HMIP_DOMAIN, f"ABC0009{IDENTIFIER_SEPARATOR}{INTERFACE_ID}")},
+        )
+
+        assert await dt.async_get_triggers(hass, device_id=device_entry.id) == []

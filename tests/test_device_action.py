@@ -18,6 +18,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry, mock_device_registry
 
+from aiohomematic.const import IDENTIFIER_SEPARATOR
 from custom_components.homematicip_local import DOMAIN as HMIP_DOMAIN
 from custom_components.homematicip_local.device_action import ACTION_SCHEMA
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
@@ -63,16 +64,12 @@ class _FakeActionDp:
         self.send_value = AsyncMock()
 
 
-def _make_runtime_data(has_client: bool, *, hm_device: Any | None) -> Any:
-    """Create a ControlUnit-like object with a .central supporting has_client/get_device."""
-    client_coordinator = Mock()
-    client_coordinator.has_client.return_value = has_client
-
+def _make_runtime_data(*, hm_device: Any | None) -> Any:
+    """Create a ControlUnit-like object whose central resolves a device by address."""
     device_coordinator = Mock()
     device_coordinator.get_device.return_value = hm_device
 
     central = Mock()
-    central.client_coordinator = client_coordinator
     central.device_coordinator = device_coordinator
 
     runtime_data = Mock()
@@ -115,13 +112,8 @@ class TestAsyncGetActions:
             hass, device_reg, entry, address="ABC0001", interface_id=INTERFACE_ID
         )
 
-        # 2) No runtime_data with proper client (has_client False) -> []
-        entry.runtime_data = _make_runtime_data(has_client=False, hm_device=None)
-        actions = await da.async_get_actions(hass, device_id=device_entry.id)
-        assert actions == []
-
-        # 3) has client but central returns no device -> []
-        entry.runtime_data = _make_runtime_data(has_client=True, hm_device=None)
+        # 2) The central knows no device at that address -> []
+        entry.runtime_data = _make_runtime_data(hm_device=None)
         actions = await da.async_get_actions(hass, device_id=device_entry.id)
         assert actions == []
 
@@ -139,14 +131,14 @@ class TestAsyncGetActions:
 
         hm_device = Mock()
         hm_device.generic_data_points = [non_action_dp]  # List of data points
-        entry.runtime_data = _make_runtime_data(has_client=True, hm_device=hm_device)
+        entry.runtime_data = _make_runtime_data(hm_device=hm_device)
         actions = await da.async_get_actions(hass, device_id=device_entry.id)
         assert actions == []
 
         # 5) hm_device with action DPs where one has unsupported parameter -> filtered
         dp_other = MyDpAction(parameter="FOO", channel_no=2)
         hm_device.generic_data_points = [dp_other]  # List with unsupported parameter
-        entry.runtime_data = _make_runtime_data(has_client=True, hm_device=hm_device)
+        entry.runtime_data = _make_runtime_data(hm_device=hm_device)
         actions = await da.async_get_actions(hass, device_id=device_entry.id)
         assert actions == []
 
@@ -154,7 +146,7 @@ class TestAsyncGetActions:
         dp_short = MyDpAction(parameter="PRESS_SHORT", channel_no=1)
         dp_long = MyDpButton(parameter="PRESS_LONG", channel_no=3)
         hm_device.generic_data_points = [dp_short, dp_long]  # List with valid DPs
-        entry.runtime_data = _make_runtime_data(has_client=True, hm_device=hm_device)
+        entry.runtime_data = _make_runtime_data(hm_device=hm_device)
         actions = await da.async_get_actions(hass, device_id=device_entry.id)
         assert {
             CONF_DOMAIN: HMIP_DOMAIN,
@@ -191,15 +183,6 @@ class TestAsyncCallActionFromConfig:
             hass, device_reg, entry, address="ABC0002", interface_id=INTERFACE_ID
         )
 
-        # 2) has_client False -> no call
-        entry.runtime_data = _make_runtime_data(has_client=False, hm_device=None)
-        await da.async_call_action_from_config(
-            hass,
-            {CONF_DEVICE_ID: device_entry.id, CONF_TYPE: "press_short", "subtype": 1},
-            {},
-            None,
-        )
-
         # Patch the action/button dispatch tuple to our fakes
         class MyDpAction(_FakeActionDp):
             pass
@@ -209,8 +192,8 @@ class TestAsyncCallActionFromConfig:
 
         monkeypatch.setattr(da, "DP_ACTION_OR_BUTTON", (MyDpAction, MyDpButton))
 
-        # 3) has_client True but no device -> early return
-        entry.runtime_data = _make_runtime_data(has_client=True, hm_device=None)
+        # 2) The central knows no device at that address -> early return
+        entry.runtime_data = _make_runtime_data(hm_device=None)
         await da.async_call_action_from_config(
             hass,
             {CONF_DEVICE_ID: device_entry.id, CONF_TYPE: "press_short", "subtype": 1},
@@ -222,7 +205,7 @@ class TestAsyncCallActionFromConfig:
         hm_device = Mock()
         dp_no_match = MyDpAction("PRESS_LONG", 4)
         hm_device.generic_data_points = [dp_no_match]  # List with non-matching DP
-        entry.runtime_data = _make_runtime_data(has_client=True, hm_device=hm_device)
+        entry.runtime_data = _make_runtime_data(hm_device=hm_device)
         await da.async_call_action_from_config(
             hass,
             {CONF_DEVICE_ID: device_entry.id, CONF_TYPE: "press_short", "subtype": 1},
@@ -242,3 +225,87 @@ class TestAsyncCallActionFromConfig:
             None,
         )
         dp.send_value.assert_awaited_once_with(value=True)
+
+
+class TestAsyncGetActionsRejectedDevices:
+    """The two ways a device entry yields no actions before any backend is asked."""
+
+    @pytest.mark.asyncio
+    async def test_config_entry_of_another_domain_is_skipped(
+        self, hass: HomeAssistant, device_reg: dr.DeviceRegistry
+    ) -> None:
+        """A device can belong to several config entries; only ours is asked.
+
+        Without the domain guard the loop would read ``runtime_data`` of a
+        foreign integration, where it is whatever that integration put there.
+        """
+        from custom_components.homematicip_local import device_action as da
+
+        foreign = MockConfigEntry(domain="other_domain", data={})
+        foreign.add_to_hass(hass)
+        foreign.runtime_data = "not a control unit"
+        device_entry = device_reg.async_get_or_create(
+            config_entry_id=foreign.entry_id,
+            identifiers={(HMIP_DOMAIN, f"ABC0003{IDENTIFIER_SEPARATOR}{INTERFACE_ID}")},
+        )
+
+        assert await da.async_get_actions(hass, device_id=device_entry.id) == []
+        await da.async_call_action_from_config(
+            hass, {CONF_DEVICE_ID: device_entry.id, CONF_TYPE: "press_short", "subtype": 1}, {}, None
+        )
+
+    @pytest.mark.asyncio
+    async def test_device_without_an_address_identifier(
+        self, hass: HomeAssistant, device_reg: dr.DeviceRegistry
+    ) -> None:
+        """The central's own entry carries a bare name, no ``address@…``.
+
+        It is a device of this integration like any other, so it reaches both
+        entry points, and neither may treat the name as an address.
+        """
+        from custom_components.homematicip_local import device_action as da
+
+        entry = MockConfigEntry(domain=HMIP_DOMAIN, data={})
+        entry.add_to_hass(hass)
+        central_entry = device_reg.async_get_or_create(
+            config_entry_id=entry.entry_id, identifiers={(HMIP_DOMAIN, "CentralName")}
+        )
+        entry.runtime_data = _make_runtime_data(hm_device=Mock())
+
+        assert await da.async_get_actions(hass, device_id=central_entry.id) == []
+        await da.async_call_action_from_config(
+            hass, {CONF_DEVICE_ID: central_entry.id, CONF_TYPE: "press_short", "subtype": 1}, {}, None
+        )
+        entry.runtime_data.central.device_coordinator.get_device.assert_not_called()
+
+
+class TestAsyncCallActionSkipsForeignDataPoints:
+    """The action loop walks every generic data point of the device."""
+
+    @pytest.mark.asyncio
+    async def test_non_action_data_point_is_skipped(
+        self, hass: HomeAssistant, device_reg: dr.DeviceRegistry, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A device mixes action data points with sensors; only the former may be sent to."""
+        from custom_components.homematicip_local import device_action as da
+
+        class MyDpAction(_FakeActionDp):
+            pass
+
+        monkeypatch.setattr(da, "DP_ACTION_OR_BUTTON", (MyDpAction,))
+
+        entry = MockConfigEntry(domain=HMIP_DOMAIN, data={})
+        device_entry = _add_device_with_identifiers(
+            hass, device_reg, entry, address="ABC0004", interface_id=INTERFACE_ID
+        )
+        matching = MyDpAction(parameter="PRESS_SHORT", channel_no=1)
+        hm_device = Mock()
+        # The sensor comes first, so the loop has to skip it to reach the button.
+        hm_device.generic_data_points = [object(), matching]
+        entry.runtime_data = _make_runtime_data(hm_device=hm_device)
+
+        await da.async_call_action_from_config(
+            hass, {CONF_DEVICE_ID: device_entry.id, CONF_TYPE: "press_short", "subtype": 1}, {}, None
+        )
+
+        matching.send_value.assert_awaited_once_with(value=True)
