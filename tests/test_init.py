@@ -17,6 +17,7 @@ from custom_components.homematicip_local import (
     _async_migrate_loom_unique_ids,
     _async_reanchor_hub_unique_ids_on_serial_change,
     _async_restore_aiohomematic_unique_ids,
+    _cuxd_scoped_unique_id,
     _loom_migrated_unique_id,
 )
 from custom_components.homematicip_local.config_flow import DomainConfigFlow
@@ -741,6 +742,70 @@ async def test_cleanup_orphan_entries_removes_hub_anchored_entry_regardless_of_d
     ControlUnit._async_cleanup_orphaned_entity_registry_entries(fake_self)
 
     assert entity_registry.async_get(hub_orphan.entity_id) is None
+
+
+class TestCuxdUniqueIdScoping:
+    """``_cuxd_scoped_unique_id`` inserts the central-id slot into CUxD keys.
+
+    CUxD hands out the same synthetic addresses on every CCU — the first
+    "(28) System" device is ``CUX2801001`` on essentially every install — so
+    two bridged CCUs declared byte-identical unique_ids and Home Assistant
+    kept only the first. aiohomematic 2026.8.7 scopes the family, as the
+    daemon always had, so every CUxD entity keyed before that moves once.
+    """
+
+    _D = HMIP_DOMAIN
+    _CENTRAL = "abc1234567"
+
+    @pytest.mark.parametrize(
+        ("unique_id", "namespace"),
+        [
+            # Already scoped — the pass runs on every setup, so this matters.
+            (f"{_D}_abc1234567_cux2801001_1_state", ""),
+            (f"{_D}_loom_abc1234567_cux2801001_1_state", "loom_"),
+            # Not a CUxD address.
+            (f"{_D}_vcu1234567_1_state", ""),
+            (f"{_D}_loom_vcu1234567_1_state", "loom_"),
+            # A loom key reached on the direct-CCU path is not ours to touch.
+            (f"{_D}_loom_cux2801001_1_state", ""),
+            # Daemon-computed alarm-panel ids carry no routing key at all.
+            (f"{_D}_openccu-loom_alarm_55f96726", "loom_"),
+            # Another integration's entity in the same registry.
+            ("other_integration_cux2801001_1_state", ""),
+        ],
+    )
+    def test_leaves_everything_else_alone(self, unique_id: str, namespace: str) -> None:
+        assert _cuxd_scoped_unique_id(unique_id, namespace=namespace, central_id=self._CENTRAL) is None
+
+    @pytest.mark.parametrize(
+        ("unique_id", "namespace", "expected"),
+        [
+            # Direct-CCU backend: the central id goes at the front.
+            (f"{_D}_cux2801001_1_state", "", f"{_D}_abc1234567_cux2801001_1_state"),
+            # …including behind a routing-key prefix, which is why the family
+            # is matched on the CUX serial shape rather than on a leading
+            # substring.
+            (
+                f"{_D}_calculated_cux2801001_1_state",
+                "",
+                f"{_D}_abc1234567_calculated_cux2801001_1_state",
+            ),
+            # openccu-loom backend: after the namespace, not before it.
+            (
+                f"{_D}_loom_cux2801001_1_state",
+                "loom_",
+                f"{_D}_loom_abc1234567_cux2801001_1_state",
+            ),
+        ],
+    )
+    def test_scopes_a_cuxd_key(self, unique_id: str, namespace: str, expected: str) -> None:
+        assert _cuxd_scoped_unique_id(unique_id, namespace=namespace, central_id=self._CENTRAL) == expected
+
+    def test_scoping_is_idempotent(self) -> None:
+        """Applying the rewrite to its own output is a no-op."""
+        once = _cuxd_scoped_unique_id(f"{self._D}_cux2801001_1_state", namespace="", central_id=self._CENTRAL)
+        assert once is not None
+        assert _cuxd_scoped_unique_id(once, namespace="", central_id=self._CENTRAL) is None
 
 
 class TestLoomUniqueIdMigration:

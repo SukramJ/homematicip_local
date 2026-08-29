@@ -6,6 +6,7 @@ from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
 import logging
+import re
 import time
 from typing import Any, TypeAlias
 
@@ -197,6 +198,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
     # For the openccu-loom backend, migrate any legacy aiohomematic entity
     # unique_ids to the canonical loom/serial scheme before entities are
     # (re)created, so existing entities keep their identity on cutover.
+    central_id = (entry.unique_id or entry.entry_id)[-10:].lower()
     if is_loom_backend:
         await _async_migrate_loom_unique_ids(hass, entry)
     else:
@@ -204,6 +206,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
         # legacy entry_id-anchored hub keys onto the CCU-serial scheme.
         await _async_restore_aiohomematic_unique_ids(hass, entry)
         await _async_migrate_aiohomematic_hub_unique_ids(hass, entry)
+    # Both backends inherited CUxD keys without the central-id slot; scope them
+    # once. Runs after the scheme migrations above so it sees final-shape keys.
+    await _async_migrate_cuxd_unique_ids(
+        hass, entry, namespace="loom_" if is_loom_backend else "", central_id=central_id
+    )
 
     hass.data.setdefault(HM_KEY, HomematicData())
     if (default_callback_port_xml_rpc := hass.data[HM_KEY].default_callback_port_xml_rpc) is None:
@@ -408,6 +415,95 @@ def _loom_migrated_unique_id(unique_id: str, *, entry_suffix: str, serial_suffix
     if key.startswith(entry_prefix):
         return f"{prefix}loom_{serial_suffix}_{key[len(entry_prefix) :]}"
     return f"{prefix}loom_{key}"
+
+
+# A CUxD serial is ``CUX`` + a two-digit device type + a five-digit running
+# number, so ``CUX2801001`` — the first "(28) System" device on essentially
+# every install. The shape is what makes the family recognisable in a routing
+# key regardless of what prefix precedes it (``calculated_``,
+# ``week_profile_``, ``schedule_channel_switch_``).
+_CUXD_KEY = re.compile(r"(?:^|_)cux\d{7}(?:_|$)")
+
+
+def _cuxd_scoped_unique_id(unique_id: str, *, namespace: str, central_id: str) -> str | None:
+    """Insert the central-id slot into a CUxD routing key, or ``None`` if not needed.
+
+    CUxD hands out the same synthetic addresses on every CCU, so two CCUs
+    bridged into one Home Assistant declared byte-identical unique_ids for
+    their CUxD data points and HA kept only the first. aiohomematic 2026.8.7
+    scopes the family by central id, as the daemon always had; every CUxD
+    entity keyed before that adoption therefore has to move once.
+
+    ``namespace`` is ``"loom_"`` on the openccu-loom backend and ``""`` on the
+    direct-CCU one — the loom scheme carries the serial *after* its namespace
+    (``loom_<serial>_cux…``) while aiohomematic carries the central id at the
+    front (``<central>_cux…``).
+
+    Idempotent: a key already carrying the slot is left alone, so this is safe
+    on every setup rather than only the first after the upgrade.
+    """
+    prefix = f"{DOMAIN}_"
+    if not unique_id.startswith(prefix):
+        return None
+    key = unique_id[len(prefix) :]
+    if namespace:
+        if not key.startswith(namespace):
+            return None
+        key = key[len(namespace) :]
+    elif key.startswith("loom_"):
+        # A loom key on the direct-CCU path is not ours to touch here.
+        return None
+    if not _CUXD_KEY.search(key):
+        return None
+    if key.startswith(f"{central_id}_"):  # already scoped
+        return None
+    return f"{prefix}{namespace}{central_id}_{key}"
+
+
+async def _async_migrate_cuxd_unique_ids(
+    hass: HomeAssistant, entry: HomematicConfigEntry, *, namespace: str, central_id: str
+) -> None:
+    """Scope CUxD entity unique_ids by the central id, once.
+
+    Runs on both backends, because both inherited the unscoped key: the daemon
+    always scoped CUxD, but the openccu-loom client rebuilds the keys the
+    daemon does not stamp — custom data points, week profiles, the combined
+    duration number, the device-update entity, event groups — through
+    aiohomematic, and aiohomematic did not scope them until 2026.8.7. On the
+    direct-CCU backend every CUxD entity is affected.
+
+    Without this the entities orphan: they keep their history, area and
+    customisations in the registry while the platform spawns freshly keyed
+    duplicates beside them, and the orphan-cleanup sweep eventually deletes
+    the originals. An installation with no CUxD devices sees nothing happen.
+    """
+    if not central_id:
+        return
+    entity_registry = er.async_get(hass)
+
+    @callback
+    def _migrator(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+        new_unique_id = _cuxd_scoped_unique_id(entity_entry.unique_id, namespace=namespace, central_id=central_id)
+        if new_unique_id is None or new_unique_id == entity_entry.unique_id:
+            return None
+        # HA raises on a duplicate unique_id, which would abort the whole
+        # migration and fail setup — skip instead (same guard as the other
+        # passes). The duplicate is the one without history; it loses.
+        if entity_registry.async_get_entity_id(entity_entry.domain, entity_entry.platform, new_unique_id):
+            _LOGGER.warning(
+                "Skipping CUxD unique_id migration, target already exists: %s -> %s",
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+            return None
+        _LOGGER.info(
+            "Scoping CUxD unique_id by central: %s -> %s",
+            entity_entry.unique_id,
+            new_unique_id,
+        )
+        return {"new_unique_id": new_unique_id}
+
+    await async_migrate_entries(hass, entry.entry_id, _migrator)
 
 
 async def _async_migrate_loom_unique_ids(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:
