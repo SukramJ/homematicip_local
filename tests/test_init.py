@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import ast
-import pathlib
+from collections.abc import Iterator
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -42,13 +41,13 @@ from tests import const
 class TestSweepSparesUnmigratedHubKeys:
     """A pre-id sysvar / program key is not an orphan while its data point is live.
 
-    The slug-to-id migration runs at the end of ``start_central()``, before any
-    entity exists. When it does not take — ``get_hub_data_points()`` raised, or
-    a data point yielded no old key — the historied entry keeps the slug, and
-    without this exemption the sweep 60 s later reads it as an orphan (no device
-    address, so ``_is_orphan_registry_entry`` falls through to ``True``) and
-    deletes it with its history, name and area. Keeping it costs one more start;
-    deleting it is permanent.
+    The slug-to-id migration runs just before this sweep, in the same callback.
+    When it does not take — ``get_hub_data_points()`` raised, or a data point
+    yielded no old key — the historied entry keeps the slug, and without this
+    exemption the sweep reads it as an orphan (no device address, so
+    ``_is_orphan_registry_entry`` falls through to ``True``) and deletes it with
+    its history, name and area. Keeping it costs one more start; deleting it is
+    permanent.
     """
 
     _SERIAL = "11a0001234"
@@ -105,66 +104,6 @@ class TestSweepSparesUnmigratedHubKeys:
         entity_registry = er.async_get(hass)
         assert entity_registry.async_get(alive.entity_id) is not None
         assert entity_registry.async_get(unmigrated.entity_id) is not None
-
-
-def _call_line(func: ast.AsyncFunctionDef, attribute: str) -> int:
-    """Return the line of the sole call to ``attribute`` in ``func``, bare or attribute-style."""
-    lines = [
-        node.lineno
-        for node in ast.walk(func)
-        if isinstance(node, ast.Call)
-        and (
-            (isinstance(node.func, ast.Attribute) and node.func.attr == attribute)
-            or (isinstance(node.func, ast.Name) and node.func.id == attribute)
-        )
-    ]
-    assert len(lines) == 1, f"expected exactly one call to {attribute}, found {len(lines)}"
-    return lines[0]
-
-
-class TestSetupOrdering:
-    """Every registry re-key must land before an entity holds the new key.
-
-    ``start_central()`` runs the slug-to-id hub migration at its end, where the
-    hub data is loaded (``init_hub()`` awaits the program and sysvar fetches
-    inside ``start_clients()``) and no platform has been forwarded. Forward the
-    platforms first and a freshly spawned twin already holds the new key, so the
-    migration has to remove that twin — which detaches the live entity and
-    leaves the historied entry bound to nothing until the next restart. That was
-    the shipped behaviour and the reason an update needed two restarts.
-
-    The constraint is an ordering between two awaits with no observable a unit
-    test can reach without standing up the whole setup path, so it is read off
-    the source of ``async_setup_entry`` itself.
-    """
-
-    @staticmethod
-    def _setup_entry() -> ast.AsyncFunctionDef:
-        source = pathlib.Path(custom_components.homematicip_local.__file__).read_text(encoding="utf-8")
-        return next(
-            node
-            for node in ast.parse(source).body
-            if isinstance(node, ast.AsyncFunctionDef) and node.name == "async_setup_entry"
-        )
-
-    def test_platforms_are_forwarded_after_the_central_starts(self) -> None:
-        """The re-keys inside start_central() run while no entity exists."""
-        function = self._setup_entry()
-        assert _call_line(function, "start_central") < _call_line(function, "async_forward_entry_setups")
-
-    def test_the_central_state_signal_follows_the_platforms(self) -> None:
-        """The backup button can only hear the signal once it is on the bus."""
-        function = self._setup_entry()
-        assert _call_line(function, "async_forward_entry_setups") < _call_line(
-            function, "async_signal_central_state_changed"
-        )
-
-    def test_the_serial_reanchor_also_precedes_the_platforms(self) -> None:
-        """The other re-key pass on this path needs the same empty registry."""
-        function = self._setup_entry()
-        assert _call_line(function, "_async_reanchor_hub_unique_ids_on_serial_change") < _call_line(
-            function, "async_forward_entry_setups"
-        )
 
 
 class TestSetupEntry:
@@ -1505,10 +1444,16 @@ class TestHubKeyMigrationAgainstTheRegistry:
     already taken — the "unique id already in use" that aborts a config entry.
     """
 
+    @pytest.fixture(autouse=True)
+    def scheduled_reload(self, hass: HomeAssistant) -> Iterator[MagicMock]:
+        """Capture the reload the migration schedules instead of performing it."""
+        with patch.object(hass.config_entries, "async_schedule_reload") as scheduled:
+            yield scheduled
+
     _SERIAL = "11a0001234"
 
     async def test_historied_entry_takes_the_id_key(
-        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry, scheduled_reload: MagicMock
     ) -> None:
         """The pre-upgrade entry keeps its entity_id and gains the new key."""
         mock_config_entry_v2.add_to_hass(hass)
@@ -1532,8 +1477,14 @@ class TestHubKeyMigrationAgainstTheRegistry:
         migrated = entity_registry.async_get(old.entity_id)
         assert migrated is not None, "the historied entry was removed instead of migrated"
         assert migrated.unique_id == f"{HMIP_DOMAIN}_loom_{self._SERIAL}_sysvar_12345"
+        # The renamed entry has no live entity: the one that existed was bound
+        # to the twin this pass just removed. Without the reload it stays gone
+        # until the user restarts — the two restarts an update used to need.
+        scheduled_reload.assert_called_once_with(mock_config_entry_v2.entry_id)
 
-    async def test_second_run_changes_nothing(self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry) -> None:
+    async def test_second_run_changes_nothing(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry, scheduled_reload: MagicMock
+    ) -> None:
         """Idempotent: the pass runs on every start-up, not only the first."""
         mock_config_entry_v2.add_to_hass(hass)
         self._seed(
@@ -1562,6 +1513,63 @@ class TestHubKeyMigrationAgainstTheRegistry:
             for entry in er.async_entries_for_config_entry(entity_registry, mock_config_entry_v2.entry_id)
         }
         assert after_second == after_first
+        # And the reload does not repeat — a pass that migrates nothing
+        # schedules nothing, so this cannot become a loop.
+        scheduled_reload.assert_called_once_with(mock_config_entry_v2.entry_id)
+
+    async def test_a_later_migrating_pass_does_not_reload_again(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry, scheduled_reload: MagicMock
+    ) -> None:
+        """A pass that migrates after the reload already ran asks for nothing.
+
+        Idempotency makes a second migrating pass unreachable in theory, which
+        is exactly why this is pinned by construction: if it ever were reached,
+        reloading on every one of them would put the config entry in a loop.
+        """
+        mock_config_entry_v2.add_to_hass(hass)
+        self._seed(
+            hass,
+            mock_config_entry_v2,
+            unique_id=f"loom_{self._SERIAL}_sysvar_aussen-temperatur",
+            entity_suffix="aussen_temperatur",
+        )
+        ControlUnit._async_migrate_hub_keys_from_name_slug(
+            _build_hub_migration_self(
+                hass,
+                mock_config_entry_v2.entry_id,
+                hub_data_points=(
+                    SimpleNamespace(unique_id=f"loom_{self._SERIAL}_sysvar_12345", legacy_name="Außen Temperatur"),
+                ),
+            )
+        )
+        scheduled_reload.assert_called_once_with(mock_config_entry_v2.entry_id)
+
+        # A second, genuinely migrating pass — a different variable this time.
+        self._seed(
+            hass,
+            mock_config_entry_v2,
+            unique_id=f"loom_{self._SERIAL}_sysvar_luftfeuchte",
+            entity_suffix="luftfeuchte",
+        )
+        ControlUnit._async_migrate_hub_keys_from_name_slug(
+            _build_hub_migration_self(
+                hass,
+                mock_config_entry_v2.entry_id,
+                hub_data_points=(
+                    SimpleNamespace(unique_id=f"loom_{self._SERIAL}_sysvar_67890", legacy_name="Luftfeuchte"),
+                ),
+            )
+        )
+
+        entity_registry = er.async_get(hass)
+        assert {
+            entry.unique_id
+            for entry in er.async_entries_for_config_entry(entity_registry, mock_config_entry_v2.entry_id)
+        } == {
+            f"{HMIP_DOMAIN}_loom_{self._SERIAL}_sysvar_12345",
+            f"{HMIP_DOMAIN}_loom_{self._SERIAL}_sysvar_67890",
+        }, "the second pass did not migrate, so it does not test the guard"
+        scheduled_reload.assert_called_once_with(mock_config_entry_v2.entry_id)
 
     async def test_two_sysvars_differing_only_in_punctuation(
         self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry

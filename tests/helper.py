@@ -65,6 +65,7 @@ class Factory:
         address_device_translation: dict[str, str],
         ignore_devices_on_create: list[str] | None = None,
         un_ignore_list: list[str] | None = None,
+        start_central_before_setup: bool = True,
     ) -> tuple[HomeAssistant, ControlUnit]:
         """Return a central based on give address_device_translation."""
         central = await self._backend_factory.init(
@@ -81,8 +82,16 @@ class Factory:
         central.event_bus.subscribe(
             event_type=RpcParameterReceivedEvent, event_key=None, handler=self.entity_event_mock
         )
-        await central.start()
-        await central.hub_coordinator.init_hub()
+        # Production starts the central from `ControlUnit.start_central()`, which
+        # runs after the platforms are forwarded. Starting it here instead is
+        # convenient — the serial is known before the entry is set up, so the
+        # re-anchor below stays quiet — but it means every data point announced
+        # during the start is announced to nobody, and only the ones a platform
+        # enumerates at setup ever become entities. `start_central_before_setup`
+        # off reproduces the production order for the tests that need it.
+        if start_central_before_setup:
+            await central.start()
+            await central.hub_coordinator.init_hub()
 
         patch("custom_components.homematicip_local.find_free_port", return_value=8765).start()
         patch(
