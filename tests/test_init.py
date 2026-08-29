@@ -15,6 +15,7 @@ import custom_components.homematicip_local
 from custom_components.homematicip_local import (
     _aiohomematic_restored_unique_id,
     _async_migrate_aiohomematic_hub_unique_ids,
+    _async_migrate_cuxd_unique_ids,
     _async_migrate_loom_unique_ids,
     _async_reanchor_hub_unique_ids_on_serial_change,
     _async_restore_aiohomematic_unique_ids,
@@ -812,6 +813,125 @@ async def test_cleanup_orphan_entries_removes_hub_anchored_entry_regardless_of_d
     ControlUnit._async_cleanup_orphaned_entity_registry_entries(fake_self)
 
     assert entity_registry.async_get(hub_orphan.entity_id) is None
+
+
+class TestCuxdMigrationAgainstTheRegistry:
+    """The registry walk of the CUxD scoping pass, not just its arithmetic.
+
+    `TestCuxdUniqueIdScoping` covers the key rebuild. This covers what happens
+    to a registry, which is what a user actually loses: whether the historied
+    entry keeps its entity_id, what becomes of a freshly keyed duplicate, and
+    that a rename is never attempted onto a key already taken — the "unique id
+    already in use" that aborts a config entry and fails setup.
+
+    Worth having because the pass is not hypothetical for anyone: it runs on
+    both backends, and on a direct-CCU install *every* CUxD entity is
+    affected. The maintainer runs CUxD devices, so this touches real
+    registries rather than a shape nobody has.
+    """
+
+    _CENTRAL = "11a0001234"
+    _DOMAIN_PREFIX = HMIP_DOMAIN
+
+    @staticmethod
+    def _seed(hass: HomeAssistant, entry: MockConfigEntry, *, unique_id: str, entity_suffix: str) -> er.RegistryEntry:
+        return er.async_get(hass).async_get_or_create(
+            domain="sensor",
+            platform=HMIP_DOMAIN,
+            unique_id=unique_id,
+            suggested_object_id=entity_suffix,
+            config_entry=entry,
+        )
+
+    async def test_a_non_cuxd_entry_is_left_alone(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """An install with no CUxD devices sees nothing happen — the docstring's promise."""
+        mock_config_entry_v2.add_to_hass(hass)
+        untouched = self._seed(
+            hass,
+            mock_config_entry_v2,
+            unique_id=f"{self._DOMAIN_PREFIX}_vcu0000001_1_state",
+            entity_suffix="regular_switch",
+        )
+
+        await _async_migrate_cuxd_unique_ids(hass, mock_config_entry_v2, namespace="", central_id=self._CENTRAL)
+
+        entity_registry = er.async_get(hass)
+        assert entity_registry.async_get(untouched.entity_id).unique_id == untouched.unique_id
+
+    async def test_a_second_run_changes_nothing(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """The pass runs on every start-up, so it has to be idempotent."""
+        mock_config_entry_v2.add_to_hass(hass)
+        self._seed(
+            hass,
+            mock_config_entry_v2,
+            unique_id=f"{self._DOMAIN_PREFIX}_cux2801001_1_state",
+            entity_suffix="cuxd_switch",
+        )
+        entity_registry = er.async_get(hass)
+
+        await _async_migrate_cuxd_unique_ids(hass, mock_config_entry_v2, namespace="", central_id=self._CENTRAL)
+        after_first = {
+            (e.entity_id, e.unique_id)
+            for e in er.async_entries_for_config_entry(entity_registry, mock_config_entry_v2.entry_id)
+        }
+
+        await _async_migrate_cuxd_unique_ids(hass, mock_config_entry_v2, namespace="", central_id=self._CENTRAL)
+        after_second = {
+            (e.entity_id, e.unique_id)
+            for e in er.async_entries_for_config_entry(entity_registry, mock_config_entry_v2.entry_id)
+        }
+        assert after_second == after_first
+
+    async def test_a_taken_target_key_is_skipped_not_raised(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """The collision must not abort setup.
+
+        `async_migrate_entries` propagates a duplicate-unique_id error, which
+        would fail the whole config entry — every entity gone, not just this
+        one. The duplicate is the entry without history, so skipping is right;
+        what matters is that the historied entry survives either way.
+        """
+        mock_config_entry_v2.add_to_hass(hass)
+        old_key = f"{self._DOMAIN_PREFIX}_cux2801001_1_state"
+        new_key = _cuxd_scoped_unique_id(old_key, namespace="", central_id=self._CENTRAL)
+        assert new_key is not None
+
+        historied = self._seed(hass, mock_config_entry_v2, unique_id=old_key, entity_suffix="cuxd_historied")
+        twin = self._seed(hass, mock_config_entry_v2, unique_id=new_key, entity_suffix="cuxd_twin")
+
+        await _async_migrate_cuxd_unique_ids(hass, mock_config_entry_v2, namespace="", central_id=self._CENTRAL)
+
+        entity_registry = er.async_get(hass)
+        assert entity_registry.async_get(historied.entity_id) is not None, "setup-aborting collision"
+        assert entity_registry.async_get(historied.entity_id).unique_id == old_key
+        assert entity_registry.async_get(twin.entity_id).unique_id == new_key
+
+    async def test_the_historied_entry_gains_the_central_slot(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """A CUxD entry is re-keyed in place, keeping its entity_id and history."""
+        mock_config_entry_v2.add_to_hass(hass)
+        seeded = self._seed(
+            hass,
+            mock_config_entry_v2,
+            unique_id=f"{self._DOMAIN_PREFIX}_cux2801001_1_state",
+            entity_suffix="cuxd_switch",
+        )
+
+        await _async_migrate_cuxd_unique_ids(hass, mock_config_entry_v2, namespace="", central_id=self._CENTRAL)
+
+        entity_registry = er.async_get(hass)
+        migrated = entity_registry.async_get(seeded.entity_id)
+        assert migrated is not None, "the entry was removed instead of migrated"
+        assert migrated.unique_id == _cuxd_scoped_unique_id(
+            f"{self._DOMAIN_PREFIX}_cux2801001_1_state", namespace="", central_id=self._CENTRAL
+        )
+        assert self._CENTRAL in migrated.unique_id
 
 
 class TestCuxdUniqueIdScoping:
