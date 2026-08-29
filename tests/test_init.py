@@ -28,7 +28,7 @@ from custom_components.homematicip_local.const import (
     CONF_OPTIONAL_SETTINGS,
     DOMAIN as HMIP_DOMAIN,
 )
-from custom_components.homematicip_local.control_unit import ControlUnit
+from custom_components.homematicip_local.control_unit import ControlUnit, hub_key_from_name_slug
 from custom_components.homematicip_local.support import realign_hub_unique_id
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -1296,3 +1296,58 @@ async def test_async_reanchor_on_serial_change_noop(hass: HomeAssistant, connect
 
     assert entry.unique_id == serial
     assert entity_registry.async_get(hub.entity_id).unique_id == f"{HMIP_DOMAIN}_{serial[-10:].lower()}_sysvar_x"
+
+
+class TestHubKeyFromNameSlug:
+    """``hub_key_from_name_slug`` rebuilds the pre-id sysvar / program key."""
+
+    _SERIAL = "11a0001234"
+
+    def test_is_idempotent(self) -> None:
+        """Feeding the rebuilt key back in yields None rather than looping."""
+        once = hub_key_from_name_slug(f"loom_{self._SERIAL}_sysvar_12345", legacy_name="Außen Temperatur")
+        assert once is not None
+        assert hub_key_from_name_slug(once, legacy_name="Außen Temperatur") is None
+
+    @pytest.mark.parametrize(
+        ("unique_id", "legacy_name"),
+        [
+            # Already on the slug: the producer has no id yet and still falls
+            # back to the name. Also the idempotency guard.
+            (f"loom_{_SERIAL}_sysvar_aussen-temperatur", "Außen Temperatur"),
+            (f"loom_{_SERIAL}_program_my-prog", "My Prog"),
+            # Neither family. Hub singletons take their names from module
+            # constants, cannot be renamed and were never re-keyed.
+            (f"loom_{_SERIAL}_hub_alarm_messages", "Alarm Messages"),
+            (f"loom_{_SERIAL}_install_mode_hmip", "Install Mode"),
+            # A device key carries no identity slot at all.
+            ("loom_vcu1234567_1_state", "irrelevant"),
+            # A name that slugifies to nothing must not produce a bare marker
+            # key that could collide with something else.
+            (f"loom_{_SERIAL}_sysvar_12345", "***"),
+        ],
+    )
+    def test_left_untouched(self, unique_id: str, legacy_name: str) -> None:
+        assert hub_key_from_name_slug(unique_id, legacy_name=legacy_name) is None
+
+    @pytest.mark.parametrize(
+        ("unique_id", "legacy_name", "expected"),
+        [
+            # The two renameable families, keyed on the CCU id, rebuilt onto
+            # the slug they used to carry.
+            (
+                f"loom_{_SERIAL}_sysvar_12345",
+                "Außen Temperatur",
+                f"loom_{_SERIAL}_sysvar_aussen-temperatur",
+            ),
+            (f"loom_{_SERIAL}_program_1234", "My Prog", f"loom_{_SERIAL}_program_my-prog"),
+            # The aiohomematic backend carries no loom_ namespace; the slot
+            # swap is the same.
+            (f"{_SERIAL}_sysvar_12345", "Außen Temperatur", f"{_SERIAL}_sysvar_aussen-temperatur"),
+            # Transliteration matters: a naive lower() would produce
+            # "au�en-temperatur" and orphan the entity it was meant to save.
+            (f"loom_{_SERIAL}_sysvar_7", "Grüne Straße", f"loom_{_SERIAL}_sysvar_grune-strasse"),
+        ],
+    )
+    def test_rebuilds_the_slug_key(self, unique_id: str, legacy_name: str, expected: str) -> None:
+        assert hub_key_from_name_slug(unique_id, legacy_name=legacy_name) == expected
