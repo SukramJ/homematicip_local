@@ -242,7 +242,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
         default_callback_port_xml_rpc=default_callback_port_xml_rpc,
     ).create_control_unit()
     entry.runtime_data = control
-    await hass.config_entries.async_forward_entry_setups(entry, HMIP_LOCAL_PLATFORMS)
     try:
         await control.start_central()
     except AuthFailure as err:
@@ -268,6 +267,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
         raise ConfigEntryError(str(err)) from err
     if not is_loom_backend:
         await _async_reanchor_hub_unique_ids_on_serial_change(hass, entry, control)
+    # The platforms come up last, after every registry re-key: the slug-to-id
+    # hub migration at the end of start_central() and the serial reanchor above.
+    # Each therefore renames the entry that carries the history while nothing
+    # holds the new key, instead of resolving a collision against a twin that
+    # spawned seconds earlier — which left the historied entry without a live
+    # entity until the next restart.
+    await hass.config_entries.async_forward_entry_setups(entry, HMIP_LOCAL_PLATFORMS)
+    # The central reached its running state before any entity existed, so the
+    # standalone hub entities that key availability on it (the backup button)
+    # have no data point to refresh on and saw no transition. Tell them now.
+    control.async_signal_central_state_changed()
     await async_setup_services(hass)
 
     # Register WebSocket commands once (HA raises on duplicate registration)
