@@ -16,6 +16,7 @@ from custom_components.homematicip_local import (
     _aiohomematic_restored_unique_id,
     _async_migrate_aiohomematic_hub_unique_ids,
     _async_migrate_cuxd_unique_ids,
+    _async_migrate_device_identifiers,
     _async_migrate_loom_unique_ids,
     _async_reanchor_hub_unique_ids_on_serial_change,
     _async_restore_aiohomematic_unique_ids,
@@ -1779,3 +1780,292 @@ class TestHubKeyMigrationAgainstTheRegistry:
             suggested_object_id=entity_suffix,
             config_entry=entry,
         )
+
+
+class TestDeviceIdentifierMigration:
+    """The device registry walk that moves entries onto the backend-neutral key.
+
+    Both backends compose ``<address>@<central>-<interface>`` but disagree on
+    the leading component — aiohomematic uses the HA instance name, the loom
+    daemon its own CCU name. Every device entry keyed the daemon's way has to
+    move, or a backend switch leaves the ``device_id`` (and with it the area,
+    the custom name and every automation) behind on an entry nothing writes to
+    any more.
+    """
+
+    _ADDRESS = "0001D8A991F2DC"
+    _DAEMON_CENTRAL = "Otto"
+
+    async def test_ambiguous_central_name_is_skipped(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """A CCU named after an interface makes the split ambiguous — skip, don't guess."""
+        mock_config_entry_v2.add_to_hass(hass)
+        ambiguous = f"{self._ADDRESS}{IDENTIFIER_SEPARATOR}my-CUxD-box-HmIP-RF"
+        seeded = self._seed_device(hass, mock_config_entry_v2, identifier=ambiguous, name="Seltsam")
+
+        _async_migrate_device_identifiers(hass, mock_config_entry_v2)
+
+        device_registry = dr.async_get(hass)
+        assert device_registry.async_get(seeded.id).identifiers == {(HMIP_DOMAIN, ambiguous)}
+
+    async def test_central_device_is_untouched(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """The central's own entry carries no address and is already backend-neutral."""
+        mock_config_entry_v2.add_to_hass(hass)
+        seeded = self._seed_device(hass, mock_config_entry_v2, identifier=const.INSTANCE_NAME, name=const.INSTANCE_NAME)
+
+        _async_migrate_device_identifiers(hass, mock_config_entry_v2)
+
+        device_registry = dr.async_get(hass)
+        assert device_registry.async_get(seeded.id).identifiers == {(HMIP_DOMAIN, const.INSTANCE_NAME)}
+
+    async def test_daemon_keyed_entry_is_renamed_in_place(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """The device_id survives — that is the whole point of the pass."""
+        mock_config_entry_v2.add_to_hass(hass)
+        seeded = self._seed_device(
+            hass, mock_config_entry_v2, identifier=self._daemon_identifier(), name="Waschmaschine"
+        )
+
+        _async_migrate_device_identifiers(hass, mock_config_entry_v2)
+
+        device_registry = dr.async_get(hass)
+        migrated = device_registry.async_get(seeded.id)
+        assert migrated is not None, "the entry was removed instead of migrated"
+        assert migrated.identifiers == {(HMIP_DOMAIN, self._neutral_identifier())}
+        assert migrated.name == "Waschmaschine"
+
+    async def test_direct_ccu_entries_are_left_alone(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """Negative control: on the direct-CCU backend the key is already neutral.
+
+        aiohomematic composes its interface id as ``<instance_name>-<interface>``,
+        so its identifier *is* the target. Nothing may move — this is what makes
+        the migration a no-op for the vast majority of installations.
+        """
+        mock_config_entry_v2.add_to_hass(hass)
+        seeded = self._seed_device(
+            hass, mock_config_entry_v2, identifier=self._neutral_identifier(), name="Waschmaschine"
+        )
+
+        _async_migrate_device_identifiers(hass, mock_config_entry_v2)
+
+        device_registry = dr.async_get(hass)
+        unchanged = device_registry.async_get(seeded.id)
+        assert unchanged is not None
+        assert unchanged.identifiers == {(HMIP_DOMAIN, self._neutral_identifier())}
+
+    async def test_merge_keeps_the_older_device_id(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """A registry after a switch that already happened holds both entries.
+
+        The one on the neutral key is the pre-switch entry — the one carrying
+        the area, the custom name and the automations. So its device_id wins,
+        and the daemon-keyed entry hands over its entities and children.
+        """
+        mock_config_entry_v2.add_to_hass(hass)
+        older = self._seed_device(
+            hass, mock_config_entry_v2, identifier=self._neutral_identifier(), name="Waschmaschine"
+        )
+        daemon_keyed = self._seed_device(
+            hass, mock_config_entry_v2, identifier=self._daemon_identifier(), name="Waschmaschine"
+        )
+        child = self._seed_device(
+            hass,
+            mock_config_entry_v2,
+            identifier=self._daemon_identifier(suffix="-6"),
+            name="Waschmaschine Kanal 6",
+            via_device_id=daemon_keyed.id,
+        )
+        entity_registry = er.async_get(hass)
+        live = entity_registry.async_get_or_create(
+            domain="switch",
+            platform=HMIP_DOMAIN,
+            unique_id=f"{HMIP_DOMAIN}_loom_{self._ADDRESS}_4_STATE",
+            device_id=daemon_keyed.id,
+            config_entry=mock_config_entry_v2,
+        )
+
+        _async_migrate_device_identifiers(hass, mock_config_entry_v2)
+
+        device_registry = dr.async_get(hass)
+        assert device_registry.async_get(daemon_keyed.id) is None, "the stale entry was left behind"
+        survivor = device_registry.async_get(older.id)
+        assert survivor is not None, "the entry holding the history was removed"
+        assert survivor.identifiers == {(HMIP_DOMAIN, self._neutral_identifier())}
+        assert entity_registry.async_get(live.entity_id).device_id == older.id
+        # The child moved onto the survivor and took the neutral key with it.
+        migrated_child = device_registry.async_get(child.id)
+        assert migrated_child.via_device_id == older.id
+        assert migrated_child.identifiers == {(HMIP_DOMAIN, self._neutral_identifier(suffix="-6"))}
+
+    async def test_second_run_changes_nothing(self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry) -> None:
+        """Idempotent: the pass runs on every start-up, not only the first."""
+        mock_config_entry_v2.add_to_hass(hass)
+        self._seed_device(hass, mock_config_entry_v2, identifier=self._daemon_identifier(), name="Waschmaschine")
+
+        _async_migrate_device_identifiers(hass, mock_config_entry_v2)
+        device_registry = dr.async_get(hass)
+        after_first = {
+            (device.id, tuple(sorted(device.identifiers)))
+            for device in dr.async_entries_for_config_entry(device_registry, mock_config_entry_v2.entry_id)
+        }
+
+        _async_migrate_device_identifiers(hass, mock_config_entry_v2)
+        after_second = {
+            (device.id, tuple(sorted(device.identifiers)))
+            for device in dr.async_entries_for_config_entry(device_registry, mock_config_entry_v2.entry_id)
+        }
+        assert after_second == after_first
+
+    async def test_sub_device_and_schedule_suffixes_survive(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """The suffix rides behind the interface and must not be swallowed."""
+        mock_config_entry_v2.add_to_hass(hass)
+        for suffix in ("-6", "-schedule"):
+            self._seed_device(
+                hass, mock_config_entry_v2, identifier=self._daemon_identifier(suffix=suffix), name=f"Sub{suffix}"
+            )
+
+        _async_migrate_device_identifiers(hass, mock_config_entry_v2)
+
+        device_registry = dr.async_get(hass)
+        assert {
+            identifier
+            for device in dr.async_entries_for_config_entry(device_registry, mock_config_entry_v2.entry_id)
+            for _, identifier in device.identifiers
+        } == {self._neutral_identifier(suffix="-6"), self._neutral_identifier(suffix="-schedule")}
+
+    def _daemon_identifier(self, *, suffix: str = "") -> str:
+        return f"{self._ADDRESS}{IDENTIFIER_SEPARATOR}{self._DAEMON_CENTRAL}-HmIP-RF{suffix}"
+
+    def _neutral_identifier(self, *, suffix: str = "") -> str:
+        return f"{self._ADDRESS}{IDENTIFIER_SEPARATOR}{const.INSTANCE_NAME}-HmIP-RF{suffix}"
+
+    def _seed_device(
+        self,
+        hass: HomeAssistant,
+        entry: MockConfigEntry,
+        *,
+        identifier: str,
+        name: str,
+        via_device_id: str | None = None,
+    ) -> dr.DeviceEntry:
+        """Register a device entry under one homematicip_local identifier."""
+        device_registry = dr.async_get(hass)
+        return device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(HMIP_DOMAIN, identifier)},
+            name=name,
+            via_device_id=via_device_id,
+        )
+
+
+class TestDeviceIdentifierMigrationAtScale:
+    """The migration against a registry shaped like a real one after a switch.
+
+    A live installation reported 190 device entries becoming 380 on the switch
+    to openccu-loom: every entry got a twin, base devices, sub devices and
+    schedule devices alike. That is the shape this replays — the per-case class
+    above covers one entry at a time, this covers all of them at once, in the
+    proportions a real registry has (1 central, 124 base devices, 19 sub
+    devices, 46 schedule devices).
+    """
+
+    _DAEMON_CENTRAL = "Otto"
+    _BASE_DEVICES = 124
+    _SUB_DEVICES = 19
+    _SCHEDULE_DEVICES = 46
+
+    async def test_a_doubled_registry_collapses_back_onto_the_original_device_ids(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """380 entries become 190 again, and every surviving device_id is the pre-switch one."""
+        mock_config_entry_v2.add_to_hass(hass)
+        device_registry = dr.async_get(hass)
+        entity_registry = er.async_get(hass)
+
+        # The central carries no address and must come through untouched.
+        central = device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry_v2.entry_id,
+            identifiers={(HMIP_DOMAIN, const.INSTANCE_NAME)},
+            name=const.INSTANCE_NAME,
+        )
+
+        addresses = self._addresses()
+        expected_device_ids: dict[str, str] = {}
+        live_entities: dict[str, str] = {}
+        for index, address in enumerate(addresses):
+            suffixes = [""]
+            if index < self._SUB_DEVICES:
+                suffixes.append("-4")
+            if index < self._SCHEDULE_DEVICES:
+                suffixes.append("-schedule")
+            for suffix in suffixes:
+                pre_switch, twin = self._seed_pair(hass, mock_config_entry_v2, address=address, suffix=suffix)
+                key = f"{address}{suffix}"
+                expected_device_ids[key] = pre_switch.id
+                # The live entity sits on the twin — that is where the loom
+                # backend put it — and has to end up on the pre-switch entry.
+                live_entities[key] = entity_registry.async_get_or_create(
+                    domain="switch",
+                    platform=HMIP_DOMAIN,
+                    unique_id=f"{HMIP_DOMAIN}_loom_{key}_STATE",
+                    device_id=twin.id,
+                    config_entry=mock_config_entry_v2,
+                ).entity_id
+
+        seeded = dr.async_entries_for_config_entry(device_registry, mock_config_entry_v2.entry_id)
+        assert len(seeded) == 2 * (self._BASE_DEVICES + self._SUB_DEVICES + self._SCHEDULE_DEVICES) + 1
+
+        _async_migrate_device_identifiers(hass, mock_config_entry_v2)
+
+        surviving = dr.async_entries_for_config_entry(device_registry, mock_config_entry_v2.entry_id)
+        assert len(surviving) == self._BASE_DEVICES + self._SUB_DEVICES + self._SCHEDULE_DEVICES + 1
+
+        # Every device_id is the pre-switch one — the automations' anchor.
+        for key, device_id in expected_device_ids.items():
+            assert device_registry.async_get(device_id) is not None, f"{key} lost its pre-switch device_id"
+            assert entity_registry.async_get(live_entities[key]).device_id == device_id, (
+                f"the live entity of {key} did not move onto the pre-switch entry"
+            )
+
+        # No daemon-keyed identifier is left anywhere.
+        assert not [
+            identifier
+            for device in surviving
+            for _, identifier in device.identifiers
+            if f"{self._DAEMON_CENTRAL}-HmIP-RF" in identifier
+        ]
+        assert device_registry.async_get(central.id).identifiers == {(HMIP_DOMAIN, const.INSTANCE_NAME)}
+
+    def _addresses(self) -> list[str]:
+        return [f"0001D8A9{index:06X}" for index in range(self._BASE_DEVICES)]
+
+    def _seed_pair(
+        self,
+        hass: HomeAssistant,
+        entry: MockConfigEntry,
+        *,
+        address: str,
+        suffix: str = "",
+    ) -> tuple[dr.DeviceEntry, dr.DeviceEntry]:
+        """Seed the pre-switch entry and the twin the loom backend created."""
+        device_registry = dr.async_get(hass)
+        pre_switch = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(HMIP_DOMAIN, f"{address}{IDENTIFIER_SEPARATOR}{const.INSTANCE_NAME}-HmIP-RF{suffix}")},
+            name=f"Device {address}{suffix}",
+        )
+        twin = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(HMIP_DOMAIN, f"{address}{IDENTIFIER_SEPARATOR}{self._DAEMON_CENTRAL}-HmIP-RF{suffix}")},
+            name=f"Device {address}{suffix}",
+        )
+        return pre_switch, twin

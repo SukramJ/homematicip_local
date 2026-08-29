@@ -16,7 +16,9 @@ from aiohomematic import __version__ as HAHM_VERSION
 from aiohomematic.const import (
     DEFAULT_ENABLE_SYSVAR_SCAN,
     DEFAULT_UN_IGNORES,
+    IDENTIFIER_SEPARATOR,
     IntegrationIssueType,
+    Interface,
     OptionalSettings,
     is_interface_default_port,
 )
@@ -63,7 +65,7 @@ from .control_unit import ControlConfig, ControlUnit, get_storage_directory
 from .device_icon import ICON_VIEW_REGISTERED_KEY, DeviceIconView
 from .panel import async_register_cards, async_register_panel, async_unregister_cards, async_unregister_panel
 from .services import async_get_loaded_config_entries, async_setup_services, async_unload_services
-from .support import get_aiohomematic_version, get_device_address_at_interface_from_identifiers, realign_hub_unique_id
+from .support import get_aiohomematic_version, get_device_address_from_identifiers, realign_hub_unique_id
 from .websocket_api import async_register_websocket_commands
 
 HA_VERSION = AwesomeVersion(HA_VERSION_STR)
@@ -211,6 +213,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
     await _async_migrate_cuxd_unique_ids(
         hass, entry, namespace="loom_" if is_loom_backend else "", central_id=central_id
     )
+    # Device registry entries keyed on a backend's own interface id move onto
+    # the backend-neutral one. Runs before the platforms are forwarded, so no
+    # freshly keyed device exists yet and the rename is plain.
+    _async_migrate_device_identifiers(hass, entry)
 
     hass.data.setdefault(HM_KEY, HomematicData())
     if (default_callback_port_xml_rpc := hass.data[HM_KEY].default_callback_port_xml_rpc) is None:
@@ -326,19 +332,21 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a config entry from a device."""
 
-    if (address_data := get_device_address_at_interface_from_identifiers(identifiers=device_entry.identifiers)) is None:
+    if (device_address := get_device_address_from_identifiers(identifiers=device_entry.identifiers)) is None:
         return False
 
-    device_address: str = address_data[0]
-    interface_id: str = address_data[1]
-
-    if interface_id and device_address and (control_unit := entry.runtime_data):
+    # The interface id is read off the device rather than parsed out of the
+    # identifier: the identifier is backend-neutral now, while delete_device
+    # needs the id the running backend routes on.
+    if (control_unit := entry.runtime_data) and (
+        hm_device := control_unit.central.device_coordinator.get_device(address=device_address)
+    ):
         await control_unit.central.device_coordinator.delete_device(
-            interface_id=interface_id, device_address=device_address
+            interface_id=hm_device.interface_id, device_address=device_address
         )
         _LOGGER.debug(
             "Called delete_device: %s, %s",
-            interface_id,
+            hm_device.interface_id,
             device_address,
         )
     return True
@@ -347,6 +355,110 @@ async def async_remove_config_entry_device(
 async def update_listener(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+def _split_device_identifier(identifier: str) -> tuple[str, str, str] | None:
+    """
+    Split a device identifier into address, interface and sub-device suffix.
+
+    ``<address>@<central>-<interface>[-<group_no>|-schedule]`` is parsed
+    against the ``Interface`` values rather than with a suffix pattern: the
+    leading component is a CCU or instance name that may contain anything,
+    including a dash and a digit, so only the interface itself is a reliable
+    landmark. ``None`` when the identifier carries no separator, no known
+    interface, or more than one — the last of which would make the split
+    ambiguous (a CCU named after an interface), and is better skipped than
+    guessed.
+    """
+    address, separator, remainder = identifier.partition(IDENTIFIER_SEPARATOR)
+    if not separator:
+        return None
+    matches = [interface for interface in Interface if f"-{interface}" in remainder]
+    if len(matches) != 1:
+        return None
+    interface = matches[0]
+    _, _, suffix = remainder.partition(f"-{interface}")
+    if suffix and not suffix.startswith("-"):
+        # The interface matched inside a longer word rather than as its own
+        # trailing component (``…-HmIP-RFX``); not ours to rewrite.
+        return None
+    return address, str(interface), suffix
+
+
+@callback
+def _async_migrate_device_identifiers(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:
+    """
+    Move device registry entries onto the backend-neutral identifier.
+
+    Both backends compose ``<address>@<central>-<interface>``, but disagree on
+    the leading component: aiohomematic uses the HA instance name, openccu-loom
+    the daemon's own CCU name. A backend switch therefore used to leave every
+    device entry behind and create a second one beside it — the entities moved
+    on (their unique_ids are migrated), the ``device_id`` did not, and with it
+    went the area, the custom name and every automation pointing at the device.
+
+    This rewrites those entries onto the neutral key. On the direct-CCU backend
+    the neutral key is what aiohomematic already produced, so nothing matches
+    and the pass is a no-op.
+
+    Runs before ``async_forward_entry_setups``, where no freshly keyed entry
+    exists yet. Two outcomes per entry:
+
+    - the target key is free: a plain rename, the ``device_id`` survives.
+    - the target key is taken, which is what a registry looks like after a
+      switch that already happened: the entry holding the target is the older
+      one, so its entities and children are moved over and the stale entry is
+      removed. The older ``device_id`` wins, which is the one automations use.
+
+    Idempotent: an entry already on the neutral key is skipped, so a second
+    start migrates nothing.
+    """
+    instance_name = entry.data[CONF_INSTANCE_NAME]
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    migrated = merged = 0
+
+    for device_entry in list(dr.async_entries_for_config_entry(device_registry, entry.entry_id)):
+        for domain, identifier in device_entry.identifiers:
+            if domain != DOMAIN:
+                continue
+            if (parts := _split_device_identifier(identifier)) is None:
+                continue
+            address, interface, suffix = parts
+            new_identifier = f"{address}{IDENTIFIER_SEPARATOR}{instance_name}-{interface}{suffix}"
+            if new_identifier == identifier:
+                continue
+            if (
+                existing := device_registry.async_get_device_by_identifier((DOMAIN, new_identifier), entry.entry_id)
+            ) is not None:
+                if existing.id == device_entry.id:
+                    continue
+                _LOGGER.info(
+                    "Merging device %s into the entry already holding %s, so its device_id survives",
+                    identifier,
+                    new_identifier,
+                )
+                for entity_entry in er.async_entries_for_device(
+                    entity_registry, device_entry.id, include_disabled_entities=True
+                ):
+                    entity_registry.async_update_entity(entity_entry.entity_id, device_id=existing.id)
+                for child in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+                    if child.via_device_id == device_entry.id:
+                        device_registry.async_update_device(child.id, via_device_id=existing.id)
+                device_registry.async_remove_device(device_entry.id)
+                merged += 1
+                break
+            _LOGGER.info("Migrating device identifier: %s -> %s", identifier, new_identifier)
+            device_registry.async_update_device(device_entry.id, new_identifiers={(DOMAIN, new_identifier)})
+            migrated += 1
+            break
+
+    if migrated or merged:
+        _LOGGER.info(
+            "Moved %s device registry entries onto the backend-neutral identifier, merged %s",
+            migrated,
+            merged,
+        )
 
 
 async def _async_migrate_event_entity_unique_ids(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:

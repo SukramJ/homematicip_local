@@ -113,7 +113,7 @@ class AioHomematicEvent(EventEntity):
         # runtime-only and never re-applied after creation).
         hm_device = event_group.device
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, hm_device.identifier)},
+            identifiers={(DOMAIN, control_unit.device_identifier(device=hm_device))},
             manufacturer=hm_device.manufacturer,
             model=hm_device.model,
             model_id=hm_device.model_description,

@@ -57,6 +57,7 @@ from aiohomematic.const import (
     get_interface_default_port,
 )
 from aiohomematic.exceptions import AuthFailure, BaseHomematicException
+from aiohomematic.interfaces import DeviceProtocol
 from aiohomematic.model.data_point import CallbackDataPoint
 from aiohomematic.support.address import get_device_address
 from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
@@ -142,6 +143,8 @@ from .support import (
     DEVICE_ERROR_EVENT_SCHEMA,
     InvalidConfig,
     cleanup_click_event_data,
+    cleanup_instance_name,
+    get_device_identifier,
     is_valid_event,
     realign_hub_unique_id,
 )
@@ -320,6 +323,34 @@ class BaseControlUnit:
             f"&device={address}"
             f"&interface={interface_id}"
         )
+
+    def device_identifier(self, *, device: DeviceProtocol) -> str:
+        """
+        Return the device registry identifier of a Homematic device.
+
+        Built from the HA instance name and the interface type rather than
+        from the backend's own interface id, so the same device keys
+        identically on both backends and a backend switch keeps its
+        ``device_id`` — see :func:`get_device_identifier`.
+
+        Falls back to the backend's own identifier when the interface is not
+        one aiohomematic knows. That happens for a device the loom store
+        seeded from a ``device.created`` push and has not completed yet; the
+        migration in ``async_setup_entry`` moves such an entry onto the
+        neutral key on the next start-up.
+        """
+        if (
+            identifier := get_device_identifier(
+                instance_name=self._central.name, address=device.address, interface=str(device.interface)
+            )
+        ) is not None:
+            return identifier
+        _LOGGER.warning(
+            "DEVICE_IDENTIFIER: Unknown interface %s for device %s; keying it on the backend identifier for now",
+            device.interface,
+            device.address,
+        )
+        return device.identifier
 
     async def start_central(self) -> None:
         """Start the central unit."""
@@ -1429,7 +1460,7 @@ class ControlConfig:
         self._backend: Final[str] = self._data.get(CONF_BACKEND, DEFAULT_BACKEND)
         # central — credentials are optional for the loom backend (it
         # authenticates with a bearer token), so read them defensively.
-        self.instance_name: Final[str] = _cleanup_instance_name(instance_name=self._data[CONF_INSTANCE_NAME])
+        self.instance_name: Final[str] = cleanup_instance_name(instance_name=self._data[CONF_INSTANCE_NAME])
         self._host: Final[str] = self._data[CONF_HOST]
         self._username: Final[str] = self._data.get(CONF_USERNAME, "")
         self._password: Final[str] = self._data.get(CONF_PASSWORD, "")
@@ -1746,13 +1777,6 @@ def _loom_config_ui_base(*, central: Any) -> str:
     if not (url := str(getattr(central, "url", "") or "")):
         return ""
     return url.removesuffix("/api/v1").rstrip("/") + "/app/"
-
-
-def _cleanup_instance_name(*, instance_name: str) -> str:
-    """Clean up instance name problematic characters for directories."""
-    for char in ("/", "\\"):
-        instance_name = instance_name.replace(char, "")
-    return instance_name
 
 
 def _entry_device_address(*, entry: er.RegistryEntry, device_registry: dr.DeviceRegistry) -> str | None:

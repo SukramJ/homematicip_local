@@ -21,6 +21,7 @@ from aiohomematic.const import (
     PROGRAM_ADDRESS,
     SYSVAR_ADDRESS,
     VIRTUAL_REMOTE_ADDRESSES,
+    Interface,
     ParamsetKey,
 )
 from aiohomematic.exceptions import BaseHomematicException
@@ -319,23 +320,57 @@ def is_valid_event(event_data: Mapping[str, Any], schema: vol.Schema) -> bool:
     return True
 
 
-def get_device_address_at_interface_from_identifiers(
-    identifiers: set[tuple[str, str]],
-) -> tuple[str, str] | None:
-    """
-    Get the device_address and interface_id from device_info.identifiers.
+def cleanup_instance_name(*, instance_name: str) -> str:
+    """Clean up instance name problematic characters for directories."""
+    for char in ("/", "\\"):
+        instance_name = instance_name.replace(char, "")
+    return instance_name
 
-    Handles both regular devices (address@interface_id) and sub-devices
-    (address@interface_id-group_no) by stripping the group suffix.
+
+def get_device_identifier(*, instance_name: str, address: str, interface: str) -> str | None:
     """
-    for identifier in identifiers:
-        if IDENTIFIER_SEPARATOR in identifier[1]:
-            parts = identifier[1].split(IDENTIFIER_SEPARATOR, 1)
-            if len(parts) == 2:
-                dev_address = parts[0]
-                # Strip any sub-device group suffix (e.g., "-1") from interface_id
-                interface_id = re.sub(r"-\d+$", "", parts[1])
-                return dev_address, interface_id
+    Return the HA device identifier, or ``None`` when it cannot be built.
+
+    The identifier is deliberately built from the HA instance name and the
+    interface *type* rather than from a backend's own interface id. Both
+    backends carry that type separately — aiohomematic as ``Interface``,
+    openccu-loom as the daemon's ``interface`` field — while their interface
+    ids differ in the leading component: aiohomematic uses the HA instance
+    name, the daemon its own CCU name (``Otto-HmIP-RF`` vs.
+    ``OttoDev-HmIP-RF``). Keying devices on the neutral form makes the
+    identifier identical on both, so switching backends keeps every device
+    registry entry and with it its ``device_id``, area and automations.
+
+    For the direct-CCU backend the result is byte-identical to the previous
+    ``Device.identifier``, because that is exactly how aiohomematic composes
+    its interface id.
+
+    Returns ``None`` when the interface is not one aiohomematic knows: the
+    loom store seeds a freshly paired device with the wire id in that field
+    until ``attach_device_detail`` corrects it, and a device keyed off that
+    stub would have to move a second time.
+    """
+    if interface not in tuple(Interface):
+        return None
+    # The same cleanup the central name goes through, applied here so the
+    # identifier is identical whether it is built from the running central or
+    # from the raw config entry (the registry migration does the latter).
+    return f"{address}{IDENTIFIER_SEPARATOR}{cleanup_instance_name(instance_name=instance_name)}-{interface}"
+
+
+def get_device_address_from_identifiers(identifiers: set[tuple[str, str]]) -> str | None:
+    """
+    Return the device address from device_info.identifiers.
+
+    The address is the part before the separator for regular devices, sub
+    devices (``address@interface-group_no``) and schedule devices alike, so
+    no suffix handling is needed. It is also the only part callers need: an
+    address identifies a device within a central, and the interface id — the
+    part that differs per backend — is read off the device once it is found.
+    """
+    for _, identifier in identifiers:
+        if IDENTIFIER_SEPARATOR in identifier:
+            return identifier.split(IDENTIFIER_SEPARATOR, 1)[0]
     return None
 
 

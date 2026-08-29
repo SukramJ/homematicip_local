@@ -10,11 +10,17 @@ from aiohomematic.const import DataPointCategory
 from custom_components.homematicip_local.const import DOMAIN
 from custom_components.homematicip_local.control_unit import ControlUnit
 from custom_components.homematicip_local.generic_entity import AioHomematicGenericEntity, AioHomematicGenericHubEntity
+from custom_components.homematicip_local.support import get_device_identifier
 
 # pylint: disable=protected-access
 
-_DEVICE_IDENTIFIER = "TEST_DEVICE"
 _CENTRAL_NAME = "test_central"
+_DEVICE_ADDRESS = "ABC1234567"
+_DEVICE_INTERFACE = "HmIP-RF"
+# What the integration composes itself — instance name plus interface type,
+# never the backend's own identifier below.
+_DEVICE_IDENTIFIER = f"{_DEVICE_ADDRESS}@{_CENTRAL_NAME}-{_DEVICE_INTERFACE}"
+_BACKEND_IDENTIFIER = f"{_DEVICE_ADDRESS}@some-daemon-central-{_DEVICE_INTERFACE}"
 _VIA_DEVICE_ID = "via-device-registry-id"
 
 
@@ -39,11 +45,12 @@ def _create_mock_data_point(
     # Device mock
     mock_device = MagicMock()
     mock_device.configure_mock(name=device_name)
-    mock_device.identifier = _DEVICE_IDENTIFIER
+    mock_device.identifier = _BACKEND_IDENTIFIER
     mock_device.manufacturer = "eQ-3"
     mock_device.model = "HmIP-PSM"
     mock_device.model_description = "Pluggable Switch and Meter"
-    mock_device.address = "ABC1234567"
+    mock_device.address = _DEVICE_ADDRESS
+    mock_device.interface = _DEVICE_INTERFACE
     mock_device.firmware = "1.0.0"
     mock_device.room = "Living Room"
     mock_device.interface_id = "test_interface"
@@ -73,6 +80,12 @@ def _create_mock_control_unit(*, enable_sub_devices: bool = False) -> MagicMock:
     mock_cu.enable_sub_devices = enable_sub_devices
     mock_cu.disable_config_panel = True
     mock_cu.ensure_via_device_exists.return_value = _VIA_DEVICE_ID
+    # Mirror the real method rather than returning a fixed string, so these
+    # tests keep exercising which identifier the entity asks for.
+    mock_cu.device_identifier.side_effect = lambda *, device: (
+        get_device_identifier(instance_name=_CENTRAL_NAME, address=device.address, interface=device.interface)
+        or device.identifier
+    )
     return mock_cu
 
 

@@ -40,7 +40,7 @@ from .const import DOMAIN, HmipLocalServices
 from .control_unit import ControlUnit
 from .permissions import SCOPE_SCHEDULE_EDIT, check_service_permission
 from .support import (
-    get_device_address_at_interface_from_identifiers,
+    get_device_address_from_identifiers,
     validate_channel_address,
     validate_channel_no,
     validate_device_address,
@@ -1393,13 +1393,10 @@ def _asnyc_get_hm_device_by_id(*, hass: HomeAssistant, device_id: str) -> Device
     device_entry = dr.async_get(hass).async_get(device_id)
     if not device_entry:
         return None
-    if (data := get_device_address_at_interface_from_identifiers(identifiers=device_entry.identifiers)) is None:
+    if (device_address := get_device_address_from_identifiers(identifiers=device_entry.identifiers)) is None:
         return None
-    device_address, interface_id = data
     for control_unit in _async_get_control_units(hass=hass):
-        if control_unit.central.client_coordinator.has_client(interface_id=interface_id) and (
-            hm_device := control_unit.central.device_coordinator.get_device(address=device_address)
-        ):
+        if hm_device := control_unit.central.device_coordinator.get_device(address=device_address):
             return hm_device
     return None
 
