@@ -190,6 +190,13 @@ def hub_key_from_name_slug(unique_id: str, *, legacy_name: str) -> str | None:
 # comfortably covers the first scheduler iteration of fetch_system_update_data.
 ORPHAN_CLEANUP_DELAY: Final = 60
 
+# Config entries whose hub key migration has already asked for its one reload,
+# kept in hass.data so it survives that reload. The pass is idempotent, so a
+# second run finds nothing to migrate and asks for nothing — but that is an
+# argument about the pass, and an automatic reload loop is a bad enough failure
+# to close by construction instead.
+HUB_KEY_RELOAD_SCHEDULED: Final = f"{DOMAIN}_hub_key_reload_scheduled"
+
 # Safety threshold for the orphan entity registry cleanup. The central reports
 # RUNNING as soon as all clients are connected, which does not guarantee that the
 # device descriptions were actually loaded (e.g. a transient auth error during a
@@ -788,20 +795,30 @@ class ControlUnit(BaseControlUnit):
             entity_registry.async_update_entity(entity_entry.entity_id, new_unique_id=new_unique_id)
             migrated += 1
 
-        if migrated:
-            _LOGGER.info(
-                "Migrated %s hub entity registry key(s) onto the CCU id; reloading so the entities re-bind",
+        if not migrated:
+            return
+
+        # The renamed entry holds the history but nothing live: the entity that
+        # existed a moment ago was bound to the twin, and removing the twin
+        # removed it. Binding happens at `async_add_entities`, which is over for
+        # this session, so without a reload the entity stays gone until the user
+        # restarts — which is what an update used to cost.
+        already_reloaded: set[str] = self._hass.data.setdefault(HUB_KEY_RELOAD_SCHEDULED, set())
+        if self._entry_id in already_reloaded:
+            # Reaching here twice means the pass did not converge, so reloading
+            # again would not either. Say so and leave it to the next restart.
+            _LOGGER.warning(
+                "Migrated %s hub entity registry key(s) onto the CCU id after a reload already ran; "
+                "not reloading again — those entities re-bind on the next restart",
                 migrated,
             )
-            # The renamed entry holds the history but nothing live: the entity
-            # that existed a moment ago was bound to the twin, and removing the
-            # twin removed it. Binding happens at `async_add_entities`, which is
-            # over for this session, so without a reload the entity stays gone
-            # until the user restarts — which is what an update used to cost.
-            #
-            # Runs exactly once. The next setup finds every key already on the
-            # id, migrates nothing, and schedules nothing.
-            self._hass.config_entries.async_schedule_reload(self._entry_id)
+            return
+        already_reloaded.add(self._entry_id)
+        _LOGGER.info(
+            "Migrated %s hub entity registry key(s) onto the CCU id; reloading so the entities re-bind",
+            migrated,
+        )
+        self._hass.config_entries.async_schedule_reload(self._entry_id)
 
     @callback
     def _async_scheduled_orphan_cleanup(self, _now: datetime) -> None:

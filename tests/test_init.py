@@ -1517,6 +1517,60 @@ class TestHubKeyMigrationAgainstTheRegistry:
         # schedules nothing, so this cannot become a loop.
         scheduled_reload.assert_called_once_with(mock_config_entry_v2.entry_id)
 
+    async def test_a_later_migrating_pass_does_not_reload_again(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry, scheduled_reload: MagicMock
+    ) -> None:
+        """A pass that migrates after the reload already ran asks for nothing.
+
+        Idempotency makes a second migrating pass unreachable in theory, which
+        is exactly why this is pinned by construction: if it ever were reached,
+        reloading on every one of them would put the config entry in a loop.
+        """
+        mock_config_entry_v2.add_to_hass(hass)
+        self._seed(
+            hass,
+            mock_config_entry_v2,
+            unique_id=f"loom_{self._SERIAL}_sysvar_aussen-temperatur",
+            entity_suffix="aussen_temperatur",
+        )
+        ControlUnit._async_migrate_hub_keys_from_name_slug(
+            _build_hub_migration_self(
+                hass,
+                mock_config_entry_v2.entry_id,
+                hub_data_points=(
+                    SimpleNamespace(unique_id=f"loom_{self._SERIAL}_sysvar_12345", legacy_name="Außen Temperatur"),
+                ),
+            )
+        )
+        scheduled_reload.assert_called_once_with(mock_config_entry_v2.entry_id)
+
+        # A second, genuinely migrating pass — a different variable this time.
+        self._seed(
+            hass,
+            mock_config_entry_v2,
+            unique_id=f"loom_{self._SERIAL}_sysvar_luftfeuchte",
+            entity_suffix="luftfeuchte",
+        )
+        ControlUnit._async_migrate_hub_keys_from_name_slug(
+            _build_hub_migration_self(
+                hass,
+                mock_config_entry_v2.entry_id,
+                hub_data_points=(
+                    SimpleNamespace(unique_id=f"loom_{self._SERIAL}_sysvar_67890", legacy_name="Luftfeuchte"),
+                ),
+            )
+        )
+
+        entity_registry = er.async_get(hass)
+        assert {
+            entry.unique_id
+            for entry in er.async_entries_for_config_entry(entity_registry, mock_config_entry_v2.entry_id)
+        } == {
+            f"{HMIP_DOMAIN}_loom_{self._SERIAL}_sysvar_12345",
+            f"{HMIP_DOMAIN}_loom_{self._SERIAL}_sysvar_67890",
+        }, "the second pass did not migrate, so it does not test the guard"
+        scheduled_reload.assert_called_once_with(mock_config_entry_v2.entry_id)
+
     async def test_two_sysvars_differing_only_in_punctuation(
         self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
     ) -> None:
