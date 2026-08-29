@@ -76,9 +76,11 @@ stands as written.
 | **Extra surfaces** | HA only | MQTT (HA Discovery), Matter, Web Config-UI |
 
 **The central finding:** Loom does **not reduce** total complexity — it
-**relocates and re-implements** it. The thin client (~14k LOC) is only thin
-because a ~232k-LOC Go daemon now carries the device-profile, paramset, and
-classification logic that aiohomematic does in-process. In exchange Loom buys a
+**relocates and re-implements** it. The client (21,730 LOC hand-maintained,
+plus 5,587 generated wire types — see the note above; ~14k when this was
+written) is only thin relative to a ~232k-LOC Go daemon that now carries the
+device-profile, paramset, and classification logic aiohomematic does
+in-process. In exchange Loom buys a
 **cleaner wire model** (compact BIN-RPC south-bound, delta-only JSON over an
 outgoing WebSocket north-bound, no inbound callback server) at the cost of an
 **additional stateful, version-coupled daemon** as a new single point of failure
@@ -224,7 +226,7 @@ traffic): MQTT (`north.mqtt.enabled: false` by default), Matter
 (`north.matter.enabled: false`). Both are north-bound adapters on the **same
 in-process EventBus** — they do not open a second CCU link.
 
-### 3.2 The thin client (`openccu-loom-client`, ~14k LOC Python)
+### 3.2 The client (`openccu-loom-client`, 21,730 LOC hand-maintained + 5,587 generated)
 
 Consumes the daemon over **one persistent outgoing WebSocket** (events) + **REST**
 (commands, snapshot, refresh) against one port/auth family (Basic / Bearer /
@@ -378,11 +380,18 @@ Protocol. Quality is high and deliberate:
 - **One shared interface**, no `if loom` sauce threaded through entities. Only
   **~11 real branch sites** total (3 in `control_unit.py`, 4 in `__init__.py`,
   4 in `config_flow.py`).
-- **`backend_types.py`** resolves the one structural friction: aiohomematic's
-  Protocol metaclass blocks both subclassing and `ABCMeta.register`, so platform
-  dispatch uses `isinstance` tuples pairing each aiohomematic class with its Loom
-  twin, degrading to the aiohomematic class alone on a CCU-only install
-  (`backend_types.py:55-67`). Used by 7 platforms.
+- **`backend_types.py`** resolves the one structural friction. Not for the
+  reason first given here: subclassing an aiohomematic model class *works*
+  (measured, 15 of 15 dispatch classes). What rules the alternatives out is that
+  `ABCMeta.register` fails **silently** — `CustomDpCover.register(cls)` returns
+  without error and `isinstance` stays `False` — and that inheriting is worse
+  than useless, because a twin must skip `__init__` (aiohomematic's constructors
+  want a live `CentralUnit`) and then 93 of 153 members raise on access, 42 of
+  them public. So platform dispatch uses `isinstance` tuples pairing each
+  aiohomematic class with its Loom twin, degrading to the aiohomematic class
+  alone on a CCU-only install (`backend_types.py:5-21`, which carries the
+  measurement). Used by 7 platforms — with cover and siren since moved onto the
+  `@runtime_checkable` category protocols in `aiohomematic.interfaces.custom`.
 - **Polymorphism instead of branching** elsewhere: an `isawaitable` pattern for
   `get_paramset_description` (sync+cached on aiohomematic, async REST on Loom,
   `websocket_api.py:266-276`) and a `NotImplementedError` guard for event groups
@@ -474,8 +483,8 @@ shipping reality" with "the architecture on its merits" would be misleading.
 | Network footprint (quantity) | 6 | **8** | 9 when daemon on-CCU; ~7 when daemon separate (both hops on LAN) |
 | NAT / firewall friendliness | 4 | **9** | outgoing WS only vs. required inbound callback listener |
 | Startup performance / scalability | 7 | 6 | aiohomematic disk-cache + bulk fetch vs. client N×M fan-out (daemon warm-start is strong, 8) |
-| HA-process footprint | 5 | **9** | 74k in-process vs. ~14k thin adapter |
-| Total system complexity | **7** | 4 | one library vs. daemon (232k Go) + client + types + SQLite |
+| HA-process footprint | 5 | 7 | 74k in-process vs. 27k client, of which 10k is the compat shim (was scored 9 against the ~14k figure) |
+| Total system complexity | **7** | 4 | one library vs. daemon (232k Go) + client + SQLite (the separate types distribution was folded into the client in 2026-08) |
 | Integration abstraction cleanliness | — | **8** | clean `CentralUnit` façade, ~11 branch sites (aiohomematic *is* the interface) |
 | Maturity / production readiness (in HA) | **10** | 4 | default backend vs. disabled groundwork (daemon now parity-complete; HA backend still gated off) |
 | Robustness / reconnect | **9** | 8 | both strong; Loom carries daemon SPOF |

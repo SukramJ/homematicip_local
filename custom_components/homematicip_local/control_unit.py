@@ -645,11 +645,12 @@ class ControlUnit(BaseControlUnit):
             )
 
         # The pre-id keys the slug-to-id migration would rename onto one of the
-        # live data points above. It runs at the end of start_central(), so an
-        # entry still holding one here means it did not: it raised, or that data
-        # point yielded no old key. Deletion is permanent and the next start
-        # retries the migration, so these are kept rather than swept — the same
-        # reasoning as the central-id drift exemption below.
+        # live data points above. It runs in this same callback, immediately
+        # before this sweep, so an entry still holding one here means it did
+        # not take: it raised, or that data point yielded no old key. Deletion
+        # is permanent and the next start retries the migration, so these are
+        # kept rather than swept — the same reasoning as the central-id drift
+        # exemption below.
         migratable_unique_ids: set[str] = {
             f"{DOMAIN}_{old_unique_id}"
             for dp in hub_data_points
