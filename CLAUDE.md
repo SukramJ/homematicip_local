@@ -118,20 +118,21 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2026.8.5) - Core async library for Homematic device communication
+- **aiohomematic** (v2026.8.8) - Core async library for Homematic device communication
 - **aiohomematic-config** (v2026.8.1) - Device configuration metadata
-- **openccu-loom-client** (v2026.8.29) - Client for the openccu-loom backend (Beta)
+- **openccu-data** (v2026.7.2) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
+- **openccu-loom-client** (v2026.8.36) - Client for the openccu-loom backend (Beta)
 - **Home Assistant Core** - Minimum version: 2026.8.0+
 - **Python 3.14+** (target version for development)
 
 ### Development Dependencies
 
-- **pytest-homeassistant-custom-component-framework** (1.0.48) - HA test framework
+- **pytest-homeassistant-custom-component-framework** (1.0.49) - HA test framework
 - **mypy** (2.1.0) - Static type checker (strict mode)
-- **pylint** (4.0.7) - Code linting
+- **pylint** (4.0.8) - Code linting
 - **ruff** (0.16.5) - Fast Python linter and formatter
 - **prek** (0.5.0) - Git hooks manager (Rust-based pre-commit alternative)
-- **aiohomematic-test-support** (2026.8.5) - Mock test data
+- **aiohomematic-test-support** (2026.8.8) - Mock test data
 - **async-upnp-client** (0.48.1) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
 
@@ -1024,6 +1025,10 @@ These rules govern how the AI assistant communicates and works with the develope
    - The version gate in `async_setup_entry` is a **minimum-version** check: setup is only
      blocked when the installed aiohomematic is *older* than the manifest pin; a newer patch
      is allowed.
+   - `manifest.json` and `requirements_test.txt` must declare the same versions —
+     `tests/test_dependency_pins.py` fails by name when they drift, so a dependency bump
+     always touches both files. CI runs against `requirements_test.txt`, so without that
+     test a release can ship a pin nothing ever tested.
 
 ### Refactoring Workflow
 
@@ -1127,8 +1132,8 @@ make hass
 - **Current Version:** 2.10.1
 - **Minimum HA Version:** 2026.8.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
-- **aiohomematic Version:** 2026.8.5
-- **openccu-loom-client Version:** 2026.8.29 (requires an openccu-loom daemon ≥ 0.66.1; pins `openccu-loom-types==0.5.9`, checks daemon API 7.21.0 at connect time)
+- **aiohomematic Version:** 2026.8.8
+- **openccu-loom-client Version:** 2026.8.36 (requires an openccu-loom daemon ≥ 0.68.1; checks daemon API 7.24.0 at connect time — same major, minor ≥ 24. `openccu-loom-types` is no longer a separate dependency, it is folded into the client)
 
 ### External Resources
 
@@ -1141,5 +1146,5 @@ make hass
 
 ---
 
-**Last Updated**: 2026-08-27
+**Last Updated**: 2026-08-29
 **Version**: 2.10.1
