@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import ast
+import pathlib
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -35,6 +37,66 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests import const
+
+
+def _call_line(func: ast.AsyncFunctionDef, attribute: str) -> int:
+    """Return the line of the sole call to ``attribute`` in ``func``, bare or attribute-style."""
+    lines = [
+        node.lineno
+        for node in ast.walk(func)
+        if isinstance(node, ast.Call)
+        and (
+            (isinstance(node.func, ast.Attribute) and node.func.attr == attribute)
+            or (isinstance(node.func, ast.Name) and node.func.id == attribute)
+        )
+    ]
+    assert len(lines) == 1, f"expected exactly one call to {attribute}, found {len(lines)}"
+    return lines[0]
+
+
+class TestSetupOrdering:
+    """Every registry re-key must land before an entity holds the new key.
+
+    ``start_central()`` runs the slug-to-id hub migration at its end, where the
+    hub data is loaded (``init_hub()`` awaits the program and sysvar fetches
+    inside ``start_clients()``) and no platform has been forwarded. Forward the
+    platforms first and a freshly spawned twin already holds the new key, so the
+    migration has to remove that twin — which detaches the live entity and
+    leaves the historied entry bound to nothing until the next restart. That was
+    the shipped behaviour and the reason an update needed two restarts.
+
+    The constraint is an ordering between two awaits with no observable a unit
+    test can reach without standing up the whole setup path, so it is read off
+    the source of ``async_setup_entry`` itself.
+    """
+
+    @staticmethod
+    def _setup_entry() -> ast.AsyncFunctionDef:
+        source = pathlib.Path(custom_components.homematicip_local.__file__).read_text(encoding="utf-8")
+        return next(
+            node
+            for node in ast.parse(source).body
+            if isinstance(node, ast.AsyncFunctionDef) and node.name == "async_setup_entry"
+        )
+
+    def test_platforms_are_forwarded_after_the_central_starts(self) -> None:
+        """The re-keys inside start_central() run while no entity exists."""
+        function = self._setup_entry()
+        assert _call_line(function, "start_central") < _call_line(function, "async_forward_entry_setups")
+
+    def test_the_central_state_signal_follows_the_platforms(self) -> None:
+        """The backup button can only hear the signal once it is on the bus."""
+        function = self._setup_entry()
+        assert _call_line(function, "async_forward_entry_setups") < _call_line(
+            function, "async_signal_central_state_changed"
+        )
+
+    def test_the_serial_reanchor_also_precedes_the_platforms(self) -> None:
+        """The other re-key pass on this path needs the same empty registry."""
+        function = self._setup_entry()
+        assert _call_line(function, "_async_reanchor_hub_unique_ids_on_serial_change") < _call_line(
+            function, "async_forward_entry_setups"
+        )
 
 
 class TestSetupEntry:

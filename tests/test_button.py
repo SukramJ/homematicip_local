@@ -73,7 +73,7 @@ class TestBackupButtonAvailability:
 
         # The central reaches its running state and the control unit announces it.
         control_unit._central.available = True
-        control_unit._async_signal_central_state_changed()
+        control_unit.async_signal_central_state_changed()
         await hass.async_block_till_done()
 
         button.async_write_ha_state.assert_called()
@@ -107,42 +107,44 @@ class TestCentralStateSignalWiring:
     """The control unit is the production caller of the central-state signal."""
 
     def test_notify_dispatches_on_the_signal(self, hass: HomeAssistant) -> None:
-        """_async_signal_central_state_changed sends the entry-scoped signal."""
+        """async_signal_central_state_changed sends the entry-scoped signal."""
         control_unit = _make_control_unit(hass, entry_id="e1")
         with patch("custom_components.homematicip_local.control_unit.async_dispatcher_send") as send:
-            control_unit._async_signal_central_state_changed()
+            control_unit.async_signal_central_state_changed()
         send.assert_called_once_with(hass, signal_central_state_changed(entry_id="e1"))
 
     async def test_runtime_state_transition_signals(self, hass: HomeAssistant) -> None:
         """Every central-state transition re-announces the change."""
         control_unit = _make_control_unit(hass, entry_id="e1")
         control_unit._instance_name = "X"
-        control_unit._async_signal_central_state_changed = Mock()
+        control_unit.async_signal_central_state_changed = Mock()
         event = SimpleNamespace(new_state=CentralState.RUNNING)
 
         with patch.object(ControlUnit, "_on_central_running", new=AsyncMock()):
             await control_unit._on_central_state_changed(event=event)
 
-        control_unit._async_signal_central_state_changed.assert_called_once()
+        control_unit.async_signal_central_state_changed.assert_called_once()
 
     def test_signal_is_entry_scoped(self) -> None:
         """The signal name is scoped to the config entry, so entries don't cross-talk."""
         assert signal_central_state_changed(entry_id="a") != signal_central_state_changed(entry_id="b")
 
-    async def test_start_central_signals_after_start(self, hass: HomeAssistant) -> None:
+    async def test_start_central_leaves_the_signal_to_setup(self, hass: HomeAssistant) -> None:
         """
-        start_central announces the central-state change once the central is up.
+        start_central no longer signals — no entity exists yet to hear it.
 
-        Without this the loom backend — which reaches its running state without
-        emitting a state event — would never notify the backup button, leaving it
-        unavailable forever.
+        It runs before the platforms are forwarded so the hub key migration can
+        re-key the registry while nothing holds the new keys. The announcement
+        the backup button needs therefore moved to `async_setup_entry`, after
+        the forward; `TestSetupOrdering` in test_init.py pins that position.
         """
         control_unit = _make_control_unit(hass, entry_id="e1")
         control_unit._instance_name = "X"
         control_unit._subscription_group = MagicMock()
         control_unit._enable_mqtt = False
         control_unit._orphan_cleanup_unsub = None
-        control_unit._async_signal_central_state_changed = Mock()
+        control_unit.async_signal_central_state_changed = Mock()
+        control_unit._async_migrate_hub_keys_from_name_slug = Mock()
 
         with (
             patch.object(ControlUnit, "_cleanup_callback_issues"),
@@ -152,4 +154,5 @@ class TestCentralStateSignalWiring:
         ):
             await control_unit.start_central()
 
-        control_unit._async_signal_central_state_changed.assert_called_once()
+        control_unit.async_signal_central_state_changed.assert_not_called()
+        control_unit._async_migrate_hub_keys_from_name_slug.assert_called_once()

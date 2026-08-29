@@ -358,6 +358,17 @@ class ControlUnit(BaseControlUnit):
         )
         self._orphan_cleanup_unsub: CALLBACK_TYPE | None = None
 
+    @callback
+    def async_signal_central_state_changed(self) -> None:
+        """Fan out that the central's availability may have changed.
+
+        Standalone hub entities that have no data point of their own — the
+        backup button — key their availability directly on ``central.available``
+        and cannot subscribe to a per-data-point refresh. They connect to this
+        dispatcher signal instead and re-render on it.
+        """
+        async_dispatcher_send(self._hass, signal_central_state_changed(entry_id=self._entry_id))
+
     def ensure_via_device_exists(
         self,
         *,
@@ -482,12 +493,11 @@ class ControlUnit(BaseControlUnit):
         )
         self._async_add_central_to_device_registry()
         await super().start_central()
-        # The central is available now. Standalone hub entities that key their
-        # availability on it (the backup button) are added before this runs,
-        # have no data point to refresh on and do not poll — so tell them to
-        # re-evaluate. The loom backend in particular reaches its running state
-        # without emitting a state event, so nothing else would.
-        self._async_signal_central_state_changed()
+        # Hub data is loaded now — `init_hub()` fetches programs and sysvars
+        # inside `start_clients()`, awaited — and no platform has been forwarded
+        # yet, so no entity holds the id-based keys. That is the one window in
+        # which re-keying the historied registry entries is a plain rename.
+        self._async_migrate_hub_keys_from_name_slug()
         if self._enable_mqtt:
             self._mqtt_consumer = MQTTConsumer(hass=self._hass, central=self._central, mqtt_prefix=self._mqtt_prefix)
             await self._mqtt_consumer.subscribe()
@@ -718,20 +728,33 @@ class ControlUnit(BaseControlUnit):
         bar the daemon's ADR 0068 sets for a re-key on this plane, and it is
         what makes this pass possible without a contract field.
 
-        Deferred with the orphan cleanup because it needs loaded hub data, which
-        means the freshly-keyed twins already exist. A collision is therefore
-        expected and resolved rather than skipped: the twin was created seconds
-        ago and holds nothing, the registry entry holds the history, so the twin
-        is removed and the historied entry takes the key. The other passes skip
-        on collision because they run before any entity exists, where a
-        collision means something genuinely unexpected.
+        Runs at the end of ``start_central()``: the hub fetch is complete
+        (``init_hub()`` awaits ``fetch_program_data`` / ``fetch_sysvar_data``
+        inside ``start_clients()``), so the live data points that carry the new
+        key exist — while the platforms have not been forwarded yet, so no
+        entity holds it. That makes this a plain rename of the entry that
+        carries the history, in the same position as every other re-key pass.
+
+        It used to run 60 s after the start, attached to the orphan cleanup on
+        the grounds that it needed loaded hub data. It does, but that data is
+        awaited during the start; the 60 s exist for ``system_update`` alone,
+        which this pass never touches.
+
+        The collision branch below is the repair path for a registry left
+        half-migrated by that deferred version, where the twin was spawned
+        before the rename and both keys can be present. The twin holds nothing
+        and the historied entry holds the history, so the twin is removed and
+        the historied entry takes the key.
 
         Idempotent: a second run finds no slug-keyed entries and does nothing.
         """
         try:
             hub_data_points = self._central.hub_coordinator.get_hub_data_points()
         except Exception:
-            _LOGGER.debug("Skipping hub key migration: hub data points unavailable", exc_info=True)
+            # Warning, not debug: the entities then spawn on the id keys while
+            # the historied slug-keyed entries stay behind, and on the
+            # aiohomematic backend the orphan sweep removes those 60 s later.
+            _LOGGER.warning("Skipping hub key migration: hub data points unavailable", exc_info=True)
             return
 
         # old registry unique_id -> current unique_id, for the two renameable
@@ -760,7 +783,7 @@ class ControlUnit(BaseControlUnit):
                 if twin_entity_id == entity_entry.entity_id:
                     continue
                 _LOGGER.debug(
-                    "Removing the freshly created twin so the historied entry can take its key: %s",
+                    "Removing the leftover twin so the historied entry can take its key: %s",
                     twin_entity_id,
                 )
                 entity_registry.async_remove(twin_entity_id)
@@ -777,23 +800,9 @@ class ControlUnit(BaseControlUnit):
 
     @callback
     def _async_scheduled_orphan_cleanup(self, _now: datetime) -> None:
-        """Run the deferred hub key migration, then the orphan cleanup."""
+        """Run the deferred orphan cleanup."""
         self._orphan_cleanup_unsub = None
-        # Order matters and is not incidental: the migration reclaims registry
-        # entries the cleanup would otherwise consider orphaned and delete.
-        self._async_migrate_hub_keys_from_name_slug()
         self._async_cleanup_orphaned_entity_registry_entries()
-
-    @callback
-    def _async_signal_central_state_changed(self) -> None:
-        """Fan out that the central's availability may have changed.
-
-        Standalone hub entities that have no data point of their own — the
-        backup button — key their availability directly on ``central.available``
-        and cannot subscribe to a per-data-point refresh. They connect to this
-        dispatcher signal instead and re-render on it.
-        """
-        async_dispatcher_send(self._hass, signal_central_state_changed(entry_id=self._entry_id))
 
     @callback
     def _cleanup_callback_issues(self) -> None:
@@ -1102,7 +1111,7 @@ class ControlUnit(BaseControlUnit):
         """Handle central state transitions."""
         # Every transition can flip central.available, so re-notify availability
         # dependent standalone entities regardless of the specific target state.
-        self._async_signal_central_state_changed()
+        self.async_signal_central_state_changed()
         if event.new_state == CentralState.RECOVERING:
             await self._on_central_recovering()
         elif event.new_state == CentralState.RUNNING:
