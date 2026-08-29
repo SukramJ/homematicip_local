@@ -1351,3 +1351,172 @@ class TestHubKeyFromNameSlug:
     )
     def test_rebuilds_the_slug_key(self, unique_id: str, legacy_name: str, expected: str) -> None:
         assert hub_key_from_name_slug(unique_id, legacy_name=legacy_name) == expected
+
+
+def _build_hub_migration_self(
+    hass: HomeAssistant,
+    entry_id: str,
+    *,
+    hub_data_points: tuple[SimpleNamespace, ...],
+) -> SimpleNamespace:
+    """Build a minimal ControlUnit-shaped self for _async_migrate_hub_keys_from_name_slug."""
+    central = MagicMock()
+    central.hub_coordinator.get_hub_data_points.return_value = hub_data_points
+    return SimpleNamespace(_hass=hass, _entry_id=entry_id, _central=central)
+
+
+class TestHubKeyMigrationAgainstTheRegistry:
+    """The registry walk of the sysvar / program key migration, not just its arithmetic.
+
+    `TestHubKeyFromNameSlug` covers the pure rebuild. This covers what actually
+    happens to a registry: which entry keeps its history, what becomes of the
+    freshly created twin, and that no rename is attempted onto a key that is
+    already taken — the "unique id already in use" that aborts a config entry.
+    """
+
+    _SERIAL = "11a0001234"
+
+    async def test_historied_entry_takes_the_id_key(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """The pre-upgrade entry keeps its entity_id and gains the new key."""
+        mock_config_entry_v2.add_to_hass(hass)
+        old = self._seed(
+            hass,
+            mock_config_entry_v2,
+            unique_id=f"loom_{self._SERIAL}_sysvar_aussen-temperatur",
+            entity_suffix="aussen_temperatur",
+        )
+
+        fake_self = _build_hub_migration_self(
+            hass,
+            mock_config_entry_v2.entry_id,
+            hub_data_points=(
+                SimpleNamespace(unique_id=f"loom_{self._SERIAL}_sysvar_12345", legacy_name="Außen Temperatur"),
+            ),
+        )
+        ControlUnit._async_migrate_hub_keys_from_name_slug(fake_self)
+
+        entity_registry = er.async_get(hass)
+        migrated = entity_registry.async_get(old.entity_id)
+        assert migrated is not None, "the historied entry was removed instead of migrated"
+        assert migrated.unique_id == f"{HMIP_DOMAIN}_loom_{self._SERIAL}_sysvar_12345"
+
+    async def test_second_run_changes_nothing(self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry) -> None:
+        """Idempotent: the pass runs on every start-up, not only the first."""
+        mock_config_entry_v2.add_to_hass(hass)
+        self._seed(
+            hass,
+            mock_config_entry_v2,
+            unique_id=f"loom_{self._SERIAL}_sysvar_aussen-temperatur",
+            entity_suffix="aussen_temperatur",
+        )
+        fake_self = _build_hub_migration_self(
+            hass,
+            mock_config_entry_v2.entry_id,
+            hub_data_points=(
+                SimpleNamespace(unique_id=f"loom_{self._SERIAL}_sysvar_12345", legacy_name="Außen Temperatur"),
+            ),
+        )
+        ControlUnit._async_migrate_hub_keys_from_name_slug(fake_self)
+        entity_registry = er.async_get(hass)
+        after_first = {
+            (entry.entity_id, entry.unique_id)
+            for entry in er.async_entries_for_config_entry(entity_registry, mock_config_entry_v2.entry_id)
+        }
+
+        ControlUnit._async_migrate_hub_keys_from_name_slug(fake_self)
+        after_second = {
+            (entry.entity_id, entry.unique_id)
+            for entry in er.async_entries_for_config_entry(entity_registry, mock_config_entry_v2.entry_id)
+        }
+        assert after_second == after_first
+
+    async def test_two_sysvars_differing_only_in_punctuation(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """The collision the id-keying exists to end, replayed end to end.
+
+        `Alarm: Küche` and `Alarm Küche` both slug to `alarm-kuche`, so before
+        the change they produced byte-identical keys and Home Assistant kept
+        whichever arrived first — the other variable had no entity at all.
+
+        After it they have distinct vids. The platform has already created both
+        freshly-keyed twins by the time this runs, so the migration has to hand
+        the surviving history to one of them and leave the other alone, without
+        ever attempting a rename onto a key that exists.
+        """
+        mock_config_entry_v2.add_to_hass(hass)
+        entity_registry = er.async_get(hass)
+
+        # What a pre-upgrade registry actually holds: one entry, because the
+        # second variable collided and never got one.
+        historied = self._seed(
+            hass,
+            mock_config_entry_v2,
+            unique_id=f"loom_{self._SERIAL}_sysvar_alarm-kuche",
+            entity_suffix="alarm_kuche",
+        )
+        # And the two twins the platform spawned on this start-up.
+        twin_a = self._seed(
+            hass, mock_config_entry_v2, unique_id=f"loom_{self._SERIAL}_sysvar_12345", entity_suffix="twin_a"
+        )
+        twin_b = self._seed(
+            hass, mock_config_entry_v2, unique_id=f"loom_{self._SERIAL}_sysvar_12346", entity_suffix="twin_b"
+        )
+
+        fake_self = _build_hub_migration_self(
+            hass,
+            mock_config_entry_v2.entry_id,
+            hub_data_points=(
+                SimpleNamespace(unique_id=f"loom_{self._SERIAL}_sysvar_12345", legacy_name="Alarm: Küche"),
+                SimpleNamespace(unique_id=f"loom_{self._SERIAL}_sysvar_12346", legacy_name="Alarm Küche"),
+            ),
+        )
+        ControlUnit._async_migrate_hub_keys_from_name_slug(fake_self)
+
+        surviving = entity_registry.async_get(historied.entity_id)
+        assert surviving is not None, "the entry holding the history was removed"
+        assert surviving.unique_id in {
+            f"{HMIP_DOMAIN}_loom_{self._SERIAL}_sysvar_12345",
+            f"{HMIP_DOMAIN}_loom_{self._SERIAL}_sysvar_12346",
+        }
+
+        # Two variables, two entities: the other twin is untouched, and the one
+        # whose key the historied entry took is gone.
+        remaining = {
+            entry.unique_id
+            for entry in er.async_entries_for_config_entry(entity_registry, mock_config_entry_v2.entry_id)
+        }
+        assert remaining == {
+            f"{HMIP_DOMAIN}_loom_{self._SERIAL}_sysvar_12345",
+            f"{HMIP_DOMAIN}_loom_{self._SERIAL}_sysvar_12346",
+        }, f"expected exactly the two id-keyed entities, got {sorted(remaining)}"
+        assert surviving.entity_id in {
+            entry.entity_id
+            for entry in er.async_entries_for_config_entry(entity_registry, mock_config_entry_v2.entry_id)
+        }
+        # Whichever twin lost its key was removed, not left as a duplicate.
+        survivors = {twin_a.entity_id, twin_b.entity_id, historied.entity_id}
+        live = {
+            entry.entity_id
+            for entry in er.async_entries_for_config_entry(entity_registry, mock_config_entry_v2.entry_id)
+        }
+        assert len(live) == 2, f"expected two entities, got {sorted(live)}"
+        assert live <= survivors
+
+    def _seed(
+        self,
+        hass: HomeAssistant,
+        entry: MockConfigEntry,
+        *,
+        unique_id: str,
+        entity_suffix: str,
+    ) -> er.RegistryEntry:
+        return er.async_get(hass).async_get_or_create(
+            domain="sensor",
+            platform=HMIP_DOMAIN,
+            unique_id=f"{HMIP_DOMAIN}_{unique_id}",
+            suggested_object_id=entity_suffix,
+            config_entry=entry,
+        )
