@@ -507,10 +507,13 @@ def _is_concrete_model_class(module_name: str, symbol: str) -> bool:
 def test_no_bare_aiohomematic_isinstance_dispatch() -> None:
     """Contract: platforms never isinstance-dispatch on concrete aiohomematic model classes.
 
-    A loom data point is never an instance of an aiohomematic class (the
-    Protocol metaclass blocks subclassing), so such a check silently excludes
-    the loom backend. Dispatch must go through the paired tuples in
-    ``backend_types.py`` or runtime-checkable Protocols.
+    A loom data point is never an instance of an aiohomematic class — not
+    because subclassing is blocked (it is not; see ``backend_types.py`` for
+    what actually rules the alternatives out) but because the twins do not
+    subclass, and cannot: aiohomematic's constructors want a live
+    ``CentralUnit``. So a bare check silently excludes the loom backend.
+    Dispatch must go through the paired tuples in ``backend_types.py`` or
+    runtime-checkable Protocols.
     """
     violations: list[str] = []
     for source in _integration_sources():
