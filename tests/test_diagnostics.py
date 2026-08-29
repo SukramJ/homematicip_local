@@ -25,6 +25,14 @@ class _SystemInformation:
     version: str
 
 
+def _device(*, address: str, model: str = "HmIP-BSM") -> MagicMock:
+    """Return a device mock with the two attributes diagnostics reads."""
+    device = MagicMock()
+    device.address = address
+    device.model = model
+    return device
+
+
 class TestAsyncGetConfigEntryDiagnostics:
     """Tests for async_get_config_entry_diagnostics function."""
 
@@ -93,6 +101,17 @@ class TestAsyncGetConfigEntryDiagnostics:
         mock_client_coordinator.clients = (mock_client,)
         control_unit.central.client_coordinator = mock_client_coordinator
 
+        # Two CUxD devices among three. The shape is what identifies the family
+        # (``CUX`` + two-digit type + five-digit running number), so the third
+        # address must not match on the prefix alone.
+        control_unit.central.device_coordinator.devices = (
+            _device(address="VCU0000001"),
+            _device(address="CUX2801001"),
+            _device(address="CUX9000123"),
+        )
+        control_unit.config.backend = "ccu"
+        del control_unit.central.daemon_central_count
+
         diag = await async_get_config_entry_diagnostics(hass, entry)
 
         # Config redaction: ensure sensitive fields are not equal to the original ones
@@ -137,6 +156,14 @@ class TestAsyncGetConfigEntryDiagnostics:
         assert throttle_data["burst_threshold"] == 5
         assert throttle_data["burst_window"] == 0.5
 
+        # The deployment shape: what an architecture review could not measure
+        # from the repositories, answerable from a dump the user attaches.
+        assert diag["deployment"]["backend"] == "ccu"
+        assert diag["deployment"]["cuxd_devices"] == 2
+        # A central without the loom adapter's counter omits the key rather
+        # than reporting a zero that would read as "one CCU".
+        assert "daemon_centrals" not in diag["deployment"]
+
     @pytest.mark.asyncio
     async def test_degrades_on_loom_shaped_central(self, hass, mock_loaded_config_entry) -> None:
         """It should build a payload when the central lacks the ccu-only surfaces.
@@ -154,11 +181,12 @@ class TestAsyncGetConfigEntryDiagnostics:
         del central.device_registry
         del central.metrics_aggregator
 
-        device_a = MagicMock()
-        device_a.model = "HmIP-SWDO"
-        device_b = MagicMock()
-        device_b.model = "HmIP-BSM"
-        central.device_coordinator.devices = (device_a, device_b)
+        central.device_coordinator.devices = (
+            _device(address="VCU0000002", model="HmIP-SWDO"),
+            _device(address="VCU0000003", model="HmIP-BSM"),
+        )
+        central.daemon_central_count = 2
+        control_unit.config.backend = "openccu-loom"
 
         central.system_information = _SystemInformation(serial="ABC123", version="1.2.3")
 
@@ -185,3 +213,11 @@ class TestAsyncGetConfigEntryDiagnostics:
         assert diag["system_health"] == {"overall_score": 100}
         assert diag["incident_store"] == {"incidents": []}
         assert diag["command_throttle"] == {}
+        # The loom adapter publishes the central count, so it is carried —
+        # this is the case that makes "is anyone on a multi-CCU daemon?"
+        # answerable from a dump the user attaches to a report.
+        assert diag["deployment"] == {
+            "backend": "openccu-loom",
+            "cuxd_devices": 0,
+            "daemon_centrals": 2,
+        }
