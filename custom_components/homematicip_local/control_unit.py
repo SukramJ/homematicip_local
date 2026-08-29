@@ -10,6 +10,8 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any, Final, Self, TypeVar, cast
 
+from slugify import slugify
+
 from aiohomematic import __version__ as AIOHM_VERSION
 from aiohomematic.central import CentralConfig, CentralUnit, check_config
 from aiohomematic.central.events import (
@@ -148,6 +150,38 @@ if TYPE_CHECKING:
     from openccu_loom_client.compat.aiohomematic.central import CentralConfig as LoomCentralConfig
 
 _LOGGER = logging.getLogger(__name__)
+
+# The routing-key slot that carries the renameable identity. Both backends
+# build hub keys as ``<central-id>_<address>_<slot>`` with the address being
+# ``sysvar`` / ``program``, and a slug never contains an underscore, so the
+# marker locates the slot without parsing the rest of the key.
+_SYSVAR_KEY_MARKER: Final = "_sysvar_"
+_PROGRAM_KEY_MARKER: Final = "_program_"
+
+
+def hub_key_from_name_slug(unique_id: str, *, legacy_name: str) -> str | None:
+    """Return the pre-id key for a sysvar / program unique_id, or None.
+
+    Both backends used to key these two families on ``slugify(legacy_name)``
+    and now key them on the id the CCU carries. This rebuilds the old key by
+    swapping the identity slot back — everything after the ``_sysvar_`` /
+    ``_program_`` marker, which a slug can never contain because slugify emits
+    dashes.
+
+    Returns None when the key belongs to neither family, when the name yields
+    no slug, or when the slot is already the slug — the last of which is both
+    the idempotency guard and the correct answer while an id is unresolved and
+    the producer still falls back to the name.
+    """
+    for marker in (_SYSVAR_KEY_MARKER, _PROGRAM_KEY_MARKER):
+        head, found, current_slot = unique_id.rpartition(marker)
+        if not found:
+            continue
+        if not (old_slot := slugify(legacy_name)) or old_slot == current_slot:
+            return None
+        return f"{head}{marker}{old_slot}"
+    return None
+
 
 # Delay before pruning orphaned entity registry entries. Most hub data points
 # (inbox, service/alarm messages, install_mode, metrics, connectivity, programs,
@@ -669,10 +703,85 @@ class ControlUnit(BaseControlUnit):
             self._entry_id,
         )
 
+    def _async_migrate_hub_keys_from_name_slug(self) -> None:
+        """Move sysvar / program registry keys from the name slug onto the CCU id.
+
+        Both backends used to key these two families on ``slugify(legacy_name)``.
+        A rename in the CCU WebUI therefore re-keyed the entity and took its
+        history, area and every automation with it, so both moved onto the id
+        the CCU already carries — aiohomematic in 2026.8.8, openccu-loom in
+        0.68.0. Existing registry entries still hold the slug key.
+
+        The old key is reconstructed rather than transported over the wire: the
+        data point carries ``legacy_name``, and the old key was the slug of it,
+        so this needs nothing the consumer does not already receive. That is the
+        bar the daemon's ADR 0068 sets for a re-key on this plane, and it is
+        what makes this pass possible without a contract field.
+
+        Deferred with the orphan cleanup because it needs loaded hub data, which
+        means the freshly-keyed twins already exist. A collision is therefore
+        expected and resolved rather than skipped: the twin was created seconds
+        ago and holds nothing, the registry entry holds the history, so the twin
+        is removed and the historied entry takes the key. The other passes skip
+        on collision because they run before any entity exists, where a
+        collision means something genuinely unexpected.
+
+        Idempotent: a second run finds no slug-keyed entries and does nothing.
+        """
+        try:
+            hub_data_points = self._central.hub_coordinator.get_hub_data_points()
+        except Exception:
+            _LOGGER.debug("Skipping hub key migration: hub data points unavailable", exc_info=True)
+            return
+
+        # old registry unique_id -> current unique_id, for the two renameable
+        # families only. Every other hub data point takes its name from a module
+        # constant, cannot be renamed, and was never keyed on anything else.
+        mapping: dict[str, str] = {}
+        for data_point in hub_data_points:
+            if not (legacy_name := getattr(data_point, "legacy_name", None)):
+                continue
+            if (old_unique_id := hub_key_from_name_slug(data_point.unique_id, legacy_name=legacy_name)) is not None:
+                mapping[f"{DOMAIN}_{old_unique_id}"] = f"{DOMAIN}_{data_point.unique_id}"
+
+        if not mapping:
+            return
+
+        entity_registry = er.async_get(self._hass)
+        migrated = 0
+        for entity_entry in list(er.async_entries_for_config_entry(entity_registry, self._entry_id)):
+            if (new_unique_id := mapping.get(entity_entry.unique_id)) is None:
+                continue
+            if (
+                twin_entity_id := entity_registry.async_get_entity_id(
+                    entity_entry.domain, entity_entry.platform, new_unique_id
+                )
+            ) is not None:
+                if twin_entity_id == entity_entry.entity_id:
+                    continue
+                _LOGGER.debug(
+                    "Removing the freshly created twin so the historied entry can take its key: %s",
+                    twin_entity_id,
+                )
+                entity_registry.async_remove(twin_entity_id)
+            _LOGGER.info(
+                "Migrating hub unique_id from the name slug onto the CCU id: %s -> %s",
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+            entity_registry.async_update_entity(entity_entry.entity_id, new_unique_id=new_unique_id)
+            migrated += 1
+
+        if migrated:
+            _LOGGER.info("Migrated %s hub entity registry key(s) onto the CCU id", migrated)
+
     @callback
     def _async_scheduled_orphan_cleanup(self, _now: datetime) -> None:
-        """Run the deferred orphan entity registry cleanup."""
+        """Run the deferred hub key migration, then the orphan cleanup."""
         self._orphan_cleanup_unsub = None
+        # Order matters and is not incidental: the migration reclaims registry
+        # entries the cleanup would otherwise consider orphaned and delete.
+        self._async_migrate_hub_keys_from_name_slug()
         self._async_cleanup_orphaned_entity_registry_entries()
 
     @callback

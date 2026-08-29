@@ -20,7 +20,10 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=hass
+          # `temperatur` is a German system-variable name used verbatim in the
+          # unique_id migration fixtures — the same entry the sister client
+          # repository carries, and not a misspelling of "temperature".
+          - --ignore-words-list=hass,temperatur
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]
