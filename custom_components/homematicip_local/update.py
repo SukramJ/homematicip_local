@@ -108,7 +108,7 @@ class AioHomematicUpdate(UpdateEntity):
         self._attr_unique_id = f"{DOMAIN}_{data_point.unique_id}"
         # suggested_area only applies at device creation — see event.py.
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, data_point.device.identifier)},
+            identifiers={(DOMAIN, control_unit.device_identifier(device=data_point.device))},
             suggested_area=data_point.device.room,
         )
         self._attr_extra_state_attributes = {ATTR_FIRMWARE_UPDATE_STATE: data_point.device.firmware_update_state}

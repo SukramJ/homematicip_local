@@ -19,7 +19,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_EVENT_TYPE, CONF_INTERFACE_ID, CONF_SUBTYPE, DOMAIN
 from .control_unit import ControlUnit
-from .support import cleanup_click_event_data, get_device_address_at_interface_from_identifiers
+from .support import cleanup_click_event_data, get_device_address_from_identifiers
 
 TRIGGER_TYPES = {param.lower() for param in CLICK_EVENTS}
 
@@ -40,16 +40,13 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[s
     device_registry = dr.async_get(hass)
     if (device := device_registry.async_get(device_id)) is None:
         return []
-    if (data := get_device_address_at_interface_from_identifiers(identifiers=device.identifiers)) is None:
+    if (device_address := get_device_address_from_identifiers(identifiers=device.identifiers)) is None:
         return []
 
-    device_address, interface_id = data
     triggers = []
     for entry_id in device.config_entries:
         if (entry := hass.config_entries.async_get_entry(entry_id=entry_id)) and entry.domain == DOMAIN:
             control_unit: ControlUnit = entry.runtime_data
-            if control_unit.central.client_coordinator.has_client(interface_id=interface_id) is False:
-                continue
             if hm_device := control_unit.central.device_coordinator.get_device(address=device_address):
                 for action_event in hm_device.generic_events:
                     if not isinstance(action_event, ClickEvent):

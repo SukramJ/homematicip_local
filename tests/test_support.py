@@ -4,7 +4,8 @@ Unit tests for custom_components.homematicip_local.support.
 Covered functions:
 - cleanup_click_event_data: transforms keys and removes channel/parameter.
 - is_valid_event: returns True on valid schema, False and logs on invalid.
-- get_device_address_at_interface_from_identifiers: parses identifier tuple set.
+- get_device_identifier: builds the backend-neutral device identifier.
+- get_device_address_from_identifiers: parses identifier tuple set.
 - get_data_point: passthrough helper for easier mocking.
 - get_aiohomematic_version: parses requirement versions from manifest.
 """
@@ -15,13 +16,15 @@ from types import SimpleNamespace
 
 import voluptuous as vol
 
-from aiohomematic.const import IDENTIFIER_SEPARATOR
+from aiohomematic.const import IDENTIFIER_SEPARATOR, Interface
 from custom_components.homematicip_local.const import EVENT_CHANNEL_NO, EVENT_PARAMETER
 from custom_components.homematicip_local.support import (
     cleanup_click_event_data,
+    cleanup_instance_name,
     get_aiohomematic_version,
     get_data_point,
-    get_device_address_at_interface_from_identifiers,
+    get_device_address_from_identifiers,
+    get_device_identifier,
     is_valid_event,
     validate_device_address,
 )
@@ -58,37 +61,76 @@ class TestIsValidEvent:
         assert is_valid_event({"a": "x"}, schema) is False
 
 
-class TestGetDeviceAddressAtInterfaceFromIdentifiers:
-    """Tests for get_device_address_at_interface_from_identifiers function."""
+class TestGetDeviceIdentifier:
+    """Tests for get_device_identifier function."""
+
+    def test_applies_the_same_cleanup_as_the_central_name(self) -> None:
+        """A slash in the instance name must not split the two paths apart.
+
+        ``ControlConfig`` strips slashes before the name reaches the central,
+        so an identifier built from the running central and one built from the
+        raw config entry — which is what the registry migration reads — would
+        otherwise disagree, and the migration would write a key no platform
+        ever produces.
+        """
+        assert get_device_identifier(
+            instance_name="Otto/Dev", address="ABC123", interface="HmIP-RF"
+        ) == get_device_identifier(
+            instance_name=cleanup_instance_name(instance_name="Otto/Dev"), address="ABC123", interface="HmIP-RF"
+        )
+
+    def test_builds_from_instance_name_and_interface(self) -> None:
+        """The identifier carries the HA instance name, not a backend's interface id."""
+        assert (
+            get_device_identifier(instance_name="OttoDev", address="ABC123", interface="HmIP-RF")
+            == f"ABC123{IDENTIFIER_SEPARATOR}OttoDev-HmIP-RF"
+        )
+
+    def test_matches_the_aiohomematic_identifier(self) -> None:
+        """On the direct-CCU backend the result equals what aiohomematic composes itself.
+
+        aiohomematic builds its interface id as ``<central_name>-<interface>``
+        and its device identifier as ``<address>@<interface_id>``, so nothing
+        moves for a direct-CCU installation. That is the whole reason this
+        migration is a no-op there.
+        """
+        interface_id = f"OttoDev-{Interface.HMIP_RF}"
+        assert (
+            get_device_identifier(instance_name="OttoDev", address="ABC123", interface=str(Interface.HMIP_RF))
+            == f"ABC123{IDENTIFIER_SEPARATOR}{interface_id}"
+        )
+
+    def test_returns_none_for_unknown_interface(self) -> None:
+        """A loom device stub carries the wire id here until its detail arrives."""
+        assert get_device_identifier(instance_name="OttoDev", address="ABC123", interface="Otto-HmIP-RF") is None
+
+
+class TestGetDeviceAddressFromIdentifiers:
+    """Tests for get_device_address_from_identifiers function."""
 
     def test_parses_regular_device(self) -> None:
-        """Extract address and interface_id from regular device identifier."""
+        """Extract the address from a regular device identifier."""
         sep = IDENTIFIER_SEPARATOR
-        good = ("homematicip_local", f"ABC123{sep}HmIP-RF")
+        good = ("homematicip_local", f"ABC123{sep}OttoDev-HmIP-RF")
         other = ("homematicip_local", "NOSEP")
-        result = get_device_address_at_interface_from_identifiers({good, other})
-        assert result == ("ABC123", "HmIP-RF")
+        assert get_device_address_from_identifiers({good, other}) == "ABC123"
+
+    def test_parses_schedule_device(self) -> None:
+        """Same for the schedule device."""
+        sep = IDENTIFIER_SEPARATOR
+        assert (
+            get_device_address_from_identifiers({("homematicip_local", f"000A1B2C3D{sep}OttoDev-BidCos-RF-schedule")})
+            == "000A1B2C3D"
+        )
 
     def test_parses_sub_device(self) -> None:
-        """Extract address and interface_id from sub-device identifier, stripping group suffix."""
+        """A sub-device suffix sits behind the separator and needs no handling."""
         sep = IDENTIFIER_SEPARATOR
-        # Sub-device identifier has -group_no suffix that should be stripped
-        sub_device = ("homematicip_local", f"ABC123{sep}HmIP-RF-1")
-        result = get_device_address_at_interface_from_identifiers({sub_device})
-        assert result == ("ABC123", "HmIP-RF")
-
-    def test_parses_sub_device_multi_digit_group(self) -> None:
-        """Strip multi-digit group suffix from sub-device identifier."""
-        sep = IDENTIFIER_SEPARATOR
-        sub_device = ("homematicip_local", f"000A1B2C3D{sep}BidCos-RF-12")
-        result = get_device_address_at_interface_from_identifiers({sub_device})
-        assert result == ("000A1B2C3D", "BidCos-RF")
+        assert get_device_address_from_identifiers({("homematicip_local", f"ABC123{sep}OttoDev-HmIP-RF-1")}) == "ABC123"
 
     def test_returns_none_without_separator(self) -> None:
         """Return None when no identifier contains the separator."""
-        no_sep = ("homematicip_local", "NOSEPARATOR")
-        result = get_device_address_at_interface_from_identifiers({no_sep})
-        assert result is None
+        assert get_device_address_from_identifiers({("homematicip_local", "NOSEPARATOR")}) is None
 
 
 class TestValidateDeviceAddress:

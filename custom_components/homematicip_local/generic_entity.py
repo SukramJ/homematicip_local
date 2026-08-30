@@ -117,7 +117,8 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
                 self._attr_translation_key = data_point.translation_key
 
         hm_device = data_point.device
-        identifier = hm_device.identifier
+        device_identifier = control_unit.device_identifier(device=hm_device)
+        identifier = device_identifier
         via_device = hm_device.central_info.name
         suggested_area = hm_device.room
 
@@ -136,14 +137,14 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
             # no platform catches. Stay on the device, below the central.
             and (channel_group_master := dp_channel.group_master) is not None
         ):
-            via_device = hm_device.identifier
-            identifier = f"{hm_device.identifier}-{channel_group_master.group_no}"
+            via_device = device_identifier
+            identifier = f"{device_identifier}-{channel_group_master.group_no}"
             if (room := channel_group_master.room) is not None:
                 suggested_area = room
 
         if control_unit.enable_sub_devices and data_point.category in _SCHEDULE_CATEGORIES:
-            via_device = hm_device.identifier
-            identifier = f"{hm_device.identifier}-schedule"
+            via_device = device_identifier
+            identifier = f"{device_identifier}-schedule"
 
         via_device_id = control_unit.ensure_via_device_exists(
             identifier=identifier,
@@ -634,7 +635,7 @@ class AioHomematicGenericHubEntity(Entity):
 
         # suggested_area only applies at device creation — see event.py.
         return DeviceInfo(
-            identifiers={(DOMAIN, self._data_point.channel.device.identifier)},
+            identifiers={(DOMAIN, self._cu.device_identifier(device=self._data_point.channel.device))},
             suggested_area=self._data_point.channel.device.room,
         )
 
