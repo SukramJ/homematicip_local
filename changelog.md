@@ -4,6 +4,15 @@
 
 ### Integration
 
+- **Bump openccu-loom-client to 2026.8.38.** The client stopped classifying
+  CCU keypress / impulse / device-error parameters for itself and now reads
+  the event groups the daemon declares per channel (`ChannelSummary.
+  event_groups`, daemon 0.70.0). Entity identities are unchanged — the
+  client's computation and the daemon's had agreed byte for byte, which is
+  why the duplication went unnoticed for as long as it did. What changes is
+  that a device-trigger flavour the daemon adds no longer needs a matching
+  release here before it appears.
+
 - **Fix: switching backends no longer leaves every device behind and builds a second one beside it.** Both backends compose the HA device identifier as `<address>@<central>-<interface>`, but they disagree on the leading component: aiohomematic uses the Home Assistant instance name, the openccu-loom daemon its own CCU name (`OttoDev-HmIP-RF` against `Otto-HmIP-RF`, measured against daemon 0.68.1). Every device therefore re-keyed on a backend switch. The entities moved with it — their unique_ids are migrated — but the `device_id` did not, and that is what an area, a custom device name and every device-based automation hang on. The old entry stayed behind holding whatever had not migrated with it.
 
   The identifier is now composed by the integration itself, from the instance name and the interface *type* both backends report separately. On the direct-CCU backend that is byte-identical to what aiohomematic produced, so nothing moves there — the migration is a no-op for every installation that never touched the loom backend. A registry keyed the daemon's way is rewritten before the platforms come up, where the target key is still free and the rename is plain. Where a switch already happened and both entries exist, the older one wins: the newer entry's entities and sub-devices move over to it and it is removed, so the `device_id` the automations use is the one that survives.
