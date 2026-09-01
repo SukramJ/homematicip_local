@@ -4,14 +4,7 @@
 
 ### Integration
 
-- **Bump openccu-loom-client to 2026.8.38.** The client stopped classifying
-  CCU keypress / impulse / device-error parameters for itself and now reads
-  the event groups the daemon declares per channel (`ChannelSummary.
-  event_groups`, daemon 0.70.0). Entity identities are unchanged — the
-  client's computation and the daemon's had agreed byte for byte, which is
-  why the duplication went unnoticed for as long as it did. What changes is
-  that a device-trigger flavour the daemon adds no longer needs a matching
-  release here before it appears.
+- **Diagnostics say which backend an installation runs, and on what.** The dump gained a `deployment` block: the backend in use, the number of CUxD devices, and — on the openccu-loom backend, read from the CCU list the adapter already fetches — how many centrals the daemon mediates. Two questions an architecture review had filed as "not measurable without telemetry" are answered by a dump a user attaches to a bug report; nothing is collected or sent anywhere. The central count is omitted when the backend does not publish it, rather than defaulting to a zero that would read as "one CCU"
 
 - **Fix: switching backends no longer leaves every device behind and builds a second one beside it.** Both backends compose the HA device identifier as `<address>@<central>-<interface>`, but they disagree on the leading component: aiohomematic uses the Home Assistant instance name, the openccu-loom daemon its own CCU name (`OttoDev-HmIP-RF` against `Otto-HmIP-RF`, measured against daemon 0.68.1). Every device therefore re-keyed on a backend switch. The entities moved with it — their unique_ids are migrated — but the `device_id` did not, and that is what an area, a custom device name and every device-based automation hang on. The old entry stayed behind holding whatever had not migrated with it.
 
@@ -36,6 +29,8 @@
 - Covers and sirens dispatch on aiohomematic's category protocols — `GarageDataPointProtocol`, `TiltCoverDataPointProtocol`, `CoverDataPointProtocol`, `SoundPlayerDataPointProtocol` — instead of on the concrete custom data point classes. Both backends satisfy them structurally, so these two platforms no longer decide which entity a data point becomes from the per-backend class tuples in `backend_types.py`. The one case the protocols do not carry stays explicit: an IP blind configured as a shutter presents no tilt and becomes a plain cover, read from `operation_mode`, which lives on the concrete class
 - `backend_types.py` names the loom twin it could not find instead of failing mute, and its docstring no longer claims a mapping the backend surface contract test disproves
 - Two test gaps closed. The hub key migration now runs against a real entity registry — two system variables whose names differ only in punctuation slug to one key, and the pass has to hand the history to one entity and leave the other alone — rather than against the key rebuild in isolation. And the hub singletons (alarm and service messages, inbox, connectivity, metrics, install mode), the per-device update data points, the event groups and the alarm panels are covered on spawn: they are announced through `DataPointsCreatedEvent` rather than enumerated in a platform's setup tail, which is why a full green suite said nothing when a change to the setup order dropped all of them mid-release
+- Two documentation findings from the implementation review of the architecture memo corrected in `docs/architecture-comparison-aiohomematic-vs-loom.md`: three places still argued from a superseded "~14k LOC thin adapter" figure — including §1's central finding and the §7 evaluation matrix a backend decision gets read from — where the client is 27,312 LOC today (21,730 hand-maintained, 5,587 generated wire types), which drops the footprint score from 9 to 7; and the metaclass claim `backend_types.py` disproved in this repository is gone, so the two no longer assert opposite things about the same settled question
+- Two more test gaps closed. The CUxD registry pass had only its key arithmetic covered, never the registry walk — it runs on every start-up, on both backends, and touches *every* CUxD entity on a direct-CCU install; four cases now pin it, including a taken target key being skipped rather than raised. And `_pair`'s warning, the only signal that exists when this integration and `openccu-loom-client` disagree on a type, is pinned by three cases so it cannot be removed again unnoticed
 - Beyond the entries above, the integration's own changes in this release are openccu-loom backend (Beta) work; its details stay out of scope for this changelog until it leaves Beta
 
 ### Dependencies
@@ -47,14 +42,13 @@ The manifest still pinned `2026.8.7` while CI already ran `2026.8.8` — across 
 `tests/test_dependency_pins.py` now pins the two files together, the way the sister client repository does. Bite proof: restoring `2026.8.7` in the manifest fails it by name.
 
 
-#### Bump openccu-loom-client to `2026.8.36`
+#### Bump openccu-loom-client to `2026.9.1`
 
-- **Fixes a refresh that raised instead of refreshing.** On the openccu-loom backend, 2026.8.33 and 2026.8.34 failed to add any entity whose custom data point refreshes on start-up — switches, covers, lights, thermostats — because the client validated the wrong response shape for a single custom data point. Nobody should run those two versions on this backend; this release is the reason.
-- **`CustomDPDetail` is generated rather than hand-written**, and it was the one hand-written model in the client's wire layer — the gap behind the regression above. The generated model requires `state` where the hand-written one let it be absent, which is the daemon's own contract: `state` is in the schema's `required` and is emitted without `omitempty`, so no payload this integration sees changes shape. The wire types are regenerated with it, purely additively — 17 new models, no removed or renamed field.
-- **This raises the minimum daemon to openccu-loom 0.68.1 or newer.** Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. The client is generated against daemon API 7.24.0, up from 7.13.0 in 2.10.0, and checks it at connect time — same major, minor at least 24 — so an older daemon is rejected outright rather than half-working. Installations that cannot update the daemon should stay on 2.10.0.
-- **CUxD entities re-key once**; the migration that carries them is the integration entry above. The client's own key rebuild now scopes `CUX*` addresses by the central, matching what the daemon always emitted.
-- The client no longer ships `openccu-loom-types` as a separate dependency — it is folded in — so this bump removes a package from the install rather than pinning one. It also floors `aiohomematic` at `2026.8.8`, which this release already pins.
-- The rest is not user-visible from here: a bootstrap that is one request instead of one per device, six admin API façades and thirteen unreachable modules removed from the wheel. The backend's details stay out of scope for this changelog until it leaves Beta.
+openccu-loom backend (Beta) only — on the direct-CCU backend the client is not loaded, so this bump has no runtime effect there.
+
+- **It raises the minimum daemon**: the client is generated against daemon API `10.1.0`, up from `7.13.0` in 2.10.0, and checks it at connect time, so an older daemon is rejected outright. Installations that cannot update the daemon should stay on 2.10.0.
+- **CUxD entities re-key once**; the migration that carries them is the integration entry above.
+- `openccu-loom-types` is no longer a separate dependency — it is folded into the client — so this bump removes a package from the install rather than pinning one.
 
 #### Bump aiohomematic to [2026.8.6](https://github.com/SukramJ/aiohomematic/compare/2026.8.5...2026.8.6)
 
@@ -63,6 +57,11 @@ The manifest still pinned `2026.8.7` while CI already ran `2026.8.8` — across 
 #### Bump aiohomematic-config to [2026.8.1](https://github.com/SukramJ/aiohomematic-config/compare/2026.8.0...2026.8.1)
 
 - Packaging and tooling only, no behaviour change: the package raises its own `aiohomematic` requirement to `>=2026.8.5`, is marked production/stable, and updates its development dependencies
+
+#### Development dependencies
+
+`prek` `0.5.1`, `pytest-homeassistant-custom-component-framework` `1.0.50`.
+
 
 # Version [2.10.0](https://github.com/SukramJ/homematicip_local/compare/2.9.1...2.10.0) (2026-08-27)
 
