@@ -121,17 +121,17 @@ homematicip_local/
 - **aiohomematic** (v2026.8.8) - Core async library for Homematic device communication
 - **aiohomematic-config** (v2026.8.1) - Device configuration metadata
 - **openccu-data** (v2026.7.2) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
-- **openccu-loom-client** (v2026.8.36) - Client for the openccu-loom backend (Beta)
+- **openccu-loom-client** (v2026.9.1) - Client for the openccu-loom backend (Beta)
 - **Home Assistant Core** - Minimum version: 2026.8.0+
 - **Python 3.14+** (target version for development)
 
 ### Development Dependencies
 
-- **pytest-homeassistant-custom-component-framework** (1.0.49) - HA test framework
+- **pytest-homeassistant-custom-component-framework** (1.0.50) - HA test framework
 - **mypy** (2.1.0) - Static type checker (strict mode)
 - **pylint** (4.0.8) - Code linting
 - **ruff** (0.16.5) - Fast Python linter and formatter
-- **prek** (0.5.0) - Git hooks manager (Rust-based pre-commit alternative)
+- **prek** (0.5.1) - Git hooks manager (Rust-based pre-commit alternative)
 - **aiohomematic-test-support** (2026.8.8) - Mock test data
 - **async-upnp-client** (0.48.1) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
@@ -1134,7 +1134,7 @@ make hass
 - **Minimum HA Version:** 2026.8.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
 - **aiohomematic Version:** 2026.8.8
-- **openccu-loom-client Version:** 2026.8.36 (requires an openccu-loom daemon ≥ 0.68.1; checks daemon API 7.24.0 at connect time — same major, minor ≥ 24. `openccu-loom-types` is no longer a separate dependency, it is folded into the client)
+- **openccu-loom-client Version:** 2026.9.1 (checks daemon API 10.1.0 at connect time — same major, minor ≥ 1 — so an older daemon is rejected outright. `openccu-loom-types` is no longer a separate dependency, it is folded into the client)
 
 ### External Resources
 
