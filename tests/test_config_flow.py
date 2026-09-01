@@ -3635,6 +3635,18 @@ class TestLoomZeroconfDiscovery:
         assert done["type"] == FlowResultType.CREATE_ENTRY
         assert not [f for f in hass.config_entries.flow.async_progress() if f["flow_id"] == card["flow_id"]]
 
+    async def test_incompatible_version(self, hass: HomeAssistant) -> None:
+        """A daemon speaking another API generation gets its own error, not cannot_connect."""
+        from openccu_loom_client import LoomIncompatibleVersionError
+
+        with (
+            patch(_LOOM_LIST, side_effect=LoomIncompatibleVersionError("daemon api 9 vs client api 3")),
+        ):
+            init = await self._init_zeroconf(hass, _loom_zeroconf_info())
+            result = await hass.config_entries.flow.async_configure(init["flow_id"], {CONF_LOOM_TOKEN: "x"})
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {"base": "incompatible_version"}
+
     async def test_invalid_auth(self, hass: HomeAssistant) -> None:
         with (
             patch(_LOOM_LIST, side_effect=AuthFailure("bad token")),
@@ -3880,6 +3892,17 @@ class TestAsyncLoomListCcus:
     def test_import_helper_returns_callable(self) -> None:
         assert callable(_import_loom_list_ccus())
 
+    async def test_incompatible_version_is_not_collapsed_into_no_connection(self, hass: HomeAssistant) -> None:
+        """The version mismatch reaches the flow step as itself, not as a connection failure."""
+        from openccu_loom_client import LoomIncompatibleVersionError
+
+        fake = AsyncMock(side_effect=LoomIncompatibleVersionError("daemon api 9 vs client api 3"))
+        with (
+            patch(_LOOM_LIST.replace("_async_loom_list_ccus", "_import_loom_list_ccus"), return_value=fake),
+            pytest.raises(LoomIncompatibleVersionError),
+        ):
+            await _async_loom_list_ccus(hass, host="h", port=1, tls=False, token="t", base_path="/api/v1")
+
     async def test_maps_auth_error(self, hass: HomeAssistant) -> None:
         from openccu_loom_client import LoomAuthError
 
@@ -4006,6 +4029,23 @@ class TestLoomActiveBrowse:
         assert entry.data[CONF_VERIFY_TLS] is False
         # Sub-device entities default to enabled on the loom backend.
         assert entry.data[CONST_ADVANCED_CONFIG] == {CONF_ENABLE_SUB_DEVICES: True}
+
+    async def test_manual_entry_incompatible_version(self, hass: HomeAssistant) -> None:
+        """
+        The manual form gets its own error too, not cannot_connect.
+
+        The discovered path had a test and this one did not, so the clause here
+        could have been deleted with the suite still green — and a user who
+        typed the host in by hand would have been sent to debug their network
+        for a mismatch that has nothing to do with reachability.
+        """
+        from openccu_loom_client import LoomIncompatibleVersionError
+
+        result = await self._submit_manual(
+            hass, loom_list=LoomIncompatibleVersionError("daemon is missing required capabilities")
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {"base": "incompatible_version"}
 
     async def test_manual_entry_invalid_config(self, hass: HomeAssistant) -> None:
         """A failing config check surfaces invalid_config on the manual form."""
