@@ -42,11 +42,15 @@ The manifest still pinned `2026.8.7` while CI already ran `2026.8.8` — across 
 `tests/test_dependency_pins.py` now pins the two files together, the way the sister client repository does. Bite proof: restoring `2026.8.7` in the manifest fails it by name.
 
 
-#### Bump openccu-loom-client to `2026.9.1`
+#### Bump openccu-loom-client to `2026.9.2`
 
 openccu-loom backend (Beta) only — on the direct-CCU backend the client is not loaded, so this bump has no runtime effect there.
 
-- **It raises the minimum daemon**: the client is generated against daemon API `10.1.0`, up from `7.13.0` in 2.10.0, and checks it at connect time, so an older daemon is rejected outright. Installations that cannot update the daemon should stay on 2.10.0.
+Two client releases land in this integration release; what follows is the net effect against 2.10.0, because the intermediate one never shipped from here.
+
+- **A daemon version mismatch no longer refuses the connection.** The client used to demand the same API major and at least the same minor as the version it was generated against, and 2026.9.1 would have rejected an older daemon outright. It reports the difference now and connects; the only condition that still refuses is a daemon missing a capability this integration declares it needs. This matters in both directions, and the second one bit on ordinary releases: HACS updates this integration before you update the daemon, which used to make the daemon *older by a minor* and fail setup for a contract that was fully present. The advice to stay on 2.10.0 when the daemon cannot be updated no longer applies.
+- **A daemon that adds a value no longer breaks decoding.** Generated enums accept a value this build has not seen and carry it through as the raw string, instead of rejecting the whole response. Three daemon response shapes also stopped declaring themselves closed to unknown fields, so a field added later no longer does the same.
+- **When the two genuinely cannot work together**, the config flow now says so with its own message rather than reporting a connection failure — see the integration entry above.
 - **CUxD entities re-key once**; the migration that carries them is the integration entry above.
 - `openccu-loom-types` is no longer a separate dependency — it is folded into the client — so this bump removes a package from the install rather than pinning one.
 
