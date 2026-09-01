@@ -280,6 +280,30 @@ def get_loom_token_schema(data: ConfigType) -> Schema:
     )
 
 
+class _NeverRaised(Exception):
+    """Placeholder type so an `except` clause can be written unconditionally."""
+
+
+def _loom_incompatible_version_error() -> type[Exception]:
+    """
+    Return the loom client's incompatible-version error, or an unraisable stand-in.
+
+    Imported lazily like every other `openccu_loom_client` reference in this
+    integration, and degraded to a type nothing raises when the package is
+    absent — the `except` clause then simply never matches, which is the
+    correct behaviour on a backend that has no daemon.
+
+    Deliberately duplicated from ``__init__.py`` rather than imported from it:
+    the config flow is loaded to render a form and must not pull in the entry
+    module to do so.
+    """
+    try:
+        from openccu_loom_client import LoomIncompatibleVersionError  # noqa: PLC0415
+    except ImportError:
+        return _NeverRaised
+    return LoomIncompatibleVersionError
+
+
 def _import_loom_list_ccus() -> Any:
     """Import the loom CCU-listing helper (blocking pydantic submodule import)."""
     from openccu_loom_client.compat.aiohomematic.central import list_ccus  # noqa: PLC0415
@@ -310,6 +334,11 @@ async def _async_loom_list_ccus(
 
         if isinstance(exc, LoomAuthError):
             raise AuthFailure(str(exc)) from exc
+        # Not a connection failure, and mapping it to one sends the user off to
+        # debug their network for a mismatch no network change can fix. It
+        # reaches the flow steps as itself and gets its own error key there.
+        if isinstance(exc, _loom_incompatible_version_error()):
+            raise
         raise NoConnectionException(str(exc)) from exc
     return result
 
@@ -1160,6 +1189,10 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders["invalid_items"] = (exc.args[0] if exc.args else "") or self.data.get(
                     CONF_HOST, ""
                 )
+            except _loom_incompatible_version_error():
+                # Must precede BaseHomematicException, which it subclasses.
+                errors["base"] = "incompatible_version"
+                description_placeholders["invalid_items"] = self.data.get(CONF_HOST, "")
             except BaseHomematicException as exc:
                 errors["base"] = "cannot_connect"
                 description_placeholders["invalid_items"] = (exc.args[0] if exc.args else "") or self.data.get(
@@ -1268,6 +1301,10 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except AuthFailure:
                 errors["base"] = "invalid_auth"
+            except _loom_incompatible_version_error():
+                # Must precede BaseHomematicException, which it subclasses.
+                errors["base"] = "incompatible_version"
+                description_placeholders["invalid_items"] = disc[CONF_HOST]
             except BaseHomematicException as exc:
                 errors["base"] = "cannot_connect"
                 description_placeholders["invalid_items"] = (exc.args[0] if exc.args else "") or disc[CONF_HOST]
