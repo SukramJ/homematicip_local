@@ -63,9 +63,14 @@ install: ## (Re-)install requirements_test.txt via uv
 hooks: ## Install the prek/pre-commit git hooks
 	$(RUN) prek install
 
-upgrade-deps: ## Update pinned versions in the requirements files (pur)
+upgrade-deps: ## Update pinned versions in the requirements files and the hook revs
 	$(RUN) pur -r requirements_test_pre_commit.txt
 	$(RUN) pur -r requirements_test.txt
+	# Five tools are pinned twice: as a requirement above and as a hook `rev` in
+	# .pre-commit-config.yaml. `pur` only ever knew the first, which is how
+	# codespell came to run at v2.4.2 against a pinned 2.4.3. Both sides move
+	# together now; tests/test_dependency_pins.py fails by name if they part again.
+	$(RUN) prek update
 
 ##@ Code quality
 

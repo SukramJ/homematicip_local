@@ -24,3 +24,44 @@ updates:
       github-actions:
         patterns:
           - "*"
+
+  # Python test/lint requirements. `manifest.json` is deliberately not covered:
+  # no ecosystem reads it, and its four packages are ours anyway (see ignore).
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+      timezone: "Europe/Berlin"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    reviewers:
+      - "SukramJ"
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      python-requirements:
+        patterns:
+          - "*"
+    ignore:
+      # Our own packages. They are bumped deliberately, together with the
+      # `manifest.json` pin that `tests/test_dependency_pins.py` ties them to, the
+      # changelog entry, and usually the code that needs the new version. A bot
+      # that moved only `requirements_test.txt` would land a red PR every release.
+      - dependency-name: "aiohomematic*"
+      - dependency-name: "openccu-*"
+      # Pinned twice: here and as a hook `rev` in `.pre-commit-config.yaml`.
+      # `make upgrade-deps` moves both sides in one go; a bot knowing only this
+      # file would drift them apart again, which is exactly what the guard in
+      # `tests/test_dependency_pins.py` now fails on.
+      - dependency-name: "bandit"
+      - dependency-name: "codespell"
+      - dependency-name: "python-typing-update"
+      - dependency-name: "ruff"
+      - dependency-name: "yamllint"
