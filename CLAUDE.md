@@ -1031,6 +1031,22 @@ These rules govern how the AI assistant communicates and works with the develope
      always touches both files. CI runs against `requirements_test.txt`, so without that
      test a release can ship a pin nothing ever tested.
 
+7. **`vol` is not voluptuous — don't rely on marker-replacement in `Schema.extend`:**
+   - From HA 2026.9 on, `homeassistant/__init__.py` calls `install_as_voluptuous()`, so
+     `import voluptuous` resolves to the **probatio** shim (`probatio._vol_shim`), not to
+     voluptuous. The two disagree on marker identity: in voluptuous
+     `Remove("x") == Required("x")` is `True` (measured on 0.13.1 … 0.16.0), in probatio
+     0.11.3 it is `False` and `Remove` carries its own `__hash__`.
+   - Consequence: `BASE.extend({vol.Remove("x"): …})` **keeps both markers** under probatio,
+     so a key the schema was meant to drop stays `Required`. `Required` → `Optional` still
+     replaces correctly; only `Remove` is affected.
+   - Build a schema that differs structurally from its base by spelling it out, not by
+     extending the base and undoing parts of it. See `CLICK_EVENT_SCHEMA` in `support.py`
+     and aiohomematic#3374, where this silently stopped every `homematic.keypress` event.
+   - Validation failures on the event path are DEBUG-level and non-fatal, so a broken schema
+     produces no error and no trace — cover such paths end to end (payload → schema → bus),
+     never each half on its own.
+
 ### Refactoring Workflow
 
 When performing a refactoring task, follow this workflow:

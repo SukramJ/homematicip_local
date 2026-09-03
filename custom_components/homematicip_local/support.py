@@ -234,13 +234,23 @@ BASE_EVENT_DATA_SCHEMA = vol.Schema(
         vol.Optional(EVENT_VALUE): vol.Any(bool, int),
     }
 )
-CLICK_EVENT_SCHEMA = BASE_EVENT_DATA_SCHEMA.extend(
+# Spelled out rather than derived from BASE_EVENT_DATA_SCHEMA, because a click
+# event is not that shape: cleanup_click_event_data folds ``channel_no`` and
+# ``parameter`` into ``subtype`` and ``type`` and drops the originals. Removing
+# them again via ``BASE_EVENT_DATA_SCHEMA.extend({vol.Remove(...): ...})`` relied
+# on a ``Remove`` marker replacing the ``Required`` one of the same name — true
+# for voluptuous, where ``Remove("x") == Required("x")``, but not for the
+# probatio shim Home Assistant 2026.9 installs in its place, which keeps both and
+# then rejects every click event for the ``channel_no`` the cleanup just removed.
+CLICK_EVENT_SCHEMA = vol.Schema(
     {
+        vol.Required(EVENT_DEVICE_ID): str,
+        vol.Required(EVENT_NAME): str,
+        vol.Required(EVENT_ADDRESS): validate_device_address,
+        vol.Required(EVENT_MODEL): str,
+        vol.Required(EVENT_INTERFACE_ID): str,
         vol.Required(CONF_TYPE): str,
-        vol.Required(CONF_SUBTYPE): int,
-        vol.Remove(EVENT_CHANNEL_NO): int,
-        vol.Remove(EVENT_PARAMETER): str,
-        vol.Remove(EVENT_VALUE): vol.Any(bool, int),
+        vol.Required(CONF_SUBTYPE): validate_channel_no,
     },
     extra=vol.ALLOW_EXTRA,
 )
