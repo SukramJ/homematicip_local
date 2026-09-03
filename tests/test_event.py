@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 
 import pytest
+from pytest_homeassistant_custom_component.common import async_capture_events
 
+from aiohomematic.const import DeviceTriggerEventType
 from homeassistant.components.event import DoorbellEventType
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -52,6 +54,20 @@ async def _wait_for_event_type(*, hass: HomeAssistant, entity_id: str, expected:
     """
     async with asyncio.timeout(2):
         while (state := hass.states.get(entity_id)) is None or state.attributes["event_type"] != expected:
+            await hass.async_block_till_done()
+            await asyncio.sleep(0.01)
+
+
+async def _wait_for_bus_event(*, hass: HomeAssistant, events: list) -> None:
+    """
+    Poll until at least one event has been captured from the HA event bus.
+
+    Same reasoning as _wait_for_event_type: the trigger crosses aiohomematic
+    task hops that block_till_done does not track. Raises TimeoutError when the
+    event never arrives.
+    """
+    async with asyncio.timeout(2):
+        while not events:
             await hass.async_block_till_done()
             await asyncio.sleep(0.01)
 
@@ -117,6 +133,36 @@ class TestAioHomematicEvent:
         assert device_info.get("name") == "HmIP-DBB_VCU4567298"
         assert device_info.get("model") == "HmIP-DBB"
         assert device_info.get("serial_number") == "VCU4567298"
+
+    @pytest.mark.asyncio
+    async def test_keypress_reaches_the_ha_event_bus(
+        self,
+        factory_homegear: Factory,
+    ) -> None:
+        """
+        A button press must arrive on the HA event bus as 'homematic.keypress'.
+
+        The entity state and the bus event are two independent consumers of the
+        same trigger, and only the bus event drives automations. When the click
+        event schema rejected the payload, the entity kept updating while every
+        keypress automation lost its trigger without a trace - the failure mode
+        of aiohomematic#3374.
+        """
+        hass, control = await factory_homegear.setup_environment(TEST_DEVICES)
+        await _wait_for_entity(hass=hass, unique_id="homematicip_local_event_group_keypress_vcu7935803_1")
+        events = async_capture_events(hass, DeviceTriggerEventType.KEYPRESS)
+
+        await control.central.event_coordinator.data_point_event(
+            interface_id=const.INTERFACE_ID, channel_address="VCU7935803:1", parameter="PRESS_SHORT", value=True
+        )
+        await _wait_for_bus_event(hass=hass, events=events)
+
+        event_data = events[0].data
+        assert event_data["type"] == "press_short"
+        # Blueprints match the channel numerically, so the type matters.
+        assert event_data["subtype"] == 1
+        assert event_data["address"] == "VCU7935803"
+        assert event_data["device_id"]
 
     @pytest.mark.asyncio
     async def test_non_doorbell_event_keeps_native_event_types(

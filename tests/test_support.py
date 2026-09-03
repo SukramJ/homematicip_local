@@ -4,6 +4,7 @@ Unit tests for custom_components.homematicip_local.support.
 Covered functions:
 - cleanup_click_event_data: transforms keys and removes channel/parameter.
 - is_valid_event: returns True on valid schema, False and logs on invalid.
+- CLICK_EVENT_SCHEMA: accepts what cleanup_click_event_data produces.
 - get_device_identifier: builds the backend-neutral device identifier.
 - get_device_address_from_identifiers: parses identifier tuple set.
 - get_data_point: passthrough helper for easier mocking.
@@ -17,8 +18,18 @@ from types import SimpleNamespace
 import voluptuous as vol
 
 from aiohomematic.const import IDENTIFIER_SEPARATOR, Interface
-from custom_components.homematicip_local.const import EVENT_CHANNEL_NO, EVENT_PARAMETER
+from custom_components.homematicip_local.const import (
+    EVENT_ADDRESS,
+    EVENT_CHANNEL_NO,
+    EVENT_DEVICE_ID,
+    EVENT_INTERFACE_ID,
+    EVENT_MODEL,
+    EVENT_NAME,
+    EVENT_PARAMETER,
+    EVENT_VALUE,
+)
 from custom_components.homematicip_local.support import (
+    CLICK_EVENT_SCHEMA,
     cleanup_click_event_data,
     cleanup_instance_name,
     get_aiohomematic_version,
@@ -49,6 +60,51 @@ class TestCleanupClickEventData:
         assert EVENT_CHANNEL_NO not in cleaned
         # Pass-through of unrelated keys
         assert cleaned["other"] == 1
+
+
+class TestClickEventSchema:
+    """Tests for CLICK_EVENT_SCHEMA."""
+
+    @staticmethod
+    def _device_trigger_event_data() -> dict[str, object]:
+        """Return an event payload shaped like ControlUnit._on_device_trigger builds it."""
+        return {
+            EVENT_INTERFACE_ID: "Otto-HmIP-RF",
+            EVENT_ADDRESS: "000B58A9A77B85",
+            EVENT_CHANNEL_NO: 1,
+            EVENT_MODEL: "HmIP-WRC6",
+            EVENT_PARAMETER: "PRESS_SHORT",
+            EVENT_VALUE: True,
+            EVENT_DEVICE_ID: "3f1c2e9a4b5d6e7f8a9b0c1d2e3f4a5b",
+            EVENT_NAME: "Wandtaster WZ",
+        }
+
+    def test_accepts_cleaned_click_event(self) -> None:
+        """
+        The schema must accept what cleanup_click_event_data produces.
+
+        Both halves were covered in isolation before, so nothing caught that the
+        schema still required the ``channel_no`` the cleanup had just dropped.
+        A rejected event is never fired, which leaves every keypress automation
+        without a trigger.
+        """
+        cleaned = cleanup_click_event_data(self._device_trigger_event_data())
+
+        assert is_valid_event(event_data=cleaned, schema=CLICK_EVENT_SCHEMA) is True
+
+    def test_rejects_event_without_device_id(self) -> None:
+        """An event whose device is missing from the registry must not validate."""
+        event_data = self._device_trigger_event_data()
+        del event_data[EVENT_DEVICE_ID]
+
+        assert is_valid_event(event_data=cleanup_click_event_data(event_data), schema=CLICK_EVENT_SCHEMA) is False
+
+    def test_subtype_stays_an_int(self) -> None:
+        """The channel number must survive as an int; blueprints compare it numerically."""
+        cleaned = CLICK_EVENT_SCHEMA(cleanup_click_event_data(self._device_trigger_event_data()))
+
+        assert cleaned["subtype"] == 1
+        assert cleaned["type"] == "press_short"
 
 
 class TestIsValidEvent:
