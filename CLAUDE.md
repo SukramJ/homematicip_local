@@ -121,7 +121,7 @@ homematicip_local/
 - **aiohomematic** (v2026.8.8) - Core async library for Homematic device communication
 - **aiohomematic-config** (v2026.8.1) - Device configuration metadata
 - **openccu-data** (v2026.7.2) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
-- **openccu-loom-client** (v2026.9.1) - Client for the openccu-loom backend (Beta)
+- **openccu-loom-client** (v2026.9.2) - Client for the openccu-loom backend (Beta)
 - **Home Assistant Core** - Minimum version: 2026.8.0+
 - **Python 3.14+** (target version for development)
 
@@ -1150,7 +1150,17 @@ make hass
 - **Minimum HA Version:** 2026.8.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
 - **aiohomematic Version:** 2026.8.8
-- **openccu-loom-client Version:** 2026.9.1 (checks daemon API 10.1.0 at connect time — same major, minor ≥ 1 — so an older daemon is rejected outright. `openccu-loom-types` is no longer a separate dependency, it is folded into the client)
+- **openccu-loom-client Version:** 2026.9.2. Its wire layer is generated against daemon API `10.4.0`
+  (`openccu_loom_client.wire.const.DAEMON_API_VERSION`), but that number no longer gates the
+  connection: `_report_api_version` **logs and never raises** — a warning when the majors differ,
+  an info line when only the minors do. Refusing on it was wrong in both directions, because the
+  daemon's major moved 7 → 8 → 9 → 10 inside one release window without touching surface this
+  client calls, and because HACS updates the integration before the operator updates the daemon,
+  so `minor(daemon) < minor(types)` is the ordinary state of an additive daemon release. The hard
+  compatibility gate is the **capability handshake** (`_assert_capabilities`), which raises
+  `LoomIncompatibleVersionError` when the daemon does not advertise a feature the caller declared
+  as required; the schema digest is likewise only logged. Do not reintroduce a version-number
+  gate here. `openccu-loom-types` is not a separate dependency, it is folded into the client
 
 ### External Resources
 
@@ -1163,5 +1173,5 @@ make hass
 
 ---
 
-**Last Updated**: 2026-08-29
+**Last Updated**: 2026-09-03
 **Version**: 2.10.1
