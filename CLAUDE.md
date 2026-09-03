@@ -127,11 +127,11 @@ homematicip_local/
 
 ### Development Dependencies
 
-- **pytest-homeassistant-custom-component-framework** (1.0.50) - HA test framework
+- **pytest-homeassistant-custom-component-framework** (1.0.51) - HA test framework
 - **mypy** (2.1.0) - Static type checker (strict mode)
 - **pylint** (4.0.8) - Code linting
 - **ruff** (0.16.5) - Fast Python linter and formatter
-- **prek** (0.5.1) - Git hooks manager (Rust-based pre-commit alternative)
+- **prek** (0.5.2) - Git hooks manager (Rust-based pre-commit alternative)
 - **aiohomematic-test-support** (2026.8.8) - Mock test data
 - **async-upnp-client** (0.48.1) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
