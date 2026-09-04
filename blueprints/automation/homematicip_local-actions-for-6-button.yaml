@@ -6,7 +6,7 @@ blueprint:
     to your configured minimum duration for long press. This can be configured in
     your CCU.
     Tested with HmIP-WRC6. Should work with other device too.
-    v2026-04-14
+    v2026-09-04
   domain: automation
   homeassistant:
     min_version: "2026.3.0"
@@ -157,32 +157,43 @@ action:
         {% elif t == 'press_long' and s == 6 %}{{ (action_right_bottom_long | default([])) | length > 0 }}
         {% else %}false{% endif %}
 
-  - action: homematicip_local.get_link_peers
-    data:
-      device_id: "{{ trigger.event.data.device_id }}"
-      channel: "{{ channel }}"
-    response_variable: link_peers
-
-  - variables:
-      direct_link_peer_count: >-
-        {% set lists = (link_peers.values() | list) if link_peers is mapping else [] %}
-        {{ lists | map('count') | sum }}
-      has_direct_link: "{{ (direct_link_peer_count | int(0)) > 0 }}"
-
+  # Asking the CCU for direct links is by far the slowest step in this
+  # automation -- a round trip on every single keypress, ahead of the action --
+  # and its answer is read by nothing but the two options below. So it only runs
+  # when one of them is on and the pressed button actually has an action; with
+  # both off there is no CCU call left in the way of the action at all.
+  # Everything depending on the answer stays inside this branch: variables set in
+  # a nested sequence do not escape it.
   - choose:
-      - conditions: "{{ notify_on_direct_links and has_direct_link and has_configured_action }}"
+      - conditions: >-
+          {{ (notify_on_direct_links or skip_actions_when_direct_link) and has_configured_action }}
         sequence:
-          - action: persistent_notification.create
+          - action: homematicip_local.get_link_peers
             data:
-              title: "Homematic CCU direct connection detected"
-              message: >-
-                Device {{ trigger.event.data.device_id }}, channel {{ channel }} has direct CCU links (peers).
-                A Home Assistant action is configured for this button, but the CCU may also handle it directly.
+              device_id: "{{ trigger.event.data.device_id }}"
+              channel: "{{ channel }}"
+            response_variable: link_peers
 
-  - choose:
-      - conditions: "{{ skip_actions_when_direct_link and has_direct_link and has_configured_action }}"
-        sequence:
-          - stop: "Skipped blueprint actions: CCU direct connection exists for this channel."
+          - variables:
+              direct_link_peer_count: >-
+                {% set lists = (link_peers.values() | list) if link_peers is mapping else [] %}
+                {{ lists | map('count') | sum }}
+              has_direct_link: "{{ (direct_link_peer_count | int(0)) > 0 }}"
+
+          - choose:
+              - conditions: "{{ notify_on_direct_links and has_direct_link }}"
+                sequence:
+                  - action: persistent_notification.create
+                    data:
+                      title: "Homematic CCU direct connection detected"
+                      message: >-
+                        Device {{ trigger.event.data.device_id }}, channel {{ channel }} has direct CCU links (peers).
+                        A Home Assistant action is configured for this button, but the CCU may also handle it directly.
+
+          - choose:
+              - conditions: "{{ skip_actions_when_direct_link and has_direct_link }}"
+                sequence:
+                  - stop: "Skipped blueprint actions: CCU direct connection exists for this channel."
 
   - choose:
       - conditions: "{{ trigger.event.data.type == 'press_short' and trigger.event.data.subtype == 1 }}"
