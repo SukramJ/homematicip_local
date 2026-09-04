@@ -1531,3 +1531,155 @@ class TestAllButtonSubtypes:
         await hass.async_block_till_done()
 
         assert len(test_calls) == 1
+
+
+class TestDirectLinkCheckIsOptional:
+    """
+    The CCU round trip runs only when its answer is read.
+
+    Asking the CCU for direct links is the slowest step in these blueprints — a
+    round trip on every keypress, ahead of the action — and its result feeds
+    nothing but the two options. It used to run unconditionally, so an
+    installation that never enabled either option still paid for it on every
+    press, and the action could never be faster than the CCU replied. Measured
+    on one reporter's installation: RPC latency averaged 9.8 ms but peaked at
+    6.1 s (aiohomematic#3382).
+    """
+
+    _BP = _AUTOMATION_DIR / "homematicip_local-actions-for-2-button.yaml"
+
+    @staticmethod
+    def _mock_link_peers(hass: HomeAssistant, *, peers: dict[str, Any] | None = None) -> list[Any]:
+        return async_mock_service(
+            hass,
+            "homematicip_local",
+            "get_link_peers",
+            response=peers if peers is not None else {},
+            supports_response=SupportsResponse.OPTIONAL,
+        )
+
+    @staticmethod
+    def _press(hass: HomeAssistant) -> None:
+        hass.bus.async_fire(
+            "homematic.keypress",
+            {
+                "interface_id": "hmip_rf",
+                "address": "0001D3C99C5A72",
+                "device_id": "test_device_id",
+                "type": "press_short",
+                "subtype": 2,
+            },
+        )
+
+    @pytest.mark.asyncio
+    async def test_action_runs_when_the_option_is_on_but_no_link_exists(self, hass: HomeAssistant) -> None:
+        """The skip option must only skip when the CCU actually reports a peer."""
+        test_calls = async_mock_service(hass, "test", "action_top_short")
+        self._mock_link_peers(hass, peers={"0001D3C99C5A72:2": []})
+
+        await setup_automation_from_blueprint(
+            hass=hass,
+            blueprint=load_blueprint(path=self._BP),
+            overrides={
+                "remote": ["test_device_id"],
+                "action_top_short": [{"action": "test.action_top_short"}],
+                "skip_actions_when_direct_link": True,
+            },
+        )
+        self._press(hass)
+        await hass.async_block_till_done()
+
+        assert len(test_calls) == 1
+
+    @pytest.mark.asyncio
+    async def test_no_ccu_call_for_a_button_without_an_action(self, hass: HomeAssistant) -> None:
+        """A press on a button with nothing configured must not cost a round trip either."""
+        peer_calls = self._mock_link_peers(hass)
+
+        await setup_automation_from_blueprint(
+            hass=hass,
+            blueprint=load_blueprint(path=self._BP),
+            overrides={
+                "remote": ["test_device_id"],
+                # Only the bottom button is configured; the press below is the top one.
+                "action_bottom_short": [{"action": "test.action_bottom_short"}],
+                "notify_on_direct_links": True,
+            },
+        )
+        self._press(hass)
+        await hass.async_block_till_done()
+
+        assert len(peer_calls) == 0
+
+    @pytest.mark.asyncio
+    async def test_no_ccu_call_when_both_options_are_off(self, hass: HomeAssistant) -> None:
+        """With neither option on, nothing reads the answer — so it is not asked for."""
+        test_calls = async_mock_service(hass, "test", "action_top_short")
+        peer_calls = self._mock_link_peers(hass)
+
+        await setup_automation_from_blueprint(
+            hass=hass,
+            blueprint=load_blueprint(path=self._BP),
+            overrides={
+                "remote": ["test_device_id"],
+                "action_top_short": [{"action": "test.action_top_short"}],
+                "notify_on_direct_links": False,
+                "skip_actions_when_direct_link": False,
+            },
+        )
+        self._press(hass)
+        await hass.async_block_till_done()
+
+        assert len(peer_calls) == 0, "the CCU was asked even though no option reads the answer"
+        assert len(test_calls) == 1, "the action must still run"
+
+    @pytest.mark.asyncio
+    async def test_notify_option_still_asks_and_notifies(self, hass: HomeAssistant) -> None:
+        """With the notify option on, the round trip happens and a direct link is reported."""
+        test_calls = async_mock_service(hass, "test", "action_top_short")
+        peer_calls = self._mock_link_peers(hass, peers={"0001D3C99C5A72:2": ["ABC123:1"]})
+        notifications = async_mock_service(hass, "persistent_notification", "create")
+
+        await setup_automation_from_blueprint(
+            hass=hass,
+            blueprint=load_blueprint(path=self._BP),
+            overrides={
+                "remote": ["test_device_id"],
+                "action_top_short": [{"action": "test.action_top_short"}],
+                "notify_on_direct_links": True,
+                "skip_actions_when_direct_link": False,
+            },
+        )
+        self._press(hass)
+        await hass.async_block_till_done()
+
+        assert len(peer_calls) == 1
+        assert len(notifications) == 1, "a direct link must still be reported"
+        assert len(test_calls) == 1, "notifying must not suppress the action"
+
+    @pytest.mark.asyncio
+    async def test_skip_option_still_stops_the_run(self, hass: HomeAssistant) -> None:
+        """
+        `stop` from inside the nested branch must end the whole run, not just the branch.
+
+        This is what moving the check into a nested sequence could plausibly have
+        broken, so it is asserted rather than assumed.
+        """
+        test_calls = async_mock_service(hass, "test", "action_top_short")
+        peer_calls = self._mock_link_peers(hass, peers={"0001D3C99C5A72:2": ["ABC123:1"]})
+
+        await setup_automation_from_blueprint(
+            hass=hass,
+            blueprint=load_blueprint(path=self._BP),
+            overrides={
+                "remote": ["test_device_id"],
+                "action_top_short": [{"action": "test.action_top_short"}],
+                "notify_on_direct_links": False,
+                "skip_actions_when_direct_link": True,
+            },
+        )
+        self._press(hass)
+        await hass.async_block_till_done()
+
+        assert len(peer_calls) == 1
+        assert len(test_calls) == 0, "the action must be skipped when a direct link exists"
