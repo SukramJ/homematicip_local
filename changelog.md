@@ -1,4 +1,4 @@
-# Version [2.10.1](https://github.com/SukramJ/homematicip_local/compare/2.10.0...2.10.1) (unreleased)
+# Version [2.11.0](https://github.com/SukramJ/homematicip_local/compare/2.10.0...2.11.0) (unreleased)
 
 ## What's Changed
 
@@ -8,7 +8,7 @@
 
   What that is worth depends entirely on the CCU. On one reporter's installation the integration delivered every keypress in about 6 ms and the seven measurable blueprint runs completed in 16–68 ms, while the same installation's RPC latency averaged 9.8 ms across 9571 calls with a maximum of 6.1 s — so the round trip is usually free and occasionally very expensive. A keypress arriving as a bundle (`PRESS_SHORT` + `PRESS_LONG` + `PRESS_LONG_RELEASE`) used to cost one lookup each.
 
-  Everything reading the answer moved into the same branch as the lookup, because variables set in a nested sequence do not escape it. That the `stop` for the skip option still ends the whole run from in there is asserted rather than assumed, as is the notification path. Reported as aiohomematic#3382, where the delay was attributed to Home Assistant 2026.9 — the lookup has been in these blueprints unchanged since 2026-04-14 and predates both that release and 2.10.1
+  Everything reading the answer moved into the same branch as the lookup, because variables set in a nested sequence do not escape it. That the `stop` for the skip option still ends the whole run from in there is asserted rather than assumed, as is the notification path. Reported as aiohomematic#3382, where the delay was attributed to Home Assistant 2026.9 — the lookup has been in these blueprints unchanged since 2026-04-14 and predates both that release and this one
 
 - **Fix: button presses reach automations again on Home Assistant 2026.9.** Every `homematic.keypress` and `homematic.impulse` event stopped being fired, so keypress blueprints, device triggers and any automation listening for a button lost their trigger — silently, with no trace to look at, while the event entity kept updating and the log showed only a DEBUG line per press: `The EVENT could not be validated. ['channel_no'], required key not provided`.
 
@@ -50,23 +50,27 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to `2026.8.8`
+#### Bump aiohomematic to `2026.9.1`
+
+- **A `HmIP-HEATING` group no longer stays frozen at its restored state after a CCU restart** ([aiohomematic#3376](https://github.com/SukramJ/aiohomematic/issues/3376)). The climate entity gated its validity on `SET_POINT_MODE`, which the CCU sends only when the operating mode actually changes — while `ACTUAL_TEMPERATURE` and `SET_POINT_TEMPERATURE` keep arriving. A heating group whose mode had not been touched since the restart therefore kept showing frozen `current_temperature` and `target_temperature`, while its sibling `sensor.*` entities updated from the very same events. Groups on `VirtualDevices` have no second source to fall back on: the ReGa bulk fetch skips the mode data point and there is no per-parameter `getValue` for a virtual group. Validity now follows temperature and setpoint, and `mode` uses its existing `AUTO` fallback until `SET_POINT_MODE` arrives. A group missing `ACTUAL_TEMPERATURE` from the bulk result too still waits for its first event
+- **A system variable whose declared type does not match its value is kept as text instead of being dropped** ([aiohomematic#3377](https://github.com/SukramJ/aiohomematic/issues/3377)). `SysVar.getAll` reports a type per variable and it was trusted: a value list holding a single text entry returns that entry rather than its index, `int()` raised, the record was discarded, and no entity ever appeared — with an `ERROR` on every 60 s scan (4075 of them in the submitted log, for one variable). Disabling the entity did not help, because that is resolved before the value is parsed. The variable now falls back to `STRING` and keeps its raw value; it also drops `extended_sysvar`, so a type that could not be verified never yields a writable data point. The log is a `WARNING` now, once per variable per client, naming the declared type
 
 The manifest still pinned `2026.8.7` while CI already ran `2026.8.8` — across the very release that adopts 2026.8.8's re-keying of system variables and programs. The registry migration added for it was therefore tested against a backend that had re-keyed and would have shipped against one that had not.
 
 `tests/test_dependency_pins.py` now pins the two files together, the way the sister client repository does. Bite proof: restoring `2026.8.7` in the manifest fails it by name.
 
 
-#### Bump openccu-loom-client to `2026.9.2`
+#### Bump openccu-loom-client to `2026.9.3`
 
 openccu-loom backend (Beta) only — on the direct-CCU backend the client is not loaded, so this bump has no runtime effect there.
 
-Two client releases land in this integration release; what follows is the net effect against 2.10.0, because the intermediate one never shipped from here.
+Three client releases land in this integration release; what follows is the net effect against 2.10.0, because the intermediate ones never shipped from here.
 
 - **A daemon version mismatch no longer refuses the connection.** The client used to demand the same API major and at least the same minor as the version it was generated against, and 2026.9.1 would have rejected an older daemon outright. It reports the difference now and connects; the only condition that still refuses is a daemon missing a capability this integration declares it needs. This matters in both directions, and the second one bit on ordinary releases: HACS updates this integration before you update the daemon, which used to make the daemon *older by a minor* and fail setup for a contract that was fully present. The advice to stay on 2.10.0 when the daemon cannot be updated no longer applies.
 - **A daemon that adds a value no longer breaks decoding.** Generated enums accept a value this build has not seen and carry it through as the raw string, instead of rejecting the whole response. Three daemon response shapes also stopped declaring themselves closed to unknown fields, so a field added later no longer does the same.
 - **When the two genuinely cannot work together**, the config flow now says so with its own message rather than reporting a connection failure — see the integration entry above.
 - **CUxD entities re-key once**; the migration that carries them is the integration entry above.
+- **A week profile reported its active profile one index too low.** Regenerated wire bindings (daemon v0.73.0) carry the fix.
 - `openccu-loom-types` is no longer a separate dependency — it is folded into the client — so this bump removes a package from the install rather than pinning one.
 
 #### Bump aiohomematic to [2026.8.6](https://github.com/SukramJ/aiohomematic/compare/2026.8.5...2026.8.6)
@@ -79,7 +83,13 @@ Two client releases land in this integration release; what follows is the net ef
 
 #### Development dependencies
 
-`prek` `0.5.1`, `pytest-homeassistant-custom-component-framework` `1.0.50`.
+Against 2.10.0: `mypy` `<=2.1.0` → `<=2.3.1`, `prek` `0.5.0` → `0.5.2`, `pylint` `4.0.7` → `4.0.8`,
+`pytest-homeassistant-custom-component-framework` `1.0.47` → `1.0.52`, `ruff` `0.16.4` → `0.16.6`, and
+`aiohomematic-test-support` `2026.8.5` → `2026.9.1` following the runtime pin. Tooling only, no packaged
+behaviour changes.
+
+The `mypy` bump is the first one Dependabot raised here: this release put the Python requirements under it,
+having covered only GitHub Actions before.
 
 
 # Version [2.10.0](https://github.com/SukramJ/homematicip_local/compare/2.9.1...2.10.0) (2026-08-27)
