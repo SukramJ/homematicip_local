@@ -8,8 +8,8 @@ isal==1.8.0
 openccu-data>=2026.9.0
 openccu-loom-client==2026.9.4
 mypy<=2.3.1
-prek==0.5.2
+prek==0.5.3
 pur==7.4.0
 pylint==4.0.8
 pylint_strict_informational==0.1
-pytest-homeassistant-custom-component-framework==1.0.53
+pytest-homeassistant-custom-component-framework==1.0.54
