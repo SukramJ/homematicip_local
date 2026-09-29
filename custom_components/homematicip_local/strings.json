@@ -17,11 +17,17 @@
             "invalid_auth": "Authentication failed for CCU [{invalid_items}]. Please verify: 1) Username and password are correct (case-sensitive), 2) The user has admin privileges on the CCU, 3) Password only contains allowed characters: A-Z, a-z, 0-9 and .!$():;#-", 
             "invalid_config": "Invalid configuration: [{invalid_items}]. Please check the entered values and try again.", 
             "no_ccus": "The daemon reports no CCUs.", 
+            "pairing_expired": "The pairing request expired. Please try again.", 
+            "pairing_mismatch": "Pairing aborted: the certificate the daemon reports is not the one this connection saw — possible interception.", 
+            "pairing_not_local": "The daemon only pairs with local-network callers.", 
+            "pairing_off": "Pairing is switched off on this daemon. Create a token on its web UI and paste it.", 
+            "pairing_rejected": "The pairing was rejected (or the code was mistyped). Please try again.", 
             "unknown": "An unexpected error occurred. Please check the Home Assistant logs for more details."
         }, 
         "flow_title": "{name}/{host} ({backend})", 
         "progress": {
-            "detect_backend": "Detecting backend type and available interfaces..."
+            "detect_backend": "Detecting backend type and available interfaces...", 
+            "loom_pairing": "Pairing code: {code}\n\nOpen the daemon web UI on {host} → Settings → API tokens and type this code there. The request expires after five minutes."
         }, 
         "step": {
             "advanced": {
@@ -121,6 +127,7 @@
                 "data": {
                     "host": "Daemon hostname/IP address", 
                     "instance_name": "Integration instance name", 
+                    "loom_pair": "Pair with the daemon (shows a code)", 
                     "loom_port": "Daemon port (blank = 8443 TLS / 8080 plain)", 
                     "loom_token": "API bearer token", 
                     "sub_devices_enabled": "Create sub-device entities", 
@@ -128,6 +135,7 @@
                     "verify_tls": "Verify TLS certificate"
                 }, 
                 "data_description": {
+                    "loom_pair": "Instead of pasting a token: the daemon shows a six-digit code here, which you type on its web UI under Settings → API tokens. Paired tokens carry operator rights; paste an admin token for backups, system update and device removal.", 
                     "sub_devices_enabled": "Splits devices with multiple channel groups into a main device with sub-devices. Entities are assigned to their corresponding sub-device based on channel group."
                 }, 
                 "description": "**Beta:** The openccu-loom backend is still under evaluation — the direct CCU connection remains the recommended setup.\n\nConnect to an openccu-loom daemon. The daemon owns the CCU connection, interfaces and callbacks.", 
@@ -149,10 +157,12 @@
             }, 
             "loom_token": {
                 "data": {
+                    "loom_pair": "Pair with the daemon (shows a code)", 
                     "loom_token": "API bearer token", 
                     "sub_devices_enabled": "Create sub-device entities"
                 }, 
                 "data_description": {
+                    "loom_pair": "Instead of pasting a token: the daemon shows a six-digit code here, which you type on its web UI under Settings → API tokens. Paired tokens carry operator rights; paste an admin token for backups, system update and device removal.", 
                     "sub_devices_enabled": "Splits devices with multiple channel groups into a main device with sub-devices. Entities are assigned to their corresponding sub-device based on channel group."
                 }, 
                 "description": "**Beta:** The openccu-loom backend is still under evaluation — the direct CCU connection remains the recommended setup.\n\nEnter the API bearer token for the discovered daemon {name} at {host}.", 

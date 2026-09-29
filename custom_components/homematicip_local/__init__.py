@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import logging
 import re
 import time
-from typing import Any, TypeAlias
+from typing import Any, TypeAlias, cast
 
 from awesomeversion import AwesomeVersion
 
@@ -22,7 +22,7 @@ from aiohomematic.const import (
     OptionalSettings,
     is_interface_default_port,
 )
-from aiohomematic.exceptions import AuthFailure
+from aiohomematic.exceptions import AuthFailure, BaseHomematicException
 from aiohomematic.store.persistent import cleanup_files
 from aiohomematic.support import find_free_port
 from homeassistant.config_entries import ConfigEntry
@@ -67,9 +67,11 @@ from .device_icon import ICON_VIEW_REGISTERED_KEY, DeviceIconView
 from .panel import async_register_cards, async_register_panel, async_unregister_cards, async_unregister_panel
 from .services import async_get_loaded_config_entries, async_setup_services, async_unload_services
 from .support import (
+    LOOM_ADMIN_ROLE_HINT,
     async_delete_issues,
     get_aiohomematic_version,
     get_device_address_from_identifiers,
+    loom_forbidden_error,
     realign_hub_unique_id,
 )
 from .websocket_api import async_register_websocket_commands
@@ -155,7 +157,7 @@ def _loom_incompatible_version_error() -> type[Exception]:
         from openccu_loom_client import LoomIncompatibleVersionError  # noqa: PLC0415
     except ImportError:
         return _NeverRaised
-    return LoomIncompatibleVersionError
+    return cast("type[Exception]", LoomIncompatibleVersionError)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -> bool:
@@ -344,9 +346,16 @@ async def async_remove_config_entry_device(
     if (control_unit := entry.runtime_data) and (
         hm_device := control_unit.central.device_coordinator.get_device(address=device_address)
     ):
-        await control_unit.central.device_coordinator.delete_device(
-            interface_id=hm_device.interface_id, device_address=device_address
-        )
+        try:
+            await control_unit.central.device_coordinator.delete_device(
+                interface_id=hm_device.interface_id, device_address=device_address
+            )
+        except loom_forbidden_error():
+            _LOGGER.warning("delete_device %s refused: %s", device_address, LOOM_ADMIN_ROLE_HINT)
+            return False
+        except BaseHomematicException as bhexc:
+            _LOGGER.warning("delete_device %s failed: %s", device_address, bhexc)
+            return False
         _LOGGER.debug(
             "Called delete_device: %s, %s",
             hm_device.interface_id,

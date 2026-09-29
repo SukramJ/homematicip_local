@@ -52,6 +52,7 @@ from .permissions import (
     require_scope,
 )
 from .repairs import REPAIR_CALLBACKS
+from .support import LOOM_ADMIN_ROLE_HINT, loom_forbidden_error
 
 if TYPE_CHECKING:
     from .control_unit import ControlUnit
@@ -1917,7 +1918,14 @@ async def ws_clear_cache(
         connection.send_error(msg["id"], "not_found", "Config entry not found")
         return
 
-    await control.central.cache_coordinator.clear_all()
+    try:
+        await control.central.cache_coordinator.clear_all()
+    except loom_forbidden_error():
+        connection.send_error(msg["id"], "forbidden", f"clear_cache: {LOOM_ADMIN_ROLE_HINT}")
+        return
+    except BaseHomematicException as bhexc:
+        connection.send_error(msg["id"], "clear_cache_failed", str(bhexc))
+        return
     connection.send_result(msg["id"], {"success": True})
 
 

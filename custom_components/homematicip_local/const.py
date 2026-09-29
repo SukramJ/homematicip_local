@@ -85,6 +85,7 @@ DEFAULT_BACKEND: Final = BACKEND_CCU
 # when it is relevant — an mDNS-discovered daemon or an existing loom entry.
 # Loom-only connection inputs. Host/TLS reuse CONF_HOST/CONF_TLS; the
 # daemon authenticates with a bearer token (or falls back to user/pass).
+CONF_LOOM_PAIR: Final = "loom_pair"
 CONF_LOOM_TOKEN: Final = "loom_token"  # noqa: S105 - config key name, not a secret
 CONF_LOOM_PORT: Final = "loom_port"
 CONF_INTERFACE_ID: Final = "interface_id"

@@ -14,6 +14,7 @@ from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgen
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
+from .support import LOOM_ADMIN_ROLE_HINT, loom_forbidden_error
 
 _LOGGER = logging.getLogger(__name__)
 _DATA_BACKUP_AGENT_LISTENERS: Final = f"{DOMAIN}_backup_agent_listeners"
@@ -204,6 +205,8 @@ class CcuLocalBackupAgent(BackupAgent):
                 backup_path,
                 len(backup_data.content),
             )
+        except loom_forbidden_error() as err:
+            raise BackupAgentError(f"CCU backup for {self._central.name}: {LOOM_ADMIN_ROLE_HINT}") from err
         except BaseHomematicException as err:
             raise BackupAgentError(f"Failed to create CCU backup for {self._central.name}: {err}") from err
         return backup_data.filename
