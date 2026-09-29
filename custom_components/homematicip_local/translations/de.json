@@ -17,11 +17,17 @@
             "invalid_auth": "Authentifizierung bei CCU [{invalid_items}] fehlgeschlagen. Bitte überprüfe: 1) Benutzername und Passwort sind korrekt (Groß-/Kleinschreibung beachten), 2) Der Benutzer hat Admin-Rechte auf der CCU, 3) Das Passwort enthält nur erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
             "invalid_config": "Ungültige Konfiguration: [{invalid_items}]. Bitte überprüfe die eingegebenen Werte und versuche es erneut.", 
             "no_ccus": "Der Daemon meldet keine CCUs.", 
+            "pairing_expired": "Die Kopplungsanfrage ist abgelaufen. Bitte erneut versuchen.", 
+            "pairing_mismatch": "Kopplung abgebrochen: Das vom Daemon gemeldete Zertifikat ist nicht das dieser Verbindung — möglicher Eingriff in die Verbindung.", 
+            "pairing_not_local": "Der Daemon erlaubt Kopplung nur aus dem lokalen Netz.", 
+            "pairing_off": "Kopplung ist auf diesem Daemon deaktiviert. Token in dessen Weboberfläche erstellen und einfügen.", 
+            "pairing_rejected": "Die Kopplung wurde abgelehnt (oder der Code falsch eingetippt). Bitte erneut versuchen.", 
             "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Home Assistant Protokolle für weitere Details."
         }, 
         "flow_title": "{name}/{host} ({backend})", 
         "progress": {
-            "detect_backend": "Backend-Typ und verfügbare Schnittstellen werden erkannt..."
+            "detect_backend": "Backend-Typ und verfügbare Schnittstellen werden erkannt...", 
+            "loom_pairing": "Kopplungscode: {code}\n\nÖffne die Weboberfläche des Daemons auf {host} → Einstellungen → API-Tokens und tippe diesen Code dort ein. Die Anfrage läuft nach fünf Minuten ab."
         }, 
         "step": {
             "advanced": {
@@ -121,6 +127,7 @@
                 "data": {
                     "host": "Daemon-Hostname/IP", 
                     "instance_name": "Name der Integrations-Instanz", 
+                    "loom_pair": "Mit dem Daemon koppeln (zeigt einen Code)", 
                     "loom_port": "Daemon-Port (leer = 8443 TLS / 8080 unverschlüsselt)", 
                     "loom_token": "API-Bearer-Token", 
                     "sub_devices_enabled": "Untergeräte-Entitäten erstellen", 
@@ -128,6 +135,7 @@
                     "verify_tls": "TLS-Zertifikat prüfen"
                 }, 
                 "data_description": {
+                    "loom_pair": "Statt ein Token einzufügen: Der Daemon zeigt hier einen sechsstelligen Code, den du in dessen Weboberfläche unter Einstellungen → API-Tokens eintippst. Gekoppelte Tokens haben Operator-Rechte; für Backups, Systemupdate und Geräte-Löschen ein Admin-Token einfügen.", 
                     "sub_devices_enabled": "Teilt Geräte mit mehreren Kanalgruppen in ein Hauptgerät mit Untergeräten auf. Entitäten werden basierend auf ihrer Kanalgruppe dem entsprechenden Untergerät zugeordnet."
                 }, 
                 "description": "**Beta:** Das openccu-loom-Backend befindet sich noch in Erprobung – die direkte CCU-Verbindung bleibt der empfohlene Weg.\n\nMit einem openccu-loom-Daemon verbinden. Der Daemon verwaltet CCU-Verbindung, Interfaces und Callbacks.", 
@@ -149,10 +157,12 @@
             }, 
             "loom_token": {
                 "data": {
+                    "loom_pair": "Mit dem Daemon koppeln (zeigt einen Code)", 
                     "loom_token": "API-Bearer-Token", 
                     "sub_devices_enabled": "Untergeräte-Entitäten erstellen"
                 }, 
                 "data_description": {
+                    "loom_pair": "Statt ein Token einzufügen: Der Daemon zeigt hier einen sechsstelligen Code, den du in dessen Weboberfläche unter Einstellungen → API-Tokens eintippst. Gekoppelte Tokens haben Operator-Rechte; für Backups, Systemupdate und Geräte-Löschen ein Admin-Token einfügen.", 
                     "sub_devices_enabled": "Teilt Geräte mit mehreren Kanalgruppen in ein Hauptgerät mit Untergeräten auf. Entitäten werden basierend auf ihrer Kanalgruppe dem entsprechenden Untergerät zugeordnet."
                 }, 
                 "description": "**Beta:** Das openccu-loom-Backend befindet sich noch in Erprobung – die direkte CCU-Verbindung bleibt der empfohlene Weg.\n\nGib den API-Bearer-Token für den gefundenen Daemon „{name}\" unter {host} ein.", 

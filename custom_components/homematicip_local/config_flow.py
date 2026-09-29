@@ -62,6 +62,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info import ssdp
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_integration
 
 from .const import (
     BACKEND_CCU,
@@ -86,6 +87,7 @@ from .const import (
     CONF_INTERFACE,
     CONF_JSON_PORT,
     CONF_LISTEN_ON_ALL_IP,
+    CONF_LOOM_PAIR,
     CONF_LOOM_PORT,
     CONF_LOOM_TOKEN,
     CONF_MQTT_PREFIX,
@@ -226,6 +228,7 @@ def get_loom_schema(data: ConfigType) -> Schema:
             vol.Required(CONF_TLS, default=data.get(CONF_TLS, True)): BOOLEAN_SELECTOR,
             vol.Required(CONF_VERIFY_TLS, default=data.get(CONF_VERIFY_TLS, True)): BOOLEAN_SELECTOR,
             vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, "")): PASSWORD_SELECTOR,
+            vol.Required(CONF_LOOM_PAIR, default=False): BOOLEAN_SELECTOR,
             vol.Required(
                 CONF_ENABLE_SUB_DEVICES,
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(
@@ -275,6 +278,7 @@ def get_loom_token_schema(data: ConfigType) -> Schema:
     return vol.Schema(
         {
             vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, "")): PASSWORD_SELECTOR,
+            vol.Required(CONF_LOOM_PAIR, default=False): BOOLEAN_SELECTOR,
             vol.Required(CONF_ENABLE_SUB_DEVICES, default=DEFAULT_LOOM_ENABLE_SUB_DEVICES): BOOLEAN_SELECTOR,
         }
     )
@@ -301,7 +305,7 @@ def _loom_incompatible_version_error() -> type[Exception]:
         from openccu_loom_client import LoomIncompatibleVersionError  # noqa: PLC0415
     except ImportError:
         return _NeverRaised
-    return LoomIncompatibleVersionError
+    return cast("type[Exception]", LoomIncompatibleVersionError)
 
 
 def _import_loom_list_ccus() -> Any:
@@ -880,6 +884,11 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         self._loom_ccus: list[dict[str, Any]] = []
         self._loom_discovered_daemons: list[dict[str, Any]] = []
         self._loom_skip_browse: bool = False
+        self._pair_origin: str = "loom"
+        self._pair_pending_input: ConfigType | None = None
+        self._pair_session: Any = None
+        self._pair_task: asyncio.Task[Any] | None = None
+        self._pair_error_key: str | None = None
         self._detection_result: BackendDetectionResult | None = None
         self._detection_task: asyncio.Task[None] | None = None
         self._detection_start_time: float | None = None
@@ -1155,6 +1164,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             "error_detail": "",
             "retry_hint": "",
         }
+        if self._pair_error_key is not None:
+            errors["base"], self._pair_error_key = self._pair_error_key, None
         if user_input is not None:
             self.data = {
                 CONF_BACKEND: BACKEND_LOOM,
@@ -1170,6 +1181,13 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.data[CONF_LOOM_PORT] = int(port)
             if token := user_input.get(CONF_LOOM_TOKEN):
                 self.data[CONF_LOOM_TOKEN] = token
+            elif user_input.get(CONF_LOOM_PAIR):
+                # Pair with the daemon instead of pasting a token: the
+                # pair step obtains one and re-dispatches this very step
+                # with it, so validation stays a single code path.
+                self._pair_origin = "loom"
+                self._pair_pending_input = dict(user_input)
+                return await self.async_step_loom_pair()
             try:
                 await ControlConfig(hass=self.hass, entry_id="validate", data=self.data).check_config()
                 ccus = await _async_loom_list_ccus(
@@ -1224,6 +1242,82 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=description_placeholders,
         )
+
+    async def async_step_loom_pair(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Pair with the daemon: show the six-digit code, wait for approval.
+
+        The daemon's administrator types the displayed code on its tokens
+        panel (the daemon's ADR 0076); the approved token then re-enters
+        the origin step exactly as a pasted one would.
+        """
+        del user_input
+        from openccu_loom_client import (  # noqa: PLC0415 - config flow renders without the package
+            LoomPairingNotLocalError,
+            LoomPairingOffError,
+            PairingFingerprintMismatchError,
+            start_pairing,
+        )
+        from openccu_loom_client.exceptions import BaseLoomException  # noqa: PLC0415
+
+        if self._pair_task is None:
+            conn = self._pair_connection()
+            integration = await async_get_integration(self.hass, DOMAIN)
+            try:
+                self._pair_session = await start_pairing(
+                    host=conn["host"],
+                    port=int(conn["port"]) if conn["port"] is not None else None,
+                    tls=conn["tls"],
+                    verify_tls=conn["verify_tls"],
+                    **({"base_path": conn["base_path"]} if conn["base_path"] else {}),
+                    app="homematicip_local",
+                    app_version=str(integration.version or ""),
+                    instance=self.hass.config.location_name or "",
+                    role="operator",
+                    purpose="Home Assistant device control",
+                )
+            except LoomPairingOffError:
+                return await self._pair_return_to_origin(error_key="pairing_off")
+            except LoomPairingNotLocalError:
+                return await self._pair_return_to_origin(error_key="pairing_not_local")
+            except PairingFingerprintMismatchError:
+                return await self._pair_return_to_origin(error_key="pairing_mismatch")
+            except BaseLoomException:
+                return await self._pair_return_to_origin(error_key="cannot_connect")
+            self._pair_task = self.hass.async_create_task(self._pair_session.wait())
+
+        if not self._pair_task.done():
+            return self.async_show_progress(
+                step_id="loom_pair",
+                progress_action="loom_pairing",
+                progress_task=self._pair_task,
+                description_placeholders={
+                    "code": self._pair_session.code,
+                    CONF_HOST: self._pair_connection()["host"],
+                },
+            )
+        return self.async_show_progress_done(next_step_id="loom_pair_done")
+
+    async def async_step_loom_pair_done(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Evaluate the pairing outcome and re-enter the origin step."""
+        del user_input
+        from openccu_loom_client.exceptions import BaseLoomException  # noqa: PLC0415
+
+        task, self._pair_task = self._pair_task, None
+        self._pair_session = None
+        try:
+            result = task.result() if task is not None else None
+        except BaseLoomException:
+            return await self._pair_return_to_origin(error_key="cannot_connect")
+        if result is None or result.state != "approved" or not result.token:
+            key = "pairing_expired" if result is not None and result.state == "expired" else "pairing_rejected"
+            return await self._pair_return_to_origin(error_key=key)
+        pending = dict(self._pair_pending_input or {})
+        pending[CONF_LOOM_TOKEN] = result.token
+        pending[CONF_LOOM_PAIR] = False
+        self._pair_pending_input = None
+        if self._pair_origin == "loom_token":
+            return await self.async_step_loom_token(pending)
+        return await self.async_step_loom(pending)
 
     async def async_step_loom_pick(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
         """Pick a discovered openccu-loom daemon (or choose manual entry)."""
@@ -1287,9 +1381,15 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_HOST: disc.get(CONF_HOST, ""),
             "invalid_items": "",
         }
+        if self._pair_error_key is not None:
+            errors["base"], self._pair_error_key = self._pair_error_key, None
         if user_input is not None:
             token = user_input.get(CONF_LOOM_TOKEN) or ""
             self._loom_enable_sub_devices = user_input.get(CONF_ENABLE_SUB_DEVICES, DEFAULT_LOOM_ENABLE_SUB_DEVICES)
+            if not token and user_input.get(CONF_LOOM_PAIR):
+                self._pair_origin = "loom_token"
+                self._pair_pending_input = dict(user_input)
+                return await self.async_step_loom_pair()
             try:
                 ccus = await _async_loom_list_ccus(
                     self.hass,
@@ -1893,6 +1993,30 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 DOMAIN, include_uninitialized=True, match_context={"source": SOURCE_ZEROCONF}
             )
         )
+
+    def _pair_connection(self) -> dict[str, Any]:
+        """Return host/port/tls knobs for the pairing ask, per origin."""
+        src = self._loom_discovery if self._pair_origin == "loom_token" else self.data
+        return {
+            "host": src[CONF_HOST],
+            "port": src.get(CONF_LOOM_PORT),
+            "tls": src.get(CONF_TLS, True),
+            "verify_tls": src.get(CONF_VERIFY_TLS, True),
+            "base_path": src.get(CONF_LOOM_BASE_PATH),
+        }
+
+    async def _pair_return_to_origin(self, *, error_key: str | None = None) -> ConfigFlowResult:
+        """Drop pairing state and re-render the step the pairing came from."""
+        self._pair_session = None
+        self._pair_task = None
+        self._pair_error_key = error_key
+        # Re-render the form the pairing came from — never re-browse: the
+        # user already sat on that form, and a fresh mDNS pick would both
+        # swallow the error and throw them back to the daemon list.
+        self._loom_skip_browse = True
+        if self._pair_origin == "loom_token":
+            return await self.async_step_loom_token()
+        return await self.async_step_loom()
 
     async def _validate_and_finish_config_flow(self) -> ConfigFlowResult:
         """Validate and finish the config flow.

@@ -4,6 +4,27 @@
 
 ### Integration
 
+- **openccu-loom: pair instead of pasting a token.** Both loom setup forms
+  (manual and discovered) grow a "Pair with the daemon" switch: the flow
+  shows a six-digit code, the daemon's administrator types it on the
+  daemon's tokens panel, and the approved token flows into the entry
+  exactly as a pasted one would — including the single-CCU auto-selection.
+  Rejected, expired, switched-off pairing and a certificate mismatch each
+  return to the form with a clear error. Paired tokens carry the operator
+  role; the form says which features (backups, system update, device
+  removal) still need a pasted admin token. Requires openccu-loom-client
+  2026.9.8 and an openccu-loom daemon ≥ 0.81.0; on an older daemon the
+  switch reports that pairing is unavailable and the token paste keeps
+  working.
+- **openccu-loom: a daemon 403 now says what to do.** With an
+  operator-role token, the admin-tier surfaces (create backup everywhere
+  it is offered, install the system update, clear caches/incidents,
+  record a session, remove a device) answered a generic failure, an
+  unhandled traceback, or nothing at all. Every one of them now names the
+  cause and the fix: create an admin token on the daemon and update the
+  integration's token. Removing a device also no longer dies on a
+  call-shape mismatch before the daemon was ever asked (fixed in
+  openccu-loom-client 2026.9.8; the contract exemption is gone).
 - **Fix: a `connection_failed` repair stayed after the connection was healthy again.** Moving the CCU to a different host is the ordinary way there — the interfaces fail, their repairs appear, the entry is reconfigured onto the new address — and afterwards the repairs stayed visible next to connection sensors reading `on`, with every device operating normally. Nothing short of deleting and re-adding the integration took them back.
 
   The repair is raised from a `connection_state` event and withdrawn by the opposite one, and that one is published only for an interface the central's connection state tracker actually holds (`CentralConnectionState.remove_issue`). That tracker belongs to the central, so it is rebuilt empty with every setup of the config entry — a reload, a reconfigure, a restart. Whatever a previous session left in the issue registry, which does survive all three, therefore had nobody left to withdraw it.

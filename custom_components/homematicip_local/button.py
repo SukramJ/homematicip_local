@@ -28,7 +28,7 @@ from .generic_entity import (
     AioHomematicGenericEntity,
     AioHomematicGenericHubEntity,
 )
-from .support import handle_homematic_errors
+from .support import LOOM_ADMIN_ROLE_HINT, handle_homematic_errors, loom_forbidden_error
 
 if TYPE_CHECKING:
     # Typing-only: the loom twin is absent on a CCU-only install, where the
@@ -312,6 +312,8 @@ class HmipLocalCreateBackupButton(ButtonEntity):
             await self.hass.async_add_executor_job(_write_backup)
 
             _LOGGER.info("CCU backup saved to %s (%d bytes)", backup_path, len(backup_data.content))
+        except loom_forbidden_error() as err:
+            raise HomeAssistantError(f"CCU backup: {LOOM_ADMIN_ROLE_HINT}") from err
         except BaseHomematicException as err:
             raise HomeAssistantError(f"Failed to create CCU backup: {err}") from err
 

@@ -40,7 +40,9 @@ from .const import DOMAIN, HmipLocalServices
 from .control_unit import ControlUnit
 from .permissions import SCOPE_SCHEDULE_EDIT, check_service_permission
 from .support import (
+    LOOM_ADMIN_ROLE_HINT,
     get_device_address_from_identifiers,
+    loom_forbidden_error,
     validate_channel_address,
     validate_channel_no,
     validate_device_address,
@@ -1142,7 +1144,12 @@ async def _async_service_clear_cache(*, hass: HomeAssistant, service: ServiceCal
     """Service to clear the cache."""
     entry_id = service.data[CONF_ENTRY_ID]
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
-        await control.central.cache_coordinator.clear_all()
+        try:
+            await control.central.cache_coordinator.clear_all()
+        except loom_forbidden_error() as err:
+            raise HomeAssistantError(f"clear_cache: {LOOM_ADMIN_ROLE_HINT}") from err
+        except BaseHomematicException as bhexc:
+            raise HomeAssistantError(bhexc) from bhexc
 
 
 async def _async_service_confirm_all_delayed_devices(*, hass: HomeAssistant, service: ServiceCall) -> None:
@@ -1244,9 +1251,14 @@ async def _async_service_record_session(*, hass: HomeAssistant, service: Service
     randomize_output = service.data[CONF_RANDOMIZE_OUTPUT]
 
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
-        await control.central.cache_coordinator.recorder.activate(
-            on_time=on_time, auto_save=True, randomize_output=randomize_output, use_ts_in_file_name=True
-        )
+        try:
+            await control.central.cache_coordinator.recorder.activate(
+                on_time=on_time, auto_save=True, randomize_output=randomize_output, use_ts_in_file_name=True
+            )
+        except loom_forbidden_error() as err:
+            raise HomeAssistantError(f"record_session: {LOOM_ADMIN_ROLE_HINT}") from err
+        except BaseHomematicException as bhexc:
+            raise HomeAssistantError(bhexc) from bhexc
 
 
 async def _async_service_update_device_firmware_data(*, hass: HomeAssistant, service: ServiceCall) -> None:
@@ -1265,7 +1277,6 @@ async def _async_service_create_ccu_backup(*, hass: HomeAssistant, service: Serv
             backup_data = await control.central.create_backup_and_download()
             if backup_data is None:
                 raise HomeAssistantError("Failed to create and download backup from CCU")
-
             # Save backup to file
             backup_dir = Path(control.backup_directory)
             backup_path = backup_dir / backup_data.filename
@@ -1284,6 +1295,8 @@ async def _async_service_create_ccu_backup(*, hass: HomeAssistant, service: Serv
                 "filename": backup_data.filename,
                 "size": len(backup_data.content),
             }
+        except loom_forbidden_error() as err:
+            raise HomeAssistantError(f"create_ccu_backup: {LOOM_ADMIN_ROLE_HINT}") from err
         except BaseHomematicException as bhexc:
             raise HomeAssistantError(bhexc) from bhexc
     return None

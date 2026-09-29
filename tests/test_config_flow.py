@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ipaddress import ip_address
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -76,6 +77,7 @@ from custom_components.homematicip_local.const import (
     CONF_INTERFACE,
     CONF_JSON_PORT,
     CONF_LISTEN_ON_ALL_IP,
+    CONF_LOOM_PAIR,
     CONF_LOOM_PORT,
     CONF_LOOM_TOKEN,
     CONF_MQTT_PREFIX,
@@ -4191,3 +4193,140 @@ class TestLoomActiveBrowse:
             result = await hass.config_entries.flow.async_configure(form["flow_id"], user_input)
             await hass.async_block_till_done()
         return result
+
+
+class _FakePairingSession:
+    """Stands in for openccu_loom_client.PairingSession."""
+
+    def __init__(self, *, result: Any = None, error: Exception | None = None) -> None:
+        self.code = "123456"
+        self.expires_in = 300
+        self.withdrawn = False
+        self._result = result
+        self._error = error
+
+    async def wait(self) -> Any:
+        if self._error is not None:
+            raise self._error
+        return self._result
+
+    async def withdraw(self) -> None:
+        self.withdrawn = True
+
+
+def _pair_result(state: str, token: str | None = None) -> Any:
+    return SimpleNamespace(state=state, token=token, subject="ha", role="operator")
+
+
+_START_PAIRING = "openccu_loom_client.start_pairing"
+_CHECK_CONFIG = "custom_components.homematicip_local.config_flow.ControlConfig.check_config"
+
+
+class TestLoomPairing:
+    """Pair-with-the-daemon instead of pasting a token (daemon ADR 0076)."""
+
+    async def test_discovered_pair_approved_reaches_ccu_selection(self, hass: HomeAssistant) -> None:
+        """The discovered-daemon token form pairs the same way."""
+        session = _FakePairingSession(result=_pair_result("approved", token="tok-paired"))
+        ccus = [{"name": "Home", "serial": "ABC123", "host": "ccu.local", "model": "CCU3", "available": True}]
+        daemon = _loom_daemon("daemon.local", 8119, "Loom")
+        with (
+            patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
+            patch(_LOOM_RELEVANT, return_value=True),
+            patch(_BROWSE, return_value=[daemon]),
+            patch(_START_PAIRING, AsyncMock(return_value=session)),
+            patch(_LOOM_LIST, return_value=ccus) as loom_list,
+        ):
+            result = await hass.config_entries.flow.async_init(
+                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+            result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "loom"})
+            assert result["step_id"] == "loom_token"
+            result = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_LOOM_PAIR: True})
+            result = await self._drain_progress(hass, result)
+        assert result["type"] == FlowResultType.CREATE_ENTRY, result
+        assert result["data"][CONF_LOOM_TOKEN] == "tok-paired"
+        assert loom_list.call_args.kwargs["token"] == "tok-paired"
+
+    async def test_manual_pair_approved_reaches_ccu_selection(self, hass: HomeAssistant) -> None:
+        """The approved token re-enters the manual step and validates as a pasted one."""
+        session = _FakePairingSession(result=_pair_result("approved", token="tok-paired"))
+        ccus = [{"name": "Home", "serial": "ABC123", "host": "ccu.local", "model": "CCU3", "available": True}]
+        start = AsyncMock(return_value=session)
+        with (
+            patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
+            patch(_START_PAIRING, start),
+            patch(_CHECK_CONFIG, AsyncMock(return_value=None)),
+            patch(_LOOM_LIST, return_value=ccus) as loom_list,
+        ):
+            step = await self._init_manual_loom(hass)
+            result = await hass.config_entries.flow.async_configure(
+                step["flow_id"],
+                {
+                    CONF_INSTANCE_NAME: "Loom",
+                    CONF_HOST: "daemon.local",
+                    CONF_TLS: False,
+                    CONF_VERIFY_TLS: False,
+                    CONF_LOOM_PAIR: True,
+                },
+            )
+            result = await self._drain_progress(hass, result)
+        assert result["type"] == FlowResultType.CREATE_ENTRY, result
+        assert result["data"][CONF_LOOM_TOKEN] == "tok-paired"
+        assert start.await_args.kwargs["role"] == "operator"
+        assert start.await_args.kwargs["host"] == "daemon.local"
+        assert loom_list.call_args.kwargs["token"] == "tok-paired"
+
+    async def test_manual_pair_expired_returns_with_error(self, hass: HomeAssistant) -> None:
+        session = _FakePairingSession(result=_pair_result("expired"))
+        with patch(_START_PAIRING, AsyncMock(return_value=session)):
+            step = await self._init_manual_loom(hass)
+            result = await hass.config_entries.flow.async_configure(
+                step["flow_id"],
+                {CONF_INSTANCE_NAME: "Loom", CONF_HOST: "daemon.local", CONF_LOOM_PAIR: True},
+            )
+            result = await self._drain_progress(hass, result)
+        assert result["errors"] == {"base": "pairing_expired"}
+
+    async def test_manual_pair_rejected_returns_with_error(self, hass: HomeAssistant) -> None:
+        session = _FakePairingSession(result=_pair_result("rejected"))
+        with patch(_START_PAIRING, AsyncMock(return_value=session)):
+            step = await self._init_manual_loom(hass)
+            result = await hass.config_entries.flow.async_configure(
+                step["flow_id"],
+                {CONF_INSTANCE_NAME: "Loom", CONF_HOST: "daemon.local", CONF_LOOM_PAIR: True},
+            )
+            result = await self._drain_progress(hass, result)
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "loom"
+        assert result["errors"] == {"base": "pairing_rejected"}
+
+    async def test_pairing_off_shows_actionable_error(self, hass: HomeAssistant) -> None:
+        from openccu_loom_client import LoomPairingOffError
+
+        with patch(_START_PAIRING, AsyncMock(side_effect=LoomPairingOffError(status=503, method="POST", url="x"))):
+            step = await self._init_manual_loom(hass)
+            result = await hass.config_entries.flow.async_configure(
+                step["flow_id"],
+                {CONF_INSTANCE_NAME: "Loom", CONF_HOST: "daemon.local", CONF_LOOM_PAIR: True},
+            )
+            result = await self._drain_progress(hass, result)
+        assert result["step_id"] == "loom"
+        assert result["errors"] == {"base": "pairing_off"}
+
+    async def _drain_progress(self, hass: HomeAssistant, result: dict) -> dict:
+        while result["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+            await hass.async_block_till_done()
+            result = await hass.config_entries.flow.async_configure(result["flow_id"])
+            await hass.async_block_till_done()
+        return result
+
+    async def _init_manual_loom(self, hass: HomeAssistant) -> dict:
+        with patch(_LOOM_RELEVANT, return_value=True), patch(_BROWSE, return_value=[]):
+            result = await hass.config_entries.flow.async_init(
+                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+            assert result["type"] == FlowResultType.MENU
+            step = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "loom"})
+        assert step["step_id"] == "loom"
+        return step

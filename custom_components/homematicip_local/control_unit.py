@@ -1710,7 +1710,7 @@ def _import_loom_central_config() -> type[LoomCentralConfig]:
     """
     from openccu_loom_client.compat.aiohomematic.central import CentralConfig as LoomCentralConfig  # noqa: PLC0415
 
-    return LoomCentralConfig
+    return cast("type[Any]", LoomCentralConfig)
 
 
 def _import_loom_check_config() -> Callable[..., Awaitable[list[str]]]:
@@ -1721,7 +1721,7 @@ def _import_loom_check_config() -> Callable[..., Awaitable[list[str]]]:
     """
     from openccu_loom_client.compat.aiohomematic.central import check_config as loom_check_config  # noqa: PLC0415
 
-    return loom_check_config
+    return cast("Callable[..., Awaitable[list[str]]]", loom_check_config)
 
 
 def signal_new_data_point(*, entry_id: str, platform: DataPointCategory | str) -> str:

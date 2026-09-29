@@ -7,7 +7,7 @@ from copy import deepcopy
 from functools import wraps
 import logging
 import re
-from typing import Any, Final, TypeAlias, TypeVar
+from typing import Any, Final, TypeAlias, TypeVar, cast
 
 from pydantic import ValidationError
 import voluptuous as vol
@@ -441,3 +441,34 @@ async def get_aiohomematic_version(hass: HomeAssistant, domain: str, package_nam
                 return version or "0.0.0"
 
     return None
+
+
+# The loom daemon answers 403 when the configured token's role (operator,
+# e.g. from code pairing) does not cover an admin-tier route. One shared
+# hint so every surface says the same actionable thing.
+LOOM_ADMIN_ROLE_HINT = (
+    "the daemon refused this action for the configured token (operator role). "
+    "Create an admin token on the daemon's web UI (Settings → API tokens) "
+    "and update the token in this integration's options"
+)
+
+
+def loom_forbidden_error() -> type[Exception]:
+    """
+    Return the loom client's 403 error type, or an unraisable stand-in.
+
+    Imported lazily like every other openccu_loom_client reference: on the
+    aiohomematic backend the package may be absent, and the except clause
+    then simply never matches.
+    """
+    try:
+        from openccu_loom_client.exceptions import (  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
+            LoomForbiddenError,
+        )
+    except ImportError:
+
+        class _NeverRaisedForbidden(Exception):
+            """Stand-in that nothing raises."""
+
+        return _NeverRaisedForbidden
+    return cast("type[Exception]", LoomForbiddenError)

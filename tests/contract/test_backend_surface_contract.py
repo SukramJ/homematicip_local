@@ -67,10 +67,6 @@ EXEMPT_FACADE_MEMBERS: dict[str, str] = {}
 # openccu-loom-client's compat adapter; remove the entry once the adapter
 # accepts the aiohomematic call shape.
 EXEMPT_FACADE_CALLS: dict[str, str] = {
-    "device_coordinator.delete_device": (
-        "loom signature is (*, address) vs aiohomematic's (*, interface_id, device_address); "
-        "removing a device from HA raises TypeError on a loom entry (__init__.py)."
-    ),
     "device_coordinator.create_central_links": (
         "loom requires address; the central-wide no-arg service call "
         "(services.py create_central_links) raises TypeError on a loom entry."

@@ -23,6 +23,7 @@ from homeassistant.helpers.typing import UndefinedType
 from . import HomematicConfigEntry
 from .const import DOMAIN
 from .control_unit import ControlUnit, signal_new_data_point
+from .support import LOOM_ADMIN_ROLE_HINT, loom_forbidden_error
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_FIRMWARE_UPDATE_STATE: Final = "firmware_update_state"
@@ -285,7 +286,12 @@ class AioHomematicHubUpdate(UpdateEntity):
         """Install an update."""
         if backup:
             await self._async_create_backup()
-        await self._data_point.install()
+        try:
+            await self._data_point.install()
+        except loom_forbidden_error() as err:
+            raise HomeAssistantError(f"install update: {LOOM_ADMIN_ROLE_HINT}") from err
+        except BaseHomematicException as bhexc:
+            raise HomeAssistantError(f"Failed to install update: {bhexc}") from bhexc
 
     async def async_update(self) -> None:
         """Update entity."""
