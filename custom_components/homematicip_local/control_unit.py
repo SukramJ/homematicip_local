@@ -8,7 +8,7 @@ from datetime import datetime
 from functools import partial
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Final, Self, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Final, Self, TypedDict, TypeVar, cast
 
 from slugify import slugify
 
@@ -90,6 +90,8 @@ from .const import (
     CONF_INTERFACE,
     CONF_JSON_PORT,
     CONF_LISTEN_ON_ALL_IP,
+    CONF_LOOM_BOX_PASSWORD,
+    CONF_LOOM_BOX_USERNAME,
     CONF_LOOM_PORT,
     CONF_LOOM_TOKEN,
     CONF_MQTT_PREFIX,
@@ -1458,6 +1460,9 @@ class ControlConfig:
         # loom-only connection inputs
         self._loom_token: Final[str | None] = self._data.get(CONF_LOOM_TOKEN)
         self._loom_port: Final[int | None] = self._data.get(CONF_LOOM_PORT)
+        # openccu-lite box ingress: empty unless the entry reaches the daemon
+        # through the box's web server.
+        self._loom_box_kwargs: Final[LoomBoxKwargs] = loom_box_kwargs(data=self._data)
         self._callback_host: Final[str | None] = self._data.get(CONF_CALLBACK_HOST)
         self._callback_port_xml_rpc: Final[int | None] = self._data.get(CONF_CALLBACK_PORT_XML_RPC)
         self._json_port: Final[int | None] = self._data.get(CONF_JSON_PORT)
@@ -1559,6 +1564,7 @@ class ControlConfig:
                 callback_port_xml_rpc=self._callback_port_xml_rpc,
                 json_port=self._json_port,
                 storage_directory=storage_directory,
+                **self._loom_box_kwargs,
             )
         else:
             config_failures = await check_config(
@@ -1696,10 +1702,36 @@ class ControlConfig:
             # through the way the direct-CCU path does. The versions that
             # guarantee it are the pins in manifest.json.
             locale=self.hass.config.language,
+            **self._loom_box_kwargs,
         ).create_central()
         # The loom adapter duck-types CentralUnit; aiohomematic's Protocol
         # metaclass blocks subclassing, so a cast is the only bridge.
         return cast(CentralUnit, central)
+
+
+class LoomBoxKwargs(TypedDict, total=False):
+    """The openccu-loom-client ``box_*`` keywords this integration sets."""
+
+    box_username: str
+    box_password: str
+
+
+def loom_box_kwargs(*, data: Mapping[str, Any]) -> LoomBoxKwargs:
+    """
+    Return the openccu-loom-client ``box_*`` keywords for an entry's data.
+
+    A set box username puts the connection into box-ingress mode: the client
+    logs in at the openccu-lite box's web server and reaches the daemon
+    through it, and the daemon credential becomes optional. Box port and
+    ingress prefix are left to the client's defaults. Outside box mode the
+    dict is empty, so the client sees no ``box_*`` keyword at all.
+    """
+    if not (box_username := data.get(CONF_LOOM_BOX_USERNAME)):
+        return {}
+    return {
+        "box_username": box_username,
+        "box_password": data.get(CONF_LOOM_BOX_PASSWORD) or "",
+    }
 
 
 def _import_loom_central_config() -> type[LoomCentralConfig]:

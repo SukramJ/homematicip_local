@@ -58,6 +58,8 @@ from custom_components.homematicip_local.config_flow import (
     get_interface_schema,
     get_loom_advanced_settings_schema,
     get_loom_options_schema,
+    get_loom_schema,
+    get_loom_token_schema,
 )
 from custom_components.homematicip_local.const import (
     BACKEND_CCU,
@@ -77,6 +79,8 @@ from custom_components.homematicip_local.const import (
     CONF_INTERFACE,
     CONF_JSON_PORT,
     CONF_LISTEN_ON_ALL_IP,
+    CONF_LOOM_BOX_PASSWORD,
+    CONF_LOOM_BOX_USERNAME,
     CONF_LOOM_PAIR,
     CONF_LOOM_PORT,
     CONF_LOOM_TOKEN,
@@ -3418,7 +3422,15 @@ class TestLoomFlowHelpers:
     def test_get_loom_options_schema_fields(self) -> None:
         schema = get_loom_options_schema(data={})
         keys = {str(k.schema) for k in schema.schema}
-        assert keys == {CONF_HOST, CONF_LOOM_PORT, CONF_TLS, CONF_VERIFY_TLS, CONF_LOOM_TOKEN}
+        assert keys == {
+            CONF_HOST,
+            CONF_LOOM_PORT,
+            CONF_TLS,
+            CONF_VERIFY_TLS,
+            CONF_LOOM_TOKEN,
+            CONF_LOOM_BOX_USERNAME,
+            CONF_LOOM_BOX_PASSWORD,
+        }
 
     def test_update_loom_advanced_settings_input(self) -> None:
         data: dict[str, object] = {CONST_ADVANCED_CONFIG: {"keep_me": 1}}
@@ -4330,3 +4342,156 @@ class TestLoomPairing:
             step = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "loom"})
         assert step["step_id"] == "loom"
         return step
+
+
+_BOX = {CONF_LOOM_BOX_USERNAME: "boxadmin", CONF_LOOM_BOX_PASSWORD: "boxpw"}
+_BOX_KWARGS = {"box_username": "boxadmin", "box_password": "boxpw"}
+_BOX_CCUS = [{"name": "Home", "serial": "ABC123", "host": "ccu.local", "model": "CCU3", "available": True}]
+
+
+class TestLoomBoxIngress:
+    """Reaching the daemon through an openccu-lite box's web server."""
+
+    async def test_async_loom_list_ccus_direct_passes_no_box_kwargs(self, hass: HomeAssistant) -> None:
+        """A direct daemon listing carries no box_* keyword at all."""
+        fake = AsyncMock(return_value=_BOX_CCUS)
+        with patch(_LOOM_LIST.replace("_async_loom_list_ccus", "_import_loom_list_ccus"), return_value=fake):
+            await _async_loom_list_ccus(hass, host="h", port=1, tls=False, token="t", base_path="/api/v1")
+        assert not any(key.startswith("box_") for key in fake.await_args.kwargs)
+
+    async def test_async_loom_list_ccus_forwards_box_kwargs(self, hass: HomeAssistant) -> None:
+        """The box account reaches the client's list_ccus as its box_* keywords."""
+        fake = AsyncMock(return_value=_BOX_CCUS)
+        with patch(_LOOM_LIST.replace("_async_loom_list_ccus", "_import_loom_list_ccus"), return_value=fake):
+            await _async_loom_list_ccus(hass, host="box", port=None, tls=True, token="", base_path=None, box=_BOX)
+        fake.assert_awaited_once_with(host="box", port=None, tls=True, token="", base_path=None, **_BOX_KWARGS)
+
+    async def test_box_account_with_pairing_is_rejected(self, hass: HomeAssistant) -> None:
+        """Pairing would talk to the daemon's own port, which the box route keeps closed."""
+        result, loom_list = await self._submit_manual(hass, {**_BOX, CONF_LOOM_PAIR: True})
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "loom"
+        assert result["errors"] == {"base": "loom_box_pairing"}
+        loom_list.assert_not_awaited()
+
+    async def test_discovered_form_box_path(self, hass: HomeAssistant) -> None:
+        """The discovered-daemon form takes a box account instead of a token."""
+        with (
+            patch(_LOOM_LIST, return_value=_BOX_CCUS) as loom_list,
+            patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
+        ):
+            init = await hass.config_entries.flow.async_init(
+                HMIP_DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=_loom_zeroconf_info()
+            )
+            assert init["step_id"] == "loom_token"
+            keys = {str(k.schema) for k in init["data_schema"].schema}
+            assert {CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD} <= keys
+            done = await hass.config_entries.flow.async_configure(init["flow_id"], dict(_BOX))
+            await hass.async_block_till_done()
+        assert done["type"] == FlowResultType.CREATE_ENTRY
+        assert loom_list.await_args.kwargs["box"] == _BOX
+        assert loom_list.await_args.kwargs["token"] == ""
+        data = done["result"].data
+        assert data[CONF_LOOM_BOX_USERNAME] == "boxadmin"
+        assert data[CONF_LOOM_BOX_PASSWORD] == "boxpw"
+        assert CONF_LOOM_TOKEN not in data
+
+    def test_get_loom_data_sets_and_clears_box(self) -> None:
+        """The options flow stores a box account and drops it when cleared."""
+        filled = _get_loom_data({}, user_input={CONF_HOST: "box", **_BOX})
+        assert filled[CONF_LOOM_BOX_USERNAME] == "boxadmin"
+        assert filled[CONF_LOOM_BOX_PASSWORD] == "boxpw"
+        cleared = _get_loom_data(filled, user_input={CONF_HOST: "h", CONF_LOOM_TOKEN: "t"})
+        assert CONF_LOOM_BOX_USERNAME not in cleared
+        assert CONF_LOOM_BOX_PASSWORD not in cleared
+
+    async def test_incomplete_box_account_is_rejected(self, hass: HomeAssistant) -> None:
+        """A box user without a password never reaches the client."""
+        result, loom_list = await self._submit_manual(hass, {CONF_LOOM_BOX_USERNAME: "boxadmin"})
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "loom"
+        assert result["errors"] == {"base": "loom_box_incomplete"}
+        loom_list.assert_not_awaited()
+
+    async def test_manual_form_box_path_without_token(self, hass: HomeAssistant) -> None:
+        """The manual form creates a box-mode entry with no daemon token."""
+        result, loom_list = await self._submit_manual(hass, dict(_BOX))
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        kwargs = loom_list.await_args.kwargs
+        assert kwargs["box"] == _BOX
+        assert kwargs["host"] == "box.local"
+        assert kwargs["token"] == ""
+        data = result["result"].data
+        assert data[CONF_LOOM_BOX_USERNAME] == "boxadmin"
+        assert data[CONF_LOOM_BOX_PASSWORD] == "boxpw"
+        assert CONF_LOOM_TOKEN not in data
+
+    async def test_manual_form_shows_box_fields(self, hass: HomeAssistant) -> None:
+        """Both loom setup forms carry the box account fields."""
+        for schema in (get_loom_schema(data={}), get_loom_token_schema(data={})):
+            keys = {str(k.schema) for k in schema.schema}
+            assert {CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD} <= keys
+
+    async def test_options_connection_box_path(self, hass: HomeAssistant) -> None:
+        """The options flow persists a box account and rejects a half-filled one."""
+        entry = TestOptionsFlowLoom()._loom_entry()
+        entry.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        with patch("custom_components.homematicip_local.config_flow.ControlConfig") as control_config:
+            control_config.return_value.check_config = AsyncMock(return_value=None)
+            await hass.config_entries.options.async_configure(result["flow_id"], {"next_step_id": "loom_connection"})
+            half = await hass.config_entries.options.async_configure(
+                result["flow_id"], {CONF_HOST: "box.local", CONF_LOOM_BOX_PASSWORD: "boxpw"}
+            )
+            assert half["errors"] == {"base": "loom_box_incomplete"}
+            done = await hass.config_entries.options.async_configure(
+                result["flow_id"], {CONF_HOST: "box.local", CONF_TLS: True, CONF_VERIFY_TLS: True, **_BOX}
+            )
+            await hass.async_block_till_done()
+        assert done["type"] == FlowResultType.CREATE_ENTRY
+        assert entry.data[CONF_LOOM_BOX_USERNAME] == "boxadmin"
+        assert entry.data[CONF_LOOM_BOX_PASSWORD] == "boxpw"
+        # The validation ran against the data carrying the box account.
+        assert control_config.call_args.kwargs["data"][CONF_LOOM_BOX_USERNAME] == "boxadmin"
+
+    async def test_switch_to_loom_drops_stale_box_account(self, hass: HomeAssistant) -> None:
+        """A CCU entry carrying a box account from an earlier loom life switches back without it."""
+        existing = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="ABC123",
+            title=const.INSTANCE_NAME,
+            version=DomainConfigFlow.VERSION,
+            data={CONF_INSTANCE_NAME: const.INSTANCE_NAME, CONF_HOST: "ccu.local", **_BOX},
+        )
+        existing.add_to_hass(hass)
+        result, _ = await self._submit_manual(hass, {CONF_LOOM_TOKEN: "tok"})
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "backend_switched"
+        assert CONF_LOOM_BOX_USERNAME not in existing.data
+        assert CONF_LOOM_BOX_PASSWORD not in existing.data
+
+    async def _submit_manual(self, hass: HomeAssistant, extra: dict[str, Any]) -> tuple[dict, AsyncMock]:
+        """Submit the manual loom form for a box host and return the result and the list_ccus mock."""
+        user_input = {
+            CONF_INSTANCE_NAME: "Box Loom",
+            CONF_HOST: "box.local",
+            CONF_TLS: True,
+            CONF_VERIFY_TLS: True,
+            **extra,
+        }
+        with (
+            patch(_LOOM_RELEVANT, return_value=True),
+            patch(_BROWSE, return_value=[]),
+            patch(_LOOM_LIST, return_value=_BOX_CCUS) as loom_list,
+            patch("custom_components.homematicip_local.config_flow.ControlConfig") as control_config,
+            patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
+        ):
+            control_config.return_value.check_config = AsyncMock(return_value=None)
+            menu = await hass.config_entries.flow.async_init(
+                HMIP_DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+            form = await hass.config_entries.flow.async_configure(menu["flow_id"], {"next_step_id": "loom"})
+            assert form["step_id"] == "loom"
+            result = await hass.config_entries.flow.async_configure(form["flow_id"], user_input)
+            await hass.async_block_till_done()
+        return result, loom_list

@@ -4,6 +4,24 @@
 
 ### Integration
 
+- **openccu-loom: connect through an openccu-lite box.** A daemon running
+  on an openccu-lite box can now be reached through the box's web server
+  (`https://<box>/addons/loom/`), so the daemon port may stay firewalled.
+  Both loom setup forms (manual and discovered) and the options flow's
+  daemon connection grow an "openccu-lite box user" and "box password":
+  with a box web account (not the SSH root password) filled in, the flow
+  lists the CCUs through the box, the box login also signs in to the
+  daemon, and the API token may stay empty. Host and TLS then describe
+  the box; the daemon port field is unused. Filling in only one of the
+  two box fields is rejected with a clear error, and so is pairing in box
+  mode — pairing talks to the daemon port the box route keeps closed, and
+  the box account already signs the connection in. Requires
+  openccu-loom-client with the compat box parameters (version set at the
+  pin bump).
+- **Fix: diagnostics no longer carry the openccu-loom API token.** The
+  daemon bearer token of a loom entry was not on the redaction list, so a
+  downloaded diagnostics file included it in clear. It is redacted now,
+  together with the new box user and box password.
 - **openccu-loom: pair instead of pasting a token.** Both loom setup forms
   (manual and discovered) grow a "Pair with the daemon" switch: the flow
   shows a six-digit code, the daemon's administrator types it on the
