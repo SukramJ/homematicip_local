@@ -144,7 +144,7 @@
           "sub_devices_enabled": "Splits devices with multiple channel groups into a main device with sub-devices. Entities are assigned to their corresponding sub-device based on channel group.",
           "loom_pair": "Instead of pasting a token: the daemon shows a six-digit code here, which you type on its web UI under Settings → API tokens. Paired tokens carry operator rights; paste an admin token for backups, system update and device removal.",
           "loom_box_password": "Password of the openccu-lite box account above.",
-          "loom_box_username": "Only when the daemon runs on an openccu-lite box: a web account of the box (not the SSH root password). The connection then goes through the box's web server (https://<host>/addons/loom/) and the box login also signs in to the daemon, so the API token can stay empty. The host is then the box, and TLS refers to the box's web server. Leave empty to connect to the daemon directly.",
+          "loom_box_username": "Only when the daemon runs on an openccu-lite box: a web account of the box (not the SSH root password). The connection then goes through the box's web server (path /addons/loom/ on the box) and the box login also signs in to the daemon, so the API token can stay empty. The host is then the box, and TLS refers to the box's web server. Leave empty to connect to the daemon directly.",
           "loom_port": "Not used when connecting through an openccu-lite box: the box's web server port applies (443 with TLS, 80 without)."
         }
       },
@@ -252,7 +252,7 @@
           "sub_devices_enabled": "Splits devices with multiple channel groups into a main device with sub-devices. Entities are assigned to their corresponding sub-device based on channel group.",
           "loom_pair": "Instead of pasting a token: the daemon shows a six-digit code here, which you type on its web UI under Settings → API tokens. Paired tokens carry operator rights; paste an admin token for backups, system update and device removal.",
           "loom_box_password": "Password of the openccu-lite box account above.",
-          "loom_box_username": "Only when the daemon runs on an openccu-lite box: a web account of the box (not the SSH root password). The connection then goes through the box's web server (https://<host>/addons/loom/) and the box login also signs in to the daemon, so the API token can stay empty. The host is then the box, and TLS refers to the box's web server. Leave empty to connect to the daemon directly."
+          "loom_box_username": "Only when the daemon runs on an openccu-lite box: a web account of the box (not the SSH root password). The connection then goes through the box's web server (path /addons/loom/ on the box) and the box login also signs in to the daemon, so the API token can stay empty. The host is then the box, and TLS refers to the box's web server. Leave empty to connect to the daemon directly."
         }
       },
       "loom_select_ccu": {
@@ -802,7 +802,7 @@
         "title": "OpenCCU-Loom daemon",
         "data_description": {
           "loom_box_password": "Password of the openccu-lite box account above.",
-          "loom_box_username": "Only when the daemon runs on an openccu-lite box: a web account of the box (not the SSH root password). The connection then goes through the box's web server (https://<host>/addons/loom/) and the box login also signs in to the daemon, so the API token can stay empty. The host is then the box, and TLS refers to the box's web server. Leave empty to connect to the daemon directly.",
+          "loom_box_username": "Only when the daemon runs on an openccu-lite box: a web account of the box (not the SSH root password). The connection then goes through the box's web server (path /addons/loom/ on the box) and the box login also signs in to the daemon, so the API token can stay empty. The host is then the box, and TLS refers to the box's web server. Leave empty to connect to the daemon directly.",
           "loom_port": "Not used when connecting through an openccu-lite box: the box's web server port applies (443 with TLS, 80 without)."
         }
       },

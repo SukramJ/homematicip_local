@@ -140,7 +140,7 @@
                 }, 
                 "data_description": {
                     "loom_box_password": "Passwort des oben angegebenen openccu-lite-Box-Kontos.", 
-                    "loom_box_username": "Nur wenn der Daemon auf einer openccu-lite-Box läuft: ein Web-Konto der Box (nicht das SSH-Root-Passwort). Die Verbindung läuft dann über den Webserver der Box (https://<host>/addons/loom/), und die Box-Anmeldung meldet auch am Daemon an, sodass das API-Token leer bleiben kann. Als Host gibst du dann die Box an, und TLS bezieht sich auf den Webserver der Box. Leer lassen, um dich direkt mit dem Daemon zu verbinden.", 
+                    "loom_box_username": "Nur wenn der Daemon auf einer openccu-lite-Box läuft: ein Web-Konto der Box (nicht das SSH-Root-Passwort). Die Verbindung läuft dann über den Webserver der Box (Pfad /addons/loom/ auf der Box), und die Box-Anmeldung meldet auch am Daemon an, sodass das API-Token leer bleiben kann. Als Host gibst du dann die Box an, und TLS bezieht sich auf den Webserver der Box. Leer lassen, um dich direkt mit dem Daemon zu verbinden.", 
                     "loom_pair": "Statt ein Token einzufügen: Der Daemon zeigt hier einen sechsstelligen Code, den du in dessen Weboberfläche unter Einstellungen → API-Tokens eintippst. Gekoppelte Tokens haben Operator-Rechte; für Backups, Systemupdate und Geräte-Löschen ein Admin-Token einfügen.", 
                     "loom_port": "Wird bei der Verbindung über eine openccu-lite-Box nicht verwendet: Dann gilt der Port des Box-Webservers (443 mit TLS, 80 ohne).", 
                     "sub_devices_enabled": "Teilt Geräte mit mehreren Kanalgruppen in ein Hauptgerät mit Untergeräten auf. Entitäten werden basierend auf ihrer Kanalgruppe dem entsprechenden Untergerät zugeordnet."
@@ -172,7 +172,7 @@
                 }, 
                 "data_description": {
                     "loom_box_password": "Passwort des oben angegebenen openccu-lite-Box-Kontos.", 
-                    "loom_box_username": "Nur wenn der Daemon auf einer openccu-lite-Box läuft: ein Web-Konto der Box (nicht das SSH-Root-Passwort). Die Verbindung läuft dann über den Webserver der Box (https://<host>/addons/loom/), und die Box-Anmeldung meldet auch am Daemon an, sodass das API-Token leer bleiben kann. Als Host gibst du dann die Box an, und TLS bezieht sich auf den Webserver der Box. Leer lassen, um dich direkt mit dem Daemon zu verbinden.", 
+                    "loom_box_username": "Nur wenn der Daemon auf einer openccu-lite-Box läuft: ein Web-Konto der Box (nicht das SSH-Root-Passwort). Die Verbindung läuft dann über den Webserver der Box (Pfad /addons/loom/ auf der Box), und die Box-Anmeldung meldet auch am Daemon an, sodass das API-Token leer bleiben kann. Als Host gibst du dann die Box an, und TLS bezieht sich auf den Webserver der Box. Leer lassen, um dich direkt mit dem Daemon zu verbinden.", 
                     "loom_pair": "Statt ein Token einzufügen: Der Daemon zeigt hier einen sechsstelligen Code, den du in dessen Weboberfläche unter Einstellungen → API-Tokens eintippst. Gekoppelte Tokens haben Operator-Rechte; für Backups, Systemupdate und Geräte-Löschen ein Admin-Token einfügen.", 
                     "sub_devices_enabled": "Teilt Geräte mit mehreren Kanalgruppen in ein Hauptgerät mit Untergeräten auf. Entitäten werden basierend auf ihrer Kanalgruppe dem entsprechenden Untergerät zugeordnet."
                 }, 
@@ -800,7 +800,7 @@
                 }, 
                 "data_description": {
                     "loom_box_password": "Passwort des oben angegebenen openccu-lite-Box-Kontos.", 
-                    "loom_box_username": "Nur wenn der Daemon auf einer openccu-lite-Box läuft: ein Web-Konto der Box (nicht das SSH-Root-Passwort). Die Verbindung läuft dann über den Webserver der Box (https://<host>/addons/loom/), und die Box-Anmeldung meldet auch am Daemon an, sodass das API-Token leer bleiben kann. Als Host gibst du dann die Box an, und TLS bezieht sich auf den Webserver der Box. Leer lassen, um dich direkt mit dem Daemon zu verbinden.", 
+                    "loom_box_username": "Nur wenn der Daemon auf einer openccu-lite-Box läuft: ein Web-Konto der Box (nicht das SSH-Root-Passwort). Die Verbindung läuft dann über den Webserver der Box (Pfad /addons/loom/ auf der Box), und die Box-Anmeldung meldet auch am Daemon an, sodass das API-Token leer bleiben kann. Als Host gibst du dann die Box an, und TLS bezieht sich auf den Webserver der Box. Leer lassen, um dich direkt mit dem Daemon zu verbinden.", 
                     "loom_port": "Wird bei der Verbindung über eine openccu-lite-Box nicht verwendet: Dann gilt der Port des Box-Webservers (443 mit TLS, 80 ohne)."
                 }, 
                 "description": "Mit einem openccu-loom-Daemon verbinden. Der Daemon verwaltet CCU-Verbindung, Interfaces und Callbacks.", 
