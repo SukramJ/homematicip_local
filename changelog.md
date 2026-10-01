@@ -73,7 +73,7 @@
 
 - `aiohomematic-test-support` `2026.9.2` → `2026.9.4`, following the aiohomematic pin above — CI runs against `requirements_test.txt`, so the two move together
 - `ruff` `0.16.6` → `0.16.7`, in the prek hook revision and in `requirements_test_pre_commit.txt`, which have to name the same version
-- `pylint` `4.0.9` → `4.1.1` and `pytest-homeassistant-custom-component-framework` `1.0.56` → `1.0.57` in `requirements_test.txt`. The framework brings Home Assistant 2026.10.0b0, whose `config_validation` no longer re-exports `voluptuous`; the one test that reached it through `cv.vol` imports `voluptuous` directly now
+- `pylint` `4.0.9` → `4.1.1` in `requirements_test.txt`. The device-action schema test imports `voluptuous` directly instead of reaching it through `cv.vol`: Home Assistant 2026.10 no longer re-exports it from `config_validation`. `pytest-homeassistant-custom-component-framework` stays on `1.0.56` — `1.0.57` brings Home Assistant 2026.10.0b0, whose schema types moved off `voluptuous`, and mypy reports 308 errors in four files against it; that migration is its own change
 
 # Version [2.11.1](https://github.com/SukramJ/homematicip_local/compare/2.11.0...2.11.1) (2026-09-10)
 

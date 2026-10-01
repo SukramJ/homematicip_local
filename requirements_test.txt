@@ -12,4 +12,4 @@ prek==0.5.4
 pur==7.4.0
 pylint==4.1.1
 pylint_strict_informational==0.1
-pytest-homeassistant-custom-component-framework==1.0.57
+pytest-homeassistant-custom-component-framework==1.0.56
