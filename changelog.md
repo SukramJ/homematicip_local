@@ -41,6 +41,14 @@
 
 ### Dependencies
 
+#### Bump openccu-loom-client to `2026.10.1`
+
+- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It regenerates the wire bindings against daemon api 13.2.0 (openccu-loom 0.83.0); nothing this integration calls changed shape. Kept to one line: loom details stay out of scope while the backend is Beta
+
+#### Bump openccu-data to `2026.9.1`
+
+- The release adds CCU WebUI device images to the repository tree only — they are not part of the Python package — so nothing reaches this integration at runtime. Bumped so the manifest pin and the test requirement name the same version
+
 #### Bump aiohomematic to [2026.9.4](https://github.com/SukramJ/aiohomematic/compare/2026.9.2...2026.9.4)
 
 - **Fix: BidCos-RF data points stayed on `restored` after a start.** The ReGa bulk fetch is the only source of an initial value on the interfaces without a per-parameter `getValue` fallback (BidCos-RF, VirtualDevices, CUxD, CCU-Jack), and its snapshot is taken once during `start_clients()` and expires after `MAX_CACHE_AGE`. Its consumer for any channel but 0 is the integration adding its entities, which happens after the platforms have been forwarded — in a real installation reliably later than that, so the snapshot was gone by then and the data point stayed unset for good. Covers were the visible case, because a shutter reports nothing until it is moved: `HM-LC-Bl1PBU-FM` blinds sat at `value_state=restored` with `current_position: 0` until they were operated by hand. The init path refreshes an expired snapshot now instead of giving up; the `getValue` fallback stays disabled
@@ -65,6 +73,7 @@
 
 - `aiohomematic-test-support` `2026.9.2` → `2026.9.4`, following the aiohomematic pin above — CI runs against `requirements_test.txt`, so the two move together
 - `ruff` `0.16.6` → `0.16.7`, in the prek hook revision and in `requirements_test_pre_commit.txt`, which have to name the same version
+- `pylint` `4.0.9` → `4.1.1` in `requirements_test.txt`. The device-action schema test imports `voluptuous` directly instead of reaching it through `cv.vol`: Home Assistant 2026.10 no longer re-exports it from `config_validation`. `pytest-homeassistant-custom-component-framework` stays on `1.0.56` — `1.0.57` brings Home Assistant 2026.10.0b0, whose schema types moved off `voluptuous`, and mypy reports 308 errors in four files against it; that migration is its own change
 
 # Version [2.11.1](https://github.com/SukramJ/homematicip_local/compare/2.11.0...2.11.1) (2026-09-10)
 

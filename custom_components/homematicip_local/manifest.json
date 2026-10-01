@@ -11,8 +11,8 @@
   "issue_tracker": "https://github.com/sukramj/aiohomematic/issues",
   "loggers": ["aiohomematic", "aiohomematic_config", "openccu_loom_client"],
   "requirements": [
-    "openccu-data==2026.9.0",
-    "openccu-loom-client==2026.9.8",
+    "openccu-data==2026.9.1",
+    "openccu-loom-client==2026.10.1",
     "aiohomematic-config==2026.8.1",
     "aiohomematic==2026.9.4"
   ],
