@@ -17,6 +17,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry, mock_device_registry
+import voluptuous as vol
 
 from aiohomematic.const import IDENTIFIER_SEPARATOR
 from custom_components.homematicip_local import DOMAIN as HMIP_DOMAIN
@@ -24,7 +25,6 @@ from custom_components.homematicip_local.device_action import ACTION_SCHEMA
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
 
 from tests.const import INTERFACE_ID
 
@@ -87,8 +87,8 @@ class TestActionSchema:
         validated = ACTION_SCHEMA(cfg)
         assert validated[CONF_TYPE] == "press_short"
 
-        # invalid type -> raises vol.Invalid via cv.Invalid
-        with pytest.raises(cv.vol.Invalid):
+        # invalid type -> raises vol.Invalid
+        with pytest.raises(vol.Invalid):
             ACTION_SCHEMA({CONF_DEVICE_ID: "dev123", CONF_TYPE: "unknown", "subtype": 1})
 
 
