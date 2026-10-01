@@ -13,7 +13,14 @@ from dataclasses import dataclass
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.homematicip_local.const import (
+    CONF_LOOM_BOX_PASSWORD,
+    CONF_LOOM_BOX_USERNAME,
+    CONF_LOOM_TOKEN,
+    DOMAIN,
+)
 from custom_components.homematicip_local.diagnostics import async_get_config_entry_diagnostics
 
 
@@ -221,3 +228,37 @@ class TestAsyncGetConfigEntryDiagnostics:
             "cuxd_devices": 0,
             "daemon_centrals": 2,
         }
+
+
+class TestLoomSecretsRedacted:
+    """The loom backend's own secrets never reach a diagnostics dump."""
+
+    @pytest.mark.asyncio
+    async def test_box_account_and_token_are_redacted(self, hass) -> None:
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                "host": "box.local",
+                CONF_LOOM_TOKEN: "secret-token",
+                CONF_LOOM_BOX_USERNAME: "boxadmin",
+                CONF_LOOM_BOX_PASSWORD: "secret-box-password",
+            },
+        )
+        central = MagicMock()
+        del central.device_registry
+        del central.metrics_aggregator
+        central.device_coordinator.devices = ()
+        central.system_information = _SystemInformation(serial="ABC123", version="1.2.3")
+        central.cache_coordinator.incident_store.get_diagnostics = AsyncMock(return_value={})
+        central.client_coordinator.clients = ()
+        control_unit = MagicMock()
+        control_unit.central = central
+        entry.runtime_data = control_unit
+
+        diag = await async_get_config_entry_diagnostics(hass, entry)
+
+        data = diag["config"]["data"]
+        assert data["host"] == "box.local"
+        for key in (CONF_LOOM_TOKEN, CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD):
+            assert data[key] == "**REDACTED**", key
+        assert "secret-box-password" not in repr(diag)

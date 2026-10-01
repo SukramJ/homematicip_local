@@ -8,8 +8,8 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, cast
 
+import probatio as vol
 from pydantic import ValidationError
-import voluptuous as vol
 
 from aiohomematic.const import ForcedDeviceAvailability, ParamsetKey, ScheduleProfile, WeekdayStr
 from aiohomematic.exceptions import BaseHomematicException

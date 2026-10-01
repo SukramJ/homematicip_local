@@ -9,8 +9,8 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
 
+import probatio as vol
 from pydantic import ValidationError
-import voluptuous as vol
 
 from aiohomematic.ccu_translations import get_device_icon
 from aiohomematic.const import Interface, Parameter, ParamsetKey

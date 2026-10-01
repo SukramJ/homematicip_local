@@ -4,6 +4,23 @@
 
 ### Integration
 
+- **openccu-loom: connect through an openccu-lite box.** A daemon running
+  on an openccu-lite box can now be reached through the box's web server
+  (`https://<box>/addons/loom/`), so the daemon port may stay firewalled.
+  Both loom setup forms (manual and discovered) and the options flow's
+  daemon connection grow an "openccu-lite box user" and "box password":
+  with a box web account (not the SSH root password) filled in, the flow
+  lists the CCUs through the box, the box login also signs in to the
+  daemon, and the API token may stay empty. Host and TLS then describe
+  the box; the daemon port field is unused. Filling in only one of the
+  two box fields is rejected with a clear error, and so is pairing in box
+  mode — pairing talks to the daemon port the box route keeps closed, and
+  the box account already signs the connection in. Requires
+  openccu-loom-client 2026.10.2.
+- **Fix: diagnostics no longer carry the openccu-loom API token.** The
+  daemon bearer token of a loom entry was not on the redaction list, so a
+  downloaded diagnostics file included it in clear. It is redacted now,
+  together with the new box user and box password.
 - **openccu-loom: pair instead of pasting a token.** Both loom setup forms
   (manual and discovered) grow a "Pair with the daemon" switch: the flow
   shows a six-digit code, the daemon's administrator types it on the
@@ -39,11 +56,13 @@
 
   The option defaults to off now in all five blueprints that carry it (2-, 6-, 8-button, key ring remote control, and the 6-button one in `blueprints/community`), and its description says what enabling it costs. **Re-import the blueprints** to pick this up. An automation that has an explicit `true` stored keeps it — the default only applies where nothing was ever saved — so if you want the warning gone there, switch the option off and save
 
+- **Breaking: Home Assistant 2026.9 or newer is required** (was 2026.8). The integration builds its schemas with probatio, the validation library Home Assistant ships from 2026.9 on and types its own helpers against from 2026.10. Validation behaves as before: since 2026.9 Home Assistant aliases `voluptuous` to probatio's compatibility shim at startup, so the integration's schemas and `Invalid` were already probatio objects at runtime — importing probatio directly makes the integration independent of that alias and type-checks its schemas against the types Home Assistant declares. The repair flow's steps are typed with `RepairsFlowResult`, the result type `RepairsFlow` declares
+
 ### Dependencies
 
-#### Bump openccu-loom-client to `2026.10.1`
+#### Bump openccu-loom-client to `2026.10.2`
 
-- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It regenerates the wire bindings against daemon api 13.2.0 (openccu-loom 0.83.0); nothing this integration calls changed shape. Kept to one line: loom details stay out of scope while the backend is Beta
+- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It regenerates the wire bindings against daemon api 13.2.0 (openccu-loom 0.83.0) — nothing this integration calls changed shape — and adds the box-ingress keywords the openccu-lite box connection above needs. Kept to one line: loom details stay out of scope while the backend is Beta
 
 #### Bump openccu-data to `2026.9.1`
 
@@ -73,7 +92,8 @@
 
 - `aiohomematic-test-support` `2026.9.2` → `2026.9.4`, following the aiohomematic pin above — CI runs against `requirements_test.txt`, so the two move together
 - `ruff` `0.16.6` → `0.16.7`, in the prek hook revision and in `requirements_test_pre_commit.txt`, which have to name the same version
-- `pylint` `4.0.9` → `4.1.1` in `requirements_test.txt`. The device-action schema test imports `voluptuous` directly instead of reaching it through `cv.vol`: Home Assistant 2026.10 no longer re-exports it from `config_validation`. `pytest-homeassistant-custom-component-framework` stays on `1.0.56` — `1.0.57` brings Home Assistant 2026.10.0b0, whose schema types moved off `voluptuous`, and mypy reports 308 errors in four files against it; that migration is its own change
+- `pylint` `4.0.9` → `4.1.1` in `requirements_test.txt`. The device-action schema test no longer reaches the schema library through `cv.vol`: Home Assistant 2026.10 no longer re-exports it from `config_validation`
+- `pytest-homeassistant-custom-component-framework` `1.0.56` → `1.0.57`, which brings Home Assistant 2026.10.0b0. Its schema types moved from voluptuous to probatio, which mypy reported as 308 errors in four files; integration and tests import probatio directly now
 
 # Version [2.11.1](https://github.com/SukramJ/homematicip_local/compare/2.11.0...2.11.1) (2026-09-10)
 

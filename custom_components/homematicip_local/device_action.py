@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
+import probatio as vol
 
 from aiohomematic.const import Parameter
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE

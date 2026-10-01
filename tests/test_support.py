@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-import voluptuous as vol
+import probatio as vol
 
 from aiohomematic.const import IDENTIFIER_SEPARATOR, Interface
 from custom_components.homematicip_local.const import (
@@ -111,7 +111,7 @@ class TestIsValidEvent:
     """Tests for is_valid_event function."""
 
     def test_true_and_false(self) -> None:
-        """It should validate against a provided voluptuous schema and return boolean."""
+        """It should validate against a provided schema and return boolean."""
         schema = vol.Schema({"a": int})
         assert is_valid_event({"a": 1}, schema) is True
         assert is_valid_event({"a": "x"}, schema) is False
