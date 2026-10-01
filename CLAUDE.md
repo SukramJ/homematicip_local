@@ -122,7 +122,7 @@ homematicip_local/
 - **aiohomematic-config** (v2026.8.1) - Device configuration metadata
 - **openccu-data** (v2026.9.0) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
 - **openccu-loom-client** (v2026.9.4) - Client for the openccu-loom backend (Beta)
-- **Home Assistant Core** - Minimum version: 2026.8.0+
+- **Home Assistant Core** - Minimum version: 2026.9.0+
 - **Python 3.14+** (target version for development)
 
 ### Development Dependencies
@@ -263,7 +263,7 @@ if TYPE_CHECKING:
 #### Common Import Aliases
 
 ```python
-import voluptuous as vol
+import probatio as vol
 
 from aiohomematic.central import CentralUnit as hmcu
 from aiohomematic.client import Client as hmcl
@@ -1183,7 +1183,7 @@ make hass
 ### Version Information
 
 - **Current Version:** 2.11.2
-- **Minimum HA Version:** 2026.8.0+
+- **Minimum HA Version:** 2026.9.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
 - **aiohomematic Version:** 2026.9.4
 - **openccu-loom-client Version:** 2026.9.4. Its wire layer is generated against daemon API `11.2.0`

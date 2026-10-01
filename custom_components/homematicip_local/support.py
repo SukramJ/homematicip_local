@@ -9,8 +9,8 @@ import logging
 import re
 from typing import Any, Final, TypeAlias, TypeVar, cast
 
+import probatio as vol
 from pydantic import ValidationError
-import voluptuous as vol
 
 from aiohomematic.const import (
     CHANNEL_ADDRESS_PATTERN,

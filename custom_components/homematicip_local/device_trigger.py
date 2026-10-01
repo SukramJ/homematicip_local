@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, is_dataclass
 
-import voluptuous as vol
+import probatio as vol
 
 from aiohomematic.const import CLICK_EVENTS, DataPointUsage
 from aiohomematic.model.event import ClickEvent

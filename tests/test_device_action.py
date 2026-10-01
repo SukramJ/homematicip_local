@@ -15,9 +15,9 @@ from dataclasses import dataclass
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
+import probatio as vol
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry, mock_device_registry
-import voluptuous as vol
 
 from aiohomematic.const import IDENTIFIER_SEPARATOR
 from custom_components.homematicip_local import DOMAIN as HMIP_DOMAIN

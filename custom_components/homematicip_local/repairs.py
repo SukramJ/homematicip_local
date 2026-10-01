@@ -7,11 +7,10 @@ import contextlib
 import logging
 from typing import Any, Final
 
-import voluptuous as vol
+import probatio as vol
 
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.issue_registry import async_delete_issue
 
 from .const import DOMAIN
@@ -43,7 +42,7 @@ class _DevicesDelayedFixFlow(RepairsFlow):
             self._interface_id = parts[1] or None
             self._address = parts[2] or None
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> RepairsFlowResult:
         """Show the form to enter a device name."""
         return self.async_show_form(
             step_id="set_name",
@@ -58,7 +57,7 @@ class _DevicesDelayedFixFlow(RepairsFlow):
             },
         )
 
-    async def async_step_set_name(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_set_name(self, user_input: dict[str, Any] | None = None) -> RepairsFlowResult:
         """Handle the name input and trigger the device addition."""
         if user_input is None:
             return await self.async_step_init()

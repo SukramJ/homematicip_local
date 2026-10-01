@@ -11,8 +11,7 @@ import time
 from typing import Any, Final, cast
 from urllib.parse import urlparse
 
-import voluptuous as vol
-from voluptuous.schema_builder import UNDEFINED, Schema
+import probatio as vol
 
 from aiohomematic.backend_detection import BackendDetectionResult, DetectionConfig, detect_backend
 from aiohomematic.const import (
@@ -200,11 +199,11 @@ COMMAND_THROTTLE_INTERVAL_SELECTOR = vol.All(
 )
 
 
-def get_domain_schema(data: ConfigType) -> Schema:
+def get_domain_schema(data: ConfigType) -> vol.Schema:
     """Return the central/connection schema (callback settings are in advanced step)."""
     return vol.Schema(
         {
-            vol.Required(CONF_INSTANCE_NAME, default=data.get(CONF_INSTANCE_NAME) or UNDEFINED): TEXT_SELECTOR,
+            vol.Required(CONF_INSTANCE_NAME, default=data.get(CONF_INSTANCE_NAME) or vol.UNDEFINED): TEXT_SELECTOR,
             vol.Required(CONF_HOST, default=data.get(CONF_HOST)): TEXT_SELECTOR,
             vol.Required(CONF_USERNAME, default=data.get(CONF_USERNAME)): TEXT_SELECTOR,
             vol.Required(CONF_PASSWORD, default=data.get(CONF_PASSWORD)): PASSWORD_SELECTOR,
@@ -258,7 +257,7 @@ def _loom_box_form_error(*, user_input: ConfigType, box: dict[str, str] | None) 
     return None
 
 
-def get_loom_schema(data: ConfigType) -> Schema:
+def get_loom_schema(data: ConfigType) -> vol.Schema:
     """Return the openccu-loom daemon connection schema.
 
     The daemon owns interfaces, callback ports and CCU credentials, so
@@ -267,9 +266,9 @@ def get_loom_schema(data: ConfigType) -> Schema:
     """
     return vol.Schema(
         {
-            vol.Required(CONF_INSTANCE_NAME, default=data.get(CONF_INSTANCE_NAME) or UNDEFINED): TEXT_SELECTOR,
+            vol.Required(CONF_INSTANCE_NAME, default=data.get(CONF_INSTANCE_NAME) or vol.UNDEFINED): TEXT_SELECTOR,
             vol.Required(CONF_HOST, default=data.get(CONF_HOST)): TEXT_SELECTOR,
-            vol.Optional(CONF_LOOM_PORT, default=data.get(CONF_LOOM_PORT, UNDEFINED)): PORT_SELECTOR_OPTIONAL,
+            vol.Optional(CONF_LOOM_PORT, default=data.get(CONF_LOOM_PORT, vol.UNDEFINED)): PORT_SELECTOR_OPTIONAL,
             vol.Required(CONF_TLS, default=data.get(CONF_TLS, True)): BOOLEAN_SELECTOR,
             vol.Required(CONF_VERIFY_TLS, default=data.get(CONF_VERIFY_TLS, True)): BOOLEAN_SELECTOR,
             vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, "")): PASSWORD_SELECTOR,
@@ -285,7 +284,7 @@ def get_loom_schema(data: ConfigType) -> Schema:
     )
 
 
-def get_options_schema(data: ConfigType) -> Schema:
+def get_options_schema(data: ConfigType) -> vol.Schema:
     """Return the options schema (callback settings are in advanced_settings step)."""
     return vol.Schema(
         {
@@ -296,7 +295,7 @@ def get_options_schema(data: ConfigType) -> Schema:
     )
 
 
-def get_loom_options_schema(data: ConfigType) -> Schema:
+def get_loom_options_schema(data: ConfigType) -> vol.Schema:
     """Return the openccu-loom daemon connection schema for the options flow.
 
     Mirrors :func:`get_loom_schema` without the (fixed) instance name: the
@@ -306,7 +305,7 @@ def get_loom_options_schema(data: ConfigType) -> Schema:
     return vol.Schema(
         {
             vol.Required(CONF_HOST, default=data.get(CONF_HOST)): TEXT_SELECTOR,
-            vol.Optional(CONF_LOOM_PORT, default=data.get(CONF_LOOM_PORT, UNDEFINED)): PORT_SELECTOR_OPTIONAL,
+            vol.Optional(CONF_LOOM_PORT, default=data.get(CONF_LOOM_PORT, vol.UNDEFINED)): PORT_SELECTOR_OPTIONAL,
             vol.Required(CONF_TLS, default=data.get(CONF_TLS, True)): BOOLEAN_SELECTOR,
             vol.Required(CONF_VERIFY_TLS, default=data.get(CONF_VERIFY_TLS, True)): BOOLEAN_SELECTOR,
             vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, "")): PASSWORD_SELECTOR,
@@ -315,7 +314,7 @@ def get_loom_options_schema(data: ConfigType) -> Schema:
     )
 
 
-def get_loom_token_schema(data: ConfigType) -> Schema:
+def get_loom_token_schema(data: ConfigType) -> vol.Schema:
     """Return the schema for a discovered openccu-loom daemon.
 
     Host / port / TLS come from the mDNS advertisement, so the user only
@@ -465,7 +464,7 @@ async def _async_browse_loom_daemons(hass: HomeAssistant) -> list[dict[str, Any]
     return daemons
 
 
-def get_reconfigure_schema(data: ConfigType) -> Schema:
+def get_reconfigure_schema(data: ConfigType) -> vol.Schema:
     """Return the reconfigure schema with only connection settings (TLS on next step)."""
     return vol.Schema(
         {
@@ -476,7 +475,7 @@ def get_reconfigure_schema(data: ConfigType) -> Schema:
     )
 
 
-def get_reauth_schema(data: ConfigType) -> Schema:
+def get_reauth_schema(data: ConfigType) -> vol.Schema:
     """Return the reauth schema with only credentials (host is fixed from existing entry)."""
     return vol.Schema(
         {
@@ -538,7 +537,7 @@ def _get_effective_json_port(tls: bool, data: ConfigType) -> int:
     return int(get_json_rpc_default_port(tls=tls))
 
 
-def get_tls_interfaces_schema(data: ConfigType, show_custom_ports_option: bool = True) -> Schema:
+def get_tls_interfaces_schema(data: ConfigType, show_custom_ports_option: bool = True) -> vol.Schema:
     """
     Return the TLS & interfaces schema (without ports - for simplified flow).
 
@@ -569,7 +568,7 @@ def get_tls_interfaces_schema(data: ConfigType, show_custom_ports_option: bool =
     return vol.Schema(schema_dict)
 
 
-def get_port_config_schema(data: ConfigType) -> Schema:
+def get_port_config_schema(data: ConfigType) -> vol.Schema:
     """
     Return the port configuration schema (for custom port configuration).
 
@@ -611,7 +610,7 @@ def get_port_config_schema(data: ConfigType) -> Schema:
     return vol.Schema(schema_dict)
 
 
-def get_interface_schema(use_tls: bool, data: ConfigType) -> Schema:
+def get_interface_schema(use_tls: bool, data: ConfigType) -> vol.Schema:
     """Return the full interface schema with TLS settings and interface ports (legacy/options flow)."""
     interfaces = data.get(CONF_INTERFACE, {})
 
@@ -621,7 +620,7 @@ def get_interface_schema(use_tls: bool, data: ConfigType) -> Schema:
             vol.Required(CONF_TLS, default=use_tls): BOOLEAN_SELECTOR,
             vol.Required(CONF_VERIFY_TLS, default=data.get(CONF_VERIFY_TLS, False)): BOOLEAN_SELECTOR,
             # JSON-RPC port
-            vol.Optional(CONF_JSON_PORT, default=data.get(CONF_JSON_PORT) or UNDEFINED): PORT_SELECTOR_OPTIONAL,
+            vol.Optional(CONF_JSON_PORT, default=data.get(CONF_JSON_PORT) or vol.UNDEFINED): PORT_SELECTOR_OPTIONAL,
             # Interface settings with ports
             vol.Required(CONF_ENABLE_HMIP_RF, default=Interface.HMIP_RF in interfaces): BOOLEAN_SELECTOR,
             vol.Required(
@@ -648,7 +647,7 @@ def get_interface_schema(use_tls: bool, data: ConfigType) -> Schema:
     )
 
 
-def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -> Schema:
+def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -> vol.Schema:
     """Return the advanced schema with all fields including callback settings."""
     existing_parameters: list[str] = [
         p
@@ -659,9 +658,9 @@ def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -
     advanced_schema = vol.Schema(
         {
             # Callback settings (moved here from port config)
-            vol.Optional(CONF_CALLBACK_HOST, default=data.get(CONF_CALLBACK_HOST) or UNDEFINED): TEXT_SELECTOR,
+            vol.Optional(CONF_CALLBACK_HOST, default=data.get(CONF_CALLBACK_HOST) or vol.UNDEFINED): TEXT_SELECTOR,
             vol.Optional(
-                CONF_CALLBACK_PORT_XML_RPC, default=data.get(CONF_CALLBACK_PORT_XML_RPC) or UNDEFINED
+                CONF_CALLBACK_PORT_XML_RPC, default=data.get(CONF_CALLBACK_PORT_XML_RPC) or vol.UNDEFINED
             ): PORT_SELECTOR_OPTIONAL,
             vol.Required(
                 CONF_LISTEN_ON_ALL_IP,
@@ -778,7 +777,7 @@ def get_advanced_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -
     return advanced_schema
 
 
-def get_advanced_settings_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -> Schema:
+def get_advanced_settings_schema(data: ConfigType, all_un_ignore_parameters: list[str]) -> vol.Schema:
     """Return the advanced settings schema without program/sysvar fields (for options flow menu)."""
     existing_parameters: list[str] = [
         p
@@ -789,9 +788,9 @@ def get_advanced_settings_schema(data: ConfigType, all_un_ignore_parameters: lis
     advanced_settings_schema = vol.Schema(
         {
             # Callback settings (moved here from connection step)
-            vol.Optional(CONF_CALLBACK_HOST, default=data.get(CONF_CALLBACK_HOST) or UNDEFINED): TEXT_SELECTOR,
+            vol.Optional(CONF_CALLBACK_HOST, default=data.get(CONF_CALLBACK_HOST) or vol.UNDEFINED): TEXT_SELECTOR,
             vol.Optional(
-                CONF_CALLBACK_PORT_XML_RPC, default=data.get(CONF_CALLBACK_PORT_XML_RPC) or UNDEFINED
+                CONF_CALLBACK_PORT_XML_RPC, default=data.get(CONF_CALLBACK_PORT_XML_RPC) or vol.UNDEFINED
             ): PORT_SELECTOR_OPTIONAL,
             vol.Required(
                 CONF_ENABLE_SYSTEM_NOTIFICATIONS,
@@ -872,7 +871,7 @@ def get_advanced_settings_schema(data: ConfigType, all_un_ignore_parameters: lis
     return advanced_settings_schema
 
 
-def get_loom_advanced_settings_schema(data: ConfigType) -> Schema:
+def get_loom_advanced_settings_schema(data: ConfigType) -> vol.Schema:
     """Return the reduced advanced-settings schema for the openccu-loom backend.
 
     The daemon owns CCU-behaviour parity (hub scans, markers, light/cover
