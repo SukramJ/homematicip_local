@@ -11,12 +11,13 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
 from . import HomematicConfigEntry
-from .const import CONF_LOOM_BOX_PASSWORD, CONF_LOOM_BOX_USERNAME, CONF_LOOM_TOKEN
+from .const import CONF_LOOM_BOX_TOKEN, CONF_LOOM_TOKEN, LEGACY_LOOM_BOX_KEYS
 from .control_unit import ControlUnit
 
 # The loom backend carries its own secrets next to the CCU credentials: the
-# daemon bearer token and the openccu-lite box web account.
-REDACT_CONFIG = {CONF_USERNAME, CONF_PASSWORD, CONF_LOOM_TOKEN, CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD}
+# daemon bearer token, the openccu-lite box token, and the box web account an
+# entry from an earlier release may still hold until it pairs again.
+REDACT_CONFIG = {CONF_USERNAME, CONF_PASSWORD, CONF_LOOM_TOKEN, CONF_LOOM_BOX_TOKEN, *LEGACY_LOOM_BOX_KEYS}
 
 # Same shape the routing-key scoping in `__init__.py` recognises: ``CUX`` plus a
 # two-digit device type plus a five-digit running number, so ``CUX2801001``.

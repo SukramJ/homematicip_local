@@ -90,8 +90,7 @@ from .const import (
     CONF_INTERFACE,
     CONF_JSON_PORT,
     CONF_LISTEN_ON_ALL_IP,
-    CONF_LOOM_BOX_PASSWORD,
-    CONF_LOOM_BOX_USERNAME,
+    CONF_LOOM_BOX_TOKEN,
     CONF_LOOM_PORT,
     CONF_LOOM_TOKEN,
     CONF_MQTT_PREFIX,
@@ -371,6 +370,10 @@ class BaseControlUnit:
             # Don't catch - let it propagate to trigger reauth
             raise
         except BaseHomematicException as ex:
+            if is_loom_box_gate_error(ex):
+                # The box refused the box token: pairing again is the only
+                # way out, which is what reauthentication offers.
+                raise AuthFailure(str(ex)) from ex
             _LOGGER.warning(
                 "START_CENTRAL: Failed to start central unit for %s: %s",
                 self._instance_name,
@@ -1712,26 +1715,39 @@ class ControlConfig:
 class LoomBoxKwargs(TypedDict, total=False):
     """The openccu-loom-client ``box_*`` keywords this integration sets."""
 
-    box_username: str
-    box_password: str
+    box_token: str
 
 
 def loom_box_kwargs(*, data: Mapping[str, Any]) -> LoomBoxKwargs:
     """
     Return the openccu-loom-client ``box_*`` keywords for an entry's data.
 
-    A set box username puts the connection into box-ingress mode: the client
-    logs in at the openccu-lite box's web server and reaches the daemon
-    through it, and the daemon credential becomes optional. Box port and
-    ingress prefix are left to the client's defaults. Outside box mode the
-    dict is empty, so the client sees no ``box_*`` keyword at all.
+    A set box token puts the connection into box-ingress mode: the client
+    reaches the daemon through the openccu-lite box's web server, and the
+    box token is its only credential — the daemon signs the request in with
+    it. Box port and ingress prefix are left to the client's defaults.
+    Outside box mode the dict is empty, so the client sees no ``box_*``
+    keyword at all.
     """
-    if not (box_username := data.get(CONF_LOOM_BOX_USERNAME)):
+    if not (box_token := data.get(CONF_LOOM_BOX_TOKEN)):
         return {}
-    return {
-        "box_username": box_username,
-        "box_password": data.get(CONF_LOOM_BOX_PASSWORD) or "",
-    }
+    return {"box_token": box_token}
+
+
+def is_loom_box_gate_error(exc: BaseException) -> bool:
+    """
+    Return whether ``exc`` is the openccu-lite box gate refusing the box token.
+
+    That never clears on its own — the token is revoked, expired, or lacks the
+    add-on's scope — so the entry goes through reauthentication to pair with
+    the box again. Imported lazily like every loom-client reference; without
+    the package nothing is a gate error.
+    """
+    try:
+        from openccu_loom_client import LoomBoxGateError  # noqa: PLC0415
+    except ImportError:
+        return False
+    return isinstance(exc, LoomBoxGateError)
 
 
 def _import_loom_central_config() -> type[LoomCentralConfig]:

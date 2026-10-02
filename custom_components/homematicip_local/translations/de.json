@@ -16,8 +16,11 @@
             "interface_not_available": "Die folgenden Schnittstellen sind auf der CCU nicht verfügbar: [{invalid_items}]. Diese Schnittstellen wurden bei der Backend-Erkennung nicht gefunden. Bitte deaktiviere sie oder überprüfe, ob sie auf deiner CCU installiert und gestartet sind.", 
             "invalid_auth": "Authentifizierung bei CCU [{invalid_items}] fehlgeschlagen. Bitte überprüfe: 1) Benutzername und Passwort sind korrekt (Groß-/Kleinschreibung beachten), 2) Der Benutzer hat Admin-Rechte auf der CCU, 3) Das Passwort enthält nur erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
             "invalid_config": "Ungültige Konfiguration: [{invalid_items}]. Bitte überprüfe die eingegebenen Werte und versuche es erneut.", 
-            "loom_box_incomplete": "Gib sowohl den openccu-lite-Box-Benutzer als auch sein Passwort an, oder lass beide leer, um dich direkt mit dem Daemon zu verbinden.", 
-            "loom_box_pairing": "Über die openccu-lite-Box ist kein Pairing möglich: Das Box-Konto meldet diese Verbindung bereits an. Lass das Pairing aus oder leere die Box-Felder, um dich direkt mit dem Daemon zu koppeln.", 
+            "loom_box_daemon_token": "Über eine openccu-lite-Box ist das Box-Token die einzige Anmeldung: lass das API-Token leer.", 
+            "loom_box_pairing_invalid": "Die openccu-lite-Box hat die Anfrage abgelehnt — ist OpenCCU-Loom dort als Add-on installiert?", 
+            "loom_box_pairing_not_local": "Die openccu-lite-Box koppelt sich nur mit Aufrufern aus ihren lokalen Netzen.", 
+            "loom_box_pairing_off": "Die openccu-lite-Box erlaubt Programmen nicht, Zugriff anzufragen. Schalte es auf der Seite der API-Tokens der Box ein, oder erstelle dort ein Token mit dem Scope addon:openccu-loom.", 
+            "loom_box_pairing_refused": "Die openccu-lite-Box hat die Kopplungsanfrage abgelehnt (zu viele Anfragen, oder eine kürzliche Ablehnung). Bitte versuche es in ein paar Minuten erneut.", 
             "no_ccus": "Der Daemon meldet keine CCUs.", 
             "pairing_expired": "Die Kopplungsanfrage ist abgelaufen. Bitte erneut versuchen.", 
             "pairing_mismatch": "Kopplung abgebrochen: Das vom Daemon gemeldete Zertifikat ist nicht das dieser Verbindung — möglicher Eingriff in die Verbindung.", 
@@ -29,6 +32,7 @@
         "flow_title": "{name}/{host} ({backend})", 
         "progress": {
             "detect_backend": "Backend-Typ und verfügbare Schnittstellen werden erkannt...", 
+            "loom_box_pairing": "Kopplungscode: {code}\n\nÖffne die openccu-lite-Box unter {host}: Ihre Statusseite zeigt diese Anfrage — vergleiche den Code und bestätige sie. Die Anfrage läuft nach fünf Minuten ab.", 
             "loom_pairing": "Kopplungscode: {code}\n\nÖffne die Weboberfläche des Daemons auf {host} → Einstellungen → API-Tokens und tippe diesen Code dort ein. Die Anfrage läuft nach fünf Minuten ab."
         }, 
         "step": {
@@ -129,8 +133,7 @@
                 "data": {
                     "host": "Daemon-Hostname/IP", 
                     "instance_name": "Name der Integrations-Instanz", 
-                    "loom_box_password": "openccu-lite-Box-Passwort", 
-                    "loom_box_username": "openccu-lite-Box-Benutzer", 
+                    "loom_box": "Über eine openccu-lite-Box", 
                     "loom_pair": "Mit dem Daemon koppeln (zeigt einen Code)", 
                     "loom_port": "Daemon-Port (leer = 8443 TLS / 8080 unverschlüsselt)", 
                     "loom_token": "API-Bearer-Token", 
@@ -139,8 +142,7 @@
                     "verify_tls": "TLS-Zertifikat prüfen"
                 }, 
                 "data_description": {
-                    "loom_box_password": "Passwort des oben angegebenen openccu-lite-Box-Kontos.", 
-                    "loom_box_username": "Nur wenn der Daemon auf einer openccu-lite-Box läuft: ein Web-Konto der Box (nicht das SSH-Root-Passwort). Die Verbindung läuft dann über den Webserver der Box (Pfad /addons/loom/ auf der Box), und die Box-Anmeldung meldet auch am Daemon an, sodass das API-Token leer bleiben kann. Als Host gibst du dann die Box an, und TLS bezieht sich auf den Webserver der Box. Leer lassen, um dich direkt mit dem Daemon zu verbinden.", 
+                    "loom_box": "Nur wenn der Daemon auf einer openccu-lite-Box läuft (openccu-lite 1.0.0-dev.36 oder neuer): Die Verbindung läuft dann über den Webserver der Box (Pfad /addons/loom/ auf der Box), und Home Assistant koppelt sich mit der Box für ein Token, das ihn öffnet — der Administrator der Box bestätigt die Anfrage auf der Statusseite der Box. Der Host ist dann die Box, TLS bezieht sich auf den Webserver der Box, und das API-Token bleibt leer. Gekoppelte Box-Tokens haben Operator-Rechte.", 
                     "loom_pair": "Statt ein Token einzufügen: Der Daemon zeigt hier einen sechsstelligen Code, den du in dessen Weboberfläche unter Einstellungen → API-Tokens eintippst. Gekoppelte Tokens haben Operator-Rechte; für Backups, Systemupdate und Geräte-Löschen ein Admin-Token einfügen.", 
                     "loom_port": "Wird bei der Verbindung über eine openccu-lite-Box nicht verwendet: Dann gilt der Port des Box-Webservers (443 mit TLS, 80 ohne).", 
                     "sub_devices_enabled": "Teilt Geräte mit mehreren Kanalgruppen in ein Hauptgerät mit Untergeräten auf. Entitäten werden basierend auf ihrer Kanalgruppe dem entsprechenden Untergerät zugeordnet."
@@ -164,15 +166,13 @@
             }, 
             "loom_token": {
                 "data": {
-                    "loom_box_password": "openccu-lite-Box-Passwort", 
-                    "loom_box_username": "openccu-lite-Box-Benutzer", 
+                    "loom_box": "Über eine openccu-lite-Box", 
                     "loom_pair": "Mit dem Daemon koppeln (zeigt einen Code)", 
                     "loom_token": "API-Bearer-Token", 
                     "sub_devices_enabled": "Untergeräte-Entitäten erstellen"
                 }, 
                 "data_description": {
-                    "loom_box_password": "Passwort des oben angegebenen openccu-lite-Box-Kontos.", 
-                    "loom_box_username": "Nur wenn der Daemon auf einer openccu-lite-Box läuft: ein Web-Konto der Box (nicht das SSH-Root-Passwort). Die Verbindung läuft dann über den Webserver der Box (Pfad /addons/loom/ auf der Box), und die Box-Anmeldung meldet auch am Daemon an, sodass das API-Token leer bleiben kann. Als Host gibst du dann die Box an, und TLS bezieht sich auf den Webserver der Box. Leer lassen, um dich direkt mit dem Daemon zu verbinden.", 
+                    "loom_box": "Nur wenn der Daemon auf einer openccu-lite-Box läuft (openccu-lite 1.0.0-dev.36 oder neuer): Die Verbindung läuft dann über den Webserver der Box (Pfad /addons/loom/ auf der Box), und Home Assistant koppelt sich mit der Box für ein Token, das ihn öffnet — der Administrator der Box bestätigt die Anfrage auf der Statusseite der Box. Der Host ist dann die Box, TLS bezieht sich auf den Webserver der Box, und das API-Token bleibt leer. Gekoppelte Box-Tokens haben Operator-Rechte.", 
                     "loom_pair": "Statt ein Token einzufügen: Der Daemon zeigt hier einen sechsstelligen Code, den du in dessen Weboberfläche unter Einstellungen → API-Tokens eintippst. Gekoppelte Tokens haben Operator-Rechte; für Backups, Systemupdate und Geräte-Löschen ein Admin-Token einfügen.", 
                     "sub_devices_enabled": "Teilt Geräte mit mehreren Kanalgruppen in ein Hauptgerät mit Untergeräten auf. Entitäten werden basierend auf ihrer Kanalgruppe dem entsprechenden Untergerät zugeordnet."
                 }, 
@@ -209,6 +209,10 @@
                 }, 
                 "description": "Schritt {step_current} von {step_total}: Authentifizierung für {host} ist fehlgeschlagen. Bitte neue Zugangsdaten eingeben.", 
                 "title": "CCU-Verbindung erneut authentifizieren"
+            }, 
+            "reauth_loom_box": {
+                "description": "Die openccu-lite-Box unter {host} akzeptiert die Anmeldedaten dieser Verbindung nicht mehr — das Box-Token wurde widerrufen oder hat nicht den Scope des Add-ons, oder dieser Eintrag enthält noch ein Web-Konto der Box aus einer früheren Version. Absenden, um dich erneut mit der Box zu koppeln: der Administrator der Box bestätigt die Anfrage auf der Statusseite der Box.", 
+                "title": "Mit der openccu-lite-Box koppeln"
             }, 
             "reconfigure": {
                 "data": {
@@ -684,7 +688,7 @@
             "cannot_connect": "Verbindung zur CCU [{invalid_items}] nicht möglich. Bitte überprüfe: 1) Der Hostname/die IP-Adresse ist korrekt, 2) Die CCU ist eingeschaltet und erreichbar, 3) Keine Firewall blockiert die Verbindung.", 
             "invalid_auth": "Authentifizierung bei CCU [{invalid_items}] fehlgeschlagen. Bitte überprüfe: 1) Benutzername und Passwort sind korrekt (Groß-/Kleinschreibung beachten), 2) Der Benutzer hat Admin-Rechte auf der CCU, 3) Das Passwort enthält nur erlaubte Zeichen: A-Z, a-z, 0-9 und .!$():;#-", 
             "invalid_config": "Ungültige Konfiguration: [{invalid_items}]. Bitte überprüfe die eingegebenen Werte und versuche es erneut.", 
-            "loom_box_incomplete": "Gib sowohl den openccu-lite-Box-Benutzer als auch sein Passwort an, oder lass beide leer, um dich direkt mit dem Daemon zu verbinden.", 
+            "loom_box_daemon_token": "Über eine openccu-lite-Box ist das Box-Token die einzige Anmeldung: lass das API-Token leer.", 
             "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Home Assistant Protokolle für weitere Details."
         }, 
         "step": {
@@ -791,16 +795,14 @@
             "loom_connection": {
                 "data": {
                     "host": "Daemon-Hostname/IP", 
-                    "loom_box_password": "openccu-lite-Box-Passwort", 
-                    "loom_box_username": "openccu-lite-Box-Benutzer", 
+                    "loom_box_token": "openccu-lite-Box-Token", 
                     "loom_port": "Daemon-Port (leer = 8443 TLS / 8080 unverschlüsselt)", 
                     "loom_token": "API-Bearer-Token", 
                     "tls": "TLS verwenden (HTTPS/WSS)", 
                     "verify_tls": "TLS-Zertifikat prüfen"
                 }, 
                 "data_description": {
-                    "loom_box_password": "Passwort des oben angegebenen openccu-lite-Box-Kontos.", 
-                    "loom_box_username": "Nur wenn der Daemon auf einer openccu-lite-Box läuft: ein Web-Konto der Box (nicht das SSH-Root-Passwort). Die Verbindung läuft dann über den Webserver der Box (Pfad /addons/loom/ auf der Box), und die Box-Anmeldung meldet auch am Daemon an, sodass das API-Token leer bleiben kann. Als Host gibst du dann die Box an, und TLS bezieht sich auf den Webserver der Box. Leer lassen, um dich direkt mit dem Daemon zu verbinden.", 
+                    "loom_box_token": "Nur wenn der Daemon auf einer openccu-lite-Box läuft: ein API-Token der Box mit dem Scope addon:openccu-loom (oder Vollzugriff), von der Token-Seite der Box. Die Verbindung läuft dann über den Webserver der Box, und das API-Token bleibt leer. Leeren, um dich direkt mit dem Daemon zu verbinden. Um dich stattdessen mit der Box zu koppeln, entferne die Integration und füge sie neu hinzu.", 
                     "loom_port": "Wird bei der Verbindung über eine openccu-lite-Box nicht verwendet: Dann gilt der Port des Box-Webservers (443 mit TLS, 80 ohne)."
                 }, 
                 "description": "Mit einem openccu-loom-Daemon verbinden. Der Daemon verwaltet CCU-Verbindung, Interfaces und Callbacks.", 

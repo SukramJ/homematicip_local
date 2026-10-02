@@ -79,7 +79,9 @@ from custom_components.homematicip_local.const import (
     CONF_INTERFACE,
     CONF_JSON_PORT,
     CONF_LISTEN_ON_ALL_IP,
+    CONF_LOOM_BOX,
     CONF_LOOM_BOX_PASSWORD,
+    CONF_LOOM_BOX_TOKEN,
     CONF_LOOM_BOX_USERNAME,
     CONF_LOOM_PAIR,
     CONF_LOOM_PORT,
@@ -3428,8 +3430,7 @@ class TestLoomFlowHelpers:
             CONF_TLS,
             CONF_VERIFY_TLS,
             CONF_LOOM_TOKEN,
-            CONF_LOOM_BOX_USERNAME,
-            CONF_LOOM_BOX_PASSWORD,
+            CONF_LOOM_BOX_TOKEN,
         }
 
     def test_update_loom_advanced_settings_input(self) -> None:
@@ -4344,13 +4345,20 @@ class TestLoomPairing:
         return step
 
 
-_BOX = {CONF_LOOM_BOX_USERNAME: "boxadmin", CONF_LOOM_BOX_PASSWORD: "boxpw"}
-_BOX_KWARGS = {"box_username": "boxadmin", "box_password": "boxpw"}
+_BOX_TOKEN = "olt_0123456789abcdef0123456789abcdef"
+_BOX = {CONF_LOOM_BOX_TOKEN: _BOX_TOKEN}
+_BOX_KWARGS = {"box_token": _BOX_TOKEN}
+_LEGACY_BOX = {CONF_LOOM_BOX_USERNAME: "boxadmin", CONF_LOOM_BOX_PASSWORD: "boxpw"}
 _BOX_CCUS = [{"name": "Home", "serial": "ABC123", "host": "ccu.local", "model": "CCU3", "available": True}]
+_START_BOX_PAIRING = "openccu_loom_client.start_box_pairing"
+
+
+def _box_pair_result(state: str, token: str | None = None) -> Any:
+    return SimpleNamespace(state=state, token=token or "", name="homeassistant", scopes=("addon:openccu-loom",))
 
 
 class TestLoomBoxIngress:
-    """Reaching the daemon through an openccu-lite box's web server."""
+    """Reaching the daemon through an openccu-lite box's web server with a box token."""
 
     async def test_async_loom_list_ccus_direct_passes_no_box_kwargs(self, hass: HomeAssistant) -> None:
         """A direct daemon listing carries no box_* keyword at all."""
@@ -4360,24 +4368,62 @@ class TestLoomBoxIngress:
         assert not any(key.startswith("box_") for key in fake.await_args.kwargs)
 
     async def test_async_loom_list_ccus_forwards_box_kwargs(self, hass: HomeAssistant) -> None:
-        """The box account reaches the client's list_ccus as its box_* keywords."""
+        """The box token reaches the client's list_ccus as its box_* keyword."""
         fake = AsyncMock(return_value=_BOX_CCUS)
         with patch(_LOOM_LIST.replace("_async_loom_list_ccus", "_import_loom_list_ccus"), return_value=fake):
             await _async_loom_list_ccus(hass, host="box", port=None, tls=True, token="", base_path=None, box=_BOX)
         fake.assert_awaited_once_with(host="box", port=None, tls=True, token="", base_path=None, **_BOX_KWARGS)
 
-    async def test_box_account_with_pairing_is_rejected(self, hass: HomeAssistant) -> None:
-        """Pairing would talk to the daemon's own port, which the box route keeps closed."""
-        result, loom_list = await self._submit_manual(hass, {**_BOX, CONF_LOOM_PAIR: True})
+    async def test_box_gate_refusal_lists_as_invalid_auth(self, hass: HomeAssistant) -> None:
+        """The box refusing the box token is a credential verdict, not a connection failure."""
+        from openccu_loom_client import LoomBoxTokenError
+
+        fake = AsyncMock(side_effect=LoomBoxTokenError("revoked"))
+        with (
+            patch(_LOOM_LIST.replace("_async_loom_list_ccus", "_import_loom_list_ccus"), return_value=fake),
+            pytest.raises(AuthFailure),
+        ):
+            await _async_loom_list_ccus(hass, host="box", port=None, tls=True, token="", base_path=None, box=_BOX)
+
+    @pytest.mark.parametrize(
+        ("code", "key"),
+        [
+            ("pairing-off", "loom_box_pairing_off"),
+            ("not-local", "loom_box_pairing_not_local"),
+            ("invalid", "loom_box_pairing_invalid"),
+            ("limit", "loom_box_pairing_refused"),
+        ],
+    )
+    async def test_box_pairing_refusal_returns_with_error_and_switch_on(
+        self, hass: HomeAssistant, code: str, key: str
+    ) -> None:
+        from openccu_loom_client import LoomBoxPairingError
+
+        start = AsyncMock(side_effect=LoomBoxPairingError(message="no", code=code, status=403))
+        with patch(_START_BOX_PAIRING, start):
+            result, loom_list = await self._submit_manual(hass, {CONF_LOOM_BOX: True}, drain=True)
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "loom"
-        assert result["errors"] == {"base": "loom_box_pairing"}
+        assert result["errors"] == {"base": key}
+        loom_list.assert_not_awaited()
+        # The form comes back with the box switch still on.
+        box_marker = next(k for k in result["data_schema"].schema if str(k.schema) == CONF_LOOM_BOX)
+        assert box_marker.default() is True
+
+    async def test_daemon_token_beside_the_box_is_rejected(self, hass: HomeAssistant) -> None:
+        """Behind the box the box token is the only credential; a daemon token is refused, not dropped."""
+        result, loom_list = await self._submit_manual(hass, {CONF_LOOM_BOX: True, CONF_LOOM_TOKEN: "tok"})
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "loom"
+        assert result["errors"] == {"base": "loom_box_daemon_token"}
         loom_list.assert_not_awaited()
 
-    async def test_discovered_form_box_path(self, hass: HomeAssistant) -> None:
-        """The discovered-daemon form takes a box account instead of a token."""
+    async def test_discovered_form_pairs_with_the_box(self, hass: HomeAssistant) -> None:
+        """The discovered-daemon form takes the box switch instead of a token."""
+        session = _FakePairingSession(result=_box_pair_result("approved", _BOX_TOKEN))
         with (
             patch(_LOOM_LIST, return_value=_BOX_CCUS) as loom_list,
+            patch(_START_BOX_PAIRING, AsyncMock(return_value=session)),
             patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
         ):
             init = await hass.config_entries.flow.async_init(
@@ -4385,92 +4431,160 @@ class TestLoomBoxIngress:
             )
             assert init["step_id"] == "loom_token"
             keys = {str(k.schema) for k in init["data_schema"].schema}
-            assert {CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD} <= keys
-            done = await hass.config_entries.flow.async_configure(init["flow_id"], dict(_BOX))
-            await hass.async_block_till_done()
+            assert CONF_LOOM_BOX in keys
+            done = await hass.config_entries.flow.async_configure(init["flow_id"], {CONF_LOOM_BOX: True})
+            done = await self._drain(hass, done)
         assert done["type"] == FlowResultType.CREATE_ENTRY
         assert loom_list.await_args.kwargs["box"] == _BOX
         assert loom_list.await_args.kwargs["token"] == ""
-        data = done["result"].data
-        assert data[CONF_LOOM_BOX_USERNAME] == "boxadmin"
-        assert data[CONF_LOOM_BOX_PASSWORD] == "boxpw"
-        assert CONF_LOOM_TOKEN not in data
+        assert done["result"].data[CONF_LOOM_BOX_TOKEN] == _BOX_TOKEN
+        assert CONF_LOOM_TOKEN not in done["result"].data
 
     def test_get_loom_data_sets_and_clears_box(self) -> None:
-        """The options flow stores a box account and drops it when cleared."""
-        filled = _get_loom_data({}, user_input={CONF_HOST: "box", **_BOX})
-        assert filled[CONF_LOOM_BOX_USERNAME] == "boxadmin"
-        assert filled[CONF_LOOM_BOX_PASSWORD] == "boxpw"
+        """The options flow stores a pasted box token and drops it, and any box web account, when cleared."""
+        filled = _get_loom_data({**_LEGACY_BOX}, user_input={CONF_HOST: "box", **_BOX})
+        assert filled[CONF_LOOM_BOX_TOKEN] == _BOX_TOKEN
+        assert not set(filled) & {CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD}
         cleared = _get_loom_data(filled, user_input={CONF_HOST: "h", CONF_LOOM_TOKEN: "t"})
-        assert CONF_LOOM_BOX_USERNAME not in cleared
-        assert CONF_LOOM_BOX_PASSWORD not in cleared
+        assert CONF_LOOM_BOX_TOKEN not in cleared
 
-    async def test_incomplete_box_account_is_rejected(self, hass: HomeAssistant) -> None:
-        """A box user without a password never reaches the client."""
-        result, loom_list = await self._submit_manual(hass, {CONF_LOOM_BOX_USERNAME: "boxadmin"})
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "loom"
-        assert result["errors"] == {"base": "loom_box_incomplete"}
-        loom_list.assert_not_awaited()
-
-    async def test_manual_form_box_path_without_token(self, hass: HomeAssistant) -> None:
-        """The manual form creates a box-mode entry with no daemon token."""
-        result, loom_list = await self._submit_manual(hass, dict(_BOX))
+    async def test_manual_form_pairs_with_the_box_and_stores_the_token(self, hass: HomeAssistant) -> None:
+        """Switching the box on pairs with the box; the entry stores its token and no daemon token."""
+        session = _FakePairingSession(result=_box_pair_result("approved", _BOX_TOKEN))
+        start = AsyncMock(return_value=session)
+        with patch(_START_BOX_PAIRING, start):
+            result, loom_list = await self._submit_manual(hass, {CONF_LOOM_BOX: True}, drain=True)
         assert result["type"] == FlowResultType.CREATE_ENTRY
+        # Paired at the box's own web server: its host and TLS, no daemon port.
+        assert start.await_args.kwargs["host"] == "box.local"
+        assert start.await_args.kwargs["tls"] is True
+        assert "port" not in start.await_args.kwargs
         kwargs = loom_list.await_args.kwargs
         assert kwargs["box"] == _BOX
-        assert kwargs["host"] == "box.local"
         assert kwargs["token"] == ""
         data = result["result"].data
-        assert data[CONF_LOOM_BOX_USERNAME] == "boxadmin"
-        assert data[CONF_LOOM_BOX_PASSWORD] == "boxpw"
+        assert data[CONF_LOOM_BOX_TOKEN] == _BOX_TOKEN
         assert CONF_LOOM_TOKEN not in data
+        assert not set(data) & {CONF_LOOM_BOX, CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD}
 
-    async def test_manual_form_shows_box_fields(self, hass: HomeAssistant) -> None:
-        """Both loom setup forms carry the box account fields."""
-        for schema in (get_loom_schema(data={}), get_loom_token_schema(data={})):
-            keys = {str(k.schema) for k in schema.schema}
-            assert {CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD} <= keys
-
-    async def test_options_connection_box_path(self, hass: HomeAssistant) -> None:
-        """The options flow persists a box account and rejects a half-filled one."""
+    async def test_options_connection_box_token(self, hass: HomeAssistant) -> None:
+        """The options flow persists a pasted box token and refuses a daemon token beside it."""
         entry = TestOptionsFlowLoom()._loom_entry()
         entry.add_to_hass(hass)
         result = await hass.config_entries.options.async_init(entry.entry_id)
         with patch("custom_components.homematicip_local.config_flow.ControlConfig") as control_config:
             control_config.return_value.check_config = AsyncMock(return_value=None)
             await hass.config_entries.options.async_configure(result["flow_id"], {"next_step_id": "loom_connection"})
-            half = await hass.config_entries.options.async_configure(
-                result["flow_id"], {CONF_HOST: "box.local", CONF_LOOM_BOX_PASSWORD: "boxpw"}
+            both = await hass.config_entries.options.async_configure(
+                result["flow_id"], {CONF_HOST: "box.local", CONF_LOOM_TOKEN: "tok", **_BOX}
             )
-            assert half["errors"] == {"base": "loom_box_incomplete"}
+            assert both["errors"] == {"base": "loom_box_daemon_token"}
+            # The form pre-fills the stored daemon token; switching to the box
+            # means clearing it.
             done = await hass.config_entries.options.async_configure(
-                result["flow_id"], {CONF_HOST: "box.local", CONF_TLS: True, CONF_VERIFY_TLS: True, **_BOX}
+                result["flow_id"],
+                {CONF_HOST: "box.local", CONF_TLS: True, CONF_VERIFY_TLS: True, CONF_LOOM_TOKEN: "", **_BOX},
             )
             await hass.async_block_till_done()
         assert done["type"] == FlowResultType.CREATE_ENTRY
-        assert entry.data[CONF_LOOM_BOX_USERNAME] == "boxadmin"
-        assert entry.data[CONF_LOOM_BOX_PASSWORD] == "boxpw"
-        # The validation ran against the data carrying the box account.
-        assert control_config.call_args.kwargs["data"][CONF_LOOM_BOX_USERNAME] == "boxadmin"
+        assert entry.data[CONF_LOOM_BOX_TOKEN] == _BOX_TOKEN
+        assert CONF_LOOM_TOKEN not in entry.data
+        # The validation ran against the data carrying the box token.
+        assert control_config.call_args.kwargs["data"][CONF_LOOM_BOX_TOKEN] == _BOX_TOKEN
 
-    async def test_switch_to_loom_drops_stale_box_account(self, hass: HomeAssistant) -> None:
-        """A CCU entry carrying a box account from an earlier loom life switches back without it."""
+    async def test_reauth_box_pairing_failure_stays_on_the_reauth_form(self, hass: HomeAssistant) -> None:
+        from openccu_loom_client import LoomBoxPairingError
+
+        entry = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="ABC123",
+            title="Box Loom",
+            version=DomainConfigFlow.VERSION,
+            data={CONF_BACKEND: BACKEND_LOOM, CONF_INSTANCE_NAME: "Box Loom", CONF_HOST: "box.local", **_LEGACY_BOX},
+        )
+        entry.add_to_hass(hass)
+        start = AsyncMock(side_effect=LoomBoxPairingError(message="off", code="pairing-off", status=403))
+        with patch(_START_BOX_PAIRING, start):
+            result = await entry.start_reauth_flow(hass)
+            result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+            result = await self._drain(hass, result)
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reauth_loom_box"
+        assert result["errors"] == {"base": "loom_box_pairing_off"}
+        assert entry.data[CONF_LOOM_BOX_USERNAME] == "boxadmin"
+
+    @pytest.mark.parametrize("box_data", [_LEGACY_BOX, _BOX], ids=["legacy box account", "refused box token"])
+    async def test_reauth_pairs_with_the_box(self, hass: HomeAssistant, box_data: dict[str, str]) -> None:
+        """Reauthentication of a box entry pairs with the box and replaces the credential."""
+        entry = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="ABC123",
+            title="Box Loom",
+            version=DomainConfigFlow.VERSION,
+            data={
+                CONF_BACKEND: BACKEND_LOOM,
+                CONF_INSTANCE_NAME: "Box Loom",
+                CONF_HOST: "box.local",
+                CONF_TLS: True,
+                CONF_VERIFY_TLS: True,
+                **box_data,
+            },
+        )
+        entry.add_to_hass(hass)
+        session = _FakePairingSession(result=_box_pair_result("approved", "olt_" + "f" * 32))
+        with (
+            patch(_START_BOX_PAIRING, AsyncMock(return_value=session)) as start,
+            patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
+        ):
+            result = await entry.start_reauth_flow(hass)
+            assert result["type"] == FlowResultType.FORM
+            assert result["step_id"] == "reauth_loom_box"
+            result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+            result = await self._drain(hass, result)
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+        assert start.await_args.kwargs["host"] == "box.local"
+        assert entry.data[CONF_LOOM_BOX_TOKEN] == "olt_" + "f" * 32
+        assert not set(entry.data) & {CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD}
+
+    async def test_rejected_box_pairing_returns_with_error(self, hass: HomeAssistant) -> None:
+        session = _FakePairingSession(result=_box_pair_result("rejected"))
+        with patch(_START_BOX_PAIRING, AsyncMock(return_value=session)):
+            result, _ = await self._submit_manual(hass, {CONF_LOOM_BOX: True}, drain=True)
+        assert result["errors"] == {"base": "pairing_rejected"}
+
+    async def test_setup_forms_show_the_box_switch(self, hass: HomeAssistant) -> None:
+        """Both loom setup forms carry the box switch and no box account fields."""
+        for schema in (get_loom_schema(data={}), get_loom_token_schema(data={})):
+            keys = {str(k.schema) for k in schema.schema}
+            assert CONF_LOOM_BOX in keys
+            assert not keys & {CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD, CONF_LOOM_BOX_TOKEN}
+
+    async def test_switch_to_loom_drops_stale_box_credentials(self, hass: HomeAssistant) -> None:
+        """A CCU entry carrying box credentials from an earlier loom life switches back without them."""
         existing = MockConfigEntry(
             domain=HMIP_DOMAIN,
             unique_id="ABC123",
             title=const.INSTANCE_NAME,
             version=DomainConfigFlow.VERSION,
-            data={CONF_INSTANCE_NAME: const.INSTANCE_NAME, CONF_HOST: "ccu.local", **_BOX},
+            data={CONF_INSTANCE_NAME: const.INSTANCE_NAME, CONF_HOST: "ccu.local", **_BOX, **_LEGACY_BOX},
         )
         existing.add_to_hass(hass)
         result, _ = await self._submit_manual(hass, {CONF_LOOM_TOKEN: "tok"})
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "backend_switched"
-        assert CONF_LOOM_BOX_USERNAME not in existing.data
-        assert CONF_LOOM_BOX_PASSWORD not in existing.data
+        assert not set(existing.data) & {CONF_LOOM_BOX_TOKEN, CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD}
 
-    async def _submit_manual(self, hass: HomeAssistant, extra: dict[str, Any]) -> tuple[dict, AsyncMock]:
+    async def _drain(self, hass: HomeAssistant, result: dict) -> dict:
+        while result["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):
+            await hass.async_block_till_done()
+            result = await hass.config_entries.flow.async_configure(result["flow_id"])
+            await hass.async_block_till_done()
+        return result
+
+    async def _submit_manual(
+        self, hass: HomeAssistant, extra: dict[str, Any], *, drain: bool = False
+    ) -> tuple[dict, AsyncMock]:
         """Submit the manual loom form for a box host and return the result and the list_ccus mock."""
         user_input = {
             CONF_INSTANCE_NAME: "Box Loom",
@@ -4494,4 +4608,6 @@ class TestLoomBoxIngress:
             assert form["step_id"] == "loom"
             result = await hass.config_entries.flow.async_configure(form["flow_id"], user_input)
             await hass.async_block_till_done()
+            if drain:
+                result = await self._drain(hass, result)
         return result, loom_list

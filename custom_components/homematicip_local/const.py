@@ -89,12 +89,19 @@ CONF_LOOM_PAIR: Final = "loom_pair"
 CONF_LOOM_TOKEN: Final = "loom_token"  # noqa: S105 - config key name, not a secret
 CONF_LOOM_PORT: Final = "loom_port"
 # Reaching the daemon through an openccu-lite box's web server: the client
-# logs in with a box web account and the daemon resolves that box session
-# itself, so no daemon token is needed. A set box username switches the
-# entry into this mode; box port and ingress prefix stay at the client's
-# defaults (443/80 by the TLS flag, ``/addons/loom``).
+# sends a box API token holding the add-on's gate scope, obtained by pairing
+# with the box, and the daemon signs the request in with that token, so no
+# daemon token is needed (openccu-lite 1.0.0-dev.36). A set box token switches
+# the entry into this mode; box port and ingress prefix stay at the client's
+# defaults (443/80 by the TLS flag, ``/addons/loom``). CONF_LOOM_BOX is the
+# form switch that asks for this mode.
+CONF_LOOM_BOX: Final = "loom_box"
+CONF_LOOM_BOX_TOKEN: Final = "loom_box_token"  # noqa: S105 - config key name, not a secret
+# The box web account an earlier release stored instead of a token. An entry
+# still carrying one is sent through reauthentication to pair with the box.
 CONF_LOOM_BOX_USERNAME: Final = "loom_box_username"
 CONF_LOOM_BOX_PASSWORD: Final = "loom_box_password"  # noqa: S105 - config key name, not a secret
+LEGACY_LOOM_BOX_KEYS: Final = (CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD)
 CONF_INTERFACE_ID: Final = "interface_id"
 CONF_JSON_PORT: Final = "json_port"
 CONF_LISTEN_ON_ALL_IP: Final = "listen_on_all_ip"

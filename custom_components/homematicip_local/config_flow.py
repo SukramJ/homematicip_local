@@ -86,8 +86,8 @@ from .const import (
     CONF_INTERFACE,
     CONF_JSON_PORT,
     CONF_LISTEN_ON_ALL_IP,
-    CONF_LOOM_BOX_PASSWORD,
-    CONF_LOOM_BOX_USERNAME,
+    CONF_LOOM_BOX,
+    CONF_LOOM_BOX_TOKEN,
     CONF_LOOM_PAIR,
     CONF_LOOM_PORT,
     CONF_LOOM_TOKEN,
@@ -115,6 +115,7 @@ from .const import (
     DEFAULT_MQTT_PREFIX,
     DEFAULT_SYS_SCAN_INTERVAL,
     DOMAIN,
+    LEGACY_LOOM_BOX_KEYS,
 )
 from .control_unit import ControlConfig, ControlUnit, loom_box_kwargs, validate_config_and_get_system_information
 from .support import InvalidConfig
@@ -215,45 +216,41 @@ def get_domain_schema(data: ConfigType) -> vol.Schema:
 
 
 def _loom_box_schema_fields(*, data: ConfigType) -> dict[vol.Marker, Any]:
-    """Return the openccu-lite box account fields shared by every loom form.
+    """Return the openccu-lite box switch shared by the loom setup forms.
 
-    Filling in the box account routes the connection through the box's web
-    server; both fields stay optional so a direct daemon setup ignores them.
+    Switching it on routes the connection through the box's web server; the
+    box token that opens the box's gate is then obtained by pairing with the
+    box, so the form asks for nothing else.
     """
     return {
-        vol.Optional(CONF_LOOM_BOX_USERNAME, default=data.get(CONF_LOOM_BOX_USERNAME, "")): TEXT_SELECTOR,
-        vol.Optional(CONF_LOOM_BOX_PASSWORD, default=data.get(CONF_LOOM_BOX_PASSWORD, "")): PASSWORD_SELECTOR,
+        vol.Required(CONF_LOOM_BOX, default=bool(data.get(CONF_LOOM_BOX) or data.get(CONF_LOOM_BOX_TOKEN))): (
+            BOOLEAN_SELECTOR
+        ),
     }
 
 
-def _loom_box_input(*, user_input: ConfigType) -> dict[str, str] | None:
-    """Return the box account from a loom form as entry data, or ``None`` if half-filled.
+def _loom_box_data(*, user_input: ConfigType) -> dict[str, str]:
+    """Return the box token a loom setup form carries as entry data.
 
-    An empty dict means a direct daemon connection. A username without a
-    password (or the reverse) is rejected rather than guessed at: either
-    half on its own would silently pick the wrong connection path.
+    Empty for a direct daemon connection, and for box mode before the box
+    pairing delivered a token — the pairing re-enters the form step with the
+    token added, the way the daemon pairing re-enters it with a daemon token.
     """
-    username = (user_input.get(CONF_LOOM_BOX_USERNAME) or "").strip()
-    password = user_input.get(CONF_LOOM_BOX_PASSWORD) or ""
-    if not username and not password:
-        return {}
-    if not username or not password:
-        return None
-    return {CONF_LOOM_BOX_USERNAME: username, CONF_LOOM_BOX_PASSWORD: password}
+    if user_input.get(CONF_LOOM_BOX) and (token := user_input.get(CONF_LOOM_BOX_TOKEN)):
+        return {CONF_LOOM_BOX_TOKEN: token}
+    return {}
 
 
-def _loom_box_form_error(*, user_input: ConfigType, box: dict[str, str] | None) -> str | None:
-    """Return the form error a loom setup form's box fields produce, or ``None``.
+def _loom_box_form_error(*, user_input: ConfigType) -> str | None:
+    """Return the form error a loom setup form's box switch produces, or ``None``.
 
-    Half a box account never reaches the client. Pairing is refused in box
-    mode: it talks to the daemon's own port, which the box route is meant
-    to keep closed, and behind the box the box account already
-    authenticates, so there is nothing to pair for.
+    Behind the box the box token is the only credential: it occupies the one
+    header the box's gate reads, and the daemon signs the request in with it.
+    A daemon token beside it could not be sent, so it is refused rather than
+    silently dropped; the daemon pairing is simply not used in box mode.
     """
-    if box is None:
-        return "loom_box_incomplete"
-    if box and user_input.get(CONF_LOOM_PAIR) and not user_input.get(CONF_LOOM_TOKEN):
-        return "loom_box_pairing"
+    if user_input.get(CONF_LOOM_BOX) and user_input.get(CONF_LOOM_TOKEN):
+        return "loom_box_daemon_token"
     return None
 
 
@@ -309,7 +306,7 @@ def get_loom_options_schema(data: ConfigType) -> vol.Schema:
             vol.Required(CONF_TLS, default=data.get(CONF_TLS, True)): BOOLEAN_SELECTOR,
             vol.Required(CONF_VERIFY_TLS, default=data.get(CONF_VERIFY_TLS, True)): BOOLEAN_SELECTOR,
             vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, "")): PASSWORD_SELECTOR,
-            **_loom_box_schema_fields(data=data),
+            vol.Optional(CONF_LOOM_BOX_TOKEN, default=data.get(CONF_LOOM_BOX_TOKEN, "")): PASSWORD_SELECTOR,
         }
     )
 
@@ -377,7 +374,7 @@ async def _async_loom_list_ccus(
     Surfaces the loom client's connection failures as the aiohomematic
     exceptions the config flow already maps (``AuthFailure`` → invalid_auth,
     ``NoConnectionException`` → cannot_connect). ``box`` carries the
-    openccu-lite box account as entry data; when set, the listing goes
+    openccu-lite box token as entry data; when set, the listing goes
     through the box's web server.
     """
     list_ccus = await hass.async_add_import_executor_job(_import_loom_list_ccus)
@@ -391,9 +388,10 @@ async def _async_loom_list_ccus(
             **loom_box_kwargs(data=box or {}),
         )
     except Exception as exc:  # normalise loom-client errors to aiohomematic ones
-        from openccu_loom_client import LoomAuthError  # noqa: PLC0415
+        from openccu_loom_client import LoomAuthError, LoomBoxGateError  # noqa: PLC0415
 
-        if isinstance(exc, LoomAuthError):
+        # The box gate refusing the box token is a credential verdict too.
+        if isinstance(exc, (LoomAuthError, LoomBoxGateError)):
             raise AuthFailure(str(exc)) from exc
         # Not a connection failure, and mapping it to one sends the user off to
         # debug their network for a mismatch no network change can fix. It
@@ -941,8 +939,11 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         self._loom_ccus: list[dict[str, Any]] = []
         self._loom_discovered_daemons: list[dict[str, Any]] = []
         self._loom_skip_browse: bool = False
-        # openccu-lite box account as entry data; empty for a direct daemon.
+        # openccu-lite box token as entry data; empty for a direct daemon.
         self._loom_box: dict[str, str] = {}
+        # What the pairing step pairs with: the daemon itself, or the
+        # openccu-lite box (for the token that opens the box's gate).
+        self._pair_kind: str = "daemon"
         self._pair_origin: str = "loom"
         self._pair_pending_input: ConfigType | None = None
         self._pair_session: Any = None
@@ -1225,8 +1226,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         if self._pair_error_key is not None:
             errors["base"], self._pair_error_key = self._pair_error_key, None
-        box = _loom_box_input(user_input=user_input) if user_input is not None else {}
-        box_error = _loom_box_form_error(user_input=user_input, box=box) if user_input is not None else None
+        box = _loom_box_data(user_input=user_input) if user_input is not None else {}
+        box_error = _loom_box_form_error(user_input=user_input) if user_input is not None else None
         if user_input is not None and box_error is not None:
             # Re-show the form with what was typed.
             errors["base"] = box_error
@@ -1244,16 +1245,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             }
             if (port := user_input.get(CONF_LOOM_PORT)) is not None:
                 self.data[CONF_LOOM_PORT] = int(port)
-            self.data.update(box or {})
-            if token := user_input.get(CONF_LOOM_TOKEN):
-                self.data[CONF_LOOM_TOKEN] = token
-            elif user_input.get(CONF_LOOM_PAIR):
-                # Pair with the daemon instead of pasting a token: the
-                # pair step obtains one and re-dispatches this very step
-                # with it, so validation stays a single code path.
-                self._pair_origin = "loom"
-                self._pair_pending_input = dict(user_input)
-                return await self.async_step_loom_pair()
+            if (pairing := await self._async_loom_credentials(user_input=user_input, box=box)) is not None:
+                return pairing
             try:
                 await ControlConfig(hass=self.hass, entry_id="validate", data=self.data).check_config()
                 ccus = await _async_loom_list_ccus(
@@ -1291,7 +1284,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                     # setups get the same serial-keyed dedup and in-place
                     # backend switch as discovered daemons.
                     self._loom_token = self.data.get(CONF_LOOM_TOKEN)
-                    self._loom_box = box or {}
+                    self._loom_box = box
                     self._loom_enable_sub_devices = self.data[CONF_ADVANCED_CONFIG][CONF_ENABLE_SUB_DEVICES]
                     self._loom_instance_name = user_input[CONF_INSTANCE_NAME]
                     self._loom_discovery = {
@@ -1312,13 +1305,18 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_loom_pair(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
-        """Pair with the daemon: show the six-digit code, wait for approval.
+        """Pair with the daemon or the openccu-lite box: show the code, wait for approval.
 
-        The daemon's administrator types the displayed code on its tokens
-        panel (the daemon's ADR 0076); the approved token then re-enters
-        the origin step exactly as a pasted one would.
+        With the daemon, its administrator types the displayed code on its
+        tokens panel (the daemon's ADR 0076). With the box, the box's
+        administrator compares the code on the box's status page and approves
+        a token for the add-on's pages (openccu-lite 1.0.0-dev.36). Either
+        approved token then re-enters the origin step exactly as a pasted one
+        would.
         """
         del user_input
+        if self._pair_kind == "box":
+            return await self._async_step_box_pair()
         from openccu_loom_client import (  # noqa: PLC0415 - config flow renders without the package
             LoomPairingNotLocalError,
             LoomPairingOffError,
@@ -1379,8 +1377,13 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         if result is None or result.state != "approved" or not result.token:
             key = "pairing_expired" if result is not None and result.state == "expired" else "pairing_rejected"
             return await self._pair_return_to_origin(error_key=key)
+        if self._pair_origin == "reauth":
+            return self._async_finish_box_reauth(box_token=result.token)
         pending = dict(self._pair_pending_input or {})
-        pending[CONF_LOOM_TOKEN] = result.token
+        if self._pair_kind == "box":
+            pending[CONF_LOOM_BOX_TOKEN] = result.token
+        else:
+            pending[CONF_LOOM_TOKEN] = result.token
         pending[CONF_LOOM_PAIR] = False
         self._pair_pending_input = None
         if self._pair_origin == "loom_token":
@@ -1451,17 +1454,19 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         if self._pair_error_key is not None:
             errors["base"], self._pair_error_key = self._pair_error_key, None
-        box = _loom_box_input(user_input=user_input) if user_input is not None else {}
-        box_error = _loom_box_form_error(user_input=user_input, box=box) if user_input is not None else None
+        box = _loom_box_data(user_input=user_input) if user_input is not None else {}
+        box_error = _loom_box_form_error(user_input=user_input) if user_input is not None else None
         if user_input is not None and box_error is not None:
             errors["base"] = box_error
         elif user_input is not None:
             token = user_input.get(CONF_LOOM_TOKEN) or ""
             self._loom_enable_sub_devices = user_input.get(CONF_ENABLE_SUB_DEVICES, DEFAULT_LOOM_ENABLE_SUB_DEVICES)
-            if not token and user_input.get(CONF_LOOM_PAIR):
-                self._pair_origin = "loom_token"
-                self._pair_pending_input = dict(user_input)
-                return await self.async_step_loom_pair()
+            if user_input.get(CONF_LOOM_BOX) and not box:
+                # Kept so a failed pairing re-renders the form with the switch on.
+                self._loom_discovery[CONF_LOOM_BOX] = True
+                return await self._async_start_pairing(kind="box", origin="loom_token", user_input=user_input)
+            if not token and not box and user_input.get(CONF_LOOM_PAIR):
+                return await self._async_start_pairing(kind="daemon", origin="loom_token", user_input=user_input)
             try:
                 ccus = await _async_loom_list_ccus(
                     self.hass,
@@ -1486,7 +1491,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "no_ccus"
                 else:
                     self._loom_token = token
-                    self._loom_box = box or {}
+                    self._loom_box = box
                     self._loom_ccus = ccus
                     return await self.async_step_loom_select_ccu()
         return self.async_show_form(
@@ -1577,6 +1582,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         if entry is None:
             return self.async_abort(reason="reauth_failed")
+        if _is_loom_box_entry(data=self.data):
+            return await self.async_step_reauth_loom_box()
 
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = _get_step_placeholders(STEP_REAUTH, TOTAL_STEPS_REAUTH)
@@ -1622,6 +1629,26 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=get_reauth_schema(self.data),
             errors=errors,
             description_placeholders=description_placeholders,
+        )
+
+    async def async_step_reauth_loom_box(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Pair with the openccu-lite box again for a token that opens its gate.
+
+        Reached when the box refused the entry's box token, and for an entry
+        from an earlier release that still holds a box web account instead of
+        a token. Confirming starts the box pairing; a failed pairing returns
+        here with its error.
+        """
+        errors: dict[str, str] = {}
+        if self._pair_error_key is not None:
+            errors["base"], self._pair_error_key = self._pair_error_key, None
+        elif user_input is not None:
+            return await self._async_start_pairing(kind="box", origin="reauth", user_input={})
+        return self.async_show_form(
+            step_id="reauth_loom_box",
+            data_schema=vol.Schema({}),
+            errors=errors,
+            description_placeholders={CONF_HOST: self.data.get(CONF_HOST, "")},
         )
 
     async def async_step_reconfigure(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
@@ -1954,10 +1981,11 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             # back is lossless; the reload re-keys the entities via the
             # unique_id migration in __init__.
             switched = dict(existing_entry.data)
-            # A box account left over from an earlier loom life would route
-            # this connection through the box although the user set it up
-            # directly; the box keys always reflect this flow's choice.
-            for box_key in (CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD):
+            # A box token (or box account) left over from an earlier loom
+            # life would route this connection through the box although the
+            # user set it up directly; the box keys always reflect this
+            # flow's choice.
+            for box_key in (CONF_LOOM_BOX_TOKEN, *LEGACY_LOOM_BOX_KEYS):
                 switched.pop(box_key, None)
             switched.update(data)
             # The instance name keys entity naming - keep it stable.
@@ -1972,6 +2000,39 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 entry=existing_entry, data=switched, reason="backend_switched"
             )
         return self.async_create_entry(title=instance_name, data=data)
+
+    @callback
+    def _async_finish_box_reauth(self, *, box_token: str) -> ConfigFlowResult:
+        """Store the newly paired box token, drop any box web account, and reload."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        if entry is None:
+            return self.async_abort(reason="reauth_failed")
+        data = {key: value for key, value in self.data.items() if key not in LEGACY_LOOM_BOX_KEYS}
+        data[CONF_LOOM_BOX_TOKEN] = box_token
+        # The box token is the only credential behind the box.
+        data.pop(CONF_LOOM_TOKEN, None)
+        return self._async_update_reload_and_abort_entry(entry=entry, data=data, reason="reauth_successful")
+
+    async def _async_loom_credentials(self, *, user_input: ConfigType, box: dict[str, str]) -> ConfigFlowResult | None:
+        """Put the manual loom form's credential into ``self.data``, or start the pairing that obtains it.
+
+        Either pairing re-dispatches the loom step with the obtained token, so
+        validation stays a single code path; ``None`` means the credential is
+        in place and the step goes on to validate.
+        """
+        if user_input.get(CONF_LOOM_BOX) and not box:
+            # Through the box: pair with the box for the token that opens its
+            # gate. The switch is kept so a failed pairing re-renders the form
+            # with it on.
+            self.data[CONF_LOOM_BOX] = True
+            return await self._async_start_pairing(kind="box", origin="loom", user_input=user_input)
+        self.data.update(box)
+        if token := user_input.get(CONF_LOOM_TOKEN):
+            self.data[CONF_LOOM_TOKEN] = token
+        elif user_input.get(CONF_LOOM_PAIR) and not box:
+            # Pair with the daemon instead of pasting a token.
+            return await self._async_start_pairing(kind="daemon", origin="loom", user_input=user_input)
+        return None
 
     async def _async_run_detection(self) -> None:
         """Run backend detection as background task."""
@@ -2023,6 +2084,56 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("Backend detection failed: no backend found at host %s", self.data[CONF_HOST])
             self._detection_error = "detection_failed"
             self._detection_error_detail = self.data[CONF_HOST]
+
+    async def _async_start_pairing(self, *, kind: str, origin: str, user_input: ConfigType) -> ConfigFlowResult:
+        """Record what to pair with and where to return, then enter the pair step."""
+        self._pair_kind = kind
+        self._pair_origin = origin
+        self._pair_pending_input = dict(user_input)
+        return await self.async_step_loom_pair()
+
+    async def _async_step_box_pair(self) -> ConfigFlowResult:
+        """Pair with the openccu-lite box for a token that opens its gate."""
+        from openccu_loom_client import (  # noqa: PLC0415 - config flow renders without the package
+            LoomBoxPairingError,
+            PairingFingerprintMismatchError,
+            start_box_pairing,
+        )
+        from openccu_loom_client.exceptions import BaseLoomException  # noqa: PLC0415
+
+        if self._pair_task is None:
+            conn = self._pair_connection()
+            integration = await async_get_integration(self.hass, DOMAIN)
+            try:
+                # The box's own web server: its port follows the TLS flag
+                # (443/80), as for the connection through the box itself.
+                self._pair_session = await start_box_pairing(
+                    host=conn["host"],
+                    tls=conn["tls"],
+                    verify_tls=conn["verify_tls"],
+                    app="homematicip_local",
+                    app_version=str(integration.version or ""),
+                    instance=self.hass.config.location_name or "",
+                )
+            except LoomBoxPairingError as exc:
+                return await self._pair_return_to_origin(error_key=_box_pairing_error_key(code=exc.code))
+            except PairingFingerprintMismatchError:
+                return await self._pair_return_to_origin(error_key="pairing_mismatch")
+            except BaseLoomException:
+                return await self._pair_return_to_origin(error_key="cannot_connect")
+            self._pair_task = self.hass.async_create_task(self._pair_session.wait())
+
+        if not self._pair_task.done():
+            return self.async_show_progress(
+                step_id="loom_pair",
+                progress_action="loom_box_pairing",
+                progress_task=self._pair_task,
+                description_placeholders={
+                    "code": self._pair_session.code,
+                    CONF_HOST: self._pair_connection()["host"],
+                },
+            )
+        return self.async_show_progress_done(next_step_id="loom_pair_done")
 
     @callback
     def _async_update_entry_and_reload(self, *, entry: ConfigEntry, data: ConfigType) -> None:
@@ -2090,6 +2201,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         self._pair_session = None
         self._pair_task = None
         self._pair_error_key = error_key
+        if self._pair_origin == "reauth":
+            return await self.async_step_reauth_loom_box()
         # Re-render the form the pairing came from — never re-browse: the
         # user already sat on that form, and a fresh mDNS pick would both
         # swallow the error and throw them back to the daemon list.
@@ -2382,9 +2495,9 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {"invalid_items": ""}
 
-        if user_input is not None and _loom_box_input(user_input=user_input) is None:
-            # Half a box account never reaches the client.
-            errors["base"] = "loom_box_incomplete"
+        if user_input is not None and user_input.get(CONF_LOOM_BOX_TOKEN) and user_input.get(CONF_LOOM_TOKEN):
+            # Behind the box the box token is the only credential.
+            errors["base"] = "loom_box_daemon_token"
         elif user_input is not None:
             self.data = _get_loom_data(self.data, user_input=user_input)
             try:
@@ -2529,11 +2642,33 @@ def _get_loom_data(data: ConfigType, user_input: ConfigType) -> ConfigType:
         loom_data[CONF_LOOM_TOKEN] = token
     elif CONF_LOOM_TOKEN in loom_data:
         del loom_data[CONF_LOOM_TOKEN]
-    # A cleared box account switches back to the direct daemon connection.
-    loom_data.pop(CONF_LOOM_BOX_USERNAME, None)
-    loom_data.pop(CONF_LOOM_BOX_PASSWORD, None)
-    loom_data.update(_loom_box_input(user_input=user_input) or {})
+    # A cleared box token switches back to the direct daemon connection; a
+    # box web account from an earlier release goes either way.
+    for box_key in (CONF_LOOM_BOX_TOKEN, *LEGACY_LOOM_BOX_KEYS):
+        loom_data.pop(box_key, None)
+    if box_token := user_input.get(CONF_LOOM_BOX_TOKEN):
+        loom_data[CONF_LOOM_BOX_TOKEN] = box_token
     return loom_data
+
+
+def _is_loom_box_entry(*, data: ConfigType) -> bool:
+    """Return whether a loom entry reaches the daemon through an openccu-lite box.
+
+    True for a box token, and for the box web account an earlier release
+    stored instead of one.
+    """
+    if data.get(CONF_BACKEND) != BACKEND_LOOM:
+        return False
+    return bool(data.get(CONF_LOOM_BOX_TOKEN)) or any(data.get(key) for key in LEGACY_LOOM_BOX_KEYS)
+
+
+def _box_pairing_error_key(*, code: str) -> str:
+    """Return the form error key for an openccu-lite box's pairing refusal code."""
+    return {
+        "pairing-off": "loom_box_pairing_off",
+        "not-local": "loom_box_pairing_not_local",
+        "invalid": "loom_box_pairing_invalid",
+    }.get(code, "loom_box_pairing_refused")
 
 
 def _update_loom_advanced_settings_input(data: ConfigType, advanced_input: ConfigType) -> None:

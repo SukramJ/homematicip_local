@@ -2196,3 +2196,38 @@ class TestStaleIssueCleanup:
             SystemStatusChangedEvent(timestamp=datetime.now(), connection_state=(self._INTERFACE_ID, False)),
         )
         return get_issue_id(entry_id=entry.entry_id, issue_type=ISSUE_TYPE_CONNECTION, interface_id=self._INTERFACE_ID)
+
+
+class TestLegacyLoomBoxAccountTriggersReauth:
+    """A loom entry still holding a box web account pairs with the box before it connects.
+
+    The client reaches an openccu-lite box with a box token now; without one the
+    entry would silently connect to the box host directly. Setup refuses it and
+    starts reauthentication, which pairs with the box.
+    """
+
+    async def test_setup_starts_reauth_without_building_a_control_unit(self, hass: HomeAssistant) -> None:
+        entry = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="ABC123",
+            title="Box Loom",
+            version=DomainConfigFlow.VERSION,
+            data={
+                "backend": BACKEND_LOOM,
+                "instance_name": "Box Loom",
+                "host": "box.local",
+                "loom_box_username": "boxadmin",
+                "loom_box_password": "boxpw",
+            },
+        )
+        entry.add_to_hass(hass)
+        with patch(
+            "custom_components.homematicip_local.control_unit.ControlConfig.create_control_unit"
+        ) as create_control_unit:
+            result = await hass.config_entries.async_setup(entry.entry_id)
+            await hass.async_block_till_done()
+        assert result is False
+        assert entry.state == ConfigEntryState.SETUP_ERROR
+        create_control_unit.assert_not_called()
+        flows = hass.config_entries.flow.async_progress_by_handler(HMIP_DOMAIN)
+        assert [f["context"]["source"] for f in flows] == ["reauth"]

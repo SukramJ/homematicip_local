@@ -1,34 +1,45 @@
 """Tests for the openccu-loom box-ingress connection in ControlConfig.
 
-A loom entry carrying an openccu-lite box account must hand that account to
+A loom entry carrying an openccu-lite box token must hand that token to
 openccu-loom-client's compat ``CentralConfig`` and ``check_config`` as their
-``box_*`` keywords; a direct daemon entry must hand over none.
+``box_*`` keyword; a direct daemon entry must hand over none, and so must an
+entry still holding a box web account from an earlier release (it is sent
+through reauthentication instead).
 """
 
 from __future__ import annotations
 
 import inspect
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from aiohomematic.exceptions import AuthFailure
 from custom_components.homematicip_local.const import (
     BACKEND_LOOM,
     CONF_BACKEND,
     CONF_INSTANCE_NAME,
     CONF_LOOM_BOX_PASSWORD,
+    CONF_LOOM_BOX_TOKEN,
     CONF_LOOM_BOX_USERNAME,
     CONF_LOOM_TOKEN,
     CONF_TLS,
 )
-from custom_components.homematicip_local.control_unit import ControlConfig, loom_box_kwargs
+from custom_components.homematicip_local.control_unit import (
+    BaseControlUnit,
+    ControlConfig,
+    is_loom_box_gate_error,
+    loom_box_kwargs,
+)
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 _CU = "custom_components.homematicip_local.control_unit"
-_BOX_DATA = {CONF_LOOM_BOX_USERNAME: "boxadmin", CONF_LOOM_BOX_PASSWORD: "boxpw"}
-_BOX_KWARGS = {"box_username": "boxadmin", "box_password": "boxpw"}
+_BOX_TOKEN = "olt_0123456789abcdef0123456789abcdef"
+_BOX_DATA = {CONF_LOOM_BOX_TOKEN: _BOX_TOKEN}
+_BOX_KWARGS = {"box_token": _BOX_TOKEN}
 
 
 def _loom_data(**extra: Any) -> dict[str, Any]:
@@ -44,7 +55,7 @@ def _loom_data(**extra: Any) -> dict[str, Any]:
 class TestLoomBoxKwargs:
     """The entry-data → client-keyword projection."""
 
-    def test_box_account_maps_to_box_kwargs(self) -> None:
+    def test_box_token_maps_to_box_kwargs(self) -> None:
         assert loom_box_kwargs(data=_loom_data(**_BOX_DATA)) == _BOX_KWARGS
 
     def test_client_accepts_every_emitted_keyword(self) -> None:
@@ -61,6 +72,10 @@ class TestLoomBoxKwargs:
 
     def test_direct_entry_maps_to_nothing(self) -> None:
         assert loom_box_kwargs(data=_loom_data(**{CONF_LOOM_TOKEN: "tok"})) == {}
+
+    def test_legacy_box_account_maps_to_nothing(self) -> None:
+        legacy = {CONF_LOOM_BOX_USERNAME: "boxadmin", CONF_LOOM_BOX_PASSWORD: "boxpw"}
+        assert loom_box_kwargs(data=_loom_data(**legacy)) == {}
 
 
 class TestControlConfigLoomBox:
@@ -102,3 +117,32 @@ class TestControlConfigLoomBox:
         kwargs = loom_central_config.call_args.kwargs
         assert {k: v for k, v in kwargs.items() if k.startswith("box_")} == expected
         assert kwargs["host"] == "box.local"
+
+
+class TestBoxGateError:
+    """Which loom-client errors send the entry through reauthentication."""
+
+    def test_box_gate_refusals_are_gate_errors(self) -> None:
+        from openccu_loom_client import LoomBoxGateError, LoomBoxTokenError
+
+        assert is_loom_box_gate_error(LoomBoxTokenError("revoked"))
+        assert is_loom_box_gate_error(LoomBoxGateError("no scope"))
+
+    def test_other_loom_errors_are_not(self) -> None:
+        from openccu_loom_client import LoomAuthError, LoomTransportError
+
+        assert not is_loom_box_gate_error(LoomTransportError("unreachable"))
+        assert not is_loom_box_gate_error(LoomAuthError(status=401, method="GET", url="x"))
+
+    async def test_start_central_turns_a_gate_refusal_into_auth_failure(self) -> None:
+        """The caller, not only the helper: a refused box token must reach setup as AuthFailure."""
+        from openccu_loom_client import LoomBoxTokenError, LoomTransportError
+
+        unit = SimpleNamespace(
+            _instance_name="box-loom", _central=SimpleNamespace(start=AsyncMock(side_effect=LoomBoxTokenError("401")))
+        )
+        with pytest.raises(AuthFailure):
+            await BaseControlUnit.start_central(unit)  # type: ignore[arg-type]
+        # Any other start failure keeps its old treatment: logged, not raised.
+        unit._central.start = AsyncMock(side_effect=LoomTransportError("unreachable"))
+        await BaseControlUnit.start_central(unit)  # type: ignore[arg-type]
