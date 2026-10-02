@@ -20,7 +20,8 @@
   the box later refuses the token —
   revoked, or without the add-on's scope — Home Assistant asks to
   reauthenticate, which pairs with the box again. Requires
-  openccu-loom-client 2026.10.3 and OpenCCU-Loom 0.84.0 (API 13.3.0).
+  openccu-loom-client 2026.10.4 and OpenCCU-Loom 0.84.1 (API 13.3.0);
+  0.84.1 is the daemon release that lets a program pair with it at all.
 - **openccu-loom: the daemon port and TLS hints are right.** The port
   field said a blank port means 8443 with TLS and 8080 without; the client
   uses 8119 either way. The TLS switch now explains that the daemon serves
@@ -29,7 +30,7 @@
 - **Fix: diagnostics no longer carry the openccu-loom API token.** The
   daemon bearer token of a loom entry was not on the redaction list, so a
   downloaded diagnostics file included it in clear. It is redacted now,
-  together with the new box user and box password.
+  together with the openccu-lite box token.
 - **openccu-loom: pair instead of pasting a token.** Both loom setup forms
   (manual and discovered) grow a "Pair with the daemon" switch: the flow
   shows a six-digit code, the daemon's administrator types it on the
@@ -69,9 +70,9 @@
 
 ### Dependencies
 
-#### Bump openccu-loom-client to `2026.10.3`
+#### Bump openccu-loom-client to `2026.10.4`
 
-- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It regenerates the wire bindings against daemon api 13.3.0 (openccu-loom 0.84.0) and brings the box-token ingress and box pairing the openccu-lite box connection above needs. Kept to one line: loom details stay out of scope while the backend is Beta
+- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It regenerates the wire bindings against daemon api 13.3.0 (openccu-loom 0.84.0), brings the box-token ingress and box pairing the openccu-lite box connection above needs, and reports an unreachable daemon during pairing as a connection error the setup form shows. Kept to one line: loom details stay out of scope while the backend is Beta
 
 #### Bump ruff to `0.16.10`
 
