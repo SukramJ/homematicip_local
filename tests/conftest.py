@@ -12,7 +12,7 @@ from pytest_homeassistant_custom_component.plugins import enable_custom_integrat
 import pytest_socket
 
 from aiohomematic.i18n import _reset_locale_for_testing
-from aiohomematic_test_support.const import FULL_SESSION_RANDOMIZED_CCU, FULL_SESSION_RANDOMIZED_PYDEVCCU
+from aiohomematic_test_support.const import FULL_SESSION_GODEVCCU, FULL_SESSION_RANDOMIZED_CCU
 from aiohomematic_test_support.mock import SessionPlayer, get_session_player
 from custom_components.homematicip_local.const import DOMAIN as HMIP_DOMAIN
 from custom_components.homematicip_local.control_unit import ControlConfig, ControlUnit
@@ -274,8 +274,8 @@ async def factory_homegear(
 
 @pytest.fixture
 async def session_player_from_full_session_homegear() -> SessionPlayer:
-    """Provide a SessionPlayer preloaded from the randomized full session JSON file."""
-    return await get_session_player(file_name=FULL_SESSION_RANDOMIZED_PYDEVCCU)
+    """Provide a SessionPlayer preloaded from the godevccu (homegear mode) session file."""
+    return await get_session_player(file_name=FULL_SESSION_GODEVCCU)
 
 
 @pytest.fixture
