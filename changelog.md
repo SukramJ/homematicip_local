@@ -70,6 +70,10 @@
 
 ### Dependencies
 
+#### Bump openccu-loom-client to `2026.10.5`
+
+- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It regenerates the wire bindings against daemon api 13.4.0 (openccu-loom 0.85.0), whose only surface change renames the simulator's backend value from `PyDevCCU` to `GoDevCCU` — a value the integration does not use. Kept to one line: loom details stay out of scope while the backend is Beta
+
 #### Bump openccu-loom-client to `2026.10.4`
 
 - Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It regenerates the wire bindings against daemon api 13.3.0 (openccu-loom 0.84.0), brings the box-token ingress and box pairing the openccu-lite box connection above needs, and reports an unreachable daemon during pairing as a connection error the setup form shows. Kept to one line: loom details stay out of scope while the backend is Beta
