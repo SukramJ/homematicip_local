@@ -82,6 +82,14 @@
 
 - The release adds CCU WebUI device images to the repository tree only — they are not part of the Python package — so nothing reaches this integration at runtime. Bumped so the manifest pin and the test requirement name the same version
 
+#### Bump aiohomematic to [2026.10.2](https://github.com/SukramJ/aiohomematic/compare/2026.9.4...2026.10.2)
+
+- **Fix: a device no longer loses every channel after a firmware update or a re-pairing.** When the CCU announced a changed device (`updateDevice`, `readdedDevice`, `replaceDevice`), aiohomematic dropped the device and its channels from its caches and fetched only the device level back. The device was then built without channels: in Home Assistant it kept its `update` entity and lost every state — window contacts, switches and heating groups alike. The loss was persisted and survived every restart, so a CCU update that announces changed device descriptions could strip a large part of an installation at once. The device is now fetched together with its channels
+
+- **An already damaged cache repairs itself.** Before devices are created from the cache, every device whose channels are not fully cached is fetched again from the CCU and the repaired cache is saved, so an installation that already lost channels recovers on the next start without deleting any cache file
+
+- aiohomematic develops and tests against the godevccu simulator instead of pydevccu now; its backend enum value for the simulator changed from `PyDevCCU` to `GoDevCCU`. The integration does not reference that value, so nothing changes at runtime
+
 #### Bump aiohomematic to [2026.9.4](https://github.com/SukramJ/aiohomematic/compare/2026.9.2...2026.9.4)
 
 - **Fix: BidCos-RF data points stayed on `restored` after a start.** The ReGa bulk fetch is the only source of an initial value on the interfaces without a per-parameter `getValue` fallback (BidCos-RF, VirtualDevices, CUxD, CCU-Jack), and its snapshot is taken once during `start_clients()` and expires after `MAX_CACHE_AGE`. Its consumer for any channel but 0 is the integration adding its entities, which happens after the platforms have been forwarded — in a real installation reliably later than that, so the snapshot was gone by then and the data point stayed unset for good. Covers were the visible case, because a shutter reports nothing until it is moved: `HM-LC-Bl1PBU-FM` blinds sat at `value_state=restored` with `current_position: 0` until they were operated by hand. The init path refreshes an expired snapshot now instead of giving up; the `getValue` fallback stays disabled
@@ -104,6 +112,7 @@
 
 ### Development
 
+- `aiohomematic-test-support` `2026.9.4` → `2026.10.2`, following the aiohomematic pin above. Its homegear session is recorded against godevccu now: `tests/conftest.py` loads `FULL_SESSION_GODEVCCU` (was `FULL_SESSION_RANDOMIZED_PYDEVCCU`), and every test on that session passes unchanged
 - `aiohomematic-test-support` `2026.9.2` → `2026.9.4`, following the aiohomematic pin above — CI runs against `requirements_test.txt`, so the two move together
 - `ruff` `0.16.6` → `0.16.7`, in the prek hook revision and in `requirements_test_pre_commit.txt`, which have to name the same version
 - `pylint` `4.0.9` → `4.1.1` in `requirements_test.txt`. The device-action schema test no longer reaches the schema library through `cv.vol`: Home Assistant 2026.10 no longer re-exports it from `config_validation`
