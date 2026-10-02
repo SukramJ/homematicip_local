@@ -12,13 +12,20 @@
   openccu-lite box": switched on, Home Assistant pairs with the box, the
   box's administrator compares the six-digit code on the box's status page
   and approves, and the entry keeps only the box token (scope
-  `addon:openccu-loom`, operator rights in the daemon). Host and TLS then
-  describe the box; the daemon port field is unused, and an API token
-  beside the box token is refused. The options flow takes a box token from
-  the box's token page instead. When the box later refuses the token —
+  `addon:openccu-loom`, operator rights in the daemon). A box token created
+  on the box's token page can be pasted in the setup form instead, and then
+  no pairing runs. Host and TLS then describe the box; the daemon port
+  field is unused, and an API token beside the box token is refused. The
+  options flow takes a box token from the box's token page as well. When
+  the box later refuses the token —
   revoked, or without the add-on's scope — Home Assistant asks to
   reauthenticate, which pairs with the box again. Requires
   openccu-loom-client 2026.10.3 and OpenCCU-Loom 0.84.0 (API 13.3.0).
+- **openccu-loom: the daemon port and TLS hints are right.** The port
+  field said a blank port means 8443 with TLS and 8080 without; the client
+  uses 8119 either way. The TLS switch now explains that the daemon serves
+  plain HTTP out of the box — with TLS on against it, the connection
+  failed with a cannot-connect error.
 - **Fix: diagnostics no longer carry the openccu-loom API token.** The
   daemon bearer token of a loom entry was not on the redaction list, so a
   downloaded diagnostics file included it in clear. It is redacted now,
