@@ -18,7 +18,7 @@
   the box's token page instead. When the box later refuses the token —
   revoked, or without the add-on's scope — Home Assistant asks to
   reauthenticate, which pairs with the box again. Requires
-  openccu-loom-client with box-token support and a daemon with API 13.3.0.
+  openccu-loom-client 2026.10.3 and OpenCCU-Loom 0.84.0 (API 13.3.0).
 - **Fix: diagnostics no longer carry the openccu-loom API token.** The
   daemon bearer token of a loom entry was not on the redaction list, so a
   downloaded diagnostics file included it in clear. It is redacted now,
@@ -62,9 +62,13 @@
 
 ### Dependencies
 
-#### Bump openccu-loom-client to `2026.10.2`
+#### Bump openccu-loom-client to `2026.10.3`
 
-- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It regenerates the wire bindings against daemon api 13.2.0 (openccu-loom 0.83.0) — nothing this integration calls changed shape — and adds the box-ingress keywords the openccu-lite box connection above needs. Kept to one line: loom details stay out of scope while the backend is Beta
+- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It regenerates the wire bindings against daemon api 13.3.0 (openccu-loom 0.84.0) and brings the box-token ingress and box pairing the openccu-lite box connection above needs. Kept to one line: loom details stay out of scope while the backend is Beta
+
+#### Bump ruff to `0.16.10`
+
+- Development only (pin and pre-commit rev). mypy stays at 2.3.1, the version Home Assistant core pins
 
 #### Bump openccu-data to `2026.9.1`
 
