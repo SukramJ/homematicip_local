@@ -4467,6 +4467,16 @@ class TestLoomBoxIngress:
         assert CONF_LOOM_TOKEN not in data
         assert not set(data) & {CONF_LOOM_BOX, CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD}
 
+    async def test_manual_form_with_a_pasted_box_token_skips_pairing(self, hass: HomeAssistant) -> None:
+        """A box token pasted in the setup form is used as is; no box pairing starts."""
+        start = AsyncMock()
+        with patch(_START_BOX_PAIRING, start):
+            result, loom_list = await self._submit_manual(hass, {CONF_LOOM_BOX: True, **_BOX})
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        start.assert_not_awaited()
+        assert loom_list.await_args.kwargs["box"] == _BOX
+        assert result["result"].data[CONF_LOOM_BOX_TOKEN] == _BOX_TOKEN
+
     async def test_options_connection_box_token(self, hass: HomeAssistant) -> None:
         """The options flow persists a pasted box token and refuses a daemon token beside it."""
         entry = TestOptionsFlowLoom()._loom_entry()
@@ -4553,12 +4563,12 @@ class TestLoomBoxIngress:
             result, _ = await self._submit_manual(hass, {CONF_LOOM_BOX: True}, drain=True)
         assert result["errors"] == {"base": "pairing_rejected"}
 
-    async def test_setup_forms_show_the_box_switch(self, hass: HomeAssistant) -> None:
-        """Both loom setup forms carry the box switch and no box account fields."""
+    async def test_setup_forms_show_the_box_switch_and_token(self, hass: HomeAssistant) -> None:
+        """Both loom setup forms carry the box switch and a box token field, no box account fields."""
         for schema in (get_loom_schema(data={}), get_loom_token_schema(data={})):
             keys = {str(k.schema) for k in schema.schema}
-            assert CONF_LOOM_BOX in keys
-            assert not keys & {CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD, CONF_LOOM_BOX_TOKEN}
+            assert {CONF_LOOM_BOX, CONF_LOOM_BOX_TOKEN} <= keys
+            assert not keys & {CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD}
 
     async def test_switch_to_loom_drops_stale_box_credentials(self, hass: HomeAssistant) -> None:
         """A CCU entry carrying box credentials from an earlier loom life switches back without them."""

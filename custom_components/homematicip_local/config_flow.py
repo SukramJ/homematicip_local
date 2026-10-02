@@ -216,25 +216,28 @@ def get_domain_schema(data: ConfigType) -> vol.Schema:
 
 
 def _loom_box_schema_fields(*, data: ConfigType) -> dict[vol.Marker, Any]:
-    """Return the openccu-lite box switch shared by the loom setup forms.
+    """Return the openccu-lite box fields shared by the loom setup forms.
 
-    Switching it on routes the connection through the box's web server; the
-    box token that opens the box's gate is then obtained by pairing with the
-    box, so the form asks for nothing else.
+    Switching the box on routes the connection through the box's web server.
+    The box token that opens the box's gate is either pasted — one created on
+    the box's token page with the add-on's scope — or, left empty, obtained by
+    pairing with the box.
     """
     return {
         vol.Required(CONF_LOOM_BOX, default=bool(data.get(CONF_LOOM_BOX) or data.get(CONF_LOOM_BOX_TOKEN))): (
             BOOLEAN_SELECTOR
         ),
+        vol.Optional(CONF_LOOM_BOX_TOKEN, default=""): PASSWORD_SELECTOR,
     }
 
 
 def _loom_box_data(*, user_input: ConfigType) -> dict[str, str]:
     """Return the box token a loom setup form carries as entry data.
 
-    Empty for a direct daemon connection, and for box mode before the box
-    pairing delivered a token — the pairing re-enters the form step with the
-    token added, the way the daemon pairing re-enters it with a daemon token.
+    Empty for a direct daemon connection, and for box mode when no token was
+    pasted and the box pairing has not delivered one yet — the pairing
+    re-enters the form step with the token added, the way the daemon pairing
+    re-enters it with a daemon token.
     """
     if user_input.get(CONF_LOOM_BOX) and (token := user_input.get(CONF_LOOM_BOX_TOKEN)):
         return {CONF_LOOM_BOX_TOKEN: token}

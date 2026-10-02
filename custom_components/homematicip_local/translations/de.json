@@ -134,8 +134,9 @@
                     "host": "Daemon-Hostname/IP", 
                     "instance_name": "Name der Integrations-Instanz", 
                     "loom_box": "Über eine openccu-lite-Box", 
+                    "loom_box_token": "openccu-lite-Box-Token (optional)", 
                     "loom_pair": "Mit dem Daemon koppeln (zeigt einen Code)", 
-                    "loom_port": "Daemon-Port (leer = 8443 TLS / 8080 unverschlüsselt)", 
+                    "loom_port": "Daemon-Port (leer = 8119)", 
                     "loom_token": "API-Bearer-Token", 
                     "sub_devices_enabled": "Untergeräte-Entitäten erstellen", 
                     "tls": "TLS verwenden (HTTPS/WSS)", 
@@ -143,9 +144,11 @@
                 }, 
                 "data_description": {
                     "loom_box": "Nur wenn der Daemon auf einer openccu-lite-Box läuft (openccu-lite 1.0.0-dev.36 oder neuer): Die Verbindung läuft dann über den Webserver der Box (Pfad /addons/loom/ auf der Box), und Home Assistant koppelt sich mit der Box für ein Token, das ihn öffnet — der Administrator der Box bestätigt die Anfrage auf der Statusseite der Box. Der Host ist dann die Box, TLS bezieht sich auf den Webserver der Box, und das API-Token bleibt leer. Gekoppelte Box-Tokens haben Operator-Rechte.", 
+                    "loom_box_token": "Nur mit eingeschaltetem Box-Schalter: ein API-Token der Box mit dem Scope addon:openccu-loom (oder Vollzugriff), angelegt auf der Token-Seite der Box. Leer lassen, um dich stattdessen mit der Box zu koppeln.", 
                     "loom_pair": "Statt ein Token einzufügen: Der Daemon zeigt hier einen sechsstelligen Code, den du in dessen Weboberfläche unter Einstellungen → API-Tokens eintippst. Gekoppelte Tokens haben Operator-Rechte; für Backups, Systemupdate und Geräte-Löschen ein Admin-Token einfügen.", 
                     "loom_port": "Wird bei der Verbindung über eine openccu-lite-Box nicht verwendet: Dann gilt der Port des Box-Webservers (443 mit TLS, 80 ohne).", 
-                    "sub_devices_enabled": "Teilt Geräte mit mehreren Kanalgruppen in ein Hauptgerät mit Untergeräten auf. Entitäten werden basierend auf ihrer Kanalgruppe dem entsprechenden Untergerät zugeordnet."
+                    "sub_devices_enabled": "Teilt Geräte mit mehreren Kanalgruppen in ein Hauptgerät mit Untergeräten auf. Entitäten werden basierend auf ihrer Kanalgruppe dem entsprechenden Untergerät zugeordnet.", 
+                    "tls": "Nur wenn der Daemon HTTPS anbietet (ein Zertifikat ist in seinen north.rest.tls-Einstellungen eingerichtet). Ab Werk spricht der Daemon unverschlüsseltes HTTP auf 8119; mit eingeschaltetem TLS schlägt die Verbindung dann fehl. Über eine openccu-lite-Box bezieht sich TLS stattdessen auf den Webserver der Box."
                 }, 
                 "description": "**Beta:** Das openccu-loom-Backend befindet sich noch in Erprobung – die direkte CCU-Verbindung bleibt der empfohlene Weg.\n\nMit einem openccu-loom-Daemon verbinden. Der Daemon verwaltet CCU-Verbindung, Interfaces und Callbacks.", 
                 "title": "OpenCCU-Loom-Daemon (Beta)"
@@ -167,12 +170,14 @@
             "loom_token": {
                 "data": {
                     "loom_box": "Über eine openccu-lite-Box", 
+                    "loom_box_token": "openccu-lite-Box-Token (optional)", 
                     "loom_pair": "Mit dem Daemon koppeln (zeigt einen Code)", 
                     "loom_token": "API-Bearer-Token", 
                     "sub_devices_enabled": "Untergeräte-Entitäten erstellen"
                 }, 
                 "data_description": {
                     "loom_box": "Nur wenn der Daemon auf einer openccu-lite-Box läuft (openccu-lite 1.0.0-dev.36 oder neuer): Die Verbindung läuft dann über den Webserver der Box (Pfad /addons/loom/ auf der Box), und Home Assistant koppelt sich mit der Box für ein Token, das ihn öffnet — der Administrator der Box bestätigt die Anfrage auf der Statusseite der Box. Der Host ist dann die Box, TLS bezieht sich auf den Webserver der Box, und das API-Token bleibt leer. Gekoppelte Box-Tokens haben Operator-Rechte.", 
+                    "loom_box_token": "Nur mit eingeschaltetem Box-Schalter: ein API-Token der Box mit dem Scope addon:openccu-loom (oder Vollzugriff), angelegt auf der Token-Seite der Box. Leer lassen, um dich stattdessen mit der Box zu koppeln.", 
                     "loom_pair": "Statt ein Token einzufügen: Der Daemon zeigt hier einen sechsstelligen Code, den du in dessen Weboberfläche unter Einstellungen → API-Tokens eintippst. Gekoppelte Tokens haben Operator-Rechte; für Backups, Systemupdate und Geräte-Löschen ein Admin-Token einfügen.", 
                     "sub_devices_enabled": "Teilt Geräte mit mehreren Kanalgruppen in ein Hauptgerät mit Untergeräten auf. Entitäten werden basierend auf ihrer Kanalgruppe dem entsprechenden Untergerät zugeordnet."
                 }, 
@@ -796,14 +801,15 @@
                 "data": {
                     "host": "Daemon-Hostname/IP", 
                     "loom_box_token": "openccu-lite-Box-Token", 
-                    "loom_port": "Daemon-Port (leer = 8443 TLS / 8080 unverschlüsselt)", 
+                    "loom_port": "Daemon-Port (leer = 8119)", 
                     "loom_token": "API-Bearer-Token", 
                     "tls": "TLS verwenden (HTTPS/WSS)", 
                     "verify_tls": "TLS-Zertifikat prüfen"
                 }, 
                 "data_description": {
                     "loom_box_token": "Nur wenn der Daemon auf einer openccu-lite-Box läuft: ein API-Token der Box mit dem Scope addon:openccu-loom (oder Vollzugriff), von der Token-Seite der Box. Die Verbindung läuft dann über den Webserver der Box, und das API-Token bleibt leer. Leeren, um dich direkt mit dem Daemon zu verbinden. Um dich stattdessen mit der Box zu koppeln, entferne die Integration und füge sie neu hinzu.", 
-                    "loom_port": "Wird bei der Verbindung über eine openccu-lite-Box nicht verwendet: Dann gilt der Port des Box-Webservers (443 mit TLS, 80 ohne)."
+                    "loom_port": "Wird bei der Verbindung über eine openccu-lite-Box nicht verwendet: Dann gilt der Port des Box-Webservers (443 mit TLS, 80 ohne).", 
+                    "tls": "Nur wenn der Daemon HTTPS anbietet (ein Zertifikat ist in seinen north.rest.tls-Einstellungen eingerichtet). Ab Werk spricht der Daemon unverschlüsseltes HTTP auf 8119; mit eingeschaltetem TLS schlägt die Verbindung dann fehl. Über eine openccu-lite-Box bezieht sich TLS stattdessen auf den Webserver der Box."
                 }, 
                 "description": "Mit einem openccu-loom-Daemon verbinden. Der Daemon verwaltet CCU-Verbindung, Interfaces und Callbacks.", 
                 "title": "OpenCCU-Loom-Daemon"
