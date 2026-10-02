@@ -5,18 +5,20 @@
 ### Integration
 
 - **openccu-loom: connect through an openccu-lite box.** A daemon running
-  on an openccu-lite box can now be reached through the box's web server
-  (`https://<box>/addons/loom/`), so the daemon port may stay firewalled.
-  Both loom setup forms (manual and discovered) and the options flow's
-  daemon connection grow an "openccu-lite box user" and "box password":
-  with a box web account (not the SSH root password) filled in, the flow
-  lists the CCUs through the box, the box login also signs in to the
-  daemon, and the API token may stay empty. Host and TLS then describe
-  the box; the daemon port field is unused. Filling in only one of the
-  two box fields is rejected with a clear error, and so is pairing in box
-  mode — pairing talks to the daemon port the box route keeps closed, and
-  the box account already signs the connection in. Requires
-  openccu-loom-client 2026.10.2.
+  on an openccu-lite box (openccu-lite 1.0.0-dev.36 or newer) can now be
+  reached through the box's web server (`https://<box>/addons/loom/`), so
+  the daemon port may stay firewalled — and no box password is stored.
+  Both loom setup forms (manual and discovered) grow a switch "Through an
+  openccu-lite box": switched on, Home Assistant pairs with the box, the
+  box's administrator compares the six-digit code on the box's status page
+  and approves, and the entry keeps only the box token (scope
+  `addon:openccu-loom`, operator rights in the daemon). Host and TLS then
+  describe the box; the daemon port field is unused, and an API token
+  beside the box token is refused. The options flow takes a box token from
+  the box's token page instead. When the box later refuses the token —
+  revoked, or without the add-on's scope — Home Assistant asks to
+  reauthenticate, which pairs with the box again. Requires
+  openccu-loom-client with box-token support and a daemon with API 13.3.0.
 - **Fix: diagnostics no longer carry the openccu-loom API token.** The
   daemon bearer token of a loom entry was not on the redaction list, so a
   downloaded diagnostics file included it in clear. It is redacted now,

@@ -48,6 +48,7 @@ from .const import (
     CONF_ENABLE_SYSVAR_SCAN,
     CONF_INSTANCE_NAME,
     CONF_INTERFACE,
+    CONF_LOOM_BOX_TOKEN,
     CONF_OPTIONAL_SETTINGS,
     CONF_SYS_SCAN_INTERVAL,
     CONF_UN_IGNORES,
@@ -61,6 +62,7 @@ from .const import (
     HMIP_LOCAL_PLATFORMS,
     ISSUE_TYPE_CALLBACK,
     ISSUE_TYPE_CONNECTION,
+    LEGACY_LOOM_BOX_KEYS,
 )
 from .control_unit import ControlConfig, ControlUnit, get_storage_directory
 from .device_icon import ICON_VIEW_REGISTERED_KEY, DeviceIconView
@@ -166,6 +168,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
     # and does not depend on the aiohomematic runtime version, so skip the
     # aiohomematic version gate for it.
     is_loom_backend = entry.data.get(CONF_BACKEND) == BACKEND_LOOM
+    if (
+        is_loom_backend
+        and not entry.data.get(CONF_LOOM_BOX_TOKEN)
+        and any(entry.data.get(key) for key in LEGACY_LOOM_BOX_KEYS)
+    ):
+        # An earlier release reached the openccu-lite box with a box web
+        # account; the client now needs a box API token instead. Without one
+        # the entry would silently connect to the box host directly, so it is
+        # sent through reauthentication, which pairs with the box.
+        raise ConfigEntryAuthFailed("The openccu-lite box connection needs pairing with the box")
     expected_version = await get_aiohomematic_version(hass=hass, domain=entry.domain, package_name="aiohomematic")
     # Only block when the installed aiohomematic is OLDER than the version this
     # release was built against. A newer (patch) version is fine and must not

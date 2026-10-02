@@ -17,6 +17,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.homematicip_local.const import (
     CONF_LOOM_BOX_PASSWORD,
+    CONF_LOOM_BOX_TOKEN,
     CONF_LOOM_BOX_USERNAME,
     CONF_LOOM_TOKEN,
     DOMAIN,
@@ -240,6 +241,7 @@ class TestLoomSecretsRedacted:
             data={
                 "host": "box.local",
                 CONF_LOOM_TOKEN: "secret-token",
+                CONF_LOOM_BOX_TOKEN: "olt_0123456789abcdef0123456789abcdef",
                 CONF_LOOM_BOX_USERNAME: "boxadmin",
                 CONF_LOOM_BOX_PASSWORD: "secret-box-password",
             },
@@ -259,6 +261,6 @@ class TestLoomSecretsRedacted:
 
         data = diag["config"]["data"]
         assert data["host"] == "box.local"
-        for key in (CONF_LOOM_TOKEN, CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD):
+        for key in (CONF_LOOM_TOKEN, CONF_LOOM_BOX_TOKEN, CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD):
             assert data[key] == "**REDACTED**", key
         assert "secret-box-password" not in repr(diag)
