@@ -5,9 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+from openccu_loom_client.compat.aiohomematic.const import LoomSystemInformation
 import pytest
 
-from aiohomematic.const import CCUType
+from aiohomematic.const import CCUType, SystemInformation
 from aiohomematic.exceptions import BaseHomematicException
 from custom_components.homematicip_local.update import (
     ATTR_FIRMWARE_UPDATE_STATE,
@@ -584,7 +585,7 @@ class TestAioHomematicHubUpdateInit:
         mock_data_point.full_name = "Hub Update"
 
         mock_cu = MagicMock()
-        mock_cu.central.system_information.ccu_type = CCUType.CCU
+        mock_cu.central.system_information = SystemInformation(ccu_type=CCUType.CCU)
         mock_cu.device_info = {"identifiers": {("homematicip_local", "hub")}}
 
         with patch("custom_components.homematicip_local.update._LOGGER"):
@@ -599,7 +600,7 @@ class TestAioHomematicHubUpdateInit:
         mock_data_point.full_name = "Hub Update"
 
         mock_cu = MagicMock()
-        mock_cu.central.system_information.ccu_type = CCUType.OPENCCU
+        mock_cu.central.system_information = SystemInformation(ccu_type=CCUType.OPENCCU)
         mock_cu.device_info = {"identifiers": {("homematicip_local", "hub")}}
 
         with patch("custom_components.homematicip_local.update._LOGGER"):
@@ -789,3 +790,56 @@ class TestAioHomematicHubUpdateBackup:
         await hub_update._async_create_backup()
 
         hub_update._cu.central.create_backup_and_download.assert_called_once()
+
+
+def _hub_update_for(system_information: SystemInformation) -> AioHomematicHubUpdate:
+    """Construct a hub update entity through its real __init__ for the given system information."""
+    mock_data_point = MagicMock()
+    mock_data_point.unique_id = "hub_123"
+    mock_data_point.full_name = "Hub Update"
+    mock_cu = MagicMock()
+    mock_cu.central.system_information = system_information
+    mock_cu.device_info = {"identifiers": {("homematicip_local", "hub")}}
+    return AioHomematicHubUpdate(control_unit=mock_cu, data_point=mock_data_point)
+
+
+class TestHubUpdateFeaturesFromSystemInformation:
+    """The hub update entity derives BACKUP from has_backup and PROGRESS from the OpenCCU type."""
+
+    @pytest.mark.parametrize("ccu_type", list(CCUType))
+    def test_aiohomematic_system_information_keeps_previous_features(self, ccu_type: CCUType) -> None:
+        """
+        A plain aiohomematic SystemInformation yields the same features as the former type-only rule.
+
+        aiohomematic defines has_backup as ccu_type == OPENCCU, so the ccu backend sees no change.
+        """
+        features = _hub_update_for(SystemInformation(ccu_type=ccu_type))._attr_supported_features
+        previous = (
+            UpdateEntityFeature.BACKUP | UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+            if ccu_type == CCUType.OPENCCU
+            else UpdateEntityFeature.INSTALL
+        )
+        assert features == previous
+
+    @pytest.mark.parametrize(
+        ("ccu_type", "backup_available", "expected"),
+        [
+            (
+                CCUType.OPENCCU,
+                True,
+                UpdateEntityFeature.BACKUP | UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS,
+            ),
+            (CCUType.OPENCCU, False, UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS),
+            (CCUType.OPENCCU_LITE, True, UpdateEntityFeature.BACKUP | UpdateEntityFeature.INSTALL),
+            (CCUType.OPENCCU_LITE, False, UpdateEntityFeature.INSTALL),
+            (CCUType.CCU, True, UpdateEntityFeature.BACKUP | UpdateEntityFeature.INSTALL),
+            (CCUType.UNKNOWN, False, UpdateEntityFeature.INSTALL),
+            (CCUType.UNKNOWN, None, UpdateEntityFeature.INSTALL),
+        ],
+    )
+    def test_loom_system_information(
+        self, ccu_type: CCUType, backup_available: bool | None, expected: UpdateEntityFeature
+    ) -> None:
+        """A loom central offers BACKUP exactly when the daemon reports the backup feature."""
+        system_information = LoomSystemInformation(ccu_type=ccu_type, backup_available=backup_available)
+        assert _hub_update_for(system_information)._attr_supported_features == expected

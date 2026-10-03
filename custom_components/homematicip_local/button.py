@@ -123,8 +123,11 @@ async def async_setup_entry(
         data_points=control_unit.get_new_data_points(data_point_type=DataPointType.ALARM_CONTROL_PANEL)
     )
 
-    # Add hub-level backup button
-    async_add_entities([HmipLocalCreateBackupButton(control_unit=control_unit)])
+    # Hub-level backup button, only for a system that can create a backup. For
+    # aiohomematic's own SystemInformation that is ccu_type == OPENCCU; an
+    # openccu-loom central reports it from the daemon's per-central feature map.
+    if control_unit.central.system_information.has_backup:
+        async_add_entities([HmipLocalCreateBackupButton(control_unit=control_unit)])
 
 
 class AioHomematicButton(AioHomematicGenericEntity[DpButton], ButtonEntity):

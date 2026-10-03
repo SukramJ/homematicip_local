@@ -156,6 +156,7 @@ from .support import (
 
 if TYPE_CHECKING:
     from openccu_loom_client.compat.aiohomematic.central import CentralConfig as LoomCentralConfig
+    from openccu_loom_client.compat.aiohomematic.central.events import SystemInformationChangedEvent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -523,6 +524,19 @@ class ControlUnit(BaseControlUnit):
             event_key=None,
             handler=self._on_optimistic_rollback,
         )
+        if self._config.backend == BACKEND_LOOM:
+            # Only the loom backend re-reads system information at runtime;
+            # aiohomematic reads it once and has no such event. Imported lazily
+            # like every loom-client reference, so the ccu path does not need it.
+            from openccu_loom_client.compat.aiohomematic.central.events import (  # noqa: PLC0415
+                SystemInformationChangedEvent,
+            )
+
+            self._subscription_group.subscribe(
+                event_type=SystemInformationChangedEvent,
+                event_key=self._central.name,
+                handler=self._on_system_information_changed,
+            )
         self._async_add_central_to_device_registry()
         await super().start_central()
         # The central is available now. Standalone hub entities that key their
@@ -1399,6 +1413,34 @@ class ControlUnit(BaseControlUnit):
             event.reason,
             event.age_seconds,
         )
+
+    async def _on_system_information_changed(self, *, event: SystemInformationChangedEvent) -> None:
+        """
+        Reload the entry when the central's type or a capability moved (openccu-loom).
+
+        The platforms read system information once, when they create their
+        entities: the update entity's features, the backup button and the backup
+        agent all depend on it. A changed version or hostname leaves them as they
+        are, so it does not reload.
+        """
+        previous, current = event.previous, event.current
+        if (previous.ccu_type, previous.has_backup, previous.has_system_update) == (
+            current.ccu_type,
+            current.has_backup,
+            current.has_system_update,
+        ):
+            return
+        _LOGGER.info(
+            "System information of %s changed (type %s -> %s, backup %s -> %s, system update %s -> %s); reloading",
+            self._central.name,
+            previous.ccu_type,
+            current.ccu_type,
+            previous.has_backup,
+            current.has_backup,
+            previous.has_system_update,
+            current.has_system_update,
+        )
+        self._hass.config_entries.async_schedule_reload(self._entry_id)
 
     async def _on_system_status(self, event: SystemStatusChangedEvent) -> None:
         """Handle system status event from aiohomematic (detail-dependent logic)."""

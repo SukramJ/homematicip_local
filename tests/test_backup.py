@@ -8,8 +8,10 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from openccu_loom_client.compat.aiohomematic.const import LoomSystemInformation
 import pytest
 
+from aiohomematic.const import CCUType, SystemInformation
 from aiohomematic.exceptions import BaseHomematicException
 from custom_components.homematicip_local.backup import (
     CcuLocalBackupAgent,
@@ -17,6 +19,7 @@ from custom_components.homematicip_local.backup import (
     async_notify_backup_listeners,
     async_register_backup_agents_listener,
 )
+from custom_components.homematicip_local.const import BACKEND_CCU, BACKEND_LOOM
 from homeassistant.components.backup import AgentBackup, BackupAgentError, BackupNotFound
 from homeassistant.core import HomeAssistant
 
@@ -37,6 +40,7 @@ def _make_control_unit(
     control_unit.central.available = available
     control_unit.central.name = name
     control_unit.backup_directory = backup_directory
+    control_unit.central.system_information = SystemInformation(ccu_type=CCUType.OPENCCU)
     control_unit.central.create_backup_and_download = AsyncMock()
     return control_unit
 
@@ -74,6 +78,62 @@ def _make_agent_backup(
 
 class TestAsyncGetBackupAgents:
     """Tests for async_get_backup_agents."""
+
+    @pytest.mark.parametrize(
+        ("backend", "system_information", "offered"),
+        [
+            (BACKEND_LOOM, LoomSystemInformation(ccu_type=CCUType.OPENCCU_LITE, backup_available=True), True),
+            (BACKEND_LOOM, LoomSystemInformation(ccu_type=CCUType.OPENCCU_LITE, backup_available=False), False),
+            (BACKEND_LOOM, LoomSystemInformation(ccu_type=CCUType.OPENCCU, backup_available=False), False),
+            (BACKEND_LOOM, LoomSystemInformation(ccu_type=CCUType.UNKNOWN), False),
+            (BACKEND_CCU, SystemInformation(ccu_type=CCUType.OPENCCU), True),
+            (BACKEND_CCU, SystemInformation(ccu_type=CCUType.CCU), False),
+            (BACKEND_CCU, SystemInformation(ccu_type=CCUType.UNKNOWN), False),
+        ],
+        ids=[
+            "loom-lite-backup",
+            "loom-lite-no-backup",
+            "loom-openccu-no-backup",
+            "loom-unknown",
+            "ccu-openccu",
+            "ccu-original-ccu",
+            "ccu-unknown",
+        ],
+    )
+    async def test_agent_follows_has_backup(
+        self,
+        hass: HomeAssistant,
+        tmp_path: Path,
+        backend: str,
+        system_information: SystemInformation,
+        offered: bool,
+    ) -> None:
+        """An entry gets an agent if and only if its central's system_information.has_backup holds."""
+        control_unit = _make_control_unit(backup_directory=str(tmp_path))
+        control_unit.config.backend = backend
+        control_unit.central.system_information = system_information
+        entry = _make_entry(control_unit=control_unit)
+
+        with patch.object(hass.config_entries, "async_loaded_entries", return_value=[entry]):
+            agents = await async_get_backup_agents(hass)
+
+        assert [agent.unique_id for agent in agents] == (["test-entry-id"] if offered else [])
+
+    async def test_entry_without_backup_does_not_hide_others(self, hass: HomeAssistant, tmp_path: Path) -> None:
+        """An entry without backup is skipped while another entry still gets its agent."""
+        without_backup = _make_control_unit(backup_directory=str(tmp_path))
+        without_backup.central.system_information = SystemInformation(ccu_type=CCUType.CCU)
+        with_backup = _make_control_unit(backup_directory=str(tmp_path))
+        with_backup.central.system_information = SystemInformation(ccu_type=CCUType.OPENCCU)
+        entries = [
+            _make_entry(control_unit=without_backup, entry_id="ccu-entry"),
+            _make_entry(control_unit=with_backup, entry_id="openccu-entry"),
+        ]
+
+        with patch.object(hass.config_entries, "async_loaded_entries", return_value=entries):
+            agents = await async_get_backup_agents(hass)
+
+        assert [agent.unique_id for agent in agents] == ["openccu-entry"]
 
     async def test_returns_agent_per_entry(self, hass: HomeAssistant, tmp_path: Path) -> None:
         """Test that one agent is returned per loaded config entry."""

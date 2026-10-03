@@ -5,10 +5,12 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from copy import deepcopy
+from dataclasses import dataclass
+from enum import StrEnum
 import logging
 from pprint import pformat
 import time
-from typing import Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 from urllib.parse import urlparse
 
 import probatio as vol
@@ -120,6 +122,9 @@ from .const import (
 from .control_unit import ControlConfig, ControlUnit, loom_box_kwargs, validate_config_and_get_system_information
 from .support import InvalidConfig
 
+if TYPE_CHECKING:
+    from openccu_loom_client import DiscoveredDaemon
+
 # Step indicator constants for config flow
 STEP_CENTRAL: Final = "1"
 STEP_INTERFACE: Final = "2"
@@ -172,6 +177,15 @@ TITLE_BACKEND_LOOM: Final = "openccu-loom Beta"
 ZEROCONF_TYPE = "_openccu-loom._tcp.local."
 DEFAULT_LOOM_BASE_PATH = "/api/v1"
 CONF_LOOM_BASE_PATH = "loom_base_path"  # internal discovery-state key (not persisted)
+# Internal discovery-state keys for the daemon's mDNS self-description (not
+# persisted): its deployment kind and login-path names. Only set when the
+# record carries them — a daemon older than 0.86 sends none.
+CONF_LOOM_DEPLOY = "loom_deploy"
+CONF_LOOM_LOGIN_PATHS = "loom_login_paths"
+# Upper bound of one unauthenticated loom probe. On an openccu-lite box the
+# daemon's port drops packets, and the client's own request timeout (30 s)
+# would hold the setup form that long per probe.
+LOOM_PROBE_TIMEOUT_SECONDS: Final = 5.0
 CONF_LOOM_CCU = "serial"  # CCU-selection form field
 CONF_LOOM_DAEMON = "daemon"  # daemon-selection form field (active browse)
 LOOM_MANUAL_DAEMON = "__manual__"  # sentinel select value for manual entry
@@ -231,7 +245,96 @@ def _loom_box_schema_fields(*, data: ConfigType) -> dict[vol.Marker, Any]:
     }
 
 
-def _loom_box_data(*, user_input: ConfigType) -> dict[str, str]:
+class LoomLoginMode(StrEnum):
+    """Represents how a loom setup form lets the user sign in."""
+
+    #: The daemon sits behind an openccu-lite box: the box token is the only credential.
+    BOX = "box"
+    #: The daemon described itself: exactly the daemon login paths it offers.
+    DIRECT = "direct"
+    #: The daemon did not describe itself (older than 0.86): every credential field.
+    LEGACY = "legacy"
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class LoomLoginOffer:
+    """Represents the credential fields a loom setup form offers."""
+
+    mode: LoomLoginMode
+    daemon_token: bool = False
+    daemon_pairing: bool = False
+
+    @property
+    def can_authenticate(self) -> bool:
+        """Return whether the offer leaves the integration a way to sign in."""
+        return self.mode is not LoomLoginMode.DIRECT or self.daemon_token or self.daemon_pairing
+
+
+# Login-path names (the short form of the daemon's ``auth.<name>.v1``
+# capability tokens) this integration can sign in with, and the deployment
+# kind of a daemon running on an openccu-lite box.
+LOOM_LOGIN_BEARER: Final = "bearer"
+LOOM_LOGIN_PAIRING: Final = "pairing"
+LOOM_LOGIN_OCCULITE_TOKEN: Final = "occulite_token"  # noqa: S105 # nosec B105 - login-path name, not a secret
+LOOM_DEPLOY_LITE_ADDON: Final = "lite-addon"
+
+
+def loom_login_offer(*, deployment_kind: str | None, login_paths: frozenset[str], box_gate: bool) -> LoomLoginOffer:
+    """
+    Return which credential fields a loom setup form offers for what the daemon said.
+
+    Args:
+        deployment_kind: The daemon's ``deployment.kind``; ``None`` when it sent none.
+        login_paths: The short names of the daemon's login paths.
+        box_gate: Whether an openccu-lite box's gate answered instead of the daemon.
+
+    Returns:
+        Box only behind a box gate or on a ``lite-addon``; the daemon's own
+        token and pairing paths for a daemon that described itself; every
+        field for one that did not. An unknown deployment kind is not a box.
+    """
+    if box_gate or deployment_kind == LOOM_DEPLOY_LITE_ADDON:
+        return LoomLoginOffer(mode=LoomLoginMode.BOX)
+    described = deployment_kind is not None or bool(
+        login_paths & {LOOM_LOGIN_BEARER, LOOM_LOGIN_PAIRING, LOOM_LOGIN_OCCULITE_TOKEN}
+    )
+    if not described:
+        return LoomLoginOffer(mode=LoomLoginMode.LEGACY, daemon_token=True, daemon_pairing=True)
+    return LoomLoginOffer(
+        mode=LoomLoginMode.DIRECT,
+        daemon_token=LOOM_LOGIN_BEARER in login_paths,
+        daemon_pairing=LOOM_LOGIN_PAIRING in login_paths,
+    )
+
+
+def _loom_credential_fields(*, offer: LoomLoginOffer, data: ConfigType) -> dict[vol.Marker, Any]:
+    """Return the credential fields a loom setup form shows for ``offer``.
+
+    Box only is the box token alone — box mode is implied, and an empty token
+    starts the box pairing. A self-describing daemon gets exactly its token
+    and pairing paths; a daemon older than 0.86 every field incl. the box
+    switch.
+    """
+    if offer.mode is LoomLoginMode.BOX:
+        return {vol.Optional(CONF_LOOM_BOX_TOKEN, default=""): PASSWORD_SELECTOR}
+    fields: dict[vol.Marker, Any] = {}
+    if offer.daemon_token:
+        fields[vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, ""))] = PASSWORD_SELECTOR
+    if offer.daemon_pairing:
+        fields[vol.Required(CONF_LOOM_PAIR, default=False)] = BOOLEAN_SELECTOR
+    if offer.mode is LoomLoginMode.LEGACY:
+        fields.update(_loom_box_schema_fields(data=data))
+    return fields
+
+
+def _loom_box_selected(*, user_input: ConfigType, offer: LoomLoginOffer) -> bool:
+    """Return whether a submitted loom credentials form connects through an openccu-lite box."""
+    if offer.mode is LoomLoginMode.BOX:
+        return True
+    return offer.mode is LoomLoginMode.LEGACY and bool(user_input.get(CONF_LOOM_BOX))
+
+
+def _loom_box_data(*, user_input: ConfigType, offer: LoomLoginOffer) -> dict[str, str]:
     """Return the box token a loom setup form carries as entry data.
 
     Empty for a direct daemon connection, and for box mode when no token was
@@ -239,12 +342,12 @@ def _loom_box_data(*, user_input: ConfigType) -> dict[str, str]:
     re-enters the form step with the token added, the way the daemon pairing
     re-enters it with a daemon token.
     """
-    if user_input.get(CONF_LOOM_BOX) and (token := user_input.get(CONF_LOOM_BOX_TOKEN)):
+    if _loom_box_selected(user_input=user_input, offer=offer) and (token := user_input.get(CONF_LOOM_BOX_TOKEN)):
         return {CONF_LOOM_BOX_TOKEN: token}
     return {}
 
 
-def _loom_box_form_error(*, user_input: ConfigType) -> str | None:
+def _loom_box_form_error(*, user_input: ConfigType, offer: LoomLoginOffer) -> str | None:
     """Return the form error a loom setup form's box switch produces, or ``None``.
 
     Behind the box the box token is the only credential: it occupies the one
@@ -252,17 +355,18 @@ def _loom_box_form_error(*, user_input: ConfigType) -> str | None:
     A daemon token beside it could not be sent, so it is refused rather than
     silently dropped; the daemon pairing is simply not used in box mode.
     """
-    if user_input.get(CONF_LOOM_BOX) and user_input.get(CONF_LOOM_TOKEN):
+    if _loom_box_selected(user_input=user_input, offer=offer) and user_input.get(CONF_LOOM_TOKEN):
         return "loom_box_daemon_token"
     return None
 
 
 def get_loom_schema(data: ConfigType) -> vol.Schema:
-    """Return the openccu-loom daemon connection schema.
+    """Return the openccu-loom daemon connection schema of the manual setup.
 
-    The daemon owns interfaces, callback ports and CCU credentials, so
-    the user only supplies the daemon endpoint, a bearer token and the
-    sub-device toggle (enabled by default on the loom backend).
+    The daemon owns interfaces, callback ports and CCU credentials, so the
+    user only supplies the daemon endpoint and the sub-device toggle
+    (enabled by default on the loom backend). The credentials follow on
+    their own step, once the daemon has said which sign-in it offers.
     """
     return vol.Schema(
         {
@@ -271,9 +375,6 @@ def get_loom_schema(data: ConfigType) -> vol.Schema:
             vol.Optional(CONF_LOOM_PORT, default=data.get(CONF_LOOM_PORT, vol.UNDEFINED)): PORT_SELECTOR_OPTIONAL,
             vol.Required(CONF_TLS, default=data.get(CONF_TLS, True)): BOOLEAN_SELECTOR,
             vol.Required(CONF_VERIFY_TLS, default=data.get(CONF_VERIFY_TLS, True)): BOOLEAN_SELECTOR,
-            vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, "")): PASSWORD_SELECTOR,
-            vol.Required(CONF_LOOM_PAIR, default=False): BOOLEAN_SELECTOR,
-            **_loom_box_schema_fields(data=data),
             vol.Required(
                 CONF_ENABLE_SUB_DEVICES,
                 default=data.get(CONF_ADVANCED_CONFIG, {}).get(
@@ -298,34 +399,43 @@ def get_options_schema(data: ConfigType) -> vol.Schema:
 def get_loom_options_schema(data: ConfigType) -> vol.Schema:
     """Return the openccu-loom daemon connection schema for the options flow.
 
-    Mirrors :func:`get_loom_schema` without the (fixed) instance name: the
-    daemon owns interfaces, callbacks and CCU credentials, so only the daemon
-    endpoint and bearer token are editable.
+    The connection fields of :func:`get_loom_schema` without the (fixed)
+    instance name, plus the entry's own credential: the box token for an
+    entry that reaches the daemon through an openccu-lite box, the daemon
+    token otherwise. Switching between the two is not done here.
     """
+    if _is_loom_box_entry(data=data):
+        credential: dict[vol.Marker, Any] = {
+            vol.Optional(CONF_LOOM_BOX_TOKEN, default=data.get(CONF_LOOM_BOX_TOKEN, "")): PASSWORD_SELECTOR
+        }
+    else:
+        credential = {vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, "")): PASSWORD_SELECTOR}
     return vol.Schema(
         {
             vol.Required(CONF_HOST, default=data.get(CONF_HOST)): TEXT_SELECTOR,
             vol.Optional(CONF_LOOM_PORT, default=data.get(CONF_LOOM_PORT, vol.UNDEFINED)): PORT_SELECTOR_OPTIONAL,
             vol.Required(CONF_TLS, default=data.get(CONF_TLS, True)): BOOLEAN_SELECTOR,
             vol.Required(CONF_VERIFY_TLS, default=data.get(CONF_VERIFY_TLS, True)): BOOLEAN_SELECTOR,
-            vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, "")): PASSWORD_SELECTOR,
-            vol.Optional(CONF_LOOM_BOX_TOKEN, default=data.get(CONF_LOOM_BOX_TOKEN, "")): PASSWORD_SELECTOR,
+            **credential,
         }
     )
 
 
-def get_loom_token_schema(data: ConfigType) -> vol.Schema:
+def get_loom_credentials_schema(*, data: ConfigType, offer: LoomLoginOffer) -> vol.Schema:
+    """Return the credentials schema of the manual loom setup for what the daemon offers."""
+    return vol.Schema(_loom_credential_fields(offer=offer, data=data))
+
+
+def get_loom_token_schema(*, data: ConfigType, offer: LoomLoginOffer) -> vol.Schema:
     """Return the schema for a discovered openccu-loom daemon.
 
     Host / port / TLS come from the mDNS advertisement, so the user only
-    supplies the bearer token and the sub-device toggle (enabled by
-    default on the loom backend).
+    supplies the credential the daemon offers and the sub-device toggle
+    (enabled by default on the loom backend).
     """
     return vol.Schema(
         {
-            vol.Optional(CONF_LOOM_TOKEN, default=data.get(CONF_LOOM_TOKEN, "")): PASSWORD_SELECTOR,
-            vol.Required(CONF_LOOM_PAIR, default=False): BOOLEAN_SELECTOR,
-            **_loom_box_schema_fields(data=data),
+            **_loom_credential_fields(offer=offer, data=data),
             vol.Required(CONF_ENABLE_SUB_DEVICES, default=DEFAULT_LOOM_ENABLE_SUB_DEVICES): BOOLEAN_SELECTOR,
         }
     )
@@ -405,6 +515,64 @@ async def _async_loom_list_ccus(
     return result
 
 
+async def _async_probe_loom_offer(
+    *, host: str, port: int | None, tls: bool, verify_tls: bool, base_path: str
+) -> LoomLoginOffer:
+    """
+    Ask a daemon without a credential what it is and return the login offer its answer yields.
+
+    One unauthenticated ``GET <base_path>/info``, bounded by
+    :data:`LOOM_PROBE_TIMEOUT_SECONDS`. An openccu-lite box's gate answering
+    instead means box only. Raises the loom client's ``BaseLoomException``
+    subclasses when nothing usable answered in time — a probe that runs out
+    of time raises ``LoomTransportError``, as an unreachable daemon does.
+    """
+    from openccu_loom_client import LoomTransportError, ProbeOutcome, probe_daemon  # noqa: PLC0415
+
+    try:
+        async with asyncio.timeout(LOOM_PROBE_TIMEOUT_SECONDS):
+            probe = await probe_daemon(host=host, port=port, tls=tls, verify_tls=verify_tls, base_path=base_path)
+    except TimeoutError as exc:
+        msg = f"probe of {host}{base_path} got no answer within {LOOM_PROBE_TIMEOUT_SECONDS} s"
+        raise LoomTransportError(msg) from exc
+    if probe.reached is ProbeOutcome.BOX_GATE:
+        return loom_login_offer(deployment_kind=None, login_paths=frozenset(), box_gate=True)
+    return loom_login_offer(deployment_kind=probe.deployment_kind, login_paths=probe.login_paths, box_gate=False)
+
+
+def _loom_box_probe_base_path() -> str:
+    """Return the daemon's API base path behind an openccu-lite box's ingress (``/addons/loom/api/v1``)."""
+    from openccu_loom_client.config import DEFAULT_BASE_PATH, DEFAULT_BOX_INGRESS_PATH_PREFIX  # noqa: PLC0415
+
+    return f"{DEFAULT_BOX_INGRESS_PATH_PREFIX}{DEFAULT_BASE_PATH}"
+
+
+def _loom_box_probe_port(*, tls: bool) -> int:
+    """Return the port of an openccu-lite box's web server for the TLS flag (443 / 80).
+
+    The probe's own default is the daemon's port, which on a box is closed.
+    """
+    from openccu_loom_client.config import DEFAULT_BOX_HTTP_PORT, DEFAULT_BOX_HTTPS_PORT  # noqa: PLC0415
+
+    return DEFAULT_BOX_HTTPS_PORT if tls else DEFAULT_BOX_HTTP_PORT
+
+
+def _loom_txt_hint(*, txt: DiscoveredDaemon) -> dict[str, Any]:
+    """Return the discovery-state keys a daemon's mDNS TXT record contributes beyond the endpoint.
+
+    The record's self-description — deployment kind and login paths — is a
+    hint for the credentials form until the daemon's own answer replaces it.
+    Keys stay absent when the record does not carry them, as on a daemon
+    older than 0.86.
+    """
+    hint: dict[str, Any] = {}
+    if txt.deploy is not None:
+        hint[CONF_LOOM_DEPLOY] = txt.deploy
+    if txt.login_paths:
+        hint[CONF_LOOM_LOGIN_PATHS] = txt.login_paths
+    return hint
+
+
 def _loom_daemon_key(daemon: dict[str, Any]) -> str:
     """Return the select-option key identifying a discovered daemon."""
     return f"{daemon[CONF_HOST]}:{daemon[CONF_LOOM_PORT]}"
@@ -414,10 +582,12 @@ async def _async_browse_loom_daemons(hass: HomeAssistant) -> list[dict[str, Any]
     """Browse the LAN for openccu-loom daemons (short window).
 
     Returns one discovery-state dict per daemon (host / port / tls /
-    base_path / instance) — the same shape :meth:`async_step_zeroconf`
-    builds — so the daemon-selection step can route straight into the
-    shared token / CCU-selection steps. Live mDNS, hence not unit-tested.
+    base_path / instance, plus the record's self-description when it
+    carries one) — the same shape :meth:`async_step_zeroconf` builds — so
+    the daemon-selection step can route straight into the shared token /
+    CCU-selection steps. Live mDNS, hence not unit-tested.
     """
+    from openccu_loom_client import parse_txt_record  # noqa: PLC0415
     from zeroconf import ServiceStateChange  # noqa: PLC0415
     from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo  # noqa: PLC0415
 
@@ -453,13 +623,15 @@ async def _async_browse_loom_daemons(hass: HomeAssistant) -> list[dict[str, Any]
             for key, value in (info.properties or {}).items()
             if isinstance(key, bytes)
         }
+        txt = parse_txt_record(properties=props)
         daemons.append(
             {
                 CONF_HOST: host,
                 CONF_LOOM_PORT: info.port,
                 CONF_TLS: str(props.get("tls", "0")).lower() not in ("0", "", "false"),
-                CONF_LOOM_BASE_PATH: props.get("path") or DEFAULT_LOOM_BASE_PATH,
-                CONF_INSTANCE_NAME: props.get("instance") or name.removesuffix(f".{ZEROCONF_TYPE}"),
+                CONF_LOOM_BASE_PATH: txt.path or DEFAULT_LOOM_BASE_PATH,
+                CONF_INSTANCE_NAME: txt.instance or name.removesuffix(f".{ZEROCONF_TYPE}"),
+                **_loom_txt_hint(txt=txt),
             }
         )
     return daemons
@@ -944,10 +1116,13 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         self._loom_skip_browse: bool = False
         # openccu-lite box token as entry data; empty for a direct daemon.
         self._loom_box: dict[str, str] = {}
+        # Which credential fields the daemon in hand offers; decided once per
+        # daemon before its credentials form is first shown.
+        self._loom_offer: LoomLoginOffer | None = None
         # What the pairing step pairs with: the daemon itself, or the
         # openccu-lite box (for the token that opens the box's gate).
         self._pair_kind: str = "daemon"
-        self._pair_origin: str = "loom"
+        self._pair_origin: str = "loom_credentials"
         self._pair_pending_input: ConfigType | None = None
         self._pair_session: Any = None
         self._pair_task: asyncio.Task[Any] | None = None
@@ -1207,9 +1382,10 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_loom(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
         """Configure an openccu-loom daemon backend (mDNS browse → manual).
 
-        The manual form validates the daemon connection, lists its CCUs and
-        routes into the shared CCU-selection step, so manual setups are
-        serial-keyed (dedup, in-place backend switch) like discovered ones.
+        The manual form takes the daemon's address only. On submit the flow
+        asks the daemon — or, when its port does not answer, the openccu-lite
+        box in front of it — which sign-in it offers, and continues with the
+        credentials step that shows just those fields.
         """
         # On entry (no input yet) actively browse for daemons and offer a
         # selection; fall back to the manual form when none are found or the
@@ -1227,15 +1403,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             "error_detail": "",
             "retry_hint": "",
         }
-        if self._pair_error_key is not None:
-            errors["base"], self._pair_error_key = self._pair_error_key, None
-        box = _loom_box_data(user_input=user_input) if user_input is not None else {}
-        box_error = _loom_box_form_error(user_input=user_input) if user_input is not None else None
-        if user_input is not None and box_error is not None:
-            # Re-show the form with what was typed.
-            errors["base"] = box_error
-            self.data = dict(user_input)
-        elif user_input is not None:
+        if user_input is not None:
             self.data = {
                 CONF_BACKEND: BACKEND_LOOM,
                 CONF_INSTANCE_NAME: user_input[CONF_INSTANCE_NAME],
@@ -1248,7 +1416,53 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             }
             if (port := user_input.get(CONF_LOOM_PORT)) is not None:
                 self.data[CONF_LOOM_PORT] = int(port)
-            if (pairing := await self._async_loom_credentials(user_input=user_input, box=box)) is not None:
+            if (offer := await self._async_manual_loom_offer()) is not None:
+                self._loom_offer = offer
+                return await self.async_step_loom_credentials()
+            errors["base"] = "cannot_connect"
+            description_placeholders["invalid_items"] = self.data[CONF_HOST]
+        return self.async_show_form(
+            step_id="loom",
+            data_schema=get_loom_schema(data=self.data),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_loom_credentials(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Collect the credential the manually entered daemon offers, then list its CCUs.
+
+        The credential is pasted or obtained by pairing (with the daemon, or
+        with the openccu-lite box in front of it); either pairing re-enters
+        this step with the token. The step validates the daemon connection,
+        lists its CCUs and routes into the shared CCU-selection step, so
+        manual setups are serial-keyed (dedup, in-place backend switch) like
+        discovered ones.
+        """
+        offer = self._loom_offer or loom_login_offer(deployment_kind=None, login_paths=frozenset(), box_gate=False)
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {
+            CONF_HOST: self.data.get(CONF_HOST, ""),
+            "invalid_items": "",
+            "error_detail": "",
+            "retry_hint": "",
+        }
+        form_data: ConfigType = self.data
+        if self._pair_error_key is not None:
+            errors["base"], self._pair_error_key = self._pair_error_key, None
+        if not offer.can_authenticate:
+            errors["base"] = "loom_no_supported_login"
+            user_input = None
+        box = _loom_box_data(user_input=user_input, offer=offer) if user_input is not None else {}
+        box_error = _loom_box_form_error(user_input=user_input, offer=offer) if user_input is not None else None
+        if user_input is not None and box_error is not None:
+            # Re-show the form with what was typed.
+            errors["base"] = box_error
+            form_data = {**self.data, **user_input}
+        elif user_input is not None:
+            # Only this submission's credential counts; an earlier attempt's stays out.
+            for key in (CONF_LOOM_TOKEN, CONF_LOOM_BOX, CONF_LOOM_BOX_TOKEN):
+                self.data.pop(key, None)
+            if (pairing := await self._async_loom_credentials(user_input=user_input, box=box, offer=offer)) is not None:
                 return pairing
             try:
                 await ControlConfig(hass=self.hass, entry_id="validate", data=self.data).check_config()
@@ -1289,20 +1503,20 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._loom_token = self.data.get(CONF_LOOM_TOKEN)
                     self._loom_box = box
                     self._loom_enable_sub_devices = self.data[CONF_ADVANCED_CONFIG][CONF_ENABLE_SUB_DEVICES]
-                    self._loom_instance_name = user_input[CONF_INSTANCE_NAME]
+                    self._loom_instance_name = self.data[CONF_INSTANCE_NAME]
                     self._loom_discovery = {
                         CONF_HOST: self.data[CONF_HOST],
                         CONF_TLS: self.data[CONF_TLS],
                         CONF_VERIFY_TLS: self.data[CONF_VERIFY_TLS],
-                        CONF_INSTANCE_NAME: user_input[CONF_INSTANCE_NAME],
+                        CONF_INSTANCE_NAME: self.data[CONF_INSTANCE_NAME],
                     }
                     if (port := self.data.get(CONF_LOOM_PORT)) is not None:
                         self._loom_discovery[CONF_LOOM_PORT] = port
                     self._loom_ccus = ccus
                     return await self.async_step_loom_select_ccu()
         return self.async_show_form(
-            step_id="loom",
-            data_schema=get_loom_schema(data=self.data),
+            step_id="loom_credentials",
+            data_schema=get_loom_credentials_schema(data=form_data, offer=offer),
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -1391,13 +1605,16 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         self._pair_pending_input = None
         if self._pair_origin == "loom_token":
             return await self.async_step_loom_token(pending)
-        return await self.async_step_loom(pending)
+        if self._pair_origin == "reauth_loom":
+            return await self.async_step_reauth_loom(pending)
+        return await self.async_step_loom_credentials(pending)
 
     async def async_step_loom_pick(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
         """Pick a discovered openccu-loom daemon (or choose manual entry)."""
         daemons = self._loom_discovered_daemons
         if len(daemons) == 1:
             self._loom_discovery = daemons[0]
+            self._loom_offer = None
             return await self.async_step_loom_token()
         if user_input is not None:
             choice = user_input[CONF_LOOM_DAEMON]
@@ -1405,6 +1622,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._loom_skip_browse = True
                 return await self.async_step_loom()
             self._loom_discovery = next(d for d in daemons if _loom_daemon_key(d) == choice)
+            self._loom_offer = None
             return await self.async_step_loom_token()
         options = [
             SelectOptionDict(
@@ -1447,7 +1665,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_loom_token(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
-        """Collect the bearer token for a discovered daemon, then list its CCUs."""
+        """Collect the credential a discovered daemon offers, then list its CCUs."""
         errors: dict[str, str] = {}
         disc = self._loom_discovery
         description_placeholders: dict[str, str] = {
@@ -1455,16 +1673,22 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_HOST: disc.get(CONF_HOST, ""),
             "invalid_items": "",
         }
+        if self._loom_offer is None:
+            self._loom_offer = await self._async_discovered_loom_offer()
+        offer = self._loom_offer
         if self._pair_error_key is not None:
             errors["base"], self._pair_error_key = self._pair_error_key, None
-        box = _loom_box_data(user_input=user_input) if user_input is not None else {}
-        box_error = _loom_box_form_error(user_input=user_input) if user_input is not None else None
+        if not offer.can_authenticate:
+            errors["base"] = "loom_no_supported_login"
+            user_input = None
+        box = _loom_box_data(user_input=user_input, offer=offer) if user_input is not None else {}
+        box_error = _loom_box_form_error(user_input=user_input, offer=offer) if user_input is not None else None
         if user_input is not None and box_error is not None:
             errors["base"] = box_error
         elif user_input is not None:
             token = user_input.get(CONF_LOOM_TOKEN) or ""
             self._loom_enable_sub_devices = user_input.get(CONF_ENABLE_SUB_DEVICES, DEFAULT_LOOM_ENABLE_SUB_DEVICES)
-            if user_input.get(CONF_LOOM_BOX) and not box:
+            if _loom_box_selected(user_input=user_input, offer=offer) and not box:
                 # Kept so a failed pairing re-renders the form with the switch on.
                 self._loom_discovery[CONF_LOOM_BOX] = True
                 return await self._async_start_pairing(kind="box", origin="loom_token", user_input=user_input)
@@ -1499,7 +1723,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                     return await self.async_step_loom_select_ccu()
         return self.async_show_form(
             step_id="loom_token",
-            data_schema=get_loom_token_schema(data=disc),
+            data_schema=get_loom_token_schema(data=disc, offer=offer),
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -1587,6 +1811,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="reauth_failed")
         if _is_loom_box_entry(data=self.data):
             return await self.async_step_reauth_loom_box()
+        if self.data.get(CONF_BACKEND) == BACKEND_LOOM:
+            return await self.async_step_reauth_loom()
 
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = _get_step_placeholders(STEP_REAUTH, TOTAL_STEPS_REAUTH)
@@ -1634,6 +1860,62 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=description_placeholders,
         )
 
+    async def async_step_reauth_loom(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Sign a loom entry that reaches the daemon directly in again.
+
+        The daemon is asked once which sign-in it offers: a new token, pairing,
+        or both. A daemon that does not describe itself — or does not answer
+        an anonymous probe — gets both. An openccu-lite box answering instead
+        routes to the box pairing. A paired token re-enters this step exactly
+        as a pasted one.
+        """
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        if entry is None:
+            return self.async_abort(reason="reauth_failed")
+        if self._loom_offer is None:
+            self._loom_offer = await self._async_reauth_loom_offer()
+        offer = self._loom_offer
+        if offer.mode is LoomLoginMode.BOX:
+            return await self.async_step_reauth_loom_box()
+
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {
+            CONF_HOST: self.data.get(CONF_HOST, ""),
+            "invalid_items": "",
+            "error_detail": "",
+            "retry_hint": "",
+        }
+        if self._pair_error_key is not None:
+            errors["base"], self._pair_error_key = self._pair_error_key, None
+        if not offer.can_authenticate:
+            errors["base"] = "loom_no_supported_login"
+            user_input = None
+        if user_input is not None:
+            if token := user_input.get(CONF_LOOM_TOKEN):
+                data = {**self.data, CONF_LOOM_TOKEN: token}
+                if (
+                    failure := await _async_loom_sign_in_failure(hass=self.hass, entry_id=entry.entry_id, data=data)
+                ) is None:
+                    return self._async_update_reload_and_abort_entry(entry=entry, data=data, reason="reauth_successful")
+                errors["base"], description_placeholders["invalid_items"] = failure
+            elif user_input.get(CONF_LOOM_PAIR) and offer.daemon_pairing:
+                return await self._async_start_pairing(kind="daemon", origin="reauth_loom", user_input=user_input)
+            else:
+                errors["base"] = "loom_no_credential"
+        # The daemon's own sign-in only: the box switch of the setup forms has
+        # no place here, a box answering the probe went to the box pairing.
+        fields: dict[vol.Marker, Any] = {}
+        if offer.daemon_token:
+            fields[vol.Optional(CONF_LOOM_TOKEN, default="")] = PASSWORD_SELECTOR
+        if offer.daemon_pairing:
+            fields[vol.Required(CONF_LOOM_PAIR, default=False)] = BOOLEAN_SELECTOR
+        return self.async_show_form(
+            step_id="reauth_loom",
+            data_schema=vol.Schema(fields),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
     async def async_step_reauth_loom_box(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
         """Pair with the openccu-lite box again for a token that opens its gate.
 
@@ -1666,6 +1948,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_HOST: entry.data.get(CONF_HOST, ""),
             CONF_BACKEND: _get_backend_title(backend=entry.data.get(CONF_BACKEND)),
         }
+        if entry.data.get(CONF_BACKEND) == BACKEND_LOOM:
+            return await self.async_step_reconfigure_loom()
 
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = _get_step_placeholders(STEP_RECONFIGURE, TOTAL_STEPS_RECONFIGURE)
@@ -1739,6 +2023,39 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure_interface",
             data_schema=get_tls_interfaces_schema(data=self.data),
             description_placeholders=_get_step_placeholders(STEP_RECONFIGURE_TLS, TOTAL_STEPS_RECONFIGURE),
+        )
+
+    async def async_step_reconfigure_loom(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Reconfigure a loom entry's daemon connection (host, port, TLS, the entry's credential).
+
+        The same form and merge as the options flow's connection step: a box
+        entry edits its box token, any other entry its daemon token, and an
+        emptied box token keeps the stored box credential.
+        """
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        if entry is None:
+            return self.async_abort(reason="reconfigure_failed")
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {CONF_HOST: entry.data.get(CONF_HOST, ""), "invalid_items": ""}
+        form_data: ConfigType = dict(entry.data)
+        if user_input is not None:
+            form_data = _merge_loom_connection_input(data=dict(entry.data), user_input=user_input)
+            if (
+                invalid_items := await _async_check_loom_connection(
+                    hass=self.hass, entry_id=entry.entry_id, data=form_data
+                )
+            ) is not None:
+                errors["base"] = "invalid_config"
+                description_placeholders["invalid_items"] = invalid_items
+            else:
+                return self._async_update_reload_and_abort_entry(
+                    entry=entry, data=form_data, reason="reconfigure_successful"
+                )
+        return self.async_show_form(
+            step_id="reconfigure_loom",
+            data_schema=get_loom_options_schema(data=form_data),
+            errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_reconfigure_port_config(self, port_input: ConfigType | None = None) -> ConfigFlowResult:
@@ -1856,9 +2173,12 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         port = discovery_info.port
         if not host or not port:
             return self.async_abort(reason="invalid_discovery_info")
+        from openccu_loom_client import parse_txt_record  # noqa: PLC0415
+
         props = discovery_info.properties
-        instance = props.get("instance") or discovery_info.name.removesuffix(f".{ZEROCONF_TYPE}")
-        base_path = props.get("path") or DEFAULT_LOOM_BASE_PATH
+        txt = parse_txt_record(properties=props)
+        instance = txt.instance or discovery_info.name.removesuffix(f".{ZEROCONF_TYPE}")
+        base_path = txt.path or DEFAULT_LOOM_BASE_PATH
         # The daemon listener is plain (TLS is terminated upstream), so tls is
         # advertised as 0; honour the TXT but it is effectively always plain.
         tls = str(props.get("tls", "0")).lower() not in ("0", "", "false")
@@ -1867,7 +2187,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries(include_ignore=False)
             if entry.data.get(CONF_BACKEND) == BACKEND_LOOM
         ]
-        if announced_serials := [s for s in (props.get("ccus") or "").replace(" ", "").split(",") if s]:
+        if announced_serials := list(txt.ccus):
             entries_by_serial = {entry.unique_id: entry for entry in loom_entries if entry.unique_id}
             for entry in (entries_by_serial[s] for s in announced_serials if s in entries_by_serial):
                 if entry.data.get(CONF_HOST) != host or entry.data.get(CONF_LOOM_PORT) != port:
@@ -1898,7 +2218,9 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_TLS: tls,
             CONF_LOOM_BASE_PATH: base_path,
             CONF_INSTANCE_NAME: instance,
+            **_loom_txt_hint(txt=txt),
         }
+        self._loom_offer = None
         self.context["title_placeholders"] = {
             CONF_NAME: instance,
             CONF_HOST: host,
@@ -2004,6 +2326,34 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         return self.async_create_entry(title=instance_name, data=data)
 
+    async def _async_discovered_loom_offer(self) -> LoomLoginOffer:
+        """Return the login offer for the discovered daemon in ``self._loom_discovery``.
+
+        The daemon's own answer is the authority; when the probe raises — on
+        an openccu-lite box the daemon's port is closed — the mDNS record's
+        self-description stands in for it.
+        """
+        from openccu_loom_client.exceptions import BaseLoomException  # noqa: PLC0415
+
+        disc = self._loom_discovery
+        try:
+            return await _async_probe_loom_offer(
+                host=disc[CONF_HOST],
+                port=disc.get(CONF_LOOM_PORT),
+                tls=disc[CONF_TLS],
+                # Same as the discovered path's CCU listing, which leaves the
+                # client's certificate check on.
+                verify_tls=disc.get(CONF_VERIFY_TLS, True),
+                base_path=disc.get(CONF_LOOM_BASE_PATH) or DEFAULT_LOOM_BASE_PATH,
+            )
+        except BaseLoomException as exc:
+            _LOGGER.debug("Loom probe of %s failed, using its mDNS record: %s", disc[CONF_HOST], exc)
+        return loom_login_offer(
+            deployment_kind=disc.get(CONF_LOOM_DEPLOY),
+            login_paths=frozenset(disc.get(CONF_LOOM_LOGIN_PATHS, ())),
+            box_gate=False,
+        )
+
     @callback
     def _async_finish_box_reauth(self, *, box_token: str) -> ConfigFlowResult:
         """Store the newly paired box token, drop any box web account, and reload."""
@@ -2016,26 +2366,100 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         data.pop(CONF_LOOM_TOKEN, None)
         return self._async_update_reload_and_abort_entry(entry=entry, data=data, reason="reauth_successful")
 
-    async def _async_loom_credentials(self, *, user_input: ConfigType, box: dict[str, str]) -> ConfigFlowResult | None:
-        """Put the manual loom form's credential into ``self.data``, or start the pairing that obtains it.
+    async def _async_loom_credentials(
+        self, *, user_input: ConfigType, box: dict[str, str], offer: LoomLoginOffer
+    ) -> ConfigFlowResult | None:
+        """Put the manual credentials form's credential into ``self.data``, or start the pairing that obtains it.
 
-        Either pairing re-dispatches the loom step with the obtained token, so
-        validation stays a single code path; ``None`` means the credential is
-        in place and the step goes on to validate.
+        Either pairing re-dispatches the credentials step with the obtained
+        token, so validation stays a single code path; ``None`` means the
+        credential is in place and the step goes on to validate.
         """
-        if user_input.get(CONF_LOOM_BOX) and not box:
+        if _loom_box_selected(user_input=user_input, offer=offer) and not box:
             # Through the box: pair with the box for the token that opens its
             # gate. The switch is kept so a failed pairing re-renders the form
             # with it on.
             self.data[CONF_LOOM_BOX] = True
-            return await self._async_start_pairing(kind="box", origin="loom", user_input=user_input)
+            return await self._async_start_pairing(kind="box", origin="loom_credentials", user_input=user_input)
         self.data.update(box)
         if token := user_input.get(CONF_LOOM_TOKEN):
             self.data[CONF_LOOM_TOKEN] = token
         elif user_input.get(CONF_LOOM_PAIR) and not box:
             # Pair with the daemon instead of pasting a token.
-            return await self._async_start_pairing(kind="daemon", origin="loom", user_input=user_input)
+            return await self._async_start_pairing(kind="daemon", origin="loom_credentials", user_input=user_input)
         return None
+
+    async def _async_manual_loom_offer(self) -> LoomLoginOffer | None:
+        """Return the login offer for the manually entered daemon, or ``None`` when nothing answered.
+
+        Asks the daemon itself and, at the same time, the box path: the box's
+        web server (443 / 80 for the TLS flag) with its ingress prefix, where
+        an openccu-lite box's gate answers — on a box the daemon's own port
+        is closed. The daemon's own answer wins whenever it gives one; the
+        box path counts only when the daemon's port did not answer.
+        """
+        from openccu_loom_client.exceptions import BaseLoomException  # noqa: PLC0415
+
+        host = self.data[CONF_HOST]
+        tls = self.data[CONF_TLS]
+        verify_tls = self.data[CONF_VERIFY_TLS]
+        direct = asyncio.create_task(
+            _async_probe_loom_offer(
+                host=host,
+                port=self.data.get(CONF_LOOM_PORT),
+                tls=tls,
+                verify_tls=verify_tls,
+                base_path=DEFAULT_LOOM_BASE_PATH,
+            ),
+            name="loom-probe-daemon",
+        )
+        box_path = asyncio.create_task(
+            _async_probe_loom_offer(
+                host=host,
+                port=_loom_box_probe_port(tls=tls),
+                tls=tls,
+                verify_tls=verify_tls,
+                base_path=_loom_box_probe_base_path(),
+            ),
+            name="loom-probe-box-path",
+        )
+        try:
+            try:
+                return await direct
+            except BaseLoomException as exc:
+                _LOGGER.debug("Loom probe of the daemon at %s failed, using the box path: %s", host, exc)
+            try:
+                return await box_path
+            except BaseLoomException as exc:
+                _LOGGER.debug("Loom probe through a box at %s failed: %s", host, exc)
+            return None
+        finally:
+            # The daemon answered (or the flow went away): the box path's answer is not needed.
+            for task in (direct, box_path):
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(direct, box_path, return_exceptions=True)
+
+    async def _async_reauth_loom_offer(self) -> LoomLoginOffer:
+        """Return the login offer for the daemon of the entry being reauthenticated.
+
+        Probes the stored endpoint. A daemon that does not answer an anonymous
+        probe may just be unreachable for it, so the token field and the
+        pairing switch are both offered then.
+        """
+        from openccu_loom_client.exceptions import BaseLoomException  # noqa: PLC0415
+
+        try:
+            return await _async_probe_loom_offer(
+                host=self.data[CONF_HOST],
+                port=self.data.get(CONF_LOOM_PORT),
+                tls=self.data.get(CONF_TLS, True),
+                verify_tls=self.data.get(CONF_VERIFY_TLS, True),
+                base_path=DEFAULT_LOOM_BASE_PATH,
+            )
+        except BaseLoomException as exc:
+            _LOGGER.debug("Loom probe of %s failed, offering token and pairing: %s", self.data.get(CONF_HOST), exc)
+        return LoomLoginOffer(mode=LoomLoginMode.LEGACY, daemon_token=True, daemon_pairing=True)
 
     async def _async_run_detection(self) -> None:
         """Run backend detection as background task."""
@@ -2206,13 +2630,15 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         self._pair_error_key = error_key
         if self._pair_origin == "reauth":
             return await self.async_step_reauth_loom_box()
-        # Re-render the form the pairing came from — never re-browse: the
-        # user already sat on that form, and a fresh mDNS pick would both
-        # swallow the error and throw them back to the daemon list.
-        self._loom_skip_browse = True
+        if self._pair_origin == "reauth_loom":
+            return await self.async_step_reauth_loom()
+        # Re-render the form the pairing came from — never the browse or the
+        # connection step: the user already sat on that form, and a fresh
+        # mDNS pick would both swallow the error and throw them back to the
+        # daemon list.
         if self._pair_origin == "loom_token":
             return await self.async_step_loom_token()
-        return await self.async_step_loom()
+        return await self.async_step_loom_credentials()
 
     async def _validate_and_finish_config_flow(self) -> ConfigFlowResult:
         """Validate and finish the config flow.
@@ -2494,22 +2920,24 @@ class HomematicIPLocalOptionsFlowHandler(OptionsFlow):
         )
 
     async def async_step_loom_connection(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
-        """Handle openccu-loom daemon connection settings (host, port, TLS, token)."""
+        """Handle openccu-loom daemon connection settings (host, port, TLS, the entry's credential).
+
+        A box entry edits its box token, any other entry its daemon token;
+        moving an entry between the two is not done here. An emptied box
+        token keeps the stored box credential.
+        """
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {"invalid_items": ""}
 
-        if user_input is not None and user_input.get(CONF_LOOM_BOX_TOKEN) and user_input.get(CONF_LOOM_TOKEN):
-            # Behind the box the box token is the only credential.
-            errors["base"] = "loom_box_daemon_token"
-        elif user_input is not None:
-            self.data = _get_loom_data(self.data, user_input=user_input)
-            try:
-                await ControlConfig(hass=self.hass, entry_id=self.entry.entry_id, data=self.data).check_config()
-            except (InvalidConfig, BaseHomematicException) as exc:
-                errors["base"] = "invalid_config"
-                description_placeholders["invalid_items"] = (exc.args[0] if exc.args else "") or self.data.get(
-                    CONF_HOST, ""
+        if user_input is not None:
+            self.data = _merge_loom_connection_input(data=self.data, user_input=user_input)
+            if (
+                invalid_items := await _async_check_loom_connection(
+                    hass=self.hass, entry_id=self.entry.entry_id, data=self.data
                 )
+            ) is not None:
+                errors["base"] = "invalid_config"
+                description_placeholders["invalid_items"] = invalid_items
             else:
                 self.hass.config_entries.async_update_entry(entry=self.entry, data=self.data)
                 return self.async_create_entry(title="", data=dict(self.entry.options))
@@ -2652,6 +3080,57 @@ def _get_loom_data(data: ConfigType, user_input: ConfigType) -> ConfigType:
     if box_token := user_input.get(CONF_LOOM_BOX_TOKEN):
         loom_data[CONF_LOOM_BOX_TOKEN] = box_token
     return loom_data
+
+
+def _merge_loom_connection_input(*, data: ConfigType, user_input: ConfigType) -> ConfigType:
+    """Return a loom entry's data with a connection form's input merged in.
+
+    The form shows the entry's own credential (see
+    :func:`get_loom_options_schema`). A box entry whose box token field is
+    left empty keeps the box credential it holds, including a box web account
+    from an earlier release.
+    """
+    stored_box = (
+        {key: data[key] for key in (CONF_LOOM_BOX_TOKEN, *LEGACY_LOOM_BOX_KEYS) if data.get(key)}
+        if _is_loom_box_entry(data=data)
+        else {}
+    )
+    merged = _get_loom_data(data, user_input=user_input)
+    if not user_input.get(CONF_LOOM_BOX_TOKEN):
+        merged.update(stored_box)
+    return merged
+
+
+async def _async_check_loom_connection(*, hass: HomeAssistant, entry_id: str, data: ConfigType) -> str | None:
+    """Check a loom entry's connection data; return the failure's detail, or ``None`` when it passes."""
+    try:
+        await ControlConfig(hass=hass, entry_id=entry_id, data=data).check_config()
+    except (InvalidConfig, BaseHomematicException) as exc:
+        return str((exc.args[0] if exc.args else "") or data.get(CONF_HOST, ""))
+    return None
+
+
+async def _async_loom_sign_in_failure(
+    *, hass: HomeAssistant, entry_id: str, data: ConfigType
+) -> tuple[str, str] | None:
+    """Check a loom entry's data with a new credential; return ``(error key, invalid items)``, or ``None`` when it passes.
+
+    The error keys are the ones the loom setup's credentials step maps the
+    same failures to.
+    """
+    host = str(data.get(CONF_HOST, ""))
+    try:
+        await ControlConfig(hass=hass, entry_id=entry_id, data=data).check_config()
+    except AuthFailure:
+        return "invalid_auth", host
+    except InvalidConfig as exc:
+        return "invalid_config", str((exc.args[0] if exc.args else "") or host)
+    except _loom_incompatible_version_error():
+        # Must precede BaseHomematicException, which it subclasses.
+        return "incompatible_version", host
+    except BaseHomematicException as exc:
+        return "cannot_connect", str((exc.args[0] if exc.args else "") or host)
+    return None
 
 
 def _is_loom_box_entry(*, data: ConfigType) -> bool:

@@ -5,9 +5,12 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from aiohomematic.const import CentralState
-from custom_components.homematicip_local.button import HmipLocalCreateBackupButton
-from custom_components.homematicip_local.const import DOMAIN
+from openccu_loom_client.compat.aiohomematic.const import LoomSystemInformation
+import pytest
+
+from aiohomematic.const import CCUType, CentralState, SystemInformation
+from custom_components.homematicip_local.button import HmipLocalCreateBackupButton, async_setup_entry
+from custom_components.homematicip_local.const import BACKEND_CCU, BACKEND_LOOM, DOMAIN
 from custom_components.homematicip_local.control_unit import BaseControlUnit, ControlUnit, signal_central_state_changed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -139,6 +142,7 @@ class TestCentralStateSignalWiring:
         """
         control_unit = _make_control_unit(hass, entry_id="e1")
         control_unit._instance_name = "X"
+        control_unit._config = SimpleNamespace(backend=BACKEND_CCU)
         control_unit._subscription_group = MagicMock()
         control_unit._enable_mqtt = False
         control_unit._orphan_cleanup_unsub = None
@@ -152,3 +156,60 @@ class TestCentralStateSignalWiring:
             await control_unit.start_central()
 
         control_unit._async_signal_central_state_changed.assert_called_once()
+
+
+async def _added_backup_buttons(
+    hass: HomeAssistant, *, backend: str, system_information: SystemInformation
+) -> list[HmipLocalCreateBackupButton]:
+    """Run the button platform setup and return the backup buttons it added."""
+    control_unit = MagicMock()
+    control_unit.config.backend = backend
+    control_unit.central.system_information = system_information
+    control_unit.central.name = "CCU"
+    control_unit.get_new_data_points = MagicMock(return_value=())
+    control_unit.get_new_hub_data_points = MagicMock(return_value=())
+    entry = MagicMock()
+    entry.entry_id = "test-entry"
+    entry.runtime_data = control_unit
+    async_add_entities = Mock()
+
+    await async_setup_entry(hass, entry, async_add_entities)
+
+    return [
+        entity
+        for call in async_add_entities.call_args_list
+        for entity in call.args[0]
+        if isinstance(entity, HmipLocalCreateBackupButton)
+    ]
+
+
+class TestBackupButtonOffered:
+    """The backup button is offered exactly when the central can create a backup, on both backends."""
+
+    @pytest.mark.parametrize(
+        ("backend", "system_information", "offered"),
+        [
+            (BACKEND_LOOM, LoomSystemInformation(ccu_type=CCUType.OPENCCU_LITE, backup_available=True), True),
+            (BACKEND_LOOM, LoomSystemInformation(ccu_type=CCUType.OPENCCU_LITE, backup_available=False), False),
+            (BACKEND_LOOM, LoomSystemInformation(ccu_type=CCUType.OPENCCU, backup_available=False), False),
+            (BACKEND_LOOM, LoomSystemInformation(ccu_type=CCUType.UNKNOWN), False),
+            (BACKEND_CCU, SystemInformation(ccu_type=CCUType.OPENCCU), True),
+            (BACKEND_CCU, SystemInformation(ccu_type=CCUType.CCU), False),
+            (BACKEND_CCU, SystemInformation(ccu_type=CCUType.UNKNOWN), False),
+        ],
+        ids=[
+            "loom-lite-backup",
+            "loom-lite-no-backup",
+            "loom-openccu-no-backup",
+            "loom-unknown",
+            "ccu-openccu",
+            "ccu-original-ccu",
+            "ccu-unknown",
+        ],
+    )
+    async def test_button_follows_has_backup(
+        self, hass: HomeAssistant, backend: str, system_information: SystemInformation, offered: bool
+    ) -> None:
+        """The button is added if and only if system_information.has_backup holds."""
+        buttons = await _added_backup_buttons(hass, backend=backend, system_information=system_information)
+        assert len(buttons) == (1 if offered else 0)

@@ -2039,6 +2039,10 @@ async def ws_create_backup(
     if (control := _get_control_unit(hass, entry_id=msg["entry_id"])) is None:
         connection.send_error(msg["id"], "not_found", "Config entry not found")
         return
+    if not control.central.system_information.has_backup:
+        # Only some systems can produce a backup at all.
+        connection.send_error(msg["id"], "not_supported", "This system cannot create a backup")
+        return
 
     try:
         backup_data = await control.central.create_backup_and_download()

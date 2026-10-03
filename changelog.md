@@ -4,6 +4,48 @@
 
 ### Integration
 
+- **Backup is offered only where the system can create one.** The
+  "Create backup" button and the Home Assistant backup agent now follow
+  the central's backup capability. **Visible change for existing users:**
+  on a CCU that is not an OpenCCU (original CCU2/CCU3, debmatic) the
+  button and the backup agent are no longer offered, because such a
+  system cannot create a backup. An OpenCCU keeps both, as before. The
+  firmware update entity offers its "back up before installing" option
+  on the same condition and is unchanged for the direct-CCU backend.
+- **openccu-loom: capabilities follow the daemon, including openccu-lite.**
+  For a loom entry, backup and the update entity's backup option follow
+  the daemon's per-central feature map, so an openccu-lite box whose
+  token carries the backup right gets them, and a central whose token
+  lacks it does not. When the daemon later reports a different system
+  type, backup or system-update capability, the entry reloads by itself
+  so its entities match; a new firmware version or hostname alone does
+  not reload. Requires aiohomematic 2026.10.3 and openccu-loom-client
+  2026.10.6.
+- **Creating a backup is refused where the system cannot create one.** The
+  `create_ccu_backup` action and the configuration panel's backup command
+  now follow the same backup capability as the button and the backup
+  agent: on such a system they answer with a clear "does not support
+  backups" error instead of asking the CCU or daemon for a backup it cannot
+  produce.
+- **openccu-loom: the setup asks the daemon how to sign in.** After the
+  manual form's address, Home Assistant asks the daemon which sign-in it
+  offers and shows only those fields: the API token, pairing, or — on an
+  openccu-lite box — the box token alone. The daemon itself and the box's
+  web server (port 443 with TLS, 80 without) are asked at the same time;
+  the daemon's own answer wins whenever it gives one. Each question gives
+  up after 5 seconds, so a box whose daemon port drops packets no longer
+  holds the form for half a minute.
+- **openccu-loom: reauthentication for a direct daemon connection.** A loom
+  entry that connects to the daemon directly used to get the CCU's username
+  and password form, which it cannot use. It now gets its own sign-in form:
+  paste a new API token, or pair with the daemon again — just the
+  ways the daemon offers. A daemon that turns out to sit behind an
+  openccu-lite box goes on to the box pairing.
+- **openccu-loom: reconfigure edits the daemon connection.** "Reconfigure"
+  on a loom entry showed the CCU's host and credential fields. It now shows
+  the daemon connection — host, port, TLS and the entry's own credential —
+  the same form as the options' connection step; a box entry whose box
+  token field is left empty keeps its stored token.
 - **openccu-loom: connect through an openccu-lite box.** A daemon running
   on an openccu-lite box (openccu-lite 1.0.0-dev.36 or newer) can now be
   reached through the box's web server (`https://<box>/addons/loom/`), so

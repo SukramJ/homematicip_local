@@ -1273,6 +1273,14 @@ async def _async_service_create_ccu_backup(*, hass: HomeAssistant, service: Serv
     entry_id = service.data[CONF_ENTRY_ID]
 
     if control := _async_get_control_unit(hass=hass, entry_id=entry_id):
+        # Only some systems can produce a backup at all; refuse the others
+        # instead of letting the central fail on a request it cannot serve.
+        if not control.central.system_information.has_backup:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="backup_not_supported",
+                translation_placeholders={"name": control.central.name},
+            )
         try:
             backup_data = await control.central.create_backup_and_download()
             if backup_data is None:

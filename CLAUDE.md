@@ -118,10 +118,10 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2026.10.2) - Core async library for Homematic device communication
+- **aiohomematic** (v2026.10.3) - Core async library for Homematic device communication
 - **aiohomematic-config** (v2026.8.1) - Device configuration metadata
-- **openccu-data** (v2026.9.0) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
-- **openccu-loom-client** (v2026.10.5) - Client for the openccu-loom backend (Beta)
+- **openccu-data** (v2026.9.1) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
+- **openccu-loom-client** (v2026.10.6) - Client for the openccu-loom backend (Beta)
 - **Home Assistant Core** - Minimum version: 2026.9.0+
 - **Python 3.14+** (target version for development)
 
@@ -132,7 +132,7 @@ homematicip_local/
 - **pylint** (4.0.8) - Code linting
 - **ruff** (0.16.7) - Fast Python linter and formatter
 - **prek** (0.5.2) - Git hooks manager (Rust-based pre-commit alternative)
-- **aiohomematic-test-support** (2026.10.2) - Mock test data
+- **aiohomematic-test-support** (2026.10.3) - Mock test data
 - **async-upnp-client** (0.48.1) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
 
@@ -572,7 +572,7 @@ The integration uses a modern, user-friendly multi-step configuration flow:
 - ✅ **Menu-Based Navigation**: Clear choice between finishing setup or accessing advanced options
 - ✅ **Reconfigure Flow**: Update connection settings without deleting and re-adding integration
 - ✅ **Relevance-Gated Loom Backend**: There is no master switch for the openccu-loom backend. `_loom_is_relevant()` decides whether `async_step_user` shows the backend menu: it returns `True` when a loom entry is already configured or a daemon discovery flow is in progress (`async_progress_by_handler(DOMAIN, match_context={"source": SOURCE_ZEROCONF})`). Setups without a daemon go straight to `central` and never see a backend choice. `async_step_zeroconf` is ungated — an announcing daemon always produces a discovery card. Do **not** reintroduce a compile-time flag, and do not use `show_advanced_options` as a gate (deprecated in HA, returns `True` unconditionally, removal in 2027.6)
-- ✅ **Loom Beta Marking**: The loom backend is marked Beta at every entry point — `TITLE_BACKEND_LOOM = "openccu-loom Beta"` (discovery card, reauth, reconfigure) plus `(Beta)` titles and a leading Beta note on `user.menu_options.loom`, `step.loom` and `step.loom_token` in `strings.json`/`en.json`/`de.json`. `options.step.loom_connection` stays unmarked (the entry already exists). Remove the marking only when the client consumes the full daemon wire surface — see `docs/architecture-comparison-aiohomematic-vs-loom.md` §10
+- ✅ **Loom Beta Marking**: The loom backend is marked Beta at every entry point — `TITLE_BACKEND_LOOM = "openccu-loom Beta"` (discovery card, reauth, reconfigure) plus `(Beta)` titles and a leading Beta note on `user.menu_options.loom`, `step.loom`, `step.loom_credentials` and `step.loom_token` in `strings.json`/`en.json`/`de.json`. Steps that act on an existing entry stay unmarked — `options.step.loom_connection`, `step.reauth_loom`, `step.reauth_loom_box` and `step.reconfigure_loom`; their dialogs carry Beta through the `{backend}` flow title. Remove the marking only when the client consumes the full daemon wire surface — see `docs/architecture-comparison-aiohomematic-vs-loom.md` §10
 - ✅ **Backend-Aware Flow Titles**: `flow_title` carries a `{backend}` placeholder (`aiohomematic` / `openccu-loom Beta`), so discovery cards (SSDP vs. mDNS), reauth and reconfigure dialogs show which backend a flow targets
 - ✅ **Backend-Neutral Device Identifiers**: The HA device identifier is composed by the integration — `ControlUnit.device_identifier()` / `support.get_device_identifier()` build `<address>@<instance_name>-<interface>` from the interface *type*, never from a backend's own `interface_id`. The two backends disagree on that id's leading component (aiohomematic uses the HA instance name, the openccu-loom daemon its own CCU name), so keying devices on it re-created every device entry on a backend switch and lost the `device_id` with its area and automations. For the direct-CCU backend the composed value is byte-identical to `Device.identifier`. `_async_migrate_device_identifiers` moves legacy entries over before the platforms are forwarded (plain rename; merge into the older entry when both exist). **Never key a device on `hm_device.identifier` again, and never parse an interface id back out of an identifier** — device actions/triggers/services resolve the device by address and read `interface_id` off the device
 - ✅ **In-Place Backend Switch**: Setting up a CCU whose serial is already configured on the *other* backend switches the existing entry in place (abort reason `backend_switched`) instead of aborting with `already_configured`. The entry keeps its entry_id, instance name and advanced config (incl. `sub_devices_enabled`); the previous backend's connection keys stay in the entry so a switch back is lossless
@@ -1185,8 +1185,8 @@ make hass
 - **Current Version:** 2.11.2
 - **Minimum HA Version:** 2026.9.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
-- **aiohomematic Version:** 2026.10.2
-- **openccu-loom-client Version:** 2026.10.5. Its wire layer is generated against daemon API `13.4.0`
+- **aiohomematic Version:** 2026.10.3
+- **openccu-loom-client Version:** 2026.10.6. Its wire layer is generated against daemon API `13.5.3`
   (`openccu_loom_client.wire.const.DAEMON_API_VERSION`), but that number no longer gates the
   connection: `_report_api_version` **logs and never raises** — a warning when the majors differ,
   an info line when only the minors do. Refusing on it was wrong in both directions, because the

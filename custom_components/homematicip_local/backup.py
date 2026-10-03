@@ -28,6 +28,11 @@ async def async_get_backup_agents(
     agents: list[BackupAgent] = []
     for entry in hass.config_entries.async_loaded_entries(DOMAIN):
         control_unit = entry.runtime_data
+        # Only a system that can create a backup gets an agent. For aiohomematic's
+        # own SystemInformation that is ccu_type == OPENCCU; an openccu-loom central
+        # reports it from the daemon's per-central feature map.
+        if not control_unit.central.system_information.has_backup:
+            continue
         agents.append(
             CcuLocalBackupAgent(
                 hass=hass,

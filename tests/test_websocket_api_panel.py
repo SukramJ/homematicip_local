@@ -503,6 +503,32 @@ class TestWsGetSystemInformation:
 class TestWsCreateBackup:
     """Tests for ws_create_backup."""
 
+    async def test_allowed_with_backup_support(
+        self,
+        hass: HomeAssistant,
+        mock_loaded_config_entry: MockConfigEntry,
+        hass_ws_client: Any,
+        tmp_path: Any,
+    ) -> None:
+        """A system that can back up still gets its backup."""
+        control: ControlUnit = mock_loaded_config_entry.runtime_data
+        control.central.system_information = Mock(has_backup=True)
+        control.central.create_backup_and_download = AsyncMock(return_value=MockBackupData())
+        control.backup_directory = str(tmp_path)
+
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "homematicip_local/ccu/create_backup",
+                "entry_id": mock_loaded_config_entry.entry_id,
+            }
+        )
+
+        response = await client.receive_json()
+        assert response["success"] is True
+        control.central.create_backup_and_download.assert_awaited_once()
+
     async def test_backup_exception(
         self,
         hass: HomeAssistant,
@@ -550,6 +576,31 @@ class TestWsCreateBackup:
         response = await client.receive_json()
         assert response["success"] is False
         assert response["error"]["code"] == "backup_failed"
+
+    async def test_refused_without_backup_support(
+        self,
+        hass: HomeAssistant,
+        mock_loaded_config_entry: MockConfigEntry,
+        hass_ws_client: Any,
+    ) -> None:
+        """A system that cannot back up is refused before the central is asked."""
+        control: ControlUnit = mock_loaded_config_entry.runtime_data
+        control.central.system_information = Mock(has_backup=False)
+        control.central.create_backup_and_download = AsyncMock(return_value=MockBackupData())
+
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "homematicip_local/ccu/create_backup",
+                "entry_id": mock_loaded_config_entry.entry_id,
+            }
+        )
+
+        response = await client.receive_json()
+        assert response["success"] is False
+        assert response["error"]["code"] == "not_supported"
+        control.central.create_backup_and_download.assert_not_awaited()
 
     async def test_success(
         self,

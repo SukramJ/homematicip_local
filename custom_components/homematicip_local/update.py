@@ -226,11 +226,18 @@ class AioHomematicHubUpdate(UpdateEntity):
         self._data_point: HmUpdate = data_point
         self._attr_unique_id = f"{DOMAIN}_{data_point.unique_id}"
         self._attr_device_info = control_unit.device_info
-        self._attr_supported_features = (
-            UpdateEntityFeature.BACKUP | UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
-            if control_unit.central.system_information.ccu_type == CCUType.OPENCCU
-            else UpdateEntityFeature.INSTALL
-        )
+        # BACKUP follows has_backup rather than the type: an openccu-loom central
+        # reports it from the daemon's per-central feature map, so an openccu-lite
+        # box may offer it and a restricted token may not. aiohomematic's own
+        # SystemInformation defines has_backup as ccu_type == OPENCCU, so the ccu
+        # backend keeps exactly the feature set the type-only rule gave it.
+        system_information = control_unit.central.system_information
+        supported_features = UpdateEntityFeature.INSTALL
+        if system_information.has_backup:
+            supported_features |= UpdateEntityFeature.BACKUP
+        if system_information.ccu_type == CCUType.OPENCCU:
+            supported_features |= UpdateEntityFeature.PROGRESS
+        self._attr_supported_features = supported_features
         self._subscription_group: Final[SubscriptionGroup] = control_unit.central.event_bus.create_subscription_group(
             name=f"hub_update_{data_point.unique_id}"
         )
