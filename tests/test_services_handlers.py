@@ -946,6 +946,31 @@ class TestServiceCreateCcuBackup:
     """Tests for _async_service_create_ccu_backup."""
 
     @pytest.mark.asyncio
+    async def test_create_ccu_backup_allowed_with_backup_support(
+        self, hass: HomeAssistant, mock_control_unit: Mock
+    ) -> None:
+        """A system that can back up still gets its backup."""
+        mock_control_unit.central.system_information.has_backup = True
+        backup_data = Mock()
+        backup_data.filename = "test_backup.sbk"
+        backup_data.content = b"backup_content"
+        mock_control_unit.central.create_backup_and_download = AsyncMock(return_value=backup_data)
+        service = MockServiceCall(
+            service="create_ccu_backup",
+            data={hm_services.CONF_ENTRY_ID: const.CONFIG_ENTRY_ID},
+        )
+
+        with (
+            patch.object(hm_services, "_async_get_control_unit", return_value=mock_control_unit),
+            patch.object(Path, "mkdir"),
+            patch.object(Path, "write_bytes"),
+        ):
+            result = await hm_services._async_service_create_ccu_backup(hass=hass, service=service)
+
+        assert result["success"] is True
+        mock_control_unit.central.create_backup_and_download.assert_awaited_once()
+
+    @pytest.mark.asyncio
     async def test_create_ccu_backup_exception(self, hass: HomeAssistant, mock_control_unit: Mock) -> None:
         """Test CCU backup creation with exception."""
         mock_control_unit.central.create_backup_and_download.side_effect = BaseHomematicException("Test error")
@@ -976,6 +1001,28 @@ class TestServiceCreateCcuBackup:
             pytest.raises(HomeAssistantError, match="Failed to create and download backup"),
         ):
             await hm_services._async_service_create_ccu_backup(hass=hass, service=service)
+
+    @pytest.mark.asyncio
+    async def test_create_ccu_backup_refused_without_backup_support(
+        self, hass: HomeAssistant, mock_control_unit: Mock
+    ) -> None:
+        """A system that cannot back up is refused before the central is asked."""
+        mock_control_unit.central.system_information.has_backup = False
+        mock_control_unit.central.create_backup_and_download = AsyncMock(return_value=None)
+        service = MockServiceCall(
+            service="create_ccu_backup",
+            data={hm_services.CONF_ENTRY_ID: const.CONFIG_ENTRY_ID},
+        )
+
+        with (
+            patch.object(hm_services, "_async_get_control_unit", return_value=mock_control_unit),
+            pytest.raises(HomeAssistantError) as exc_info,
+        ):
+            await hm_services._async_service_create_ccu_backup(hass=hass, service=service)
+
+        assert exc_info.value.translation_domain == "homematicip_local"
+        assert exc_info.value.translation_key == "backup_not_supported"
+        mock_control_unit.central.create_backup_and_download.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_create_ccu_backup_success(self, hass: HomeAssistant, mock_control_unit: Mock) -> None:

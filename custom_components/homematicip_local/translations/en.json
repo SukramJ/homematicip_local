@@ -27,7 +27,9 @@
       "loom_box_pairing_off": "The openccu-lite box does not allow programs to ask for access. Switch it on on the box's API tokens page, or create a token with the scope addon:openccu-loom there.",
       "loom_box_pairing_not_local": "The openccu-lite box only pairs with callers from its local networks.",
       "loom_box_pairing_invalid": "The openccu-lite box refused the request — is OpenCCU-Loom installed on it as an add-on?",
-      "loom_box_pairing_refused": "The openccu-lite box refused the pairing request (too many requests, or a recent rejection). Please try again in a few minutes."
+      "loom_box_pairing_refused": "The openccu-lite box refused the pairing request (too many requests, or a recent rejection). Please try again in a few minutes.",
+      "loom_no_supported_login": "The daemon at {host} offers neither an API token nor pairing as a way to sign in, so Home Assistant cannot connect to it. Check the daemon's sign-in settings.",
+      "loom_no_credential": "Paste an API token or switch on pairing."
     },
     "flow_title": "{name}/{host} ({backend})",
     "progress": {
@@ -134,23 +136,16 @@
           "host": "Daemon hostname/IP address",
           "instance_name": "Integration instance name",
           "loom_port": "Daemon port (blank = 8119)",
-          "loom_token": "API bearer token",
           "tls": "Use TLS (HTTPS/WSS)",
           "verify_tls": "Verify TLS certificate",
-          "sub_devices_enabled": "Create sub-device entities",
-          "loom_pair": "Pair with the daemon (shows a code)",
-          "loom_box": "Through an openccu-lite box",
-          "loom_box_token": "openccu-lite box token (optional)"
+          "sub_devices_enabled": "Create sub-device entities"
         },
-        "description": "**Beta:** The openccu-loom backend is still under evaluation — the direct CCU connection remains the recommended setup.\n\nConnect to an openccu-loom daemon. The daemon owns the CCU connection, interfaces and callbacks.",
+        "description": "**Beta:** The openccu-loom backend is still under evaluation — the direct CCU connection remains the recommended setup.\n\nConnect to an openccu-loom daemon. The daemon owns the CCU connection, interfaces and callbacks. Enter its address here; the next page asks the daemon — or the openccu-lite box it runs on — which sign-in it accepts and shows only those fields.",
         "title": "OpenCCU-Loom daemon (Beta)",
         "data_description": {
           "sub_devices_enabled": "Splits devices with multiple channel groups into a main device with sub-devices. Entities are assigned to their corresponding sub-device based on channel group.",
-          "loom_pair": "Instead of pasting a token: the daemon shows a six-digit code here, which you type on its web UI under Settings → API tokens. Paired tokens carry operator rights; paste an admin token for backups, system update and device removal.",
           "loom_port": "Not used when connecting through an openccu-lite box: the box's web server port applies (443 with TLS, 80 without).",
-          "loom_box": "Only when the daemon runs on an openccu-lite box (openccu-lite 1.0.0-dev.36 or newer): the connection then goes through the box's web server (path /addons/loom/ on the box), and Home Assistant pairs with the box for a token that opens it — the box's administrator approves the request on the box's status page. The host is then the box, TLS refers to the box's web server, and the API token stays empty. Paired box tokens carry operator rights.",
-          "tls": "Only when the daemon serves HTTPS (a certificate is configured in its north.rest.tls settings). Out of the box the daemon serves plain HTTP on 8119; with TLS on against it the connection fails. Through an openccu-lite box, TLS refers to the box's web server instead.",
-          "loom_box_token": "Only with the box switch on: a box API token with the scope addon:openccu-loom (or Full access), created on the box's token page. Leave empty to pair with the box instead."
+          "tls": "Only when the daemon serves HTTPS (a certificate is configured in its north.rest.tls settings). Out of the box the daemon serves plain HTTP on 8119; with TLS on against it the connection fails. Through an openccu-lite box, TLS refers to the box's web server instead."
         }
       },
       "port_config": {
@@ -244,8 +239,8 @@
         "title": "Select backend"
       },
       "loom_token": {
-        "title": "OpenCCU-Loom daemon token (Beta)",
-        "description": "**Beta:** The openccu-loom backend is still under evaluation — the direct CCU connection remains the recommended setup.\n\nEnter the API bearer token for the discovered daemon {name} at {host}.",
+        "title": "Sign in to the OpenCCU-Loom daemon (Beta)",
+        "description": "**Beta:** The openccu-loom backend is still under evaluation — the direct CCU connection remains the recommended setup.\n\nSign in to the discovered daemon {name} at {host}. Only the sign-in methods the daemon offers are shown: on an openccu-lite box that is the box token alone.",
         "data": {
           "loom_token": "API bearer token",
           "sub_devices_enabled": "Create sub-device entities",
@@ -257,7 +252,7 @@
           "sub_devices_enabled": "Splits devices with multiple channel groups into a main device with sub-devices. Entities are assigned to their corresponding sub-device based on channel group.",
           "loom_pair": "Instead of pasting a token: the daemon shows a six-digit code here, which you type on its web UI under Settings → API tokens. Paired tokens carry operator rights; paste an admin token for backups, system update and device removal.",
           "loom_box": "Only when the daemon runs on an openccu-lite box (openccu-lite 1.0.0-dev.36 or newer): the connection then goes through the box's web server (path /addons/loom/ on the box), and Home Assistant pairs with the box for a token that opens it — the box's administrator approves the request on the box's status page. The host is then the box, TLS refers to the box's web server, and the API token stays empty. Paired box tokens carry operator rights.",
-          "loom_box_token": "Only with the box switch on: a box API token with the scope addon:openccu-loom (or Full access), created on the box's token page. Leave empty to pair with the box instead."
+          "loom_box_token": "Only for a connection through an openccu-lite box: a box API token with the scope addon:openccu-loom (or Full access), created on the box's token page. Leave it empty and Home Assistant pairs with the box instead — the box's administrator approves the request on the box's status page. Paired box tokens carry operator rights."
         }
       },
       "loom_select_ccu": {
@@ -277,6 +272,50 @@
       "reauth_loom_box": {
         "title": "Pair with the openccu-lite box",
         "description": "The openccu-lite box at {host} no longer accepts this connection's credential — the box token was revoked or lacks the add-on's scope, or this entry still holds a box web account from an earlier release. Submit to pair with the box again: the box's administrator approves the request on the box's status page."
+      },
+      "loom_credentials": {
+        "data": {
+          "loom_token": "API bearer token",
+          "loom_pair": "Pair with the daemon (shows a code)",
+          "loom_box": "Through an openccu-lite box",
+          "loom_box_token": "openccu-lite box token (optional)"
+        },
+        "data_description": {
+          "loom_box": "Only when the daemon runs on an openccu-lite box (openccu-lite 1.0.0-dev.36 or newer): the connection then goes through the box's web server (path /addons/loom/ on the box), and Home Assistant pairs with the box for a token that opens it — the box's administrator approves the request on the box's status page. The host is then the box, TLS refers to the box's web server, and the API token stays empty. Paired box tokens carry operator rights.",
+          "loom_pair": "Instead of pasting a token: the daemon shows a six-digit code here, which you type on its web UI under Settings → API tokens. Paired tokens carry operator rights; paste an admin token for backups, system update and device removal.",
+          "loom_box_token": "Only for a connection through an openccu-lite box: a box API token with the scope addon:openccu-loom (or Full access), created on the box's token page. Leave it empty and Home Assistant pairs with the box instead — the box's administrator approves the request on the box's status page. Paired box tokens carry operator rights."
+        },
+        "description": "**Beta:** The openccu-loom backend is still under evaluation — the direct CCU connection remains the recommended setup.\n\nSign in to the daemon at {host}. Only the sign-in methods the daemon offers are shown: on an openccu-lite box that is the box token alone.",
+        "title": "Sign in to the OpenCCU-Loom daemon (Beta)"
+      },
+      "reauth_loom": {
+        "title": "Sign in to the OpenCCU-Loom daemon again",
+        "description": "The daemon at {host} no longer accepts this connection's credential. Paste a new API token, or pair with the daemon again. Only the sign-in methods the daemon offers are shown.",
+        "data": {
+          "loom_token": "API bearer token",
+          "loom_pair": "Pair with the daemon (shows a code)"
+        },
+        "data_description": {
+          "loom_token": "A token created on the daemon's web UI under Settings → API tokens. It replaces the stored one.",
+          "loom_pair": "Instead of pasting a token: the daemon shows a six-digit code here, which you type on its web UI under Settings → API tokens. Paired tokens carry operator rights; paste an admin token for backups, system update and device removal."
+        }
+      },
+      "reconfigure_loom": {
+        "title": "Reconfigure the daemon connection",
+        "description": "Update the connection to the OpenCCU-Loom daemon. An entry that connects through an openccu-lite box edits its box token here, any other entry its API token; switching an entry between the box and a direct connection is not done here.",
+        "data": {
+          "host": "Daemon hostname/IP address",
+          "loom_port": "Daemon port (blank = 8119)",
+          "loom_token": "API bearer token",
+          "tls": "Use TLS (HTTPS/WSS)",
+          "verify_tls": "Verify TLS certificate",
+          "loom_box_token": "openccu-lite box token"
+        },
+        "data_description": {
+          "loom_port": "Not used when connecting through an openccu-lite box: the box's web server port applies (443 with TLS, 80 without).",
+          "loom_box_token": "The openccu-lite box API token this entry connects with (scope addon:openccu-loom or Full access, from the box's token page). Paste a new one to replace it; left empty, the stored token stays.",
+          "tls": "Only when the daemon serves HTTPS (a certificate is configured in its north.rest.tls settings). Out of the box the daemon serves plain HTTP on 8119; with TLS on against it the connection fails. Through an openccu-lite box, TLS refers to the box's web server instead."
+        }
       }
     }
   },
@@ -693,8 +732,7 @@
       "cannot_connect": "Cannot connect to CCU [{invalid_items}]. Please verify: 1) The hostname/IP address is correct, 2) The CCU is powered on and reachable, 3) No firewall is blocking the connection.",
       "invalid_auth": "Authentication failed for CCU [{invalid_items}]. Please verify: 1) Username and password are correct (case-sensitive), 2) The user has admin privileges on the CCU, 3) Password only contains allowed characters: A-Z, a-z, 0-9 and .!$():;#-",
       "invalid_config": "Invalid configuration: [{invalid_items}]. Please check the entered values and try again.",
-      "unknown": "An unexpected error occurred. Please check the Home Assistant logs for more details.",
-      "loom_box_daemon_token": "Through an openccu-lite box the box token is the only credential: leave the API token empty."
+      "unknown": "An unexpected error occurred. Please check the Home Assistant logs for more details."
     },
     "step": {
       "advanced_settings": {
@@ -806,11 +844,11 @@
           "verify_tls": "Verify TLS certificate",
           "loom_box_token": "openccu-lite box token"
         },
-        "description": "Connect to an openccu-loom daemon. The daemon owns the CCU connection, interfaces and callbacks.",
+        "description": "Connect to an openccu-loom daemon. The daemon owns the CCU connection, interfaces and callbacks. An entry that connects through an openccu-lite box edits its box token here, any other entry its API token; switching an entry between the box and a direct connection is not done here.",
         "title": "OpenCCU-Loom daemon",
         "data_description": {
           "loom_port": "Not used when connecting through an openccu-lite box: the box's web server port applies (443 with TLS, 80 without).",
-          "loom_box_token": "Only when the daemon runs on an openccu-lite box: a box API token with the scope addon:openccu-loom (or Full access), from the box's token page. The connection then goes through the box's web server and the API token stays empty. Clear it to connect to the daemon directly. To pair with the box instead, remove and re-add the integration.",
+          "loom_box_token": "The openccu-lite box API token this entry connects with (scope addon:openccu-loom or Full access, from the box's token page). Paste a new one to replace it; left empty, the stored token stays.",
           "tls": "Only when the daemon serves HTTPS (a certificate is configured in its north.rest.tls settings). Out of the box the daemon serves plain HTTP on 8119; with TLS on against it the connection fails. Through an openccu-lite box, TLS refers to the box's web server instead."
         }
       },
@@ -1692,6 +1730,11 @@
         }
       },
       "name": "Set valve on time"
+    }
+  },
+  "exceptions": {
+    "backup_not_supported": {
+      "message": "{name} cannot create a backup: this system does not support backups."
     }
   }
 }
