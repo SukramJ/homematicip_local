@@ -114,6 +114,10 @@
 
 ### Dependencies
 
+#### Bump openccu-loom-client to `2026.10.7`
+
+- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It brings the support for devices the daemon holds back (openccu-loom 0.88.0, daemon api 13.7.1): a newly paired device is announced as a delayed device, so the "Add delayed device" repair appears and, once a name is entered, accepts and releases the device on the daemon. During the first ten minutes after setup, when delayed devices are confirmed without a name, a held device is left held and the repair follows afterwards
+
 #### Bump openccu-loom-client to `2026.10.5`
 
 - Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It regenerates the wire bindings against daemon api 13.4.0 (openccu-loom 0.85.0), whose only surface change renames the simulator's backend value from `PyDevCCU` to `GoDevCCU` — a value the integration does not use. Kept to one line: loom details stay out of scope while the backend is Beta
