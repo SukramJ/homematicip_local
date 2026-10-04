@@ -679,6 +679,9 @@
     },
     "devices_delayed": {
       "fix_flow": {
+        "abort": {
+          "device_add_failed": "The device {address} could not be added: {error}"
+        },
         "step": {
           "set_name": {
             "data": {

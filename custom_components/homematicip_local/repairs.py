@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-import contextlib
 import logging
 from typing import Any, Final
 
@@ -66,11 +65,23 @@ class _DevicesDelayedFixFlow(RepairsFlow):
 
         # Execute the fix callback with the device name (empty string skips rename)
         cb = REPAIR_CALLBACKS.pop(self._issue_id, None)
+        error: str | None = None
         if cb is not None:
-            with contextlib.suppress(Exception):
+            try:
                 await cb(device_name=device_name)
+            except Exception as err:  # noqa: BLE001 - every backend failure is shown, not swallowed
+                # Reporting success here would hide a device the backend has
+                # not finished adding; the openccu-loom backend, for one,
+                # leaves it accepted but unreleased when the release fails.
+                _LOGGER.warning("Adding delayed device %s failed: %s", self._address, err)
+                error = str(err) or type(err).__name__
 
         # Close the issue
         async_delete_issue(hass=self.hass, domain=DOMAIN, issue_id=self._issue_id)
 
+        if error is not None:
+            return self.async_abort(
+                reason="device_add_failed",
+                description_placeholders={"address": self._address or "", "error": error},
+            )
         return self.async_create_entry(title="", data={})

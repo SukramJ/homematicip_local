@@ -108,9 +108,15 @@
 
   The option defaults to off now in all five blueprints that carry it (2-, 6-, 8-button, key ring remote control, and the 6-button one in `blueprints/community`), and its description says what enabling it costs. **Re-import the blueprints** to pick this up. An automation that has an explicit `true` stored keeps it — the default only applies where nothing was ever saved — so if you want the warning gone there, switch the option off and save
 
+- **Fix: adding a delayed device reported success when it failed.** The "Add delayed device" repair swallowed every error from adding the device, closed the issue and finished as if the device had been added. It now ends with a "could not be added" message carrying the backend's error. On the openccu-loom backend this is the case where the daemon accepted the device under the entered name but releasing it failed: the device then waits on the daemon until it is released there, and the repair says so instead of reporting success
+
 - **Breaking: Home Assistant 2026.9 or newer is required** (was 2026.8). The integration builds its schemas with probatio, the validation library Home Assistant ships from 2026.9 on and types its own helpers against from 2026.10. Validation behaves as before: since 2026.9 Home Assistant aliases `voluptuous` to probatio's compatibility shim at startup, so the integration's schemas and `Invalid` were already probatio objects at runtime — importing probatio directly makes the integration independent of that alias and type-checks its schemas against the types Home Assistant declares. The repair flow's steps are typed with `RepairsFlowResult`, the result type `RepairsFlow` declares
 
 ### Dependencies
+
+#### Bump openccu-loom-client to `2026.10.7`
+
+- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It brings the support for devices the daemon holds back (openccu-loom 0.88.0, daemon api 13.7.1): a newly paired device is announced as a delayed device, so the "Add delayed device" repair appears and, once a name is entered, accepts and releases the device on the daemon. During the first ten minutes after setup, when delayed devices are confirmed without a name, a held device is left held and the repair follows afterwards
 
 #### Bump openccu-loom-client to `2026.10.5`
 
