@@ -163,7 +163,7 @@ def _loom_incompatible_version_error() -> type[Exception]:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -> bool:
-    """Set up Homematic(IP) Local for OpenCCU from a config entr11y."""
+    """Set up Homematic(IP) Local for OpenCCU from a config entry."""
     # The openccu-loom backend talks to the daemon via openccu-loom-client
     # and does not depend on the aiohomematic runtime version, so skip the
     # aiohomematic version gate for it.
@@ -208,7 +208,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
             "This release of Homematic(IP) Local for OpenCCU requires HA version %s and above",
             HMIP_LOCAL_MIN_HA_VERSION,
         )
-        _LOGGER.warning("HHomematic(IP) Local for OpenCCU setup blocked")
+        _LOGGER.warning("Homematic(IP) Local for OpenCCU setup blocked")
         return False
 
     # Clean up stale issues from previous sessions

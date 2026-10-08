@@ -18,6 +18,11 @@
   agent: on such a system they answer with a clear "does not support
   backups" error instead of asking the CCU or daemon for a backup it cannot
   produce.
+- **The start-up log names the backend package it shows the version of.**
+  "Started central unit for …" always showed the aiohomematic version
+  without saying so, also for an openccu-loom entry. It now reads
+  `(aiohomematic 2026.10.4)` on the direct-CCU backend and
+  `(openccu-loom-client 2026.10.8)` on the openccu-loom backend.
 - **openccu-loom (Beta): setup, reauthentication and reconfigure follow
   what the daemon offers** — pairing instead of pasting a token, connecting
   through an openccu-lite box, and backup / system-update capabilities taken
