@@ -12,9 +12,9 @@
   "loggers": ["aiohomematic", "aiohomematic_config", "openccu_loom_client"],
   "requirements": [
     "openccu-data==2026.9.1",
-    "openccu-loom-client==2026.10.7",
-    "aiohomematic-config==2026.8.1",
-    "aiohomematic==2026.10.3"
+    "openccu-loom-client==2026.10.8",
+    "aiohomematic-config==2026.10.1",
+    "aiohomematic==2026.10.4"
   ],
   "ssdp": [
     {
@@ -22,6 +22,6 @@
       "manufacturerURL": "https://openccu.de"
     }
   ],
-  "version": "2.11.2",
+  "version": "2.12.0",
   "zeroconf": ["_openccu-loom._tcp.local."]
 }

@@ -191,7 +191,7 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
       box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
     }
   }
-`,Ce=new Set(["BidCos-RF","BidCos-Wired","HmIP-RF"]);function Ee(e,t){return`/api/homematicip_local/${e}/device_icon/${t}`}async function Ae(e,t){return(await e.callWS({type:"homematicip_local/config/list_devices",entry_id:t})).devices}async function De(e,t,i,s,a="",r="MASTER"){return e.callWS({type:"homematicip_local/config/get_form_schema",entry_id:t,interface_id:i,channel_address:s,channel_type:a,paramset_key:r})}async function Ie(e,t,i,s,a="MASTER"){return e.callWS({type:"homematicip_local/config/session_open",entry_id:t,interface_id:i,channel_address:s,paramset_key:a})}async function Te(e,t,i,s,a,r="MASTER"){return e.callWS({type:"homematicip_local/config/session_set",entry_id:t,channel_address:i,parameter:s,value:a,paramset_key:r})}async function Me(e,t,i,s="MASTER"){return e.callWS({type:"homematicip_local/config/session_discard",entry_id:t,channel_address:i,paramset_key:s})}async function Pe(e,t,i,s,a){return e.callWS({type:"homematicip_local/config/get_link_form_schema",entry_id:t,interface_id:i,sender_channel_address:s,receiver_channel_address:a})}async function Le(e,t,i,s,a,r){return e.callWS({type:"homematicip_local/config/put_link_paramset",entry_id:t,interface_id:i,sender_channel_address:s,receiver_channel_address:a,values:r})}async function ze(e,t,i,s,a){try{return await e.callWS({type:"homematicip_local/config/get_link_profiles",entry_id:t,interface_id:i,sender_channel_address:s,receiver_channel_address:a})}catch{return null}}async function Ne(e,t){return(await e.callWS({type:"homematicip_local/config/list_schedule_devices",entry_id:t})).devices}async function Re(e,t,i,s){return e.callWS({type:"homematicip_local/config/get_climate_schedule",entry_id:t,device_address:i,...s&&{profile:s}})}async function Be(e,t,i,s,a,r,n){return e.callWS({type:"homematicip_local/config/set_climate_schedule_weekday",entry_id:t,device_address:i,profile:s,weekday:a,base_temperature:r,simple_weekday_list:n})}async function Ve(e,t,i,s){return e.callWS({type:"homematicip_local/config/set_device_schedule",entry_id:t,device_address:i,schedule_data:s})}async function We(e,t){return e.callWS({type:"homematicip_local/config/get_user_permissions",entry_id:t})}async function Ue(e,t){return e.callWS({type:"homematicip_local/integration/get_system_health",entry_id:t})}async function He(e,t){return(await e.callWS({type:"homematicip_local/integration/get_command_throttle_stats",entry_id:t})).throttle_stats}async function Fe(e,t,i=50,s){return e.callWS({type:"homematicip_local/integration/get_incidents",entry_id:t,limit:i,...s})}async function Oe(e,t){return e.callWS({type:"homematicip_local/ccu/get_system_information",entry_id:t})}async function je(e,t){return e.callWS({type:"homematicip_local/ccu/get_install_mode_status",entry_id:t})}async function Ke(e,t){return(await e.callWS({type:"homematicip_local/ccu/get_signal_quality",entry_id:t})).devices}async function Ye(e,t){return e.callWS({type:"homematicip_local/ccu/get_firmware_overview",entry_id:t})}async function Ge(e,t){return(await e.callWS({type:"homematicip_local/ccu/get_inbox_devices",entry_id:t})).devices}async function Ze(e,t){return(await e.callWS({type:"homematicip_local/ccu/get_service_messages",entry_id:t})).messages}async function qe(e,t){return(await e.callWS({type:"homematicip_local/ccu/get_alarm_messages",entry_id:t})).alarms}const Xe={en:{common:{back:"Back",loading:"Loading...",save:"Save",cancel:"Cancel",yes:"Yes",no:"No",retry:"Retry",close:"Close",error_loading:"Failed to load."},device_list:{title:"Homematic Device Configuration",select_ccu:"CCU",select_placeholder:"Select a CCU...",search_placeholder:"Search devices...",no_entry_selected:"Please select a CCU to view devices.",no_entry_hint:"Select a CCU above to view its devices.",no_devices:"No configurable devices found.",channels:"channels",unreachable:"Unreachable",reachable:"Reachable",low_battery:"Low battery",config_pending:"Configuration pending",sort_by:"Sort by",sort_name:"Name",sort_address:"Address",sort_model:"Model"},device_detail:{address:"Address",firmware:"Firmware",channel:"Channel",configure_master:"Configure MASTER",no_master_config:"No MASTER configuration available.",not_found:"Device not found.",yes:"Yes",no:"No",reachable:"Reachable",unreachable:"Unreachable",export:"Export",import:"Import",export_success:"Configuration exported successfully.",export_failed:"Failed to export configuration.",import_confirm_title:"Import Configuration",import_confirm_text:"Import and apply configuration to channel {channel}?",import_success:"Configuration imported successfully.",import_failed:"Failed to import configuration.",import_validation_failed:"Import validation failed.",show_history:"Change History",show_links:"Direct Links",show_schedules:"Schedules",rssi_device:"RSSI Device",rssi_peer:"RSSI Peer",dutycycle:"DC Limit",low_bat:"Low Battery",unreach:"Reachability",config_pending_label:"Config Pending",device_config:"Device Configuration",virtual:"Virtual",copy:"Copy",copied:"Copied to clipboard.",copy_failed:"Failed to copy.",schedule_channel_hint:"Managed via schedules",edit_schedule:"Edit Schedule"},form_parameter:{toggle_on:"On",toggle_off:"Off",custom_value:"Custom value",auto_detect:"Auto-detect",detecting:"Detecting...",detect_failed:"Detection failed"},time_selector:{base:"Base",factor:"Factor",unit:"Time unit",value:"Value",unit_inactive:"Not active",unit_100ms:"100 milliseconds",unit_seconds:"Seconds",unit_5seconds:"5-second steps",unit_10seconds:"10-second steps",unit_minutes:"Minutes",unit_5minutes:"5-minute steps",unit_10minutes:"10-minute steps",unit_hours:"Hours",permanent:"Permanent"},channel_config:{save:"Save",saving:"Saving...",discard:"Discard Changes",reset_defaults:"Reset to Defaults",confirm_save_title:"Save Changes",confirm_save_text:"Apply {count} change(s) to the device?",unsaved_title:"Unsaved Changes",unsaved_warning:"You have unsaved changes. Discard them and go back?",save_success:"Changes saved successfully.",save_failed:"Failed to save changes.",validation_failed:"Validation failed. Please check the highlighted fields.",undo:"Undo",redo:"Redo",session_expiring:"Session expiring soon, refreshing automatically...",expert_mode:"Expert mode",expert_mode_hint:"Show advanced parameters"},change_history:{title:"Change History",empty:"No configuration changes recorded.",source_manual_hint:"Changed manually via the configuration UI",source_import_hint:"Applied via a configuration import",source_copy_hint:"Copied from another channel",clear:"Clear History",clear_confirm_title:"Clear History",clear_confirm_text:"Delete all history entries? This cannot be undone.",clear_success:"History cleared ({count} entries removed).",clear_failed:"Failed to clear history.",source_manual:"Manual",source_import:"Import",source_copy:"Copy",parameters_changed:"{count} parameter(s) changed"},device_links:{title:"Direct Links",subtitle:"Direct links for {device}",empty:"No direct links configured.",empty_hint:"Create a new link to connect devices directly.",add_link:"New Link",outgoing:"Outgoing",incoming:"Incoming",configure:"Configure",delete:"Delete",delete_confirm_title:"Delete Link",delete_confirm_text:"Remove the direct link from {sender} to {receiver}? The devices will no longer communicate directly.",delete_success:"Link deleted successfully.",delete_failed:"Failed to delete link.",channel_group:"Channel {channel}",sort_by:"Sort by",sort_channel:"Channel",sort_sender:"Sender",sort_receiver:"Receiver"},link_config:{title:"Link Configuration",sender:"Sender",receiver:"Receiver",save_success:"Link configuration saved.",save_failed:"Failed to save link configuration.",discard:"Discard Changes",confirm_save_title:"Save Link Changes",confirm_save_text:"Apply {count} change(s) to this link?",unsaved_title:"Unsaved Changes",unsaved_warning:"You have unsaved changes. Discard them and go back?",receiver_params:"Receiver Parameters",sender_params:"Sender Parameters",no_params:"No configurable parameters for this link.",profile:"Profile",short_keypress:"Short keypress",long_keypress:"Long keypress",last_value:"Last value",custom_time:"Custom",test_profile:"Test profile",test_profile_success:"Profile applied successfully",test_profile_failed:"Failed to apply profile"},device_schedule:{title:"Schedules",subtitle:"Schedules for {device}",select_device:"Select a device...",no_devices:"No devices with schedule support found.",schedule_type_climate:"Climate",schedule_type_default:"Device",profile:"Profile",active_profile:"Active profile",weekdays:"Mon,Tue,Wed,Thu,Fri,Sat,Sun",weekday_monday:"Monday",weekday_tuesday:"Tuesday",weekday_wednesday:"Wednesday",weekday_thursday:"Thursday",weekday_friday:"Friday",weekday_saturday:"Saturday",weekday_sunday:"Sunday",base_temperature:"Base temperature",temperature:"Temperature",time:"Time",from:"From",to:"To",add_period:"Add period",delete_period:"Delete",save:"Save",saving:"Saving...",save_success:"Schedule saved successfully.",save_failed:"Failed to save schedule.",load_failed:"Failed to load schedule.",reload:"Reload from device",reload_success:"Device configuration reloaded.",reload_failed:"Failed to reload device configuration.",export:"Export",import:"Import",import_confirm_title:"Import Schedule",import_confirm_text:"Import and apply this schedule?",import_success:"Schedule imported.",import_failed:"Failed to import schedule.",no_schedule_data:"No schedule data available.",click_to_edit:"Click on a time slot to edit the schedule",copy_schedule:"Copy schedule",paste_schedule:"Paste schedule",edit:"Edit {weekday}",add_time_block:"+ Add Time Block",edit_slot:"Edit",save_all:"Save all",discard:"Discard",keep_editing:"Keep editing",unsaved_changes:"Unsaved changes",confirm_discard_changes:"You have unsaved changes. Do you want to discard them?",save_slot:"Apply",cancel_slot_edit:"Cancel",remove_slot:"Remove",undo_shortcut:"Undo (Ctrl+Z)",redo_shortcut:"Redo (Ctrl+Y)",warnings_title:"Validation Warnings",base_temperature_description:"Temperature for unscheduled periods",temperature_periods:"Temperature Periods",invalid_schedule:"Invalid schedule: {error}",validation_block_end_before_start:"Block {block}: End time is before start time",validation_block_zero_duration:"Block {block}: Block has zero duration",validation_invalid_start_time:"Block {block}: Invalid start time",validation_invalid_end_time:"Block {block}: Invalid end time",validation_temp_out_of_range:"Block {block}: Temperature out of range ({min}-{max}°C)",validation_invalid_slot_count:"Invalid number of slots: {count} (expected 13)",validation_invalid_slot_key:"Invalid slot key: {key} (must be integer 1-13)",validation_missing_slot:"Missing slot {slot}",validation_slot_missing_values:"Slot {slot} missing ENDTIME or TEMPERATURE",validation_slot_time_backwards:"Slot {slot} time goes backwards: {time}",validation_slot_time_exceeds_day:"Slot {slot} time exceeds 24:00: {time}",validation_last_slot_must_end:"Last slot must end at 24:00",validation_schedule_must_be_object:"Schedule data must be an object",validation_missing_weekday:"Missing weekday: {weekday}",validation_invalid_weekday_data:"Invalid data for {weekday}",validation_weekday_error:"{weekday}: {details}",entries:"{count} entries",max_entries:"Max entries: {max}",level:"Level",duration:"Duration",condition:"Condition",target_channel:"Target channel",add_event:"Add Event",edit_event:"Edit Event",delete_event:"Delete Event",confirm_delete:"Are you sure you want to delete this event?",weekdays_label:"Weekdays",level_on:"On",level_off:"Off",permanent_on:"Permanent",show_more:"Show more",show_less:"Show less",slat:"Slat Position",ramp_time:"Ramp Time",astro_sunrise:"Sunrise",astro_sunset:"Sunset",astro_offset:"Astro Offset (min)",condition_fixed_time:"Fixed Time",condition_astro:"Astro",condition_fixed_if_before_astro:"Fixed if before Astro",condition_astro_if_before_fixed:"Astro if before Fixed",condition_fixed_if_after_astro:"Fixed if after Astro",condition_astro_if_after_fixed:"Astro if after Fixed",condition_earliest:"Earliest",condition_latest:"Latest",or:"or",if_before:"if before",if_after:"if after",device_mode_hint_bsl:"This device supports Switch and Status LED color modes via the CCU WebUI.",device_mode_hint_rgbw:"This device supports RGBW color modes via the CCU WebUI.",device_mode_hint_lock:"This device supports door lock modes via the CCU WebUI.",weekly_program:"Weekly Program",weekly_program_enabled:"Weekly program is active",weekly_program_disabled:"Weekly program is inactive",weekly_program_enable_failed:"Failed to enable/disable weekly program.",weekly_program_enabled_toast:"Weekly program enabled.",weekly_program_disabled_toast:"Weekly program disabled.",lock_mode:"Entry Type",lock_mode_door_lock:"Door Lock Drive",lock_mode_user_permission:"User Permission",lock_action:"Action",lock_action_lock_autorelock_end:"Lock + Auto-Relock end",lock_action_lock_autorelock_start:"Lock + Auto-Relock start",lock_action_unlock_autorelock_end:"Unlock + Auto-Relock end",lock_action_autorelock_end:"Auto-Relock end",lock_permission:"Permission",permission_granted:"Granted",permission_not_granted:"Not granted",schedule_enabled:"Enabled",schedule_disabled:"Disabled"},add_link:{title:"New Direct Link",step_channel:"Step 1/3 — Select Channel",step_peer:"Step 2/3 — Select Partner",step_confirm:"Step 3/3 — Confirm",select_channel:"Select a channel from this device:",select_role:"Role of selected channel:",role_sender:"Sender (sends commands)",role_receiver:"Receiver (receives commands)",search_devices:"Search devices...",no_compatible:"No compatible channels found.",link_name:"Link name (optional)",create:"Create Link",create_success:"Link created successfully.",create_failed:"Failed to create link.",next:"Next",back:"Back"},tabs:{devices:"Devices",integration:"Integration",ccu:"OpenCCU"},integration:{system_health:"System Health",central_state:"Central State",health_score:"Health Score",device_statistics:"Device Statistics",total_devices:"Total Devices",unreachable:"Unreachable",firmware_updatable:"Firmware Updatable",total_short:"total",unreachable_short:"unreachable",radio_levels:"Duty Cycle / Carrier Sense",loom_diagnostics_hint:"System health, command throttling and incidents live in the OpenCCU-Loom Config UI under Diagnostics — there they cover every CCU the daemon serves, not just this config entry.",command_throttle:"Command Throttle",enabled:"Enabled",interval:"Interval",queue_size:"Queue Size",throttled:"Throttled",burst_count:"Burst Count",incidents:"Incidents",no_incidents:"No incidents recorded.",clear_incidents:"Clear Incidents",clear_incidents_title:"Clear Incidents",clear_incidents_text:"Delete all recorded incidents? This cannot be undone.",incidents_cleared:"Incidents cleared.",clear:"Clear",clear_cache:"Clear Cache",clear_cache_title:"Clear Cache",clear_cache_text:"Clear all cached data? The integration will re-fetch data from the CCU.",cache_cleared:"Cache cleared.",actions:"Actions",refresh:"Refresh",action_failed:"Action failed."},ccu:{tab_general:"General",tab_pairing:"Device Pairing",tab_messages:"Messages",tab_signal:"Signal Quality",tab_firmware:"Firmware",no_inbox_devices:"No new devices in inbox.",no_service_messages:"No service messages.",no_alarm_messages:"No alarm messages.",system_information:"System Information",name:"Name",model:"Model",version:"Version",serial:"Serial",hostname:"Hostname",ccu_type:"CCU Type",interfaces:"Interfaces",auth_enabled:"Authentication",backup_exists:"Backup available",hub_messages:"Hub Messages",service_messages:"Service Messages",alarm_messages:"Alarm Messages",inbox:"Inbox",address:"Address",device_type:"Device Type",device_name:"Device Name",accept:"Accept",accept_device_title:"Accept Device",accept_device_text:"Accept device {device} into the system?",accept_device_success:"Device {device} accepted.",message:"Message",msg_type:"Type",timestamp:"Timestamp",counter_label:"Count",acknowledge:"Acknowledge",message_acknowledged:"Message acknowledged.",description:"Description",last_trigger:"Last Trigger",install_mode:"Install Mode",active:"Active",inactive:"Inactive",remaining_seconds:"{seconds}s remaining",activate:"Activate",install_mode_title:"Activate Install Mode",install_mode_text:"Activate install mode for {interface}? The CCU will accept new devices for 60 seconds.",install_mode_activated:"Install mode activated for {interface}.",signal_quality:"Signal Quality",device:"Device",interface:"Interface",reachable:"Reachable",signal:"Signal",battery:"Battery",low:"Low",ok:"OK",firmware_overview:"Firmware Overview",updatable:"updatable",current_fw:"Current",available_fw:"Available",state:"State",refresh_firmware:"Refresh Firmware Data",firmware_refreshed:"Firmware data refreshed.",actions:"Actions",refresh:"Refresh",create_backup:"Create Backup",create_backup_title:"Create CCU Backup",create_backup_text:"Create a backup of the CCU configuration? This may take a moment.",backup_running:"Creating backup...",backup_success:"Backup created: {filename} ({size} MB)",backup_failed:"Failed to create backup.",action_failed:"Action failed.",filter_devices:"Filter devices...",filter_all:"All",filter_result:"{count} of {total} devices",update_firmware:"Update",update_firmware_confirm:"Update firmware for {device}?",update_firmware_success:"Firmware update triggered for {device}",update_firmware_failed:"Firmware update failed"},permissions:{read_only_notice:"You have read-only access. Contact an admin for edit permissions.",schedule_edit_required:"Schedule editing permission required.",device_config_required:"Device configuration permission required.",device_links_required:"Device link management permission required."},config_form:{dst_start:"Start of daylight saving time",dst_end:"End of daylight saving time"},cross_validation:{max_must_be_gte_min:"Maximum must be greater than or equal to minimum.",level_must_be_in_range:"Level must be between minimum and maximum.",hi_must_be_gte_lo:"Upper threshold must be greater than or equal to lower threshold."}},de:{common:{back:"Zurück",loading:"Laden...",save:"Speichern",cancel:"Abbrechen",yes:"Ja",no:"Nein",retry:"Erneut versuchen",close:"Schließen",error_loading:"Fehler beim Laden."},device_list:{title:"Homematic Gerätekonfiguration",select_ccu:"CCU",select_placeholder:"CCU auswählen...",search_placeholder:"Geräte suchen...",no_entry_selected:"Bitte eine CCU auswählen, um Geräte anzuzeigen.",no_entry_hint:"Wählen Sie oben eine CCU aus, um deren Geräte anzuzeigen.",no_devices:"Keine konfigurierbaren Geräte gefunden.",channels:"Kanäle",unreachable:"Nicht erreichbar",reachable:"Erreichbar",low_battery:"Batterie schwach",config_pending:"Konfiguration ausstehend",sort_by:"Sortieren nach",sort_name:"Name",sort_address:"Adresse",sort_model:"Modell"},device_detail:{address:"Adresse",firmware:"Firmware",channel:"Kanal",configure_master:"MASTER konfigurieren",no_master_config:"Keine MASTER-Konfiguration verfügbar.",not_found:"Gerät nicht gefunden.",yes:"Ja",no:"Nein",reachable:"Erreichbar",unreachable:"Nicht erreichbar",export:"Exportieren",import:"Importieren",export_success:"Konfiguration erfolgreich exportiert.",export_failed:"Export der Konfiguration fehlgeschlagen.",import_confirm_title:"Konfiguration importieren",import_confirm_text:"Konfiguration importieren und auf Kanal {channel} anwenden?",import_success:"Konfiguration erfolgreich importiert.",import_failed:"Import der Konfiguration fehlgeschlagen.",import_validation_failed:"Import-Validierung fehlgeschlagen.",show_history:"Änderungsverlauf",show_links:"Direktverknüpfungen",show_schedules:"Zeitpläne",rssi_device:"RSSI Gerät",rssi_peer:"RSSI Peer",dutycycle:"DC-Limit",low_bat:"Batterie schwach",unreach:"Erreichbarkeit",config_pending_label:"Konfig. ausstehend",device_config:"Gerätekonfiguration",virtual:"Virtuell",copy:"Kopieren",copied:"In die Zwischenablage kopiert.",copy_failed:"Kopieren fehlgeschlagen.",schedule_channel_hint:"Wird über Zeitpläne verwaltet",edit_schedule:"Zeitplan bearbeiten"},form_parameter:{toggle_on:"Ein",toggle_off:"Aus",custom_value:"Wert eingeben",auto_detect:"Auto-Erkennung",detecting:"Erkennung läuft...",detect_failed:"Erkennung fehlgeschlagen"},time_selector:{base:"Basis",factor:"Faktor",unit:"Zeiteinheit",value:"Wert",unit_inactive:"Nicht aktiv",unit_100ms:"100 Millisekunden",unit_seconds:"Sekunden",unit_5seconds:"5-Sekunden-Schritte",unit_10seconds:"10-Sekunden-Schritte",unit_minutes:"Minuten",unit_5minutes:"5-Minuten-Schritte",unit_10minutes:"10-Minuten-Schritte",unit_hours:"Stunden",permanent:"Dauerhaft"},channel_config:{save:"Speichern",saving:"Speichern...",discard:"Änderungen verwerfen",reset_defaults:"Standardwerte laden",confirm_save_title:"Änderungen speichern",confirm_save_text:"{count} Änderung(en) auf das Gerät anwenden?",unsaved_title:"Ungespeicherte Änderungen",unsaved_warning:"Es gibt ungespeicherte Änderungen. Verwerfen und zurückgehen?",save_success:"Änderungen erfolgreich gespeichert.",save_failed:"Fehler beim Speichern der Änderungen.",validation_failed:"Validierung fehlgeschlagen. Bitte die markierten Felder prüfen.",undo:"Rückgängig",redo:"Wiederherstellen",session_expiring:"Sitzung läuft bald ab, wird automatisch erneuert...",expert_mode:"Expertenmodus",expert_mode_hint:"Erweiterte Parameter anzeigen"},change_history:{title:"Änderungsverlauf",empty:"Keine Konfigurationsänderungen aufgezeichnet.",source_manual_hint:"Manuell über die Konfigurationsoberfläche geändert",source_import_hint:"Über einen Konfigurationsimport eingespielt",source_copy_hint:"Von einem anderen Kanal kopiert",clear:"Verlauf löschen",clear_confirm_title:"Verlauf löschen",clear_confirm_text:"Alle Verlaufseinträge löschen? Dies kann nicht rückgängig gemacht werden.",clear_success:"Verlauf gelöscht ({count} Einträge entfernt).",clear_failed:"Fehler beim Löschen des Verlaufs.",source_manual:"Manuell",source_import:"Import",source_copy:"Kopie",parameters_changed:"{count} Parameter geändert"},device_links:{title:"Direktverknüpfungen",subtitle:"Direktverknüpfungen für {device}",empty:"Keine Direktverknüpfungen konfiguriert.",empty_hint:"Erstellen Sie eine neue Verknüpfung, um Geräte direkt miteinander zu verbinden.",add_link:"Neue Verknüpfung",outgoing:"Ausgehend",incoming:"Eingehend",configure:"Konfigurieren",delete:"Löschen",delete_confirm_title:"Verknüpfung löschen",delete_confirm_text:"Direktverknüpfung von {sender} nach {receiver} entfernen? Die Geräte kommunizieren dann nicht mehr direkt.",delete_success:"Verknüpfung erfolgreich gelöscht.",delete_failed:"Fehler beim Löschen der Verknüpfung.",channel_group:"Kanal {channel}",sort_by:"Sortieren nach",sort_channel:"Kanal",sort_sender:"Sender",sort_receiver:"Empfänger"},link_config:{title:"Link-Konfiguration",sender:"Sender",receiver:"Empfänger",save_success:"Link-Konfiguration gespeichert.",save_failed:"Fehler beim Speichern der Link-Konfiguration.",discard:"Änderungen verwerfen",confirm_save_title:"Link-Änderungen speichern",confirm_save_text:"{count} Änderung(en) auf diese Verknüpfung anwenden?",unsaved_title:"Ungespeicherte Änderungen",unsaved_warning:"Es gibt ungespeicherte Änderungen. Verwerfen und zurückgehen?",receiver_params:"Empfänger-Parameter",sender_params:"Sender-Parameter",no_params:"Keine konfigurierbaren Parameter für diese Verknüpfung.",profile:"Profil",short_keypress:"Kurzer Tastendruck",long_keypress:"Langer Tastendruck",last_value:"Letzter Wert",custom_time:"Benutzerdefiniert",test_profile:"Profil testen",test_profile_success:"Profil erfolgreich angewendet",test_profile_failed:"Profil konnte nicht angewendet werden"},device_schedule:{title:"Zeitpläne",subtitle:"Zeitpläne für {device}",select_device:"Gerät auswählen...",no_devices:"Keine Geräte mit Zeitplan-Unterstützung gefunden.",schedule_type_climate:"Heizung",schedule_type_default:"Gerät",profile:"Profil",active_profile:"Aktives Profil",weekdays:"Mo,Di,Mi,Do,Fr,Sa,So",weekday_monday:"Montag",weekday_tuesday:"Dienstag",weekday_wednesday:"Mittwoch",weekday_thursday:"Donnerstag",weekday_friday:"Freitag",weekday_saturday:"Samstag",weekday_sunday:"Sonntag",base_temperature:"Basistemperatur",temperature:"Temperatur",time:"Uhrzeit",from:"Von",to:"Bis",add_period:"Zeitraum hinzufügen",delete_period:"Löschen",save:"Speichern",saving:"Speichern...",save_success:"Zeitplan erfolgreich gespeichert.",save_failed:"Fehler beim Speichern des Zeitplans.",load_failed:"Fehler beim Laden des Zeitplans.",reload:"Vom Gerät laden",reload_success:"Gerätekonfiguration neu geladen.",reload_failed:"Fehler beim Laden der Gerätekonfiguration.",export:"Exportieren",import:"Importieren",import_confirm_title:"Zeitplan importieren",import_confirm_text:"Diesen Zeitplan importieren und anwenden?",import_success:"Zeitplan importiert.",import_failed:"Fehler beim Importieren des Zeitplans.",no_schedule_data:"Keine Zeitplan-Daten verfügbar.",click_to_edit:"Klicken Sie auf einen Zeitabschnitt, um den Zeitplan zu bearbeiten",copy_schedule:"Zeitplan kopieren",paste_schedule:"Zeitplan einfügen",edit:"{weekday} bearbeiten",add_time_block:"+ Zeitblock hinzufügen",edit_slot:"Bearbeiten",save_all:"Alle speichern",discard:"Verwerfen",keep_editing:"Weiter bearbeiten",unsaved_changes:"Ungespeicherte Änderungen",confirm_discard_changes:"Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?",save_slot:"Übernehmen",cancel_slot_edit:"Abbrechen",remove_slot:"Entfernen",undo_shortcut:"Rückgängig (Strg+Z)",redo_shortcut:"Wiederholen (Strg+Y)",warnings_title:"Validierungswarnungen",base_temperature_description:"Temperatur für nicht geplante Zeiträume",temperature_periods:"Temperaturperioden",invalid_schedule:"Ungültiger Zeitplan: {error}",validation_block_end_before_start:"Block {block}: Die Endzeit liegt vor der Startzeit",validation_block_zero_duration:"Block {block}: Der Block hat keine Dauer",validation_invalid_start_time:"Block {block}: Ungültige Startzeit",validation_invalid_end_time:"Block {block}: Ungültige Endzeit",validation_temp_out_of_range:"Block {block}: Temperatur außerhalb des Bereichs ({min}-{max}°C)",validation_invalid_slot_count:"Ungültige Anzahl an Slots: {count} (erwartet 13)",validation_invalid_slot_key:"Ungültiger Slot-Schlüssel: {key} (muss eine Ganzzahl 1-13 sein)",validation_missing_slot:"Slot {slot} fehlt",validation_slot_missing_values:"Slot {slot} fehlt ENDTIME oder TEMPERATURE",validation_slot_time_backwards:"Slot {slot}: Zeit läuft rückwärts: {time}",validation_slot_time_exceeds_day:"Slot {slot}: Zeit überschreitet 24:00: {time}",validation_last_slot_must_end:"Der letzte Slot muss um 24:00 enden",validation_schedule_must_be_object:"Zeitplandaten müssen ein Objekt sein",validation_missing_weekday:"Fehlender Wochentag: {weekday}",validation_invalid_weekday_data:"Ungültige Daten für {weekday}",validation_weekday_error:"{weekday}: {details}",entries:"{count} Einträge",max_entries:"Max. Einträge: {max}",level:"Wert",duration:"Dauer",condition:"Bedingung",target_channel:"Zielkanal",add_event:"Ereignis hinzufügen",edit_event:"Ereignis bearbeiten",delete_event:"Ereignis löschen",confirm_delete:"Möchten Sie dieses Ereignis wirklich löschen?",weekdays_label:"Wochentage",level_on:"Ein",level_off:"Aus",permanent_on:"Dauerhaft",show_more:"Mehr anzeigen",show_less:"Weniger anzeigen",slat:"Lamellenposition",ramp_time:"Rampenzeit",astro_sunrise:"Sonnenaufgang",astro_sunset:"Sonnenuntergang",astro_offset:"Astro-Offset (Min.)",condition_fixed_time:"Feste Zeit",condition_astro:"Astro",condition_fixed_if_before_astro:"Fest wenn vor Astro",condition_astro_if_before_fixed:"Astro wenn vor Fest",condition_fixed_if_after_astro:"Fest wenn nach Astro",condition_astro_if_after_fixed:"Astro wenn nach Fest",condition_earliest:"Frühester",condition_latest:"Spätester",or:"oder",if_before:"wenn vor",if_after:"wenn nach",device_mode_hint_bsl:"Dieses Gerät unterstützt Schalt- und Status-LED-Farbmodi über die CCU-WebUI.",device_mode_hint_rgbw:"Dieses Gerät unterstützt RGBW-Farbmodi über die CCU-WebUI.",device_mode_hint_lock:"Dieses Gerät unterstützt Türschloss-Modi über die CCU-WebUI.",weekly_program:"Wochenprogramm",weekly_program_enabled:"Wochenprogramm ist aktiv",weekly_program_disabled:"Wochenprogramm ist inaktiv",weekly_program_enable_failed:"Fehler beim Aktivieren/Deaktivieren des Wochenprogramms.",weekly_program_enabled_toast:"Wochenprogramm aktiviert.",weekly_program_disabled_toast:"Wochenprogramm deaktiviert.",lock_mode:"Zeitpunkt-Typ",lock_mode_door_lock:"Türschlossantrieb",lock_mode_user_permission:"Benutzerberechtigung",lock_action:"Aktion",lock_action_lock_autorelock_end:"Verriegeln + Auto-Relock Ende",lock_action_lock_autorelock_start:"Verriegeln + Auto-Relock Beginn",lock_action_unlock_autorelock_end:"Entriegeln + Auto-Relock Ende",lock_action_autorelock_end:"Auto-Relock Ende",lock_permission:"Berechtigung",permission_granted:"Erteilt",permission_not_granted:"Nicht erteilt",schedule_enabled:"Aktiviert",schedule_disabled:"Deaktiviert"},add_link:{title:"Neue Direktverknüpfung",step_channel:"Schritt 1/3 — Kanal wählen",step_peer:"Schritt 2/3 — Partner wählen",step_confirm:"Schritt 3/3 — Bestätigen",select_channel:"Kanal dieses Geräts auswählen:",select_role:"Rolle des gewählten Kanals:",role_sender:"Sender (sendet Kommandos)",role_receiver:"Empfänger (empfängt Kommandos)",search_devices:"Geräte suchen...",no_compatible:"Keine kompatiblen Kanäle gefunden.",link_name:"Verknüpfungsname (optional)",create:"Verknüpfung erstellen",create_success:"Verknüpfung erfolgreich erstellt.",create_failed:"Fehler beim Erstellen der Verknüpfung.",next:"Weiter",back:"Zurück"},tabs:{devices:"Geräte",integration:"Integration",ccu:"OpenCCU"},integration:{system_health:"Systemzustand",central_state:"Zentralenstatus",health_score:"Gesundheitswert",device_statistics:"Gerätestatistik",total_devices:"Geräte gesamt",unreachable:"Nicht erreichbar",firmware_updatable:"Firmware aktualisierbar",total_short:"gesamt",unreachable_short:"nicht erreichbar",radio_levels:"Duty Cycle / Carrier Sense",loom_diagnostics_hint:"Systemzustand, Befehlsdrosselung und Störungen finden Sie in der OpenCCU-Loom-Konfigurationsoberfläche unter Diagnose — dort für alle CCUs des Daemons, nicht nur für diesen Eintrag.",command_throttle:"Befehlsdrosselung",enabled:"Aktiviert",interval:"Intervall",queue_size:"Warteschlange",throttled:"Gedrosselt",burst_count:"Burst-Anzahl",incidents:"Vorfälle",no_incidents:"Keine Vorfälle aufgezeichnet.",clear_incidents:"Vorfälle löschen",clear_incidents_title:"Vorfälle löschen",clear_incidents_text:"Alle aufgezeichneten Vorfälle löschen? Dies kann nicht rückgängig gemacht werden.",incidents_cleared:"Vorfälle gelöscht.",clear:"Löschen",clear_cache:"Cache leeren",clear_cache_title:"Cache leeren",clear_cache_text:"Alle zwischengespeicherten Daten löschen? Die Integration holt die Daten erneut von der CCU.",cache_cleared:"Cache geleert.",actions:"Aktionen",refresh:"Aktualisieren",action_failed:"Aktion fehlgeschlagen."},ccu:{tab_general:"Allgemein",tab_pairing:"Geräte anlernen",tab_messages:"Meldungen",tab_signal:"Signalqualität",tab_firmware:"Firmware",no_inbox_devices:"Keine neuen Geräte im Posteingang.",no_service_messages:"Keine Servicemeldungen.",no_alarm_messages:"Keine Alarmmeldungen.",system_information:"Systeminformationen",name:"Name",model:"Modell",version:"Version",serial:"Seriennummer",hostname:"Hostname",ccu_type:"CCU-Typ",interfaces:"Schnittstellen",auth_enabled:"Authentifizierung",backup_exists:"Backup vorhanden",hub_messages:"Hub-Meldungen",service_messages:"Servicemeldungen",alarm_messages:"Alarmmeldungen",inbox:"Posteingang",address:"Adresse",device_type:"Gerätetyp",device_name:"Gerätename",accept:"Annehmen",accept_device_title:"Gerät annehmen",accept_device_text:"Gerät {device} in das System übernehmen?",accept_device_success:"Gerät {device} angenommen.",message:"Meldung",msg_type:"Typ",timestamp:"Zeitstempel",counter_label:"Anzahl",acknowledge:"Quittieren",message_acknowledged:"Meldung quittiert.",description:"Beschreibung",last_trigger:"Letzter Auslöser",install_mode:"Anlernmodus",active:"Aktiv",inactive:"Inaktiv",remaining_seconds:"Noch {seconds}s",activate:"Aktivieren",install_mode_title:"Anlernmodus aktivieren",install_mode_text:"Anlernmodus für {interface} aktivieren? Die CCU akzeptiert 60 Sekunden lang neue Geräte.",install_mode_activated:"Anlernmodus für {interface} aktiviert.",signal_quality:"Signalqualität",device:"Gerät",interface:"Schnittstelle",reachable:"Erreichbar",signal:"Signal",battery:"Batterie",low:"Schwach",ok:"OK",firmware_overview:"Firmware-Übersicht",updatable:"aktualisierbar",current_fw:"Aktuell",available_fw:"Verfügbar",state:"Status",refresh_firmware:"Firmware-Daten aktualisieren",firmware_refreshed:"Firmware-Daten aktualisiert.",actions:"Aktionen",refresh:"Aktualisieren",create_backup:"Backup erstellen",create_backup_title:"CCU-Backup erstellen",create_backup_text:"Ein Backup der CCU-Konfiguration erstellen? Dies kann einen Moment dauern.",backup_running:"Backup wird erstellt...",backup_success:"Backup erstellt: {filename} ({size} MB)",backup_failed:"Fehler beim Erstellen des Backups.",action_failed:"Aktion fehlgeschlagen.",filter_devices:"Geräte filtern...",filter_all:"Alle",filter_result:"{count} von {total} Geräten",update_firmware:"Aktualisieren",update_firmware_confirm:"Firmware für {device} aktualisieren?",update_firmware_success:"Firmware-Update für {device} gestartet",update_firmware_failed:"Firmware-Update fehlgeschlagen"},permissions:{read_only_notice:"Sie haben nur Lesezugriff. Wenden Sie sich an einen Administrator für Bearbeitungsrechte.",schedule_edit_required:"Berechtigung zur Zeitplanbearbeitung erforderlich.",device_config_required:"Berechtigung zur Gerätekonfiguration erforderlich.",device_links_required:"Berechtigung zur Verwaltung von Direktverknüpfungen erforderlich."},config_form:{dst_start:"Beginn der Sommerzeit",dst_end:"Ende der Sommerzeit"},cross_validation:{max_must_be_gte_min:"Maximum muss größer oder gleich dem Minimum sein.",level_must_be_in_range:"Level muss zwischen Minimum und Maximum liegen.",hi_must_be_gte_lo:"Oberer Schwellwert muss größer oder gleich dem unteren Schwellwert sein."}}};function Qe(e,t=""){const i={};for(const[s,a]of Object.entries(e)){const e=t?`${t}.${s}`:s;"string"==typeof a?i[e]=a:"object"==typeof a&&null!==a&&Object.assign(i,Qe(a,e))}return i}const Je=new Map;function et(e){if(Je.has(e))return Je.get(e);const t=Qe(Xe[e]??Xe.en);return Je.set(e,t),t}function tt(e,t,i){const s=et(e.config.language??"en");let a=s[t]??s[t.replace(/^panel\./,"")]??t;if(i)for(const[e,t]of Object.entries(i))a=a.replace(`{${e}}`,String(t));return a}let it=class extends oe{constructor(){super(...arguments),this.entryId=""}updated(e){e.has("hass")&&this.hass&&this.classList.toggle("dark-theme",this.hass.themes?.darkMode??!1)}_l(e,t){return tt(this.hass,e,t)}_handleClick(){this.dispatchEvent(new CustomEvent("device-selected",{detail:{device:this.device.address,interfaceId:this.device.interface_id},bubbles:!0,composed:!0}))}_handleKeydown(e){"Enter"!==e.key&&" "!==e.key||(e.preventDefault(),this._handleClick())}_handleIconError(e){e.target.style.display="none"}_renderMaintenanceIcons(e){return e&&0!==Object.keys(e).length?F`
+`,Ce=new Set(["BidCos-RF","BidCos-Wired","HmIP-RF"]);function Ee(e,t){return`/api/homematicip_local/${e}/device_icon/${t}`}async function Ae(e,t){return(await e.callWS({type:"homematicip_local/config/list_devices",entry_id:t})).devices}async function De(e,t,i,s,a="",r="MASTER"){return e.callWS({type:"homematicip_local/config/get_form_schema",entry_id:t,interface_id:i,channel_address:s,channel_type:a,paramset_key:r})}async function Ie(e,t,i,s,a="MASTER"){return e.callWS({type:"homematicip_local/config/session_open",entry_id:t,interface_id:i,channel_address:s,paramset_key:a})}async function Te(e,t,i,s,a,r="MASTER"){return e.callWS({type:"homematicip_local/config/session_set",entry_id:t,channel_address:i,parameter:s,value:a,paramset_key:r})}async function Me(e,t,i,s="MASTER"){return e.callWS({type:"homematicip_local/config/session_discard",entry_id:t,channel_address:i,paramset_key:s})}async function Pe(e,t,i,s,a){return e.callWS({type:"homematicip_local/config/get_link_form_schema",entry_id:t,interface_id:i,sender_channel_address:s,receiver_channel_address:a})}async function Le(e,t,i,s,a,r){return e.callWS({type:"homematicip_local/config/put_link_paramset",entry_id:t,interface_id:i,sender_channel_address:s,receiver_channel_address:a,values:r})}async function ze(e,t,i,s,a){try{return await e.callWS({type:"homematicip_local/config/get_link_profiles",entry_id:t,interface_id:i,sender_channel_address:s,receiver_channel_address:a})}catch{return null}}async function Ne(e,t){return(await e.callWS({type:"homematicip_local/config/list_schedule_devices",entry_id:t})).devices}async function Re(e,t,i,s){return e.callWS({type:"homematicip_local/config/get_climate_schedule",entry_id:t,device_address:i,...s&&{profile:s}})}async function Be(e,t,i,s,a,r,n){return e.callWS({type:"homematicip_local/config/set_climate_schedule_weekday",entry_id:t,device_address:i,profile:s,weekday:a,base_temperature:r,simple_weekday_list:n})}async function Ve(e,t,i,s){return e.callWS({type:"homematicip_local/config/set_device_schedule",entry_id:t,device_address:i,schedule_data:s})}async function We(e,t){return e.callWS({type:"homematicip_local/config/get_user_permissions",entry_id:t})}async function Ue(e,t){return e.callWS({type:"homematicip_local/integration/get_system_health",entry_id:t})}async function He(e,t){return(await e.callWS({type:"homematicip_local/integration/get_command_throttle_stats",entry_id:t})).throttle_stats}async function Fe(e,t,i=50,s){return e.callWS({type:"homematicip_local/integration/get_incidents",entry_id:t,limit:i,...s})}async function Oe(e,t){return e.callWS({type:"homematicip_local/ccu/get_system_information",entry_id:t})}async function je(e,t){return e.callWS({type:"homematicip_local/ccu/get_install_mode_status",entry_id:t})}async function Ke(e,t){return(await e.callWS({type:"homematicip_local/ccu/get_signal_quality",entry_id:t})).devices}async function Ye(e,t){return e.callWS({type:"homematicip_local/ccu/get_firmware_overview",entry_id:t})}async function Ge(e,t){return(await e.callWS({type:"homematicip_local/ccu/get_inbox_devices",entry_id:t})).devices}async function Ze(e,t){return(await e.callWS({type:"homematicip_local/ccu/get_service_messages",entry_id:t})).messages}async function qe(e,t){return(await e.callWS({type:"homematicip_local/ccu/get_alarm_messages",entry_id:t})).alarms}const Xe={en:{common:{back:"Back",loading:"Loading...",save:"Save",cancel:"Cancel",yes:"Yes",no:"No",retry:"Retry",close:"Close",error_loading:"Failed to load."},device_list:{title:"Homematic Device Configuration",select_ccu:"CCU",select_placeholder:"Select a CCU...",search_placeholder:"Search devices...",no_entry_selected:"Please select a CCU to view devices.",no_entry_hint:"Select a CCU above to view its devices.",no_devices:"No configurable devices found.",channels:"channels",unreachable:"Unreachable",reachable:"Reachable",low_battery:"Low battery",config_pending:"Configuration pending",sort_by:"Sort by",sort_name:"Name",sort_address:"Address",sort_model:"Model"},device_detail:{address:"Address",firmware:"Firmware",channel:"Channel",configure_master:"Configure MASTER",no_master_config:"No MASTER configuration available.",not_found:"Device not found.",yes:"Yes",no:"No",reachable:"Reachable",unreachable:"Unreachable",export:"Export",import:"Import",export_success:"Configuration exported successfully.",export_failed:"Failed to export configuration.",import_confirm_title:"Import Configuration",import_confirm_text:"Import and apply configuration to channel {channel}?",import_success:"Configuration imported successfully.",import_failed:"Failed to import configuration.",import_validation_failed:"Import validation failed.",show_history:"Change History",show_links:"Direct Links",show_schedules:"Schedules",rssi_device:"RSSI Device",rssi_peer:"RSSI Peer",dutycycle:"DC Limit",low_bat:"Low Battery",unreach:"Reachability",config_pending_label:"Config Pending",device_config:"Device Configuration",virtual:"Virtual",copy:"Copy",copied:"Copied to clipboard.",copy_failed:"Failed to copy.",schedule_channel_hint:"Managed via schedules",edit_schedule:"Edit Schedule"},form_parameter:{toggle_on:"On",toggle_off:"Off",custom_value:"Custom value",auto_detect:"Auto-detect",detecting:"Detecting...",detect_failed:"Detection failed"},time_selector:{base:"Base",factor:"Factor",unit:"Time unit",value:"Value",unit_inactive:"Not active",unit_100ms:"100 milliseconds",unit_seconds:"Seconds",unit_5seconds:"5-second steps",unit_10seconds:"10-second steps",unit_minutes:"Minutes",unit_5minutes:"5-minute steps",unit_10minutes:"10-minute steps",unit_hours:"Hours",permanent:"Permanent"},channel_config:{save:"Save",saving:"Saving...",discard:"Discard Changes",reset_defaults:"Reset to Defaults",confirm_save_title:"Save Changes",confirm_save_text:"Apply {count} change(s) to the device?",unsaved_title:"Unsaved Changes",unsaved_warning:"You have unsaved changes. Discard them and go back?",save_success:"Changes saved successfully.",save_failed:"Failed to save changes.",validation_failed:"Validation failed. Please check the highlighted fields.",undo:"Undo",redo:"Redo",session_expiring:"Session expiring soon, refreshing automatically...",expert_mode:"Expert mode",expert_mode_hint:"Show advanced parameters"},change_history:{title:"Change History",empty:"No configuration changes recorded.",source_manual_hint:"Changed manually via the configuration UI",source_import_hint:"Applied via a configuration import",source_copy_hint:"Copied from another channel",clear:"Clear History",clear_confirm_title:"Clear History",clear_confirm_text:"Delete all history entries? This cannot be undone.",clear_success:"History cleared ({count} entries removed).",clear_failed:"Failed to clear history.",source_manual:"Manual",source_import:"Import",source_copy:"Copy",parameters_changed:"{count} parameter(s) changed"},device_links:{title:"Direct Links",subtitle:"Direct links for {device}",empty:"No direct links configured.",empty_hint:"Create a new link to connect devices directly.",add_link:"New Link",outgoing:"Outgoing",incoming:"Incoming",configure:"Configure",delete:"Delete",delete_confirm_title:"Delete Link",delete_confirm_text:"Remove the direct link from {sender} to {receiver}? The devices will no longer communicate directly.",delete_success:"Link deleted successfully.",delete_failed:"Failed to delete link.",channel_group:"Channel {channel}",sort_by:"Sort by",sort_channel:"Channel",sort_sender:"Sender",sort_receiver:"Receiver"},link_config:{title:"Link Configuration",sender:"Sender",receiver:"Receiver",save_success:"Link configuration saved.",save_failed:"Failed to save link configuration.",discard:"Discard Changes",confirm_save_title:"Save Link Changes",confirm_save_text:"Apply {count} change(s) to this link?",unsaved_title:"Unsaved Changes",unsaved_warning:"You have unsaved changes. Discard them and go back?",receiver_params:"Receiver Parameters",sender_params:"Sender Parameters",no_params:"No configurable parameters for this link.",profile:"Profile",short_keypress:"Short keypress",long_keypress:"Long keypress",last_value:"Last value",custom_time:"Custom",test_profile:"Test profile",test_profile_success:"Profile applied successfully",test_profile_failed:"Failed to apply profile"},device_schedule:{title:"Schedules",subtitle:"Schedules for {device}",select_device:"Select a device...",no_devices:"No devices with schedule support found.",schedule_type_climate:"Climate",schedule_type_default:"Device",profile:"Profile",active_profile:"Active profile",weekdays:"Mon,Tue,Wed,Thu,Fri,Sat,Sun",weekday_monday:"Monday",weekday_tuesday:"Tuesday",weekday_wednesday:"Wednesday",weekday_thursday:"Thursday",weekday_friday:"Friday",weekday_saturday:"Saturday",weekday_sunday:"Sunday",base_temperature:"Base temperature",temperature:"Temperature",time:"Time",from:"From",to:"To",add_period:"Add period",delete_period:"Delete",save:"Save",saving:"Saving...",save_success:"Schedule saved successfully.",save_failed:"Failed to save schedule.",load_failed:"Failed to load schedule.",reload:"Reload from device",reload_success:"Device configuration reloaded.",reload_failed:"Failed to reload device configuration.",export:"Export",import:"Import",import_confirm_title:"Import Schedule",import_confirm_text:"Import and apply this schedule?",import_success:"Schedule imported.",import_failed:"Failed to import schedule.",no_schedule_data:"No schedule data available.",click_to_edit:"Click on a time slot to edit the schedule",copy_schedule:"Copy schedule",paste_schedule:"Paste schedule",edit:"Edit {weekday}",add_time_block:"+ Add Time Block",edit_slot:"Edit",save_all:"Save all",discard:"Discard",keep_editing:"Keep editing",unsaved_changes:"Unsaved changes",confirm_discard_changes:"You have unsaved changes. Do you want to discard them?",save_slot:"Apply",cancel_slot_edit:"Cancel",remove_slot:"Remove",undo_shortcut:"Undo (Ctrl+Z)",redo_shortcut:"Redo (Ctrl+Y)",warnings_title:"Validation Warnings",base_temperature_description:"Temperature for unscheduled periods",temperature_periods:"Temperature Periods",invalid_schedule:"Invalid schedule: {error}",validation_block_end_before_start:"Block {block}: End time is before start time",validation_block_zero_duration:"Block {block}: Block has zero duration",validation_invalid_start_time:"Block {block}: Invalid start time",validation_invalid_end_time:"Block {block}: Invalid end time",validation_temp_out_of_range:"Block {block}: Temperature out of range ({min}-{max}°C)",validation_invalid_slot_count:"Invalid number of slots: {count} (expected 13)",validation_invalid_slot_key:"Invalid slot key: {key} (must be integer 1-13)",validation_missing_slot:"Missing slot {slot}",validation_slot_missing_values:"Slot {slot} missing ENDTIME or TEMPERATURE",validation_slot_time_backwards:"Slot {slot} time goes backwards: {time}",validation_slot_time_exceeds_day:"Slot {slot} time exceeds 24:00: {time}",validation_last_slot_must_end:"Last slot must end at 24:00",validation_schedule_must_be_object:"Schedule data must be an object",validation_missing_weekday:"Missing weekday: {weekday}",validation_invalid_weekday_data:"Invalid data for {weekday}",validation_weekday_error:"{weekday}: {details}",entries:"{count} entries",max_entries:"Max entries: {max}",level:"Level",duration:"Duration",condition:"Condition",target_channel:"Target channel",add_event:"Add Event",edit_event:"Edit Event",delete_event:"Delete Event",confirm_delete:"Are you sure you want to delete this event?",weekdays_label:"Weekdays",level_on:"On",level_off:"Off",permanent_on:"Permanent",show_more:"Show more",show_less:"Show less",slat:"Slat Position",ramp_time:"Ramp Time",astro_sunrise:"Sunrise",astro_sunset:"Sunset",astro_offset:"Astro Offset (min)",condition_fixed_time:"Fixed Time",condition_astro:"Astro",condition_fixed_if_before_astro:"Fixed if before Astro",condition_astro_if_before_fixed:"Astro if before Fixed",condition_fixed_if_after_astro:"Fixed if after Astro",condition_astro_if_after_fixed:"Astro if after Fixed",condition_earliest:"Earliest",condition_latest:"Latest",or:"or",if_before:"if before",if_after:"if after",device_mode_hint_bsl:"This device supports Switch and Status LED color modes via the CCU WebUI.",device_mode_hint_rgbw:"This device supports RGBW color modes via the CCU WebUI.",device_mode_hint_lock:"This device supports door lock modes via the CCU WebUI.",weekly_program:"Weekly Program",weekly_program_enabled:"Weekly program is active",weekly_program_disabled:"Weekly program is inactive",weekly_program_enable_failed:"Failed to enable/disable weekly program.",weekly_program_enabled_toast:"Weekly program enabled.",weekly_program_disabled_toast:"Weekly program disabled.",lock_mode:"Entry Type",lock_mode_door_lock:"Door Lock Drive",lock_mode_user_permission:"User Permission",lock_action:"Action",lock_action_lock_autorelock_end:"Lock + Auto-Relock end",lock_action_lock_autorelock_start:"Lock + Auto-Relock start",lock_action_unlock_autorelock_end:"Unlock + Auto-Relock end",lock_action_autorelock_end:"Auto-Relock end",lock_permission:"Permission",permission_granted:"Granted",permission_not_granted:"Not granted",schedule_enabled:"Enabled",schedule_disabled:"Disabled"},add_link:{title:"New Direct Link",step_channel:"Step 1/3 — Select Channel",step_peer:"Step 2/3 — Select Partner",step_confirm:"Step 3/3 — Confirm",select_channel:"Select a channel from this device:",select_role:"Role of selected channel:",role_sender:"Sender (sends commands)",role_receiver:"Receiver (receives commands)",search_devices:"Search devices...",no_compatible:"No compatible channels found.",link_name:"Link name (optional)",create:"Create Link",create_success:"Link created successfully.",create_failed:"Failed to create link.",next:"Next",back:"Back"},tabs:{devices:"Devices",integration:"Integration",ccu:"OpenCCU"},integration:{system_health:"System Health",central_state:"Central State",health_score:"Health Score",device_statistics:"Device Statistics",total_devices:"Total Devices",unreachable:"Unreachable",firmware_updatable:"Firmware Updatable",total_short:"total",unreachable_short:"unreachable",radio_levels:"Duty Cycle / Carrier Sense",loom_diagnostics_hint:"System health, command throttling and incidents live in the OpenCCU-Loom Config UI under Diagnostics — there they cover every CCU the daemon serves, not just this config entry.",command_throttle:"Command Throttle",enabled:"Enabled",interval:"Interval",queue_size:"Queue Size",throttled:"Throttled",burst_count:"Burst Count",incidents:"Incidents",no_incidents:"No incidents recorded.",clear_incidents:"Clear Incidents",clear_incidents_title:"Clear Incidents",clear_incidents_text:"Delete all recorded incidents? This cannot be undone.",incidents_cleared:"Incidents cleared.",clear:"Clear",clear_cache:"Clear Cache",clear_cache_title:"Clear Cache",clear_cache_text:"Clear all cached data? The integration will re-fetch data from the CCU.",cache_cleared:"Cache cleared.",actions:"Actions",refresh:"Refresh",action_failed:"Action failed."},ccu:{tab_general:"General",tab_pairing:"Device Pairing",tab_messages:"Messages",tab_signal:"Signal Quality",tab_firmware:"Firmware",no_inbox_devices:"No new devices in inbox.",no_service_messages:"No service messages.",no_alarm_messages:"No alarm messages.",system_information:"System Information",name:"Name",model:"Model",version:"Version",serial:"Serial",hostname:"Hostname",ccu_type:"CCU Type",interfaces:"Interfaces",auth_enabled:"Authentication",backup_exists:"Backup available",hub_messages:"Hub Messages",service_messages:"Service Messages",alarm_messages:"Alarm Messages",inbox:"Inbox",address:"Address",device_type:"Device Type",device_name:"Device Name",accept:"Accept",accept_device_title:"Accept Device",accept_device_text:"Accept device {device} into the system?",accept_device_success:"Device {device} accepted.",message:"Message",msg_type:"Type",timestamp:"Timestamp",counter_label:"Count",acknowledge:"Acknowledge",message_acknowledged:"Message acknowledged.",description:"Description",last_trigger:"Last Trigger",install_mode:"Install Mode",active:"Active",inactive:"Inactive",remaining_seconds:"{seconds}s remaining",activate:"Activate",install_mode_title:"Activate Install Mode",install_mode_text:"Activate install mode for {interface}? The CCU will accept new devices for 60 seconds.",install_mode_activated:"Install mode activated for {interface}.",signal_quality:"Signal Quality",device:"Device",interface:"Interface",reachable:"Reachable",signal:"Signal",rssi_device:"RSSI Device",rssi_peer:"RSSI Peer",battery:"Battery",low:"Low",ok:"OK",firmware_overview:"Firmware Overview",updatable:"updatable",current_fw:"Current",available_fw:"Available",state:"State",refresh_firmware:"Refresh Firmware Data",firmware_refreshed:"Firmware data refreshed.",actions:"Actions",refresh:"Refresh",create_backup:"Create Backup",create_backup_title:"Create CCU Backup",create_backup_text:"Create a backup of the CCU configuration? This may take a moment.",backup_running:"Creating backup...",backup_success:"Backup created: {filename} ({size} MB)",backup_failed:"Failed to create backup.",action_failed:"Action failed.",filter_devices:"Filter devices...",filter_all:"All",filter_result:"{count} of {total} devices",update_firmware:"Update",update_firmware_confirm:"Update firmware for {device}?",update_firmware_success:"Firmware update triggered for {device}",update_firmware_failed:"Firmware update failed"},permissions:{read_only_notice:"You have read-only access. Contact an admin for edit permissions.",schedule_edit_required:"Schedule editing permission required.",device_config_required:"Device configuration permission required.",device_links_required:"Device link management permission required."},config_form:{dst_start:"Start of daylight saving time",dst_end:"End of daylight saving time"},cross_validation:{max_must_be_gte_min:"Maximum must be greater than or equal to minimum.",level_must_be_in_range:"Level must be between minimum and maximum.",hi_must_be_gte_lo:"Upper threshold must be greater than or equal to lower threshold."}},de:{common:{back:"Zurück",loading:"Laden...",save:"Speichern",cancel:"Abbrechen",yes:"Ja",no:"Nein",retry:"Erneut versuchen",close:"Schließen",error_loading:"Fehler beim Laden."},device_list:{title:"Homematic Gerätekonfiguration",select_ccu:"CCU",select_placeholder:"CCU auswählen...",search_placeholder:"Geräte suchen...",no_entry_selected:"Bitte eine CCU auswählen, um Geräte anzuzeigen.",no_entry_hint:"Wählen Sie oben eine CCU aus, um deren Geräte anzuzeigen.",no_devices:"Keine konfigurierbaren Geräte gefunden.",channels:"Kanäle",unreachable:"Nicht erreichbar",reachable:"Erreichbar",low_battery:"Batterie schwach",config_pending:"Konfiguration ausstehend",sort_by:"Sortieren nach",sort_name:"Name",sort_address:"Adresse",sort_model:"Modell"},device_detail:{address:"Adresse",firmware:"Firmware",channel:"Kanal",configure_master:"MASTER konfigurieren",no_master_config:"Keine MASTER-Konfiguration verfügbar.",not_found:"Gerät nicht gefunden.",yes:"Ja",no:"Nein",reachable:"Erreichbar",unreachable:"Nicht erreichbar",export:"Exportieren",import:"Importieren",export_success:"Konfiguration erfolgreich exportiert.",export_failed:"Export der Konfiguration fehlgeschlagen.",import_confirm_title:"Konfiguration importieren",import_confirm_text:"Konfiguration importieren und auf Kanal {channel} anwenden?",import_success:"Konfiguration erfolgreich importiert.",import_failed:"Import der Konfiguration fehlgeschlagen.",import_validation_failed:"Import-Validierung fehlgeschlagen.",show_history:"Änderungsverlauf",show_links:"Direktverknüpfungen",show_schedules:"Zeitpläne",rssi_device:"RSSI Gerät",rssi_peer:"RSSI Peer",dutycycle:"DC-Limit",low_bat:"Batterie schwach",unreach:"Erreichbarkeit",config_pending_label:"Konfig. ausstehend",device_config:"Gerätekonfiguration",virtual:"Virtuell",copy:"Kopieren",copied:"In die Zwischenablage kopiert.",copy_failed:"Kopieren fehlgeschlagen.",schedule_channel_hint:"Wird über Zeitpläne verwaltet",edit_schedule:"Zeitplan bearbeiten"},form_parameter:{toggle_on:"Ein",toggle_off:"Aus",custom_value:"Wert eingeben",auto_detect:"Auto-Erkennung",detecting:"Erkennung läuft...",detect_failed:"Erkennung fehlgeschlagen"},time_selector:{base:"Basis",factor:"Faktor",unit:"Zeiteinheit",value:"Wert",unit_inactive:"Nicht aktiv",unit_100ms:"100 Millisekunden",unit_seconds:"Sekunden",unit_5seconds:"5-Sekunden-Schritte",unit_10seconds:"10-Sekunden-Schritte",unit_minutes:"Minuten",unit_5minutes:"5-Minuten-Schritte",unit_10minutes:"10-Minuten-Schritte",unit_hours:"Stunden",permanent:"Dauerhaft"},channel_config:{save:"Speichern",saving:"Speichern...",discard:"Änderungen verwerfen",reset_defaults:"Standardwerte laden",confirm_save_title:"Änderungen speichern",confirm_save_text:"{count} Änderung(en) auf das Gerät anwenden?",unsaved_title:"Ungespeicherte Änderungen",unsaved_warning:"Es gibt ungespeicherte Änderungen. Verwerfen und zurückgehen?",save_success:"Änderungen erfolgreich gespeichert.",save_failed:"Fehler beim Speichern der Änderungen.",validation_failed:"Validierung fehlgeschlagen. Bitte die markierten Felder prüfen.",undo:"Rückgängig",redo:"Wiederherstellen",session_expiring:"Sitzung läuft bald ab, wird automatisch erneuert...",expert_mode:"Expertenmodus",expert_mode_hint:"Erweiterte Parameter anzeigen"},change_history:{title:"Änderungsverlauf",empty:"Keine Konfigurationsänderungen aufgezeichnet.",source_manual_hint:"Manuell über die Konfigurationsoberfläche geändert",source_import_hint:"Über einen Konfigurationsimport eingespielt",source_copy_hint:"Von einem anderen Kanal kopiert",clear:"Verlauf löschen",clear_confirm_title:"Verlauf löschen",clear_confirm_text:"Alle Verlaufseinträge löschen? Dies kann nicht rückgängig gemacht werden.",clear_success:"Verlauf gelöscht ({count} Einträge entfernt).",clear_failed:"Fehler beim Löschen des Verlaufs.",source_manual:"Manuell",source_import:"Import",source_copy:"Kopie",parameters_changed:"{count} Parameter geändert"},device_links:{title:"Direktverknüpfungen",subtitle:"Direktverknüpfungen für {device}",empty:"Keine Direktverknüpfungen konfiguriert.",empty_hint:"Erstellen Sie eine neue Verknüpfung, um Geräte direkt miteinander zu verbinden.",add_link:"Neue Verknüpfung",outgoing:"Ausgehend",incoming:"Eingehend",configure:"Konfigurieren",delete:"Löschen",delete_confirm_title:"Verknüpfung löschen",delete_confirm_text:"Direktverknüpfung von {sender} nach {receiver} entfernen? Die Geräte kommunizieren dann nicht mehr direkt.",delete_success:"Verknüpfung erfolgreich gelöscht.",delete_failed:"Fehler beim Löschen der Verknüpfung.",channel_group:"Kanal {channel}",sort_by:"Sortieren nach",sort_channel:"Kanal",sort_sender:"Sender",sort_receiver:"Empfänger"},link_config:{title:"Link-Konfiguration",sender:"Sender",receiver:"Empfänger",save_success:"Link-Konfiguration gespeichert.",save_failed:"Fehler beim Speichern der Link-Konfiguration.",discard:"Änderungen verwerfen",confirm_save_title:"Link-Änderungen speichern",confirm_save_text:"{count} Änderung(en) auf diese Verknüpfung anwenden?",unsaved_title:"Ungespeicherte Änderungen",unsaved_warning:"Es gibt ungespeicherte Änderungen. Verwerfen und zurückgehen?",receiver_params:"Empfänger-Parameter",sender_params:"Sender-Parameter",no_params:"Keine konfigurierbaren Parameter für diese Verknüpfung.",profile:"Profil",short_keypress:"Kurzer Tastendruck",long_keypress:"Langer Tastendruck",last_value:"Letzter Wert",custom_time:"Benutzerdefiniert",test_profile:"Profil testen",test_profile_success:"Profil erfolgreich angewendet",test_profile_failed:"Profil konnte nicht angewendet werden"},device_schedule:{title:"Zeitpläne",subtitle:"Zeitpläne für {device}",select_device:"Gerät auswählen...",no_devices:"Keine Geräte mit Zeitplan-Unterstützung gefunden.",schedule_type_climate:"Heizung",schedule_type_default:"Gerät",profile:"Profil",active_profile:"Aktives Profil",weekdays:"Mo,Di,Mi,Do,Fr,Sa,So",weekday_monday:"Montag",weekday_tuesday:"Dienstag",weekday_wednesday:"Mittwoch",weekday_thursday:"Donnerstag",weekday_friday:"Freitag",weekday_saturday:"Samstag",weekday_sunday:"Sonntag",base_temperature:"Basistemperatur",temperature:"Temperatur",time:"Uhrzeit",from:"Von",to:"Bis",add_period:"Zeitraum hinzufügen",delete_period:"Löschen",save:"Speichern",saving:"Speichern...",save_success:"Zeitplan erfolgreich gespeichert.",save_failed:"Fehler beim Speichern des Zeitplans.",load_failed:"Fehler beim Laden des Zeitplans.",reload:"Vom Gerät laden",reload_success:"Gerätekonfiguration neu geladen.",reload_failed:"Fehler beim Laden der Gerätekonfiguration.",export:"Exportieren",import:"Importieren",import_confirm_title:"Zeitplan importieren",import_confirm_text:"Diesen Zeitplan importieren und anwenden?",import_success:"Zeitplan importiert.",import_failed:"Fehler beim Importieren des Zeitplans.",no_schedule_data:"Keine Zeitplan-Daten verfügbar.",click_to_edit:"Klicken Sie auf einen Zeitabschnitt, um den Zeitplan zu bearbeiten",copy_schedule:"Zeitplan kopieren",paste_schedule:"Zeitplan einfügen",edit:"{weekday} bearbeiten",add_time_block:"+ Zeitblock hinzufügen",edit_slot:"Bearbeiten",save_all:"Alle speichern",discard:"Verwerfen",keep_editing:"Weiter bearbeiten",unsaved_changes:"Ungespeicherte Änderungen",confirm_discard_changes:"Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?",save_slot:"Übernehmen",cancel_slot_edit:"Abbrechen",remove_slot:"Entfernen",undo_shortcut:"Rückgängig (Strg+Z)",redo_shortcut:"Wiederholen (Strg+Y)",warnings_title:"Validierungswarnungen",base_temperature_description:"Temperatur für nicht geplante Zeiträume",temperature_periods:"Temperaturperioden",invalid_schedule:"Ungültiger Zeitplan: {error}",validation_block_end_before_start:"Block {block}: Die Endzeit liegt vor der Startzeit",validation_block_zero_duration:"Block {block}: Der Block hat keine Dauer",validation_invalid_start_time:"Block {block}: Ungültige Startzeit",validation_invalid_end_time:"Block {block}: Ungültige Endzeit",validation_temp_out_of_range:"Block {block}: Temperatur außerhalb des Bereichs ({min}-{max}°C)",validation_invalid_slot_count:"Ungültige Anzahl an Slots: {count} (erwartet 13)",validation_invalid_slot_key:"Ungültiger Slot-Schlüssel: {key} (muss eine Ganzzahl 1-13 sein)",validation_missing_slot:"Slot {slot} fehlt",validation_slot_missing_values:"Slot {slot} fehlt ENDTIME oder TEMPERATURE",validation_slot_time_backwards:"Slot {slot}: Zeit läuft rückwärts: {time}",validation_slot_time_exceeds_day:"Slot {slot}: Zeit überschreitet 24:00: {time}",validation_last_slot_must_end:"Der letzte Slot muss um 24:00 enden",validation_schedule_must_be_object:"Zeitplandaten müssen ein Objekt sein",validation_missing_weekday:"Fehlender Wochentag: {weekday}",validation_invalid_weekday_data:"Ungültige Daten für {weekday}",validation_weekday_error:"{weekday}: {details}",entries:"{count} Einträge",max_entries:"Max. Einträge: {max}",level:"Wert",duration:"Dauer",condition:"Bedingung",target_channel:"Zielkanal",add_event:"Ereignis hinzufügen",edit_event:"Ereignis bearbeiten",delete_event:"Ereignis löschen",confirm_delete:"Möchten Sie dieses Ereignis wirklich löschen?",weekdays_label:"Wochentage",level_on:"Ein",level_off:"Aus",permanent_on:"Dauerhaft",show_more:"Mehr anzeigen",show_less:"Weniger anzeigen",slat:"Lamellenposition",ramp_time:"Rampenzeit",astro_sunrise:"Sonnenaufgang",astro_sunset:"Sonnenuntergang",astro_offset:"Astro-Offset (Min.)",condition_fixed_time:"Feste Zeit",condition_astro:"Astro",condition_fixed_if_before_astro:"Fest wenn vor Astro",condition_astro_if_before_fixed:"Astro wenn vor Fest",condition_fixed_if_after_astro:"Fest wenn nach Astro",condition_astro_if_after_fixed:"Astro wenn nach Fest",condition_earliest:"Frühester",condition_latest:"Spätester",or:"oder",if_before:"wenn vor",if_after:"wenn nach",device_mode_hint_bsl:"Dieses Gerät unterstützt Schalt- und Status-LED-Farbmodi über die CCU-WebUI.",device_mode_hint_rgbw:"Dieses Gerät unterstützt RGBW-Farbmodi über die CCU-WebUI.",device_mode_hint_lock:"Dieses Gerät unterstützt Türschloss-Modi über die CCU-WebUI.",weekly_program:"Wochenprogramm",weekly_program_enabled:"Wochenprogramm ist aktiv",weekly_program_disabled:"Wochenprogramm ist inaktiv",weekly_program_enable_failed:"Fehler beim Aktivieren/Deaktivieren des Wochenprogramms.",weekly_program_enabled_toast:"Wochenprogramm aktiviert.",weekly_program_disabled_toast:"Wochenprogramm deaktiviert.",lock_mode:"Zeitpunkt-Typ",lock_mode_door_lock:"Türschlossantrieb",lock_mode_user_permission:"Benutzerberechtigung",lock_action:"Aktion",lock_action_lock_autorelock_end:"Verriegeln + Auto-Relock Ende",lock_action_lock_autorelock_start:"Verriegeln + Auto-Relock Beginn",lock_action_unlock_autorelock_end:"Entriegeln + Auto-Relock Ende",lock_action_autorelock_end:"Auto-Relock Ende",lock_permission:"Berechtigung",permission_granted:"Erteilt",permission_not_granted:"Nicht erteilt",schedule_enabled:"Aktiviert",schedule_disabled:"Deaktiviert"},add_link:{title:"Neue Direktverknüpfung",step_channel:"Schritt 1/3 — Kanal wählen",step_peer:"Schritt 2/3 — Partner wählen",step_confirm:"Schritt 3/3 — Bestätigen",select_channel:"Kanal dieses Geräts auswählen:",select_role:"Rolle des gewählten Kanals:",role_sender:"Sender (sendet Kommandos)",role_receiver:"Empfänger (empfängt Kommandos)",search_devices:"Geräte suchen...",no_compatible:"Keine kompatiblen Kanäle gefunden.",link_name:"Verknüpfungsname (optional)",create:"Verknüpfung erstellen",create_success:"Verknüpfung erfolgreich erstellt.",create_failed:"Fehler beim Erstellen der Verknüpfung.",next:"Weiter",back:"Zurück"},tabs:{devices:"Geräte",integration:"Integration",ccu:"OpenCCU"},integration:{system_health:"Systemzustand",central_state:"Zentralenstatus",health_score:"Gesundheitswert",device_statistics:"Gerätestatistik",total_devices:"Geräte gesamt",unreachable:"Nicht erreichbar",firmware_updatable:"Firmware aktualisierbar",total_short:"gesamt",unreachable_short:"nicht erreichbar",radio_levels:"Duty Cycle / Carrier Sense",loom_diagnostics_hint:"Systemzustand, Befehlsdrosselung und Störungen finden Sie in der OpenCCU-Loom-Konfigurationsoberfläche unter Diagnose — dort für alle CCUs des Daemons, nicht nur für diesen Eintrag.",command_throttle:"Befehlsdrosselung",enabled:"Aktiviert",interval:"Intervall",queue_size:"Warteschlange",throttled:"Gedrosselt",burst_count:"Burst-Anzahl",incidents:"Vorfälle",no_incidents:"Keine Vorfälle aufgezeichnet.",clear_incidents:"Vorfälle löschen",clear_incidents_title:"Vorfälle löschen",clear_incidents_text:"Alle aufgezeichneten Vorfälle löschen? Dies kann nicht rückgängig gemacht werden.",incidents_cleared:"Vorfälle gelöscht.",clear:"Löschen",clear_cache:"Cache leeren",clear_cache_title:"Cache leeren",clear_cache_text:"Alle zwischengespeicherten Daten löschen? Die Integration holt die Daten erneut von der CCU.",cache_cleared:"Cache geleert.",actions:"Aktionen",refresh:"Aktualisieren",action_failed:"Aktion fehlgeschlagen."},ccu:{tab_general:"Allgemein",tab_pairing:"Geräte anlernen",tab_messages:"Meldungen",tab_signal:"Signalqualität",tab_firmware:"Firmware",no_inbox_devices:"Keine neuen Geräte im Posteingang.",no_service_messages:"Keine Servicemeldungen.",no_alarm_messages:"Keine Alarmmeldungen.",system_information:"Systeminformationen",name:"Name",model:"Modell",version:"Version",serial:"Seriennummer",hostname:"Hostname",ccu_type:"CCU-Typ",interfaces:"Schnittstellen",auth_enabled:"Authentifizierung",backup_exists:"Backup vorhanden",hub_messages:"Hub-Meldungen",service_messages:"Servicemeldungen",alarm_messages:"Alarmmeldungen",inbox:"Posteingang",address:"Adresse",device_type:"Gerätetyp",device_name:"Gerätename",accept:"Annehmen",accept_device_title:"Gerät annehmen",accept_device_text:"Gerät {device} in das System übernehmen?",accept_device_success:"Gerät {device} angenommen.",message:"Meldung",msg_type:"Typ",timestamp:"Zeitstempel",counter_label:"Anzahl",acknowledge:"Quittieren",message_acknowledged:"Meldung quittiert.",description:"Beschreibung",last_trigger:"Letzter Auslöser",install_mode:"Anlernmodus",active:"Aktiv",inactive:"Inaktiv",remaining_seconds:"Noch {seconds}s",activate:"Aktivieren",install_mode_title:"Anlernmodus aktivieren",install_mode_text:"Anlernmodus für {interface} aktivieren? Die CCU akzeptiert 60 Sekunden lang neue Geräte.",install_mode_activated:"Anlernmodus für {interface} aktiviert.",signal_quality:"Signalqualität",device:"Gerät",interface:"Schnittstelle",reachable:"Erreichbar",signal:"Signal",rssi_device:"RSSI Gerät",rssi_peer:"RSSI Peer",battery:"Batterie",low:"Schwach",ok:"OK",firmware_overview:"Firmware-Übersicht",updatable:"aktualisierbar",current_fw:"Aktuell",available_fw:"Verfügbar",state:"Status",refresh_firmware:"Firmware-Daten aktualisieren",firmware_refreshed:"Firmware-Daten aktualisiert.",actions:"Aktionen",refresh:"Aktualisieren",create_backup:"Backup erstellen",create_backup_title:"CCU-Backup erstellen",create_backup_text:"Ein Backup der CCU-Konfiguration erstellen? Dies kann einen Moment dauern.",backup_running:"Backup wird erstellt...",backup_success:"Backup erstellt: {filename} ({size} MB)",backup_failed:"Fehler beim Erstellen des Backups.",action_failed:"Aktion fehlgeschlagen.",filter_devices:"Geräte filtern...",filter_all:"Alle",filter_result:"{count} von {total} Geräten",update_firmware:"Aktualisieren",update_firmware_confirm:"Firmware für {device} aktualisieren?",update_firmware_success:"Firmware-Update für {device} gestartet",update_firmware_failed:"Firmware-Update fehlgeschlagen"},permissions:{read_only_notice:"Sie haben nur Lesezugriff. Wenden Sie sich an einen Administrator für Bearbeitungsrechte.",schedule_edit_required:"Berechtigung zur Zeitplanbearbeitung erforderlich.",device_config_required:"Berechtigung zur Gerätekonfiguration erforderlich.",device_links_required:"Berechtigung zur Verwaltung von Direktverknüpfungen erforderlich."},config_form:{dst_start:"Beginn der Sommerzeit",dst_end:"Ende der Sommerzeit"},cross_validation:{max_must_be_gte_min:"Maximum muss größer oder gleich dem Minimum sein.",level_must_be_in_range:"Level muss zwischen Minimum und Maximum liegen.",hi_must_be_gte_lo:"Oberer Schwellwert muss größer oder gleich dem unteren Schwellwert sein."}}};function Qe(e,t=""){const i={};for(const[s,a]of Object.entries(e)){const e=t?`${t}.${s}`:s;"string"==typeof a?i[e]=a:"object"==typeof a&&null!==a&&Object.assign(i,Qe(a,e))}return i}const Je=new Map;function et(e){if(Je.has(e))return Je.get(e);const t=Qe(Xe[e]??Xe.en);return Je.set(e,t),t}function tt(e,t,i){const s=et(e.config.language??"en");let a=s[t]??s[t.replace(/^panel\./,"")]??t;if(i)for(const[e,t]of Object.entries(i))a=a.replace(`{${e}}`,String(t));return a}let it=class extends oe{constructor(){super(...arguments),this.entryId=""}updated(e){e.has("hass")&&this.hass&&this.classList.toggle("dark-theme",this.hass.themes?.darkMode??!1)}_l(e,t){return tt(this.hass,e,t)}_handleClick(){this.dispatchEvent(new CustomEvent("device-selected",{detail:{device:this.device.address,interfaceId:this.device.interface_id},bubbles:!0,composed:!0}))}_handleKeydown(e){"Enter"!==e.key&&" "!==e.key||(e.preventDefault(),this._handleClick())}_handleIconError(e){e.target.style.display="none"}_renderMaintenanceIcons(e){return e&&0!==Object.keys(e).length?F`
       <div class="device-status">
         ${!0===e.unreach?F`<ha-icon
                 class="status-badge unreachable"
@@ -5380,45 +5380,45 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
               <span class="kv-value">${e.name}</span>
             </div>
             ${e.model?F`
-                  <div class="kv-item">
-                    <span class="kv-label">${this._l("ccu.model")}</span>
-                    <span class="kv-value">${e.model}</span>
-                  </div>
-                `:j}
+                    <div class="kv-item">
+                      <span class="kv-label">${this._l("ccu.model")}</span>
+                      <span class="kv-value">${e.model}</span>
+                    </div>
+                  `:j}
             ${e.version?F`
-                  <div class="kv-item">
-                    <span class="kv-label">${this._l("ccu.version")}</span>
-                    <span class="kv-value">${e.version}</span>
-                  </div>
-                `:j}
+                    <div class="kv-item">
+                      <span class="kv-label">${this._l("ccu.version")}</span>
+                      <span class="kv-value">${e.version}</span>
+                    </div>
+                  `:j}
             ${e.serial?F`
-                  <div class="kv-item">
-                    <span class="kv-label">${this._l("ccu.serial")}</span>
-                    <span class="kv-value">${e.serial}</span>
-                  </div>
-                `:j}
+                    <div class="kv-item">
+                      <span class="kv-label">${this._l("ccu.serial")}</span>
+                      <span class="kv-value">${e.serial}</span>
+                    </div>
+                  `:j}
             <div class="kv-item">
               <span class="kv-label">${this._l("ccu.hostname")}</span>
               <span class="kv-value">${e.hostname}</span>
             </div>
             ${e.ccu_type?F`
-                  <div class="kv-item">
-                    <span class="kv-label">${this._l("ccu.ccu_type")}</span>
-                    <span class="kv-value">${e.ccu_type}</span>
-                  </div>
-                `:j}
+                    <div class="kv-item">
+                      <span class="kv-label">${this._l("ccu.ccu_type")}</span>
+                      <span class="kv-value">${e.ccu_type}</span>
+                    </div>
+                  `:j}
             <div class="kv-item">
               <span class="kv-label">${this._l("ccu.interfaces")}</span>
               <span class="kv-value">${e.available_interfaces.join(", ")}</span>
             </div>
             ${null!==e.auth_enabled?F`
-                  <div class="kv-item">
-                    <span class="kv-label">${this._l("ccu.auth_enabled")}</span>
-                    <span class="kv-value"
-                      >${this._l(e.auth_enabled?"common.yes":"common.no")}</span
-                    >
-                  </div>
-                `:j}
+                    <div class="kv-item">
+                      <span class="kv-label">${this._l("ccu.auth_enabled")}</span>
+                      <span class="kv-value"
+                        >${this._l(e.auth_enabled?"common.yes":"common.no")}</span
+                      >
+                    </div>
+                  `:j}
           </div>
           <div class="status-badges"></div>
         </div>
@@ -5442,13 +5442,13 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
           </span>
         </div>
         ${i.active&&null!==i.remaining_seconds?F`<span class="install-mode-remaining"
-              >${this._l("ccu.remaining_seconds",{seconds:i.remaining_seconds})}</span
-            >`:j}
+                >${this._l("ccu.remaining_seconds",{seconds:i.remaining_seconds})}</span
+              >`:j}
         ${i.active?j:F`
-              <ha-button @click=${()=>this._handleTriggerInstallMode(t)}>
-                ${this._l("ccu.activate")}
-              </ha-button>
-            `}
+                <ha-button @click=${()=>this._handleTriggerInstallMode(t)}>
+                  ${this._l("ccu.activate")}
+                </ha-button>
+              `}
       </div>
     `}async _handleAcceptInboxDevice(e){const t=await(i={title:this._l("ccu.accept_device_title"),text:this._l("ccu.accept_device_text",{device:e.name||e.address}),inputLabel:this._l("ccu.device_name"),defaultValue:e.name||"",confirmText:this._l("ccu.accept"),dismissText:this._l("common.cancel")},new Promise(e=>{const t=document.activeElement,s=document.createElement("dialog");s.style.cssText=["border: none","border-radius: var(--ha-card-border-radius, 12px)","padding: 24px","max-width: 450px","width: calc(100% - 48px)","max-height: 90vh","overflow-y: auto","box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3)","font-family: var(--paper-font-body1_-_font-family, Roboto, sans-serif)","background: var(--card-background-color, var(--ha-card-background, #fff))","color: var(--primary-text-color, #212121)"].join("; ");const a=i.title?`<h2 style="margin: 0 0 16px; font-size: 18px; font-weight: 500;">${nt(i.title)}</h2>`:"",r=i.text?`<p style="margin: 0 0 16px; white-space: pre-line; line-height: 1.5; color: var(--secondary-text-color, #727272);">${nt(i.text)}</p>`:"",n=i.inputLabel?`<label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--secondary-text-color, #727272);">${nt(i.inputLabel)}</label>`:"";s.innerHTML=`\n      ${a}\n      ${r}\n      ${n}\n      <input type="text" class="prompt-input" value="${nt(i.defaultValue||"")}" style="\n        width: 100%;\n        padding: 8px 12px;\n        border: 1px solid var(--divider-color, #e0e0e0);\n        border-radius: 4px;\n        background: var(--card-background-color, #fff);\n        color: var(--primary-text-color, #212121);\n        font-size: 14px;\n        font-family: inherit;\n        box-sizing: border-box;\n        margin-bottom: 24px;\n      " />\n      <div style="display: flex; justify-content: flex-end; gap: 8px;">\n        <button class="dismiss" style="\n          padding: 8px 16px;\n          border: none;\n          border-radius: 4px;\n          background: transparent;\n          color: var(--primary-text-color, #212121);\n          font-size: 14px;\n          font-family: inherit;\n          cursor: pointer;\n        ">${nt(i.dismissText||"Cancel")}</button>\n        <button class="confirm" style="\n          padding: 8px 16px;\n          border: none;\n          border-radius: 4px;\n          background: var(--primary-color, #03a9f4);\n          color: #fff;\n          font-size: 14px;\n          font-family: inherit;\n          cursor: pointer;\n        ">${nt(i.confirmText||"OK")}</button>\n      </div>\n    `;const o=i=>{s.close(),s.remove(),t?.focus(),e(i)},l=s.querySelector(".prompt-input");s.querySelector(".confirm").addEventListener("click",()=>o(l.value)),s.querySelector(".dismiss").addEventListener("click",()=>o(null)),l.addEventListener("keydown",e=>{"Enter"===e.key&&o(l.value)}),s.addEventListener("cancel",e=>{e.preventDefault(),o(null)}),document.body.appendChild(s),s.showModal(),l.focus(),l.select()}));var i;if(null!==t)try{await async function(e,t,i,s,a){return e.callWS({type:"homematicip_local/ccu/accept_inbox_device",entry_id:t,device_address:i,...s&&a?{device_name:s,device_id:a}:{}})}(this.hass,this.entryId,e.address,t||void 0,t?e.device_id:void 0),ot(this,{message:this._l("ccu.accept_device_success",{device:t||e.address})}),this._inboxDevices=await Ge(this.hass,this.entryId).catch(()=>[])}catch{ot(this,{message:this._l("ccu.action_failed")})}}async _handleAcknowledgeServiceMessage(e){try{await async function(e,t,i){return e.callWS({type:"homematicip_local/ccu/acknowledge_service_message",entry_id:t,msg_id:i})}(this.hass,this.entryId,e.msg_id),ot(this,{message:this._l("ccu.message_acknowledged")}),this._serviceMessages=await Ze(this.hass,this.entryId).catch(()=>[])}catch{ot(this,{message:this._l("ccu.action_failed")})}}async _handleAcknowledgeAlarmMessage(e){try{await async function(e,t,i){return e.callWS({type:"homematicip_local/ccu/acknowledge_alarm_message",entry_id:t,alarm_id:i})}(this.hass,this.entryId,e.alarm_id),ot(this,{message:this._l("ccu.message_acknowledged")}),this._alarmMessages=await qe(this.hass,this.entryId).catch(()=>[])}catch{ot(this,{message:this._l("ccu.action_failed")})}}_renderInboxCard(){return F`
       <ha-card>
@@ -5458,37 +5458,37 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
         </div>
         <div class="card-content">
           ${0===this._inboxDevices.length?F`<div class="empty-hint">${this._l("ccu.no_inbox_devices")}</div>`:F`
-                <div class="table-wrapper">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>${this._l("ccu.device")}</th>
-                        <th>${this._l("ccu.address")}</th>
-                        <th>${this._l("ccu.device_type")}</th>
-                        <th>${this._l("ccu.interface")}</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${this._inboxDevices.map(e=>F`
-                          <tr>
-                            <td class="device-name" data-label=${this._l("ccu.device")}>
-                              ${e.name||"—"}
-                            </td>
-                            <td data-label=${this._l("ccu.address")}>${e.address}</td>
-                            <td data-label=${this._l("ccu.device_type")}>${e.device_type}</td>
-                            <td data-label=${this._l("ccu.interface")}>${e.interface}</td>
-                            <td>
-                              <ha-button @click=${()=>this._handleAcceptInboxDevice(e)}>
-                                ${this._l("ccu.accept")}
-                              </ha-button>
-                            </td>
-                          </tr>
-                        `)}
-                    </tbody>
-                  </table>
-                </div>
-              `}
+                  <div class="table-wrapper">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>${this._l("ccu.device")}</th>
+                          <th>${this._l("ccu.address")}</th>
+                          <th>${this._l("ccu.device_type")}</th>
+                          <th>${this._l("ccu.interface")}</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${this._inboxDevices.map(e=>F`
+                            <tr>
+                              <td class="device-name" data-label=${this._l("ccu.device")}>
+                                ${e.name||"—"}
+                              </td>
+                              <td data-label=${this._l("ccu.address")}>${e.address}</td>
+                              <td data-label=${this._l("ccu.device_type")}>${e.device_type}</td>
+                              <td data-label=${this._l("ccu.interface")}>${e.interface}</td>
+                              <td>
+                                <ha-button @click=${()=>this._handleAcceptInboxDevice(e)}>
+                                  ${this._l("ccu.accept")}
+                                </ha-button>
+                              </td>
+                            </tr>
+                          `)}
+                      </tbody>
+                    </table>
+                  </div>
+                `}
         </div>
       </ha-card>
     `}_renderServiceMessagesCard(){return F`
@@ -5499,51 +5499,51 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
         </div>
         <div class="card-content">
           ${0===this._serviceMessages.length?F`<div class="empty-hint">${this._l("ccu.no_service_messages")}</div>`:F`<div class="table-wrapper">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>${this._l("ccu.device")}</th>
-                      <th>${this._l("ccu.address")}</th>
-                      <th>${this._l("ccu.msg_type")}</th>
-                      <th>${this._l("ccu.message")}</th>
-                      <th>${this._l("ccu.timestamp")}</th>
-                      <th>${this._l("ccu.counter_label")}</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${this._serviceMessages.map(e=>F`
-                        <tr>
-                          <td class="device-name" data-label=${this._l("ccu.device")}>
-                            ${e.device_name||"—"}
-                          </td>
-                          <td data-label=${this._l("ccu.address")}>${e.address||"—"}</td>
-                          <td data-label=${this._l("ccu.msg_type")}>
-                            <span class="msg-type msg-type-${e.msg_type}">
-                              ${e.msg_type_name}
-                            </span>
-                          </td>
-                          <td data-label=${this._l("ccu.message")}>${e.display_name}</td>
-                          <td class="timestamp-cell" data-label=${this._l("ccu.timestamp")}>
-                            ${e.timestamp||"—"}
-                          </td>
-                          <td data-label=${this._l("ccu.counter_label")}>
-                            ${e.counter>1?e.counter:""}
-                          </td>
-                          <td>
-                            ${e.quittable?F`
-                                  <ha-button
-                                    @click=${()=>this._handleAcknowledgeServiceMessage(e)}
-                                  >
-                                    ${this._l("ccu.acknowledge")}
-                                  </ha-button>
-                                `:j}
-                          </td>
-                        </tr>
-                      `)}
-                  </tbody>
-                </table>
-              </div>`}
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>${this._l("ccu.device")}</th>
+                        <th>${this._l("ccu.address")}</th>
+                        <th>${this._l("ccu.msg_type")}</th>
+                        <th>${this._l("ccu.message")}</th>
+                        <th>${this._l("ccu.timestamp")}</th>
+                        <th>${this._l("ccu.counter_label")}</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${this._serviceMessages.map(e=>F`
+                          <tr>
+                            <td class="device-name" data-label=${this._l("ccu.device")}>
+                              ${e.device_name||"—"}
+                            </td>
+                            <td data-label=${this._l("ccu.address")}>${e.address||"—"}</td>
+                            <td data-label=${this._l("ccu.msg_type")}>
+                              <span class="msg-type msg-type-${e.msg_type}">
+                                ${e.msg_type_name}
+                              </span>
+                            </td>
+                            <td data-label=${this._l("ccu.message")}>${e.display_name}</td>
+                            <td class="timestamp-cell" data-label=${this._l("ccu.timestamp")}>
+                              ${e.timestamp||"—"}
+                            </td>
+                            <td data-label=${this._l("ccu.counter_label")}>
+                              ${e.counter>1?e.counter:""}
+                            </td>
+                            <td>
+                              ${e.quittable?F`
+                                      <ha-button
+                                        @click=${()=>this._handleAcknowledgeServiceMessage(e)}
+                                      >
+                                        ${this._l("ccu.acknowledge")}
+                                      </ha-button>
+                                    `:j}
+                            </td>
+                          </tr>
+                        `)}
+                    </tbody>
+                  </table>
+                </div>`}
         </div>
       </ha-card>
     `}_renderAlarmMessagesCard(){return F`
@@ -5554,47 +5554,47 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
         </div>
         <div class="card-content">
           ${0===this._alarmMessages.length?F`<div class="empty-hint">${this._l("ccu.no_alarm_messages")}</div>`:F`<div class="table-wrapper">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>${this._l("ccu.device")}</th>
-                      <th>${this._l("ccu.message")}</th>
-                      <th>${this._l("ccu.description")}</th>
-                      <th>${this._l("ccu.last_trigger")}</th>
-                      <th>${this._l("ccu.timestamp")}</th>
-                      <th>${this._l("ccu.counter_label")}</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${this._alarmMessages.map(e=>F`
-                        <tr>
-                          <td class="device-name" data-label=${this._l("ccu.device")}>
-                            ${e.device_name||"—"}
-                          </td>
-                          <td data-label=${this._l("ccu.message")}>${e.display_name}</td>
-                          <td data-label=${this._l("ccu.description")}>
-                            ${e.description||"—"}
-                          </td>
-                          <td data-label=${this._l("ccu.last_trigger")}>
-                            ${e.last_trigger||"—"}
-                          </td>
-                          <td class="timestamp-cell" data-label=${this._l("ccu.timestamp")}>
-                            ${e.timestamp||"—"}
-                          </td>
-                          <td data-label=${this._l("ccu.counter_label")}>
-                            ${e.counter>1?e.counter:""}
-                          </td>
-                          <td>
-                            <ha-button @click=${()=>this._handleAcknowledgeAlarmMessage(e)}>
-                              ${this._l("ccu.acknowledge")}
-                            </ha-button>
-                          </td>
-                        </tr>
-                      `)}
-                  </tbody>
-                </table>
-              </div>`}
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>${this._l("ccu.device")}</th>
+                        <th>${this._l("ccu.message")}</th>
+                        <th>${this._l("ccu.description")}</th>
+                        <th>${this._l("ccu.last_trigger")}</th>
+                        <th>${this._l("ccu.timestamp")}</th>
+                        <th>${this._l("ccu.counter_label")}</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${this._alarmMessages.map(e=>F`
+                          <tr>
+                            <td class="device-name" data-label=${this._l("ccu.device")}>
+                              ${e.device_name||"—"}
+                            </td>
+                            <td data-label=${this._l("ccu.message")}>${e.display_name}</td>
+                            <td data-label=${this._l("ccu.description")}>
+                              ${e.description||"—"}
+                            </td>
+                            <td data-label=${this._l("ccu.last_trigger")}>
+                              ${e.last_trigger||"—"}
+                            </td>
+                            <td class="timestamp-cell" data-label=${this._l("ccu.timestamp")}>
+                              ${e.timestamp||"—"}
+                            </td>
+                            <td data-label=${this._l("ccu.counter_label")}>
+                              ${e.counter>1?e.counter:""}
+                            </td>
+                            <td>
+                              <ha-button @click=${()=>this._handleAcknowledgeAlarmMessage(e)}>
+                                ${this._l("ccu.acknowledge")}
+                              </ha-button>
+                            </td>
+                          </tr>
+                        `)}
+                    </tbody>
+                  </table>
+                </div>`}
         </div>
       </ha-card>
     `}_filterSignalDevices(e){return e.filter(e=>{if(this._signalFilter){const t=this._signalFilter.toLowerCase();if(!e.name.toLowerCase().includes(t)&&!e.model.toLowerCase().includes(t))return!1}if(this._signalInterfaceFilter&&e.interface_id!==this._signalInterfaceFilter)return!1;if(this._signalReachableFilter&&String(e.is_reachable)!==this._signalReachableFilter)return!1;if(this._signalBatteryFilter){if("low"===this._signalBatteryFilter&&!0!==e.low_battery)return!1;if("ok"===this._signalBatteryFilter&&!1!==e.low_battery)return!1}return!0})}_renderSignalQualityCard(){if(!this._signalDevices||0===this._signalDevices.length)return j;const e=this._signalDevices.length>10,t=e?this._filterSignalDevices(this._signalDevices):this._signalDevices,i=[...t].sort((e,t)=>{const i=this._signalSortColumn,s=this._compareValues(e[i],t[i]);return this._signalSortAsc?s:-s}),s=e&&t.length!==this._signalDevices.length,a=[...new Set(this._signalDevices.map(e=>e.interface_id))].sort();return F`
@@ -5602,42 +5602,42 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
         <div class="card-header">${this._l("ccu.signal_quality")}</div>
         <div class="card-content table-wrapper">
           ${e?F`
-                <div class="filter-bar">
-                  <ha-input
-                    .value=${this._signalFilter}
-                    .placeholder=${this._l("ccu.filter_devices")}
-                    aria-label=${this._l("ccu.filter_devices")}
-                    @input=${e=>{this._signalFilter=e.target.value}}
-                    class="filter-search"
-                  ></ha-input>
-                  <div class="filter-selects">
-                    <ha-select
-                      .label=${this._l("ccu.interface")}
-                      .value=${this._signalInterfaceFilter}
-                      .options=${[{value:"",label:this._l("ccu.filter_all")},...a.map(e=>({value:e,label:e}))]}
-                      @selected=${e=>{e.stopPropagation(),this._signalInterfaceFilter=e.detail.value??""}}
-                      @closed=${e=>e.stopPropagation()}
-                    ></ha-select>
-                    <ha-select
-                      .label=${this._l("ccu.reachable")}
-                      .value=${this._signalReachableFilter}
-                      .options=${[{value:"",label:this._l("ccu.filter_all")},{value:"true",label:this._l("common.yes")},{value:"false",label:this._l("common.no")}]}
-                      @selected=${e=>{e.stopPropagation(),this._signalReachableFilter=e.detail.value??""}}
-                      @closed=${e=>e.stopPropagation()}
-                    ></ha-select>
-                    <ha-select
-                      .label=${this._l("ccu.battery")}
-                      .value=${this._signalBatteryFilter}
-                      .options=${[{value:"",label:this._l("ccu.filter_all")},{value:"ok",label:this._l("ccu.ok")},{value:"low",label:this._l("ccu.low")}]}
-                      @selected=${e=>{e.stopPropagation(),this._signalBatteryFilter=e.detail.value??""}}
-                      @closed=${e=>e.stopPropagation()}
-                    ></ha-select>
+                  <div class="filter-bar">
+                    <ha-input
+                      .value=${this._signalFilter}
+                      .placeholder=${this._l("ccu.filter_devices")}
+                      aria-label=${this._l("ccu.filter_devices")}
+                      @input=${e=>{this._signalFilter=e.target.value}}
+                      class="filter-search"
+                    ></ha-input>
+                    <div class="filter-selects">
+                      <ha-select
+                        .label=${this._l("ccu.interface")}
+                        .value=${this._signalInterfaceFilter}
+                        .options=${[{value:"",label:this._l("ccu.filter_all")},...a.map(e=>({value:e,label:e}))]}
+                        @selected=${e=>{e.stopPropagation(),this._signalInterfaceFilter=e.detail.value??""}}
+                        @closed=${e=>e.stopPropagation()}
+                      ></ha-select>
+                      <ha-select
+                        .label=${this._l("ccu.reachable")}
+                        .value=${this._signalReachableFilter}
+                        .options=${[{value:"",label:this._l("ccu.filter_all")},{value:"true",label:this._l("common.yes")},{value:"false",label:this._l("common.no")}]}
+                        @selected=${e=>{e.stopPropagation(),this._signalReachableFilter=e.detail.value??""}}
+                        @closed=${e=>e.stopPropagation()}
+                      ></ha-select>
+                      <ha-select
+                        .label=${this._l("ccu.battery")}
+                        .value=${this._signalBatteryFilter}
+                        .options=${[{value:"",label:this._l("ccu.filter_all")},{value:"ok",label:this._l("ccu.ok")},{value:"low",label:this._l("ccu.low")}]}
+                        @selected=${e=>{e.stopPropagation(),this._signalBatteryFilter=e.detail.value??""}}
+                        @closed=${e=>e.stopPropagation()}
+                      ></ha-select>
+                    </div>
                   </div>
-                </div>
-                ${s?F`<div class="filter-count">
-                      ${this._l("ccu.filter_result",{count:t.length,total:this._signalDevices.length})}
-                    </div>`:j}
-              `:j}
+                  ${s?F`<div class="filter-count">
+                          ${this._l("ccu.filter_result",{count:t.length,total:this._signalDevices.length})}
+                        </div>`:j}
+                `:j}
           <table>
             <thead>
               <tr>
@@ -5654,7 +5654,10 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
                   ${this._l("ccu.reachable")} ${this._sortIcon("signal","is_reachable")}
                 </th>
                 <th @click=${()=>this._toggleSignalSort("rssi_device")}>
-                  RSSI ${this._sortIcon("signal","rssi_device")}
+                  ${this._l("ccu.rssi_device")} ${this._sortIcon("signal","rssi_device")}
+                </th>
+                <th @click=${()=>this._toggleSignalSort("rssi_peer")}>
+                  ${this._l("ccu.rssi_peer")} ${this._sortIcon("signal","rssi_peer")}
                 </th>
                 <th @click=${()=>this._toggleSignalSort("low_battery")}>
                   ${this._l("ccu.battery")} ${this._sortIcon("signal","low_battery")}
@@ -5670,7 +5673,8 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
                     <td data-label=${this._l("ccu.reachable")}>
                       <span class="status-dot ${e.is_reachable?"online":"offline"}"></span>
                     </td>
-                    <td data-label="RSSI">${e.rssi_device??"—"}</td>
+                    <td data-label=${this._l("ccu.rssi_device")}>${e.rssi_device??"—"}</td>
+                    <td data-label=${this._l("ccu.rssi_peer")}>${e.rssi_peer??"—"}</td>
                     <td data-label=${this._l("ccu.battery")}>
                       ${null===e.low_battery?"—":e.low_battery?F`<span class="warn-text">${this._l("ccu.low")}</span>`:this._l("ccu.ok")}
                     </td>
@@ -5685,8 +5689,8 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
         <div class="card-header">
           <span>${this._l("ccu.firmware_overview")}</span>
           ${this._firmware.summary.firmware_updatable>0?F`<span class="badge"
-                >${this._firmware.summary.firmware_updatable} ${this._l("ccu.updatable")}</span
-              >`:j}
+                  >${this._firmware.summary.firmware_updatable} ${this._l("ccu.updatable")}</span
+                >`:j}
         </div>
         <div class="card-content table-wrapper">
           <div class="action-bar">
@@ -5695,28 +5699,28 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
             </ha-button>
           </div>
           ${t?F`
-                <div class="filter-bar">
-                  <ha-input
-                    .value=${this._firmwareFilter}
-                    .placeholder=${this._l("ccu.filter_devices")}
-                    aria-label=${this._l("ccu.filter_devices")}
-                    @input=${e=>{this._firmwareFilter=e.target.value}}
-                    class="filter-search"
-                  ></ha-input>
-                  <div class="filter-selects">
-                    <ha-select
-                      .label=${this._l("ccu.state")}
-                      .value=${this._firmwareStateFilter}
-                      .options=${[{value:"",label:this._l("ccu.filter_all")},...r.map(e=>({value:e,label:e}))]}
-                      @selected=${e=>{e.stopPropagation(),this._firmwareStateFilter=e.detail.value??""}}
-                      @closed=${e=>e.stopPropagation()}
-                    ></ha-select>
+                  <div class="filter-bar">
+                    <ha-input
+                      .value=${this._firmwareFilter}
+                      .placeholder=${this._l("ccu.filter_devices")}
+                      aria-label=${this._l("ccu.filter_devices")}
+                      @input=${e=>{this._firmwareFilter=e.target.value}}
+                      class="filter-search"
+                    ></ha-input>
+                    <div class="filter-selects">
+                      <ha-select
+                        .label=${this._l("ccu.state")}
+                        .value=${this._firmwareStateFilter}
+                        .options=${[{value:"",label:this._l("ccu.filter_all")},...r.map(e=>({value:e,label:e}))]}
+                        @selected=${e=>{e.stopPropagation(),this._firmwareStateFilter=e.detail.value??""}}
+                        @closed=${e=>e.stopPropagation()}
+                      ></ha-select>
+                    </div>
                   </div>
-                </div>
-                ${a?F`<div class="filter-count">
-                      ${this._l("ccu.filter_result",{count:i.length,total:e.length})}
-                    </div>`:j}
-              `:j}
+                  ${a?F`<div class="filter-count">
+                          ${this._l("ccu.filter_result",{count:i.length,total:e.length})}
+                        </div>`:j}
+                `:j}
           <table>
             <thead>
               <tr>
@@ -5753,10 +5757,10 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
                     </td>
                     <td>
                       ${e.firmware_updatable?F`
-                            <ha-button @click=${()=>this._handleUpdateFirmware(e)}>
-                              ${this._l("ccu.update_firmware")}
-                            </ha-button>
-                          `:j}
+                              <ha-button @click=${()=>this._handleUpdateFirmware(e)}>
+                                ${this._l("ccu.update_firmware")}
+                              </ha-button>
+                            `:j}
                     </td>
                   </tr>
                 `)}
