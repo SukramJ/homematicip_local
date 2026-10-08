@@ -1,4 +1,4 @@
-# Version [2.11.2](https://github.com/SukramJ/homematicip_local/compare/2.11.1...2.11.2) (unreleased)
+# Version [2.12.0](https://github.com/SukramJ/homematicip_local/compare/2.11.1...2.12.0) (unreleased)
 
 ## What's Changed
 
@@ -12,88 +12,20 @@
   system cannot create a backup. An OpenCCU keeps both, as before. The
   firmware update entity offers its "back up before installing" option
   on the same condition and is unchanged for the direct-CCU backend.
-- **openccu-loom: capabilities follow the daemon, including openccu-lite.**
-  For a loom entry, backup and the update entity's backup option follow
-  the daemon's per-central feature map, so an openccu-lite box whose
-  token carries the backup right gets them, and a central whose token
-  lacks it does not. When the daemon later reports a different system
-  type, backup or system-update capability, the entry reloads by itself
-  so its entities match; a new firmware version or hostname alone does
-  not reload. Requires aiohomematic 2026.10.3 and openccu-loom-client
-  2026.10.6.
 - **Creating a backup is refused where the system cannot create one.** The
   `create_ccu_backup` action and the configuration panel's backup command
   now follow the same backup capability as the button and the backup
   agent: on such a system they answer with a clear "does not support
   backups" error instead of asking the CCU or daemon for a backup it cannot
   produce.
-- **openccu-loom: the setup asks the daemon how to sign in.** After the
-  manual form's address, Home Assistant asks the daemon which sign-in it
-  offers and shows only those fields: the API token, pairing, or — on an
-  openccu-lite box — the box token alone. The daemon itself and the box's
-  web server (port 443 with TLS, 80 without) are asked at the same time;
-  the daemon's own answer wins whenever it gives one. Each question gives
-  up after 5 seconds, so a box whose daemon port drops packets no longer
-  holds the form for half a minute.
-- **openccu-loom: reauthentication for a direct daemon connection.** A loom
-  entry that connects to the daemon directly used to get the CCU's username
-  and password form, which it cannot use. It now gets its own sign-in form:
-  paste a new API token, or pair with the daemon again — just the
-  ways the daemon offers. A daemon that turns out to sit behind an
-  openccu-lite box goes on to the box pairing.
-- **openccu-loom: reconfigure edits the daemon connection.** "Reconfigure"
-  on a loom entry showed the CCU's host and credential fields. It now shows
-  the daemon connection — host, port, TLS and the entry's own credential —
-  the same form as the options' connection step; a box entry whose box
-  token field is left empty keeps its stored token.
-- **openccu-loom: connect through an openccu-lite box.** A daemon running
-  on an openccu-lite box (openccu-lite 1.0.0-dev.36 or newer) can now be
-  reached through the box's web server (`https://<box>/addons/loom/`), so
-  the daemon port may stay firewalled — and no box password is stored.
-  Both loom setup forms (manual and discovered) grow a switch "Through an
-  openccu-lite box": switched on, Home Assistant pairs with the box, the
-  box's administrator compares the six-digit code on the box's status page
-  and approves, and the entry keeps only the box token (scope
-  `addon:openccu-loom`, operator rights in the daemon). A box token created
-  on the box's token page can be pasted in the setup form instead, and then
-  no pairing runs. Host and TLS then describe the box; the daemon port
-  field is unused, and an API token beside the box token is refused. The
-  options flow takes a box token from the box's token page as well. When
-  the box later refuses the token —
-  revoked, or without the add-on's scope — Home Assistant asks to
-  reauthenticate, which pairs with the box again. Requires
-  openccu-loom-client 2026.10.4 and OpenCCU-Loom 0.84.1 (API 13.3.0);
-  0.84.1 is the daemon release that lets a program pair with it at all.
-- **openccu-loom: the daemon port and TLS hints are right.** The port
-  field said a blank port means 8443 with TLS and 8080 without; the client
-  uses 8119 either way. The TLS switch now explains that the daemon serves
-  plain HTTP out of the box — with TLS on against it, the connection
-  failed with a cannot-connect error.
-- **Fix: diagnostics no longer carry the openccu-loom API token.** The
-  daemon bearer token of a loom entry was not on the redaction list, so a
-  downloaded diagnostics file included it in clear. It is redacted now,
-  together with the openccu-lite box token.
-- **openccu-loom: pair instead of pasting a token.** Both loom setup forms
-  (manual and discovered) grow a "Pair with the daemon" switch: the flow
-  shows a six-digit code, the daemon's administrator types it on the
-  daemon's tokens panel, and the approved token flows into the entry
-  exactly as a pasted one would — including the single-CCU auto-selection.
-  Rejected, expired, switched-off pairing and a certificate mismatch each
-  return to the form with a clear error. Paired tokens carry the operator
-  role; the form says which features (backups, system update, device
-  removal) still need a pasted admin token. Requires openccu-loom-client
-  2026.9.8 and an openccu-loom daemon ≥ 0.81.0; on an older daemon the
-  switch reports that pairing is unavailable and the token paste keeps
-  working.
-- **openccu-loom: a daemon 403 now says what to do.** With an
-  operator-role token, the admin-tier surfaces (create backup everywhere
-  it is offered, install the system update, clear caches/incidents,
-  record a session, remove a device) answered a generic failure, an
-  unhandled traceback, or nothing at all. Every one of them now names the
-  cause and the fix: create an admin token on the daemon and update the
-  integration's token. Removing a device also no longer dies on a
-  call-shape mismatch before the daemon was ever asked (fixed in
-  openccu-loom-client 2026.9.8; the contract exemption is gone).
+- **openccu-loom (Beta): setup, reauthentication and reconfigure follow
+  what the daemon offers** — pairing instead of pasting a token, connecting
+  through an openccu-lite box, and backup / system-update capabilities taken
+  from the daemon. Loom details stay out of this changelog while the backend
+  is Beta.
+- **Fix: diagnostics no longer carry the openccu-loom API token** or the
+  openccu-lite box token; both are redacted now.
+
 - **Fix: a `connection_failed` repair stayed after the connection was healthy again.** Moving the CCU to a different host is the ordinary way there — the interfaces fail, their repairs appear, the entry is reconfigured onto the new address — and afterwards the repairs stayed visible next to connection sensors reading `on`, with every device operating normally. Nothing short of deleting and re-adding the integration took them back.
 
   The repair is raised from a `connection_state` event and withdrawn by the opposite one, and that one is published only for an interface the central's connection state tracker actually holds (`CentralConnectionState.remove_issue`). That tracker belongs to the central, so it is rebuilt empty with every setup of the config entry — a reload, a reconfigure, a restart. Whatever a previous session left in the issue registry, which does survive all three, therefore had nobody left to withdraw it.
@@ -108,27 +40,31 @@
 
   The option defaults to off now in all five blueprints that carry it (2-, 6-, 8-button, key ring remote control, and the 6-button one in `blueprints/community`), and its description says what enabling it costs. **Re-import the blueprints** to pick this up. An automation that has an explicit `true` stored keeps it — the default only applies where nothing was ever saved — so if you want the warning gone there, switch the option off and save
 
-- **Fix: adding a delayed device reported success when it failed.** The "Add delayed device" repair swallowed every error from adding the device, closed the issue and finished as if the device had been added. It now ends with a "could not be added" message carrying the backend's error. On the openccu-loom backend this is the case where the daemon accepted the device under the entered name but releasing it failed: the device then waits on the daemon until it is released there, and the repair says so instead of reporting success
+- **Fix: adding a delayed device reported success when it failed.** The "Add delayed device" repair swallowed every error from adding the device, closed the issue and finished as if the device had been added. It now ends with a "could not be added" message carrying the backend's error.
 
 - **Breaking: Home Assistant 2026.9 or newer is required** (was 2026.8). The integration builds its schemas with probatio, the validation library Home Assistant ships from 2026.9 on and types its own helpers against from 2026.10. Validation behaves as before: since 2026.9 Home Assistant aliases `voluptuous` to probatio's compatibility shim at startup, so the integration's schemas and `Invalid` were already probatio objects at runtime — importing probatio directly makes the integration independent of that alias and type-checks its schemas against the types Home Assistant declares. The repair flow's steps are typed with `RepairsFlowResult`, the result type `RepairsFlow` declares
 
+### Config Panel
+
+- The signal quality table shows "RSSI Device" and "RSSI Peer" as two sortable columns instead of a single "RSSI" column filled from `RSSI_DEVICE` only ([frontend#112](https://github.com/SukramJ/homematicip-local-frontend/pull/112), reported in [frontend#111](https://github.com/SukramJ/homematicip-local-frontend/issues/111)). Classic BidCos-RF devices often report no valid `RSSI_DEVICE` while `RSSI_PEER` is valid, so the column stayed at "—" although the device detail view showed a value. The two values measure opposite directions of the radio link and are shown side by side
+
 ### Dependencies
 
-#### Bump openccu-loom-client to `2026.10.7`
+#### Bump openccu-loom-client to `2026.10.8`
 
-- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It brings the support for devices the daemon holds back (openccu-loom 0.88.0, daemon api 13.7.1): a newly paired device is announced as a delayed device, so the "Add delayed device" repair appears and, once a name is entered, accepts and releases the device on the daemon. During the first ten minutes after setup, when delayed devices are confirmed without a name, a held device is left held and the repair follows afterwards
+- For the openccu-loom backend (Beta) only; no runtime effect on the direct-CCU backend, where the client is not loaded
 
-#### Bump openccu-loom-client to `2026.10.5`
+#### Bump aiohomematic-config to `2026.10.1`
 
-- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It regenerates the wire bindings against daemon api 13.4.0 (openccu-loom 0.85.0), whose only surface change renames the simulator's backend value from `PyDevCCU` to `GoDevCCU` — a value the integration does not use. Kept to one line: loom details stay out of scope while the backend is Beta
+- Raises its dependency floors to the aiohomematic and openccu-data versions pinned here; no functional change
 
-#### Bump openccu-loom-client to `2026.10.4`
+#### Bump aiohomematic to [2026.10.4](https://github.com/SukramJ/aiohomematic/compare/2026.10.2...2026.10.4)
 
-- Bump for the openccu-loom backend (Beta); it has no runtime effect on the direct-CCU backend, where the client is not loaded. It regenerates the wire bindings against daemon api 13.3.0 (openccu-loom 0.84.0), brings the box-token ingress and box pairing the openccu-lite box connection above needs, and reports an unreachable daemon during pairing as a connection error the setup form shows. Kept to one line: loom details stay out of scope while the backend is Beta
+- **Fix: classic BidCos-RF devices showed no battery state.** Devices such as HM-Sec-SCo or HM-CC-RT-DN report their battery as `LOWBAT` instead of `LOW_BAT`, so the device's low-battery state stayed unknown and the config panel's signal quality view showed none. Both spellings are read now
 
-#### Bump ruff to `0.16.10`
+- **Fix: a reload left a command throttle worker running.** Stopping an interface client now also stops its command throttle, so reloading the integration no longer leaves a `CommandThrottle-*` task pending
 
-- Development only (pin and pre-commit rev). mypy stays at 2.3.1, the version Home Assistant core pins
+- A backend that reports no product is identified as an unknown system instead of an original CCU. Neither enables backup or system update, so no feature appears or disappears
 
 #### Bump openccu-data to `2026.9.1`
 
@@ -161,14 +97,6 @@
   The CCU announces `UNREACH` only when the value changes, so that recovery transition is never delivered after such an outage. Nothing closed the gap afterwards: `UN_REACH` and `STICKY_UN_REACH` are hidden parameters and carry `DataPointUsage.NO_CREATE`, which is exactly what the recovery data load skips — it iterates the readable generic data points — while the one path that does read them over RPC runs only for newly created devices.
 
   The connection recovery re-reads the channel 0 `VALUES` paramset of every device on the interface now and applies `UN_REACH`, `STICKY_UN_REACH` and `CONFIG_PENDING` through the regular event path, in the staged data load as well as in the circuit-breaker recovery. It reads them with `getParamset` rather than the per-parameter `getValue` fallback, because that fallback is skipped on BidCos-RF, VirtualDevices, CUxD and CCU-Jack — building on it would have produced a fix that does nothing on four of six interfaces. A read that fails, or a paramset that does not carry the parameter, leaves the data point untouched instead of defaulting it: a boolean without a value falls back to `false`, so a swallowed read error would have reported every unreachable device as reachable
-
-### Development
-
-- `aiohomematic-test-support` `2026.9.4` → `2026.10.2`, following the aiohomematic pin above. Its homegear session is recorded against godevccu now: `tests/conftest.py` loads `FULL_SESSION_GODEVCCU` (was `FULL_SESSION_RANDOMIZED_PYDEVCCU`), and every test on that session passes unchanged
-- `aiohomematic-test-support` `2026.9.2` → `2026.9.4`, following the aiohomematic pin above — CI runs against `requirements_test.txt`, so the two move together
-- `ruff` `0.16.6` → `0.16.7`, in the prek hook revision and in `requirements_test_pre_commit.txt`, which have to name the same version
-- `pylint` `4.0.9` → `4.1.1` in `requirements_test.txt`. The device-action schema test no longer reaches the schema library through `cv.vol`: Home Assistant 2026.10 no longer re-exports it from `config_validation`
-- `pytest-homeassistant-custom-component-framework` `1.0.56` → `1.0.57`, which brings Home Assistant 2026.10.0b0. Its schema types moved from voluptuous to probatio, which mypy reported as 308 errors in four files; integration and tests import probatio directly now
 
 # Version [2.11.1](https://github.com/SukramJ/homematicip_local/compare/2.11.0...2.11.1) (2026-09-10)
 

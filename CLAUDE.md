@@ -24,7 +24,7 @@ This document provides comprehensive guidance for AI assistants working with the
 
 **Project Name:** Homematic(IP) Local for OpenCCU
 **Type:** Home Assistant Custom Integration
-**Version:** 2.11.2
+**Version:** 2.12.0
 **Primary Language:** Python 3.14+
 **Domain:** `homematicip_local`
 
@@ -118,10 +118,10 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2026.10.3) - Core async library for Homematic device communication
-- **aiohomematic-config** (v2026.8.1) - Device configuration metadata
+- **aiohomematic** (v2026.10.4) - Core async library for Homematic device communication
+- **aiohomematic-config** (v2026.10.1) - Device configuration metadata
 - **openccu-data** (v2026.9.1) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
-- **openccu-loom-client** (v2026.10.7) - Client for the openccu-loom backend (Beta)
+- **openccu-loom-client** (v2026.10.8) - Client for the openccu-loom backend (Beta)
 - **Home Assistant Core** - Minimum version: 2026.9.0+
 - **Python 3.14+** (target version for development)
 
@@ -132,7 +132,7 @@ homematicip_local/
 - **pylint** (4.0.8) - Code linting
 - **ruff** (0.16.7) - Fast Python linter and formatter
 - **prek** (0.5.2) - Git hooks manager (Rust-based pre-commit alternative)
-- **aiohomematic-test-support** (2026.10.3) - Mock test data
+- **aiohomematic-test-support** (2026.10.4) - Mock test data
 - **async-upnp-client** (0.48.1) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
 
@@ -1182,11 +1182,11 @@ make hass
 
 ### Version Information
 
-- **Current Version:** 2.11.2
+- **Current Version:** 2.12.0
 - **Minimum HA Version:** 2026.9.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
-- **aiohomematic Version:** 2026.10.3
-- **openccu-loom-client Version:** 2026.10.7. Its wire layer is generated against daemon API `13.7.1`
+- **aiohomematic Version:** 2026.10.4
+- **openccu-loom-client Version:** 2026.10.8. Its wire layer is generated against daemon API `13.7.2`
   (`openccu_loom_client.wire.const.DAEMON_API_VERSION`), but that number no longer gates the
   connection: `_report_api_version` **logs and never raises** — a warning when the majors differ,
   an info line when only the minors do. Refusing on it was wrong in both directions, because the
@@ -1210,4 +1210,4 @@ make hass
 ---
 
 **Last Updated**: 2026-09-12
-**Version**: 2.11.2
+**Version**: 2.12.0
