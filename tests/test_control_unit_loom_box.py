@@ -1,4 +1,4 @@
-"""Tests for the openccu-loom box-ingress connection in ControlConfig.
+"""Tests for the openccu-loom box-ingress connection in ControlConfig and the start-up log.
 
 A loom entry carrying an openccu-lite box token must hand that token to
 openccu-loom-client's compat ``CentralConfig`` and ``check_config`` as their
@@ -10,6 +10,7 @@ through reauthentication instead).
 from __future__ import annotations
 
 import inspect
+import logging
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -18,6 +19,7 @@ import pytest
 
 from aiohomematic.exceptions import AuthFailure
 from custom_components.homematicip_local.const import (
+    BACKEND_CCU,
     BACKEND_LOOM,
     CONF_BACKEND,
     CONF_INSTANCE_NAME,
@@ -146,3 +148,30 @@ class TestBoxGateError:
         # Any other start failure keeps its old treatment: logged, not raised.
         unit._central.start = AsyncMock(side_effect=LoomTransportError("unreachable"))
         await BaseControlUnit.start_central(unit)  # type: ignore[arg-type]
+
+
+class TestStartCentralVersionLog:
+    """The start-up line names the backend package whose version it shows."""
+
+    @pytest.mark.parametrize("backend", [BACKEND_LOOM, BACKEND_CCU])
+    async def test_started_line_names_the_backend_package(self, backend: str, caplog: pytest.LogCaptureFixture) -> None:
+        from openccu_loom_client import __version__ as loom_client_version
+
+        from aiohomematic import __version__ as aiohomematic_version
+
+        unit = SimpleNamespace(
+            _instance_name="Kearney",
+            _config=SimpleNamespace(backend=backend),
+            _central=SimpleNamespace(start=AsyncMock()),
+        )
+        with caplog.at_level(logging.INFO, logger=_CU):
+            await BaseControlUnit.start_central(unit)  # type: ignore[arg-type]
+
+        expected, other = (
+            (f"openccu-loom-client {loom_client_version}", "aiohomematic")
+            if backend == BACKEND_LOOM
+            else (f"aiohomematic {aiohomematic_version}", "openccu-loom-client")
+        )
+        (line,) = [r.getMessage() for r in caplog.records if r.getMessage().startswith("Started central unit")]
+        assert line == f"Started central unit for Kearney ({expected})"
+        assert other not in line

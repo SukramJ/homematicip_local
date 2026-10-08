@@ -366,7 +366,13 @@ class BaseControlUnit:
         )
         try:
             await self._central.start()
-            _LOGGER.info("Started central unit for %s (%s)", self._instance_name, AIOHM_VERSION)
+            _LOGGER.info(
+                "Started central unit for %s (%s)",
+                self._instance_name,
+                f"openccu-loom-client {_loom_client_version()}"
+                if self._config.backend == BACKEND_LOOM
+                else f"aiohomematic {AIOHM_VERSION}",
+            )
         except AuthFailure:
             # Don't catch - let it propagate to trigger reauth
             raise
@@ -1790,6 +1796,18 @@ def is_loom_box_gate_error(exc: BaseException) -> bool:
     except ImportError:
         return False
     return isinstance(exc, LoomBoxGateError)
+
+
+def _loom_client_version() -> str:
+    """Return the installed openccu-loom-client version.
+
+    Imported lazily like every other ``openccu_loom_client`` reference, so the
+    direct-CCU backend never loads the client. Only called once a loom central
+    has started, when the package is already imported.
+    """
+    from openccu_loom_client import __version__ as loom_client_version  # noqa: PLC0415
+
+    return loom_client_version
 
 
 def _import_loom_central_config() -> type[LoomCentralConfig]:
