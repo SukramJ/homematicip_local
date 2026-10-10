@@ -50,6 +50,7 @@ ENERGY_SENSOR_RULES: list[EntityDescriptionRule] = [
             key="ENERGY_COUNTER",
             device_class=SensorDeviceClass.ENERGY,
             unit=UnitOfEnergy.WATT_HOUR,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
     ),
     # IEC Energy counter (kWh)
