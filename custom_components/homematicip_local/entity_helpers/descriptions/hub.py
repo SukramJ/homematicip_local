@@ -199,6 +199,8 @@ HUB_RULES: list[EntityDescriptionRule] = [
         ),
     ),
     # Hub sensors - Energy counter (system variables)
+    # A generic prefix rule also matches its longer variants (svEnergyCounter matches
+    # svEnergyCounterFeedIn_…), so every more specific rule here carries priority=10.
     EntityDescriptionRule(
         category=DataPointCategory.HUB_SENSOR,
         var_name_contains="svEnergyCounter",
@@ -206,6 +208,7 @@ HUB_RULES: list[EntityDescriptionRule] = [
             key="ENERGY_COUNTER",
             device_class=SensorDeviceClass.ENERGY,
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             state_class=SensorStateClass.TOTAL_INCREASING,
             translation_key="energy_counter_total",
         ),
@@ -213,10 +216,12 @@ HUB_RULES: list[EntityDescriptionRule] = [
     EntityDescriptionRule(
         category=DataPointCategory.HUB_SENSOR,
         var_name_contains="svEnergyCounterFeedIn",
+        priority=10,
         description=HmSensorEntityDescription(
             key="ENERGY_COUNTER_FEED_IN",
             device_class=SensorDeviceClass.ENERGY,
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             state_class=SensorStateClass.TOTAL_INCREASING,
             translation_key="energy_counter_feed_in_total",
         ),
@@ -260,6 +265,7 @@ HUB_RULES: list[EntityDescriptionRule] = [
             key="SUNSHINE_COUNTER",
             device_class=SensorDeviceClass.DURATION,
             native_unit_of_measurement=UnitOfTime.MINUTES,
+            suggested_unit_of_measurement=UnitOfTime.HOURS,
             state_class=SensorStateClass.TOTAL_INCREASING,
             translation_key="sunshine_counter_total",
         ),
@@ -267,6 +273,7 @@ HUB_RULES: list[EntityDescriptionRule] = [
     EntityDescriptionRule(
         category=DataPointCategory.HUB_SENSOR,
         var_name_contains="svHmIPSunshineCounterToday",
+        priority=10,
         description=HmSensorEntityDescription(
             key="SUNSHINE_COUNTER_TODAY",
             device_class=SensorDeviceClass.DURATION,
@@ -278,6 +285,7 @@ HUB_RULES: list[EntityDescriptionRule] = [
     EntityDescriptionRule(
         category=DataPointCategory.HUB_SENSOR,
         var_name_contains="svHmIPSunshineCounterYesterday",
+        priority=10,
         description=HmSensorEntityDescription(
             key="SUNSHINE_COUNTER_YESTERDAY",
             device_class=SensorDeviceClass.DURATION,

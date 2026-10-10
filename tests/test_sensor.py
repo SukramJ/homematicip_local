@@ -10,7 +10,9 @@ import pytest
 from custom_components.homematicip_local.generic_entity import AioHomematicGenericEntity
 from custom_components.homematicip_local.sensor import AioHomematicSensor
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, UnitOfEnergy
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests import const, helper
 from tests.helper import Factory
@@ -33,6 +35,11 @@ def _make_sensor(*, unit: str | None, values: tuple[str, ...] | None) -> AioHome
 TEST_DEVICES: dict[str, str] = {
     "VCU7837366": "HB-UNI-Sensor1.json",
 }
+
+ENERGY_DEVICES: dict[str, str] = {
+    "VCU2128127": "HmIP-BSM.json",
+}
+ENERGY_COUNTER_ENTITY_ID = "sensor.hmip_bsm_vcu2128127_energy_counter"
 
 # pylint: disable=protected-access
 
@@ -112,3 +119,58 @@ class TestSensorUnitAndEnum:
         """A plain numeric data point still adopts its unit of measurement."""
         sensor = _make_sensor(unit="V", values=None)
         assert sensor._attr_native_unit_of_measurement == "V"
+
+
+class TestEnergyCounterUnit:
+    """ENERGY_COUNTER reports Wh and is suggested to Home Assistant in kWh."""
+
+    @pytest.mark.asyncio
+    async def test_new_energy_counter_is_shown_in_kwh(self, factory_homegear: Factory) -> None:
+        """A newly registered energy counter shows kWh, converted from the device's Wh."""
+        hass, control = await factory_homegear.setup_environment(ENERGY_DEVICES)
+
+        entry = er.async_get(hass).async_get(ENERGY_COUNTER_ENTITY_ID)
+        assert entry is not None
+        assert entry.options["sensor.private"]["suggested_unit_of_measurement"] == UnitOfEnergy.KILO_WATT_HOUR
+
+        await control.central.event_coordinator.data_point_event(
+            interface_id=const.INTERFACE_ID, channel_address="VCU2128127:7", parameter="ENERGY_COUNTER", value=1234.5
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        ha_state = hass.states.get(ENERGY_COUNTER_ENTITY_ID)
+        assert ha_state.attributes["unit_of_measurement"] == UnitOfEnergy.KILO_WATT_HOUR
+        assert float(ha_state.state) == pytest.approx(1.2345)
+
+    @pytest.mark.asyncio
+    async def test_registered_energy_counter_keeps_wh(self, hass: HomeAssistant, factory_homegear: Factory) -> None:
+        """
+        An energy counter already registered in Wh keeps Wh.
+
+        Home Assistant stores the suggested unit only the first time it sees an
+        entity, so an existing installation does not change its unit on update.
+        """
+        unique_id = "homematicip_local_vcu2128127_7_energy_counter"
+        er.async_get(hass).async_get_or_create(
+            "sensor",
+            "homematicip_local",
+            unique_id,
+            suggested_object_id="hmip_bsm_vcu2128127_energy_counter",
+            unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        )
+
+        hass, control = await factory_homegear.setup_environment(ENERGY_DEVICES)
+
+        entry = er.async_get(hass).async_get(ENERGY_COUNTER_ENTITY_ID)
+        assert entry is not None
+        assert entry.unique_id == unique_id
+        assert "sensor.private" not in entry.options
+
+        await control.central.event_coordinator.data_point_event(
+            interface_id=const.INTERFACE_ID, channel_address="VCU2128127:7", parameter="ENERGY_COUNTER", value=1234.5
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        ha_state = hass.states.get(ENERGY_COUNTER_ENTITY_ID)
+        assert ha_state.attributes["unit_of_measurement"] == UnitOfEnergy.WATT_HOUR
+        assert float(ha_state.state) == pytest.approx(1234.5)

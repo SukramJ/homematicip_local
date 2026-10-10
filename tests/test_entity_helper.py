@@ -9,7 +9,7 @@ from custom_components.homematicip_local.entity_helpers import REGISTRY
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.event import EventDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import UnitOfTime
+from homeassistant.const import UnitOfEnergy, UnitOfTime
 
 
 class TestEntityHelper:
@@ -22,6 +22,71 @@ class TestEntityHelper:
         assert daemon is not None
         assert ccu is not None
         assert daemon.key != ccu.key
+
+    @pytest.mark.parametrize(
+        ("var_name", "key", "translation_key", "native_unit", "suggested_unit"),
+        [
+            (
+                "svEnergyCounter_50811_VCU1295827:6",
+                "ENERGY_COUNTER",
+                "energy_counter_total",
+                UnitOfEnergy.WATT_HOUR,
+                UnitOfEnergy.KILO_WATT_HOUR,
+            ),
+            (
+                "svEnergyCounterFeedIn_50811_VCU1295827:6",
+                "ENERGY_COUNTER_FEED_IN",
+                "energy_counter_feed_in_total",
+                UnitOfEnergy.WATT_HOUR,
+                UnitOfEnergy.KILO_WATT_HOUR,
+            ),
+            (
+                "svHmIPSunshineCounter_50812_VCU0000001:1",
+                "SUNSHINE_COUNTER",
+                "sunshine_counter_total",
+                UnitOfTime.MINUTES,
+                UnitOfTime.HOURS,
+            ),
+            (
+                "svHmIPSunshineCounterToday_50812_VCU0000001:1",
+                "SUNSHINE_COUNTER_TODAY",
+                "sunshine_counter_today",
+                UnitOfTime.MINUTES,
+                None,
+            ),
+            (
+                "svHmIPSunshineCounterYesterday_50812_VCU0000001:1",
+                "SUNSHINE_COUNTER_YESTERDAY",
+                "sunshine_counter_yesterday",
+                UnitOfTime.MINUTES,
+                None,
+            ),
+        ],
+    )
+    def test_registry_counter_sysvars_resolve_to_their_own_rule(
+        self,
+        var_name: str,
+        key: str,
+        translation_key: str,
+        native_unit: str,
+        suggested_unit: str | None,
+    ) -> None:
+        """
+        A counter sysvar gets its own description, not the one of its shorter prefix.
+
+        `svEnergyCounter` is a substring of `svEnergyCounterFeedIn_…` and
+        `svHmIPSunshineCounter` of the Today/Yesterday variants. With equal
+        priority the generic rule won, so the feed-in counter was named
+        "Energy Counter Total" and the daily sunshine counters "Sunshine
+        Counter Total" — and would have inherited the total counter's
+        suggested hours as well.
+        """
+        description = REGISTRY.find(category=DataPointCategory.HUB_SENSOR, var_name=var_name)
+        assert description is not None
+        assert description.key == key
+        assert description.translation_key == translation_key
+        assert description.native_unit_of_measurement == native_unit
+        assert description.suggested_unit_of_measurement == suggested_unit
 
     def test_registry_defaults(self) -> None:
         """Test that defaults are returned when no rule matches."""
