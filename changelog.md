@@ -21,8 +21,8 @@
 - **The start-up log names the backend package it shows the version of.**
   "Started central unit for …" always showed the aiohomematic version
   without saying so, also for an openccu-loom entry. It now reads
-  `(aiohomematic 2026.10.4)` on the direct-CCU backend and
-  `(openccu-loom-client 2026.10.8)` on the openccu-loom backend.
+  `(aiohomematic 2026.10.5)` on the direct-CCU backend and
+  `(openccu-loom-client 2026.10.9)` on the openccu-loom backend.
 - **openccu-loom (Beta): setup, reauthentication and reconfigure follow
   what the daemon offers** — pairing instead of pasting a token, connecting
   through an openccu-lite box, and backup / system-update capabilities taken
@@ -56,10 +56,11 @@
 ### Config Panel
 
 - The signal quality table shows "RSSI Device" and "RSSI Peer" as two sortable columns instead of a single "RSSI" column filled from `RSSI_DEVICE` only ([frontend#112](https://github.com/SukramJ/homematicip-local-frontend/pull/112), reported in [frontend#111](https://github.com/SukramJ/homematicip-local-frontend/issues/111)). Classic BidCos-RF devices often report no valid `RSSI_DEVICE` while `RSSI_PEER` is valid, so the column stayed at "—" although the device detail view showed a value. The two values measure opposite directions of the radio link and are shown side by side
+- **Fix: the climate schedule's profile selector marked the wrong profile as active** ([frontend#115](https://github.com/SukramJ/homematicip-local-frontend/pull/115), reported in [frontend#114](https://github.com/SukramJ/homematicip-local-frontend/issues/114)). The panel marked the profile at list position `device_active_profile_index - 1`, but the profiles are listed in the order the CCU returns them — for a HmIP-HEATING group delivering P2, P3, P1 it marked P2 while the device ran P1. It now marks the profile named `P<index>` and lists the profiles in numeric order, as the climate schedule card does
 
 ### Dependencies
 
-#### Bump openccu-loom-client to `2026.10.8`
+#### Bump openccu-loom-client to `2026.10.9`
 
 - For the openccu-loom backend (Beta) only; no runtime effect on the direct-CCU backend, where the client is not loaded
 
@@ -67,7 +68,11 @@
 
 - Raises its dependency floors to the aiohomematic and openccu-data versions pinned here; no functional change
 
-#### Bump aiohomematic to [2026.10.4](https://github.com/SukramJ/aiohomematic/compare/2026.10.2...2026.10.4)
+#### Bump aiohomematic to [2026.10.5](https://github.com/SukramJ/aiohomematic/compare/2026.10.2...2026.10.5)
+
+- **Fix: a dimmer's last level drifted down with every off/on cycle.** RF dimmers report intermediate levels while they ramp, and the value reported while ramping down to off was kept as the last level — so switching a light back on restored it a little darker each time (e.g. 40 % → 36 % after six cycles on an HM-LC-Dim1T-FM). The commanded level is kept now
+
+- **Fix: the second channel of the 2-channel HB-LC-Bl1-Velux was missing.** Only channel 1 became a cover; both channels do now. The 1-channel variant keeps its current entity name
 
 - **Fix: classic BidCos-RF devices showed no battery state.** Devices such as HM-Sec-SCo or HM-CC-RT-DN report their battery as `LOWBAT` instead of `LOW_BAT`, so the device's low-battery state stayed unknown and the config panel's signal quality view showed none. Both spellings are read now
 
