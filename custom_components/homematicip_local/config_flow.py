@@ -2521,11 +2521,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_step_box_pair(self) -> ConfigFlowResult:
         """Pair with the openccu-lite box for a token that opens its gate."""
-        from openccu_loom_client import (  # noqa: PLC0415 - config flow renders without the package
-            LoomBoxPairingError,
-            PairingFingerprintMismatchError,
-            start_box_pairing,
-        )
+        from openccu_loom_client import LoomBoxPairingError, PairingFingerprintMismatchError, start_box_pairing  # noqa: PLC0415 - config flow renders without the package
         from openccu_loom_client.exceptions import BaseLoomException  # noqa: PLC0415
 
         if self._pair_task is None:

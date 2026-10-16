@@ -534,9 +534,7 @@ class ControlUnit(BaseControlUnit):
             # Only the loom backend re-reads system information at runtime;
             # aiohomematic reads it once and has no such event. Imported lazily
             # like every loom-client reference, so the ccu path does not need it.
-            from openccu_loom_client.compat.aiohomematic.central.events import (  # noqa: PLC0415
-                SystemInformationChangedEvent,
-            )
+            from openccu_loom_client.compat.aiohomematic.central.events import SystemInformationChangedEvent  # noqa: PLC0415
 
             self._subscription_group.subscribe(
                 event_type=SystemInformationChangedEvent,

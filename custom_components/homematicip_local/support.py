@@ -462,9 +462,7 @@ def loom_forbidden_error() -> type[Exception]:
     then simply never matches.
     """
     try:
-        from openccu_loom_client.exceptions import (  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
-            LoomForbiddenError,
-        )
+        from openccu_loom_client.exceptions import LoomForbiddenError  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
     except ImportError:
 
         class _NeverRaisedForbidden(Exception):

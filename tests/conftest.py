@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -175,7 +175,7 @@ def discovery_info() -> ssdp.SsdpServiceInfo:
             "SERVER": "HomeMatic",
             "ST": "upnp:rootdevice",
             "USN": f"uuid:upnp-BasicDevice-1_0-3014F711A0001F{const.CONFIG_ENTRY_UNIQUE_ID}::upnp:rootdevice",
-            "_timestamp": datetime.datetime(2023, 8, 9, 10, 25, 39, 669454),
+            "_timestamp": dt.datetime(2023, 8, 9, 10, 25, 39, 669454),
             "_host": const.HOST,
             "_port": 1900,
             "_local_addr": ("0.0.0.0", 40610),

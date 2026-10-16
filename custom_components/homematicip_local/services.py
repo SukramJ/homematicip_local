@@ -1154,9 +1154,7 @@ async def _async_service_clear_cache(*, hass: HomeAssistant, service: ServiceCal
 
 async def _async_service_confirm_all_delayed_devices(*, hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to confirm all delayed devices at once."""
-    from homeassistant.helpers.issue_registry import (  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
-        async_delete_issue,
-    )
+    from homeassistant.helpers.issue_registry import async_delete_issue  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
 
     from .repairs import REPAIR_CALLBACKS  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
 
