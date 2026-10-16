@@ -118,22 +118,22 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2026.10.4) - Core async library for Homematic device communication
+- **aiohomematic** (v2026.10.5) - Core async library for Homematic device communication
 - **aiohomematic-config** (v2026.10.1) - Device configuration metadata
 - **openccu-data** (v2026.9.1) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
-- **openccu-loom-client** (v2026.10.8) - Client for the openccu-loom backend (Beta)
+- **openccu-loom-client** (v2026.10.9) - Client for the openccu-loom backend (Beta)
 - **Home Assistant Core** - Minimum version: 2026.9.0+
 - **Python 3.14+** (target version for development)
 
 ### Development Dependencies
 
-- **pytest-homeassistant-custom-component-framework** (1.0.53) - HA test framework
-- **mypy** (`<=2.3.1`, a ceiling rather than a pin; 2.1.0 installed) - Static type checker (strict mode)
-- **pylint** (4.0.8) - Code linting
-- **ruff** (0.16.7) - Fast Python linter and formatter
-- **prek** (0.5.2) - Git hooks manager (Rust-based pre-commit alternative)
-- **aiohomematic-test-support** (2026.10.4) - Mock test data
-- **async-upnp-client** (0.48.1) - UPnP discovery
+- **pytest-homeassistant-custom-component-framework** (1.0.61) - HA test framework
+- **mypy** (`<=2.4.0`, a ceiling rather than a pin; 2.1.0 installed) - Static type checker (strict mode)
+- **pylint** (4.1.3) - Code linting
+- **ruff** (0.17.1) - Fast Python linter and formatter
+- **prek** (0.5.5) - Git hooks manager (Rust-based pre-commit alternative)
+- **aiohomematic-test-support** (2026.10.5) - Mock test data
+- **async-upnp-client** (0.49.0) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
 
 ---
@@ -1185,8 +1185,8 @@ make hass
 - **Current Version:** 2.12.0
 - **Minimum HA Version:** 2026.9.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
-- **aiohomematic Version:** 2026.10.4
-- **openccu-loom-client Version:** 2026.10.8. Its wire layer is generated against daemon API `13.7.2`
+- **aiohomematic Version:** 2026.10.5
+- **openccu-loom-client Version:** 2026.10.9. Its wire layer is generated against daemon API `13.9.0`
   (`openccu_loom_client.wire.const.DAEMON_API_VERSION`), but that number no longer gates the
   connection: `_report_api_version` **logs and never raises** — a warning when the majors differ,
   an info line when only the minors do. Refusing on it was wrong in both directions, because the

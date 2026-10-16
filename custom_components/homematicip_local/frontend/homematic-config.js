@@ -4740,14 +4740,14 @@ function e(e,t,i,s){var a,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPro
             </div>`:j}
       ${"climate"===this._selectedDevice?.schedule_type&&this._climateData?this._renderClimateSchedule():j}
       ${"default"===this._selectedDevice?.schedule_type&&this._deviceData?this._renderDeviceSchedule():j}
-    `}_renderClimateSchedule(){const e=this._climateData,t=e.schedule_data;return F`
+    `}_renderClimateSchedule(){const e=this._climateData,t=e.schedule_data,i=[...e.available_profiles].sort((e,t)=>e.localeCompare(t,void 0,{numeric:!0})),s=function(e){if(null!=e)return`P${e}`}(e.device_active_profile_index);return F`
       <div class="schedule-content">
         <div class="toolbar">
           <div class="profile-selector">
             <ha-select
               .label=${this._l("device_schedule.profile")}
               .value=${this._selectedProfile}
-              .options=${e.available_profiles.map((t,i)=>({value:t,label:e.device_active_profile_index===i+1?`${t} (${this._l("device_schedule.active_profile")})`:t}))}
+              .options=${i.map(e=>({value:e,label:e===s?`${e} (${this._l("device_schedule.active_profile")})`:e}))}
               @selected=${this._handleProfileChange}
               @closed=${e=>e.stopPropagation()}
             ></ha-select>
