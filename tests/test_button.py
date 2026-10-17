@@ -213,3 +213,49 @@ class TestBackupButtonOffered:
         """The button is added if and only if system_information.has_backup holds."""
         buttons = await _added_backup_buttons(hass, backend=backend, system_information=system_information)
         assert len(buttons) == (1 if offered else 0)
+
+
+class TestBackupButtonAfterStart:
+    """The backup button follows system information that arrives only once the central has started."""
+
+    async def test_button_added_once_central_started(self, hass: HomeAssistant) -> None:
+        """
+        Platforms are set up before the central starts (#3457).
+
+        Without a primary client aiohomematic reports an empty SystemInformation, so
+        has_backup is False at setup; the button must appear once the central has
+        started and reports an OpenCCU.
+        """
+        control_unit = MagicMock()
+        control_unit.config.backend = BACKEND_CCU
+        control_unit.central.system_information = SystemInformation()
+        control_unit.central.name = "CCU"
+        control_unit.entry_id = "test-entry"
+        control_unit.get_new_data_points = MagicMock(return_value=())
+        control_unit.get_new_hub_data_points = MagicMock(return_value=())
+        entry = MagicMock()
+        entry.entry_id = "test-entry"
+        entry.runtime_data = control_unit
+        async_add_entities = Mock()
+
+        await async_setup_entry(hass, entry, async_add_entities)
+
+        def _backup_buttons() -> list[HmipLocalCreateBackupButton]:
+            return [
+                entity
+                for call in async_add_entities.call_args_list
+                for entity in call.args[0]
+                if isinstance(entity, HmipLocalCreateBackupButton)
+            ]
+
+        assert _backup_buttons() == []
+
+        control_unit.central.system_information = SystemInformation(ccu_type=CCUType.OPENCCU)
+        async_dispatcher_send(hass, signal_central_state_changed(entry_id="test-entry"))
+        await hass.async_block_till_done()
+        assert len(_backup_buttons()) == 1
+
+        # A later state transition must not add a second button.
+        async_dispatcher_send(hass, signal_central_state_changed(entry_id="test-entry"))
+        await hass.async_block_till_done()
+        assert len(_backup_buttons()) == 1
