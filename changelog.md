@@ -1,3 +1,15 @@
+# Version [2.12.1](https://github.com/SukramJ/homematicip_local/compare/2.12.0...2.12.1) (unreleased)
+
+## What's Changed
+
+### Integration
+
+- **The "Create backup" button is back on an OpenCCU.** 2.12.0 decided whether to
+  offer it while the platforms were set up, before the central had started and before
+  it knew it was talking to an OpenCCU, so the button was never added and only a
+  restored, unavailable entity was left. The button is now added once the started
+  central reports that it can create a backup (aiohomematic#3457).
+
 # Version [2.12.0](https://github.com/SukramJ/homematicip_local/compare/2.11.1...2.12.0) (unreleased)
 
 ## What's Changed

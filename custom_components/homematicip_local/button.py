@@ -126,8 +126,28 @@ async def async_setup_entry(
     # Hub-level backup button, only for a system that can create a backup. For
     # aiohomematic's own SystemInformation that is ccu_type == OPENCCU; an
     # openccu-loom central reports it from the daemon's per-central feature map.
-    if control_unit.central.system_information.has_backup:
+    # The platform is set up before the central starts, and aiohomematic has no
+    # system information until its primary client exists (#3457), so the check
+    # runs again on every central state signal until the button is added.
+    backup_button_added = False
+
+    @callback
+    def async_add_backup_button() -> None:
+        """Add the backup button once the central reports it can create a backup."""
+        nonlocal backup_button_added
+        if backup_button_added or not control_unit.central.system_information.has_backup:
+            return
+        backup_button_added = True
         async_add_entities([HmipLocalCreateBackupButton(control_unit=control_unit)])
+
+    entry.async_on_unload(
+        func=async_dispatcher_connect(
+            hass=hass,
+            signal=signal_central_state_changed(entry_id=entry.entry_id),
+            target=async_add_backup_button,
+        )
+    )
+    async_add_backup_button()
 
 
 class AioHomematicButton(AioHomematicGenericEntity[DpButton], ButtonEntity):
