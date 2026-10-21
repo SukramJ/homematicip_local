@@ -14,7 +14,7 @@
     "openccu-data==2026.9.1",
     "openccu-loom-client==2026.10.9",
     "aiohomematic-config==2026.10.1",
-    "aiohomematic==2026.10.5"
+    "aiohomematic==2026.10.6"
   ],
   "ssdp": [
     {
@@ -22,6 +22,6 @@
       "manufacturerURL": "https://openccu.de"
     }
   ],
-  "version": "2.12.1",
+  "version": "2.12.2",
   "zeroconf": ["_openccu-loom._tcp.local."]
 }

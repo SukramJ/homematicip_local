@@ -1,3 +1,15 @@
+# Version [2.12.2](https://github.com/SukramJ/homematicip_local/compare/2.12.1...2.12.2) (unreleased)
+
+## What's Changed
+
+### Integration
+
+- **Starting HA while the CCU boots no longer re-anchors hub and sysvar entities.** With
+  only CUxD connected, the central reported the dummy serial `CUxD_SN0815`. That was taken
+  as a CCU serial change, which moved all hub keys and left sysvars re-created as disabled
+  `_2` entities. The serial change is now accepted only on a running central and never for a
+  dummy serial (aiohomematic#3462).
+
 # Version [2.12.1](https://github.com/SukramJ/homematicip_local/compare/2.12.0...2.12.1) (unreleased)
 
 ## What's Changed

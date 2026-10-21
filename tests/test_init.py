@@ -1464,6 +1464,7 @@ async def test_async_reanchor_on_serial_change_rewrites_and_updates_entry(hass: 
 
     control = MagicMock()
     control.central.system_information.serial = new_serial
+    control.central.state = CentralState.RUNNING
 
     await _async_reanchor_hub_unique_ids_on_serial_change(hass, entry, control)
 
@@ -1488,6 +1489,44 @@ async def test_async_reanchor_on_serial_change_noop(hass: HomeAssistant, connect
 
     control = MagicMock()
     control.central.system_information.serial = connected
+    control.central.state = CentralState.RUNNING
+
+    await _async_reanchor_hub_unique_ids_on_serial_change(hass, entry, control)
+
+    assert entry.unique_id == serial
+    assert entity_registry.async_get(hub.entity_id).unique_id == f"{HMIP_DOMAIN}_{serial[-10:].lower()}_sysvar_x"
+
+
+@pytest.mark.parametrize(
+    ("connected", "central_state"),
+    [
+        # Cold start while the CCU boots: only CUxD answered (#3462).
+        ("CUxD_SN0815", CentralState.RUNNING),
+        ("BidCos-RF_SN0815", CentralState.RUNNING),
+        # A real serial change is only trusted on a fully running central.
+        ("3014F711B0009999", CentralState.FAILED),
+        ("3014F711B0009999", CentralState.DEGRADED),
+    ],
+)
+async def test_async_reanchor_on_serial_change_ignores_untrusted_serial(
+    hass: HomeAssistant, connected: str, central_state: CentralState
+) -> None:
+    """No re-anchor onto a dummy serial or while the central is not running."""
+    serial = "3014F711A0001234"
+    entry = MockConfigEntry(domain=HMIP_DOMAIN, unique_id=serial)
+    entry.add_to_hass(hass)
+
+    entity_registry = er.async_get(hass)
+    hub = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_{serial[-10:].lower()}_sysvar_x",
+        config_entry=entry,
+    )
+
+    control = MagicMock()
+    control.central.system_information.serial = connected
+    control.central.state = central_state
 
     await _async_reanchor_hub_unique_ids_on_serial_change(hass, entry, control)
 

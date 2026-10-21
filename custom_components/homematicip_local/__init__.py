@@ -16,7 +16,9 @@ from aiohomematic import __version__ as HAHM_VERSION
 from aiohomematic.const import (
     DEFAULT_ENABLE_SYSVAR_SCAN,
     DEFAULT_UN_IGNORES,
+    DUMMY_SERIAL,
     IDENTIFIER_SEPARATOR,
+    CentralState,
     IntegrationIssueType,
     Interface,
     OptionalSettings,
@@ -850,10 +852,17 @@ async def _async_reanchor_hub_unique_ids_on_serial_change(
     from the stored one, this realigns those keys onto the new serial, updates
     the entry's unique_id and reloads so the running central rebuilds on the new
     anchor. A no-op when the serial is unchanged or unknown.
+
+    A serial is only trusted from a fully running central, and a dummy serial
+    (``<interface>_SN0815``) is never a radio-module swap: a start while the CCU
+    is still booting can leave only CUxD connected, whose backend carries such a
+    dummy serial (#3462).
     """
     old_serial = entry.unique_id
     new_serial = control.central.system_information.serial
     if not old_serial or not new_serial or new_serial.lower() == "unknown":
+        return
+    if control.central.state != CentralState.RUNNING or new_serial.endswith(f"_{DUMMY_SERIAL}"):
         return
     if new_serial.lower() == old_serial.lower():
         return
