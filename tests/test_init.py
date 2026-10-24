@@ -1841,6 +1841,30 @@ class TestDeviceIdentifierMigration:
     _ADDRESS = "0001D8A991F2DC"
     _DAEMON_CENTRAL = "Otto"
 
+    async def test_a_child_already_on_the_neutral_key_cannot_leave_a_merged_parent(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A child whose key is already neutral has nowhere to move: it goes with its parent, loudly."""
+        mock_config_entry_v2.add_to_hass(hass)
+        self._seed_device(hass, mock_config_entry_v2, identifier=self._neutral_identifier(), name="Waschmaschine")
+        daemon_keyed = self._seed_device(
+            hass, mock_config_entry_v2, identifier=self._daemon_identifier(), name="Waschmaschine"
+        )
+        odd_child = self._seed_child(
+            hass,
+            mock_config_entry_v2,
+            identifier=self._neutral_identifier(suffix="-6"),
+            name="Gruppe 6",
+            parent=daemon_keyed,
+        )
+
+        _async_migrate_device_identifiers(hass, mock_config_entry_v2)
+
+        device_registry = dr.async_get(hass)
+        assert device_registry.async_get(daemon_keyed.id) is None
+        assert device_registry.async_get(odd_child.id) is None
+        assert "cannot move to another parent" in caplog.text
+
     async def test_ambiguous_central_name_is_skipped(
         self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
     ) -> None:
@@ -1865,6 +1889,155 @@ class TestDeviceIdentifierMigration:
 
         device_registry = dr.async_get(hass)
         assert device_registry.async_get(seeded.id).identifiers == {(HMIP_DOMAIN, const.INSTANCE_NAME)}
+
+    async def test_children_of_a_merged_parent_join_the_survivors_children(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """When the survivor already holds the child, that child wins and takes the entities."""
+        mock_config_entry_v2.add_to_hass(hass)
+        older = self._seed_device(
+            hass, mock_config_entry_v2, identifier=self._neutral_identifier(), name="Waschmaschine"
+        )
+        older_child = self._seed_child(
+            hass, mock_config_entry_v2, identifier=self._neutral_identifier(suffix="-6"), name="Gruppe 6", parent=older
+        )
+        daemon_keyed = self._seed_device(
+            hass, mock_config_entry_v2, identifier=self._daemon_identifier(), name="Waschmaschine"
+        )
+        stale_child = self._seed_child(
+            hass,
+            mock_config_entry_v2,
+            identifier=self._daemon_identifier(suffix="-6"),
+            name="Gruppe 6",
+            parent=daemon_keyed,
+        )
+        entity_registry = er.async_get(hass)
+        live = entity_registry.async_get_or_create(
+            domain="switch",
+            platform=HMIP_DOMAIN,
+            unique_id=f"{HMIP_DOMAIN}_loom_{self._ADDRESS}_6_STATE",
+            device_id=stale_child.id,
+            config_entry=mock_config_entry_v2,
+        )
+
+        _async_migrate_device_identifiers(hass, mock_config_entry_v2)
+
+        device_registry = dr.async_get(hass)
+        assert device_registry.async_get(stale_child.id) is None
+        survivor_child = device_registry.async_get(older_child.id)
+        assert isinstance(survivor_child, dr.ChildDeviceEntry)
+        assert survivor_child.parent_device_id == older.id
+        assert entity_registry.async_get(live.entity_id).device_id == older_child.id
+
+    async def test_children_of_a_merged_parent_move_under_the_survivor(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """Removing a parent removes its children and their entities, so they are handed over first.
+
+        HA does not reparent a child device. The child is re-created under the
+        survivor on the neutral key, its entities, area and custom name follow,
+        and the old child goes down with the stale parent.
+        """
+        mock_config_entry_v2.add_to_hass(hass)
+        older = self._seed_device(
+            hass, mock_config_entry_v2, identifier=self._neutral_identifier(), name="Waschmaschine"
+        )
+        daemon_keyed = self._seed_device(
+            hass, mock_config_entry_v2, identifier=self._daemon_identifier(), name="Waschmaschine"
+        )
+        device_registry = dr.async_get(hass)
+        child = self._seed_child(
+            hass,
+            mock_config_entry_v2,
+            identifier=self._daemon_identifier(suffix="-6"),
+            name="Gruppe 6",
+            parent=daemon_keyed,
+        )
+        device_registry.async_update_child_device(child.id, name_by_user="Trommel", area_id="keller")
+        entity_registry = er.async_get(hass)
+        live = entity_registry.async_get_or_create(
+            domain="switch",
+            platform=HMIP_DOMAIN,
+            unique_id=f"{HMIP_DOMAIN}_loom_{self._ADDRESS}_6_STATE",
+            device_id=child.id,
+            config_entry=mock_config_entry_v2,
+        )
+
+        _async_migrate_device_identifiers(hass, mock_config_entry_v2)
+
+        assert device_registry.async_get(daemon_keyed.id) is None
+        assert device_registry.async_get(child.id) is None, "the stale child was left behind"
+        moved = device_registry.async_get_child_device_by_identifier(
+            (HMIP_DOMAIN, self._neutral_identifier(suffix="-6")), mock_config_entry_v2.entry_id
+        )
+        assert moved is not None
+        assert moved.parent_device_id == older.id
+        assert moved.name == "Gruppe 6"
+        assert moved.name_by_user == "Trommel"
+        assert moved.area_id == "keller"
+        assert entity_registry.async_get(live.entity_id).device_id == moved.id
+
+    async def test_daemon_keyed_child_is_renamed_in_place(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """A child on a daemon key below a parent that stays is renamed like a main device, keeping its id."""
+        mock_config_entry_v2.add_to_hass(hass)
+        parent = self._seed_device(
+            hass, mock_config_entry_v2, identifier=self._neutral_identifier(), name="Waschmaschine"
+        )
+        child = self._seed_child(
+            hass,
+            mock_config_entry_v2,
+            identifier=self._daemon_identifier(suffix="-schedule"),
+            name="Zeitplan",
+            parent=parent,
+        )
+
+        _async_migrate_device_identifiers(hass, mock_config_entry_v2)
+
+        device_registry = dr.async_get(hass)
+        renamed = device_registry.async_get(child.id)
+        assert isinstance(renamed, dr.ChildDeviceEntry), "the child was removed instead of migrated"
+        assert renamed.identifiers == {(HMIP_DOMAIN, self._neutral_identifier(suffix="-schedule"))}
+        assert renamed.parent_device_id == parent.id
+
+    async def test_daemon_keyed_child_merges_into_the_neutral_child(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """Two children of one parent, one per key: the neutral one keeps its id and takes the entities."""
+        mock_config_entry_v2.add_to_hass(hass)
+        parent = self._seed_device(
+            hass, mock_config_entry_v2, identifier=self._neutral_identifier(), name="Waschmaschine"
+        )
+        neutral_child = self._seed_child(
+            hass,
+            mock_config_entry_v2,
+            identifier=self._neutral_identifier(suffix="-schedule"),
+            name="Zeitplan",
+            parent=parent,
+        )
+        stale_child = self._seed_child(
+            hass,
+            mock_config_entry_v2,
+            identifier=self._daemon_identifier(suffix="-schedule"),
+            name="Zeitplan",
+            parent=parent,
+        )
+        entity_registry = er.async_get(hass)
+        live = entity_registry.async_get_or_create(
+            domain="sensor",
+            platform=HMIP_DOMAIN,
+            unique_id=f"{HMIP_DOMAIN}_loom_{self._ADDRESS}_schedule",
+            device_id=stale_child.id,
+            config_entry=mock_config_entry_v2,
+        )
+
+        _async_migrate_device_identifiers(hass, mock_config_entry_v2)
+
+        device_registry = dr.async_get(hass)
+        assert device_registry.async_get(stale_child.id) is None
+        assert device_registry.async_get(neutral_child.id) is not None
+        assert entity_registry.async_get(live.entity_id).device_id == neutral_child.id
 
     async def test_daemon_keyed_entry_is_renamed_in_place(
         self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
@@ -1992,6 +2165,23 @@ class TestDeviceIdentifierMigration:
 
     def _neutral_identifier(self, *, suffix: str = "") -> str:
         return f"{self._ADDRESS}{IDENTIFIER_SEPARATOR}{const.INSTANCE_NAME}-HmIP-RF{suffix}"
+
+    def _seed_child(
+        self,
+        hass: HomeAssistant,
+        entry: MockConfigEntry,
+        *,
+        identifier: str,
+        name: str,
+        parent: dr.DeviceEntry,
+    ) -> dr.ChildDeviceEntry:
+        """Register a child device entry under one homematicip_local identifier."""
+        return dr.async_get(hass).async_get_or_create_child(
+            config_entry_id=entry.entry_id,
+            identifiers={(HMIP_DOMAIN, identifier)},
+            name=name,
+            parent_device_id=parent.id,
+        )
 
     def _seed_device(
         self,

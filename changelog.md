@@ -4,6 +4,18 @@
 
 ### Integration
 
+- **Sub devices are now Home Assistant child devices.** A channel group and the schedule of a
+  device used to be separate devices linked with `via_device`; they are now child devices of the
+  device they belong to, as HA 2026.9 introduced for parts of one product
+  ([HA developer blog](https://contributors.home-assistant.io/blog/2026/10/22/child-devices/)).
+  HA converts the existing entries in place, so every `device_id`, area, custom name and
+  automation survives. What changes: a child carries no manufacturer, model, firmware or serial of
+  its own, inherits the device's area unless the channel group has its own room, and is deleted or
+  disabled together with the device. Its name drops the device prefix, because HA composes the full
+  name from device and child itself: the schedule child is now called `Schedule` / `Zeitplan`, an
+  unnamed channel group `Group 2` / `Gruppe 2`, a named group keeps its name. The `friendly_name`
+  state attribute of their entities therefore no longer starts with the device name. The link from a
+  device to the central stays a `via_device` link.
 - **Starting HA while the CCU boots no longer re-anchors hub and sysvar entities.** With
   only CUxD connected, the central reported the dummy serial `CUxD_SN0815`. That was taken
   as a CCU serial change, which moved all hub keys and left sysvars re-created as disabled
