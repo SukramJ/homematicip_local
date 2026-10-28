@@ -21,7 +21,8 @@ _DEVICE_INTERFACE = "HmIP-RF"
 # never the backend's own identifier below.
 _DEVICE_IDENTIFIER = f"{_DEVICE_ADDRESS}@{_CENTRAL_NAME}-{_DEVICE_INTERFACE}"
 _BACKEND_IDENTIFIER = f"{_DEVICE_ADDRESS}@some-daemon-central-{_DEVICE_INTERFACE}"
-_VIA_DEVICE_ID = "via-device-registry-id"
+_CENTRAL_DEVICE_ID = "central-device-registry-id"
+_PARENT_DEVICE_ID = "parent-device-registry-id"
 
 
 def _create_mock_data_point(
@@ -74,12 +75,24 @@ def _create_mock_data_point(
     return mock_dp
 
 
+def _put_in_channel_group(mock_dp: MagicMock, *, group_no: int, group_name: str, room: str | None = None) -> None:
+    """Place the data point's channel in a multi-channel group led by a master with the given name."""
+    mock_dp.device.has_sub_devices = True
+    mock_dp.channel.is_in_multi_group = True
+    master = MagicMock()
+    master.configure_mock(name=group_name)
+    master.group_no = group_no
+    master.room = room
+    mock_dp.channel.group_master = master
+
+
 def _create_mock_control_unit(*, enable_sub_devices: bool = False) -> MagicMock:
     """Create a mock control unit."""
     mock_cu = MagicMock(spec=ControlUnit)
     mock_cu.enable_sub_devices = enable_sub_devices
     mock_cu.disable_config_panel = True
-    mock_cu.ensure_via_device_exists.return_value = _VIA_DEVICE_ID
+    mock_cu.ensure_central_device_exists.return_value = _CENTRAL_DEVICE_ID
+    mock_cu.ensure_parent_device_exists.return_value = _PARENT_DEVICE_ID
     # Mirror the real method rather than returning a fixed string, so these
     # tests keep exercising which identifier the entity asks for.
     mock_cu.device_identifier.side_effect = lambda *, device: (
@@ -107,6 +120,24 @@ def _create_entity(
 
 class TestHaDeviceName:
     """Tests for _ha_device_name property."""
+
+    def test_channel_group_name_is_plain_when_sub_devices_disabled(self) -> None:
+        """Without sub devices every channel stays on the device, so the device name stands."""
+        mock_dp = _create_mock_data_point(category=DataPointCategory.SWITCH, device_name="HmIP-BSL Test")
+        _put_in_channel_group(mock_dp, group_no=2, group_name="Küche Licht")
+        mock_cu = _create_mock_control_unit(enable_sub_devices=False)
+        entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
+
+        assert entity._ha_device_name == "HmIP-BSL Test"
+
+    def test_named_channel_group_uses_the_group_name(self) -> None:
+        """A group whose master carries a user-given name is named after it, without the device prefix."""
+        mock_dp = _create_mock_data_point(category=DataPointCategory.SWITCH, device_name="HmIP-BSL Test")
+        _put_in_channel_group(mock_dp, group_no=2, group_name="Küche Licht")
+        mock_cu = _create_mock_control_unit(enable_sub_devices=True)
+        entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
+
+        assert entity._ha_device_name == "Küche Licht"
 
     def test_non_schedule_device_name(self) -> None:
         """Test that non-schedule device name is just the device name."""
@@ -142,7 +173,8 @@ class TestHaDeviceName:
         mock_cu = _create_mock_control_unit(enable_sub_devices=True)
         entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
 
-        assert entity._ha_device_name == "HmIP-PSM Test Schedule"
+        # A child device carries its own name only; HA prepends the parent's.
+        assert entity._ha_device_name == "Schedule"
 
     def test_schedule_device_name_uses_translation(self) -> None:
         """Test that schedule device name uses CCU translation when available."""
@@ -162,7 +194,7 @@ class TestHaDeviceName:
             parameter="SCHEDULE_CHANNEL_SWITCH",
             locale="de",
         )
-        assert entity._ha_device_name == "HmIP-PSM Test Zeitplan"
+        assert entity._ha_device_name == "Zeitplan"
 
     @pytest.mark.parametrize(
         "category",
@@ -180,14 +212,70 @@ class TestHaDeviceName:
         mock_cu = _create_mock_control_unit(enable_sub_devices=True)
         entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
 
-        assert "Schedule" in entity._ha_device_name or "Zeitplan" in entity._ha_device_name
+        assert entity._ha_device_name in ("Schedule", "Zeitplan")
+        assert "HmIP-PSM Test" not in entity._ha_device_name
+
+    @pytest.mark.parametrize(
+        ("locale", "group_name", "expected"),
+        [
+            ("de", "4", "Gruppe 4"),
+            ("en", "4", "Group 4"),
+            ("de-DE", "4", "Gruppe 4"),
+            ("xx", "4", "Group 4"),
+            # No name at all: the group number stands in.
+            ("de", "", "Gruppe 2"),
+        ],
+    )
+    def test_unnamed_channel_group_is_labelled_by_locale(self, locale: str, group_name: str, expected: str) -> None:
+        """An unnamed group (CCU names it by its channel number) gets a localized label instead of the device prefix."""
+        mock_dp = _create_mock_data_point(category=DataPointCategory.SWITCH, device_name="HmIP-BSL Test")
+        mock_dp.device.config_provider.config.locale = locale
+        _put_in_channel_group(mock_dp, group_no=2, group_name=group_name)
+        mock_cu = _create_mock_control_unit(enable_sub_devices=True)
+        entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
+
+        assert entity._ha_device_name == expected
 
 
-class TestScheduleSubdevice:
-    """Tests for schedule sub-device creation logic."""
+class TestChildDeviceInfo:
+    """Tests for the device info an entity lands on: the device itself or a child of it."""
+
+    def test_channel_group_becomes_a_child_of_the_device(self) -> None:
+        """A grouped channel lands on a child device: parent id, own name, the group's room, no hardware data."""
+        mock_dp = _create_mock_data_point(category=DataPointCategory.SWITCH, device_name="HmIP-BSL Test")
+        _put_in_channel_group(mock_dp, group_no=2, group_name="Küche Licht", room="Küche")
+        mock_cu = _create_mock_control_unit(enable_sub_devices=True)
+        entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
+
+        device_info = entity._attr_device_info
+        assert device_info is not None
+        assert device_info["identifiers"] == {(DOMAIN, f"{_DEVICE_IDENTIFIER}-2")}
+        assert device_info["parent_device_id"] == _PARENT_DEVICE_ID
+        assert device_info["name"] == "Küche Licht"
+        assert device_info["suggested_area"] == "Küche"
+        assert "manufacturer" not in device_info
+        assert "via_device_id" not in device_info
+        # The parent is registered with the full device info of the device itself.
+        parent_info = mock_cu.ensure_parent_device_exists.call_args.kwargs["device_info"]
+        assert parent_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
+        assert parent_info["name"] == "HmIP-BSL Test"
+        assert parent_info["model"] == "HmIP-PSM"
+        assert parent_info["suggested_area"] == "Living Room"
+        assert parent_info["via_device_id"] == _CENTRAL_DEVICE_ID
+
+    def test_channel_group_without_a_room_inherits_the_parent_area(self) -> None:
+        """A group without its own room passes no area, so HA resolves the parent's."""
+        mock_dp = _create_mock_data_point(category=DataPointCategory.SWITCH)
+        _put_in_channel_group(mock_dp, group_no=2, group_name="Küche Licht", room=None)
+        mock_cu = _create_mock_control_unit(enable_sub_devices=True)
+        entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
+
+        device_info = entity._attr_device_info
+        assert device_info is not None
+        assert device_info["suggested_area"] is None
 
     def test_multi_group_channel_without_group_master_stays_on_the_device(self) -> None:
-        """Test that a group-master-less channel does not make the device its own via device."""
+        """Test that a group-master-less channel does not split off a child device."""
         mock_dp = _create_mock_data_point(category=DataPointCategory.SWITCH)
         mock_dp.device.has_sub_devices = True
         mock_dp.channel.is_in_multi_group = True
@@ -197,13 +285,15 @@ class TestScheduleSubdevice:
 
         device_info = entity._attr_device_info
         assert device_info is not None
-        # Without a group master there is no sub device to split off, so the
-        # entity stays on the device — which hangs off the central, not itself.
+        # Without a group master there is no child to split off, so the entity
+        # stays on the device — which hangs off the central.
         assert device_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
-        assert mock_cu.ensure_via_device_exists.call_args.kwargs["via_device"] == _CENTRAL_NAME
+        assert "parent_device_id" not in device_info
+        assert device_info["via_device_id"] == _CENTRAL_DEVICE_ID
+        mock_cu.ensure_parent_device_exists.assert_not_called()
 
     def test_non_schedule_no_subdevice(self) -> None:
-        """Test that non-schedule entities do not create a sub-device."""
+        """Test that non-schedule entities land on the device, which hangs off the central."""
         mock_dp = _create_mock_data_point(category=DataPointCategory.SWITCH)
         mock_cu = _create_mock_control_unit(enable_sub_devices=True)
         entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
@@ -211,8 +301,11 @@ class TestScheduleSubdevice:
         device_info = entity._attr_device_info
         assert device_info is not None
         assert device_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
-        assert device_info["via_device_id"] == _VIA_DEVICE_ID
-        assert mock_cu.ensure_via_device_exists.call_args.kwargs["via_device"] == _CENTRAL_NAME
+        assert device_info["name"] == "HmIP-PSM Test"
+        assert device_info["manufacturer"] == "eQ-3"
+        assert device_info["serial_number"] == _DEVICE_ADDRESS
+        assert device_info["via_device_id"] == _CENTRAL_DEVICE_ID
+        mock_cu.ensure_parent_device_exists.assert_not_called()
 
     @pytest.mark.parametrize(
         "category",
@@ -225,7 +318,7 @@ class TestScheduleSubdevice:
         self,
         category: DataPointCategory,
     ) -> None:
-        """Test that a separate schedule sub-device is created when sub devices are enabled."""
+        """Test that a schedule child device is created below the device when sub devices are enabled."""
         mock_dp = _create_mock_data_point(category=category)
         mock_cu = _create_mock_control_unit(enable_sub_devices=True)
         entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
@@ -233,8 +326,11 @@ class TestScheduleSubdevice:
         device_info = entity._attr_device_info
         assert device_info is not None
         assert device_info["identifiers"] == {(DOMAIN, f"{_DEVICE_IDENTIFIER}-schedule")}
-        assert device_info["via_device_id"] == _VIA_DEVICE_ID
-        assert mock_cu.ensure_via_device_exists.call_args.kwargs["via_device"] == _DEVICE_IDENTIFIER
+        assert device_info["parent_device_id"] == _PARENT_DEVICE_ID
+        assert device_info["name"] == "Zeitplan"
+        assert "via_device_id" not in device_info
+        parent_info = mock_cu.ensure_parent_device_exists.call_args.kwargs["device_info"]
+        assert parent_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
 
     @pytest.mark.parametrize(
         "category",
@@ -254,10 +350,23 @@ class TestScheduleSubdevice:
 
         device_info = entity._attr_device_info
         assert device_info is not None
-        # Entity stays on main device, not a separate schedule sub-device
+        # Entity stays on main device, not a separate schedule child device
         assert device_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
-        assert device_info["via_device_id"] == _VIA_DEVICE_ID
-        assert mock_cu.ensure_via_device_exists.call_args.kwargs["via_device"] == _CENTRAL_NAME
+        assert device_info["via_device_id"] == _CENTRAL_DEVICE_ID
+        mock_cu.ensure_parent_device_exists.assert_not_called()
+
+    def test_schedule_wins_over_a_channel_group(self) -> None:
+        """A schedule data point on a grouped channel lands on the schedule child, as before."""
+        mock_dp = _create_mock_data_point(category=DataPointCategory.SCHEDULE_SWITCH)
+        _put_in_channel_group(mock_dp, group_no=2, group_name="Küche Licht", room="Küche")
+        mock_cu = _create_mock_control_unit(enable_sub_devices=True)
+        entity = _create_entity(mock_dp=mock_dp, mock_cu=mock_cu)
+
+        device_info = entity._attr_device_info
+        assert device_info is not None
+        assert device_info["identifiers"] == {(DOMAIN, f"{_DEVICE_IDENTIFIER}-schedule")}
+        assert device_info["name"] == "Zeitplan"
+        assert device_info["suggested_area"] is None
 
 
 def _create_mock_hub_data_point(

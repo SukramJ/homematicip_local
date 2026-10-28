@@ -15,13 +15,12 @@ Names are taken from these sources, in the following order:
 3. Home Assistant translation strings for parameter/entity type to present readable localized names.
 
 ## Device name in Home Assistant
-- The HA device name is primarily the CCU device name.
-- When “sub devices” are enabled and a device has sub devices (i.e. grouped channels), the HA device name might be extended with the group/master channel information:
-  - If the entity’s channel belongs to a multi-group and there is a group master channel:
-    - If the master channel has a non-empty, non-numeric name: use that name.
-    - If the master channel name is numeric: use "{device name}-{master name}".
-    - If the master channel has no name: use "{device name}-{group_no}".
-- If sub devices are not enabled, the plain CCU device name is used.
+- The HA device name is the CCU device name.
+- When “sub devices” are enabled, a channel group and the schedule of a device are HA child devices of that device. A child carries its own name only — HA composes the displayed name from parent, child and entity itself, so the device name is never repeated in the child name:
+  - The schedule child is named with the CCU translation of the schedule parameter ("Schedule" / "Zeitplan").
+  - A channel group whose master channel has a non-empty, non-numeric name uses that name.
+  - A channel group whose master channel is unnamed (the CCU names it by its channel number) is labelled "Group {n}" / "Gruppe {n}", with the master's name or, failing that, the group number as `n`.
+- If sub devices are not enabled, every entity lands on the device, and the plain CCU device name is used.
 
 This logic is implemented in AioHomematicGenericEntity._ha_device_name.
 
@@ -52,7 +51,7 @@ This logic is implemented in AioHomematicGenericEntity._do_remove_name.
 - Entities that do not have their own distinct name (after the above processing) are considered to "use the device name" in HA. This is exposed via the property use_device_name.
 
 ## Special cases
-- Sub-device grouping: When enable_sub_devices is on and the device has grouped channels, the device name shown in HA will denote the group as described above. Entity names will use the parameter part only to avoid repeated device/group info.
+- Sub-device grouping: When enable_sub_devices is on and the device has grouped channels, each group is a child device named as described above; HA shows it as "{device name} {group name}". Entity names will use the parameter part only to avoid repeated device/group info.
 - Custom entity mappings: Some complex devices map multiple data points into specialized entities (e.g., climate, cover). The naming rules still apply after removing duplicated device names and translating parameter names.
 
 ## Differences vs AIOhomematic
