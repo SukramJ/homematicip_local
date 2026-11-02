@@ -1205,8 +1205,8 @@ make hass
 
 - **Main Documentation:** https://github.com/sukramj/homematicip_local
 - **Contributing Guide:** See CONTRIBUTING.md
-- **Issues:** https://github.com/sukramj/aiohomematic/issues
-- **Discussions:** https://github.com/sukramj/aiohomematic/discussions
+- **Issues:** https://github.com/sukramj/homematicip_local/issues
+- **Discussions:** https://github.com/sukramj/homematicip_local/discussions
 - **Changelog:** [changelog.md](changelog.md)
 - **HACS:** Integration available via HACS
 

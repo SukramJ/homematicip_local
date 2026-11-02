@@ -24,8 +24,8 @@ Homematic(IP) Local for OpenCCU is a custom [integration](https://www.home-assis
 | **Installation** | See [Installation](#installation) below |
 | **Alternative Setup (OpenCCU)** | [OpenCCU Wiki](https://github.com/OpenCCU/OpenCCU/wiki/HomeAssistant-Integration) |
 | **Changelog** | [changelog.md](changelog.md) |
-| **Issues** | [GitHub Issues](https://github.com/sukramj/aiohomematic/issues) |
-| **Discussions** | [GitHub Discussions](https://github.com/sukramj/aiohomematic/discussions) |
+| **Issues** | [GitHub Issues](https://github.com/sukramj/homematicip_local/issues) |
+| **Discussions** | [GitHub Discussions](https://github.com/sukramj/homematicip_local/discussions) |
 
 ## Related Integrations
 
@@ -161,8 +161,8 @@ Enhance your Home Assistant dashboard with custom cards designed for this integr
 
 | Resource | Link |
 |----------|------|
-| **Report Issues** | [GitHub Issues](https://github.com/sukramj/aiohomematic/issues) |
-| **Discussions** | [GitHub Discussions](https://github.com/sukramj/aiohomematic/discussions) |
+| **Report Issues** | [GitHub Issues](https://github.com/sukramj/homematicip_local/issues) |
+| **Discussions** | [GitHub Discussions](https://github.com/sukramj/homematicip_local/discussions) |
 | **Documentation** | [sukramj.github.io/aiohomematic](https://sukramj.github.io/aiohomematic/) |
 | **Contributing** | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | **AI Contribution Policy** | [AI_POLICY.md](AI_POLICY.md) |
