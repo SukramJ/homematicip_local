@@ -862,3 +862,51 @@ def test_was_transferred_reads_the_issue_events() -> None:
     assert analyze_issue.was_transferred(_Issue("labeled", "transferred")) is True
     assert analyze_issue.was_transferred(_Issue("labeled", "closed")) is False
     assert analyze_issue.was_transferred(_Issue()) is False
+
+
+class _TriageReached(Exception):
+    """Raised by the first step after the guards in main()."""
+
+
+def _run_main_until_triage(monkeypatch: pytest.MonkeyPatch, association: str | None) -> list[str]:
+    """Run main() against a fake issue and stop at the first triage step, returning posted comments."""
+    comments: list[str] = []
+    issue = types.SimpleNamespace(
+        title="Notice",
+        body="A notice without diagnostics",
+        get_events=list,
+        create_comment=comments.append,
+    )
+    repo = types.SimpleNamespace(get_issue=lambda _number: issue)
+
+    def _reached(_body: str) -> dict[str, str]:
+        raise _TriageReached
+
+    monkeypatch.setattr(analyze_issue, "Auth", types.SimpleNamespace(Token=lambda token: token))
+    monkeypatch.setattr(analyze_issue, "Github", lambda **_kwargs: types.SimpleNamespace(get_repo=lambda _name: repo))
+    monkeypatch.setattr(analyze_issue, "parse_form_fields", _reached)
+    for name, value in {
+        "GITHUB_TOKEN": "token",
+        "ANTHROPIC_API_KEY": "key",
+        "ISSUE_NUMBER": "1",
+        "REPO_NAME": "SukramJ/homematicip_local",
+    }.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.delenv("AUTHOR_ASSOCIATION", raising=False)
+    if association is not None:
+        monkeypatch.setenv("AUTHOR_ASSOCIATION", association)
+    analyze_issue.main()
+    return comments
+
+
+@pytest.mark.parametrize("association", ["OWNER", "MEMBER", "COLLABORATOR", "owner"])
+def test_main_skips_issues_filed_by_maintainers(monkeypatch: pytest.MonkeyPatch, association: str) -> None:
+    """A maintainer's issue gets no triage comment and never reaches the triage."""
+    assert _run_main_until_triage(monkeypatch, association) == []
+
+
+@pytest.mark.parametrize("association", ["NONE", "CONTRIBUTOR", "", None])
+def test_main_triages_other_authors_and_manual_runs(monkeypatch: pytest.MonkeyPatch, association: str | None) -> None:
+    """External reporters are triaged, and so is a manual run, which has no event author."""
+    with pytest.raises(_TriageReached):
+        _run_main_until_triage(monkeypatch, association)

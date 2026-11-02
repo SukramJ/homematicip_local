@@ -40,6 +40,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number || github.event.inputs.issue_number }}
           ISSUE_TITLE: ${{ github.event.issue.title || '' }}
           ISSUE_BODY: ${{ github.event.issue.body || '' }}
+          AUTHOR_ASSOCIATION: ${{ github.event.issue.author_association || '' }}
           REPO_NAME: ${{ github.repository }}
         run: |
           python .github/scripts/analyze_issue.py

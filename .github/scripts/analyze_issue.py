@@ -30,6 +30,7 @@ from anthropic import Anthropic
 from github import Auth, Github, GithubException, Repository
 from issue_form import (
     AI_TOOL_FIELD_MARKERS,
+    EXEMPT_ASSOCIATIONS,
     VERSION_FIELD_MARKERS,
     detect_attachments,
     detect_screenshots,
@@ -906,6 +907,12 @@ def main() -> None:
 
     if was_transferred(issue):
         print(f"Skipping #{issue_number}: transferred from another repository")
+        return
+
+    # A manual run has no event author, so a maintainer can still ask for a triage.
+    author_association = (os.getenv("AUTHOR_ASSOCIATION") or "").upper()
+    if author_association in EXEMPT_ASSOCIATIONS:
+        print(f"Skipping #{issue_number}: filed by a maintainer (association={author_association!r})")
         return
 
     # Get issue details (either from env or from GitHub API)
