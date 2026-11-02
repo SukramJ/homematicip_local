@@ -1,0 +1,168 @@
+name: Close Issue - Insufficient Information
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to close'
+        required: true
+        type: number
+      force:
+        description: 'Skip the safety guardrails (min. age, attached data, feature-request label)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  close-issue:
+    if: github.repository_owner == 'SukramJ'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close issue with comment
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueNumber = ${{ github.event.inputs.issue_number }};
+            const force = ${{ github.event.inputs.force }} === true || '${{ github.event.inputs.force }}' === 'true';
+
+            // Fetch the issue to get its body
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber
+            });
+
+            // ---------------------------------------------------------------
+            // Guardrails: closing for "insufficient information" is refused
+            // when the issue plausibly DOES contain data, is a feature request,
+            // or the reporter has not had enough time to supply the data.
+            // Override with the "force" input.
+            // ---------------------------------------------------------------
+            if (issue.state === 'closed') {
+              core.setFailed(`Issue #${issueNumber} is already closed.`);
+              return;
+            }
+
+            if (!force) {
+              const body = issue.body || '';
+              const labels = issue.labels.map((label) => (typeof label === 'string' ? label : label.name));
+
+              // 1. Never close feature requests as "insufficient information".
+              const featureLabels = labels.filter((name) => /enhancement|feature/i.test(name || ''));
+              if (featureLabels.length > 0) {
+                core.setFailed(
+                  `Refusing to close #${issueNumber}: it carries the label(s) ${featureLabels.join(', ')} ` +
+                  '(feature requests must not be closed as "insufficient information"). Use force=true to override.'
+                );
+                return;
+              }
+
+              // 2. Never close when uploaded files or screenshots are present.
+              //    A log excerpt pasted into a fenced block deliberately does not count:
+              //    it is a selection made by the reporter and does not satisfy the raw-data
+              //    requirement of AI_POLICY.md, so it must not block the close either.
+              const hasAttachment = /user-attachments\/(files|assets)\//.test(body);
+              if (hasAttachment) {
+                core.setFailed(
+                  `Refusing to close #${issueNumber}: the issue contains attached files/screenshots. ` +
+                  'It may not actually lack information. Use force=true to override.'
+                );
+                return;
+              }
+
+              // 3. Minimum waiting period: 72h since the needs-raw-data label was applied
+              //    (or since issue creation when the label was never applied).
+              const MIN_WAIT_MS = 72 * 60 * 60 * 1000;
+              let referenceTime = new Date(issue.created_at).getTime();
+              const events = await github.paginate(github.rest.issues.listEvents, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                per_page: 100
+              });
+              for (const event of events) {
+                if (event.event === 'labeled' && event.label && event.label.name === 'needs-raw-data') {
+                  referenceTime = Math.max(referenceTime, new Date(event.created_at).getTime());
+                }
+              }
+              const elapsed = Date.now() - referenceTime;
+              if (elapsed < MIN_WAIT_MS) {
+                const earliest = new Date(referenceTime + MIN_WAIT_MS).toISOString();
+                core.setFailed(
+                  `Refusing to close #${issueNumber}: the reporter has had less than 72h to supply the data ` +
+                  `(earliest close: ${earliest}). Use force=true to override.`
+                );
+                return;
+              }
+            }
+
+            // Detect language based on German-specific labels in the issue body
+            const isGerman = issue.body &&
+              (issue.body.includes('Das Problem') ||
+               issue.body.includes('Diagnoseinformationen') ||
+               issue.body.includes('Protokolldatei'));
+
+            // Compose the comment based on language
+            let comment;
+            if (isGerman) {
+              comment = `Dieses Issue wird geschlossen, da die bereitgestellten Informationen nicht ausreichen, um das Problem zu analysieren.
+
+            Ohne eine **Integrationsdiagnose** (.json-Datei) und ein **Debug-Log** ist es uns nicht möglich, die Ursache des Problems zu identifizieren. Diese Daten sind unverzichtbar, da sie die Systemkonfiguration, den Zustand der Geräte und die genaue Fehlersequenz dokumentieren.
+
+            **Nächste Schritte:**
+            - Bitte lies [Warum sind Diagnosedaten und Logs so wichtig?](https://sukramj.github.io/aiohomematic/contributor/testing/debug_data_importance/)
+            - Erstelle ein neues Issue mit vollständigen Diagnosedaten, falls das Problem weiterhin besteht
+
+            💡 **Tipp:** Bei Geräteproblemen (fehlende Entitäten, falsche Werte, seltsames Verhalten) sind Screenshots viel hilfreicher als lange Textbeschreibungen!
+
+            **Hilfreiche Dokumentation:**
+            - [Dokumentation](https://sukramj.github.io/aiohomematic/user/homeassistant_integration/)
+            - [Fehlerbehebung](https://sukramj.github.io/aiohomematic/user/troubleshooting/homeassistant_troubleshooting/)
+            - [Glossar](https://sukramj.github.io/aiohomematic/reference/glossary/)
+            - [Versionshinweise](https://github.com/sukramj/homematicip_local/releases)
+
+            Wir helfen gerne, sobald die erforderlichen Informationen vorliegen.`;
+            } else {
+              comment = `This issue is being closed because the information provided is insufficient to analyze the problem.
+
+            Without an **integration diagnostics** file (.json) and a **debug log**, we cannot identify the root cause of the issue. These data are essential as they document the system configuration, device states, and the exact error sequence.
+
+            **Next steps:**
+            - Please read [Why are diagnostics and logs so important?](https://sukramj.github.io/aiohomematic/contributor/testing/debug_data_importance/)
+            - Open a new issue with complete diagnostic data if the problem persists
+
+            💡 **Tip:** For device-related issues (missing entities, wrong values, strange behavior), screenshots are much more helpful than long text descriptions!
+
+            **Helpful documentation:**
+            - [Documentation](https://sukramj.github.io/aiohomematic/user/homeassistant_integration/)
+            - [Troubleshooting](https://sukramj.github.io/aiohomematic/user/troubleshooting/homeassistant_troubleshooting/)
+            - [Glossary](https://sukramj.github.io/aiohomematic/reference/glossary/)
+            - [Release notes](https://github.com/sukramj/homematicip_local/releases)
+
+            We're happy to help once the required information is available.`;
+            }
+
+            // Post the comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: comment
+            });
+
+            // Close the issue as "not planned"
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              state: 'closed',
+              state_reason: 'not_planned'
+            });
+
+            console.log(`Issue #${issueNumber} closed as "not planned" with ${isGerman ? 'German' : 'English'} comment.`);
