@@ -2,6 +2,17 @@
 
 ## What's Changed
 
+### Issues and discussions have moved
+
+- **Please report problems and ask questions in this repository from now on.**
+  [Issues](https://github.com/SukramJ/homematicip_local/issues/new/choose) and
+  [discussions](https://github.com/SukramJ/homematicip_local/discussions) about Homematic(IP) Local
+  now live in `homematicip_local` instead of `aiohomematic`
+  ([announcement](https://github.com/SukramJ/homematicip_local/issues/1334)). Earlier
+  [issues](https://github.com/SukramJ/aiohomematic/issues?q=is%3Aissue) and
+  [discussions](https://github.com/SukramJ/aiohomematic/discussions) stay available in
+  `aiohomematic`; please search there too before you report something.
+
 ### Integration
 
 - **Starting HA while the CCU boots no longer re-anchors hub and sysvar entities.** With
@@ -9,6 +20,24 @@
   as a CCU serial change, which moved all hub keys and left sysvars re-created as disabled
   `_2` entities. The serial change is now accepted only on a running central and never for a
   dummy serial (aiohomematic#3462).
+
+### Dependencies
+
+#### Bump aiohomematic to [2026.11.1](https://github.com/SukramJ/aiohomematic/compare/2026.10.5...2026.11.1)
+
+- **Fix: HmIP blinds moved the slats to an end position on a tilt-only change.** A tilt-only command
+  at standstill resent the current height, rounded to whole percent, while the actuator reports
+  0.5 % steps, so the actuator moved the height and turned the slats first. HmIP-DRBLI4 and
+  HmIPW-DRBL4 now keep their height on such a command, and positions are rounded instead of
+  truncated (0.29 → 29) ([aiohomematic#3473](https://github.com/SukramJ/aiohomematic/discussions/3473))
+- **Fix: background jobs stalled or piled up at a daylight saving time change.** The autumn change
+  paused every background job (connection check, hub refresh, metrics) for an hour without a log
+  line, and the spring change made each job run on every loop iteration until it had caught up
+- **Fix: programs opened in the CCU WebUI editor appeared twice.** The WebUI edits a copy of the
+  program, and every program refresh added a second button and switch for that copy. Copies are
+  skipped now
+- A start while the CCU is still booting no longer reports the CUxD dummy serial as the CCU serial;
+  see the re-anchoring fix above
 
 # Version [2.12.1](https://github.com/SukramJ/homematicip_local/compare/2.12.0...2.12.1) (unreleased)
 
