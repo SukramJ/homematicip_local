@@ -21,6 +21,9 @@ from typing import Any, Final
 # Issue-form parsing
 # =============================================================================
 
+# Author associations exempt from the form check and the triage (maintainers legitimately use the API)
+EXEMPT_ASSOCIATIONS: Final[frozenset[str]] = frozenset({"OWNER", "MEMBER", "COLLABORATOR"})
+
 # Value GitHub inserts for empty issue-form fields
 FORM_NO_RESPONSE: Final = "_No response_"
 

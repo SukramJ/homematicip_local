@@ -51,6 +51,12 @@ A transfer fires the `issues` workflows of the destination repository. The analy
 template check skip an issue that carries a `transferred` event: a maintainer moved it
 deliberately, and its body belongs to the form of the source repository.
 
+## Issues filed by maintainers
+
+The analyzer skips issues from owners, members and collaborators, like the template check does.
+A maintainer's notice or task has no diagnostics to ask for. A manual `workflow_dispatch` run has no
+event author, so it still triages any issue.
+
 ## History in aiohomematic
 
 Reports were filed in `SukramJ/aiohomematic` before this repository took over. The similar-issue

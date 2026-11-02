@@ -35,7 +35,13 @@ import sys
 from typing import Any, Final, cast
 
 from github import Auth, Github, GithubException, Repository
-from issue_form import detect_template_language, has_uploaded_file, normalize_label, was_transferred
+from issue_form import (
+    EXEMPT_ASSOCIATIONS,
+    detect_template_language,
+    has_uploaded_file,
+    normalize_label,
+    was_transferred,
+)
 import yaml
 
 # Directory holding the issue forms
@@ -51,9 +57,6 @@ INVALID_TEMPLATE_LABEL_DESCRIPTION: Final = "Issue was not filed through the iss
 
 # Opt-out label a maintainer can add to silence the check on a specific issue
 SKIP_LABEL: Final = "skip-template-check"
-
-# Author associations exempt from the check (maintainers legitimately use the API)
-EXEMPT_ASSOCIATIONS: Final[frozenset[str]] = frozenset({"OWNER", "MEMBER", "COLLABORATOR"})
 
 # Marker in the bot comment used to avoid duplicate comments on later edits
 COMMENT_MARKER: Final = "<!-- issue-template-check -->"
