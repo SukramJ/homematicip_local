@@ -81,6 +81,9 @@ homematicip_local/
 │   ├── test-run.yaml                     # Main test pipeline (Python 3.14)
 │   ├── e2e-parity.yaml                   # Three-way backend parity gate (see tests/e2e/README.md)
 │   ├── pre-commit.yml                    # Code quality gate
+│   ├── issue-analyzer.yml                # Issue triage (.github/scripts/analyze_issue.py)
+│   ├── validate-issue-template.yml       # Closes issues that bypass the form; skips transferred ones
+│   ├── close-insufficient-info.yml       # Manual close when diagnostics are missing
 │   ├── hacs_validate.yaml                # HACS validation
 │   └── hassfest.yaml                     # HA manifest validation
 │   │

@@ -75,7 +75,7 @@ body:
       required: false
     attributes:
       label: Hast Du beim Erstellen dieses Reports ein KI-Tool eingesetzt?
-      placeholder: 'z. B.: nein / ChatGPT für die Übersetzung / Claude hat den Text formuliert'
+      placeholder: "z. B.: nein / ChatGPT für die Übersetzung / Claude hat den Text formuliert"
       description: >-
         Wenn ja, welches? Das ist völlig in Ordnung und bringt Dir keinen Nachteil — es hilft uns
         nur einzuordnen, welche Angaben Du gemessen hast und welche aus einer Herleitung stammen.

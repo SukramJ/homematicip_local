@@ -7,11 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       issue_number:
-        description: 'Issue number to validate'
+        description: "Issue number to validate"
         required: true
         type: number
       auto_close:
-        description: 'Close the issue when the form was not honored'
+        description: "Close the issue when the form was not honored"
         required: false
         type: boolean
         default: true
@@ -31,7 +31,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v7.1.0
         with:
-          python-version: '3.14'
+          python-version: "3.14"
 
       - name: Install dependencies
         run: |

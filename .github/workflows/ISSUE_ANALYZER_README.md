@@ -45,6 +45,17 @@ ones. The bot therefore focuses on deterministic checks; do not re-add diagnosis
 6. **Multilingual support**
    - Detects the template language (German/English) and responds in it
 
+## Transferred issues
+
+A transfer fires the `issues` workflows of the destination repository. The analyzer and the
+template check skip an issue that carries a `transferred` event: a maintainer moved it
+deliberately, and its body belongs to the form of the source repository.
+
+## History in aiohomematic
+
+Reports were filed in `SukramJ/aiohomematic` before this repository took over. The similar-issue
+search covers both repositories (`HISTORY_REPOS`), so that history stays useful.
+
 ## Companion workflow: Close Issue - Insufficient Information
 
 `close-insufficient-info.yml` closes an issue that lacks the required data. It is triggered

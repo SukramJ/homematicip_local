@@ -35,7 +35,7 @@ import sys
 from typing import Any, Final, cast
 
 from github import Auth, Github, GithubException, Repository
-from issue_form import detect_template_language, has_uploaded_file, normalize_label
+from issue_form import detect_template_language, has_uploaded_file, normalize_label, was_transferred
 import yaml
 
 # Directory holding the issue forms
@@ -70,9 +70,11 @@ MIN_STRUCTURE_RATIO: Final = 0.5
 MAX_DRIFT_MISSING: Final = 1
 
 # Link targets used in the comment
-AI_POLICY_URL: Final = "https://github.com/SukramJ/aiohomematic/blob/main/AI_POLICY.md#stop--hard-precondition-for-bug-reports"
-NEW_ISSUE_URL: Final = "https://github.com/SukramJ/aiohomematic/issues/new/choose"
-DISCUSSIONS_URL: Final = "https://github.com/SukramJ/aiohomematic/discussions"
+AI_POLICY_URL: Final = (
+    "https://github.com/SukramJ/aiohomematic/blob/main/AI_POLICY.md#stop--hard-precondition-for-bug-reports"
+)
+NEW_ISSUE_URL: Final = "https://github.com/SukramJ/homematicip_local/issues/new/choose"
+DISCUSSIONS_URL: Final = "https://github.com/SukramJ/homematicip_local/discussions"
 DEBUG_DATA_URL: Final = "https://sukramj.github.io/aiohomematic/contributor/testing/debug_data_importance/"
 
 
@@ -411,6 +413,10 @@ def main() -> None:
     repo = gh.get_repo(settings.repo_name)
     issue = repo.get_issue(settings.issue_number)
     issue_body = os.getenv("ISSUE_BODY") or issue.body or ""
+
+    if was_transferred(issue):
+        print(f"Skipping #{settings.issue_number}: transferred from another repository")
+        return
 
     if is_exempt(author_association=settings.author_association, labels=label_names(issue)):
         print(f"Skipping #{settings.issue_number}: exempt (association={settings.author_association!r})")

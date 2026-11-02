@@ -443,14 +443,17 @@ def test_extract_device_model_skips_interface_names() -> None:
 # ---------------------------------------------------------------------------
 
 
+_SEARCH_REPOS = ("SukramJ/homematicip_local", "SukramJ/aiohomematic")
+
+
 class _FakeSearchResultIssue:
     """Minimal stand-in for a PyGithub issue returned by the search API."""
 
-    def __init__(self, number: int, title: str = "title", state: str = "open") -> None:
+    def __init__(self, number: int, title: str = "title", state: str = "open", repo: str = "x/y") -> None:
         """Store the search-result fields."""
         self.number = number
         self.title = title
-        self.html_url = f"https://github.com/x/y/issues/{number}"
+        self.html_url = f"https://github.com/{repo}/issues/{number}"
         self.state = state
 
 
@@ -524,11 +527,11 @@ def test_search_similar_issues_uses_search_api_with_term() -> None:
     gh = _FakeGithub([_FakeSearchResultIssue(11), _FakeSearchResultIssue(12)])
     items = analyze_issue.search_similar_issues(
         gh,  # type: ignore[arg-type]
-        repo_full_name="SukramJ/aiohomematic",
+        repo_full_names=_SEARCH_REPOS,
         search_terms=["HmIP-eTRV-2"],
-        current_issue_number=99,
+        current_issue_url="https://github.com/x/y/issues/99",
     )
-    assert gh.queries == ["repo:SukramJ/aiohomematic is:issue HmIP-eTRV-2"]
+    assert gh.queries == ["repo:SukramJ/homematicip_local repo:SukramJ/aiohomematic is:issue HmIP-eTRV-2"]
     assert [item["number"] for item in items] == [11, 12]
 
 
@@ -537,9 +540,9 @@ def test_search_similar_issues_excludes_current_and_dedupes() -> None:
     gh = _FakeGithub([_FakeSearchResultIssue(99), _FakeSearchResultIssue(11), _FakeSearchResultIssue(11)])
     items = analyze_issue.search_similar_issues(
         gh,  # type: ignore[arg-type]
-        repo_full_name="SukramJ/aiohomematic",
+        repo_full_names=_SEARCH_REPOS,
         search_terms=["term-a", "term-b"],
-        current_issue_number=99,
+        current_issue_url="https://github.com/x/y/issues/99",
     )
     assert [item["number"] for item in items] == [11]
 
@@ -549,11 +552,13 @@ def test_search_similar_issues_sanitizes_query_syntax() -> None:
     gh = _FakeGithub([])
     analyze_issue.search_similar_issues(
         gh,  # type: ignore[arg-type]
-        repo_full_name="SukramJ/aiohomematic",
+        repo_full_names=_SEARCH_REPOS,
         search_terms=['error: "Parameter not found"'],
-        current_issue_number=1,
+        current_issue_url="https://github.com/x/y/issues/1",
     )
-    assert gh.queries == ["repo:SukramJ/aiohomematic is:issue error   Parameter not found"]
+    assert gh.queries == [
+        "repo:SukramJ/homematicip_local repo:SukramJ/aiohomematic is:issue error   Parameter not found"
+    ]
 
 
 def test_search_similar_issues_empty_search_results_do_not_crash() -> None:
@@ -561,9 +566,9 @@ def test_search_similar_issues_empty_search_results_do_not_crash() -> None:
     gh = _FakeGithub([])
     items = analyze_issue.search_similar_issues(
         gh,  # type: ignore[arg-type]
-        repo_full_name="SukramJ/aiohomematic",
+        repo_full_names=_SEARCH_REPOS,
         search_terms=["doorbell ring event"],
-        current_issue_number=3300,
+        current_issue_url="https://github.com/x/y/issues/3300",
     )
     assert items == []
 
@@ -795,3 +800,65 @@ def test_check_reported_version_tolerates_annotated_field() -> None:
     )
     assert check.status == "ok"
     assert check.reported == "2.8.3"
+
+
+def test_search_similar_issues_keeps_same_number_from_another_repository() -> None:
+    """Issue numbers repeat across repositories, so only the same URL counts as the same issue."""
+    gh = _FakeGithub(
+        [
+            _FakeSearchResultIssue(99, repo="SukramJ/homematicip_local"),
+            _FakeSearchResultIssue(99, repo="SukramJ/aiohomematic"),
+            _FakeSearchResultIssue(12, repo="SukramJ/homematicip_local"),
+            _FakeSearchResultIssue(12, repo="SukramJ/aiohomematic"),
+        ]
+    )
+    items = analyze_issue.search_similar_issues(
+        gh,  # type: ignore[arg-type]
+        repo_full_names=_SEARCH_REPOS,
+        search_terms=["term-a"],
+        current_issue_url="https://github.com/SukramJ/homematicip_local/issues/99",
+    )
+    # The search returns at most three results per term, so the fourth one is not reached.
+    assert [item["url"] for item in items] == [
+        "https://github.com/SukramJ/aiohomematic/issues/99",
+        "https://github.com/SukramJ/homematicip_local/issues/12",
+    ]
+
+
+def test_format_comment_links_similar_issue_without_bare_number() -> None:
+    """A bare #123 would resolve against the current repository, not the one the result is from."""
+    triage = analyze_issue.TriageResult(
+        language="en",
+        similar_items=[
+            {
+                "type": "issue",
+                "number": 3462,
+                "title": "Old report",
+                "url": "https://github.com/SukramJ/aiohomematic/issues/3462",
+                "state": "closed",
+                "search_term": "term",
+            }
+        ],
+    )
+    comment = analyze_issue.format_comment(triage)
+    assert "[Old report](https://github.com/SukramJ/aiohomematic/issues/3462)" in comment
+    assert "#3462:" not in comment
+
+
+def test_was_transferred_reads_the_issue_events() -> None:
+    """Only a transferred event marks an issue as moved here."""
+
+    class _Event:
+        def __init__(self, event: str) -> None:
+            self.event = event
+
+    class _Issue:
+        def __init__(self, *events: str) -> None:
+            self._events = [_Event(event) for event in events]
+
+        def get_events(self) -> list[_Event]:
+            return self._events
+
+    assert analyze_issue.was_transferred(_Issue("labeled", "transferred")) is True
+    assert analyze_issue.was_transferred(_Issue("labeled", "closed")) is False
+    assert analyze_issue.was_transferred(_Issue()) is False

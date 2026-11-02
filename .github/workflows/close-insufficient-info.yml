@@ -5,11 +5,11 @@ on:
   workflow_dispatch:
     inputs:
       issue_number:
-        description: 'Issue number to close'
+        description: "Issue number to close"
         required: true
         type: number
       force:
-        description: 'Skip the safety guardrails (min. age, attached data, feature-request label)'
+        description: "Skip the safety guardrails (min. age, attached data, feature-request label)"
         required: false
         type: boolean
         default: false

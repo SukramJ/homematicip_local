@@ -16,6 +16,7 @@ public comment.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import date
 from itertools import islice
@@ -35,10 +36,14 @@ from issue_form import (
     detect_template_language,
     get_form_field,
     parse_form_fields,
+    was_transferred,
 )
 
 # Integration repository for version lookups
 INTEGRATION_REPO: Final = "SukramJ/homematicip_local"
+
+# Repositories whose issues stay searchable as history for new reports
+HISTORY_REPOS: Final[tuple[str, ...]] = ("SukramJ/aiohomematic",)
 
 # Maximum number of releases to scan when building the known-version set
 MAX_RELEASES_TO_SCAN: Final = 100
@@ -57,11 +62,13 @@ DOCS_LINKS: Final[dict[str, str]] = {
     "unignore": "https://sukramj.github.io/aiohomematic/user/advanced/unignore/",
     "lifecycle": "https://sukramj.github.io/aiohomematic/developer/homeassistant_lifecycle/",
     "glossary": "https://sukramj.github.io/aiohomematic/reference/glossary/",
-    "discussions": "https://github.com/sukramj/aiohomematic/discussions",
+    "discussions": "https://github.com/sukramj/homematicip_local/discussions",
 }
 
 # Hard precondition for bug reports, quoted at AI tools that draft issues
-AI_POLICY_URL: Final = "https://github.com/SukramJ/aiohomematic/blob/main/AI_POLICY.md#stop--hard-precondition-for-bug-reports"
+AI_POLICY_URL: Final = (
+    "https://github.com/SukramJ/aiohomematic/blob/main/AI_POLICY.md#stop--hard-precondition-for-bug-reports"
+)
 
 
 # =============================================================================
@@ -378,13 +385,14 @@ def extract_device_model(text: str) -> str | None:
 def search_similar_issues(
     gh: Github,
     *,
-    repo_full_name: str,
+    repo_full_names: Sequence[str],
     search_terms: list[str],
-    current_issue_number: int,
+    current_issue_url: str,
 ) -> list[dict[str, Any]]:
     """Search for similar issues via the GitHub search API using the given terms."""
     similar_items: list[dict[str, Any]] = []
-    seen: set[int] = set()
+    seen: set[str] = set()
+    repo_filter = " ".join(f"repo:{name}" for name in repo_full_names)
 
     for raw_term in search_terms[:3]:
         # Strip search-syntax characters so terms cannot break the query
@@ -392,15 +400,16 @@ def search_similar_issues(
         if len(term) < 3:
             continue
 
-        query = f"repo:{repo_full_name} is:issue {term}"
+        query = f"{repo_filter} is:issue {term}"
         try:
             results = gh.search_issues(query)
             # Do not slice the PaginatedList: slicing probes by index and raises
             # IndexError when the search returns no hits; plain iteration is safe.
             for issue in islice(results, 3):
-                if issue.number == current_issue_number or issue.number in seen:
+                # Numbers are only unique per repository, so the URL identifies a result
+                if issue.html_url == current_issue_url or issue.html_url in seen:
                     continue
-                seen.add(issue.number)
+                seen.add(issue.html_url)
                 similar_items.append(
                     {
                         "type": "issue",
@@ -791,7 +800,7 @@ def format_comment(triage: TriageResult) -> str:
 
         for item in triage.similar_items:
             state_emoji = "✅" if item["state"] == "closed" else "🔄"
-            comment += f"- {state_emoji} #{item['number']}: [{item['title']}]({item['url']})\n"
+            comment += f"- {state_emoji} [{item['title']}]({item['url']})\n"
         comment += "\n"
 
     # Footer
@@ -895,6 +904,10 @@ def main() -> None:
     repo = gh.get_repo(repo_name)
     issue = repo.get_issue(issue_number)
 
+    if was_transferred(issue):
+        print(f"Skipping #{issue_number}: transferred from another repository")
+        return
+
     # Get issue details (either from env or from GitHub API)
     issue_title = os.getenv("ISSUE_TITLE") or issue.title
     issue_body = os.getenv("ISSUE_BODY") or issue.body or ""
@@ -945,9 +958,9 @@ def main() -> None:
     if search_terms:
         similar_items = search_similar_issues(
             gh,
-            repo_full_name=repo_name,
+            repo_full_names=(repo_name, *HISTORY_REPOS),
             search_terms=search_terms,
-            current_issue_number=issue_number,
+            current_issue_url=issue.html_url,
         )
         print(f"Found {len(similar_items)} similar items")
 

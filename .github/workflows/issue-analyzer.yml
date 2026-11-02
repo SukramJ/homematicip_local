@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       issue_number:
-        description: 'Issue number to analyze'
+        description: "Issue number to analyze"
         required: true
         type: number
 
@@ -26,7 +26,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v7.1.0
         with:
-          python-version: '3.14'
+          python-version: "3.14"
 
       - name: Install dependencies
         run: |

@@ -278,3 +278,76 @@ def test_freely_composed_report_is_flagged() -> None:
     assert check.ok is False
     assert "bypassed" in check.violations
     assert "no-raw-data" in check.violations
+
+
+# ---------------------------------------------------------------------------
+# main(): a transferred issue is left alone
+# ---------------------------------------------------------------------------
+
+
+class _FakeEvent:
+    def __init__(self, event: str) -> None:
+        self.event = event
+
+
+class _FakeIssue:
+    """Issue from an external reporter whose body does not match this repository's form."""
+
+    def __init__(self, *events: str) -> None:
+        self.body = "### Some other form\n\n- [x] A checkbox of another repository\n"
+        self.state = "open"
+        self.labels: list[object] = []
+        self.comments: list[str] = []
+        self.state_reason: str | None = None
+        self._events = [_FakeEvent(event) for event in events]
+
+    def add_to_labels(self, label: str) -> None:
+        self.labels.append(types.SimpleNamespace(name=label))
+
+    def create_comment(self, comment: str) -> None:
+        self.comments.append(comment)
+
+    def edit(self, *, state: str, state_reason: str) -> None:
+        self.state = state
+        self.state_reason = state_reason
+
+    def get_comments(self) -> list[object]:
+        return []
+
+    def get_events(self) -> list[_FakeEvent]:
+        return self._events
+
+
+def _run_main(monkeypatch: pytest.MonkeyPatch, issue: _FakeIssue) -> None:
+    repo = types.SimpleNamespace(get_issue=lambda _number: issue, get_label=lambda _name: None)
+    monkeypatch.chdir(_TEMPLATE_DIR.parents[1])
+    monkeypatch.setattr(checker, "Auth", types.SimpleNamespace(Token=lambda token: token))
+    monkeypatch.setattr(checker, "Github", lambda **_kwargs: types.SimpleNamespace(get_repo=lambda _name: repo))
+    for name, value in {
+        "GITHUB_TOKEN": "token",
+        "REPO_NAME": "SukramJ/homematicip_local",
+        "ISSUE_NUMBER": "1",
+        "AUTHOR_ASSOCIATION": "NONE",
+        "AUTO_CLOSE": "true",
+        "ISSUE_BODY": issue.body,
+    }.items():
+        monkeypatch.setenv(name, value)
+    checker.main()
+
+
+def test_main_closes_a_foreign_body_of_an_external_reporter(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Control: without a transfer, a body from another form is closed as not planned."""
+    issue = _FakeIssue("labeled")
+    _run_main(monkeypatch, issue)
+    assert issue.state == "closed"
+    assert issue.state_reason == "not_planned"
+    assert len(issue.comments) == 1
+
+
+def test_main_leaves_a_transferred_issue_alone(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The same body stays open and uncommented once the issue carries a transferred event."""
+    issue = _FakeIssue("labeled", "transferred")
+    _run_main(monkeypatch, issue)
+    assert issue.state == "open"
+    assert issue.comments == []
+    assert issue.labels == []

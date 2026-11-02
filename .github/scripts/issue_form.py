@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import re
-from typing import Final
+from typing import Any, Final
 
 # =============================================================================
 # Issue-form parsing
@@ -83,6 +83,18 @@ _MARKDOWN_LINK_PATTERN: Final = re.compile(r"\[([^\]]*)\]\([^)]*\)")
 # "custom_component" and "homematicip_local_frontend" that appear in the labels.
 _MARKDOWN_EMPHASIS_PATTERN: Final = re.compile(r"[*`]+")
 _WHITESPACE_PATTERN: Final = re.compile(r"\s+")
+
+
+def was_transferred(issue: Any) -> bool:
+    """
+    Return True when the issue was moved here from another repository.
+
+    A transfer fires the ``issues`` workflows of the destination repository. The body was
+    written for the form of the source repository, and a maintainer moved it deliberately,
+    so neither the form check nor the triage may act on it. The transfer is read from the
+    issue's events because labels arrive only after the destination workflows have started.
+    """
+    return any(event.event == "transferred" for event in issue.get_events())
 
 
 def normalize_label(text: str) -> str:
