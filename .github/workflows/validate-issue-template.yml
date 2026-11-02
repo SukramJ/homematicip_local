@@ -1,0 +1,52 @@
+name: Validate Issue Template
+
+# yamllint disable-line rule:truthy
+on:
+  issues:
+    types: [opened, edited]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number to validate"
+        required: true
+        type: number
+      auto_close:
+        description: "Close the issue when the form was not honored"
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  validate-template:
+    if: github.repository_owner == 'SukramJ'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v7.1.0
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: |
+          pip install PyGithub PyYAML
+
+      # AUTO_CLOSE is on by default: an issue that bypasses the form is labelled, gets one
+      # explanatory comment and is closed as not planned, as AI_POLICY.md announces. Set the
+      # repository variable AUTO_CLOSE_INVALID_TEMPLATE to "false" to only label and comment.
+      - name: Validate issue against the issue form
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || github.event.inputs.issue_number }}
+          ISSUE_BODY: ${{ github.event.issue.body || '' }}
+          AUTHOR_ASSOCIATION: ${{ github.event.issue.author_association || '' }}
+          REPO_NAME: ${{ github.repository }}
+          AUTO_CLOSE: ${{ github.event.inputs.auto_close || vars.AUTO_CLOSE_INVALID_TEMPLATE || 'true' }}
+        run: |
+          python .github/scripts/check_issue_template.py

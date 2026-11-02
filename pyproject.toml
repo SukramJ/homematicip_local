@@ -535,6 +535,7 @@ voluptuous = "vol"
 "pytz".msg = "use zoneinfo instead"
 
 [tool.ruff.lint.per-file-ignores]
+".github/scripts/*" = ["T20", "BLE001", "S110", "C901"] # CI utility scripts; not production code
 # Relative imports between modules of the same integration are a standard
 # HA custom-component convention (see core's config which does the same).
 "custom_components/homematicip_local/*" = ["TID252"]

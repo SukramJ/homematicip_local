@@ -1,5 +1,11 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Create issues in the AIO Homematic Repository
-    url: https://github.com/sukramj/aiohomematic/issues
-    about: Please create issues in the AIO Homematic Repository.
+  - name: Frontend Issues / Frontend-Probleme
+    url: https://github.com/SukramJ/homematicip-local-frontend/issues
+    about: "Issues with dashboard cards (Climate Schedule Card, Status Card) or the device configuration panel? Report them in the frontend repository. / Probleme mit Dashboard-Karten (Climate Schedule Card, Status Card) oder dem Gerätekonfigurations-Panel? Bitte im Frontend-Repository melden."
+  - name: openccu-loom without this integration / openccu-loom ohne diese Integration
+    url: https://github.com/SukramJ/openccu-loom/issues
+    about: "Running the openccu-loom daemon without Homematic(IP) Local (MQTT, REST, Matter, Node-RED)? Report it there. / Du betreibst den openccu-loom-Daemon ohne Homematic(IP) Local (MQTT, REST, Matter, Node-RED)? Dann melde es dort."
+  - name: Questions & Feature Requests / Fragen & Funktionswünsche
+    url: https://github.com/SukramJ/homematicip_local/discussions
+    about: "Please use the discussions for questions and feature requests. / Bitte nutze die Diskussionen für Fragen und Funktionswünsche."
