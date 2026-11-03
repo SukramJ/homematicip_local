@@ -151,14 +151,6 @@ for which parameters trigger which event. Note that CCU service messages (`CONFI
 
 Community blueprints are welcome via pull request in [blueprints/community](blueprints/community).
 
-## Companion Cards
-
-Enhance your Home Assistant dashboard with custom cards designed for this integration:
-
-| Card | Description |
-|------|-------------|
-| [Climate Schedule Card](https://github.com/SukramJ/homematicip_local_climate_schedule_card) | Visual editor for Homematic thermostat week profiles. Edit heating schedules directly from your dashboard. |
-
 ## Support and Contributing
 
 | Resource | Link |
