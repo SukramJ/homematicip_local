@@ -1,3 +1,34 @@
+# Version [2.12.3](https://github.com/SukramJ/homematicip_local/compare/2.12.2...2.12.3) (unreleased)
+
+## What's Changed
+
+### Integration
+
+- **Switching to the openccu-loom backend keeps event entities and valve-level sensors.**
+  The unique_id migration skipped event-group keys (`event_group_…`) and kept the `_sensor`
+  suffix aiohomematic appends to `LEVEL` on `HmIP-eTRV` / `HmIP-HEATING` (forced sensor). Neither
+  matched the key the loom backend produces, so these entities were re-created as `_2`
+  duplicates and the originals were swept as orphans, losing the entity_id, history and a
+  user's disabled state. Both key shapes are now migrated; switching back re-appends the
+  `_sensor` suffix for those devices. Installations already on loom keep their `_2` entities
+  and can rename them back.
+
+### Documentation
+
+- **Homegear is no longer listed as a supported hub.** The README's supported-hardware list,
+  which is exhaustive, now names CCU2/3, OpenCCU and Debmatic only.
+- **Installation now points to the Home Assistant Marketplace.** From Home Assistant 2026.11 on,
+  the integration is installed through the Marketplace; on earlier versions the same steps apply
+  in HACS.
+- The button blueprints are documented with their actual minimum of Home Assistant 2026.9.
+- The Companion Cards section was removed; the climate schedule card is part of the integration
+  now and the link was dead.
+
+### Development
+
+- CI runs the test suite on Python 3.15 in addition to 3.14. The 3.15 job is informational,
+  since Home Assistant does not support 3.15 yet.
+
 # Version [2.12.2](https://github.com/SukramJ/homematicip_local/compare/2.12.1...2.12.2) (unreleased)
 
 ## What's Changed
@@ -15,14 +46,6 @@
 
 ### Integration
 
-- **Switching to the openccu-loom backend keeps event entities and valve-level sensors.**
-  The unique_id migration skipped event-group keys (`event_group_…`) and kept the `_sensor`
-  suffix aiohomematic appends to `LEVEL` on `HmIP-eTRV` / `HmIP-HEATING` (forced sensor). Neither
-  matched the key the loom backend produces, so these entities were re-created as `_2`
-  duplicates and the originals were swept as orphans, losing the entity_id, history and a
-  user's disabled state. Both key shapes are now migrated; switching back re-appends the
-  `_sensor` suffix for those devices. Installations already on loom keep their `_2` entities
-  and can rename them back.
 - **Starting HA while the CCU boots no longer re-anchors hub and sysvar entities.** With
   only CUxD connected, the central reported the dummy serial `CUxD_SN0815`. That was taken
   as a CCU serial change, which moved all hub keys and left sysvars re-created as disabled

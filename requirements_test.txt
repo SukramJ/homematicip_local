@@ -6,7 +6,7 @@ aiohomematic==2026.11.1
 aiohomematic_config==2026.10.1
 isal==1.9.0
 openccu-data>=2026.9.1
-openccu-loom-client==2026.10.11
+openccu-loom-client==2026.11.0
 mypy<=2.4.0
 prek==0.5.9
 pur==7.4.0
