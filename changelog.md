@@ -15,8 +15,6 @@
 
 ### Documentation
 
-- **Homegear is no longer listed as a supported hub.** The README's supported-hardware list,
-  which is exhaustive, now names CCU2/3, OpenCCU and Debmatic only.
 - **Installation now points to the Home Assistant Marketplace.** From Home Assistant 2026.11 on,
   the integration is installed through the Marketplace; on earlier versions the same steps apply
   in HACS.
