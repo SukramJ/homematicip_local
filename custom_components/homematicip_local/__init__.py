@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import logging
 import re
 import time
-from typing import Any, TypeAlias, cast
+from typing import Any, Final, TypeAlias, cast
 
 from awesomeversion import AwesomeVersion
 
@@ -516,6 +516,16 @@ async def _async_migrate_event_entity_unique_ids(hass: HomeAssistant, entry: Hom
     await async_migrate_entries(hass, entry.entry_id, update_event_entity_unique_id)
 
 
+# aiohomematic appends ``_sensor`` to the unique_id of a data point it forces to
+# the sensor category (``DataPointCategory.SENSOR``). The only forced parameter
+# is ``LEVEL`` on ``HmIP-eTRV*`` / ``HmIP-HEATING`` (aiohomematic
+# ``_SWITCH_DP_TO_SENSOR``); the loom backend keys it without the suffix.
+_FORCED_SENSOR_SUFFIX: Final = "_sensor"
+_FORCED_SENSOR_LEVEL_SUFFIX: Final = f"_level{_FORCED_SENSOR_SUFFIX}"
+_FORCED_SENSOR_MODELS: Final = ("HmIP-eTRV", "HmIP-HEATING")
+_EVENT_GROUP_PREFIX: Final = "event_group_"
+
+
 def _loom_migrated_unique_id(unique_id: str, *, entry_suffix: str, serial_suffix: str) -> str | None:
     """Map a legacy aiohomematic HA ``unique_id`` to the loom/serial scheme.
 
@@ -526,10 +536,20 @@ def _loom_migrated_unique_id(unique_id: str, *, entry_suffix: str, serial_suffix
     the legacy key to the loom one; see openccu-loom
     ``docs/external-clients/ha-unique-id-migration.md``.
 
+    Two aiohomematic key shapes differ from the loom routing key beyond the
+    namespace and are normalised here:
+
+    * Event groups (``event_group_<type>_<rest>``): the loom backend emits
+      them as ``loom_event_group_<type>_<rest>``. A virtual-remote group
+      carries the central-id slot inside ``<rest>``; it is swapped like a hub
+      key.
+    * Forced sensors: aiohomematic appends ``_sensor`` to a data point it
+      forces to the sensor category (``LEVEL`` on ``HmIP-eTRV`` /
+      ``HmIP-HEATING``); the loom backend keys it without the suffix.
+
     Returns ``None`` when no rewrite applies: already migrated, not one of
-    our entities, or a synthetic entity that is not a data-point routing key
-    (the per-central backup button, and the legacy event-group entities the
-    loom backend does not emit yet — those are out of scope here).
+    our entities, or the per-central backup button, which is not a
+    data-point routing key.
     """
     prefix = f"{DOMAIN}_"
     if not unique_id.startswith(prefix):
@@ -537,8 +557,17 @@ def _loom_migrated_unique_id(unique_id: str, *, entry_suffix: str, serial_suffix
     key = unique_id[len(prefix) :]
     if key.startswith("loom_"):  # idempotent
         return None
-    if key.endswith("_create_backup") or key.startswith("event_group_"):
+    if key.endswith("_create_backup"):
         return None
+    if key.endswith(_FORCED_SENSOR_LEVEL_SUFFIX):
+        key = key.removesuffix(_FORCED_SENSOR_SUFFIX)
+    if key.startswith(_EVENT_GROUP_PREFIX):
+        # A virtual-remote event group carries the legacy entry_id slot right
+        # after the event type; swap it for the serial like a hub key.
+        legacy_slot = f"_{entry_suffix}_"
+        if legacy_slot in key:
+            key = key.replace(legacy_slot, f"_{serial_suffix}_", 1)
+        return f"{prefix}loom_{key}"
     if key.startswith("openccu-loom_"):
         # Daemon-computed ids (the alarm panels: ``openccu-loom_alarm_<area>``)
         # are deliberately NOT loom_-routing-scheme keys and never existed on
@@ -722,7 +751,7 @@ async def _async_migrate_loom_unique_ids(hass: HomeAssistant, entry: HomematicCo
     await async_migrate_entries(hass, entry.entry_id, _migrator)
 
 
-def _aiohomematic_restored_unique_id(unique_id: str) -> str | None:
+def _aiohomematic_restored_unique_id(unique_id: str, *, forced_sensor: bool = False) -> str | None:
     """Strip the ``loom_`` namespace from an HA ``unique_id``.
 
     The inverse of :func:`_loom_migrated_unique_id`. Both backends now anchor
@@ -730,6 +759,11 @@ def _aiohomematic_restored_unique_id(unique_id: str) -> str | None:
     ``central_id`` in :mod:`.control_unit`), so the two schemes differ only by
     the ``loom_`` namespace and restoring a key is a plain prefix strip — the
     serial-anchored central-id slot is already correct, no swap needed.
+
+    ``forced_sensor`` re-appends aiohomematic's ``_sensor`` suffix to a
+    ``LEVEL`` key. The key alone cannot tell a forced sensor from any other
+    ``LEVEL``, so the caller decides from the registry entry (sensor domain on
+    an ``HmIP-eTRV`` / ``HmIP-HEATING`` device).
 
     Returns ``None`` when no rewrite applies: not one of our entities, or
     already in the aiohomematic scheme (no ``loom_`` namespace).
@@ -741,7 +775,19 @@ def _aiohomematic_restored_unique_id(unique_id: str) -> str | None:
     if not key.startswith("loom_"):  # idempotent: already aiohomematic-scheme
         return None
     body = key[len("loom_") :]
+    if forced_sensor and body.endswith("_level"):
+        body = f"{body}{_FORCED_SENSOR_SUFFIX}"
     return f"{prefix}{body}"
+
+
+def _is_forced_sensor_entry(entity_entry: er.RegistryEntry, *, device_registry: dr.DeviceRegistry) -> bool:
+    """Return whether a registry entry is a LEVEL that aiohomematic forces to a sensor."""
+    if entity_entry.domain != "sensor" or entity_entry.device_id is None:
+        return False
+    device = device_registry.async_get(entity_entry.device_id)
+    if not isinstance(device, dr.DeviceEntry) or device.model is None:
+        return False
+    return device.model.startswith(_FORCED_SENSOR_MODELS)
 
 
 async def _async_restore_aiohomematic_unique_ids(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:
@@ -757,10 +803,14 @@ async def _async_restore_aiohomematic_unique_ids(hass: HomeAssistant, entry: Hom
     """
 
     entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     @callback
     def _migrator(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
-        new_unique_id = _aiohomematic_restored_unique_id(entity_entry.unique_id)
+        new_unique_id = _aiohomematic_restored_unique_id(
+            entity_entry.unique_id,
+            forced_sensor=_is_forced_sensor_entry(entity_entry, device_registry=device_registry),
+        )
         if new_unique_id is None or new_unique_id == entity_entry.unique_id:
             return None
         # HA raises on a duplicate unique_id, which would abort the whole
