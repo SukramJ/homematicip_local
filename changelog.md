@@ -15,6 +15,14 @@
 
 ### Integration
 
+- **Switching to the openccu-loom backend keeps event entities and valve-level sensors.**
+  The unique_id migration skipped event-group keys (`event_group_…`) and kept the `_sensor`
+  suffix aiohomematic appends to `LEVEL` on `HmIP-eTRV` / `HmIP-HEATING` (forced sensor). Neither
+  matched the key the loom backend produces, so these entities were re-created as `_2`
+  duplicates and the originals were swept as orphans, losing the entity_id, history and a
+  user's disabled state. Both key shapes are now migrated; switching back re-appends the
+  `_sensor` suffix for those devices. Installations already on loom keep their `_2` entities
+  and can rename them back.
 - **Starting HA while the CCU boots no longer re-anchors hub and sysvar entities.** With
   only CUxD connected, the central reported the dummy serial `CUxD_SN0815`. That was taken
   as a CCU serial change, which moved all hub keys and left sysvars re-created as disabled

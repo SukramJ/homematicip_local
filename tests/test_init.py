@@ -1017,7 +1017,6 @@ class TestLoomUniqueIdMigration:
         [
             f"{_D}_loom_vcu1234567_1_state",  # already migrated → idempotent
             f"{_D}_home_create_backup",  # synthetic backup button
-            f"{_D}_event_group_keypress_vcu1234567_1",  # event group (loom n/a yet)
             # Daemon-computed alarm-panel ids are backend-agnostic — never
             # legacy keys. Prefixing them orphaned the entity and
             # crash-looped setup ("unique id already in use").
@@ -1046,6 +1045,23 @@ class TestLoomUniqueIdMigration:
             ),
             # Internal address — same prefix swap.
             (f"{_D}_a1b2c3d4e5_int0001234_1_level", f"{_D}_loom_11a0001234_int0001234_1_level"),
+            # Device event group — the loom backend emits these under loom_ too;
+            # skipping them orphaned every event entity on cutover (`_2` duplicates).
+            (f"{_D}_event_group_keypress_000858a994d674_2", f"{_D}_loom_event_group_keypress_000858a994d674_2"),
+            # Virtual-remote event group — central-id slot swapped like a hub key.
+            (
+                f"{_D}_event_group_keypress_a1b2c3d4e5_hmip_rcv_1_1",
+                f"{_D}_loom_event_group_keypress_11a0001234_hmip_rcv_1_1",
+            ),
+            # Already serial-anchored virtual-remote event group — namespace only.
+            (
+                f"{_D}_event_group_keypress_11a0001234_hmip_rcv_1_1",
+                f"{_D}_loom_event_group_keypress_11a0001234_hmip_rcv_1_1",
+            ),
+            # Forced sensor (LEVEL on HmIP-eTRV / HmIP-HEATING): aiohomematic appends
+            # ``_sensor``, the loom backend does not.
+            (f"{_D}_000a1709af5344_1_level_sensor", f"{_D}_loom_000a1709af5344_1_level"),
+            (f"{_D}_a1b2c3d4e5_int0000012_1_level_sensor", f"{_D}_loom_11a0001234_int0000012_1_level"),
         ],
     )
     def test_rewrites(self, old: str, expected: str) -> None:
@@ -1059,6 +1075,24 @@ class TestAioHomematicUniqueIdRestore:
     """``_aiohomematic_restored_unique_id`` strips the loom_ namespace."""
 
     _D = HMIP_DOMAIN  # "homematicip_local"
+
+    def test_forced_sensor_flag_only_touches_level(self) -> None:
+        """The flag never appends the suffix to anything but a LEVEL key."""
+        assert (
+            _aiohomematic_restored_unique_id(f"{self._D}_loom_000a1709af5344_1_state", forced_sensor=True)
+            == f"{self._D}_000a1709af5344_1_state"
+        )
+
+    @pytest.mark.parametrize(
+        ("old", "expected"),
+        [
+            (f"{_D}_loom_000a1709af5344_1_level", f"{_D}_000a1709af5344_1_level_sensor"),
+            (f"{_D}_loom_11a0001234_int0000012_1_level", f"{_D}_11a0001234_int0000012_1_level_sensor"),
+        ],
+    )
+    def test_forced_sensor_gets_suffix_back(self, old: str, expected: str) -> None:
+        """A LEVEL forced to sensor regains aiohomematic's ``_sensor`` suffix."""
+        assert _aiohomematic_restored_unique_id(old, forced_sensor=True) == expected
 
     @pytest.mark.parametrize(
         "unique_id",
@@ -1100,6 +1134,8 @@ class TestAioHomematicUniqueIdRestore:
             f"{_D}_11a0001234_sysvar_aussen-temperatur",
             f"{_D}_11a0001234_int0001234_1_level",
             f"{_D}_11a0001234_bidcos_rf_1_press_short",
+            f"{_D}_event_group_keypress_000858a994d674_2",
+            f"{_D}_event_group_keypress_11a0001234_hmip_rcv_1_1",
         ],
     )
     def test_round_trip(self, original: str) -> None:
@@ -1294,6 +1330,72 @@ async def test_async_restore_aiohomematic_unique_ids_rewrites_registry(hass: Hom
     assert (
         entity_registry.async_get(hub.entity_id).unique_id == f"{HMIP_DOMAIN}_{serial_suffix}_sysvar_aussen-temperatur"
     )
+
+
+async def test_async_migrate_loom_unique_ids_keeps_event_and_forced_sensor_entities(hass: HomeAssistant) -> None:
+    """Event-group and forced-sensor entities keep their identity across the loom cutover.
+
+    Regression: event groups were skipped and forced sensors kept aiohomematic's
+    ``_sensor`` suffix, so neither matched the loom key; the backend created
+    fresh ``_2`` entities and the orphan sweep deleted the originals.
+    """
+    entry = MockConfigEntry(domain=HMIP_DOMAIN, unique_id="3014F711A0001234")
+    entry.add_to_hass(hass)
+    entity_registry = er.async_get(hass)
+    event = entity_registry.async_get_or_create(
+        domain="event",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_event_group_keypress_000858a994d674_2",
+        config_entry=entry,
+        suggested_object_id="flur_an",
+    )
+    level = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_000a1709af5344_1_level_sensor",
+        config_entry=entry,
+        suggested_object_id="heizkorperthermostat_db_ventil_offnungsgrad",
+    )
+
+    await _async_migrate_loom_unique_ids(hass, entry)
+
+    assert (
+        entity_registry.async_get(event.entity_id).unique_id
+        == f"{HMIP_DOMAIN}_loom_event_group_keypress_000858a994d674_2"
+    )
+    assert entity_registry.async_get(level.entity_id).unique_id == f"{HMIP_DOMAIN}_loom_000a1709af5344_1_level"
+
+
+@pytest.mark.parametrize(
+    ("model", "expected_suffix"),
+    [
+        ("HmIP-eTRV-2", "_level_sensor"),  # forced sensor → suffix restored
+        ("HmIP-FALMOT-C12", "_level"),  # genuine LEVEL sensor → untouched
+    ],
+)
+async def test_async_restore_aiohomematic_unique_ids_forced_sensor_by_model(
+    hass: HomeAssistant, model: str, expected_suffix: str
+) -> None:
+    """Switching back restores ``_sensor`` only on a LEVEL of an eTRV / HEATING device."""
+    entry = MockConfigEntry(domain=HMIP_DOMAIN, unique_id="3014F711A0001234")
+    entry.add_to_hass(hass)
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(HMIP_DOMAIN, "000A1709AF5344@test-HmIP-RF")},
+        model=model,
+    )
+    entity_registry = er.async_get(hass)
+    level = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=HMIP_DOMAIN,
+        unique_id=f"{HMIP_DOMAIN}_loom_000a1709af5344_1_level",
+        config_entry=entry,
+        device_id=device.id,
+    )
+
+    await _async_restore_aiohomematic_unique_ids(hass, entry)
+
+    assert entity_registry.async_get(level.entity_id).unique_id == f"{HMIP_DOMAIN}_000a1709af5344_1{expected_suffix}"
 
 
 async def test_async_migrate_aiohomematic_hub_unique_ids_reanchors_onto_serial(hass: HomeAssistant) -> None:
