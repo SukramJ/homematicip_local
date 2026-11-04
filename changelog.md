@@ -4,6 +4,10 @@
 
 ### Integration
 
+- **HmIP-DLD shows "opening" instead of "locking" while the latch is opened.** The lock entity
+  now forwards aiohomematic's new `is_opening` (requires aiohomematic 2026.11.2), so HA and HomeKit
+  no longer report a lock movement when only the latch is pulled
+  ([#1343](https://github.com/SukramJ/homematicip_local/issues/1343)).
 - **Switching to the openccu-loom backend keeps event entities and valve-level sensors.**
   The unique_id migration skipped event-group keys (`event_group_…`) and kept the `_sensor`
   suffix aiohomematic appends to `LEVEL` on `HmIP-eTRV` / `HmIP-HEATING` (forced sensor). Neither
@@ -26,6 +30,12 @@
 
 - CI runs the test suite on Python 3.15 in addition to 3.14. The 3.15 job is informational,
   since Home Assistant does not support 3.15 yet.
+
+### Dependencies
+
+#### Bump aiohomematic to [2026.11.2](https://github.com/SukramJ/aiohomematic/compare/2026.11.1...2026.11.2)
+
+- **Fix: HmIP-DLD reported "locking" while the latch was opened** ([#1343](https://github.com/SukramJ/homematicip_local/issues/1343))
 
 # Version [2.12.2](https://github.com/SukramJ/homematicip_local/compare/2.12.1...2.12.2) (unreleased)
 
