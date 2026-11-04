@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry, async_mock_service
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
 
 from custom_components.homematicip_local.const import DOMAIN
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN

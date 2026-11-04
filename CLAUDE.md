@@ -125,12 +125,12 @@ homematicip_local/
 - **aiohomematic-config** (v2026.10.1) - Device configuration metadata
 - **openccu-data** (v2026.9.1) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
 - **openccu-loom-client** (v2026.10.11) - Client for the openccu-loom backend (Beta)
-- **Home Assistant Core** - Minimum version: 2026.9.0+
+- **Home Assistant Core** - Minimum version: 2026.11.0+
 - **Python 3.14+** (target version for development)
 
 ### Development Dependencies
 
-- **pytest-homeassistant-custom-component-framework** (1.0.64) - HA test framework
+- **pytest-homeassistant** (2026.11.0) - Home Assistant's official pytest plugin for custom integrations (HA core `packages/pytest-homeassistant`, pinned to the matching HA release)
 - **mypy** (`<=2.4.0`, a ceiling rather than a pin; 2.1.0 installed) - Static type checker (strict mode)
 - **pylint** (4.1.3) - Code linting
 - **ruff** (0.17.3) - Fast Python linter and formatter
@@ -478,7 +478,7 @@ make test-e2e
 
 ### Test Configuration
 
-- Framework: pytest with pytest-homeassistant-custom-component
+- Framework: pytest with pytest-homeassistant (HA's official plugin; loads itself, no `pytest_plugins` line, the `hass` fixture enables custom integrations)
 - Test location: `/tests/`
 - Asyncio mode: `auto` (default), `legacy` (CI)
 - Coverage requirements:
@@ -581,7 +581,7 @@ The integration uses a modern, user-friendly multi-step configuration flow:
 - ✅ **In-Place Backend Switch**: Setting up a CCU whose serial is already configured on the *other* backend switches the existing entry in place (abort reason `backend_switched`) instead of aborting with `already_configured`. The entry keeps its entry_id, instance name and advanced config (incl. `sub_devices_enabled`); the previous backend's connection keys stay in the entry so a switch back is lossless
 - ✅ **Loom Sub-Device Toggle**: The openccu-loom setup flow (manual form and discovered-daemon token step) offers `sub_devices_enabled` directly, defaulting to enabled (`DEFAULT_LOOM_ENABLE_SUB_DEVICES`)
 - ✅ **Serial-Keyed Manual Loom Setup**: The manual loom form validates the daemon, lists its CCUs and routes into the shared CCU-selection step, so manual entries get the same serial-based dedup and in-place backend switch as discovered daemons (the user-chosen instance name is kept)
-- ✅ **Single-Reload Entry Updates**: `_async_update_reload_and_abort_entry` / `_async_update_entry_and_reload` (used by reauth, both backend-switch paths and the mDNS host follow-up) schedule a reload only when the entry's update listener will not already reload it — never use `ConfigFlow.async_update_reload_and_abort` here (double reload, deprecated with HA 2026.12)
+- ✅ **Single-Reload Entry Updates**: `_async_update_reload_and_abort_entry` / `_async_update_entry_and_reload` (used by reauth, reconfigure, both backend-switch paths and the mDNS host follow-up) schedule a reload only when the entry's update listener will not already reload it — never use `ConfigFlow.async_update_reload_and_abort` here (double reload, deprecated with HA 2026.12)
 - ✅ **Loom Discovery Dedup**: `async_step_zeroconf` suppresses the daemon card once it is configured — per CCU serial when the daemon announces them (TXT key `ccus`, incl. automatic host/port follow-up on IP change; a serial on the CCU backend keeps the card as the backend-switch path), with a host/port fallback for pre-`ccus` daemons; `_async_create_loom_entry` clears lingering passive cards of the daemon it just handled
 
 ### Service Registration Pattern
@@ -1186,7 +1186,7 @@ make hass
 ### Version Information
 
 - **Current Version:** 2.12.0
-- **Minimum HA Version:** 2026.9.0+
+- **Minimum HA Version:** 2026.11.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
 - **aiohomematic Version:** 2026.11.2
 - **openccu-loom-client Version:** 2026.10.11. Its wire layer is generated against daemon API `15.2.0`

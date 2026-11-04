@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from pytest_homeassistant_custom_component.components.recorder.common import async_wait_recording_done
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from aiohomematic.const import DeviceFirmwareState
 from custom_components.homematicip_local.const import EVENT_ADDRESS, EVENT_CHANNEL_NO, EVENT_INTERFACE_ID, EVENT_MODEL

@@ -240,7 +240,7 @@ open htmlcov/index.html
 
 ### Test Framework
 
-- **pytest** with pytest-homeassistant-custom-component
+- **pytest** with pytest-homeassistant (Home Assistant's official test plugin)
 - **Asyncio mode**: Tests use `@pytest.mark.asyncio`
 - **Fixtures**: Use existing fixtures from `tests/conftest.py`
 

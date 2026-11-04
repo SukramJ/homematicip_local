@@ -365,7 +365,7 @@ log_date_format = "%Y-%m-%d %H:%M:%S"
 asyncio_debug = true
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-addopts = "-n auto --dist loadscope"
+addopts = "-n auto --dist loadscope -p no:respx"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "benchmark: performance benchmark tests",

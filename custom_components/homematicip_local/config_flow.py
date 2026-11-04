@@ -37,7 +37,6 @@ from aiohomematic.const import (
 )
 from aiohomematic.exceptions import AuthFailure, BaseHomematicException, NoConnectionException, ValidationException
 from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_PUSH,
     SOURCE_ZEROCONF,
     ConfigEntry,
     ConfigEntryState,
@@ -1098,7 +1097,6 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the instance flow for Homematic(IP) Local for OpenCCU."""
 
     VERSION = 17
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
         """Init the ConfigFlow."""
@@ -2002,10 +2000,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                     hass=self.hass, data=self.data, entry_id=entry.entry_id
                 )
                 # Validation successful - finish reconfiguration
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data=self.data,
-                    reason="reconfigure_successful",
+                return self._async_update_reload_and_abort_entry(
+                    entry=entry, data=self.data, reason="reconfigure_successful"
                 )
             except AuthFailure:
                 # Auth errors should go back to reconfigure step
@@ -2080,10 +2076,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                     hass=self.hass, data=self.data, entry_id=entry.entry_id
                 )
                 # Validation successful - finish reconfiguration
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data=self.data,
-                    reason="reconfigure_successful",
+                return self._async_update_reload_and_abort_entry(
+                    entry=entry, data=self.data, reason="reconfigure_successful"
                 )
             except AuthFailure:
                 errors["base"] = "invalid_auth"

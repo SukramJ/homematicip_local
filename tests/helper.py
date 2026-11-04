@@ -10,7 +10,7 @@ from types import FunctionType, MethodType
 from typing import Any, Final, TypeVar
 from unittest.mock import MagicMock, Mock, patch
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from aiohomematic.central.events import (
     DataPointsCreatedEvent,

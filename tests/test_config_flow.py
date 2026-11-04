@@ -10,7 +10,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry, flush_store
+from pytest_homeassistant.common import MockConfigEntry, flush_store
 
 from aiohomematic.backend_detection import BackendDetectionResult
 from aiohomematic.const import (
@@ -1535,6 +1535,51 @@ class TestAdvancedConfigurationFlow:
 class TestReconfigureFlow:
     """Test the reconfigure flow (two-step: connection + interface with automatic ports)."""
 
+    @staticmethod
+    def _reconfigurable_entry() -> MockConfigEntry:
+        return MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            data={
+                "instance_name": const.INSTANCE_NAME,
+                CONF_HOST: const.HOST,
+                CONF_USERNAME: const.USERNAME,
+                CONF_PASSWORD: const.PASSWORD,
+                CONF_TLS: False,
+                CONF_VERIFY_TLS: False,
+                CONF_INTERFACE: {Interface.HMIP_RF: {CONF_PORT: IF_HMIP_RF_PORT}},
+                CONST_ADVANCED_CONFIG: {},
+            },
+        )
+
+    async def test_reconfigure_of_loaded_entry_reloads_once(
+        self, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A loaded entry reloads through its update listener; the flow schedules no second reload.
+
+        ``ConfigFlow.async_update_reload_and_abort`` schedules one anyway and HA 2026.11 reports
+        that as deprecated whenever the entry has an update listener.
+        """
+        entry = self._reconfigurable_entry()
+        entry.add_to_hass(hass)
+        entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+        entry.add_update_listener(AsyncMock())
+        with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
+            result = await self._reconfigure_to_tls(hass, entry)
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert entry.data[CONF_TLS] is True
+        schedule_reload.assert_not_called()
+        assert [r.getMessage() for r in caplog.records if "update listener" in r.getMessage()] == []
+
+    async def test_reconfigure_of_unloaded_entry_schedules_reload(self, hass: HomeAssistant) -> None:
+        """An entry that is not loaded has no update listener running, so the flow reloads it."""
+        entry = self._reconfigurable_entry()
+        entry.add_to_hass(hass)
+        with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
+            result = await self._reconfigure_to_tls(hass, entry)
+        assert result["reason"] == "reconfigure_successful"
+        schedule_reload.assert_called_once_with(entry.entry_id)
+
     async def test_reconfigure_preserves_custom_ports(self, hass: HomeAssistant) -> None:
         """Test that reconfigure preserves custom ports when using custom_port_config."""
         custom_port = 12345
@@ -1844,6 +1889,41 @@ class TestReconfigureFlow:
             return_value=True,
         ):
             yield
+
+    async def _reconfigure_to_tls(self, hass: HomeAssistant, entry: MockConfigEntry) -> dict[str, Any]:
+        """Run the two-step reconfigure flow switching the entry to TLS."""
+        result = await hass.config_entries.flow.async_init(
+            HMIP_DOMAIN,
+            context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+        )
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: const.HOST, CONF_USERNAME: const.USERNAME, CONF_PASSWORD: const.PASSWORD},
+        )
+        with patch(
+            "custom_components.homematicip_local.config_flow._async_validate_config_and_get_system_information",
+            return_value=SystemInformation(
+                available_interfaces=[],
+                auth_enabled=False,
+                https_redirect_enabled=False,
+                serial=const.SERIAL,
+            ),
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_TLS: True,
+                    CONF_VERIFY_TLS: False,
+                    CONF_ENABLE_HMIP_RF: True,
+                    CONF_ENABLE_BIDCOS_RF: False,
+                    CONF_ENABLE_VIRTUAL_DEVICES: False,
+                    CONF_ENABLE_BIDCOS_WIRED: False,
+                    CONF_ENABLE_CCU_JACK: False,
+                    CONF_ENABLE_CUXD: False,
+                },
+            )
+            await hass.async_block_till_done()
+        return result
 
 
 class TestPortConfigErrorHandling:

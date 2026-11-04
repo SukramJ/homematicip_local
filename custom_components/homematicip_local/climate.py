@@ -135,7 +135,7 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             control_unit=control_unit,
             data_point=data_point,
         )
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_target_temperature_step = data_point.target_temperature_step
         self._week_profile_data_point: ClimateWeekProfileDataPointProtocol | None = None
         if (wp_dp := self._data_point.device.week_profile_data_point) is not None and isinstance(
@@ -151,16 +151,6 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
             return self._data_point.current_humidity
         if self.is_restored and self._restored_state:
             return self._restored_state.attributes.get(ATTR_CURRENT_HUMIDITY)
-        return None
-
-    @property
-    @override
-    def current_temperature(self) -> float | None:
-        """Return the current temperature."""
-        if self._data_point.is_valid:
-            return self._data_point.current_temperature
-        if self.is_restored and self._restored_state:
-            return self._restored_state.attributes.get(ATTR_CURRENT_TEMPERATURE)
         return None
 
     @property
@@ -244,6 +234,26 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
 
     @property
     @override
+    def native_current_temperature(self) -> float | None:
+        """Return the current temperature in the native unit (Celsius)."""
+        if self._data_point.is_valid:
+            return self._data_point.current_temperature
+        if self.is_restored and self._restored_state:
+            return self._restored_state.attributes.get(ATTR_CURRENT_TEMPERATURE)
+        return None
+
+    @property
+    @override
+    def native_target_temperature(self) -> float | None:
+        """Return the temperature we try to reach, in the native unit (Celsius)."""
+        if self._data_point.is_valid:
+            return self._data_point.target_temperature
+        if self.is_restored and self._restored_state:
+            return self._restored_state.attributes.get(ATTR_TEMPERATURE)
+        return None
+
+    @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         if (self._data_point.is_valid and self._data_point.profile in SUPPORTED_HA_PRESET_MODES) or str(
@@ -276,16 +286,6 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         if self._data_point.capabilities.profiles:
             supported_features |= ClimateEntityFeature.PRESET_MODE
         return supported_features
-
-    @property
-    @override
-    def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
-        if self._data_point.is_valid:
-            return self._data_point.target_temperature
-        if self.is_restored and self._restored_state:
-            return self._restored_state.attributes.get(ATTR_TEMPERATURE)
-        return None
 
     @handle_homematic_errors
     async def async_disable_away_mode(self) -> None:

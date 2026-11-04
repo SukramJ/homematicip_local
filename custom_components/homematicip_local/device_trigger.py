@@ -44,30 +44,27 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[s
         return []
 
     triggers = []
-    for entry_id in device.config_entries:
-        if (entry := hass.config_entries.async_get_entry(entry_id=entry_id)) and entry.domain == DOMAIN:
-            control_unit: ControlUnit = entry.runtime_data
-            if hm_device := control_unit.central.device_coordinator.get_device(address=device_address):
-                for action_event in hm_device.generic_events:
-                    if not isinstance(action_event, ClickEvent):
-                        continue
+    if (entry := hass.config_entries.async_get_entry(entry_id=device.config_entry_id)) and entry.domain == DOMAIN:
+        control_unit: ControlUnit = entry.runtime_data
+        if hm_device := control_unit.central.device_coordinator.get_device(address=device_address):
+            for action_event in hm_device.generic_events:
+                if not isinstance(action_event, ClickEvent):
+                    continue
 
-                    if action_event.usage == DataPointUsage.NO_CREATE:
-                        continue
+                if action_event.usage == DataPointUsage.NO_CREATE:
+                    continue
 
-                    trigger = {
-                        CONF_PLATFORM: "device",
-                        CONF_DOMAIN: DOMAIN,
-                        CONF_DEVICE_ID: device_id,
-                        CONF_EVENT_TYPE: action_event.event_type.value,
-                    }
-                    event_data = action_event.get_event_data()
-                    trigger.update(
-                        cleanup_click_event_data(
-                            event_data=asdict(event_data) if is_dataclass(event_data) else event_data
-                        )
-                    )
-                    triggers.append(trigger)
+                trigger = {
+                    CONF_PLATFORM: "device",
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_DEVICE_ID: device_id,
+                    CONF_EVENT_TYPE: action_event.event_type.value,
+                }
+                event_data = action_event.get_event_data()
+                trigger.update(
+                    cleanup_click_event_data(event_data=asdict(event_data) if is_dataclass(event_data) else event_data)
+                )
+                triggers.append(trigger)
 
     return triggers
 
