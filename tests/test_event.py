@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 
 import pytest
-from pytest_homeassistant_custom_component.common import async_capture_events
+from pytest_homeassistant.common import async_capture_events
 
 from aiohomematic.const import DeviceTriggerEventType
 from homeassistant.components.event import DoorbellEventType

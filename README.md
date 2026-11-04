@@ -14,7 +14,7 @@ Homematic(IP) Local for OpenCCU is a custom [integration](https://www.home-assis
 - Communication: Local XML-RPC for control and push state updates; JSON-RPC for names and rooms. OpenCCU Lite is connected through the OpenCCU Loom backend.
 - Installation: via the Home Assistant Marketplace (HACS before Home Assistant 2026.11); manual installation supported.
 - Auto-discovery: Supported for CCU and compatible hubs.
-- Minimum requirements: Home Assistant 2026.9.0+; for Homematic IP on CCU require at least CCU2 2.61.x / CCU3 3.61.x.
+- Minimum requirements: Home Assistant 2026.11.0+; for Homematic IP on CCU require at least CCU2 2.61.x / CCU3 3.61.x.
 
 ## Quick Start
 

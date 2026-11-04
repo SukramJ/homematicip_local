@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, Mock
 
 import probatio as vol
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry, mock_device_registry
+from pytest_homeassistant.common import MockConfigEntry, mock_device_registry
 
 from aiohomematic.const import IDENTIFIER_SEPARATOR
 from custom_components.homematicip_local import DOMAIN as HMIP_DOMAIN

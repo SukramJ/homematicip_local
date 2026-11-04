@@ -125,12 +125,12 @@ homematicip_local/
 - **aiohomematic-config** (v2026.10.1) - Device configuration metadata
 - **openccu-data** (v2026.9.1) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
 - **openccu-loom-client** (v2026.10.11) - Client for the openccu-loom backend (Beta)
-- **Home Assistant Core** - Minimum version: 2026.9.0+
+- **Home Assistant Core** - Minimum version: 2026.11.0+
 - **Python 3.14+** (target version for development)
 
 ### Development Dependencies
 
-- **pytest-homeassistant-custom-component-framework** (1.0.64) - HA test framework
+- **pytest-homeassistant** (2026.11.0) - Home Assistant's official pytest plugin for custom integrations (HA core `packages/pytest-homeassistant`, pinned to the matching HA release)
 - **mypy** (`<=2.4.0`, a ceiling rather than a pin; 2.1.0 installed) - Static type checker (strict mode)
 - **pylint** (4.1.3) - Code linting
 - **ruff** (0.17.3) - Fast Python linter and formatter
@@ -478,7 +478,7 @@ make test-e2e
 
 ### Test Configuration
 
-- Framework: pytest with pytest-homeassistant-custom-component
+- Framework: pytest with pytest-homeassistant (HA's official plugin; loads itself, no `pytest_plugins` line, the `hass` fixture enables custom integrations)
 - Test location: `/tests/`
 - Asyncio mode: `auto` (default), `legacy` (CI)
 - Coverage requirements:
@@ -1186,7 +1186,7 @@ make hass
 ### Version Information
 
 - **Current Version:** 2.12.0
-- **Minimum HA Version:** 2026.9.0+
+- **Minimum HA Version:** 2026.11.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
 - **aiohomematic Version:** 2026.11.2
 - **openccu-loom-client Version:** 2026.10.11. Its wire layer is generated against daemon API `15.2.0`

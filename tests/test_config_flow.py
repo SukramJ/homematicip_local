@@ -10,7 +10,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry, flush_store
+from pytest_homeassistant.common import MockConfigEntry, flush_store
 
 from aiohomematic.backend_detection import BackendDetectionResult
 from aiohomematic.const import (

@@ -4,6 +4,17 @@
 
 ### Integration
 
+- **Breaking: Home Assistant 2026.11 or newer is required** (was 2026.9). The climate entity now
+  implements Home Assistant's `native_current_temperature`, `native_target_temperature` and
+  `_attr_native_temperature_unit`, introduced in 2026.11, instead of the names that release
+  deprecates (`current_temperature`, `target_temperature`, `_attr_temperature_unit`; they stop
+  working in 2027.11 and 2026.11 logs a warning per thermostat class at startup). The old names
+  are `Final` on the base class, so an integration cannot type-check with both, and on 2026.9
+  and 2026.10 the base class does not read the new ones. The startup check in `const.py` now
+  enforces the same minimum as `hacs.json`; it had stayed at 2026.8.
+- **No more `CONN_CLASS_LOCAL_PUSH` warning at startup.** The config flow dropped its
+  `CONNECTION_CLASS`; Home Assistant deprecated the constant without replacement (removal in
+  2027.5) and nothing reads the attribute any more.
 - **HmIP-DLD shows "opening" instead of "locking" while the latch is opened.** The lock entity
   now forwards aiohomematic's new `is_opening` (requires aiohomematic 2026.11.2), so HA and HomeKit
   no longer report a lock movement when only the latch is pulled
@@ -28,6 +39,13 @@
 
 ### Development
 
+- The test suite runs on `pytest-homeassistant`, Home Assistant's official pytest plugin for
+  custom integrations (built from `packages/pytest-homeassistant` in HA core and pinned to the
+  matching HA release), replacing `pytest-homeassistant-custom-component-framework`. The
+  framework's generator extracted files from `tests/` in HA core that 2026.11 moved into that
+  package, and its plugin imports `httpx` before HA installs the `httpx2` alias, so it cannot
+  start against 2026.11 at all. Tests import helpers from `pytest_homeassistant.common`, the
+  `hass` fixture enables custom integrations by itself, and pytest runs with `-p no:respx`.
 - CI runs the test suite on Python 3.15 in addition to 3.14. The 3.15 job is informational,
   since Home Assistant does not support 3.15 yet.
 

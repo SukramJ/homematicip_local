@@ -37,7 +37,6 @@ from aiohomematic.const import (
 )
 from aiohomematic.exceptions import AuthFailure, BaseHomematicException, NoConnectionException, ValidationException
 from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_PUSH,
     SOURCE_ZEROCONF,
     ConfigEntry,
     ConfigEntryState,
@@ -1098,7 +1097,6 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the instance flow for Homematic(IP) Local for OpenCCU."""
 
     VERSION = 17
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
         """Init the ConfigFlow."""
