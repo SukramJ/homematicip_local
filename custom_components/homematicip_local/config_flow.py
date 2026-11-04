@@ -2000,10 +2000,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                     hass=self.hass, data=self.data, entry_id=entry.entry_id
                 )
                 # Validation successful - finish reconfiguration
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data=self.data,
-                    reason="reconfigure_successful",
+                return self._async_update_reload_and_abort_entry(
+                    entry=entry, data=self.data, reason="reconfigure_successful"
                 )
             except AuthFailure:
                 # Auth errors should go back to reconfigure step
@@ -2078,10 +2076,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                     hass=self.hass, data=self.data, entry_id=entry.entry_id
                 )
                 # Validation successful - finish reconfiguration
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data=self.data,
-                    reason="reconfigure_successful",
+                return self._async_update_reload_and_abort_entry(
+                    entry=entry, data=self.data, reason="reconfigure_successful"
                 )
             except AuthFailure:
                 errors["base"] = "invalid_auth"

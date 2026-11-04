@@ -12,6 +12,14 @@
   are `Final` on the base class, so an integration cannot type-check with both, and on 2026.9
   and 2026.10 the base class does not read the new ones. The startup check in `const.py` now
   enforces the same minimum as `hacs.json`; it had stayed at 2026.8.
+- **Device actions and triggers read the device's config entry without a deprecation notice.**
+  Home Assistant 2026.11 reports every read of `DeviceEntry.config_entries` (a device belongs to
+  one entry, `config_entry_id`) and removes the attribute in 2027.10; the three lookups in
+  `device_action.py` and `device_trigger.py` use `config_entry_id` now.
+- **Reconfiguring a connected CCU reloads the entry once.** The reconfigure flow used
+  `ConfigFlow.async_update_reload_and_abort`, which schedules a reload although the entry's update
+  listener already reloads it on changed data; HA 2026.11 reports that as deprecated. It now
+  uses the integration's single-reload update, like reauth and the backend switch do.
 - **No more `CONN_CLASS_LOCAL_PUSH` warning at startup.** The config flow dropped its
   `CONNECTION_CLASS`; Home Assistant deprecated the constant without replacement (removal in
   2027.5) and nothing reads the attribute any more.

@@ -39,23 +39,22 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict[st
         return []
 
     actions = []
-    for entry_id in device.config_entries:
-        if (entry := hass.config_entries.async_get_entry(entry_id=entry_id)) and entry.domain == DOMAIN:
-            control_unit: ControlUnit = entry.runtime_data
-            if hm_device := control_unit.central.device_coordinator.get_device(address=device_address):
-                for dp in hm_device.generic_data_points:
-                    if not isinstance(dp, DP_ACTION_OR_BUTTON):
-                        continue
-                    if dp.parameter not in ACTION_PARAMS:
-                        continue
+    if (entry := hass.config_entries.async_get_entry(entry_id=device.config_entry_id)) and entry.domain == DOMAIN:
+        control_unit: ControlUnit = entry.runtime_data
+        if hm_device := control_unit.central.device_coordinator.get_device(address=device_address):
+            for dp in hm_device.generic_data_points:
+                if not isinstance(dp, DP_ACTION_OR_BUTTON):
+                    continue
+                if dp.parameter not in ACTION_PARAMS:
+                    continue
 
-                    action = {
-                        CONF_DOMAIN: DOMAIN,
-                        CONF_DEVICE_ID: device_id,
-                        CONF_TYPE: dp.parameter.lower(),
-                        CONF_SUBTYPE: dp.channel.no,
-                    }
-                    actions.append(action)
+                action = {
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_DEVICE_ID: device_id,
+                    CONF_TYPE: dp.parameter.lower(),
+                    CONF_SUBTYPE: dp.channel.no,
+                }
+                actions.append(action)
 
     return actions
 
@@ -77,12 +76,11 @@ async def async_call_action_from_config(
     if (device_address := get_device_address_from_identifiers(identifiers=device.identifiers)) is None:
         return
 
-    for entry_id in device.config_entries:
-        if (entry := hass.config_entries.async_get_entry(entry_id=entry_id)) and entry.domain == DOMAIN:
-            control_unit: ControlUnit = entry.runtime_data
-            if hm_device := control_unit.central.device_coordinator.get_device(address=device_address):
-                for dp in hm_device.generic_data_points:
-                    if not isinstance(dp, DP_ACTION_OR_BUTTON):
-                        continue
-                    if dp.parameter == action_type.upper() and dp.channel.no == action_subtype:
-                        await dp.send_value(value=True)
+    if (entry := hass.config_entries.async_get_entry(entry_id=device.config_entry_id)) and entry.domain == DOMAIN:
+        control_unit: ControlUnit = entry.runtime_data
+        if hm_device := control_unit.central.device_coordinator.get_device(address=device_address):
+            for dp in hm_device.generic_data_points:
+                if not isinstance(dp, DP_ACTION_OR_BUTTON):
+                    continue
+                if dp.parameter == action_type.upper() and dp.channel.no == action_subtype:
+                    await dp.send_value(value=True)
