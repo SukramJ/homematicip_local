@@ -31,6 +31,12 @@
 - CI runs the test suite on Python 3.15 in addition to 3.14. The 3.15 job is informational,
   since Home Assistant does not support 3.15 yet.
 
+### Dependencies
+
+#### Bump aiohomematic to [2026.11.2](https://github.com/SukramJ/aiohomematic/compare/2026.11.1...2026.11.2)
+
+- **Fix: HmIP-DLD reported "locking" while the latch was opened** ([#1343](https://github.com/SukramJ/homematicip_local/issues/1343))
+
 # Version [2.12.2](https://github.com/SukramJ/homematicip_local/compare/2.12.1...2.12.2) (unreleased)
 
 ## What's Changed

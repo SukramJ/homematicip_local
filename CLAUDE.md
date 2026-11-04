@@ -121,7 +121,7 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2026.11.1) - Core async library for Homematic device communication
+- **aiohomematic** (v2026.11.2) - Core async library for Homematic device communication
 - **aiohomematic-config** (v2026.10.1) - Device configuration metadata
 - **openccu-data** (v2026.9.1) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
 - **openccu-loom-client** (v2026.10.11) - Client for the openccu-loom backend (Beta)
@@ -1188,7 +1188,7 @@ make hass
 - **Current Version:** 2.12.0
 - **Minimum HA Version:** 2026.9.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
-- **aiohomematic Version:** 2026.11.1
+- **aiohomematic Version:** 2026.11.2
 - **openccu-loom-client Version:** 2026.10.11. Its wire layer is generated against daemon API `15.2.0`
   (`openccu_loom_client.wire.const.DAEMON_API_VERSION`), but that number no longer gates the
   connection: `_report_api_version` **logs and never raises** — a warning when the majors differ,
