@@ -29,8 +29,8 @@ from openccu_loom_client.compat.aiohomematic.central import adapter as loom_adap
 import openccu_loom_client.compat.aiohomematic.central.held_devices as held_devices_module
 from openccu_loom_client.wire import DAEMON_API_VERSION
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 from yarl import URL
 
 from custom_components.homematicip_local.const import (

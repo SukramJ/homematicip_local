@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, Mock
 
 import probatio as vol
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry, mock_device_registry
+from pytest_homeassistant.common import MockConfigEntry, mock_device_registry
 
 from aiohomematic.const import IDENTIFIER_SEPARATOR
 from custom_components.homematicip_local import DOMAIN as HMIP_DOMAIN
@@ -62,6 +62,11 @@ class _FakeActionDp:
         self.channel = _FakeChannel(channel_no)
         # send_value is awaited in the code when used for matching action
         self.send_value = AsyncMock()
+
+
+def _deprecation_reports(caplog: pytest.LogCaptureFixture) -> list[str]:
+    """Return the deprecation notices Home Assistant logged for this integration."""
+    return [record.getMessage() for record in caplog.records if "deprecated" in record.getMessage()]
 
 
 def _make_runtime_data(*, hm_device: Any | None) -> Any:
@@ -234,9 +239,9 @@ class TestAsyncGetActionsRejectedDevices:
     async def test_config_entry_of_another_domain_is_skipped(
         self, hass: HomeAssistant, device_reg: dr.DeviceRegistry
     ) -> None:
-        """A device can belong to several config entries; only ours is asked.
+        """A device owned by another integration's entry yields no actions.
 
-        Without the domain guard the loop would read ``runtime_data`` of a
+        Without the domain guard the lookup would read ``runtime_data`` of a
         foreign integration, where it is whatever that integration put there.
         """
         from custom_components.homematicip_local import device_action as da
@@ -277,6 +282,32 @@ class TestAsyncGetActionsRejectedDevices:
             hass, {CONF_DEVICE_ID: central_entry.id, CONF_TYPE: "press_short", "subtype": 1}, {}, None
         )
         entry.runtime_data.central.device_coordinator.get_device.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_entry_lookup_reads_config_entry_id(
+        self, hass: HomeAssistant, device_reg: dr.DeviceRegistry, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Both entry points resolve the device's entry without a deprecation notice.
+
+        HA 2026.11 reports ``DeviceEntry.config_entries`` as deprecated on every read
+        (a device belongs to one entry, ``config_entry_id``) and drops it in 2027.10.
+        """
+        from custom_components.homematicip_local import device_action as da
+
+        entry = MockConfigEntry(domain=HMIP_DOMAIN, data={})
+        device_entry = _add_device_with_identifiers(
+            hass, device_reg, entry, address="ABC0004", interface_id=INTERFACE_ID
+        )
+        entry.runtime_data = _make_runtime_data(hm_device=None)
+
+        assert await da.async_get_actions(hass, device_id=device_entry.id) == []
+        await da.async_call_action_from_config(
+            hass,
+            {CONF_DEVICE_ID: device_entry.id, CONF_TYPE: "press_short", "subtype": 1},
+            variables={},
+            context=None,
+        )
+        assert _deprecation_reports(caplog) == []
 
 
 class TestAsyncCallActionSkipsForeignDataPoints:

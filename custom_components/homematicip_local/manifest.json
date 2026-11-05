@@ -8,13 +8,13 @@
   "homekit": {},
   "integration_type": "hub",
   "iot_class": "local_push",
-  "issue_tracker": "https://github.com/sukramj/aiohomematic/issues",
+  "issue_tracker": "https://github.com/sukramj/homematicip_local/issues",
   "loggers": ["aiohomematic", "aiohomematic_config", "openccu_loom_client"],
   "requirements": [
     "openccu-data==2026.9.1",
-    "openccu-loom-client==2026.10.9",
+    "openccu-loom-client==2026.11.0",
     "aiohomematic-config==2026.10.1",
-    "aiohomematic==2026.10.6"
+    "aiohomematic==2026.11.2"
   ],
   "ssdp": [
     {
@@ -22,6 +22,6 @@
       "manufacturerURL": "https://openccu.de"
     }
   ],
-  "version": "2.12.2",
+  "version": "2.12.3",
   "zeroconf": ["_openccu-loom._tcp.local."]
 }

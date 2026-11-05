@@ -12,7 +12,7 @@ import shutil
 from typing import Any
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from aiohomematic.exceptions import BaseHomematicException
 from custom_components.homematicip_local.const import (
@@ -125,7 +125,6 @@ def _dump(snap: Snapshot) -> None:
 
 async def test_plane_aiohomematic(
     hass: HomeAssistant,
-    enable_custom_integrations: Any,
     backend: BackendStack,
     parity_results: dict[str, Any],
     action_results: dict[str, Any],
@@ -168,7 +167,6 @@ async def test_plane_aiohomematic(
 
 async def test_plane_loom(
     hass: HomeAssistant,
-    enable_custom_integrations: Any,
     backend: BackendStack,
     parity_results: dict[str, Any],
     action_results: dict[str, Any],
@@ -204,7 +202,6 @@ async def test_plane_loom(
 
 async def test_plane_mqtt(
     hass: HomeAssistant,
-    enable_custom_integrations: Any,
     backend: BackendStack,
     parity_results: dict[str, Any],
     action_results: dict[str, Any],

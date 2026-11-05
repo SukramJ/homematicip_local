@@ -99,6 +99,14 @@ class AioHomematicLock(AioHomematicGenericRestoreEntity[BaseCustomDpLock], LockE
 
     @property
     @override
+    def is_opening(self) -> bool | None:
+        """Return true if the lock is opening (latch is being pulled)."""
+        # The openccu-loom compat lock carries no is_opening.
+        is_opening: bool | None = getattr(self._data_point, "is_opening", None)
+        return is_opening
+
+    @property
+    @override
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         return self._data_point.is_unlocking

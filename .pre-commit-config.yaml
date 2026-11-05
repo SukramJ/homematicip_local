@@ -8,7 +8,7 @@ repos:
         types_or: [python]
         files: ^(custom_components/homematicip_local|tests)/.+\.py$
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.17.1
+    rev: v0.17.3
     hooks:
       - id: ruff
         args:
@@ -27,7 +27,7 @@ repos:
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]
-        exclude: ^tests/fixtures/|.github/ISSUE_TEMPLATE/bug_report_de.yml|^custom_components/homematicip_local/frontend/
+        exclude: ^tests/fixtures/|tests/github_scripts/test_analyze_issue.py|tests/github_scripts/test_check_issue_template.py|.github/ISSUE_TEMPLATE/bug_report_de.yml|.github/ISSUE_TEMPLATE/config.yml|.github/scripts/analyze_issue.py|.github/scripts/check_issue_template.py|.github/workflows/validate-issue-template.yml|.github/workflows/close-insufficient-info.yml|^custom_components/homematicip_local/frontend/
   - repo: https://github.com/PyCQA/bandit
     rev: 1.9.4
     hooks:

@@ -7,8 +7,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-from pytest_homeassistant_custom_component.plugins import enable_custom_integrations  # noqa: F401
+from pytest_homeassistant.common import MockConfigEntry
 import pytest_socket
 
 from aiohomematic.i18n import _reset_locale_for_testing
@@ -24,8 +23,18 @@ from homeassistant.helpers.service_info import ssdp
 
 from tests import const, helper
 
-pytest_plugins = "pytest_homeassistant_custom_component"  # pylint: disable=invalid-name
 # pylint: disable=protected-access, redefined-outer-name
+
+
+@pytest.fixture
+def hass_config_dir(hass_tmp_config_dir: str) -> str:
+    """Give every test an isolated, writable config directory.
+
+    The plugin defaults to the shared ``tests/testing_config`` path; the integration
+    writes blueprints and storage there during setup, which would leave files in
+    the repository.
+    """
+    return hass_tmp_config_dir
 
 
 @pytest.fixture(autouse=True)
@@ -39,12 +48,6 @@ def teardown():
 def _reset_i18n():
     """Reset aiohomematic i18n state so set_locale() can be called in each test."""
     _reset_locale_for_testing()
-
-
-@pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations: Any):  # noqa: F811
-    """Auto add enable_custom_integrations."""
-    return
 
 
 @pytest.fixture(autouse=True)

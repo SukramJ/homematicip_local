@@ -4,17 +4,17 @@
 [![License][license-shield]](LICENSE)
 [![hainstall][hainstallbadge]][hainstall]
 [![GitHub Sponsors][sponsorsbadge]][sponsors]
-[![hacs][hacsbadge]][hacs]
+[![Marketplace][marketplacebadge]][marketplace]
 
 Homematic(IP) Local for OpenCCU is a custom [integration](https://www.home-assistant.io/getting-started/concepts-terminology/#integrations) for Home Assistant.
 
 ## At a Glance
 
-- Local Home Assistant integration for Homematic(IP) hubs (CCU2/3, OpenCCU, Debmatic, Homegear). No cloud required. See [Supported Hardware](#supported-hardware) for the complete, exhaustive list.
-- Communication: Local XML-RPC for control and push state updates; JSON-RPC for names and rooms.
-- Installation: HACS recommended; manual installation supported.
+- Local Home Assistant integration for Homematic(IP) hubs (CCU2/3, OpenCCU, OpenCCU Lite, Debmatic). No cloud required. See [Supported Hardware](#supported-hardware) for the complete, exhaustive list.
+- Communication: Local XML-RPC for control and push state updates; JSON-RPC for names and rooms. OpenCCU Lite is connected through the OpenCCU Loom backend.
+- Installation: via the Home Assistant Marketplace (HACS before Home Assistant 2026.11); manual installation supported.
 - Auto-discovery: Supported for CCU and compatible hubs.
-- Minimum requirements: Home Assistant 2026.9.0+; for Homematic IP on CCU require at least CCU2 2.61.x / CCU3 3.61.x.
+- Minimum requirements: Home Assistant 2026.11.0+; for Homematic IP on CCU require at least CCU2 2.61.x / CCU3 3.61.x.
 
 ## Quick Start
 
@@ -24,22 +24,24 @@ Homematic(IP) Local for OpenCCU is a custom [integration](https://www.home-assis
 | **Installation** | See [Installation](#installation) below |
 | **Alternative Setup (OpenCCU)** | [OpenCCU Wiki](https://github.com/OpenCCU/OpenCCU/wiki/HomeAssistant-Integration) |
 | **Changelog** | [changelog.md](changelog.md) |
-| **Issues** | [GitHub Issues](https://github.com/sukramj/aiohomematic/issues) |
-| **Discussions** | [GitHub Discussions](https://github.com/sukramj/aiohomematic/discussions) |
+| **Issues** | [GitHub Issues](https://github.com/sukramj/homematicip_local/issues) |
+| **Discussions** | [GitHub Discussions](https://github.com/sukramj/homematicip_local/discussions) |
 
 ## Related Integrations
 
 | Integration | Use Case |
 |-------------|----------|
-| **This integration** | Local connection to CCU2/3, OpenCCU, Debmatic, Homegear |
+| **This integration** | Local connection to CCU2/3, OpenCCU, OpenCCU Lite, Debmatic |
 | [Homematic(IP) Cloud](https://www.home-assistant.io/integrations/homematicip_cloud) | Cloud connection via Homematic IP Access Point |
 | [Homematic IP Local (HCU)](https://github.com/Ediminator/hacs-homematicip-hcu) | Local connection to HmIP-HCU1 |
 
 ## Installation
 
-### HACS (Recommended)
+### Marketplace (Recommended)
 
-1. In Home Assistant, go to **HACS** > **Integrations** > **Explore & Download Repositories**
+From Home Assistant 2026.11 on, use the Home Assistant **Marketplace**. On earlier versions, the same steps apply in [HACS](https://hacs.xyz).
+
+1. In Home Assistant, open the **Marketplace** and browse the integrations
 2. Search for "Homematic(IP) Local for OpenCCU" and install it
 3. Restart Home Assistant when prompted
 
@@ -60,8 +62,8 @@ After installation, add the integration via **Settings** > **Devices & Services*
 
 - CCU2/3
 - OpenCCU
+- [OpenCCU Lite](https://github.com/hobbyquaker/openccu-lite) (CCU platform without ReGaHSS; supported through the OpenCCU Loom backend)
 - Debmatic
-- Homegear
 - Home Assistant OS/Supervised with suitable add-on + communication device
 
 > **Note:** This list is exhaustive. Third-party hubs that reimplement the CCU interfaces (XML-RPC, JSON-RPC, ReGa) are not supported, even if they appear to work. Issues reported against such a setup are closed without further assessment.
@@ -139,7 +141,7 @@ Copy the desired blueprint files to your `config/blueprints/automation` director
 The button blueprints (2/4/6/8-button) react to the selected device's **event entities**
 (`event.*`, one per button channel). These are enabled by default; a button whose event
 entity you have disabled or hidden cannot trigger the automation. They require Home
-Assistant 2026.8 or newer.
+Assistant 2026.9 or newer.
 
 The remaining blueprints are driven by the integration's **events** — see the
 [Events Reference](https://sukramj.github.io/aiohomematic/user/features/homeassistant_events/)
@@ -149,20 +151,12 @@ for which parameters trigger which event. Note that CCU service messages (`CONFI
 
 Community blueprints are welcome via pull request in [blueprints/community](blueprints/community).
 
-## Companion Cards
-
-Enhance your Home Assistant dashboard with custom cards designed for this integration:
-
-| Card | Description |
-|------|-------------|
-| [Climate Schedule Card](https://github.com/SukramJ/homematicip_local_climate_schedule_card) | Visual editor for Homematic thermostat week profiles. Edit heating schedules directly from your dashboard. |
-
 ## Support and Contributing
 
 | Resource | Link |
 |----------|------|
-| **Report Issues** | [GitHub Issues](https://github.com/sukramj/aiohomematic/issues) |
-| **Discussions** | [GitHub Discussions](https://github.com/sukramj/aiohomematic/discussions) |
+| **Report Issues** | [GitHub Issues](https://github.com/sukramj/homematicip_local/issues) |
+| **Discussions** | [GitHub Discussions](https://github.com/sukramj/homematicip_local/discussions) |
 | **Documentation** | [sukramj.github.io/aiohomematic](https://sukramj.github.io/aiohomematic/) |
 | **Contributing** | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | **AI Contribution Policy** | [AI_POLICY.md](AI_POLICY.md) |
@@ -183,5 +177,5 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 [hainstallbadge]: https://img.shields.io/badge/dynamic/json?style=for-the-badge&logo=home-assistant&logoColor=ccc&label=usage&suffix=%20installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/custom_integrations.json&query=$.homematicip_local.total
 [sponsorsbadge]: https://img.shields.io/github/sponsors/SukramJ?style=for-the-badge&label=GitHub%20Sponsors&color=green
 [sponsors]: https://github.com/sponsors/SukramJ
-[hacs]: https://hacs.xyz
-[hacsbadge]: https://img.shields.io/badge/HACS-Default-green.svg?style=for-the-badge
+[marketplace]: https://www.home-assistant.io/
+[marketplacebadge]: https://img.shields.io/badge/Marketplace-Default-green.svg?style=for-the-badge

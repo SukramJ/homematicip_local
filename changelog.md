@@ -1,6 +1,82 @@
+# Version [2.12.3](https://github.com/SukramJ/homematicip_local/compare/2.12.2...2.12.3) (unreleased)
+
+## What's Changed
+
+### Integration
+
+- **Breaking: Home Assistant 2026.11 or newer is required** (was 2026.9). The climate entity now
+  implements Home Assistant's `native_current_temperature`, `native_target_temperature` and
+  `_attr_native_temperature_unit`, introduced in 2026.11, instead of the names that release
+  deprecates (`current_temperature`, `target_temperature`, `_attr_temperature_unit`; they stop
+  working in 2027.11 and 2026.11 logs a warning per thermostat class at startup). The old names
+  are `Final` on the base class, so an integration cannot type-check with both, and on 2026.9
+  and 2026.10 the base class does not read the new ones. The startup check in `const.py` now
+  enforces the same minimum as `hacs.json`; it had stayed at 2026.8.
+- **Device actions and triggers read the device's config entry without a deprecation notice.**
+  Home Assistant 2026.11 reports every read of `DeviceEntry.config_entries` (a device belongs to
+  one entry, `config_entry_id`) and removes the attribute in 2027.10; the three lookups in
+  `device_action.py` and `device_trigger.py` use `config_entry_id` now.
+- **Reconfiguring a connected CCU reloads the entry once.** The reconfigure flow used
+  `ConfigFlow.async_update_reload_and_abort`, which schedules a reload although the entry's update
+  listener already reloads it on changed data; HA 2026.11 reports that as deprecated. It now
+  uses the integration's single-reload update, like reauth and the backend switch do.
+- **No more `CONN_CLASS_LOCAL_PUSH` warning at startup.** The config flow dropped its
+  `CONNECTION_CLASS`; Home Assistant deprecated the constant without replacement (removal in
+  2027.5) and nothing reads the attribute any more.
+- **HmIP-DLD shows "opening" instead of "locking" while the latch is opened.** The lock entity
+  now forwards aiohomematic's new `is_opening` (requires aiohomematic 2026.11.2), so HA and HomeKit
+  no longer report a lock movement when only the latch is pulled
+  ([#1343](https://github.com/SukramJ/homematicip_local/issues/1343)).
+- **Switching to the openccu-loom backend keeps event entities and valve-level sensors.**
+  The unique_id migration skipped event-group keys (`event_group_…`) and kept the `_sensor`
+  suffix aiohomematic appends to `LEVEL` on `HmIP-eTRV` / `HmIP-HEATING` (forced sensor). Neither
+  matched the key the loom backend produces, so these entities were re-created as `_2`
+  duplicates and the originals were swept as orphans, losing the entity_id, history and a
+  user's disabled state. Both key shapes are now migrated; switching back re-appends the
+  `_sensor` suffix for those devices. Installations already on loom keep their `_2` entities
+  and can rename them back.
+
+### Documentation
+
+- **Installation now points to the Home Assistant Marketplace.** From Home Assistant 2026.11 on,
+  the integration is installed through the Marketplace; on earlier versions the same steps apply
+  in HACS.
+- The button blueprints are documented with their actual minimum of Home Assistant 2026.9.
+- The Companion Cards section was removed; the climate schedule card is part of the integration
+  now and the link was dead.
+
+### Development
+
+- The test suite runs on `pytest-homeassistant`, Home Assistant's official pytest plugin for
+  custom integrations (built from `packages/pytest-homeassistant` in HA core and pinned to the
+  matching HA release), replacing `pytest-homeassistant-custom-component-framework`. The
+  framework's generator extracted files from `tests/` in HA core that 2026.11 moved into that
+  package, and its plugin imports `httpx` before HA installs the `httpx2` alias, so it cannot
+  start against 2026.11 at all. Tests import helpers from `pytest_homeassistant.common`, the
+  `hass` fixture enables custom integrations by itself, and pytest runs with `-p no:respx`.
+- CI runs the test suite on Python 3.15 in addition to 3.14. The 3.15 job is informational,
+  since Home Assistant does not support 3.15 yet.
+
+### Dependencies
+
+#### Bump aiohomematic to [2026.11.2](https://github.com/SukramJ/aiohomematic/compare/2026.11.1...2026.11.2)
+
+- **Fix: HmIP-DLD reported "locking" while the latch was opened** ([#1343](https://github.com/SukramJ/homematicip_local/issues/1343))
+
 # Version [2.12.2](https://github.com/SukramJ/homematicip_local/compare/2.12.1...2.12.2) (unreleased)
 
 ## What's Changed
+
+### Issues and discussions have moved
+
+- **Please report problems and ask questions in this repository from now on.**
+  [Issues](https://github.com/SukramJ/homematicip_local/issues/new/choose) and
+  [discussions](https://github.com/SukramJ/homematicip_local/discussions) about Homematic(IP) Local
+  now live in `homematicip_local` instead of `aiohomematic`
+  ([announcement](https://github.com/SukramJ/homematicip_local/issues/1334)). Earlier
+  [issues](https://github.com/SukramJ/aiohomematic/issues?q=is%3Aissue) and
+  [discussions](https://github.com/SukramJ/aiohomematic/discussions) stay available in
+  `aiohomematic`; please search there too before you report something.
 
 ### Integration
 
@@ -21,6 +97,24 @@
   as a CCU serial change, which moved all hub keys and left sysvars re-created as disabled
   `_2` entities. The serial change is now accepted only on a running central and never for a
   dummy serial (aiohomematic#3462).
+
+### Dependencies
+
+#### Bump aiohomematic to [2026.11.1](https://github.com/SukramJ/aiohomematic/compare/2026.10.5...2026.11.1)
+
+- **Fix: HmIP blinds moved the slats to an end position on a tilt-only change.** A tilt-only command
+  at standstill resent the current height, rounded to whole percent, while the actuator reports
+  0.5 % steps, so the actuator moved the height and turned the slats first. HmIP-DRBLI4 and
+  HmIPW-DRBL4 now keep their height on such a command, and positions are rounded instead of
+  truncated (0.29 → 29) ([aiohomematic#3473](https://github.com/SukramJ/aiohomematic/discussions/3473))
+- **Fix: background jobs stalled or piled up at a daylight saving time change.** The autumn change
+  paused every background job (connection check, hub refresh, metrics) for an hour without a log
+  line, and the spring change made each job run on every loop iteration until it had caught up
+- **Fix: programs opened in the CCU WebUI editor appeared twice.** The WebUI edits a copy of the
+  program, and every program refresh added a second button and switch for that copy. Copies are
+  skipped now
+- A start while the CCU is still booting no longer reports the CUxD dummy serial as the CCU serial;
+  see the re-anchoring fix above
 
 # Version [2.12.1](https://github.com/SukramJ/homematicip_local/compare/2.12.0...2.12.1) (unreleased)
 

@@ -7,7 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 import pytest_socket
 
 from aiohomematic.const import DeviceFirmwareState, Interface
