@@ -316,6 +316,20 @@ class AioHomematicWeekProfileSensor(AioHomematicGenericEntity[WeekProfileDataPoi
     )
     _unrecorded_attributes = frozenset(__no_recored_attributes)
 
+    def __init__(
+        self,
+        control_unit: ControlUnit,
+        data_point: WeekProfileDataPoint,
+    ) -> None:
+        """Initialize the week profile sensor."""
+        super().__init__(control_unit=control_unit, data_point=data_point)
+        # Next to a switch schedule, the climate schedule needs a name of its own.
+        if (
+            isinstance(data_point, ClimateWeekProfileDataPointProtocol)
+            and len(data_point.device.week_profile_data_points) > 1
+        ):
+            self._attr_translation_key = "climate_week_profile"
+
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:

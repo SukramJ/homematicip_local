@@ -121,7 +121,7 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2026.11.2) - Core async library for Homematic device communication
+- **aiohomematic** (v2026.11.3) - Core async library for Homematic device communication
 - **aiohomematic-config** (v2026.10.1) - Device configuration metadata
 - **openccu-data** (v2026.9.1) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
 - **openccu-loom-client** (v2026.10.11) - Client for the openccu-loom backend (Beta)
@@ -135,7 +135,7 @@ homematicip_local/
 - **pylint** (4.1.3) - Code linting
 - **ruff** (0.17.3) - Fast Python linter and formatter
 - **prek** (0.5.9) - Git hooks manager (Rust-based pre-commit alternative)
-- **aiohomematic-test-support** (2026.11.1) - Mock test data
+- **aiohomematic-test-support** (2026.11.3) - Mock test data
 - **async-upnp-client** (0.49.0) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
 

@@ -1,3 +1,26 @@
+# Version [2.12.4](https://github.com/SukramJ/homematicip_local/compare/2.12.3...2.12.4) (unreleased)
+
+## What's Changed
+
+### Integration
+
+- **HmIP-WGT and HmIP-WGTC show their heating schedule.** They also have a switch schedule, and the
+  climate entity and the climate schedule services only knew that one. The climate entity and its
+  services now use the heating schedule. `get_schedule` and `set_schedule` stay on the switch schedule
+  of these devices. The new heating schedule sensor is called "Climate week profile". The config panel
+  still shows the switch schedule only.
+
+### Dependencies
+
+#### Bump aiohomematic to [2026.11.3](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.3)
+
+- **Support for new devices:** thermostats HmIP-WT, KW-STATH, KW-UKETRV, HmIPW-WGT and HmIPW-WGTC, dimmers
+  HmIP-WUA, ELV-SH-WUA and HmIP-UDI-PB2
+- **Fix:** HmIP-DLD and HmIP-DLP report a jammed lock, HmIP-DLP exposes `ERROR_JAMMED`
+- **Fix:** HmIP-WSM keeps its run time on current firmware, HmIP-BDT-I dimmer uses the correct channels
+- **Fix:** the switch schedule of HmIP-WGT and HmIP-WGTC has the correct targets and accepts entries
+- **Fix:** HmIPW-WTH and HmIPW-SCTHD use the limits configured on the device
+
 # Version [2.12.3](https://github.com/SukramJ/homematicip_local/compare/2.12.2...2.12.3) (unreleased)
 
 ## What's Changed
