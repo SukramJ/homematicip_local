@@ -222,11 +222,11 @@ class TestCopyScheduleHandler:
         target_dp = MagicMock(spec=ClimateWeekProfileDataPointProtocol)
 
         source_device = MagicMock()
-        source_device.week_profile_data_point = source_dp
+        source_device.climate_week_profile_data_point = source_dp
         source_device.name = "Source Device"
 
         target_device = MagicMock()
-        target_device.week_profile_data_point = target_dp
+        target_device.climate_week_profile_data_point = target_dp
         target_device.name = "Target Device"
 
         mock_service = MagicMock()

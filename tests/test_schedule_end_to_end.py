@@ -182,7 +182,7 @@ class TestClimateScheduleProfileEndToEnd:
         mock_wp_data_point_climate.get_schedule_profile = AsyncMock(return_value=ccu_profile_data)
 
         mock_device = MagicMock()
-        mock_device.week_profile_data_point = mock_wp_data_point_climate
+        mock_device.climate_week_profile_data_point = mock_wp_data_point_climate
         mock_device.name = "Living Room Thermostat"
 
         mock_service = MagicMock()
@@ -211,7 +211,7 @@ class TestClimateScheduleProfileEndToEnd:
         }
 
         mock_device = MagicMock()
-        mock_device.week_profile_data_point = mock_wp_data_point_climate
+        mock_device.climate_week_profile_data_point = mock_wp_data_point_climate
         mock_device.name = "Living Room Thermostat"
 
         mock_service = MagicMock()
@@ -253,7 +253,7 @@ class TestClimateScheduleWeekdayEndToEnd:
         mock_wp_data_point_climate.get_schedule_weekday = AsyncMock(return_value=ccu_weekday_data)
 
         mock_device = MagicMock()
-        mock_device.week_profile_data_point = mock_wp_data_point_climate
+        mock_device.climate_week_profile_data_point = mock_wp_data_point_climate
         mock_device.name = "Living Room Thermostat"
 
         mock_service = MagicMock()
@@ -280,7 +280,7 @@ class TestClimateScheduleWeekdayEndToEnd:
         )
 
         mock_device = MagicMock()
-        mock_device.week_profile_data_point = mock_wp_data_point_climate
+        mock_device.climate_week_profile_data_point = mock_wp_data_point_climate
         mock_device.name = "Living Room Thermostat"
 
         mock_service = MagicMock()
@@ -319,11 +319,11 @@ class TestCopyScheduleEndToEnd:
         target_wp_dp = MagicMock(spec=ClimateWeekProfileDataPointProtocol)
 
         source_device = MagicMock()
-        source_device.week_profile_data_point = mock_wp_data_point_climate
+        source_device.climate_week_profile_data_point = mock_wp_data_point_climate
         source_device.name = "Source Thermostat"
 
         target_device = MagicMock()
-        target_device.week_profile_data_point = target_wp_dp
+        target_device.climate_week_profile_data_point = target_wp_dp
         target_device.name = "Target Thermostat"
 
         mock_service = MagicMock()
@@ -353,7 +353,7 @@ class TestCopyScheduleEndToEnd:
         )
 
         mock_device = MagicMock()
-        mock_device.week_profile_data_point = mock_wp_data_point_climate
+        mock_device.climate_week_profile_data_point = mock_wp_data_point_climate
         mock_device.name = "Living Room Thermostat"
 
         mock_service = MagicMock()

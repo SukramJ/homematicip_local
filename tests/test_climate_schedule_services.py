@@ -23,7 +23,7 @@ class TestGetScheduleProfileHandler:
         mock_wp_dp.get_schedule_profile = AsyncMock(return_value={"MONDAY": [{"start": "06:00", "temp": 21.0}]})
 
         mock_device = MagicMock()
-        mock_device.week_profile_data_point = mock_wp_dp
+        mock_device.climate_week_profile_data_point = mock_wp_dp
         mock_device.name = "Test Climate"
 
         mock_service = MagicMock()
@@ -41,13 +41,10 @@ class TestGetScheduleProfileHandler:
     @pytest.mark.asyncio
     async def test_get_schedule_profile_raises_if_not_climate(self) -> None:
         """Test get_schedule_profile raises error if device is not climate."""
-        from aiohomematic.interfaces import WeekProfileDataPointProtocol
         from custom_components.homematicip_local.services import ATTR_PROFILE, _async_service_get_schedule_profile
 
-        mock_wp_dp = MagicMock(spec=WeekProfileDataPointProtocol)
-
         mock_device = MagicMock()
-        mock_device.week_profile_data_point = mock_wp_dp
+        mock_device.climate_week_profile_data_point = None
         mock_device.name = "Non-Climate Device"
 
         mock_service = MagicMock()
@@ -81,7 +78,7 @@ class TestGetScheduleWeekdayHandler:
         )
 
         mock_device = MagicMock()
-        mock_device.week_profile_data_point = mock_wp_dp
+        mock_device.climate_week_profile_data_point = mock_wp_dp
         mock_device.name = "Test Climate"
 
         mock_service = MagicMock()
@@ -113,7 +110,7 @@ class TestSetScheduleProfileHandler:
         mock_wp_dp.set_schedule_profile = AsyncMock()
 
         mock_device = MagicMock()
-        mock_device.week_profile_data_point = mock_wp_dp
+        mock_device.climate_week_profile_data_point = mock_wp_dp
         mock_device.name = "Test Climate"
 
         profile_data = {"MONDAY": {"base_temperature": 17.0, "periods": []}}
@@ -147,7 +144,7 @@ class TestSetScheduleWeekdayHandler:
         mock_wp_dp.set_schedule_weekday = AsyncMock()
 
         mock_device = MagicMock()
-        mock_device.week_profile_data_point = mock_wp_dp
+        mock_device.climate_week_profile_data_point = mock_wp_dp
         mock_device.name = "Test Climate"
 
         mock_service = MagicMock()
@@ -183,7 +180,7 @@ class TestCopyScheduleProfileHandler:
         mock_wp_dp.copy_schedule_profile = AsyncMock()
 
         mock_device = MagicMock()
-        mock_device.week_profile_data_point = mock_wp_dp
+        mock_device.climate_week_profile_data_point = mock_wp_dp
         mock_device.name = "Test Climate"
 
         mock_service = MagicMock()

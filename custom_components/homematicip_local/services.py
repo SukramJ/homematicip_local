@@ -1457,8 +1457,8 @@ async def _async_service_set_schedule(*, hass: HomeAssistant, service: ServiceCa
 async def _async_service_get_schedule_profile(*, hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
     """Handle get_schedule_profile service call."""
     hm_device = _async_get_hm_device_by_service_data(hass=hass, service=service)
-    wp_dp = hm_device.week_profile_data_point
-    if not isinstance(wp_dp, ClimateWeekProfileDataPointProtocol):
+    wp_dp = hm_device.climate_week_profile_data_point
+    if wp_dp is None:
         raise HomeAssistantError(f"Device {hm_device.name} does not support climate schedules")
     profile = ScheduleProfile(service.data[ATTR_PROFILE])
     try:
@@ -1473,8 +1473,8 @@ async def _async_service_get_schedule_profile(*, hass: HomeAssistant, service: S
 async def _async_service_get_schedule_weekday(*, hass: HomeAssistant, service: ServiceCall) -> ServiceResponse:
     """Handle get_schedule_weekday service call."""
     hm_device = _async_get_hm_device_by_service_data(hass=hass, service=service)
-    wp_dp = hm_device.week_profile_data_point
-    if not isinstance(wp_dp, ClimateWeekProfileDataPointProtocol):
+    wp_dp = hm_device.climate_week_profile_data_point
+    if wp_dp is None:
         raise HomeAssistantError(f"Device {hm_device.name} does not support climate schedules")
     profile = ScheduleProfile(service.data[ATTR_PROFILE])
     weekday = WeekdayStr(service.data[ATTR_WEEKDAY])
@@ -1497,8 +1497,8 @@ async def _async_service_set_schedule_profile(*, hass: HomeAssistant, service: S
         await check_service_permission(
             hass=hass, entry_id=entry_id, user_id=service.context.user_id, required_scope=SCOPE_SCHEDULE_EDIT
         )
-    wp_dp = hm_device.week_profile_data_point
-    if not isinstance(wp_dp, ClimateWeekProfileDataPointProtocol):
+    wp_dp = hm_device.climate_week_profile_data_point
+    if wp_dp is None:
         raise HomeAssistantError(f"Device {hm_device.name} does not support climate schedules")
     profile = ScheduleProfile(service.data[ATTR_PROFILE])
     profile_data = service.data[ATTR_SIMPLE_PROFILE_DATA]
@@ -1518,8 +1518,8 @@ async def _async_service_set_schedule_weekday(*, hass: HomeAssistant, service: S
         await check_service_permission(
             hass=hass, entry_id=entry_id, user_id=service.context.user_id, required_scope=SCOPE_SCHEDULE_EDIT
         )
-    wp_dp = hm_device.week_profile_data_point
-    if not isinstance(wp_dp, ClimateWeekProfileDataPointProtocol):
+    wp_dp = hm_device.climate_week_profile_data_point
+    if wp_dp is None:
         raise HomeAssistantError(f"Device {hm_device.name} does not support climate schedules")
     profile = ScheduleProfile(service.data[ATTR_PROFILE])
     weekday = WeekdayStr(service.data[ATTR_WEEKDAY])
@@ -1549,15 +1549,15 @@ async def _async_service_copy_schedule(*, hass: HomeAssistant, service: ServiceC
         await check_service_permission(
             hass=hass, entry_id=entry_id, user_id=service.context.user_id, required_scope=SCOPE_SCHEDULE_EDIT
         )
-    source_dp = source_device.week_profile_data_point
-    if not isinstance(source_dp, ClimateWeekProfileDataPointProtocol):
+    source_dp = source_device.climate_week_profile_data_point
+    if source_dp is None:
         raise HomeAssistantError(f"Device {source_device.name} does not support climate schedules")
     target_device_id = service.data[ATTR_TARGET_DEVICE_ID]
     target_device = _asnyc_get_hm_device_by_id(hass=hass, device_id=target_device_id)
     if target_device is None:
         raise HomeAssistantError(f"Target device {target_device_id} not found")
-    target_dp = target_device.week_profile_data_point
-    if not isinstance(target_dp, ClimateWeekProfileDataPointProtocol):
+    target_dp = target_device.climate_week_profile_data_point
+    if target_dp is None:
         raise HomeAssistantError(f"Target device {target_device.name} does not support climate schedules")
     try:
         await source_dp.copy_schedule(target_data_point=target_dp)
@@ -1572,8 +1572,8 @@ async def _async_service_copy_schedule_profile(*, hass: HomeAssistant, service: 
         await check_service_permission(
             hass=hass, entry_id=entry_id, user_id=service.context.user_id, required_scope=SCOPE_SCHEDULE_EDIT
         )
-    dp = device.week_profile_data_point
-    if not isinstance(dp, ClimateWeekProfileDataPointProtocol):
+    dp = device.climate_week_profile_data_point
+    if dp is None:
         raise HomeAssistantError(f"Device {device.name} does not support climate schedules")
     source_profile = ScheduleProfile(service.data[ATTR_SOURCE_PROFILE])
     target_profile = ScheduleProfile(service.data[ATTR_TARGET_PROFILE])
@@ -1582,10 +1582,9 @@ async def _async_service_copy_schedule_profile(*, hass: HomeAssistant, service: 
         target_device = _asnyc_get_hm_device_by_id(hass=hass, device_id=target_device_id)
         if target_device is None:
             raise HomeAssistantError(f"Target device {target_device_id} not found")
-        target_dp_candidate = target_device.week_profile_data_point
-        if not isinstance(target_dp_candidate, ClimateWeekProfileDataPointProtocol):
+        target_dp = target_device.climate_week_profile_data_point
+        if target_dp is None:
             raise HomeAssistantError(f"Target device {target_device.name} does not support climate schedules")
-        target_dp = target_dp_candidate
     try:
         await dp.copy_schedule_profile(
             source_profile=source_profile,

@@ -137,11 +137,9 @@ class AioHomematicClimate(AioHomematicGenericRestoreEntity[BaseCustomDpClimate],
         )
         self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_target_temperature_step = data_point.target_temperature_step
-        self._week_profile_data_point: ClimateWeekProfileDataPointProtocol | None = None
-        if (wp_dp := self._data_point.device.week_profile_data_point) is not None and isinstance(
-            wp_dp, ClimateWeekProfileDataPointProtocol
-        ):
-            self._week_profile_data_point = wp_dp
+        self._week_profile_data_point: ClimateWeekProfileDataPointProtocol | None = (
+            self._data_point.device.climate_week_profile_data_point
+        )
 
     @property
     @override
