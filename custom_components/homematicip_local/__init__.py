@@ -411,6 +411,115 @@ def _split_device_identifier(identifier: str) -> tuple[str, str, str] | None:
     return address, str(interface), suffix
 
 
+def _neutral_device_identifier(identifier: str, *, instance_name: str) -> str:
+    """Return the backend-neutral form of a device identifier, or the identifier itself when it has none."""
+    if (parts := _split_device_identifier(identifier)) is None:
+        return identifier
+    address, interface, suffix = parts
+    return f"{address}{IDENTIFIER_SEPARATOR}{instance_name}-{interface}{suffix}"
+
+
+@callback
+def _async_move_child_devices(
+    hass: HomeAssistant,
+    entry: HomematicConfigEntry,
+    *,
+    old_parent_id: str,
+    new_parent_id: str,
+    instance_name: str,
+) -> int:
+    """
+    Re-create the child devices of a parent about to be removed under the parent that survives.
+
+    HA does not reparent a child device, and removing a parent removes its
+    children with every entity of this config entry on them. So each child is
+    registered anew under the survivor — on the backend-neutral identifier,
+    which lets a child the survivor already holds take it over — its entities
+    are moved, and its area and custom name follow when the target has none.
+    The old child then goes down with its parent. Returns the number of
+    children handed over.
+    """
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    moved = 0
+    for child in dr.async_entries_for_parent_device(device_registry, old_parent_id):
+        identifiers = {
+            (
+                domain,
+                _neutral_device_identifier(identifier, instance_name=instance_name) if domain == DOMAIN else identifier,
+            )
+            for domain, identifier in child.identifiers
+        }
+        if identifiers == child.identifiers:
+            _LOGGER.warning(
+                "Child device %s stays on a parent that is removed: its identifier %s is already neutral and "
+                "cannot move to another parent",
+                child.id,
+                sorted(child.identifiers),
+            )
+            continue
+        target = device_registry.async_get_or_create_child(
+            config_entry_id=entry.entry_id,
+            identifiers=identifiers,
+            name=child.name,
+            parent_device_id=new_parent_id,
+        )
+        device_registry.async_update_child_device(
+            target.id,
+            area_id=target.area_id if target.area_id is not None else child.area_id,
+            name_by_user=target.name_by_user if target.name_by_user is not None else child.name_by_user,
+        )
+        for entity_entry in er.async_entries_for_device(entity_registry, child.id, include_disabled_entities=True):
+            entity_registry.async_update_entity(entity_entry.entity_id, device_id=target.id)
+        _LOGGER.info("Moved child device %s under the surviving parent %s", sorted(identifiers), new_parent_id)
+        moved += 1
+    return moved
+
+
+@callback
+def _async_migrate_child_device_identifiers(
+    hass: HomeAssistant, entry: HomematicConfigEntry, *, instance_name: str
+) -> tuple[int, int]:
+    """
+    Move child device entries onto the backend-neutral identifier.
+
+    The child counterpart of the main-device pass: a plain rename when the
+    target key is free, otherwise the entities move onto the child already
+    holding it and the stale child is removed. Returns (migrated, merged).
+    """
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    migrated = merged = 0
+    for child in list(dr.async_child_entries_for_config_entry(device_registry, entry.entry_id)):
+        for domain, identifier in child.identifiers:
+            if domain != DOMAIN:
+                continue
+            if (new_identifier := _neutral_device_identifier(identifier, instance_name=instance_name)) == identifier:
+                continue
+            if (
+                existing_child := device_registry.async_get_child_device_by_identifier(
+                    (DOMAIN, new_identifier), entry.entry_id
+                )
+            ) is not None and existing_child.id != child.id:
+                _LOGGER.info(
+                    "Merging child device %s into the entry already holding %s, so its device_id survives",
+                    identifier,
+                    new_identifier,
+                )
+                for entity_entry in er.async_entries_for_device(
+                    entity_registry, child.id, include_disabled_entities=True
+                ):
+                    entity_registry.async_update_entity(entity_entry.entity_id, device_id=existing_child.id)
+                device_registry.async_remove_device(child.id)
+                merged += 1
+                break
+            _LOGGER.info("Migrating child device identifier: %s -> %s", identifier, new_identifier)
+            device_registry.async_update_child_device(child.id, new_identifiers={(DOMAIN, new_identifier)})
+            migrated += 1
+            break
+    return migrated, merged
+
+
 @callback
 def _async_migrate_device_identifiers(hass: HomeAssistant, entry: HomematicConfigEntry) -> None:
     """
@@ -436,6 +545,12 @@ def _async_migrate_device_identifiers(hass: HomeAssistant, entry: HomematicConfi
       one, so its entities and children are moved over and the stale entry is
       removed. The older ``device_id`` wins, which is the one automations use.
 
+    Child devices (channel groups, schedules) get the same two outcomes. One
+    difference: HA cannot reparent a child, and removing a parent removes its
+    children together with their entities — so the children of a merged-away
+    parent are re-created under the survivor and hand their entities over
+    first.
+
     Idempotent: an entry already on the neutral key is skipped, so a second
     start migrates nothing.
     """
@@ -448,11 +563,7 @@ def _async_migrate_device_identifiers(hass: HomeAssistant, entry: HomematicConfi
         for domain, identifier in device_entry.identifiers:
             if domain != DOMAIN:
                 continue
-            if (parts := _split_device_identifier(identifier)) is None:
-                continue
-            address, interface, suffix = parts
-            new_identifier = f"{address}{IDENTIFIER_SEPARATOR}{instance_name}-{interface}{suffix}"
-            if new_identifier == identifier:
+            if (new_identifier := _neutral_device_identifier(identifier, instance_name=instance_name)) == identifier:
                 continue
             if (
                 existing := device_registry.async_get_device_by_identifier((DOMAIN, new_identifier), entry.entry_id)
@@ -468,9 +579,16 @@ def _async_migrate_device_identifiers(hass: HomeAssistant, entry: HomematicConfi
                     entity_registry, device_entry.id, include_disabled_entities=True
                 ):
                     entity_registry.async_update_entity(entity_entry.entity_id, device_id=existing.id)
-                for child in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
-                    if child.via_device_id == device_entry.id:
-                        device_registry.async_update_device(child.id, via_device_id=existing.id)
+                for via_linked in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+                    if via_linked.via_device_id == device_entry.id:
+                        device_registry.async_update_device(via_linked.id, via_device_id=existing.id)
+                merged += _async_move_child_devices(
+                    hass,
+                    entry,
+                    old_parent_id=device_entry.id,
+                    new_parent_id=existing.id,
+                    instance_name=instance_name,
+                )
                 device_registry.async_remove_device(device_entry.id)
                 merged += 1
                 break
@@ -478,6 +596,10 @@ def _async_migrate_device_identifiers(hass: HomeAssistant, entry: HomematicConfi
             device_registry.async_update_device(device_entry.id, new_identifiers={(DOMAIN, new_identifier)})
             migrated += 1
             break
+
+    child_migrated, child_merged = _async_migrate_child_device_identifiers(hass, entry, instance_name=instance_name)
+    migrated += child_migrated
+    merged += child_merged
 
     if migrated or merged:
         _LOGGER.info(
