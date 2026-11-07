@@ -87,24 +87,7 @@ EXEMPT_FACADE_CALLS: dict[str, str] = {
 # Every entry is a REAL, reachable runtime break on the loom backend
 # (AttributeError), tracked for a fix in openccu-loom-client's Device; remove
 # the entry once the Device carries the member.
-LOOM_EXEMPT_DEVICE_MEMBERS: dict[str, str] = {
-    "create_central_links": (
-        "the loom Device has no per-device call; device_coordinator.create_central_links(address=...) "
-        "exists. services.py create_central_links with a device target raises on a loom entry."
-    ),
-    "generic_data_points": (
-        "device actions (device_action.py) list and run the device's buttons through it; listing "
-        "actions for a loom device raises."
-    ),
-    "generic_events": (
-        "device triggers (device_trigger.py) are built from the device's click events; listing "
-        "triggers for a loom device raises."
-    ),
-    "remove_central_links": (
-        "the loom Device has no per-device call; device_coordinator.remove_central_links(address=...) "
-        "exists. services.py remove_central_links with a device target raises on a loom entry."
-    ),
-}
+LOOM_EXEMPT_DEVICE_MEMBERS: dict[str, str] = {}
 
 # facades whose class cannot be resolved generically (annotation is Any or an
 # unresolvable forward ref); mapped to an explicit (aiohomematic, loom) class
@@ -114,13 +97,7 @@ _FACADE_CLASS_OVERRIDES: dict[str, tuple[type, type] | None] = {}
 # isinstance dispatch sites on concrete aiohomematic model classes outside
 # backend_types.py, keyed by "<file>:<name>". Empty baseline: every dispatch
 # goes through backend_types pairs or runtime-checkable Protocols.
-EXEMPT_ISINSTANCE_SITES: dict[str, str] = {
-    "device_trigger.py:ClickEvent": (
-        "event objects are real aiohomematic instances on both backends — the loom "
-        "adapter republishes aiohomematic events on a real aiohomematic EventBus, "
-        "so this isinstance check holds for loom data too."
-    ),
-}
+EXEMPT_ISINSTANCE_SITES: dict[str, str] = {}
 
 
 def _override_config_pair() -> tuple[type, type]:

@@ -46,6 +46,7 @@ from aiohomematic.model.custom import (
     CustomDpSoundPlayerLed,
     CustomDpSwitch,
 )
+from aiohomematic.model.event import ClickEvent
 from aiohomematic.model.generic import DpAction, DpButton, DpSwitch
 from aiohomematic.model.hub import ProgramDpSwitch, SysvarDpSwitch
 
@@ -56,20 +57,23 @@ _g: object | None
 _c: object | None
 _h: object | None
 _a: object | None
+_e: object | None
 try:
     from openccu_loom_client.compat.aiohomematic.model import (
         alarm_panel as _loom_alarm_panel,
         custom as _loom_custom,
+        event as _loom_event,
         generic as _loom_generic,
         hub as _loom_hub,
     )
 except ImportError:  # pragma: no cover - CCU-only install
-    _g = _c = _h = _a = None
+    _g = _c = _h = _a = _e = None
 else:
     _g = _loom_generic
     _c = _loom_custom
     _h = _loom_hub
     _a = _loom_alarm_panel
+    _e = _loom_event
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,6 +127,12 @@ DP_SWITCH = _pair(DpSwitch, "DpSwitch", _g)
 DP_ACTION = _pair(DpAction, "DpAction", _g)
 DP_BUTTON = _pair(DpButton, "DpButton", _g)
 DP_ACTION_OR_BUTTON: tuple[type[DpAction | DpButton], ...] = (*DP_ACTION, *DP_BUTTON)
+
+# ---- events ----
+# The device's trigger sources (``device.generic_events``). On the loom backend
+# they are twins wrapping the daemon-declared event-group members, never
+# aiohomematic instances.
+CLICK_EVENT = _pair(ClickEvent, "ClickEvent", _e)
 
 # ---- hub ----
 SYSVAR_DP_SWITCH = _pair(SysvarDpSwitch, "SysvarDpSwitch", _h)
