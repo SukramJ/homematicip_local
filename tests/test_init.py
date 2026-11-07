@@ -1062,6 +1062,14 @@ class TestLoomUniqueIdMigration:
             # ``_sensor``, the loom backend does not.
             (f"{_D}_000a1709af5344_1_level_sensor", f"{_D}_loom_000a1709af5344_1_level"),
             (f"{_D}_a1b2c3d4e5_int0000012_1_level_sensor", f"{_D}_loom_11a0001234_int0000012_1_level"),
+            # Week profiles of an HmIP-WGT/WGTC: aiohomematic keys the heating
+            # schedule ``climate_week_profile_…`` next to the switch schedule,
+            # the daemon (api 15.6.0) ``loom_climate_week_profile_…``.
+            (f"{_D}_week_profile_000c9709ac8caf_week_profile", f"{_D}_loom_week_profile_000c9709ac8caf_week_profile"),
+            (
+                f"{_D}_climate_week_profile_000c9709ac8caf_week_profile",
+                f"{_D}_loom_climate_week_profile_000c9709ac8caf_week_profile",
+            ),
         ],
     )
     def test_rewrites(self, old: str, expected: str) -> None:
@@ -1120,6 +1128,11 @@ class TestAioHomematicUniqueIdRestore:
             ),
             # Internal address — same plain strip.
             (f"{_D}_loom_11a0001234_int0001234_1_level", f"{_D}_11a0001234_int0001234_1_level"),
+            # Heating schedule of an HmIP-WGT/WGTC — back to aiohomematic's key.
+            (
+                f"{_D}_loom_climate_week_profile_000c9709ac8caf_week_profile",
+                f"{_D}_climate_week_profile_000c9709ac8caf_week_profile",
+            ),
         ],
     )
     def test_rewrites(self, old: str, expected: str) -> None:
@@ -1136,6 +1149,8 @@ class TestAioHomematicUniqueIdRestore:
             f"{_D}_11a0001234_bidcos_rf_1_press_short",
             f"{_D}_event_group_keypress_000858a994d674_2",
             f"{_D}_event_group_keypress_11a0001234_hmip_rcv_1_1",
+            f"{_D}_week_profile_000c9709ac8caf_week_profile",
+            f"{_D}_climate_week_profile_000c9709ac8caf_week_profile",
         ],
     )
     def test_round_trip(self, original: str) -> None:
