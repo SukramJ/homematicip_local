@@ -3,7 +3,7 @@
 async_upnp_client==0.49.0
 aiohomematic-test-support==2026.11.3
 aiohomematic==2026.11.3
-aiohomematic_config==2026.10.1
+aiohomematic_config==2026.11.1
 isal==1.9.0
 openccu-data>=2026.9.1
 openccu-loom-client==2026.11.1
