@@ -137,11 +137,11 @@ class TestAsyncGetTriggers:
         triggers = await dt.async_get_triggers(hass, device_id=device_entry.id)
         assert triggers == []
 
-        # Patch ClickEvent class in module so isinstance checks work
+        # Patch the ClickEvent dispatch pair in module so isinstance checks work
         class MyClickEvent(_FakeClickEvent):
             pass
 
-        monkeypatch.setattr(dt, "ClickEvent", MyClickEvent)
+        monkeypatch.setattr(dt, "CLICK_EVENT", (MyClickEvent,))
 
         # 5) device present but event not ClickEvent -> filtered
         hm_device = Mock()
@@ -179,6 +179,63 @@ class TestAsyncGetTriggers:
         # From cleanup_click_event_data
         assert trig[CONF_TYPE] == "press_short"
         assert trig["subtype"] == 1
+
+    @pytest.mark.asyncio
+    async def test_async_get_triggers_lists_loom_click_events(
+        self, hass: HomeAssistant, device_reg: dr.DeviceRegistry
+    ) -> None:
+        """
+        A loom device lists its keys as triggers.
+
+        On the openccu-loom backend `generic_events` holds openccu-loom-client's
+        twins, never aiohomematic instances. Dispatching on aiohomematic's
+        ClickEvent alone dropped every one of them, so a loom device had no
+        triggers. The trigger carries what the keypress bus event carries
+        (control_unit.py `_on_device_trigger`), so an automation built on it fires.
+        """
+        from types import SimpleNamespace
+
+        from openccu_loom_client.compat.aiohomematic.model.event import ClickEvent as LoomClickEvent, ImpulseEvent
+
+        from custom_components.homematicip_local import device_trigger as dt
+
+        entry = MockConfigEntry(domain=HMIP_DOMAIN, data={})
+        entry.add_to_hass(hass)
+        device_entry = _add_device_with_identifiers(
+            hass, device_reg, entry, address="VCU0000001", interface_id=INTERFACE_ID
+        )
+        loom_device = SimpleNamespace(interface_id=INTERFACE_ID, model="HmIP-RC8")
+
+        def _source(*, channel: int, parameter: str, usage: str) -> SimpleNamespace:
+            return SimpleNamespace(
+                device=loom_device,
+                device_address="VCU0000001",
+                channel_number=channel,
+                parameter=parameter,
+                summary=SimpleNamespace(usage=usage),
+            )
+
+        hm_device = Mock()
+        hm_device.generic_events = [
+            LoomClickEvent(data_point=_source(channel=1, parameter="PRESS_SHORT", usage="event")),
+            LoomClickEvent(data_point=_source(channel=1, parameter="PRESS_LONG", usage="event")),
+            # The channel operation mode excludes this key: no trigger, as in the reference.
+            LoomClickEvent(data_point=_source(channel=2, parameter="PRESS_SHORT", usage="no_create")),
+            # Not a keypress: device triggers list click events only.
+            ImpulseEvent(data_point=_source(channel=0, parameter="SEQUENCE_OK", usage="event")),
+        ]
+        entry.runtime_data = _make_runtime_data(hm_device=hm_device)
+
+        triggers = await dt.async_get_triggers(hass, device_id=device_entry.id)
+
+        assert sorted((t[CONF_TYPE], t["subtype"]) for t in triggers) == [("press_long", 1), ("press_short", 1)]
+        for trigger in triggers:
+            assert trigger[CONF_PLATFORM] == "device"
+            assert trigger[CONF_DEVICE_ID] == device_entry.id
+            assert trigger["event_type"] == "homematic.keypress"
+            assert trigger[CONF_ADDRESS] == "VCU0000001"
+            assert trigger["interface_id"] == INTERFACE_ID
+            TRIGGER_SCHEMA(trigger)  # what HA validates before attaching
 
 
 class TestAsyncAttachTrigger:

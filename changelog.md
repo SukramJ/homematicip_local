@@ -25,9 +25,9 @@
 
 - **Fix:** the climate schedule commands of the config panel (`get_climate_schedule`, `set_climate_schedule_weekday`, `set_climate_active_profile`) reach the heating schedule of HmIP-WGT and HmIP-WGTC, which also have a switch schedule
 
-#### Bump openccu-loom-client to `2026.11.2`
+#### Bump openccu-loom-client to `2026.11.3`
 
-- For the openccu-loom backend (Beta) only; no runtime effect on the direct-CCU backend, where the client is not loaded. Fixes `switch_set_on_time`, `light_set_on_time` and `valve_set_on_time`, which had no effect on that backend, and climate entities that were not created there with this release; HmIP-WGT and HmIP-WGTC get their heating schedule with openccu-loom 0.97.1 or newer
+- For the openccu-loom backend (Beta) only; no runtime effect on the direct-CCU backend, where the client is not loaded. Fixes `switch_set_on_time`, `light_set_on_time` and `valve_set_on_time`, which had no effect on that backend, climate entities that were not created there with this release, and device actions, device triggers and the per-device central-link services, which failed there; HmIP-WGT and HmIP-WGTC get their heating schedule with openccu-loom 0.97.1 or newer
 
 # Version [2.12.3](https://github.com/SukramJ/homematicip_local/compare/2.12.2...2.12.3) (unreleased)
 
