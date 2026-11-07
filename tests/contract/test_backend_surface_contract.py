@@ -45,8 +45,10 @@ import typing
 from typing import Any
 
 from openccu_loom_client.compat.aiohomematic.central.adapter import LoomCentralAdapter
+from openccu_loom_client.model.device import Device as LoomDevice
 
 from aiohomematic.central import CentralUnit
+from aiohomematic.model.device import Device as AioDevice
 
 INTEGRATION_ROOT = Path(__file__).parent.parent.parent / "custom_components" / "homematicip_local"
 
@@ -78,6 +80,29 @@ EXEMPT_FACADE_CALLS: dict[str, str] = {
     "configuration.get_link_paramset_description": (
         "loom additionally requires peer; the link config panel call "
         "(websocket_api.py) raises TypeError on a loom entry."
+    ),
+}
+
+# device members the integration uses that the loom Device does not provide.
+# Every entry is a REAL, reachable runtime break on the loom backend
+# (AttributeError), tracked for a fix in openccu-loom-client's Device; remove
+# the entry once the Device carries the member.
+LOOM_EXEMPT_DEVICE_MEMBERS: dict[str, str] = {
+    "create_central_links": (
+        "the loom Device has no per-device call; device_coordinator.create_central_links(address=...) "
+        "exists. services.py create_central_links with a device target raises on a loom entry."
+    ),
+    "generic_data_points": (
+        "device actions (device_action.py) list and run the device's buttons through it; listing "
+        "actions for a loom device raises."
+    ),
+    "generic_events": (
+        "device triggers (device_trigger.py) are built from the device's click events; listing "
+        "triggers for a loom device raises."
+    ),
+    "remove_central_links": (
+        "the loom Device has no per-device call; device_coordinator.remove_central_links(address=...) "
+        "exists. services.py remove_central_links with a device target raises on a loom entry."
     ),
 }
 
@@ -323,6 +348,58 @@ def test_used_central_members_exist_on_both_backends() -> None:
     )
     stale = sorted(set(LOOM_EXEMPT_CENTRAL_MEMBERS) - first)
     assert not stale, f"stale LOOM_EXEMPT_CENTRAL_MEMBERS entries (no longer used): {stale}"
+
+
+# Names the integration binds a Homematic device to. A name alone cannot tell an
+# aiohomematic device from Home Assistant's DeviceEntry (`device` is both), so
+# the inventory keeps only members the aiohomematic Device has: an HA registry
+# attribute never reaches the check.
+_DEVICE_BASE_NAMES = frozenset({"device", "_device", "hm_device", "source_device", "target_device"})
+
+
+def _is_device_base(node: ast.expr) -> bool:
+    """Return whether an expression plausibly refers to a Homematic device."""
+    if isinstance(node, ast.Name):
+        return node.id in _DEVICE_BASE_NAMES
+    if isinstance(node, ast.Attribute):
+        return node.attr in ("device", "_device")
+    return False
+
+
+def _used_device_members() -> dict[str, list[str]]:
+    """Return the aiohomematic Device members the integration reads, with their call sites."""
+    used: dict[str, list[str]] = {}
+    for source in _integration_sources():
+        tree = ast.parse(source.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Attribute) and _is_device_base(node.value) and _member_exists(AioDevice, node.attr):
+                used.setdefault(node.attr, []).append(f"{source.name}:{node.lineno}")
+    return used
+
+
+def test_used_device_members_exist_on_both_backends() -> None:
+    """
+    Contract: every device member the integration reads exists on the loom Device.
+
+    The central and facade checks above never looked past the central, and the
+    devices it hands out are where 2.12.4 broke: the climate entity read
+    `device.climate_week_profile_data_point` and the week-profile sensor
+    `device.week_profile_data_points`, which aiohomematic 2026.11.3 added and the
+    loom Device of openccu-loom-client 2026.11.1 lacked. Platform setup raised
+    AttributeError and no climate entity was created on that backend.
+    """
+    used = _used_device_members()
+    assert {"climate_week_profile_data_point", "week_profile_data_points"} <= set(used), (
+        "AST inventory misses the week-profile reads of climate.py / sensor.py — scan is broken"
+    )
+    missing = sorted(m for m in used if not _member_exists(LoomDevice, m) and m not in LOOM_EXEMPT_DEVICE_MEMBERS)
+    assert not missing, (
+        "used device members missing on the loom Device: "
+        + ", ".join(f"{m} ({', '.join(used[m][:3])})" for m in missing)
+        + " — add them to openccu-loom-client's Device, or document the gap in LOOM_EXEMPT_DEVICE_MEMBERS"
+    )
+    stale = sorted(m for m in LOOM_EXEMPT_DEVICE_MEMBERS if m not in used or _member_exists(LoomDevice, m))
+    assert not stale, f"stale LOOM_EXEMPT_DEVICE_MEMBERS entries (no longer used, or provided now): {stale}"
 
 
 def test_used_facade_members_exist_on_both_backends() -> None:
