@@ -24,7 +24,7 @@ This document provides comprehensive guidance for AI assistants working with the
 
 **Project Name:** Homematic(IP) Local for OpenCCU
 **Type:** Home Assistant Custom Integration
-**Version:** 2.12.0
+**Version:** 2.12.4
 **Primary Language:** Python 3.14+
 **Domain:** `homematicip_local`
 
@@ -124,7 +124,7 @@ homematicip_local/
 - **aiohomematic** (v2026.11.3) - Core async library for Homematic device communication
 - **aiohomematic-config** (v2026.10.1) - Device configuration metadata
 - **openccu-data** (v2026.9.1) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
-- **openccu-loom-client** (v2026.10.11) - Client for the openccu-loom backend (Beta)
+- **openccu-loom-client** (v2026.11.1) - Client for the openccu-loom backend (Beta)
 - **Home Assistant Core** - Minimum version: 2026.11.0+
 - **Python 3.14+** (target version for development)
 
@@ -1185,11 +1185,11 @@ make hass
 
 ### Version Information
 
-- **Current Version:** 2.12.0
+- **Current Version:** 2.12.4
 - **Minimum HA Version:** 2026.11.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
-- **aiohomematic Version:** 2026.11.2
-- **openccu-loom-client Version:** 2026.10.11. Its wire layer is generated against daemon API `15.2.0`
+- **aiohomematic Version:** 2026.11.3
+- **openccu-loom-client Version:** 2026.11.1. Its wire layer is generated against daemon API `15.2.0`
   (`openccu_loom_client.wire.const.DAEMON_API_VERSION`), but that number no longer gates the
   connection: `_report_api_version` **logs and never raises** — a warning when the majors differ,
   an info line when only the minors do. Refusing on it was wrong in both directions, because the
@@ -1212,5 +1212,5 @@ make hass
 
 ---
 
-**Last Updated**: 2026-09-12
-**Version**: 2.12.0
+**Last Updated**: 2026-11-07
+**Version**: 2.12.4
