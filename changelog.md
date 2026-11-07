@@ -12,7 +12,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.11.3](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.3)
+#### Bump aiohomematic to [2026.11.4](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.4)
 
 - **Support for new devices:** thermostats HmIP-WT, KW-STATH, KW-UKETRV, HmIPW-WGT and HmIPW-WGTC, dimmers
   HmIP-WUA, ELV-SH-WUA and HmIP-UDI-PB2
@@ -20,6 +20,7 @@
 - **Fix:** HmIP-WSM keeps its run time on current firmware, HmIP-BDT-I dimmer uses the correct channels
 - **Fix:** the switch schedule of HmIP-WGT and HmIP-WGTC has the correct targets and accepts entries
 - **Fix:** HmIPW-WTH and HmIPW-SCTHD use the limits configured on the device
+- **Fix:** tilt-only changes turn the slats of a fully closed HmIPW-DRBL4 again, a regression of 2.12.2 ([#1357](https://github.com/SukramJ/homematicip_local/issues/1357))
 
 #### Bump aiohomematic-config to [2026.11.1](https://github.com/SukramJ/aiohomematic-config/compare/2026.10.1...2026.11.1)
 
