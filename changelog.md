@@ -21,6 +21,10 @@
 - **Fix:** the switch schedule of HmIP-WGT and HmIP-WGTC has the correct targets and accepts entries
 - **Fix:** HmIPW-WTH and HmIPW-SCTHD use the limits configured on the device
 
+#### Bump openccu-loom-client to `2026.11.1`
+
+- For the openccu-loom backend (Beta) only; no runtime effect on the direct-CCU backend, where the client is not loaded. Fixes `switch_set_on_time`, `light_set_on_time` and `valve_set_on_time`, which had no effect on that backend, so a switch turned on afterwards stayed on
+
 # Version [2.12.3](https://github.com/SukramJ/homematicip_local/compare/2.12.2...2.12.3) (unreleased)
 
 ## What's Changed
