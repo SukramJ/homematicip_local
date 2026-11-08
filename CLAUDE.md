@@ -840,7 +840,7 @@ This section defines mandatory rules for all implementations in this project.
 
 ### Implementation Plan Requirements
 
-**CRITICAL**: Implementation plans created by Opus/Sonnet MUST be executable by Haiku without errors.
+**CRITICAL**: An implementation plan is a brief for the `impl` agent (Opus, see [Which model does which work](#which-model-does-which-work)) and MUST be executable without questions; a stop condition reported back is a successful outcome, a guess is not.
 
 A valid implementation plan must:
 
@@ -1104,7 +1104,7 @@ These rules govern how the AI assistant communicates and works with the develope
 ✅ **Always** handle exceptions with proper context
 ✅ **Always** complete the Refactoring Completion Checklist before finishing
 ✅ **Always** update changelog.md with breaking changes
-✅ **Always** create implementation plans that are Haiku-executable
+✅ **Always** create implementation plans the `impl` agent can execute without questions
 ✅ **Always** verify docs/*.md files are current after major changes
 ✅ **Always** describe your approach and wait for approval before writing code
 ✅ **Always** ask clarifying questions when requirements are ambiguous
@@ -1235,7 +1235,7 @@ When performing a refactoring task, follow this workflow:
 
 ### Implementation Plan Quality Standard
 
-**A plan is only complete when Haiku can execute it without asking questions.**
+**A plan is only complete when the `impl` agent (Opus) can execute it without asking questions.**
 
 Before finalizing any implementation plan, verify:
 
