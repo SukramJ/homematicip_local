@@ -9,10 +9,14 @@
   services now use the heating schedule. `get_schedule` and `set_schedule` stay on the switch schedule
   of these devices. The new heating schedule sensor is called "Climate week profile". The config panel
   still shows the switch schedule only.
+- **The Messages card shows the CCU's text for service messages.** It rendered the raw parameter
+  name from the CCU alarm, so a sabotage of an HM-Sec-SCo read `ERROR-7` where the CCU shows
+  "Sabotage". The card now uses the same translated text as the alarm list and the CCU dashboard
+  ([#1356](https://github.com/SukramJ/homematicip_local/discussions/1356))
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.11.4](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.4)
+#### Bump aiohomematic to [2026.11.5](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.5)
 
 - **Support for new devices:** thermostats HmIP-WT, KW-STATH, KW-UKETRV, HmIPW-WGT and HmIPW-WGTC, dimmers
   HmIP-WUA, ELV-SH-WUA and HmIP-UDI-PB2
@@ -21,6 +25,7 @@
 - **Fix:** the switch schedule of HmIP-WGT and HmIP-WGTC has the correct targets and accepts entries
 - **Fix:** HmIPW-WTH and HmIPW-SCTHD use the limits configured on the device
 - **Fix:** tilt-only changes turn the slats of a fully closed HmIPW-DRBL4 again, a regression of 2.12.2 ([#1357](https://github.com/SukramJ/homematicip_local/issues/1357))
+- **Fix:** service messages of enum parameters carry the CCU's value text, so the hub sensor `service_messages` shows `Sabotage` instead of `ERROR-7` ([#1356](https://github.com/SukramJ/homematicip_local/discussions/1356))
 
 #### Bump aiohomematic-config to [2026.11.1](https://github.com/SukramJ/aiohomematic-config/compare/2026.10.1...2026.11.1)
 
