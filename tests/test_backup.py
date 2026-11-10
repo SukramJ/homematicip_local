@@ -10,6 +10,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from openccu_loom_client.compat.aiohomematic.const import LoomSystemInformation
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+import pytest_socket
 
 from aiohomematic.const import CCUType, SystemInformation
 from aiohomematic.exceptions import BaseHomematicException
@@ -20,8 +22,12 @@ from custom_components.homematicip_local.backup import (
     async_register_backup_agents_listener,
 )
 from custom_components.homematicip_local.const import BACKEND_CCU, BACKEND_LOOM
+from custom_components.homematicip_local.control_unit import ControlUnit
 from homeassistant.components.backup import AgentBackup, BackupAgentError, BackupNotFound
+from homeassistant.components.backup.const import DATA_MANAGER
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 
 def _make_backup_data(*, filename: str = "backup_2026.tar.gz", content: bytes = b"backup-content") -> MagicMock:
@@ -174,6 +180,55 @@ class TestBackupAgentListener:
         remove()
         async_notify_backup_listeners(hass)
         assert len(called) == 1  # Not called again after removal
+
+
+class TestBackupAgentFollowsEntry:
+    """The agent Home Assistant knows follows the entry through setup, reload and unload."""
+
+    async def test_agent_survives_reload(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry_v2: MockConfigEntry,
+        mock_control_unit: ControlUnit,
+        tmp_path: Path,
+    ) -> None:
+        """
+        A reloaded entry keeps its backup agent, an unloaded entry loses it.
+
+        Home Assistant rebuilds the agent list the moment it is notified, and
+        only a loaded entry contributes an agent. Notified from inside
+        async_setup_entry the entry is still in setup, so the agent the unload
+        removed never came back until Home Assistant was restarted.
+        """
+        pytest_socket.enable_socket()
+        mock_control_unit.backup_directory = str(tmp_path)
+        mock_control_unit.central.name = "TestCCU"
+        mock_control_unit.central.system_information = SystemInformation(ccu_type=CCUType.OPENCCU)
+        assert await async_setup_component(hass, "backup", {})
+        await hass.async_block_till_done()
+        agent_id = f"homematicip_local.{mock_config_entry_v2.entry_id}"
+
+        with (
+            patch("custom_components.homematicip_local.find_free_port", return_value=8765),
+            patch(
+                "custom_components.homematicip_local.control_unit.ControlConfig.create_control_unit",
+                return_value=mock_control_unit,
+            ),
+        ):
+            mock_config_entry_v2.add_to_hass(hass)
+            await hass.config_entries.async_setup(mock_config_entry_v2.entry_id)
+            await hass.async_block_till_done()
+            assert mock_config_entry_v2.state is ConfigEntryState.LOADED
+            assert agent_id in hass.data[DATA_MANAGER].backup_agents
+
+            await hass.config_entries.async_reload(mock_config_entry_v2.entry_id)
+            await hass.async_block_till_done()
+            assert mock_config_entry_v2.state is ConfigEntryState.LOADED
+            assert agent_id in hass.data[DATA_MANAGER].backup_agents
+
+            await hass.config_entries.async_unload(mock_config_entry_v2.entry_id)
+            await hass.async_block_till_done()
+            assert agent_id not in hass.data[DATA_MANAGER].backup_agents
 
 
 class TestCcuLocalBackupAgent:

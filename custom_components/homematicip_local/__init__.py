@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
+from functools import partial
 import logging
 import re
 import time
@@ -318,7 +319,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
     # Register on HA stop event to gracefully shutdown Homematic(IP) Local connection
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, control.stop_central)
     entry.async_on_unload(entry.add_update_listener(update_listener))
-    async_notify_backup_listeners(hass)
+    # Home Assistant rebuilds its backup agents the moment it is notified, and
+    # async_get_backup_agents only sees a loaded entry. Inside this function the
+    # entry is still in setup, so the notification follows the entry's state.
+    entry.async_on_unload(entry.async_on_state_change(partial(async_notify_backup_listeners, hass)))
     return True
 
 
@@ -337,7 +341,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomematicConfigEntry) -
         del hass.data[HM_KEY]
     elif not _any_entry_has_panel_enabled(hass=hass):
         async_unregister_panel(hass)
-    async_notify_backup_listeners(hass)
     return unload_ok
 
 
