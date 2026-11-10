@@ -13,6 +13,11 @@
   name from the CCU alarm, so a sabotage of an HM-Sec-SCo read `ERROR-7` where the CCU shows
   "Sabotage". The card now uses the same translated text as the alarm list and the CCU dashboard
   ([#1356](https://github.com/SukramJ/homematicip_local/discussions/1356))
+- **The CCU backup location survives a reload of the integration.** After a reload — changed
+  options, a reconfigure, a reauth — the backup location "CCU <name>" was gone from the Home
+  Assistant backup settings until Home Assistant was restarted, and automatic backups no longer
+  included a CCU backup. The integration told Home Assistant about its backup agents while the
+  entry was still being set up, and Home Assistant only accepts agents of a loaded entry
 
 ### Dependencies
 
