@@ -67,6 +67,7 @@ from homeassistant.loader import async_get_integration
 from .const import (
     BACKEND_CCU,
     BACKEND_LOOM,
+    CCU_CREDENTIAL_KEYS,
     CONF_ADVANCED_CONFIG,
     CONF_BACKEND,
     CONF_BACKUP_PATH,
@@ -117,6 +118,7 @@ from .const import (
     DEFAULT_SYS_SCAN_INTERVAL,
     DOMAIN,
     LEGACY_LOOM_BOX_KEYS,
+    LOOM_CREDENTIAL_KEYS,
 )
 from .control_unit import ControlConfig, ControlUnit, loom_box_kwargs, validate_config_and_get_system_information
 from .support import InvalidConfig
@@ -1096,7 +1098,7 @@ async def _async_detect_backend(
 class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the instance flow for Homematic(IP) Local for OpenCCU."""
 
-    VERSION = 17
+    VERSION = 18
 
     def __init__(self) -> None:
         """Init the ConfigFlow."""
@@ -2295,17 +2297,15 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                     reason="already_configured",
                     description_placeholders={"serial": serial or "unknown"},
                 )
-            # In-place backend switch CCU -> loom. The stale CCU connection
-            # keys (credentials, interfaces) stay in the entry so a switch
-            # back is lossless; the reload re-keys the entities via the
-            # unique_id migration in __init__.
+            # In-place backend switch CCU -> loom. The reload re-keys the
+            # entities via the unique_id migration in __init__.
             switched = dict(existing_entry.data)
-            # A box token (or box account) left over from an earlier loom
-            # life would route this connection through the box although the
-            # user set it up directly; the box keys always reflect this
-            # flow's choice.
-            for box_key in (CONF_LOOM_BOX_TOKEN, *LEGACY_LOOM_BOX_KEYS):
-                switched.pop(box_key, None)
+            # The entry keeps no credential but the one this flow collected:
+            # the CCU account is not carried along (a switch back asks for
+            # it), and a daemon or box token of an earlier loom life would
+            # sit beside this flow's choice.
+            for credential_key in (*CCU_CREDENTIAL_KEYS, *LOOM_CREDENTIAL_KEYS):
+                switched.pop(credential_key, None)
             switched.update(data)
             # The instance name keys entity naming - keep it stable.
             switched[CONF_INSTANCE_NAME] = existing_entry.data[CONF_INSTANCE_NAME]
@@ -2655,11 +2655,13 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                             reason="already_configured",
                             description_placeholders={"serial": serial or "unknown"},
                         )
-                    # In-place backend switch loom -> CCU. The stale loom
-                    # connection keys (daemon port, token) stay in the entry
-                    # so a switch back is lossless; the reload re-keys the
-                    # entities via the unique_id migration in __init__.
+                    # In-place backend switch loom -> CCU. The daemon and
+                    # box tokens are not carried along (a switch back asks
+                    # for them); the reload re-keys the entities via the
+                    # unique_id migration in __init__.
                     switched = dict(existing_entry.data)
+                    for credential_key in LOOM_CREDENTIAL_KEYS:
+                        switched.pop(credential_key, None)
                     switched.update(self.data)
                     # The instance name keys entity naming - keep it stable.
                     switched[CONF_INSTANCE_NAME] = existing_entry.data[CONF_INSTANCE_NAME]

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import datetime
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -304,6 +305,67 @@ class TestMigrateEntry:
             assert "ENABLE_LINKED_ENTITY_CLIMATE_ACTIVITY" not in optional_settings
             assert "USE_INTERFACE_CLIENT" not in optional_settings
             assert "SR_DISABLE_RANDOMIZED_OUTPUT" in optional_settings
+
+    @pytest.mark.parametrize(
+        ("data", "expected"),
+        [
+            pytest.param(
+                {"backend": "loom", "host": "d", "loom_token": "tok", "username": "Admin", "password": "pw"},
+                {"backend": "loom", "host": "d", "loom_token": "tok"},
+                id="loom-direct-drops-ccu-account",
+            ),
+            pytest.param(
+                {
+                    "backend": "loom",
+                    "host": "box",
+                    "loom_box_token": "box-tok",
+                    "loom_token": "stale",
+                    "username": "Admin",
+                    "password": "pw",
+                },
+                {"backend": "loom", "host": "box", "loom_box_token": "box-tok"},
+                id="loom-box-keeps-only-the-box-token",
+            ),
+            pytest.param(
+                {
+                    "backend": "loom",
+                    "host": "box",
+                    "loom_box_username": "boxadmin",
+                    "loom_box_password": "boxpw",
+                    "username": "Admin",
+                },
+                {"backend": "loom", "host": "box", "loom_box_username": "boxadmin", "loom_box_password": "boxpw"},
+                id="loom-legacy-box-account-stays-for-reauth",
+            ),
+            pytest.param(
+                {
+                    "backend": "ccu",
+                    "host": "ccu",
+                    "username": "Admin",
+                    "password": "pw",
+                    "loom_port": 8443,
+                    "loom_token": "tok",
+                    "loom_box_token": "box-tok",
+                    "loom_box_username": "boxadmin",
+                    "loom_box_password": "boxpw",
+                },
+                {"backend": "ccu", "host": "ccu", "username": "Admin", "password": "pw", "loom_port": 8443},
+                id="ccu-drops-loom-credentials",
+            ),
+            pytest.param(
+                {"host": "ccu", "username": "Admin", "password": "pw", "loom_token": "tok"},
+                {"host": "ccu", "username": "Admin", "password": "pw"},
+                id="entry-without-backend-key-is-ccu",
+            ),
+        ],
+    )
+    def test_migrate_v17_drops_the_other_backends_credentials(
+        self, data: dict[str, Any], expected: dict[str, Any]
+    ) -> None:
+        """Migration from v17 leaves an entry only the credentials its own backend uses."""
+        from custom_components.homematicip_local import _migrate_v17_to_v18_data
+
+        assert _migrate_v17_to_v18_data(dict(data)) == expected
 
 
 class TestUnloadEntry:

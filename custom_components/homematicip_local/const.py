@@ -6,7 +6,7 @@ from enum import StrEnum
 from typing import Final
 
 from aiohomematic.const import CATEGORIES
-from homeassistant.const import Platform
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 
 DOMAIN: Final = "homematicip_local"
 HMIP_LOCAL_MIN_HA_VERSION: Final = "2026.11.0"
@@ -84,7 +84,7 @@ DEFAULT_BACKEND: Final = BACKEND_CCU
 # The loom backend needs no master switch: the config flow offers it exactly
 # when it is relevant — an mDNS-discovered daemon or an existing loom entry.
 # Loom-only connection inputs. Host/TLS reuse CONF_HOST/CONF_TLS; the
-# daemon authenticates with a bearer token (or falls back to user/pass).
+# daemon authenticates with a bearer token.
 CONF_LOOM_PAIR: Final = "loom_pair"
 CONF_LOOM_TOKEN: Final = "loom_token"  # noqa: S105 - config key name, not a secret
 CONF_LOOM_PORT: Final = "loom_port"
@@ -102,6 +102,11 @@ CONF_LOOM_BOX_TOKEN: Final = "loom_box_token"  # noqa: S105 - config key name, n
 CONF_LOOM_BOX_USERNAME: Final = "loom_box_username"
 CONF_LOOM_BOX_PASSWORD: Final = "loom_box_password"  # noqa: S105 - config key name, not a secret
 LEGACY_LOOM_BOX_KEYS: Final = (CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD)
+# The credentials each backend signs in with. An entry holds only its own
+# backend's set: an in-place backend switch drops the other one, and the
+# setup flow of the backend switched to asks for its credentials.
+CCU_CREDENTIAL_KEYS: Final = (CONF_USERNAME, CONF_PASSWORD)
+LOOM_CREDENTIAL_KEYS: Final = (CONF_LOOM_TOKEN, CONF_LOOM_BOX_TOKEN, *LEGACY_LOOM_BOX_KEYS)
 CONF_INTERFACE_ID: Final = "interface_id"
 CONF_JSON_PORT: Final = "json_port"
 CONF_LISTEN_ON_ALL_IP: Final = "listen_on_all_ip"
