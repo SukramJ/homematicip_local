@@ -39,6 +39,7 @@ from homeassistant.util.hass_dict import HassKey
 from .backup import async_notify_backup_listeners
 from .const import (
     BACKEND_LOOM,
+    CCU_CREDENTIAL_KEYS,
     CONF_ACTION_SELECT_VALUES,
     CONF_ADVANCED_CONFIG,
     CONF_BACKEND,
@@ -52,6 +53,7 @@ from .const import (
     CONF_INSTANCE_NAME,
     CONF_INTERFACE,
     CONF_LOOM_BOX_TOKEN,
+    CONF_LOOM_TOKEN,
     CONF_OPTIONAL_SETTINGS,
     CONF_SYS_SCAN_INTERVAL,
     CONF_UN_IGNORES,
@@ -66,6 +68,7 @@ from .const import (
     ISSUE_TYPE_CALLBACK,
     ISSUE_TYPE_CONNECTION,
     LEGACY_LOOM_BOX_KEYS,
+    LOOM_CREDENTIAL_KEYS,
 )
 from .control_unit import ControlConfig, ControlUnit, get_storage_directory
 from .device_icon import ICON_VIEW_REGISTERED_KEY, DeviceIconView
@@ -1065,6 +1068,28 @@ def _migrate_v16_to_v17_data(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def _migrate_v17_to_v18_data(data: dict[str, Any]) -> dict[str, Any]:
+    """
+    Migrate config entry data from v17 to v18: drop the other backend's credentials.
+
+    An in-place backend switch used to carry the previous backend's
+    credentials along. A loom entry reaching its daemon through an
+    openccu-lite box then failed to set up, because the box token came with a
+    second credential. A box account of an earlier release stays: setup sends
+    such an entry through reauthentication.
+    """
+    stale: tuple[str, ...]
+    if data.get(CONF_BACKEND) != BACKEND_LOOM:
+        stale = LOOM_CREDENTIAL_KEYS
+    elif data.get(CONF_LOOM_BOX_TOKEN):
+        stale = (*CCU_CREDENTIAL_KEYS, CONF_LOOM_TOKEN)
+    else:
+        stale = CCU_CREDENTIAL_KEYS
+    for key in stale:
+        data.pop(key, None)
+    return data
+
+
 # Dispatch table for pure data-only migrations (no hass / async work).
 # Each entry maps from-version -> data transformer. The to-version is always from + 1.
 _DATA_MIGRATIONS: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = {
@@ -1078,6 +1103,7 @@ _DATA_MIGRATIONS: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = {
     14: _migrate_v14_remove_deprecated_optional_settings,
     15: _migrate_v15_to_v16_data,
     16: _migrate_v16_to_v17_data,
+    17: _migrate_v17_to_v18_data,
 }
 
 # Versions whose only side effect is calling cleanup_files() before bumping the version.
@@ -1088,7 +1114,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HomematicConfigEntry) 
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
 
-    while entry.version < 17:
+    while entry.version < 18:
         version = entry.version
         if migrator := _DATA_MIGRATIONS.get(version):
             data = migrator(dict(entry.data))

@@ -3732,10 +3732,11 @@ class TestLoomZeroconfDiscovery:
         assert data[CONF_HOST] == "192.168.1.50"
         assert data[CONF_LOOM_PORT] == 8080
         assert data[CONF_LOOM_TOKEN] == "tok"
-        # Instance name and CCU credentials survive for a lossless switch back.
+        # The instance name keys entity naming and stays stable on a switch.
         assert data[CONF_INSTANCE_NAME] == const.INSTANCE_NAME
-        assert data[CONF_USERNAME] == const.USERNAME
-        assert data[CONF_PASSWORD] == const.PASSWORD
+        # The CCU credentials are not carried along; a switch back asks for them.
+        assert CONF_USERNAME not in data
+        assert CONF_PASSWORD not in data
         # The entry's explicit advanced config wins over the form default.
         assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_SUB_DEVICES] is False
         assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_MQTT] is True
@@ -3982,9 +3983,10 @@ class TestBackendSwitchToCcu:
         assert data[CONF_PASSWORD] == const.PASSWORD
         # The instance name keys entity naming and stays stable on a switch.
         assert data[CONF_INSTANCE_NAME] == const.INSTANCE_NAME
-        # Loom connection keys survive for a lossless switch back.
+        # The daemon port is no credential and stays; the daemon token is
+        # not carried along, a switch back asks for it.
         assert data[CONF_LOOM_PORT] == 8443
-        assert data[CONF_LOOM_TOKEN] == "tok"
+        assert CONF_LOOM_TOKEN not in data
         # The entry's advanced config (incl. sub_devices_enabled) is migrated.
         assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_SUB_DEVICES] is True
 
@@ -4759,6 +4761,40 @@ class TestLoomBoxIngress:
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "backend_switched"
         assert not set(existing.data) & {CONF_LOOM_BOX_TOKEN, CONF_LOOM_BOX_USERNAME, CONF_LOOM_BOX_PASSWORD}
+
+    @pytest.mark.parametrize(
+        "leftover",
+        [
+            {CONF_USERNAME: const.USERNAME, CONF_PASSWORD: const.PASSWORD},
+            {CONF_LOOM_TOKEN: "stale-daemon-token"},
+        ],
+        ids=["ccu-account", "daemon-token"],
+    )
+    async def test_switch_to_loom_through_the_box_leaves_only_the_box_token(
+        self, hass: HomeAssistant, leftover: dict[str, str]
+    ) -> None:
+        """A CCU entry switched to the box starts: the client refuses any credential beside the box token."""
+        from custom_components.homematicip_local.control_unit import ControlConfig as RealControlConfig
+
+        existing = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="ABC123",
+            title=const.INSTANCE_NAME,
+            version=DomainConfigFlow.VERSION,
+            data={CONF_INSTANCE_NAME: const.INSTANCE_NAME, CONF_HOST: "ccu.local", **leftover},
+        )
+        existing.add_to_hass(hass)
+        result, _ = await self._submit_manual(hass, {CONF_LOOM_BOX: True, **_BOX})
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "backend_switched"
+        assert not set(existing.data) & {CONF_USERNAME, CONF_PASSWORD, CONF_LOOM_TOKEN}
+        assert existing.data[CONF_LOOM_BOX_TOKEN] == _BOX_TOKEN
+        # The real client builds the central from the switched entry.
+        with patch(
+            "custom_components.homematicip_local.control_unit.aiohttp_client.async_get_clientsession",
+            return_value=MagicMock(),
+        ):
+            await RealControlConfig(hass=hass, entry_id="entry", data=existing.data, serial="ABC123").create_central()
 
     async def _drain(self, hass: HomeAssistant, result: dict) -> dict:
         while result["type"] in (FlowResultType.SHOW_PROGRESS, FlowResultType.SHOW_PROGRESS_DONE):

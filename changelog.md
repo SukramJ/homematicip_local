@@ -18,6 +18,12 @@
   Assistant backup settings until Home Assistant was restarted, and automatic backups no longer
   included a CCU backup. The integration told Home Assistant about its backup agents while the
   entry was still being set up, and Home Assistant only accepts agents of a loaded entry
+- **openccu-loom (Beta): a CCU switched to the daemon behind an openccu-lite box starts again.** The
+  switch kept the CCU user name and password in the entry, and the box connection refuses any
+  credential beside its box token, so setup failed with `box_token is the only credential behind the
+  box`. A backend switch no longer carries the previous backend's credentials along; existing
+  entries are cleaned up automatically, and switching back asks for the credentials again
+  ([openccu-lite#20](https://github.com/hobbyquaker/openccu-lite/issues/20))
 
 ### Dependencies
 

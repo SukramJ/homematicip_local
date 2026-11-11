@@ -1601,14 +1601,11 @@ class ControlConfig:
         if self._backend == BACKEND_LOOM:
             loom_check_config = await self.hass.async_add_import_executor_job(_import_loom_check_config)
 
-            # Credentials are optional for the loom backend; pass None instead of
-            # an empty string so the daemon does not reject a "given but empty"
-            # username (or password).
+            # A loom entry holds no CCU account: the daemon owns the CCU
+            # credentials, and the entry signs in with a daemon or box token.
             config_failures = await loom_check_config(
                 central_name=self.instance_name,
                 host=self._host,
-                username=self._username or None,
-                password=self._password or None,
                 callback_host=self._callback_host,
                 callback_port_xml_rpc=self._callback_port_xml_rpc,
                 json_port=self._json_port,
@@ -1742,8 +1739,6 @@ class ControlConfig:
             tls=self._tls,
             verify_tls=self._verify_tls,
             token=self._loom_token,
-            username=self._username or None,
-            password=self._password or None,
             serial=self._serial,
             client_session=aiohttp_client.async_get_clientsession(self.hass),
             # Sysvar/program marker filtering and enabled-by-default are
