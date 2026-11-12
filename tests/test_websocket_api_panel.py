@@ -17,6 +17,8 @@ from custom_components.homematicip_local.control_unit import ControlUnit
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from tests.helper import loom_incident_store
+
 
 @dataclass(frozen=True, slots=True)
 class MockAvailabilityInfo:
@@ -218,6 +220,90 @@ class TestWsGetCommandThrottleStats:
 
 class TestWsGetIncidents:
     """Tests for ws_get_incidents."""
+
+    async def test_loom_incidents_carry_the_fields_the_panel_reads(
+        self,
+        hass: HomeAssistant,
+        mock_loaded_config_entry: MockConfigEntry,
+        hass_ws_client: Any,
+    ) -> None:
+        """
+        On the openccu-loom backend the panel gets aiohomematic's incident keys.
+
+        The config panel renders ``type``, ``message`` and ``timestamp``, the
+        system-health card ``message`` and ``timestamp``; with the daemon's
+        ``summary`` and ``when`` passed through, every row was blank. The
+        daemon sends newest first (REST API 16.4.0 shape); aiohomematic and
+        therefore the panel get the newest ``limit`` oldest first.
+        """
+        control: ControlUnit = mock_loaded_config_entry.runtime_data
+        control.central.cache_coordinator.incident_store = loom_incident_store(
+            incidents=[
+                {
+                    "id": "2",
+                    "when": "2026-11-12T08:00:00Z",
+                    "component": "home/home-HmIP-RF",
+                    "severity": "warning",
+                    "summary": "ping/pong: pending TTL exceeded",
+                    "type": "pingpong_mismatch",
+                    "interface_id": "home-HmIP-RF",
+                },
+                {
+                    "id": "1",
+                    "when": "2026-11-12T07:00:00Z",
+                    "component": "home",
+                    "severity": "error",
+                    "summary": "callback error",
+                    "type": "callback_timeout",
+                },
+            ]
+        )
+
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "homematicip_local/integration/get_incidents",
+                "entry_id": mock_loaded_config_entry.entry_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"] is True
+        rows = [
+            {key: incident[key] for key in ("type", "message", "timestamp", "severity")}
+            for incident in response["result"]["incidents"]
+        ]
+        assert rows == [
+            {
+                "type": "callback_timeout",
+                "message": "callback error",
+                "timestamp": "2026-11-12T07:00:00Z",
+                "severity": "error",
+            },
+            {
+                "type": "pingpong_mismatch",
+                "message": "ping/pong: pending TTL exceeded",
+                "timestamp": "2026-11-12T08:00:00Z",
+                "severity": "warning",
+            },
+        ]
+        assert response["result"]["summary"] == {
+            "total_incidents": 2,
+            "incidents_by_type": {"callback_timeout": 1, "pingpong_mismatch": 1},
+            "incidents_by_severity": {"warning": 1, "error": 1},
+        }
+
+        await client.send_json(
+            {
+                "id": 2,
+                "type": "homematicip_local/integration/get_incidents",
+                "entry_id": mock_loaded_config_entry.entry_id,
+                "interface_id": "home-HmIP-RF",
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"] is True
+        assert [incident["incident_id"] for incident in response["result"]["incidents"]] == ["2"]
 
     async def test_success(
         self,

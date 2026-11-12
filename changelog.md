@@ -42,7 +42,7 @@
 
 - **Fix:** the climate schedule commands of the config panel (`get_climate_schedule`, `set_climate_schedule_weekday`, `set_climate_active_profile`) reach the heating schedule of HmIP-WGT and HmIP-WGTC, which also have a switch schedule
 
-#### Bump openccu-loom-client to [2026.11.7](https://github.com/SukramJ/openccu-loom-client/compare/2026.11.0...2026.11.7)
+#### Bump openccu-loom-client to [2026.11.8](https://github.com/SukramJ/openccu-loom-client/compare/2026.11.0...2026.11.8)
 
 - For the openccu-loom backend (Beta) only; no runtime effect on the direct-CCU backend, where the client is not loaded. Fixes `switch_set_on_time`, `light_set_on_time` and `valve_set_on_time`, which had no effect on that backend, climate entities that were not created there with this release, and device actions, device triggers and the per-device central-link services, which failed there; HmIP-WGT and HmIP-WGTC get their heating schedule with openccu-loom 0.97.1 or newer
 - **Fix:** service messages of enum parameters carry the CCU's value text on the openccu-loom backend too, so the hub
@@ -53,6 +53,8 @@
 - Wire bindings for openccu-loom 0.100.0, which replaced the built-in measurement history with measurement forwarding
 - **Fix:** downloading the diagnostics failed with HTTP 500 on the openccu-loom backend as soon as the daemon had
   recorded an incident ([#1368](https://github.com/SukramJ/homematicip_local/issues/1368))
+- **Fix:** the incident list of the integration panel and of the system-health card shows text, time and (with
+  openccu-loom REST API 16.4.0 or newer) type on the openccu-loom backend; the rows were blank but for their colour
 
 # Version [2.12.3](https://github.com/SukramJ/homematicip_local/compare/2.12.2...2.12.3) (unreleased)
 
