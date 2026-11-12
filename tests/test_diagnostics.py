@@ -10,8 +10,12 @@ This suite validates:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import SimpleNamespace
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
+from openccu_loom_client.compat.aiohomematic.central.adapter import _IncidentStore
+from openccu_loom_client.operations import DiagnosticsOperations
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -31,6 +35,18 @@ class _SystemInformation:
 
     serial: str
     version: str
+
+
+class _IncidentsTransport:
+    """Answer ``GET /incidents`` the way the daemon does: a JSON array of ``Incident``."""
+
+    def __init__(self, *, incidents: list[dict[str, Any]]) -> None:
+        self._incidents = incidents
+
+    async def request(self, *, method: str, path: str, **kwargs: Any) -> Any:
+        """Return the incident array for ``GET /incidents``."""
+        assert (method, path) == ("GET", "/incidents")
+        return self._incidents
 
 
 def _device(*, address: str, model: str = "HmIP-BSM") -> MagicMock:
@@ -202,10 +218,25 @@ class TestAsyncGetConfigEntryDiagnostics:
         mock_health.to_dict.return_value = {"overall_score": 100}
         central.health = mock_health
 
-        mock_incident_store = MagicMock()
-        mock_incident_store.get_diagnostics = AsyncMock(return_value={"incidents": []})
+        # The real compat incident store over the real operations layer: the
+        # daemon's array went through ``dict()`` there and failed the whole
+        # download with HTTP 500 once one incident was recorded (#1368). An
+        # incident without ``detail`` (the daemon omits it when empty) is the
+        # shape from that report.
+        incident = {
+            "id": "7",
+            "when": "2026-11-12T06:54:00Z",
+            "component": "home/home-HmIP-RF",
+            "severity": "warning",
+            "summary": "ping/pong: pending TTL exceeded",
+        }
         mock_cache_coordinator = MagicMock()
-        mock_cache_coordinator.incident_store = mock_incident_store
+        mock_cache_coordinator.incident_store = _IncidentStore(
+            client=SimpleNamespace(
+                diagnostics=DiagnosticsOperations(transport=_IncidentsTransport(incidents=[incident]))
+            ),
+            looper=SimpleNamespace(),
+        )
         central.cache_coordinator = mock_cache_coordinator
 
         mock_client_coordinator = MagicMock()
@@ -219,7 +250,11 @@ class TestAsyncGetConfigEntryDiagnostics:
         # No in-process metrics aggregator -> no metrics section.
         assert "metrics" not in diag
         assert diag["system_health"] == {"overall_score": 100}
-        assert diag["incident_store"] == {"incidents": []}
+        assert diag["incident_store"] == {
+            "total_incidents": 1,
+            "incidents_by_severity": {"warning": 1},
+            "recent_incidents": [incident],
+        }
         assert diag["command_throttle"] == {}
         # The loom adapter publishes the central count, so it is carried —
         # this is the case that makes "is anyone on a multi-CCU daemon?"
