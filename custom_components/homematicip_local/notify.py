@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohomematic.const import DataPointCategory, DataPointType
 from aiohomematic.model.custom.text_display import CustomDpTextDisplay
@@ -166,6 +166,12 @@ class HmipTextDisplayNotifyEntity(AioHomematicGenericEntity[CustomDpTextDisplay]
         self._current_state = {"lines": {}}
         if self._store:
             await self._store.async_save(state=self._current_state)
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Take an entity_id change in place; nothing here is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
 
     @handle_homematic_errors
     async def async_send_message(self, message: str, title: str | None = None) -> None:

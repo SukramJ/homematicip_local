@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Final
+from typing import Final, override
 
 from aiohomematic.central.events import DataPointStateChangedEvent, DeviceRemovedEvent, SubscriptionGroup
 from aiohomematic.const import DATA_POINT_EVENTS, DataPointCategory, Parameter
@@ -172,6 +172,12 @@ class AioHomematicEvent(EventEntity):
             event_key=self._event_group.unique_id,
             handler=self._async_device_removed,
         )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Take an entity_id change in place; nothing here is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""

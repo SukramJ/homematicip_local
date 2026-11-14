@@ -4,6 +4,18 @@
 
 ### Integration
 
+- **Sub devices are now Home Assistant child devices.** A channel group and the schedule of a
+  device used to be separate devices linked with `via_device`; they are now child devices of the
+  device they belong to, as HA 2026.9 introduced for parts of one product
+  ([HA developer blog](https://contributors.home-assistant.io/blog/2026/10/22/child-devices/)).
+  HA converts the existing entries in place, so every `device_id`, area, custom name and
+  automation survives. What changes: a child carries no manufacturer, model, firmware or serial of
+  its own, inherits the device's area unless the channel group has its own room, and is deleted or
+  disabled together with the device. Its name drops the device prefix, because HA composes the full
+  name from device and child itself: the schedule child is now called `Schedule` / `Zeitplan`, an
+  unnamed channel group `Group 2` / `Gruppe 2`, a named group keeps its name. The `friendly_name`
+  state attribute of their entities therefore no longer starts with the device name. The link from a
+  device to the central stays a `via_device` link.
 - **HmIP-WGT and HmIP-WGTC show their heating schedule.** They also have a switch schedule, and the
   climate entity and the climate schedule services only knew that one. The climate entity and its
   services now use the heating schedule. `get_schedule` and `set_schedule` stay on the switch schedule
@@ -24,6 +36,15 @@
   box`. A backend switch no longer carries the previous backend's credentials along; existing
   entries are cleaned up automatically, and switching back asks for the credentials again
   ([openccu-lite#20](https://github.com/hobbyquaker/openccu-lite/issues/20))
+- **Changing an entity ID keeps the entity in place.** Home Assistant removed every entity of the
+  integration on an entity ID change and added it again, so the entity dropped its subscriptions and
+  reloaded its value. Since HA 2026.11 an integration can take the change in place
+  ([HA developer blog](https://contributors.home-assistant.io/blog/2026/10/12/new-entity-lifecycle-hooks/)),
+  and all entities of the integration now do.
+- **Repairs belong to their integration entry.** Home Assistant deletes the repairs of an entry
+  together with the entry and hides them while the entry is disabled
+  ([HA developer blog](https://contributors.home-assistant.io/blog/2026/10/28/issue-registry-refresh/)).
+  Repairs raised before this version are not linked yet; they are linked when they are raised again.
 
 ### Dependencies
 

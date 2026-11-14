@@ -163,6 +163,12 @@ class AioHomematicUpdate(UpdateEntity):
             handler=self._async_device_removed,
         )
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Take an entity_id change in place; nothing here is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+
     @override
     async def async_install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
         """Install an update."""
@@ -287,6 +293,12 @@ class AioHomematicHubUpdate(UpdateEntity):
             event_key=self._data_point.unique_id,
             handler=self._async_device_removed,
         )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Take an entity_id change in place; nothing here is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_install(self, version: str | None, backup: bool, **kwargs: Any) -> None:

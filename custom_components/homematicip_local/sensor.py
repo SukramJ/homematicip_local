@@ -256,6 +256,12 @@ class AioHomematicSensor(
         if not self._data_point.is_valid and (restored_sensor_data := await self.async_get_last_sensor_data()):
             self._restored_native_value = restored_sensor_data.native_value
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Take an entity_id change in place; nothing here is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+
 
 class AioHomematicSysvarSensor(AioHomematicGenericSysvarEntity[SysvarDpSensor], SensorEntity):
     """Representation of the HomematicIP hub sensor entity."""
