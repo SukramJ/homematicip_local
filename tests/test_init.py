@@ -2501,7 +2501,13 @@ class TestStaleIssueCleanup:
 
     @staticmethod
     def _control_unit(hass: HomeAssistant, entry: MockConfigEntry) -> SimpleNamespace:
-        """Return the attributes the issue handlers of a control unit read."""
+        """Return the attributes the issue handlers of a control unit read.
+
+        A repair is linked to its config entry, and HA refuses the link to an
+        entry it does not know, so the entry is registered first.
+        """
+        if hass.config_entries.async_get_entry(entry.entry_id) is None:
+            entry.add_to_hass(hass)
         return SimpleNamespace(_hass=hass, _entry_id=entry.entry_id, _instance_name=const.INSTANCE_NAME)
 
     @staticmethod
@@ -2555,6 +2561,20 @@ class TestStaleIssueCleanup:
 
         assert self._raise_connection_repair(hass, mock_config_entry_v2) == issue_id
         assert issue_id in self._issue_ids(hass)
+
+    async def test_a_repair_is_deleted_together_with_its_config_entry(
+        self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry
+    ) -> None:
+        """A repair carries its config entry, so HA deletes it when the entry is removed."""
+        issue_id = self._raise_connection_repair(hass, mock_config_entry_v2)
+        issue = ir.async_get(hass).async_get_issue(HMIP_DOMAIN, issue_id)
+        assert issue is not None
+        assert issue.config_entry_id == mock_config_entry_v2.entry_id
+
+        await hass.config_entries.async_remove(mock_config_entry_v2.entry_id)
+        await hass.async_block_till_done()
+
+        assert issue_id not in self._issue_ids(hass)
 
     async def test_other_repairs_and_other_entries_are_left_alone(
         self, hass: HomeAssistant, mock_config_entry_v2: MockConfigEntry

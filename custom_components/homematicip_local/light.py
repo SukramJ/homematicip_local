@@ -243,6 +243,12 @@ class AioHomematicLight(AioHomematicGenericRestoreEntity[CustomDpDimmer], LightE
             stored_level = self._data_point.brightness_to_level(int(stored))
             self._data_point.set_last_level(value=stored_level)
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Take an entity_id change in place; nothing here is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+
     @handle_homematic_errors
     async def async_set_led(
         self,

@@ -385,6 +385,12 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
                 self._data_point.full_name,
             )
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Take an entity_id change in place; nothing here is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+
     async def async_update(self) -> None:
         """Update entities."""
         if isinstance(
@@ -499,6 +505,12 @@ class AioHomematicGenericRestoreEntity(AioHomematicGenericEntity[HmGenericDataPo
         await super().async_added_to_hass()
         # if not self._data_point.is_valid:
         self._restored_state = await self.async_get_last_state()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Take an entity_id change in place; nothing here is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
 
 
 class AioHomematicGenericHubEntity(Entity):
@@ -619,6 +631,12 @@ class AioHomematicGenericHubEntity(Entity):
                 event_key=self._data_point.unique_id,
                 handler=self._async_hub_device_removed,
             )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Take an entity_id change in place; nothing here is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_will_remove_from_hass(self) -> None:

@@ -437,10 +437,7 @@ class ControlUnit(BaseControlUnit):
         """
         return (
             dr.async_get(self._hass)
-            .async_get_or_create(
-                config_entry_id=self._entry_id,
-                **device_info,
-            )
+            .async_get_or_create_from_info(config_entry_id=self._entry_id, device_info=device_info)
             .id
         )
 
@@ -934,6 +931,7 @@ class ControlUnit(BaseControlUnit):
             ir.async_create_issue(
                 hass=self._hass,
                 domain=DOMAIN,
+                config_entry_id=self._entry_id,
                 issue_id=issue_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
@@ -946,6 +944,7 @@ class ControlUnit(BaseControlUnit):
             ir.async_create_issue(
                 hass=self._hass,
                 domain=DOMAIN,
+                config_entry_id=self._entry_id,
                 issue_id=issue_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
@@ -966,6 +965,7 @@ class ControlUnit(BaseControlUnit):
             ir.async_create_issue(
                 hass=self._hass,
                 domain=DOMAIN,
+                config_entry_id=self._entry_id,
                 issue_id=issue_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
@@ -1011,6 +1011,7 @@ class ControlUnit(BaseControlUnit):
             ir.async_create_issue(
                 hass=self._hass,
                 domain=DOMAIN,
+                config_entry_id=self._entry_id,
                 issue_id=issue_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
@@ -1031,6 +1032,7 @@ class ControlUnit(BaseControlUnit):
             ir.async_create_issue(
                 hass=self._hass,
                 domain=DOMAIN,
+                config_entry_id=self._entry_id,
                 issue_id=issue_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
@@ -1076,6 +1078,7 @@ class ControlUnit(BaseControlUnit):
             ir.async_create_issue(
                 hass=self._hass,
                 domain=DOMAIN,
+                config_entry_id=self._entry_id,
                 issue_id=issue_id_degraded,
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
@@ -1125,6 +1128,7 @@ class ControlUnit(BaseControlUnit):
             ir.async_create_issue(
                 hass=self._hass,
                 domain=DOMAIN,
+                config_entry_id=self._entry_id,
                 issue_id=issue_id_failed,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
@@ -1258,6 +1262,7 @@ class ControlUnit(BaseControlUnit):
                 ir.async_create_issue(
                     hass=self._hass,
                     domain=DOMAIN,
+                    config_entry_id=self._entry_id,
                     issue_id=issue_id,
                     is_fixable=True,
                     severity=ir.IssueSeverity.WARNING,

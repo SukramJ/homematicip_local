@@ -267,6 +267,12 @@ class AioHomematicNumber(AioHomematicGenericEntity[BaseDpNumber[Any]], RestoreNu
         if not self._data_point.is_valid and (restored_sensor_data := await self.async_get_last_number_data()):
             self._restored_native_value = restored_sensor_data.native_value
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Take an entity_id change in place; nothing here is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+
     @override
     @handle_homematic_errors
     async def async_set_native_value(self, value: float) -> None:
@@ -368,6 +374,12 @@ class AioHomematicActionNumber(AioHomematicGenericRestoreEntity[BaseDpActionNumb
         """Run when entity is added to hass."""
         await super().async_added_to_hass()
         self._load_persisted_value()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Take an entity_id change in place; nothing here is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_set_native_value(self, value: float) -> None:

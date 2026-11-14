@@ -36,6 +36,15 @@
   box`. A backend switch no longer carries the previous backend's credentials along; existing
   entries are cleaned up automatically, and switching back asks for the credentials again
   ([openccu-lite#20](https://github.com/hobbyquaker/openccu-lite/issues/20))
+- **Changing an entity ID keeps the entity in place.** Home Assistant removed every entity of the
+  integration on an entity ID change and added it again, so the entity dropped its subscriptions and
+  reloaded its value. Since HA 2026.11 an integration can take the change in place
+  ([HA developer blog](https://contributors.home-assistant.io/blog/2026/10/12/new-entity-lifecycle-hooks/)),
+  and all entities of the integration now do.
+- **Repairs belong to their integration entry.** Home Assistant deletes the repairs of an entry
+  together with the entry and hides them while the entry is disabled
+  ([HA developer blog](https://contributors.home-assistant.io/blog/2026/10/28/issue-registry-refresh/)).
+  Repairs raised before this version are not linked yet; they are linked when they are raised again.
 
 ### Dependencies
 
