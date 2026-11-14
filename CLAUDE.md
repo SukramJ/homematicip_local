@@ -1220,6 +1220,11 @@ These rules govern how the AI assistant communicates and works with the develope
    - Cover such a path end to end (raise the repair through the handler, then sweep), never
      each half on its own: the type token in the id is the only thing that links them, and
      the issue registry does not persist the translation key.
+   - Every repair the control unit raises carries `config_entry_id=self._entry_id` (HA 2026.11):
+     HA deletes it with the entry and hides it while the entry is disabled. That does not
+     replace the setup sweep — a reload keeps the entry, so the link withdraws nothing there.
+     HA refuses a `config_entry_id` it does not know, so a test that raises a repair through
+     a handler registers its `MockConfigEntry` first.
 
 ### Refactoring Workflow
 

@@ -316,6 +316,12 @@ class HmipLocalCreateBackupButton(ButtonEntity):
             )
         )
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Take an entity_id change in place; nothing here is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+
     @override
     async def async_press(self) -> None:
         """Handle the button press."""

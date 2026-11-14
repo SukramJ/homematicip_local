@@ -288,6 +288,12 @@ class AioHomematicActionSelect(AioHomematicGenericRestoreEntity[DpActionSelect],
         # Load persisted value from storage file
         self._load_persisted_value()
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Take an entity_id change in place; nothing here is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+
     @override
     async def async_select_option(self, option: str) -> None:
         """
