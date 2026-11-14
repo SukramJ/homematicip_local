@@ -10,12 +10,8 @@ This suite validates:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from types import SimpleNamespace
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-from openccu_loom_client.compat.aiohomematic.central.adapter import _IncidentStore
-from openccu_loom_client.operations import DiagnosticsOperations
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -28,6 +24,8 @@ from custom_components.homematicip_local.const import (
 )
 from custom_components.homematicip_local.diagnostics import async_get_config_entry_diagnostics
 
+from tests.helper import loom_incident_store
+
 
 @dataclass
 class _SystemInformation:
@@ -35,18 +33,6 @@ class _SystemInformation:
 
     serial: str
     version: str
-
-
-class _IncidentsTransport:
-    """Answer ``GET /incidents`` the way the daemon does: a JSON array of ``Incident``."""
-
-    def __init__(self, *, incidents: list[dict[str, Any]]) -> None:
-        self._incidents = incidents
-
-    async def request(self, *, method: str, path: str, **kwargs: Any) -> Any:
-        """Return the incident array for ``GET /incidents``."""
-        assert (method, path) == ("GET", "/incidents")
-        return self._incidents
 
 
 def _device(*, address: str, model: str = "HmIP-BSM") -> MagicMock:
@@ -231,12 +217,7 @@ class TestAsyncGetConfigEntryDiagnostics:
             "summary": "ping/pong: pending TTL exceeded",
         }
         mock_cache_coordinator = MagicMock()
-        mock_cache_coordinator.incident_store = _IncidentStore(
-            client=SimpleNamespace(
-                diagnostics=DiagnosticsOperations(transport=_IncidentsTransport(incidents=[incident]))
-            ),
-            looper=SimpleNamespace(),
-        )
+        mock_cache_coordinator.incident_store = loom_incident_store(incidents=[incident])
         central.cache_coordinator = mock_cache_coordinator
 
         mock_client_coordinator = MagicMock()
@@ -250,10 +231,24 @@ class TestAsyncGetConfigEntryDiagnostics:
         # No in-process metrics aggregator -> no metrics section.
         assert "metrics" not in diag
         assert diag["system_health"] == {"overall_score": 100}
+        # aiohomematic's keys; a daemon before REST API 16.4.0 sends no type
+        # and no interface_id, so both stay None and no type is counted.
         assert diag["incident_store"] == {
             "total_incidents": 1,
+            "incidents_by_type": {},
             "incidents_by_severity": {"warning": 1},
-            "recent_incidents": [incident],
+            "recent_incidents": [
+                {
+                    "incident_id": "7",
+                    "timestamp": "2026-11-12T06:54:00Z",
+                    "type": None,
+                    "severity": "warning",
+                    "interface_id": None,
+                    "message": "ping/pong: pending TTL exceeded",
+                    "context": {"component": "home/home-HmIP-RF"},
+                    "journal_excerpt": [],
+                }
+            ],
         }
         assert diag["command_throttle"] == {}
         # The loom adapter publishes the central count, so it is carried —

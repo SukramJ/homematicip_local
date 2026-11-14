@@ -6,10 +6,12 @@ import contextlib
 from datetime import datetime
 import inspect
 import logging
-from types import FunctionType, MethodType
+from types import FunctionType, MethodType, SimpleNamespace
 from typing import Any, Final, TypeVar
 from unittest.mock import MagicMock, Mock, patch
 
+from openccu_loom_client.compat.aiohomematic.central.adapter import _IncidentStore
+from openccu_loom_client.operations import DiagnosticsOperations
 from pytest_homeassistant.common import MockConfigEntry
 
 from aiohomematic.central.events import (
@@ -226,3 +228,28 @@ def _get_mockable_method_names(data_point: Any) -> list[str]:
         ):
             method_list.append(attribute)
     return method_list
+
+
+class _IncidentsTransport:
+    """Answer ``GET /incidents`` the way the daemon does: a JSON array of ``Incident``, newest first."""
+
+    def __init__(self, *, incidents: list[dict[str, Any]]) -> None:
+        self._incidents = incidents
+
+    async def request(self, *, method: str, path: str, **kwargs: Any) -> Any:
+        """Return the incident array for ``GET /incidents``."""
+        assert (method, path) == ("GET", "/incidents")
+        return self._incidents
+
+
+def loom_incident_store(*, incidents: list[dict[str, Any]]) -> _IncidentStore:
+    """
+    Return the openccu-loom compat incident store over the real operations layer.
+
+    Only the HTTP transport is faked, so the daemon's payload runs through the
+    same code that serves the diagnostics download and the incident panel.
+    """
+    return _IncidentStore(
+        client=SimpleNamespace(diagnostics=DiagnosticsOperations(transport=_IncidentsTransport(incidents=incidents))),
+        looper=SimpleNamespace(),
+    )
