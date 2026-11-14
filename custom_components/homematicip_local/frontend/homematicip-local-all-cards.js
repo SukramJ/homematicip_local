@@ -3115,7 +3115,7 @@ const nt=je(class extends Ze{constructor(){super(...arguments),this.key=j}render
               <div class="item-content">
                 <div class="item-primary">${e.device_name||e.name}</div>
                 <div class="item-secondary">
-                  ${e.message_code}${e.counter>1?` · ${e.counter}x`:""}${this._config?.show_timestamp?` · ${this._formatTimestamp(e.timestamp)}`:""}
+                  ${e.display_name}${e.counter>1?` · ${e.counter}x`:""}${this._config?.show_timestamp?` · ${this._formatTimestamp(e.timestamp)}`:""}
                 </div>
               </div>
               ${e.quittable?F`

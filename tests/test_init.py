@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import datetime
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -304,6 +305,67 @@ class TestMigrateEntry:
             assert "ENABLE_LINKED_ENTITY_CLIMATE_ACTIVITY" not in optional_settings
             assert "USE_INTERFACE_CLIENT" not in optional_settings
             assert "SR_DISABLE_RANDOMIZED_OUTPUT" in optional_settings
+
+    @pytest.mark.parametrize(
+        ("data", "expected"),
+        [
+            pytest.param(
+                {"backend": "loom", "host": "d", "loom_token": "tok", "username": "Admin", "password": "pw"},
+                {"backend": "loom", "host": "d", "loom_token": "tok"},
+                id="loom-direct-drops-ccu-account",
+            ),
+            pytest.param(
+                {
+                    "backend": "loom",
+                    "host": "box",
+                    "loom_box_token": "box-tok",
+                    "loom_token": "stale",
+                    "username": "Admin",
+                    "password": "pw",
+                },
+                {"backend": "loom", "host": "box", "loom_box_token": "box-tok"},
+                id="loom-box-keeps-only-the-box-token",
+            ),
+            pytest.param(
+                {
+                    "backend": "loom",
+                    "host": "box",
+                    "loom_box_username": "boxadmin",
+                    "loom_box_password": "boxpw",
+                    "username": "Admin",
+                },
+                {"backend": "loom", "host": "box", "loom_box_username": "boxadmin", "loom_box_password": "boxpw"},
+                id="loom-legacy-box-account-stays-for-reauth",
+            ),
+            pytest.param(
+                {
+                    "backend": "ccu",
+                    "host": "ccu",
+                    "username": "Admin",
+                    "password": "pw",
+                    "loom_port": 8443,
+                    "loom_token": "tok",
+                    "loom_box_token": "box-tok",
+                    "loom_box_username": "boxadmin",
+                    "loom_box_password": "boxpw",
+                },
+                {"backend": "ccu", "host": "ccu", "username": "Admin", "password": "pw", "loom_port": 8443},
+                id="ccu-drops-loom-credentials",
+            ),
+            pytest.param(
+                {"host": "ccu", "username": "Admin", "password": "pw", "loom_token": "tok"},
+                {"host": "ccu", "username": "Admin", "password": "pw"},
+                id="entry-without-backend-key-is-ccu",
+            ),
+        ],
+    )
+    def test_migrate_v17_drops_the_other_backends_credentials(
+        self, data: dict[str, Any], expected: dict[str, Any]
+    ) -> None:
+        """Migration from v17 leaves an entry only the credentials its own backend uses."""
+        from custom_components.homematicip_local import _migrate_v17_to_v18_data
+
+        assert _migrate_v17_to_v18_data(dict(data)) == expected
 
 
 class TestUnloadEntry:
@@ -1062,6 +1124,14 @@ class TestLoomUniqueIdMigration:
             # ``_sensor``, the loom backend does not.
             (f"{_D}_000a1709af5344_1_level_sensor", f"{_D}_loom_000a1709af5344_1_level"),
             (f"{_D}_a1b2c3d4e5_int0000012_1_level_sensor", f"{_D}_loom_11a0001234_int0000012_1_level"),
+            # Week profiles of an HmIP-WGT/WGTC: aiohomematic keys the heating
+            # schedule ``climate_week_profile_…`` next to the switch schedule,
+            # the daemon (api 15.6.0) ``loom_climate_week_profile_…``.
+            (f"{_D}_week_profile_000c9709ac8caf_week_profile", f"{_D}_loom_week_profile_000c9709ac8caf_week_profile"),
+            (
+                f"{_D}_climate_week_profile_000c9709ac8caf_week_profile",
+                f"{_D}_loom_climate_week_profile_000c9709ac8caf_week_profile",
+            ),
         ],
     )
     def test_rewrites(self, old: str, expected: str) -> None:
@@ -1120,6 +1190,11 @@ class TestAioHomematicUniqueIdRestore:
             ),
             # Internal address — same plain strip.
             (f"{_D}_loom_11a0001234_int0001234_1_level", f"{_D}_11a0001234_int0001234_1_level"),
+            # Heating schedule of an HmIP-WGT/WGTC — back to aiohomematic's key.
+            (
+                f"{_D}_loom_climate_week_profile_000c9709ac8caf_week_profile",
+                f"{_D}_climate_week_profile_000c9709ac8caf_week_profile",
+            ),
         ],
     )
     def test_rewrites(self, old: str, expected: str) -> None:
@@ -1136,6 +1211,8 @@ class TestAioHomematicUniqueIdRestore:
             f"{_D}_11a0001234_bidcos_rf_1_press_short",
             f"{_D}_event_group_keypress_000858a994d674_2",
             f"{_D}_event_group_keypress_11a0001234_hmip_rcv_1_1",
+            f"{_D}_week_profile_000c9709ac8caf_week_profile",
+            f"{_D}_climate_week_profile_000c9709ac8caf_week_profile",
         ],
     )
     def test_round_trip(self, original: str) -> None:

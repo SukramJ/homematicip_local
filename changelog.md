@@ -1,3 +1,71 @@
+# Version [2.12.4](https://github.com/SukramJ/homematicip_local/compare/2.12.3...2.12.4) (unreleased)
+
+## What's Changed
+
+### Integration
+
+- **Sub devices are now Home Assistant child devices.** A channel group and the schedule of a
+  device used to be separate devices linked with `via_device`; they are now child devices of the
+  device they belong to, as HA 2026.9 introduced for parts of one product
+  ([HA developer blog](https://contributors.home-assistant.io/blog/2026/10/22/child-devices/)).
+  HA converts the existing entries in place, so every `device_id`, area, custom name and
+  automation survives. What changes: a child carries no manufacturer, model, firmware or serial of
+  its own, inherits the device's area unless the channel group has its own room, and is deleted or
+  disabled together with the device. Its name drops the device prefix, because HA composes the full
+  name from device and child itself: the schedule child is now called `Schedule` / `Zeitplan`, an
+  unnamed channel group `Group 2` / `Gruppe 2`, a named group keeps its name. The `friendly_name`
+  state attribute of their entities therefore no longer starts with the device name. The link from a
+  device to the central stays a `via_device` link.
+- **HmIP-WGT and HmIP-WGTC show their heating schedule.** They also have a switch schedule, and the
+  climate entity and the climate schedule services only knew that one. The climate entity and its
+  services now use the heating schedule. `get_schedule` and `set_schedule` stay on the switch schedule
+  of these devices. The new heating schedule sensor is called "Climate week profile". The config panel
+  still shows the switch schedule only.
+- **The Messages card shows the CCU's text for service messages.** It rendered the raw parameter
+  name from the CCU alarm, so a sabotage of an HM-Sec-SCo read `ERROR-7` where the CCU shows
+  "Sabotage". The card now uses the same translated text as the alarm list and the CCU dashboard
+  ([#1356](https://github.com/SukramJ/homematicip_local/discussions/1356))
+- **The CCU backup location survives a reload of the integration.** After a reload — changed
+  options, a reconfigure, a reauth — the backup location "CCU <name>" was gone from the Home
+  Assistant backup settings until Home Assistant was restarted, and automatic backups no longer
+  included a CCU backup. The integration told Home Assistant about its backup agents while the
+  entry was still being set up, and Home Assistant only accepts agents of a loaded entry
+- **openccu-loom (Beta): a CCU switched to the daemon behind an openccu-lite box starts again.** The
+  switch kept the CCU user name and password in the entry, and the box connection refuses any
+  credential beside its box token, so setup failed with `box_token is the only credential behind the
+  box`. A backend switch no longer carries the previous backend's credentials along; existing
+  entries are cleaned up automatically, and switching back asks for the credentials again
+  ([openccu-lite#20](https://github.com/hobbyquaker/openccu-lite/issues/20))
+
+### Dependencies
+
+#### Bump aiohomematic to [2026.11.5](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.5)
+
+- **Support for new devices:** thermostats HmIP-WT, KW-STATH, KW-UKETRV, HmIPW-WGT and HmIPW-WGTC, dimmers
+  HmIP-WUA, ELV-SH-WUA and HmIP-UDI-PB2
+- **Fix:** HmIP-DLD and HmIP-DLP report a jammed lock, HmIP-DLP exposes `ERROR_JAMMED`
+- **Fix:** HmIP-WSM keeps its run time on current firmware, HmIP-BDT-I dimmer uses the correct channels
+- **Fix:** the switch schedule of HmIP-WGT and HmIP-WGTC has the correct targets and accepts entries
+- **Fix:** HmIPW-WTH and HmIPW-SCTHD use the limits configured on the device
+- **Fix:** tilt-only changes turn the slats of a fully closed HmIPW-DRBL4 again, a regression of 2.12.2 ([#1357](https://github.com/SukramJ/homematicip_local/issues/1357))
+- **Fix:** service messages of enum parameters carry the CCU's value text, so the hub sensor `service_messages` shows `Sabotage` instead of `ERROR-7` ([#1356](https://github.com/SukramJ/homematicip_local/discussions/1356))
+
+#### Bump aiohomematic-config to [2026.11.1](https://github.com/SukramJ/aiohomematic-config/compare/2026.10.1...2026.11.1)
+
+- **Fix:** the climate schedule commands of the config panel (`get_climate_schedule`, `set_climate_schedule_weekday`, `set_climate_active_profile`) reach the heating schedule of HmIP-WGT and HmIP-WGTC, which also have a switch schedule
+
+#### Bump openccu-loom-client to [2026.11.7](https://github.com/SukramJ/openccu-loom-client/compare/2026.11.0...2026.11.7)
+
+- For the openccu-loom backend (Beta) only; no runtime effect on the direct-CCU backend, where the client is not loaded. Fixes `switch_set_on_time`, `light_set_on_time` and `valve_set_on_time`, which had no effect on that backend, climate entities that were not created there with this release, and device actions, device triggers and the per-device central-link services, which failed there; HmIP-WGT and HmIP-WGTC get their heating schedule with openccu-loom 0.97.1 or newer
+- **Fix:** service messages of enum parameters carry the CCU's value text on the openccu-loom backend too, so the hub
+  sensor `service_messages` shows `Sabotage` instead of `ERROR-7` (openccu-loom 0.97.2 or newer)
+- **Fix:** after the openccu-loom daemon restarts, the integration waits until the daemon has brought its devices up
+  before it reads them again. It created entities for hidden parameters (`UNREACH`, `BOOTED`, …) that a cold start
+  never creates, and logged one "does not generate unique IDs" error per entity
+- Wire bindings for openccu-loom 0.100.0, which replaced the built-in measurement history with measurement forwarding
+- **Fix:** downloading the diagnostics failed with HTTP 500 on the openccu-loom backend as soon as the daemon had
+  recorded an incident ([#1368](https://github.com/SukramJ/homematicip_local/issues/1368))
+
 # Version [2.12.3](https://github.com/SukramJ/homematicip_local/compare/2.12.2...2.12.3) (unreleased)
 
 ## What's Changed
@@ -80,18 +148,6 @@
 
 ### Integration
 
-- **Sub devices are now Home Assistant child devices.** A channel group and the schedule of a
-  device used to be separate devices linked with `via_device`; they are now child devices of the
-  device they belong to, as HA 2026.9 introduced for parts of one product
-  ([HA developer blog](https://contributors.home-assistant.io/blog/2026/10/22/child-devices/)).
-  HA converts the existing entries in place, so every `device_id`, area, custom name and
-  automation survives. What changes: a child carries no manufacturer, model, firmware or serial of
-  its own, inherits the device's area unless the channel group has its own room, and is deleted or
-  disabled together with the device. Its name drops the device prefix, because HA composes the full
-  name from device and child itself: the schedule child is now called `Schedule` / `Zeitplan`, an
-  unnamed channel group `Group 2` / `Gruppe 2`, a named group keeps its name. The `friendly_name`
-  state attribute of their entities therefore no longer starts with the device name. The link from a
-  device to the central stays a `via_device` link.
 - **Starting HA while the CCU boots no longer re-anchors hub and sysvar entities.** With
   only CUxD connected, the central reported the dummy serial `CUxD_SN0815`. That was taken
   as a CCU serial change, which moved all hub keys and left sysvars re-created as disabled

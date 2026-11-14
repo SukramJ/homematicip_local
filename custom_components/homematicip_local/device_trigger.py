@@ -7,7 +7,6 @@ from dataclasses import asdict, is_dataclass
 import probatio as vol
 
 from aiohomematic.const import CLICK_EVENTS, DataPointUsage
-from aiohomematic.model.event import ClickEvent
 from aiohomematic.type_aliases import UnsubscribeCallback
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
@@ -17,6 +16,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
+from .backend_types import CLICK_EVENT
 from .const import CONF_EVENT_TYPE, CONF_INTERFACE_ID, CONF_SUBTYPE, DOMAIN
 from .control_unit import ControlUnit
 from .support import cleanup_click_event_data, get_device_address_from_identifiers
@@ -48,7 +48,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[s
         control_unit: ControlUnit = entry.runtime_data
         if hm_device := control_unit.central.device_coordinator.get_device(address=device_address):
             for action_event in hm_device.generic_events:
-                if not isinstance(action_event, ClickEvent):
+                if not isinstance(action_event, CLICK_EVENT):
                     continue
 
                 if action_event.usage == DataPointUsage.NO_CREATE:

@@ -457,6 +457,9 @@
             "carrier_sense_level": {
                 "name": "Carrier Sense Level"
             }, 
+            "climate_week_profile": {
+                "name": "Heizprofil"
+            }, 
             "connection_latency": {
                 "name": "Verbindungslatenz"
             }, 

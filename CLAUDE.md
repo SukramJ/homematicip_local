@@ -24,7 +24,7 @@ This document provides comprehensive guidance for AI assistants working with the
 
 **Project Name:** Homematic(IP) Local for OpenCCU
 **Type:** Home Assistant Custom Integration
-**Version:** 2.12.0
+**Version:** 2.12.4
 **Primary Language:** Python 3.14+
 **Domain:** `homematicip_local`
 
@@ -121,10 +121,10 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2026.11.2) - Core async library for Homematic device communication
-- **aiohomematic-config** (v2026.10.1) - Device configuration metadata
+- **aiohomematic** (v2026.11.5) - Core async library for Homematic device communication
+- **aiohomematic-config** (v2026.11.1) - Device configuration metadata
 - **openccu-data** (v2026.9.1) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
-- **openccu-loom-client** (v2026.10.11) - Client for the openccu-loom backend (Beta)
+- **openccu-loom-client** (v2026.11.7) - Client for the openccu-loom backend (Beta)
 - **Home Assistant Core** - Minimum version: 2026.11.0+
 - **Python 3.14+** (target version for development)
 
@@ -135,7 +135,7 @@ homematicip_local/
 - **pylint** (4.1.3) - Code linting
 - **ruff** (0.17.3) - Fast Python linter and formatter
 - **prek** (0.5.9) - Git hooks manager (Rust-based pre-commit alternative)
-- **aiohomematic-test-support** (2026.11.1) - Mock test data
+- **aiohomematic-test-support** (2026.11.5) - Mock test data
 - **async-upnp-client** (0.49.0) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
 
@@ -579,7 +579,7 @@ The integration uses a modern, user-friendly multi-step configuration flow:
 - ✅ **Backend-Aware Flow Titles**: `flow_title` carries a `{backend}` placeholder (`aiohomematic` / `openccu-loom Beta`), so discovery cards (SSDP vs. mDNS), reauth and reconfigure dialogs show which backend a flow targets
 - ✅ **Backend-Neutral Device Identifiers**: The HA device identifier is composed by the integration — `ControlUnit.device_identifier()` / `support.get_device_identifier()` build `<address>@<instance_name>-<interface>` from the interface *type*, never from a backend's own `interface_id`. The two backends disagree on that id's leading component (aiohomematic uses the HA instance name, the openccu-loom daemon its own CCU name), so keying devices on it re-created every device entry on a backend switch and lost the `device_id` with its area and automations. For the direct-CCU backend the composed value is byte-identical to `Device.identifier`. `_async_migrate_device_identifiers` moves legacy entries over before the platforms are forwarded (plain rename; merge into the older entry when both exist). **Never key a device on `hm_device.identifier` again, and never parse an interface id back out of an identifier** — device actions/triggers/services resolve the device by address and read `interface_id` off the device
 - ✅ **Child Devices for Sub Devices**: With `sub_devices_enabled`, a channel group (`<device>-<group_no>`) and the schedule (`<device>-schedule`) are HA **child devices** of the physical device (`ChildDeviceInfo` with `parent_device_id`, HA ≥ 2026.9), never separate devices linked with `via_device`; only the device → central link and the virtual remotes stay `via_device`. `ControlUnit.ensure_parent_device_exists()` registers the parent with its full `DeviceInfo` and returns its id; the child itself is left to the entity platform. **Do not pre-create the child as a main device**: HA converts a legacy sub device in place (same identifiers, `device_id` kept) only when the config entry has not registered those identifiers as a main device in the same session, otherwise every entity of the child fails with `identifiers registered as a device and as a child device by the same config entry`. A child name carries no device prefix (HA composes parent + child + entity); the legacy `friendly_name` attribute is child + entity only. `dr.async_entries_for_config_entry` returns main devices only — children come from `dr.async_child_entries_for_config_entry` / `async_entries_for_parent_device`, are updated with `async_update_child_device`, cannot be reparented, and are removed (with their entities) together with their parent, which is why `_async_migrate_device_identifiers` hands the children of a merged-away parent over before removing it
-- ✅ **In-Place Backend Switch**: Setting up a CCU whose serial is already configured on the *other* backend switches the existing entry in place (abort reason `backend_switched`) instead of aborting with `already_configured`. The entry keeps its entry_id, instance name and advanced config (incl. `sub_devices_enabled`); the previous backend's connection keys stay in the entry so a switch back is lossless
+- ✅ **In-Place Backend Switch**: Setting up a CCU whose serial is already configured on the *other* backend switches the existing entry in place (abort reason `backend_switched`) instead of aborting with `already_configured`. The entry keeps its entry_id, instance name and advanced config (incl. `sub_devices_enabled`). An entry holds only its own backend's credentials: the switch drops the other set (`CCU_CREDENTIAL_KEYS` / `LOOM_CREDENTIAL_KEYS` in `const.py`), and a switch back asks for them in that backend's setup flow. **Never carry a credential across a switch** — openccu-loom-client refuses any credential beside a box token (`box_token is the only credential behind the box`), which left a switched entry in `SETUP_ERROR` (openccu-lite#20); the v17 → v18 migration cleans entries switched earlier. Non-credential keys such as the daemon port stay
 - ✅ **Loom Sub-Device Toggle**: The openccu-loom setup flow (manual form and discovered-daemon token step) offers `sub_devices_enabled` directly, defaulting to enabled (`DEFAULT_LOOM_ENABLE_SUB_DEVICES`)
 - ✅ **Serial-Keyed Manual Loom Setup**: The manual loom form validates the daemon, lists its CCUs and routes into the shared CCU-selection step, so manual entries get the same serial-based dedup and in-place backend switch as discovered daemons (the user-chosen instance name is kept)
 - ✅ **Single-Reload Entry Updates**: `_async_update_reload_and_abort_entry` / `_async_update_entry_and_reload` (used by reauth, reconfigure, both backend-switch paths and the mDNS host follow-up) schedule a reload only when the entry's update listener will not already reload it — never use `ConfigFlow.async_update_reload_and_abort` here (double reload, deprecated with HA 2026.12)
@@ -841,7 +841,7 @@ This section defines mandatory rules for all implementations in this project.
 
 ### Implementation Plan Requirements
 
-**CRITICAL**: Implementation plans created by Opus/Sonnet MUST be executable by Haiku without errors.
+**CRITICAL**: An implementation plan is a brief for the `impl` agent (Opus, see [Which model does which work](#which-model-does-which-work)) and MUST be executable without questions; a stop condition reported back is a successful outcome, a guess is not.
 
 A valid implementation plan must:
 
@@ -919,7 +919,7 @@ ruff check --select F401,F841 custom_components/
 
 Config entry migrations (`async_migrate_entry` in `__init__.py`) are **only needed** when the **data structure** stored in config entries changes.
 
-**Current version:** 12 (as of 2025-12)
+**Current version:** 18 (as of 2026-11)
 
 **Migration is required when:**
 
@@ -943,6 +943,140 @@ Config entry migrations (`async_migrate_entry` in `__init__.py`) are **only need
 - Test migration path from each previous version
 - Document migration in changelog
 - Never skip version numbers
+
+---
+
+## Which model does which work
+
+Set by the owner for the go-fabric family on 2026-10-10 (go-fabric's
+`CLAUDE.md`); the review split of 2026-11-08 (go-fabric #456) likewise.
+Adopted here on 2026-11-08. A statement about Home Assistant, aiohomematic or openccu-loom behaviour that
+lands in this repo is cited later as fact — a comment that names a caller
+or a consumer, a docstring that states what the other side does, a
+`changelog.md` line — so the work that produces such statements gets
+the strongest model, and the work a guard checks may use a cheaper one. The
+agents in [Sub-Agent Delegation](#sub-agent-delegation) carry a default
+model each; the rows below decide when a call overrides it (`model:` on the
+Agent tool). Implementation defaults to Opus.
+
+| Work | Model |
+| --- | --- |
+| Analysis, planning, reviews of design, audits; anything written into `docs/`, `changelog.md` or `AI_POLICY.md`, or a comment that names a Home Assistant core, aiohomematic, openccu-loom-client or CCU behaviour; the config flow with its credentials and TLS (`config_flow.py`, the loom credential and token steps) and the WebSocket API payloads the frontend consumes (`websocket_api.py`); *which* guard gets built and its bite line; rebases and merge conflicts where `main` may have overtaken the change | **Fable** (the default for this repo; also the `hunt` agent) |
+| Implementation of a finished plan with guards behind it: a platform entity once the pattern exists, a translation key with `make translations`, a test on an existing fixture, a `changelog.md` entry for a finished diff | **Opus** (the `impl` default; also what fast mode runs on) |
+| **Review of a slice's pull request, split (owner decision 2026-11-08, go-fabric #456).** The code review — correctness, concurrency, error paths, tests, the fixed report shape — is **Opus**. On top of it **Fable** reads, bounded: every new comment or docstring that names a Home Assistant core, aiohomematic, openccu-loom-client or CCU behaviour against Home Assistant core at the minimum version, aiohomematic and openccu-loom-client at the pins in `manifest.json`, every line that enters `docs/`, `changelog.md` or `AI_POLICY.md`, the paths of the first row, and the brief's decisions against the reference — the behavioural gaps a code review does not see. The load-bearing claims of the Opus review are verified before they reach the implementer. | **Opus**, then **Fable** |
+| Work a test or generator checks immediately: `make translations`, `make prek`, `ruff format`, a table case on an existing pattern; search and first reading of a tree whose result a stronger model or the owner reads again | **Sonnet** (the `guard` default; `impl` with `model: "sonnet"`) |
+| Mechanical inventories whose answer is a list the caller can re-grep: which files reference X, which links are dead, which entries lack a counterpart | **Haiku** (`sweep` default) |
+
+Sonnet never writes a claim about a Home Assistant core, aiohomematic, openccu-loom-client or CCU behaviour into the repo, and
+never touches the paths named in the first row. Haiku returns lists, never
+verdicts. When in doubt about which row a task is in, it is in the first.
+
+---
+
+## Sub-Agent Delegation
+
+As go-fabric's and openccu-loom's rule (owner, 2026-10-10). The main
+conversation owns planning, contract and wire decisions, guard
+specifications, sub-agent steering, and final verification. It does not own
+typing.
+
+**Delegate what a gate can prove; keep what only a reader can accept.**
+Delegate freely: table cases, fakes, scaffolding, fixture updates, doc and
+link cleanups, version bumps across the changelog set, inventories and grep
+sweeps. Never delegate: the config flow and credential handling, the WebSocket API payloads, the aiohomematic / openccu-loom-client pins and the capability handshake, and *which* guard gets
+built. Locating is delegable; reading is not.
+
+| Agent | Default model | Use for |
+|---|---|---|
+| `impl` | Opus | scoped implementation with a stated acceptance command |
+| `guard` | Sonnet | tests from a caller-written guard spec, plus the bite proof |
+| `sweep` | Haiku | read-only inventories and grep sweeps, high fan-out |
+| `hunt` | Fable | adversarial read-only defect hunt, ranked candidates |
+
+Each default is one row of
+[Which model does which work](#which-model-does-which-work); a call that
+falls into another row passes `model:` on the Agent tool — `impl` with
+`model: "sonnet"` for work a generator or formatter checks immediately.
+
+**Size CPU-bound fan-out from the host, never from a constant** — the owner
+works from a 4-core box and a 14-core box:
+
+```sh
+cores=$(nproc); agents=$(( (cores - 1) / share ))   # share = cores per agent
+```
+
+Check the 1-minute load first; if it is at or above the core count, run one
+CPU-bound agent and queue the rest. Eight concurrent agents is a practical
+ceiling whatever the core count. Every CPU-bound agent must **pin** its share
+in the command it runs (`pytest tests/<area>` — one process is one core; never a parallel run from a sub-agent) — handing out a number without
+pinning it changes nothing. Read-only agents cost no core worth counting;
+6–8 is a practical ceiling there.
+
+Two hard rules: **no sub-agent runs the full gate (`make check` (prek + tests with coverage), `make ci`) or a
+repo-wide lint** — the full gate runs once, in the main conversation, at the
+end of the slice — and **no two writing agents in the same package**
+(disjoint file sets, or `isolation: "worktree"`).
+
+Every brief carries five things: the files and public surface plus one style
+reference; the acceptance command the agent runs itself; the invariants it
+touches; **stop conditions** (new dependency, API or wire change, credential
+handling, an ADR-shaped decision — a stop is a successful outcome); and a
+report format ≤ 250 words, large artefacts to the scratchpad as a path.
+
+**A report is a claim.** Read the diff, run the gate yourself. For `guard`,
+the acceptance artefact is not a green test but the **bite proof**: the named
+production line removed, the test observed red with its message, the line
+restored, green again.
+
+---
+
+## Token use
+
+Set by the owner on 2026-10-14 (efficient use of the tokens matters to the
+owner), as go-fabric's rule of the same date. A slice costs on
+the order of half a million to a million tokens per implementing agent
+before the owner's review; the rules below are what keeps that from
+doubling.
+
+- **Read slices, not files.** `sed -n a,bp`, `grep -n` with a tight
+  pattern and `head`; a whole file only when the task is the file. Never
+  re-read what is already in context; cite the earlier read.
+- **Delegate first reads.** A source tree's inventory (Home Assistant core, aiohomematic, openccu-loom-client, this repo)
+  is a `sweep` or Sonnet read written to the scratchpad with `file:line`
+  for every fact; the owner spot-checks the load-bearing lines and verifies
+  every fact about Home Assistant, aiohomematic or openccu-loom behaviour before it enters a brief or
+  `docs/`, `changelog.md` or `AI_POLICY.md` — the agent's result is a map, never a citation.
+- **Logs by their summary.** The gate (`make check` (prek + tests with coverage), `make ci`) runs in the
+  background with a summary file (one line per gate, `FAIL`/`ok` lines
+  only); read the summary, and open a log only on failure, with `grep` for
+  the failure markers and the error strings — never `cat`. The same for CI:
+  the job log is fetched once to a file and grepped.
+- **One turn, every independent call.** Reads, checks and background
+  starts that do not depend on each other go out together; a wait is a
+  `Monitor` or an `until` loop in the background, not polling by hand.
+- **Short artefacts.** A brief names files, decisions and the acceptance
+  command, not prose; a report follows the fixed shape of
+  [Sub-Agent Delegation](#sub-agent-delegation) (≤ 250 words, large
+  artefacts as a scratchpad path); status messages to the owner are short,
+  outcome first, in German.
+- **Skip what cannot have changed.** No regeneration for a comment change;
+  no second gate run for a notes-only commit — say what was skipped and
+  why.
+- **Edit by script.** Several replacements in several files are one
+  scripted call with asserted anchors, not a chain of interactive edits;
+  a generated file (the bundled frontend under `custom_components/homematicip_local/frontend/`, the translation files) is regenerated, never patched.
+- **Agents read what the brief names.** An implementing agent gets the
+  file list and the pinned sources in the brief, reads those, and reports
+  in the fixed shape; it does not survey the tree. One agent per brief;
+  two agents only on disjoint paths, at most one Opus agent at a time.
+- **Push, pull request and tag are the session's own calls.** An
+  implementing agent works locally — branch, commits, guards — and
+  reports; the owner's session reads the diff, runs the gate, pushes,
+  opens the pull request and tags the merge commit; the owner merges. A
+  delegated push, pull request or tag is refused by the auto-mode
+  classifier ("Create Public Surface", 2026-11-07), and the review in
+  [Which model does which work](#which-model-does-which-work) sits
+  between the agent's report and the push anyway.
 
 ---
 
@@ -971,7 +1105,7 @@ These rules govern how the AI assistant communicates and works with the develope
 ✅ **Always** handle exceptions with proper context
 ✅ **Always** complete the Refactoring Completion Checklist before finishing
 ✅ **Always** update changelog.md with breaking changes
-✅ **Always** create implementation plans that are Haiku-executable
+✅ **Always** create implementation plans the `impl` agent can execute without questions
 ✅ **Always** verify docs/*.md files are current after major changes
 ✅ **Always** describe your approach and wait for approval before writing code
 ✅ **Always** ask clarifying questions when requirements are ambiguous
@@ -1102,7 +1236,7 @@ When performing a refactoring task, follow this workflow:
 
 ### Implementation Plan Quality Standard
 
-**A plan is only complete when Haiku can execute it without asking questions.**
+**A plan is only complete when the `impl` agent (Opus) can execute it without asking questions.**
 
 Before finalizing any implementation plan, verify:
 
@@ -1186,11 +1320,11 @@ make hass
 
 ### Version Information
 
-- **Current Version:** 2.12.0
+- **Current Version:** 2.12.4
 - **Minimum HA Version:** 2026.11.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
-- **aiohomematic Version:** 2026.11.2
-- **openccu-loom-client Version:** 2026.10.11. Its wire layer is generated against daemon API `15.2.0`
+- **aiohomematic Version:** 2026.11.5
+- **openccu-loom-client Version:** 2026.11.7. Its wire layer is generated against daemon API `16.2.0`
   (`openccu_loom_client.wire.const.DAEMON_API_VERSION`), but that number no longer gates the
   connection: `_report_api_version` **logs and never raises** — a warning when the majors differ,
   an info line when only the minors do. Refusing on it was wrong in both directions, because the
@@ -1213,5 +1347,5 @@ make hass
 
 ---
 
-**Last Updated**: 2026-09-12
-**Version**: 2.12.0
+**Last Updated**: 2026-11-07
+**Version**: 2.12.4

@@ -266,7 +266,12 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
         if (
             isinstance(self._data_point, CustomDataPointProtocol)
             and self._data_point.usage == DataPointUsage.CDP_PRIMARY
-            and (wp_dp := self._data_point.device.week_profile_data_point) is not None
+            and (
+                wp_dp := self._data_point.device.climate_week_profile_data_point
+                if self._data_point.category == DataPointCategory.CLIMATE
+                else self._data_point.device.week_profile_data_point
+            )
+            is not None
             and (schedule := wp_dp.schedule) is not None
         ):
             attributes[ATTR_SCHEDULE_DATA] = schedule
