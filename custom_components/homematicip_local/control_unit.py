@@ -412,57 +412,37 @@ class ControlUnit(BaseControlUnit):
         )
         self._orphan_cleanup_unsub: CALLBACK_TYPE | None = None
 
-    def ensure_via_device_exists(
-        self,
-        *,
-        identifier: str,
-        suggested_area: str | None,
-        via_device: str,
-        via_suggested_area: str | None = None,
-    ) -> str:
+    def ensure_central_device_exists(self) -> str:
         """
-        Create the via device of a device and return its device registry id.
+        Create the central pseudo-device and return its device registry id.
 
         A device info links its via device by registry id, and HA rejects the
-        whole device info when that id is not a registered device — so the via
-        device (and, one rung further up, the central it hangs off) has to
-        exist before the entity carrying the link is added.
+        whole device info when that id is not a registered device — so the
+        central has to exist before the entity carrying the link is added.
         """
-        device_registry = dr.async_get(self._hass)
+        return self._async_add_central_to_device_registry().id
 
-        if (via_entry := device_registry.async_get_device_by_identifier((DOMAIN, via_device), self._entry_id)) is None:
-            central_entry = self._async_add_central_to_device_registry()
-            if via_device == self.central.name:
-                via_entry = central_entry
-            else:
-                # The parent carries its own room: HA applies suggested_area
-                # only at creation, so seeding the parent with a sub-device's
-                # area (e.g. a channel-group room) would pin the wrong area.
-                via_entry = device_registry.async_get_or_create(
-                    config_entry_id=self._entry_id,
-                    identifiers={
-                        (
-                            DOMAIN,
-                            via_device,
-                        )
-                    },
-                    suggested_area=via_suggested_area,
-                    via_device_id=central_entry.id,
-                )
+    def ensure_parent_device_exists(self, *, device_info: DeviceInfo) -> str:
+        """
+        Create the parent of a child device and return its device registry id.
 
-            device_registry.async_get_or_create(
+        A child device info names its parent by registry id, which HA requires
+        to be a registered main device of this config entry — so the device
+        (with its full device info, as an entity landing on it would register
+        it) has to exist before the entity carrying the link is added. The
+        child itself is left to the entity platform: pre-creating it here as a
+        main device would block HA's in-place conversion of a legacy sub
+        device, which refuses identifiers one config entry registered both
+        ways in the same session.
+        """
+        return (
+            dr.async_get(self._hass)
+            .async_get_or_create(
                 config_entry_id=self._entry_id,
-                identifiers={
-                    (
-                        DOMAIN,
-                        identifier,
-                    )
-                },
-                suggested_area=suggested_area,
-                via_device_id=via_entry.id,
+                **device_info,
             )
-
-        return via_entry.id
+            .id
+        )
 
     def get_new_data_points(
         self,

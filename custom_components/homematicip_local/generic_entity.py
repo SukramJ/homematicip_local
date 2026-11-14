@@ -12,6 +12,7 @@ from aiohomematic.const import CallSource, DataPointCategory, DataPointUsage
 from aiohomematic.interfaces import (
     CalculatedDataPointProtocol,
     CallbackDataPointProtocol,
+    ChannelProtocol,
     CombinedDataPointProtocol,
     CustomDataPointProtocol,
     GenericDataPointProtocol,
@@ -22,7 +23,7 @@ from aiohomematic.interfaces import (
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UndefinedType
@@ -50,6 +51,10 @@ _SCHEDULE_CATEGORIES: Final[frozenset[DataPointCategory]] = frozenset(
     {DataPointCategory.WEEK_PROFILE, DataPointCategory.SCHEDULE_SWITCH}
 )
 _SCHEDULE_TRANSLATION_PARAMETER: Final = "SCHEDULE_CHANNEL_SWITCH"
+# The CCU translations carry no word for a channel group, so the label of an
+# unnamed group is kept here; English is the fallback for every other locale.
+_CHANNEL_GROUP_LABELS: Final[Mapping[str, str]] = {"de": "Gruppe", "en": "Group"}
+_CHILD_SCHEDULE_SUFFIX: Final = "schedule"
 
 
 def get_schedule_name(*, locale: str) -> str:
@@ -61,6 +66,11 @@ def get_schedule_name(*, locale: str) -> str:
         )
         or "Schedule"
     )
+
+
+def get_channel_group_name(*, locale: str, group_label: str) -> str:
+    """Return the name of a channel group that carries no name of its own, e.g. ``Gruppe 2``."""
+    return f"{_CHANNEL_GROUP_LABELS.get(locale[:2].lower(), _CHANNEL_GROUP_LABELS['en'])} {group_label}"
 
 
 ATTR_ADDRESS: Final = "address"
@@ -118,42 +128,10 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
 
         hm_device = data_point.device
         device_identifier = control_unit.device_identifier(device=hm_device)
-        identifier = device_identifier
-        via_device = hm_device.central_info.name
-        suggested_area = hm_device.room
-
-        # data_point.channel is None for some loom-backend data points
-        # (hub singletons ride a different base class, but week-profile
-        # DPs can resolve no channel before the store is fully hydrated)
-        # — guard so the sub-device split never trips on it.
-        if (
-            control_unit.enable_sub_devices
-            and hm_device.has_sub_devices
-            and (dp_channel := data_point.channel) is not None
-            and dp_channel.is_in_multi_group
-            # No group master means no sub device to split off, and moving the
-            # via device up to the device itself would then make the device its
-            # own via device — which HA rejects with a HomeAssistantError that
-            # no platform catches. Stay on the device, below the central.
-            and (channel_group_master := dp_channel.group_master) is not None
-        ):
-            via_device = device_identifier
-            identifier = f"{device_identifier}-{channel_group_master.group_no}"
-            if (room := channel_group_master.room) is not None:
-                suggested_area = room
-
-        if control_unit.enable_sub_devices and data_point.category in _SCHEDULE_CATEGORIES:
-            via_device = device_identifier
-            identifier = f"{device_identifier}-schedule"
-
-        via_device_id = control_unit.ensure_via_device_exists(
-            identifier=identifier,
-            suggested_area=suggested_area,
-            via_device=via_device,
-            via_suggested_area=hm_device.room,
-        )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, identifier)},
+        # The physical device hangs off the central, a genuine hub relation
+        # that stays a via_device link.
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_identifier)},
             configuration_url=control_unit.device_configuration_url(
                 address=hm_device.address,
                 interface_id=hm_device.interface_id,
@@ -161,13 +139,35 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
             manufacturer=hm_device.manufacturer,
             model=hm_device.model,
             model_id=hm_device.model_description,
-            name=self._ha_device_name,
+            name=hm_device.name,
             serial_number=hm_device.address,
             sw_version=hm_device.firmware,
-            suggested_area=suggested_area,
-            # Link to the Homematic control unit.
-            via_device_id=via_device_id,
+            suggested_area=hm_device.room,
+            via_device_id=control_unit.ensure_central_device_exists(),
         )
+
+        # A channel group or the schedule is a part of that one product, so it
+        # becomes a child device of it: no hardware data of its own, its area
+        # inherited from the parent unless the group carries its own room.
+        child_identifier: str | None = None
+        child_suggested_area: str | None = None
+        if control_unit.enable_sub_devices and data_point.category in _SCHEDULE_CATEGORIES:
+            child_identifier = f"{device_identifier}-{_CHILD_SCHEDULE_SUFFIX}"
+        elif (channel_group_master := self._channel_group_master) is not None:
+            child_identifier = f"{device_identifier}-{channel_group_master.group_no}"
+            child_suggested_area = channel_group_master.room
+
+        if child_identifier is None:
+            self._attr_device_info = device_info
+        else:
+            # The child device itself is registered by the entity platform from
+            # this device info; the parent it points at has to exist first.
+            self._attr_device_info = ChildDeviceInfo(
+                identifiers={(DOMAIN, child_identifier)},
+                name=self._ha_device_name,
+                parent_device_id=control_unit.ensure_parent_device_exists(device_info=device_info),
+                suggested_area=child_suggested_area,
+            )
 
         self._static_state_attributes = self._get_static_state_attributes()
         self._subscription_group: Final[SubscriptionGroup] = control_unit.central.event_bus.create_subscription_group(
@@ -190,27 +190,48 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
             )
 
     @property
-    def _ha_device_name(self) -> str:
-        """Return the Homematic entity device name."""
+    def _channel_group_master(self) -> ChannelProtocol | None:
+        """
+        Return the group master of the channel group this entity splits off into, else None.
+
+        data_point.channel is None for some loom-backend data points (hub
+        singletons ride a different base class, but week-profile DPs can
+        resolve no channel before the store is fully hydrated), and a group
+        without a master has no child device to split off; both stay on the
+        device.
+        """
         hm_device = self._data_point.device
-        if not self._cu.enable_sub_devices:
-            return hm_device.name
-
-        if self._data_point.category in _SCHEDULE_CATEGORIES:
-            return f"{hm_device.name} {get_schedule_name(locale=hm_device.config_provider.config.locale)}"
-
         if (
             self._cu.enable_sub_devices
             and hm_device.has_sub_devices
             and (dp_channel := self._data_point.channel) is not None
             and dp_channel.is_in_multi_group
-            and (channel_group_master := dp_channel.group_master)
         ):
-            return (
-                f"{hm_device.name}-{channel_group_master.name}"
-                if channel_group_master.name.isnumeric()
-                else channel_group_master.name or f"{hm_device.name}-{channel_group_master.group_no}"
-            )
+            return dp_channel.group_master
+        return None
+
+    @property
+    def _ha_device_name(self) -> str:
+        """
+        Return the name of the HA device this entity lands on.
+
+        A child device carries its own name only — the schedule label or the
+        channel group's name — never the device name as a prefix: HA composes
+        the full name from parent, child and entity itself.
+        """
+        hm_device = self._data_point.device
+        if not self._cu.enable_sub_devices:
+            return hm_device.name
+
+        locale = hm_device.config_provider.config.locale
+        if self._data_point.category in _SCHEDULE_CATEGORIES:
+            return get_schedule_name(locale=locale)
+
+        if (channel_group_master := self._channel_group_master) is not None:
+            if (group_name := channel_group_master.name) and not group_name.isnumeric():
+                return group_name
+            return get_channel_group_name(locale=locale, group_label=group_name or str(channel_group_master.group_no))
+
         return hm_device.name
 
     @property
