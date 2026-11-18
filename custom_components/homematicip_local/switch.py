@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomematicConfigEntry
-from .backend_types import CUSTOM_DP_SWITCH, DP_SWITCH, PROGRAM_DP_SWITCH, SYSVAR_DP_SWITCH
+from .backend_types import CUSTOM_DP_SWITCH, PROGRAM_DP_SWITCH, SYSVAR_DP_SWITCH
 from .control_unit import ControlUnit, signal_new_data_point
 from .generic_entity import (
     AioHomematicGenericEntity,
@@ -160,11 +160,8 @@ class AioHomematicSwitch(AioHomematicGenericRestoreEntity[CustomDpSwitch | DpSwi
 
     @handle_homematic_errors
     async def async_set_on_time(self, on_time: float) -> None:
-        """Set the on time of the light."""
-        if isinstance(self._data_point, CUSTOM_DP_SWITCH):
-            self._data_point.set_timer_on_time(on_time=on_time)
-        if isinstance(self._data_point, DP_SWITCH):
-            await self._data_point.set_on_time(on_time=on_time)
+        """Stage the on time for the next switch-on."""
+        self._data_point.set_timer_on_time(on_time=on_time)
 
     @override
     @handle_homematic_errors

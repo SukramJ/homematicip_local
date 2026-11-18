@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import asyncio
 from typing import cast
+from unittest.mock import MagicMock
 
 import pytest
 
+from aiohomematic.model.custom import CustomDpSwitch
+from aiohomematic.model.generic import DpSwitch
 from aiohomematic.model.hub import SysvarDpSwitch
+from custom_components.homematicip_local.switch import AioHomematicSwitch
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from tests import const, helper
@@ -84,3 +88,19 @@ class TestSysvarDpSwitch:
 
         await hass.services.async_call("switch", "turn_off", {"entity_id": entity_id}, blocking=True)
         assert data_point.send_variable.call_count == 2
+
+
+class TestSwitchSetOnTime:
+    """Tests for the switch_set_on_time entity service (#1378)."""
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("dp_class", [CustomDpSwitch, DpSwitch])
+    async def test_set_on_time_stages_on_time(self, dp_class: type[CustomDpSwitch | DpSwitch]) -> None:
+        """Stage the on-time on custom and generic switches; the following turn_on sends it."""
+        data_point = MagicMock(spec=dp_class)
+        switch = object.__new__(AioHomematicSwitch)
+        switch._data_point = data_point
+
+        await switch.async_set_on_time(on_time=60.0)
+
+        data_point.set_timer_on_time.assert_called_once_with(on_time=60.0)
