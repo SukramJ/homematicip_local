@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -17,8 +19,10 @@ from custom_components.homematicip_local.const import (
 )
 from custom_components.homematicip_local.control_unit import ControlUnit
 from custom_components.homematicip_local.panel import (
+    _CARDS_STATIC_REGISTERED_KEY,
     _STATIC_PATH_REGISTERED_KEY,
     PANEL_REGISTERED_KEY,
+    async_register_cards,
     async_register_panel,
     async_unregister_panel,
 )
@@ -122,6 +126,66 @@ class TestAsyncRegisterPanel:
         assert hass.data.get(_STATIC_PATH_REGISTERED_KEY) is True
         hass.http.async_register_static_paths.assert_called_once()
         mock_panel.assert_called_once()
+
+
+def _aiohttp_like_register(hass: HomeAssistant) -> AsyncMock:
+    """Return a static path registration that yields and refuses a route twice, as aiohttp does."""
+    registered: set[str] = set()
+
+    async def _register(paths: list[Any]) -> None:
+        await asyncio.sleep(0)
+        for path in paths:
+            if path.url_path in registered:
+                raise RuntimeError("Added route will never be executed, method GET is already registered")
+            registered.add(path.url_path)
+
+    mock = AsyncMock(side_effect=_register)
+    hass.http.async_register_static_paths = mock
+    return mock
+
+
+class TestConcurrentRegistration:
+    """Several config entries set up at once register each static path once (#1376)."""
+
+    @pytest.mark.asyncio
+    async def test_concurrent_card_registration(self, mock_hass_http: HomeAssistant) -> None:
+        """Register the card static paths once when three entries set up concurrently."""
+        hass = mock_hass_http
+        register = _aiohttp_like_register(hass)
+
+        await asyncio.gather(*(async_register_cards(hass) for _ in range(3)))
+
+        register.assert_called_once()
+        assert hass.data.get(_CARDS_STATIC_REGISTERED_KEY) is True
+
+    @pytest.mark.asyncio
+    async def test_concurrent_panel_registration(self, mock_hass_http: HomeAssistant) -> None:
+        """Register the panel static path and the panel once when three entries set up concurrently."""
+        hass = mock_hass_http
+        register = _aiohttp_like_register(hass)
+        with patch(
+            "custom_components.homematicip_local.panel.panel_custom.async_register_panel",
+            new_callable=AsyncMock,
+        ) as mock_panel:
+            await asyncio.gather(*(async_register_panel(hass) for _ in range(3)))
+
+        register.assert_called_once()
+        mock_panel.assert_called_once()
+        assert hass.data.get(PANEL_REGISTERED_KEY) is True
+
+    @pytest.mark.asyncio
+    async def test_failed_card_registration_is_retried(self, mock_hass_http: HomeAssistant) -> None:
+        """Leave the flag unset when the registration fails, so the next entry registers again."""
+        hass = mock_hass_http
+        hass.http.async_register_static_paths = AsyncMock(side_effect=[OSError("boom"), None])
+
+        with pytest.raises(OSError, match="boom"):
+            await async_register_cards(hass)
+        assert hass.data.get(_CARDS_STATIC_REGISTERED_KEY) is None
+
+        await async_register_cards(hass)
+        assert hass.data.get(_CARDS_STATIC_REGISTERED_KEY) is True
+        assert hass.http.async_register_static_paths.call_count == 2
 
 
 class TestAsyncUnregisterPanel:
