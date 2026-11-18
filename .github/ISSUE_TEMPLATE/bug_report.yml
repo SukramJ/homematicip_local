@@ -38,8 +38,6 @@ body:
           required: true
         - label: I am aware of the latest [release notes](https://github.com/sukramj/homematicip_local/releases)
           required: true
-        - label: I am aware that an integration that was installed via HACS also needs to be updated via HACS
-          required: true
         - label: The Backend (CCU/Homegear/...) is working as expected, devices are taught in and are controllable by its own UI.
           required: true
         - label: My backend is one of the supported hubs (CCU2/3, OpenCCU, piVCCU/Debmatic, Homegear). Third-party hubs that reimplement the CCU interfaces are not supported, and issues reported against them are closed without further assessment.
@@ -94,7 +92,7 @@ body:
       label: What version of Homematic(IP) Local for OpenCCU has the issue?
       placeholder: 2.x.x
       description: >
-        Can be found in: HACS -> Integrations
+        Can be found in: Settings -> Devices & services -> Homematic(IP) Local for OpenCCU
   - type: input
     attributes:
       label: What was the last working version of Homematic(IP) Local for OpenCCU?

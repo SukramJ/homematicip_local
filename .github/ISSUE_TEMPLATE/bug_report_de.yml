@@ -38,8 +38,6 @@ body:
           required: true
         - label: Ich kenne die neuesten [Versionshinweise](https://github.com/sukramj/homematicip_local/releases)
           required: true
-        - label: Mir ist klar, dass eine Integration, die über HACS installiert wurde, auch über HACS aktualisiert werden muss
-          required: true
         - label: Das Backend (CCU/Homegear/...) funktioniert wie erwartet, Geräte können angelernt werden und sind über deren eigene Benutzeroberfläche steuerbar
           required: true
         - label: Mein Backend ist eine der unterstützten Zentralen (CCU2/3, OpenCCU, piVCCU/Debmatic, Homegear). Zentralen von Dritten, die die CCU-Schnittstellen nachbauen, werden nicht unterstützt; Issues dazu werden ohne inhaltliche Bewertung geschlossen.
@@ -94,7 +92,7 @@ body:
       label: Bei welcher Version von HomematicIP (lokal) tritt das Problem auf?
       placeholder: 2.x.x
       description: >
-        Zu finden unter: HACS -> Integrationen
+        Zu finden unter: Einstellungen -> Geräte & Dienste -> Homematic(IP) Local for OpenCCU
   - type: input
     attributes:
       label: Welche war die letzte funktionierende Version von Homematic(IP) Local for OpenCCU?

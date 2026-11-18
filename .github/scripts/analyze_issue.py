@@ -603,7 +603,7 @@ def _format_missing_required_info(
         if not has_logs:
             result += "- ❌ **Protokolldatei** - Als **Datei angehängt**, am besten ein DEBUG-Log; ein eingefügter Auszug reicht nicht. Aktivieren via: Einstellungen → Geräte → Integration auswählen → Debug-Protokollierung aktivieren. Danach Problem reproduzieren und Log herunterladen (Einstellungen → System → Protokolle → Unveränderte Protokolle laden)\n"
         if version_missing:
-            result += "- ❌ **Version der Integration** - Das Versionsfeld ist leer. Bitte die Version von Homematic(IP) Local angeben (zu finden in: HACS → Integrationen)\n"
+            result += "- ❌ **Version der Integration** - Das Versionsfeld ist leer. Bitte die Version von Homematic(IP) Local angeben (zu finden in: Einstellungen → Geräte & Dienste → Homematic(IP) Local for OpenCCU)\n"
         result += (
             "\n⚠️ **Issues ohne diese Informationen können nicht bearbeitet werden und werden ggf. geschlossen.**\n\n"
         )
@@ -616,7 +616,7 @@ def _format_missing_required_info(
         if not has_logs:
             result += "- ❌ **Log file** - **Attached as a file**, preferably a DEBUG log; a pasted excerpt is not enough. Enable via: Settings → Devices → Select integration → Enable debug logging. Then reproduce the issue and download log (Settings → System → Logs → Load unchanged logs)\n"
         if version_missing:
-            result += "- ❌ **Integration version** - The version field is empty. Please provide the Homematic(IP) Local version (found in: HACS → Integrations)\n"
+            result += "- ❌ **Integration version** - The version field is empty. Please provide the Homematic(IP) Local version (found in: Settings → Devices & services → Homematic(IP) Local for OpenCCU)\n"
         result += "\n⚠️ **Issues without this information cannot be processed and may be closed.**\n\n"
         result += "_Exception: For initial setup issues, diagnostics may not be available yet._\n\n"
 
