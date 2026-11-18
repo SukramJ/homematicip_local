@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import logging
 from pathlib import Path
@@ -41,6 +42,9 @@ _CARD_FILES: Final[dict[str, str]] = {
 CARDS_REGISTERED_KEY: HassKey[bool] = HassKey("homematicip_local_cards_registered")
 _CARDS_STATIC_REGISTERED_KEY: HassKey[bool] = HassKey("homematicip_local_cards_static_registered")
 
+# Config entries set up concurrently; the registration awaits between its check and its flag.
+_REGISTRATION_LOCK_KEY: HassKey[asyncio.Lock] = HassKey("homematicip_local_frontend_registration_lock")
+
 
 def _build_card_urls() -> dict[str, str]:
     """Build cache-busted URLs for card JS files."""
@@ -54,6 +58,17 @@ def _build_card_urls() -> dict[str, str]:
 
 
 _CARD_URLS: Final[dict[str, str]] = _build_card_urls()
+
+
+def _registration_lock(hass: HomeAssistant) -> asyncio.Lock:
+    """
+    Return the lock that serialises panel and card registration.
+
+    The static path registration awaits between the check of its flag and
+    setting it; a second config entry set up meanwhile would register the
+    same route again, which aiohttp refuses (#1376).
+    """
+    return hass.data.setdefault(_REGISTRATION_LOCK_KEY, asyncio.Lock())
 
 
 async def _async_register_static_path(hass: HomeAssistant) -> None:
@@ -79,6 +94,12 @@ async def _async_register_static_path(hass: HomeAssistant) -> None:
 
 async def async_register_panel(hass: HomeAssistant) -> None:
     """Register the Homematic configuration panel."""
+    async with _registration_lock(hass):
+        await _async_register_panel(hass)
+
+
+async def _async_register_panel(hass: HomeAssistant) -> None:
+    """Register the Homematic configuration panel; the caller holds the registration lock."""
     if hass.data.get(PANEL_REGISTERED_KEY):
         return
 
@@ -138,6 +159,12 @@ async def _async_register_card_static_paths(hass: HomeAssistant) -> None:
 
 async def async_register_cards(hass: HomeAssistant) -> None:
     """Register Lovelace card resources."""
+    async with _registration_lock(hass):
+        await _async_register_cards(hass)
+
+
+async def _async_register_cards(hass: HomeAssistant) -> None:
+    """Register Lovelace card resources; the caller holds the registration lock."""
     if hass.data.get(CARDS_REGISTERED_KEY):
         return
 

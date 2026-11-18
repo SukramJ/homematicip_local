@@ -50,6 +50,11 @@
   `switch.turn_on` sent nothing because the switch was already on. The action now stages the on time on
   every switch, and `switch.turn_on` sends it together with the switch-on, also when the switch is already
   on ([#1378](https://github.com/SukramJ/homematicip_local/issues/1378)).
+- **Several CCUs start reliably at Home Assistant startup.** With more than one config entry, the entries set
+  up at the same time and could register the static paths of the cards or the configuration panel twice;
+  Home Assistant refused the second registration, so one entry failed to set up at random and only a restart
+  recovered it. The registration now runs once, one entry after the other
+  ([#1376](https://github.com/SukramJ/homematicip_local/issues/1376)).
 
 ### Dependencies
 
