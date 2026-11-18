@@ -45,10 +45,15 @@
   together with the entry and hides them while the entry is disabled
   ([HA developer blog](https://contributors.home-assistant.io/blog/2026/10/28/issue-registry-refresh/)).
   Repairs raised before this version are not linked yet; they are linked when they are raised again.
+- **`switch_set_on_time` works on a switch that is already on.** On a generic switch (CUxD and Homematic
+  channels without a device-specific switch) the on time was written at once, and the following
+  `switch.turn_on` sent nothing because the switch was already on. The action now stages the on time on
+  every switch, and `switch.turn_on` sends it together with the switch-on, also when the switch is already
+  on ([#1378](https://github.com/SukramJ/homematicip_local/issues/1378)).
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.11.5](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.5)
+#### Bump aiohomematic to [2026.11.6](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.6)
 
 - **Support for new devices:** thermostats HmIP-WT, KW-STATH, KW-UKETRV, HmIPW-WGT and HmIPW-WGTC, dimmers
   HmIP-WUA, ELV-SH-WUA and HmIP-UDI-PB2
@@ -58,12 +63,14 @@
 - **Fix:** HmIPW-WTH and HmIPW-SCTHD use the limits configured on the device
 - **Fix:** tilt-only changes turn the slats of a fully closed HmIPW-DRBL4 again, a regression of 2.12.2 ([#1357](https://github.com/SukramJ/homematicip_local/issues/1357))
 - **Fix:** service messages of enum parameters carry the CCU's value text, so the hub sensor `service_messages` shows `Sabotage` instead of `ERROR-7` ([#1356](https://github.com/SukramJ/homematicip_local/discussions/1356))
+- **Fix:** switching the week program of a heating group (HM-CC-VG-1) no longer breaks its device settings page in the CCU WebUI ([#1379](https://github.com/SukramJ/homematicip_local/issues/1379))
+- **Fix:** a timed switch-on reaches a generic switch that is already on ([#1378](https://github.com/SukramJ/homematicip_local/issues/1378))
 
 #### Bump aiohomematic-config to [2026.11.1](https://github.com/SukramJ/aiohomematic-config/compare/2026.10.1...2026.11.1)
 
 - **Fix:** the climate schedule commands of the config panel (`get_climate_schedule`, `set_climate_schedule_weekday`, `set_climate_active_profile`) reach the heating schedule of HmIP-WGT and HmIP-WGTC, which also have a switch schedule
 
-#### Bump openccu-loom-client to [2026.11.8](https://github.com/SukramJ/openccu-loom-client/compare/2026.11.0...2026.11.8)
+#### Bump openccu-loom-client to [2026.11.9](https://github.com/SukramJ/openccu-loom-client/compare/2026.11.0...2026.11.9)
 
 - For the openccu-loom backend (Beta) only; no runtime effect on the direct-CCU backend, where the client is not loaded. Fixes `switch_set_on_time`, `light_set_on_time` and `valve_set_on_time`, which had no effect on that backend, climate entities that were not created there with this release, and device actions, device triggers and the per-device central-link services, which failed there; HmIP-WGT and HmIP-WGTC get their heating schedule with openccu-loom 0.97.1 or newer
 - **Fix:** service messages of enum parameters carry the CCU's value text on the openccu-loom backend too, so the hub
@@ -76,6 +83,8 @@
   recorded an incident ([#1368](https://github.com/SukramJ/homematicip_local/issues/1368))
 - **Fix:** the incident list of the integration panel and of the system-health card shows text, time and (with
   openccu-loom REST API 16.4.0 or newer) type on the openccu-loom backend; the rows were blank but for their colour
+- **Fix:** `switch_set_on_time` reaches a generic switch on the openccu-loom backend, which dropped the on time
+  ([#1378](https://github.com/SukramJ/homematicip_local/issues/1378))
 
 # Version [2.12.3](https://github.com/SukramJ/homematicip_local/compare/2.12.2...2.12.3) (unreleased)
 

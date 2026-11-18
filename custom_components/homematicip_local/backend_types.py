@@ -47,7 +47,7 @@ from aiohomematic.model.custom import (
     CustomDpSwitch,
 )
 from aiohomematic.model.event import ClickEvent
-from aiohomematic.model.generic import DpAction, DpButton, DpSwitch
+from aiohomematic.model.generic import DpAction, DpButton
 from aiohomematic.model.hub import ProgramDpSwitch, SysvarDpSwitch
 
 if TYPE_CHECKING:
@@ -123,7 +123,6 @@ def _loom_only(loom_attr: str, loom_module: object | None) -> tuple[type[Any], .
 
 
 # ---- generic ----
-DP_SWITCH = _pair(DpSwitch, "DpSwitch", _g)
 DP_ACTION = _pair(DpAction, "DpAction", _g)
 DP_BUTTON = _pair(DpButton, "DpButton", _g)
 DP_ACTION_OR_BUTTON: tuple[type[DpAction | DpButton], ...] = (*DP_ACTION, *DP_BUTTON)
