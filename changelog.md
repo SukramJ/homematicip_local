@@ -55,6 +55,12 @@
   Home Assistant refused the second registration, so one entry failed to set up at random and only a restart
   recovered it. The registration now runs once, one entry after the other
   ([#1376](https://github.com/SukramJ/homematicip_local/issues/1376)).
+- **The climate schedule shows the heating times as periods.** The simple week profile used the
+  temperature that runs longest on a day as base temperature, so a profile whose comfort phase is the
+  longer one showed the setback hours as coloured periods and the heating phase as grey background. The
+  card and the configuration panel now take the lowest temperature of the day as base; the schedule on the
+  device is unchanged
+  ([frontend#129](https://github.com/SukramJ/homematicip-local-frontend/discussions/129)).
 
 ### Dependencies
 
