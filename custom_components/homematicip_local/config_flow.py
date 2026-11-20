@@ -126,8 +126,6 @@ from .control_unit import ControlConfig, ControlUnit, loom_box_kwargs, validate_
 from .support import InvalidConfig
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
-
     from openccu_loom_client import DiscoveredDaemon
 
 # Step indicator constants for config flow
@@ -562,22 +560,14 @@ def _loom_box_probe_port(*, tls: bool) -> int:
     return DEFAULT_BOX_HTTPS_PORT if tls else DEFAULT_BOX_HTTP_PORT
 
 
-def _announced_instance_id(*, properties: Mapping[str, Any]) -> str | None:
+def _announced_instance_id(*, txt_id: str | None) -> str | None:
     """Return the installation id an openccu-loom daemon announces (TXT ``id``), or None.
 
-    Read from the raw properties: the loom client's TXT parser does not
-    carry the key yet. The first ``id`` key decides (RFC 6763 section 6.4);
-    a value that is not 32 lower-case hex digits counts as absent.
+    The loom client's TXT parser reads the key (first occurrence decides,
+    RFC 6763 section 6.4); a value that is not 32 lower-case hex digits
+    counts as absent here.
     """
-    for key, value in properties.items():
-        if str(key).lower() != "id":
-            continue
-        if isinstance(value, bytes):
-            value = value.decode("utf-8", errors="replace")
-        if isinstance(value, str) and _INSTANCE_ID_SHAPE.fullmatch(value):
-            return value
-        return None
-    return None
+    return txt_id if txt_id is not None and _INSTANCE_ID_SHAPE.fullmatch(txt_id) else None
 
 
 _INSTANCE_ID_SHAPE: Final = re.compile(r"[0-9a-f]{32}")
@@ -2234,7 +2224,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries(include_ignore=False)
             if entry.data.get(CONF_BACKEND) == BACKEND_LOOM
         ]
-        announced_id = _announced_instance_id(properties=props)
+        announced_id = _announced_instance_id(txt_id=txt.instance_id)
         if announced_serials := list(txt.ccus):
             entries_by_serial = {entry.unique_id: entry for entry in loom_entries if entry.unique_id}
             for entry in (entries_by_serial[s] for s in announced_serials if s in entries_by_serial):
