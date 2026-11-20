@@ -4,6 +4,15 @@
 
 ### Integration
 
+- **A discovered openccu-loom daemon no longer re-points a configured entry by itself.** When a
+  daemon announced a CCU serial that an entry already uses, the entry silently switched to that
+  daemon's address and reloaded — and sent its sign-in token there. A second daemon for the same CCU
+  (a test build, another installation) could take over a working setup that way, and so could any
+  host on the network that announced the serial. Now the entry stays as it is and a discovery card
+  asks whether the daemon moved; only a confirmation switches it. A daemon whose announced instance
+  id differs from the one the entry knows is recognised as another daemon and ignored
+  (needs openccu-loom with SukramJ/openccu-loom#1131; the id is learned at setup and on a confirmed
+  move) (#1386).
 - **Sub devices are now Home Assistant child devices.** A channel group and the schedule of a
   device used to be separate devices linked with `via_device`; they are now child devices of the
   device they belong to, as HA 2026.9 introduced for parts of one product
@@ -81,7 +90,7 @@
 
 - **Fix:** the climate schedule commands of the config panel (`get_climate_schedule`, `set_climate_schedule_weekday`, `set_climate_active_profile`) reach the heating schedule of HmIP-WGT and HmIP-WGTC, which also have a switch schedule
 
-#### Bump openccu-loom-client to [2026.11.9](https://github.com/SukramJ/openccu-loom-client/compare/2026.11.0...2026.11.9)
+#### Bump openccu-loom-client to [2026.11.10](https://github.com/SukramJ/openccu-loom-client/compare/2026.11.0...2026.11.10)
 
 - For the openccu-loom backend (Beta) only; no runtime effect on the direct-CCU backend, where the client is not loaded. Fixes `switch_set_on_time`, `light_set_on_time` and `valve_set_on_time`, which had no effect on that backend, climate entities that were not created there with this release, and device actions, device triggers and the per-device central-link services, which failed there; HmIP-WGT and HmIP-WGTC get their heating schedule with openccu-loom 0.97.1 or newer
 - **Fix:** service messages of enum parameters carry the CCU's value text on the openccu-loom backend too, so the hub
@@ -96,6 +105,12 @@
   openccu-loom REST API 16.4.0 or newer) type on the openccu-loom backend; the rows were blank but for their colour
 - **Fix:** `switch_set_on_time` reaches a generic switch on the openccu-loom backend, which dropped the on time
   ([#1378](https://github.com/SukramJ/homematicip_local/issues/1378))
+- **Fix:** lights with effects (effect, RGBW and signal lights) show their effect list on the openccu-loom backend, and
+  switching one on with an effect switches it on; the effect used to go out without a switch-on
+  ([#1385](https://github.com/SukramJ/homematicip_local/issues/1385))
+- Reads the instance id an openccu-loom daemon announces (openccu-loom 0.106.0 or newer), which the discovery of a
+  moved daemon uses to tell two daemons for the same CCU apart
+  ([#1386](https://github.com/SukramJ/homematicip_local/issues/1386))
 
 # Version [2.12.3](https://github.com/SukramJ/homematicip_local/compare/2.12.2...2.12.3) (unreleased)
 

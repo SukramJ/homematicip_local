@@ -88,6 +88,10 @@ DEFAULT_BACKEND: Final = BACKEND_CCU
 CONF_LOOM_PAIR: Final = "loom_pair"
 CONF_LOOM_TOKEN: Final = "loom_token"  # noqa: S105 - config key name, not a secret
 CONF_LOOM_PORT: Final = "loom_port"
+# The openccu-loom daemon's installation id (mDNS TXT ``id``, ``/info``
+# ``instance_id``): tells the entry's daemon from another one serving the
+# same CCU. Public, so it never authorises a move on its own.
+CONF_LOOM_INSTANCE_ID: Final = "loom_instance_id"
 # Reaching the daemon through an openccu-lite box's web server: the client
 # sends a box API token holding the add-on's gate scope, obtained by pairing
 # with the box, and the daemon signs the request in with that token, so no

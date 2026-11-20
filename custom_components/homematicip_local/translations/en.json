@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "loom_moved": "The entry now talks to the daemon at its new address.",
       "already_configured": "Entry with the serial {serial} is already configured",
       "reauth_failed": "Could not find the configuration entry to reauthenticate",
       "reauth_successful": "Reauthentication successful. Connection restored.",
@@ -38,6 +39,10 @@
       "loom_box_pairing": "Pairing code: {code}\n\nOpen the openccu-lite box at {host}: its status page lists this request — compare the code and approve it. The request expires after five minutes."
     },
     "step": {
+      "loom_move": {
+        "title": "OpenCCU-Loom moved?",
+        "description": "A daemon serving {serial} announced itself at {new}. The entry {name} talks to {old}.\n\nSwitch only if you moved the daemon there yourself: the entry's sign-in token is sent to the new address."
+      },
       "advanced": {
         "data": {
           "callback_host": "Callback host (optional)",

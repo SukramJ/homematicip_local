@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 from pprint import pformat
+import re
 import time
 from typing import TYPE_CHECKING, Any, Final, cast
 from urllib.parse import urlparse
@@ -90,6 +91,7 @@ from .const import (
     CONF_LISTEN_ON_ALL_IP,
     CONF_LOOM_BOX,
     CONF_LOOM_BOX_TOKEN,
+    CONF_LOOM_INSTANCE_ID,
     CONF_LOOM_PAIR,
     CONF_LOOM_PORT,
     CONF_LOOM_TOKEN,
@@ -556,6 +558,19 @@ def _loom_box_probe_port(*, tls: bool) -> int:
     from openccu_loom_client.config import DEFAULT_BOX_HTTP_PORT, DEFAULT_BOX_HTTPS_PORT  # noqa: PLC0415
 
     return DEFAULT_BOX_HTTPS_PORT if tls else DEFAULT_BOX_HTTP_PORT
+
+
+def _announced_instance_id(*, txt_id: str | None) -> str | None:
+    """Return the installation id an openccu-loom daemon announces (TXT ``id``), or None.
+
+    The loom client's TXT parser reads the key (first occurrence decides,
+    RFC 6763 section 6.4); a value that is not 32 lower-case hex digits
+    counts as absent here.
+    """
+    return txt_id if txt_id is not None and _INSTANCE_ID_SHAPE.fullmatch(txt_id) else None
+
+
+_INSTANCE_ID_SHAPE: Final = re.compile(r"[0-9a-f]{32}")
 
 
 def _loom_txt_hint(*, txt: DiscoveredDaemon) -> dict[str, Any]:
@@ -1116,6 +1131,9 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
         self._loom_skip_browse: bool = False
         # openccu-lite box token as entry data; empty for a direct daemon.
         self._loom_box: dict[str, str] = {}
+        # A configured loom entry and the address a daemon serving its CCU
+        # announced; set while the operator is asked to confirm a move.
+        self._loom_move: dict[str, Any] | None = None
         # Which credential fields the daemon in hand offers; decided once per
         # daemon before its credentials form is first shown.
         self._loom_offer: LoomLoginOffer | None = None
@@ -1520,6 +1538,29 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=description_placeholders,
         )
+
+    async def async_step_loom_move(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
+        """Confirm moving a loom entry to the address its daemon announced."""
+        move = self._loom_move
+        entry = self.hass.config_entries.async_get_entry(move["entry_id"]) if move else None
+        if move is None or entry is None:
+            return self.async_abort(reason="invalid_discovery_info")
+        if user_input is None:
+            self._set_confirm_only()
+            return self.async_show_form(
+                step_id="loom_move",
+                description_placeholders={
+                    "name": entry.title,
+                    "serial": entry.unique_id or "unknown",
+                    "old": f"{entry.data.get(CONF_HOST)}:{entry.data.get(CONF_LOOM_PORT)}",
+                    "new": f"{move[CONF_HOST]}:{move[CONF_LOOM_PORT]}",
+                },
+            )
+        data = {**entry.data, CONF_HOST: move[CONF_HOST], CONF_LOOM_PORT: move[CONF_LOOM_PORT]}
+        if move[CONF_LOOM_INSTANCE_ID]:
+            data[CONF_LOOM_INSTANCE_ID] = move[CONF_LOOM_INSTANCE_ID]
+        self._async_update_entry_and_reload(entry=entry, data=data)
+        return self.async_abort(reason="loom_moved")
 
     async def async_step_loom_pair(self, user_input: ConfigType | None = None) -> ConfigFlowResult:
         """Pair with the daemon or the openccu-lite box: show the code, wait for approval.
@@ -2183,14 +2224,25 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries(include_ignore=False)
             if entry.data.get(CONF_BACKEND) == BACKEND_LOOM
         ]
+        announced_id = _announced_instance_id(txt_id=txt.instance_id)
         if announced_serials := list(txt.ccus):
             entries_by_serial = {entry.unique_id: entry for entry in loom_entries if entry.unique_id}
             for entry in (entries_by_serial[s] for s in announced_serials if s in entries_by_serial):
-                if entry.data.get(CONF_HOST) != host or entry.data.get(CONF_LOOM_PORT) != port:
-                    # Follow the daemon to its announced endpoint (IP change).
-                    self._async_update_entry_and_reload(
-                        entry=entry, data={**entry.data, CONF_HOST: host, CONF_LOOM_PORT: port}
-                    )
+                if entry.data.get(CONF_HOST) == host and entry.data.get(CONF_LOOM_PORT) == port:
+                    continue
+                stored_id = entry.data.get(CONF_LOOM_INSTANCE_ID)
+                if stored_id and stored_id != announced_id:
+                    # Another daemon serving the same CCU (a second
+                    # installation, a test build): not the entry's daemon.
+                    continue
+                # The entry's daemon at a new address — or a daemon the entry
+                # cannot tell from its own. An mDNS announcement is
+                # unauthenticated and its id public, so the entry never
+                # follows on its own: switching sends the entry's token to
+                # that address. The operator confirms.
+                return await self._async_offer_loom_move(
+                    entry=entry, host=host, port=port, instance_id=announced_id, instance=instance
+                )
             if all(s in entries_by_serial for s in announced_serials):
                 # Every announced CCU is already set up on the loom backend.
                 return self.async_abort(
@@ -2216,6 +2268,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_INSTANCE_NAME: instance,
             **_loom_txt_hint(txt=txt),
         }
+        if announced_id:
+            self._loom_discovery[CONF_LOOM_INSTANCE_ID] = announced_id
         self._loom_offer = None
         self.context["title_placeholders"] = {
             CONF_NAME: instance,
@@ -2290,6 +2344,8 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
             data[CONF_LOOM_PORT] = int(port)
         if self._loom_token:
             data[CONF_LOOM_TOKEN] = self._loom_token
+        if instance_id := disc.get(CONF_LOOM_INSTANCE_ID):
+            data[CONF_LOOM_INSTANCE_ID] = instance_id
         data.update(self._loom_box)
         if existing_entry is not None:
             if existing_entry.data.get(CONF_BACKEND, BACKEND_CCU) == BACKEND_LOOM:
@@ -2433,6 +2489,26 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not task.done():
                     task.cancel()
             await asyncio.gather(direct, box_path, return_exceptions=True)
+
+    async def _async_offer_loom_move(
+        self, *, entry: ConfigEntry, host: str, port: int, instance_id: str | None, instance: str
+    ) -> ConfigFlowResult:
+        """Ask whether a configured loom entry should move to an announced address."""
+        # One card per entry, however often the daemon re-announces.
+        await self.async_set_unique_id(f"loom-move-{entry.entry_id}")
+        self._abort_if_unique_id_configured()
+        self._loom_move = {
+            "entry_id": entry.entry_id,
+            CONF_HOST: host,
+            CONF_LOOM_PORT: port,
+            CONF_LOOM_INSTANCE_ID: instance_id,
+        }
+        self.context["title_placeholders"] = {
+            CONF_NAME: instance,
+            CONF_HOST: host,
+            CONF_BACKEND: _get_backend_title(backend=BACKEND_LOOM),
+        }
+        return await self.async_step_loom_move()
 
     async def _async_reauth_loom_offer(self) -> LoomLoginOffer:
         """Return the login offer for the daemon of the entry being reauthenticated.

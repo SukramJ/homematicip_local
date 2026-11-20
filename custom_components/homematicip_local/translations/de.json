@@ -4,6 +4,7 @@
             "already_configured": "Eintrag mit der Seriennummer {serial} ist bereits konfiguriert", 
             "backend_switched": "Backend für die bereits konfigurierte CCU gewechselt. Der bestehende Eintrag behält Einstellungen, Entitäten und Verlauf.", 
             "invalid_discovery_info": "Unvollständige Discovery-Informationen.", 
+            "loom_moved": "Der Eintrag spricht jetzt mit dem Daemon unter der neuen Adresse.", 
             "reauth_failed": "Der Konfigurationseintrag zur erneuten Authentifizierung konnte nicht gefunden werden", 
             "reauth_successful": "Erneute Authentifizierung erfolgreich. Verbindung wiederhergestellt.", 
             "reconfigure_failed": "Der zu ändernde Konfigurationseintrag konnte nicht gefunden werden", 
@@ -162,6 +163,10 @@
                 }, 
                 "description": "**Beta:** Das openccu-loom-Backend befindet sich noch in Erprobung – die direkte CCU-Verbindung bleibt der empfohlene Weg.\n\nAm Daemon unter {host} anmelden. Es werden nur die Anmeldewege angezeigt, die der Daemon anbietet: auf einer openccu-lite-Box ist das allein das Box-Token.", 
                 "title": "Am OpenCCU-Loom-Daemon anmelden (Beta)"
+            }, 
+            "loom_move": {
+                "description": "Ein Daemon für {serial} meldet sich unter {new}. Der Eintrag {name} spricht mit {old}.\n\nStelle nur um, wenn du den Daemon selbst dorthin verlegt hast: Das Anmelde-Token des Eintrags wird an die neue Adresse gesendet.", 
+                "title": "OpenCCU-Loom umgezogen?"
             }, 
             "loom_pick": {
                 "data": {
