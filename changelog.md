@@ -4,6 +4,15 @@
 
 ### Integration
 
+- **A discovered openccu-loom daemon no longer re-points a configured entry by itself.** When a
+  daemon announced a CCU serial that an entry already uses, the entry silently switched to that
+  daemon's address and reloaded — and sent its sign-in token there. A second daemon for the same CCU
+  (a test build, another installation) could take over a working setup that way, and so could any
+  host on the network that announced the serial. Now the entry stays as it is and a discovery card
+  asks whether the daemon moved; only a confirmation switches it. A daemon whose announced instance
+  id differs from the one the entry knows is recognised as another daemon and ignored
+  (needs openccu-loom with SukramJ/openccu-loom#1131; the id is learned at setup and on a confirmed
+  move) (#1386).
 - **Sub devices are now Home Assistant child devices.** A channel group and the schedule of a
   device used to be separate devices linked with `via_device`; they are now child devices of the
   device they belong to, as HA 2026.9 introduced for parts of one product

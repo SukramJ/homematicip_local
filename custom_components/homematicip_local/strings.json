@@ -4,6 +4,7 @@
             "already_configured": "Entry with the serial {serial} is already configured", 
             "backend_switched": "Backend switched for the already configured CCU. The existing entry keeps its settings, entities and history.", 
             "invalid_discovery_info": "Incomplete discovery information.", 
+            "loom_moved": "The entry now talks to the daemon at its new address.", 
             "reauth_failed": "Could not find the configuration entry to reauthenticate", 
             "reauth_successful": "Reauthentication successful. Connection restored.", 
             "reconfigure_failed": "Could not find the configuration entry to reconfigure", 
@@ -162,6 +163,10 @@
                 }, 
                 "description": "**Beta:** The openccu-loom backend is still under evaluation — the direct CCU connection remains the recommended setup.\n\nSign in to the daemon at {host}. Only the sign-in methods the daemon offers are shown: on an openccu-lite box that is the box token alone.", 
                 "title": "Sign in to the OpenCCU-Loom daemon (Beta)"
+            }, 
+            "loom_move": {
+                "description": "A daemon serving {serial} announced itself at {new}. The entry {name} talks to {old}.\n\nSwitch only if you moved the daemon there yourself: the entry's sign-in token is sent to the new address.", 
+                "title": "OpenCCU-Loom moved?"
             }, 
             "loom_pick": {
                 "data": {

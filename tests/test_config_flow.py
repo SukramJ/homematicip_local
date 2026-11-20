@@ -90,6 +90,7 @@ from custom_components.homematicip_local.const import (
     CONF_LOOM_BOX_PASSWORD,
     CONF_LOOM_BOX_TOKEN,
     CONF_LOOM_BOX_USERNAME,
+    CONF_LOOM_INSTANCE_ID,
     CONF_LOOM_PAIR,
     CONF_LOOM_PORT,
     CONF_LOOM_TOKEN,
@@ -3629,6 +3630,27 @@ class TestLoomZeroconfDiscovery:
         assert result["reason"] == "already_configured"
         assert result["description_placeholders"] == {"serial": "ABC123"}
 
+    async def test_announced_serial_at_new_address_does_not_rewrite_the_entry(self, hass: HomeAssistant) -> None:
+        """A configured serial announced at another address asks first; the entry stays as it is.
+
+        mDNS is unauthenticated: rewriting on an announcement alone would send
+        the entry's token to whoever announced the serial.
+        """
+        existing = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="ABC123",
+            version=DomainConfigFlow.VERSION,
+            data={CONF_BACKEND: BACKEND_LOOM, CONF_HOST: "old.local", CONF_LOOM_PORT: 9999},
+        )
+        existing.add_to_hass(hass)
+        result = await self._init_zeroconf(hass, _loom_zeroconf_info(properties={"instance": "Loom", "ccus": "ABC123"}))
+        await hass.async_block_till_done()
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "loom_move"
+        assert result["description_placeholders"]["new"] == "192.168.1.50:8080"
+        assert existing.data[CONF_HOST] == "old.local"
+        assert existing.data[CONF_LOOM_PORT] == 9999
+
     async def test_announced_serial_on_ccu_backend_keeps_card(self, hass: HomeAssistant) -> None:
         """A serial configured on the CCU backend keeps the card (backend-switch path)."""
         existing = MockConfigEntry(
@@ -3656,27 +3678,6 @@ class TestLoomZeroconfDiscovery:
         assert result["reason"] == "already_configured"
         assert result["description_placeholders"] == {"serial": "ABC123"}
 
-    async def test_announced_serials_follow_daemon_host(self, hass: HomeAssistant) -> None:
-        """A configured loom entry follows the daemon's announced endpoint."""
-        existing = MockConfigEntry(
-            domain=HMIP_DOMAIN,
-            unique_id="ABC123",
-            version=DomainConfigFlow.VERSION,
-            data={CONF_BACKEND: BACKEND_LOOM, CONF_HOST: "old.local", CONF_LOOM_PORT: 9999},
-        )
-        existing.add_to_hass(hass)
-        with (
-            patch("custom_components.homematicip_local.async_setup_entry", return_value=True),
-        ):
-            result = await self._init_zeroconf(
-                hass, _loom_zeroconf_info(properties={"instance": "Loom", "ccus": "ABC123"})
-            )
-            await hass.async_block_till_done()
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
-        assert existing.data[CONF_HOST] == "192.168.1.50"
-        assert existing.data[CONF_LOOM_PORT] == 8080
-
     async def test_announced_serials_partially_configured_keeps_card(self, hass: HomeAssistant) -> None:
         """With an unconfigured CCU on the daemon the card stays offered."""
         existing = MockConfigEntry(
@@ -3691,6 +3692,28 @@ class TestLoomZeroconfDiscovery:
         )
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "loom_token"
+
+    async def test_another_daemon_for_the_same_serial_leaves_the_entry(self, hass: HomeAssistant) -> None:
+        """A daemon whose id differs from the entry's is another daemon: no card, no rewrite."""
+        existing = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="ABC123",
+            version=DomainConfigFlow.VERSION,
+            data={
+                CONF_BACKEND: BACKEND_LOOM,
+                CONF_HOST: "old.local",
+                CONF_LOOM_PORT: 9999,
+                CONF_LOOM_INSTANCE_ID: "a" * 32,
+            },
+        )
+        existing.add_to_hass(hass)
+        result = await self._init_zeroconf(
+            hass, _loom_zeroconf_info(properties={"instance": "Loom", "ccus": "ABC123", "id": "b" * 32})
+        )
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+        assert existing.data[CONF_HOST] == "old.local"
+        assert existing.data[CONF_LOOM_PORT] == 9999
 
     async def test_cannot_connect(self, hass: HomeAssistant) -> None:
         with (
@@ -3740,6 +3763,28 @@ class TestLoomZeroconfDiscovery:
         # The entry's explicit advanced config wins over the form default.
         assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_SUB_DEVICES] is False
         assert data[CONST_ADVANCED_CONFIG][CONF_ENABLE_MQTT] is True
+
+    async def test_confirmed_move_rewrites_the_entry(self, hass: HomeAssistant) -> None:
+        """Only the operator's confirmation moves the entry, and it learns the daemon's id."""
+        existing = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="ABC123",
+            version=DomainConfigFlow.VERSION,
+            data={CONF_BACKEND: BACKEND_LOOM, CONF_HOST: "old.local", CONF_LOOM_PORT: 9999},
+        )
+        existing.add_to_hass(hass)
+        daemon_id = "0123456789abcdef0123456789abcdef"
+        with patch("custom_components.homematicip_local.async_setup_entry", return_value=True):
+            init = await self._init_zeroconf(
+                hass, _loom_zeroconf_info(properties={"instance": "Loom", "ccus": "ABC123", "id": daemon_id})
+            )
+            result = await hass.config_entries.flow.async_configure(init["flow_id"], {})
+            await hass.async_block_till_done()
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "loom_moved"
+        assert existing.data[CONF_HOST] == "192.168.1.50"
+        assert existing.data[CONF_LOOM_PORT] == 8080
+        assert existing.data[CONF_LOOM_INSTANCE_ID] == daemon_id
 
     async def test_daemon_endpoint_already_configured_aborts(self, hass: HomeAssistant) -> None:
         """Without announced serials the daemon endpoint dedups the card."""
@@ -3870,6 +3915,27 @@ class TestLoomZeroconfDiscovery:
         assert done["result"].unique_id == const.CONFIG_ENTRY_UNIQUE_ID
         # Creating the loom entry auto-aborts the now-redundant SSDP discovery card.
         assert not hass.config_entries.flow.async_progress()
+
+    async def test_same_daemon_at_new_address_offers_the_move(self, hass: HomeAssistant) -> None:
+        """The entry's own daemon at a new address is offered as a move, still not applied."""
+        existing = MockConfigEntry(
+            domain=HMIP_DOMAIN,
+            unique_id="ABC123",
+            version=DomainConfigFlow.VERSION,
+            data={
+                CONF_BACKEND: BACKEND_LOOM,
+                CONF_HOST: "old.local",
+                CONF_LOOM_PORT: 9999,
+                CONF_LOOM_INSTANCE_ID: "a" * 32,
+            },
+        )
+        existing.add_to_hass(hass)
+        result = await self._init_zeroconf(
+            hass, _loom_zeroconf_info(properties={"instance": "Loom", "ccus": "ABC123", "id": "a" * 32})
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "loom_move"
+        assert existing.data[CONF_HOST] == "old.local"
 
     async def test_shows_token_form(self, hass: HomeAssistant) -> None:
         result = await self._init_zeroconf(hass, _loom_zeroconf_info())
