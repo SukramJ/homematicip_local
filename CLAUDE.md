@@ -133,7 +133,7 @@ homematicip_local/
 - **pytest-homeassistant** (2026.11.2) - Home Assistant's official pytest plugin for custom integrations (HA core `packages/pytest-homeassistant`, pinned to the matching HA release)
 - **mypy** (`<=2.4.1`, a ceiling rather than a pin) - Static type checker (strict mode)
 - **pylint** (4.1.4) - Code linting
-- **ruff** (0.17.5) - Fast Python linter and formatter
+- **ruff** (0.17.6) - Fast Python linter and formatter
 - **prek** (0.5.11) - Git hooks manager (Rust-based pre-commit alternative)
 - **aiohomematic-test-support** (2026.11.6) - Mock test data
 - **async-upnp-client** (0.49.0) - UPnP discovery
