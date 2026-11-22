@@ -73,7 +73,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.11.6](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.6)
+#### Bump aiohomematic to [2026.11.7](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.7)
 
 - **Support for new devices:** thermostats HmIP-WT, KW-STATH, KW-UKETRV, HmIPW-WGT and HmIPW-WGTC, dimmers
   HmIP-WUA, ELV-SH-WUA and HmIP-UDI-PB2
@@ -85,6 +85,11 @@
 - **Fix:** service messages of enum parameters carry the CCU's value text, so the hub sensor `service_messages` shows `Sabotage` instead of `ERROR-7` ([#1356](https://github.com/SukramJ/homematicip_local/discussions/1356))
 - **Fix:** switching the week program of a heating group (HM-CC-VG-1) no longer breaks its device settings page in the CCU WebUI ([#1379](https://github.com/SukramJ/homematicip_local/issues/1379))
 - **Fix:** a timed switch-on reaches a generic switch that is already on ([#1378](https://github.com/SukramJ/homematicip_local/issues/1378))
+- **Fix:** a failed start no longer leaves sessions open on the CCU, so later starts are no longer refused with
+  "invalid credentials or too many sessions"
+- **Fix:** a read request to the CCU is sent once more when the CCU has closed an idle connection, instead of failing
+  the start with `ServerDisconnectedError`
+- **Fix:** loading the device caches at startup no longer blocks Home Assistant
 
 #### Bump aiohomematic-config to [2026.11.1](https://github.com/SukramJ/aiohomematic-config/compare/2026.10.1...2026.11.1)
 
