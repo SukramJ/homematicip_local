@@ -121,7 +121,7 @@ homematicip_local/
 
 ### Runtime Dependencies
 
-- **aiohomematic** (v2026.11.6) - Core async library for Homematic device communication
+- **aiohomematic** (v2026.11.7) - Core async library for Homematic device communication
 - **aiohomematic-config** (v2026.11.1) - Device configuration metadata
 - **openccu-data** (v2026.9.1) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
 - **openccu-loom-client** (v2026.11.9) - Client for the openccu-loom backend (Beta)
@@ -133,9 +133,9 @@ homematicip_local/
 - **pytest-homeassistant** (2026.11.2) - Home Assistant's official pytest plugin for custom integrations (HA core `packages/pytest-homeassistant`, pinned to the matching HA release)
 - **mypy** (`<=2.4.1`, a ceiling rather than a pin) - Static type checker (strict mode)
 - **pylint** (4.1.4) - Code linting
-- **ruff** (0.17.5) - Fast Python linter and formatter
+- **ruff** (0.17.6) - Fast Python linter and formatter
 - **prek** (0.5.11) - Git hooks manager (Rust-based pre-commit alternative)
-- **aiohomematic-test-support** (2026.11.6) - Mock test data
+- **aiohomematic-test-support** (2026.11.7) - Mock test data
 - **async-upnp-client** (0.49.0) - UPnP discovery
 - **uv** - Fast Python package installer (preferred over pip)
 
@@ -1372,7 +1372,7 @@ make hass
 - **Current Version:** 2.12.4
 - **Minimum HA Version:** 2026.11.0+
 - **Python Target:** 3.14+ (CI tests on 3.14)
-- **aiohomematic Version:** 2026.11.6
+- **aiohomematic Version:** 2026.11.7
 - **openccu-loom-client Version:** 2026.11.9. Its wire layer is generated against daemon API `16.3.4`
   (`openccu_loom_client.wire.const.DAEMON_API_VERSION`), but that number no longer gates the
   connection: `_report_api_version` **logs and never raises** — a warning when the majors differ,
