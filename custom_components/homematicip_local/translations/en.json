@@ -1318,7 +1318,7 @@
           "name": "Ramp time"
         },
         "repetitions": {
-          "description": "Number of repetitions (0=none, 1-18=count, -1=infinite)",
+          "description": "Number of repetitions (0=none, 1-14=count, -1=infinite)",
           "name": "Repetitions"
         },
         "soundfile": {
@@ -1666,7 +1666,7 @@
           "name": "Ramp time"
         },
         "repetitions": {
-          "description": "Number of repetitions (0=none, 1-18=count, -1=infinite)",
+          "description": "Number of repetitions (0=none, 1-14=count, -1=infinite)",
           "name": "Repetitions"
         }
       },

@@ -764,7 +764,7 @@ play_sound:
       selector:
         number:
           min: -1
-          max: 18
+          max: 14
           step: 1
           mode: box
 
@@ -830,7 +830,7 @@ set_sound_led:
       selector:
         number:
           min: -1
-          max: 18
+          max: 14
           step: 1
           mode: box
     flash_time:

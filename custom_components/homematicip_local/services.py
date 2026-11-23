@@ -783,7 +783,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             vol.Optional(ATTR_VOLUME): vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
             vol.Optional(ATTR_ON_TIME): vol.All(vol.Coerce(float), vol.Range(min=0.0)),
             vol.Optional(ATTR_RAMP_TIME): vol.All(vol.Coerce(float), vol.Range(min=0.0)),
-            vol.Optional(ATTR_REPETITIONS): vol.All(vol.Coerce(int), vol.Range(min=-1, max=18)),
+            vol.Optional(ATTR_REPETITIONS): vol.All(vol.Coerce(int), vol.Range(min=-1, max=14)),
         },
         func="async_play_sound",
     )
@@ -809,7 +809,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             vol.Optional(ATTR_BRIGHTNESS): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
             vol.Optional(ATTR_ON_TIME): vol.All(vol.Coerce(float), vol.Range(min=0.0)),
             vol.Optional(ATTR_RAMP_TIME): vol.All(vol.Coerce(float), vol.Range(min=0.0)),
-            vol.Optional(ATTR_REPETITIONS): vol.All(vol.Coerce(int), vol.Range(min=-1, max=18)),
+            vol.Optional(ATTR_REPETITIONS): vol.All(vol.Coerce(int), vol.Range(min=-1, max=14)),
             vol.Optional(ATTR_FLASH_TIME): vol.All(vol.Coerce(int), vol.Range(min=0, max=5000)),
         },
         func="async_set_led",

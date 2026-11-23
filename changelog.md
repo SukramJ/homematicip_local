@@ -70,10 +70,14 @@
   card and the configuration panel now take the lowest temperature of the day as base; the schedule on the
   device is unchanged
   ([frontend#129](https://github.com/SukramJ/homematicip-local-frontend/discussions/129)).
+- **`play_sound` and `set_sound_led` accept at most 14 repetitions.** The action forms and their schemas
+  allowed up to 18, but the sound players (HmIP-MP3P, HmIP-WRCD) list `REPETITIONS_001` to `REPETITIONS_014`
+  and `INFINITE_REPETITIONS` only, so 15 to 18 passed the form and the backend then refused the call. The
+  range now ends at 14, matching the device.
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.11.7](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.7)
+#### Bump aiohomematic to [2026.11.8](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.8)
 
 - **Support for new devices:** thermostats HmIP-WT, KW-STATH, KW-UKETRV, HmIPW-WGT and HmIPW-WGTC, dimmers
   HmIP-WUA, ELV-SH-WUA and HmIP-UDI-PB2
@@ -90,6 +94,8 @@
 - **Fix:** a read request to the CCU is sent once more when the CCU has closed an idle connection, instead of failing
   the start with `ServerDisconnectedError`
 - **Fix:** loading the device caches at startup no longer blocks Home Assistant
+- **Fix:** sound and sound LED refuse more than 14 repetitions before sending; the device value list ends at
+  `REPETITIONS_014`
 
 #### Bump aiohomematic-config to [2026.11.1](https://github.com/SukramJ/aiohomematic-config/compare/2026.10.1...2026.11.1)
 
