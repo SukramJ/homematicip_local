@@ -124,7 +124,7 @@ homematicip_local/
 - **aiohomematic** (v2026.11.7) - Core async library for Homematic device communication
 - **aiohomematic-config** (v2026.11.1) - Device configuration metadata
 - **openccu-data** (v2026.9.1) - CCU configuration metadata (translations, easymodes, link profiles); pulled in by aiohomematic and pinned in the manifest, not imported here
-- **openccu-loom-client** (v2026.11.9) - Client for the openccu-loom backend (Beta)
+- **openccu-loom-client** (v2026.11.11) - Client for the openccu-loom backend (Beta)
 - **Home Assistant Core** - Minimum version: 2026.11.0+
 - **Python 3.14+** (target version for development)
 
