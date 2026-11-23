@@ -70,6 +70,10 @@
   card and the configuration panel now take the lowest temperature of the day as base; the schedule on the
   device is unchanged
   ([frontend#129](https://github.com/SukramJ/homematicip-local-frontend/discussions/129)).
+- **`play_sound` and `set_sound_led` accept at most 14 repetitions.** The action forms and their schemas
+  allowed up to 18, but the sound players (HmIP-MP3P, HmIP-WRCD) list `REPETITIONS_001` to `REPETITIONS_014`
+  and `INFINITE_REPETITIONS` only, so 15 to 18 passed the form and the backend then refused the call. The
+  range now ends at 14, matching the device.
 
 ### Dependencies
 

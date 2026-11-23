@@ -1323,7 +1323,7 @@
                     "name": "Anlaufzeit"
                 }, 
                 "repetitions": {
-                    "description": "Anzahl der Wiederholungen (0=keine, 1-18=Anzahl, -1=unendlich)", 
+                    "description": "Anzahl der Wiederholungen (0=keine, 1-14=Anzahl, -1=unendlich)", 
                     "name": "Wiederholungen"
                 }, 
                 "soundfile": {
@@ -1671,7 +1671,7 @@
                     "name": "Anlaufzeit"
                 }, 
                 "repetitions": {
-                    "description": "Anzahl der Wiederholungen (0=keine, 1-18=Anzahl, -1=unendlich)", 
+                    "description": "Anzahl der Wiederholungen (0=keine, 1-14=Anzahl, -1=unendlich)", 
                     "name": "Wiederholungen"
                 }
             }, 

@@ -13,10 +13,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import pathlib
 from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+import voluptuous as vol
+import yaml
 
 import custom_components.homematicip_local.services as hm_services
 from homeassistant.core import HomeAssistant
@@ -287,3 +290,51 @@ class TestAsyncUnloadServices:
 
         # One removal per enum value
         assert len(removed) == len(list(hm_services.HmipLocalServices))
+
+
+class TestSoundServiceRepetitionsRange:
+    """play_sound and set_sound_led accept the repetitions the device value list offers."""
+
+    @staticmethod
+    async def _entity_schemas(hass: HomeAssistant, monkeypatch) -> dict[str, dict[Any, Any]]:
+        registered: dict[str, dict[Any, Any]] = {}
+
+        def fake_register_platform_entity_service(
+            *, hass, service_domain, service_name, entity_domain, schema, func, **kwargs
+        ):
+            registered[str(service_name)] = schema
+
+        monkeypatch.setattr(hm_services, "async_register_admin_service", lambda **kwargs: None)
+        monkeypatch.setattr(
+            hm_services, "async_register_platform_entity_service", fake_register_platform_entity_service
+        )
+        await hm_services.async_setup_services(hass)
+        return registered
+
+    @pytest.mark.parametrize(
+        "service",
+        [hm_services.HmipLocalServices.PLAY_SOUND, hm_services.HmipLocalServices.SET_SOUND_LED],
+    )
+    def test_action_form_matches_schema(self, service) -> None:
+        """The services.yaml selector offers the same range as the schema."""
+        services_yaml = yaml.safe_load(
+            (pathlib.Path(hm_services.__file__).parent / "services.yaml").read_text(encoding="utf-8")
+        )
+        number = services_yaml[str(service)]["fields"]["repetitions"]["selector"]["number"]
+        assert (number["min"], number["max"]) == (-1, 14)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "service",
+        [hm_services.HmipLocalServices.PLAY_SOUND, hm_services.HmipLocalServices.SET_SOUND_LED],
+    )
+    async def test_schema_caps_repetitions_at_14(self, hass: HomeAssistant, monkeypatch, service) -> None:
+        """The value list ends at REPETITIONS_014 before INFINITE_REPETITIONS, so 15 is refused."""
+        schema = vol.Schema((await self._entity_schemas(hass, monkeypatch))[str(service)])
+
+        assert schema({"repetitions": 14})["repetitions"] == 14
+        assert schema({"repetitions": -1})["repetitions"] == -1
+        with pytest.raises(vol.Invalid):
+            schema({"repetitions": 15})
+        with pytest.raises(vol.Invalid):
+            schema({"repetitions": -2})
