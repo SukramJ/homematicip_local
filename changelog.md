@@ -4,6 +4,10 @@
 
 ### Integration
 
+- **Hub entities load again on Home Assistant 2026.12.** HA 2026.12 turned `UndefinedType` into an
+  alias of the `Undefined` sentinel object, so the name check of system variables, programs and the
+  alarm entity raised `TypeError: isinstance() arg 2 must be a type` and those entities were not
+  added. The check now compares by identity and works on 2026.11 and 2026.12.
 - **A discovered openccu-loom daemon no longer re-points a configured entry by itself.** When a
   daemon announced a CCU serial that an entry already uses, the entry silently switched to that
   daemon's address and reloaded — and sent its sign-in token there. A second daemon for the same CCU
@@ -77,7 +81,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.11.8](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.8)
+#### Bump aiohomematic to [2026.11.9](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.9)
 
 - **Support for new devices:** thermostats HmIP-WT, KW-STATH, KW-UKETRV, HmIPW-WGT and HmIPW-WGTC, dimmers
   HmIP-WUA, ELV-SH-WUA and HmIP-UDI-PB2
@@ -96,6 +100,9 @@
 - **Fix:** loading the device caches at startup no longer blocks Home Assistant
 - **Fix:** sound and sound LED refuse more than 14 repetitions before sending; the device value list ends at
   `REPETITIONS_014`
+- **Fix:** with `use_group_channel_for_cover_state`, a cover command is no longer dropped when only the group channel
+  already shows the target, and a blind command for one axis keeps the other axis at the own channel's value
+  ([#1393](https://github.com/SukramJ/homematicip_local/issues/1393))
 
 #### Bump aiohomematic-config to [2026.11.1](https://github.com/SukramJ/aiohomematic-config/compare/2026.10.1...2026.11.1)
 

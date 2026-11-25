@@ -26,7 +26,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import UndefinedType
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import (
     ALARM_DEVICE_IDENTIFIER,
@@ -597,7 +597,9 @@ class AioHomematicGenericHubEntity(Entity):
 
         entity_name = self._data_point.name
 
-        if (translated_name := super().name) is not None and not isinstance(translated_name, UndefinedType):
+        # Identity, not isinstance: from HA 2026.12 on, UndefinedType is an
+        # alias of the sentinel object Undefined, no longer a class.
+        if (translated_name := super().name) is not None and translated_name is not UNDEFINED:
             entity_name = translated_name
 
         if not self._data_point.channel and entity_name and isinstance(entity_name, str):
@@ -611,8 +613,6 @@ class AioHomematicGenericHubEntity(Entity):
                 entity_name = f"P {entity_name}"
 
         if entity_name == "":
-            return None
-        if isinstance(entity_name, UndefinedType):
             return None
         return entity_name.replace("_", " ")
 
