@@ -81,7 +81,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.11.8](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.8)
+#### Bump aiohomematic to [2026.11.9](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.9)
 
 - **Support for new devices:** thermostats HmIP-WT, KW-STATH, KW-UKETRV, HmIPW-WGT and HmIPW-WGTC, dimmers
   HmIP-WUA, ELV-SH-WUA and HmIP-UDI-PB2
@@ -100,6 +100,9 @@
 - **Fix:** loading the device caches at startup no longer blocks Home Assistant
 - **Fix:** sound and sound LED refuse more than 14 repetitions before sending; the device value list ends at
   `REPETITIONS_014`
+- **Fix:** with `use_group_channel_for_cover_state`, a cover command is no longer dropped when only the group channel
+  already shows the target, and a blind command for one axis keeps the other axis at the own channel's value
+  ([#1393](https://github.com/SukramJ/homematicip_local/issues/1393))
 
 #### Bump aiohomematic-config to [2026.11.1](https://github.com/SukramJ/aiohomematic-config/compare/2026.10.1...2026.11.1)
 
