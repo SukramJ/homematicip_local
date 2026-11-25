@@ -1,4 +1,4 @@
-# Version [2.12.4](https://github.com/SukramJ/homematicip_local/compare/2.12.3...2.12.4) (unreleased)
+# Version [2.13.0](https://github.com/SukramJ/homematicip_local/compare/2.12.3...2.13.0) (unreleased)
 
 ## What's Changed
 
