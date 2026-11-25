@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -11,6 +11,7 @@ from custom_components.homematicip_local.const import DOMAIN
 from custom_components.homematicip_local.control_unit import ControlUnit
 from custom_components.homematicip_local.generic_entity import AioHomematicGenericEntity, AioHomematicGenericHubEntity
 from custom_components.homematicip_local.support import get_device_identifier
+from homeassistant.helpers.entity import Entity
 
 # pylint: disable=protected-access
 
@@ -452,3 +453,28 @@ class TestHubEntityNameFromBackend:
         entity = _create_hub_entity(mock_dp=mock_dp)
 
         assert entity.name == "alarm messages"
+
+
+class TestHubEntityNameWithUndefinedSentinel:
+    """
+    The hub entity name survives HA's `Undefined` sentinel.
+
+    From HA 2026.12 on, `UndefinedType` and `UNDEFINED` are deprecated
+    aliases of the sentinel object `Undefined` (`helpers/typing.py`), no
+    longer a class. An `isinstance` check against it raised `TypeError`
+    and every hub entity failed to be added. The test rebuilds that shape
+    on the pinned HA: alias and constant are one non-type object, and the
+    base `Entity.name` answers with it.
+    """
+
+    def test_an_undefined_base_name_falls_back_to_the_data_point_name(self) -> None:
+        sentinel = object()
+        mock_dp = _create_mock_hub_data_point(name="alarm_messages", resolved_name=None)
+        entity = _create_hub_entity(mock_dp=mock_dp)
+
+        with (
+            patch("custom_components.homematicip_local.generic_entity.UndefinedType", sentinel, create=True),
+            patch("custom_components.homematicip_local.generic_entity.UNDEFINED", sentinel, create=True),
+            patch.object(Entity, "name", new_callable=PropertyMock, return_value=sentinel),
+        ):
+            assert entity.name == "alarm messages"
