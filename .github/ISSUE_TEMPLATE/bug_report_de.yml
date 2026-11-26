@@ -19,7 +19,7 @@ body:
         Dazu gehören insbesondere: **Integrationsdiagnose (.json-Datei)** und **Protokolldatei**.
         Issues ohne diese Informationen können kommentarlos geschlossen werden.
 
-        📖 **[Warum sind Diagnosedaten und Logs so wichtig?](https://sukramj.github.io/aiohomematic/contributor/testing/debug_data_importance/)** - Bitte lies dies, um zu verstehen, was wir benötigen und warum.
+        📖 **[Warum sind Diagnosedaten und Logs so wichtig?](https://sukramj.dev/aiohomematic/contributor/testing/debug_data_importance/)** - Bitte lies dies, um zu verstehen, was wir benötigen und warum.
 
         🤖 **KI-generierte Analysen helfen hier nicht weiter.** Bitte hänge die rohen **Diagnosedaten (.json)** und die **Protokolldatei** an — keine von ChatGPT/Claude/Copilot o. Ä. erstellte Zusammenfassung oder Diagnose. Wir analysieren die Rohdaten selbst; eingefügte KI-Interpretationen sind häufig falsch und nicht verwertbar. (Dass Du KI zur eigenen Fehlersuche nutzt, ist völlig in Ordnung — gib uns aber die zugrunde liegenden Dateien, nicht deren Schlussfolgerungen.)
 
@@ -30,11 +30,11 @@ body:
     attributes:
       label: Ich stimme dem Folgenden zu
       options:
-        - label: Ich habe die [Dokumentation](https://sukramj.github.io/aiohomematic/user/homeassistant_integration/) gelesen
+        - label: Ich habe die [Dokumentation](https://sukramj.dev/aiohomematic/user/homeassistant_integration/) gelesen
           required: true
-        - label: Ich habe die [Fehlerbehebung-Dokumentation](https://sukramj.github.io/aiohomematic/user/troubleshooting/homeassistant_troubleshooting/) gelesen, und versucht das Problem selbstständig zu identifizieren/beheben.
+        - label: Ich habe die [Fehlerbehebung-Dokumentation](https://sukramj.dev/aiohomematic/user/troubleshooting/homeassistant_troubleshooting/) gelesen, und versucht das Problem selbstständig zu identifizieren/beheben.
           required: true
-        - label: Ich habe das [Glossar](https://sukramj.github.io/aiohomematic/reference/glossary/) gelesen und verstehe den Unterschied zwischen Integration, App und Backend
+        - label: Ich habe das [Glossar](https://sukramj.dev/aiohomematic/reference/glossary/) gelesen und verstehe den Unterschied zwischen Integration, App und Backend
           required: true
         - label: Ich kenne die neuesten [Versionshinweise](https://github.com/sukramj/homematicip_local/releases)
           required: true

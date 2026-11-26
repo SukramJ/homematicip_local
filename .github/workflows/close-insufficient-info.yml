@@ -116,15 +116,15 @@ jobs:
             Ohne eine **Integrationsdiagnose** (.json-Datei) und ein **Debug-Log** ist es uns nicht möglich, die Ursache des Problems zu identifizieren. Diese Daten sind unverzichtbar, da sie die Systemkonfiguration, den Zustand der Geräte und die genaue Fehlersequenz dokumentieren.
 
             **Nächste Schritte:**
-            - Bitte lies [Warum sind Diagnosedaten und Logs so wichtig?](https://sukramj.github.io/aiohomematic/contributor/testing/debug_data_importance/)
+            - Bitte lies [Warum sind Diagnosedaten und Logs so wichtig?](https://sukramj.dev/aiohomematic/contributor/testing/debug_data_importance/)
             - Erstelle ein neues Issue mit vollständigen Diagnosedaten, falls das Problem weiterhin besteht
 
             💡 **Tipp:** Bei Geräteproblemen (fehlende Entitäten, falsche Werte, seltsames Verhalten) sind Screenshots viel hilfreicher als lange Textbeschreibungen!
 
             **Hilfreiche Dokumentation:**
-            - [Dokumentation](https://sukramj.github.io/aiohomematic/user/homeassistant_integration/)
-            - [Fehlerbehebung](https://sukramj.github.io/aiohomematic/user/troubleshooting/homeassistant_troubleshooting/)
-            - [Glossar](https://sukramj.github.io/aiohomematic/reference/glossary/)
+            - [Dokumentation](https://sukramj.dev/aiohomematic/user/homeassistant_integration/)
+            - [Fehlerbehebung](https://sukramj.dev/aiohomematic/user/troubleshooting/homeassistant_troubleshooting/)
+            - [Glossar](https://sukramj.dev/aiohomematic/reference/glossary/)
             - [Versionshinweise](https://github.com/sukramj/homematicip_local/releases)
 
             Wir helfen gerne, sobald die erforderlichen Informationen vorliegen.`;
@@ -134,15 +134,15 @@ jobs:
             Without an **integration diagnostics** file (.json) and a **debug log**, we cannot identify the root cause of the issue. These data are essential as they document the system configuration, device states, and the exact error sequence.
 
             **Next steps:**
-            - Please read [Why are diagnostics and logs so important?](https://sukramj.github.io/aiohomematic/contributor/testing/debug_data_importance/)
+            - Please read [Why are diagnostics and logs so important?](https://sukramj.dev/aiohomematic/contributor/testing/debug_data_importance/)
             - Open a new issue with complete diagnostic data if the problem persists
 
             💡 **Tip:** For device-related issues (missing entities, wrong values, strange behavior), screenshots are much more helpful than long text descriptions!
 
             **Helpful documentation:**
-            - [Documentation](https://sukramj.github.io/aiohomematic/user/homeassistant_integration/)
-            - [Troubleshooting](https://sukramj.github.io/aiohomematic/user/troubleshooting/homeassistant_troubleshooting/)
-            - [Glossary](https://sukramj.github.io/aiohomematic/reference/glossary/)
+            - [Documentation](https://sukramj.dev/aiohomematic/user/homeassistant_integration/)
+            - [Troubleshooting](https://sukramj.dev/aiohomematic/user/troubleshooting/homeassistant_troubleshooting/)
+            - [Glossary](https://sukramj.dev/aiohomematic/reference/glossary/)
             - [Release notes](https://github.com/sukramj/homematicip_local/releases)
 
             We're happy to help once the required information is available.`;

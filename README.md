@@ -20,7 +20,7 @@ Homematic(IP) Local for OpenCCU is a custom [integration](https://www.home-assis
 
 | Resource | Link |
 |----------|------|
-| **Full Documentation** | [User Guide](https://sukramj.github.io/aiohomematic/user/homeassistant_integration/) |
+| **Full Documentation** | [User Guide](https://sukramj.dev/aiohomematic/user/homeassistant_integration/) |
 | **Installation** | See [Installation](#installation) below |
 | **Alternative Setup (OpenCCU)** | [OpenCCU Wiki](https://github.com/OpenCCU/OpenCCU/wiki/HomeAssistant-Integration) |
 | **Changelog** | [changelog.md](changelog.md) |
@@ -84,21 +84,21 @@ After installation, add the integration via **Settings** > **Devices & Services*
 - Allowed password characters: `A-Z`, `a-z`, `0-9`, `.!$():;#-`
 - XML-RPC authentication recommended (Settings > Control Panel > Security)
 
-For complete requirements and configuration details, see the [Full Documentation](https://sukramj.github.io/aiohomematic/user/homeassistant_integration/).
+For complete requirements and configuration details, see the [Full Documentation](https://sukramj.dev/aiohomematic/user/homeassistant_integration/).
 
 ## Documentation
 
-The complete documentation is available at **[sukramj.github.io/aiohomematic](https://sukramj.github.io/aiohomematic/)**:
+The complete documentation is available at **[sukramj.dev/aiohomematic](https://sukramj.dev/aiohomematic/)**:
 
 | Topic | Link |
 |-------|------|
-| **Home Assistant Integration** | [User Guide](https://sukramj.github.io/aiohomematic/user/homeassistant_integration/) |
-| **Actions Reference** | [Actions](https://sukramj.github.io/aiohomematic/user/features/homeassistant_actions/) |
-| **Events Reference** | [Events](https://sukramj.github.io/aiohomematic/user/features/homeassistant_events/) |
-| **Troubleshooting** | [Troubleshooting Guide](https://sukramj.github.io/aiohomematic/user/troubleshooting/homeassistant_troubleshooting/) |
-| **Week Profiles** | [Week Profiles](https://sukramj.github.io/aiohomematic/user/features/week_profile/) |
-| **Naming Conventions** | [Naming](https://sukramj.github.io/aiohomematic/user/advanced/homeassistant_naming/) |
-| **Glossary** | [Glossary](https://sukramj.github.io/aiohomematic/reference/glossary/) |
+| **Home Assistant Integration** | [User Guide](https://sukramj.dev/aiohomematic/user/homeassistant_integration/) |
+| **Actions Reference** | [Actions](https://sukramj.dev/aiohomematic/user/features/homeassistant_actions/) |
+| **Events Reference** | [Events](https://sukramj.dev/aiohomematic/user/features/homeassistant_events/) |
+| **Troubleshooting** | [Troubleshooting Guide](https://sukramj.dev/aiohomematic/user/troubleshooting/homeassistant_troubleshooting/) |
+| **Week Profiles** | [Week Profiles](https://sukramj.dev/aiohomematic/user/features/week_profile/) |
+| **Naming Conventions** | [Naming](https://sukramj.dev/aiohomematic/user/advanced/homeassistant_naming/) |
+| **Glossary** | [Glossary](https://sukramj.dev/aiohomematic/reference/glossary/) |
 
 ### Additional Resources
 
@@ -144,7 +144,7 @@ entity you have disabled or hidden cannot trigger the automation. They require H
 Assistant 2026.9 or newer.
 
 The remaining blueprints are driven by the integration's **events** — see the
-[Events Reference](https://sukramj.github.io/aiohomematic/user/features/homeassistant_events/)
+[Events Reference](https://sukramj.dev/aiohomematic/user/features/homeassistant_events/)
 for which parameters trigger which event. Note that CCU service messages (`CONFIG_PENDING`,
 `UPDATE_PENDING`, …) are not events; they are available through the
 `sensor.<instance>_hub_service_messages` sensor.
@@ -159,7 +159,7 @@ Community blueprints are welcome via pull request in [blueprints/community](blue
 |----------|------|
 | **Report Issues** | [GitHub Issues](https://github.com/sukramj/homematicip_local/issues) |
 | **Discussions** | [GitHub Discussions](https://github.com/sukramj/homematicip_local/discussions) |
-| **Documentation** | [sukramj.github.io/aiohomematic](https://sukramj.github.io/aiohomematic/) |
+| **Documentation** | [sukramj.dev/aiohomematic](https://sukramj.dev/aiohomematic/) |
 | **Contributing** | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | **AI Contribution Policy** | [AI_POLICY.md](AI_POLICY.md) |
 | **Sponsor** | [GitHub Sponsors](https://github.com/sponsors/SukramJ) |
