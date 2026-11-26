@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UndefinedType
 
 from . import HomematicConfigEntry
 from .backend_types import LOOM_DP_ALARM_CONTROL_PANEL
@@ -36,6 +35,7 @@ if TYPE_CHECKING:
     from openccu_loom_client.compat.aiohomematic.model.alarm_panel import LoomDpAlarmControlPanel
 
     from aiohomematic.interfaces.model import GenericHubDataPointProtocol
+    from homeassistant.helpers.typing import Undefined
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -233,7 +233,7 @@ class AioHomematicAlarmMotionResetButton(AioHomematicAlarmEntity, ButtonEntity):
 
     @property
     @override
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """
         Return the daemon's name for this button, else compose one here.
 

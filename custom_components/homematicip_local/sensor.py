@@ -21,7 +21,7 @@ from homeassistant.const import ATTR_CONFIG_ENTRY_ID, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType, UndefinedType
+from homeassistant.helpers.typing import StateType
 
 from . import HomematicConfigEntry
 from .backend_types import LOOM_DP_ALARM_CONTROL_PANEL
@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     from openccu_loom_client.compat.aiohomematic.model.alarm_panel import LoomDpAlarmControlPanel
 
     from aiohomematic.interfaces.model import GenericHubDataPointProtocol
+    from homeassistant.helpers.typing import Undefined
 
 ATTR_CURRENT_SCHEDULE_PROFILE: Final = "active_profile"
 ATTR_AVAILABLE_PROFILES: Final = "available_profiles"
@@ -371,7 +372,7 @@ class AioHomematicWeekProfileSensor(AioHomematicGenericEntity[WeekProfileDataPoi
 
     @property
     @override
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """Return the name of the entity."""
         if self._cu.enable_sub_devices:
             # Sub-device is "Schedule"/"Zeitplan", sensor is the main entity
@@ -430,7 +431,7 @@ class AioHomematicAlarmTriggeredMotionSensor(AioHomematicAlarmEntity, SensorEnti
 
     @property
     @override
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """
         Return the daemon's name for this counter, else compose one here.
 

@@ -154,9 +154,9 @@ class TestAioHomematicEvent:
         )
         device_info = entity.device_info
         assert device_info is not None
-        assert device_info.get("name") == "HmIP-DBB_VCU4567298"
-        assert device_info.get("model") == "HmIP-DBB"
-        assert device_info.get("serial_number") == "VCU4567298"
+        assert device_info.name == "HmIP-DBB_VCU4567298"
+        assert device_info.model == "HmIP-DBB"
+        assert device_info.serial_number == "VCU4567298"
 
     @pytest.mark.asyncio
     async def test_keypress_reaches_the_ha_event_bus(

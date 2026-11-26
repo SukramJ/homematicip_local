@@ -7,7 +7,10 @@
 - **Hub entities load again on Home Assistant 2026.12.** HA 2026.12 turned `UndefinedType` into an
   alias of the `Undefined` sentinel object, so the name check of system variables, programs and the
   alarm entity raised `TypeError: isinstance() arg 2 must be a type` and those entities were not
-  added. The check now compares by identity and works on 2026.11 and 2026.12.
+  added. The check now tests for a text name and works on 2026.11 and 2026.12.
+- **No deprecation warning about `UNDEFINED` / `UndefinedType` on Home Assistant 2026.12.** HA
+  2026.12 logs "The deprecated alias UNDEFINED was used from homematicip_local" for every runtime
+  import of these names, which it removes in 2027.12. The integration no longer imports them.
 - **A discovered openccu-loom daemon no longer re-points a configured entry by itself.** When a
   daemon announced a CCU serial that an entry already uses, the entry silently switched to that
   daemon's address and reloaded — and sent its sign-in token there. A second daemon for the same CCU

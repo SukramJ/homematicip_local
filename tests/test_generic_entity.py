@@ -250,19 +250,19 @@ class TestChildDeviceInfo:
 
         device_info = entity._attr_device_info
         assert device_info is not None
-        assert device_info["identifiers"] == {(DOMAIN, f"{_DEVICE_IDENTIFIER}-2")}
-        assert device_info["parent_device_id"] == _PARENT_DEVICE_ID
-        assert device_info["name"] == "Küche Licht"
-        assert device_info["suggested_area"] == "Küche"
-        assert "manufacturer" not in device_info
-        assert "via_device_id" not in device_info
+        assert device_info.identifiers == {(DOMAIN, f"{_DEVICE_IDENTIFIER}-2")}
+        assert device_info.parent_device_id == _PARENT_DEVICE_ID
+        assert device_info.name == "Küche Licht"
+        assert device_info.suggested_area == "Küche"
+        assert not hasattr(device_info, "manufacturer")
+        assert not hasattr(device_info, "via_device_id")
         # The parent is registered with the full device info of the device itself.
         parent_info = mock_cu.ensure_parent_device_exists.call_args.kwargs["device_info"]
-        assert parent_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
-        assert parent_info["name"] == "HmIP-BSL Test"
-        assert parent_info["model"] == "HmIP-PSM"
-        assert parent_info["suggested_area"] == "Living Room"
-        assert parent_info["via_device_id"] == _CENTRAL_DEVICE_ID
+        assert parent_info.identifiers == {(DOMAIN, _DEVICE_IDENTIFIER)}
+        assert parent_info.name == "HmIP-BSL Test"
+        assert parent_info.model == "HmIP-PSM"
+        assert parent_info.suggested_area == "Living Room"
+        assert parent_info.via_device_id == _CENTRAL_DEVICE_ID
 
     def test_channel_group_without_a_room_inherits_the_parent_area(self) -> None:
         """A group without its own room passes no area, so HA resolves the parent's."""
@@ -273,7 +273,7 @@ class TestChildDeviceInfo:
 
         device_info = entity._attr_device_info
         assert device_info is not None
-        assert device_info["suggested_area"] is None
+        assert device_info.suggested_area is None
 
     def test_multi_group_channel_without_group_master_stays_on_the_device(self) -> None:
         """Test that a group-master-less channel does not split off a child device."""
@@ -288,9 +288,9 @@ class TestChildDeviceInfo:
         assert device_info is not None
         # Without a group master there is no child to split off, so the entity
         # stays on the device — which hangs off the central.
-        assert device_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
-        assert "parent_device_id" not in device_info
-        assert device_info["via_device_id"] == _CENTRAL_DEVICE_ID
+        assert device_info.identifiers == {(DOMAIN, _DEVICE_IDENTIFIER)}
+        assert not hasattr(device_info, "parent_device_id")
+        assert device_info.via_device_id == _CENTRAL_DEVICE_ID
         mock_cu.ensure_parent_device_exists.assert_not_called()
 
     def test_non_schedule_no_subdevice(self) -> None:
@@ -301,11 +301,11 @@ class TestChildDeviceInfo:
 
         device_info = entity._attr_device_info
         assert device_info is not None
-        assert device_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
-        assert device_info["name"] == "HmIP-PSM Test"
-        assert device_info["manufacturer"] == "eQ-3"
-        assert device_info["serial_number"] == _DEVICE_ADDRESS
-        assert device_info["via_device_id"] == _CENTRAL_DEVICE_ID
+        assert device_info.identifiers == {(DOMAIN, _DEVICE_IDENTIFIER)}
+        assert device_info.name == "HmIP-PSM Test"
+        assert device_info.manufacturer == "eQ-3"
+        assert device_info.serial_number == _DEVICE_ADDRESS
+        assert device_info.via_device_id == _CENTRAL_DEVICE_ID
         mock_cu.ensure_parent_device_exists.assert_not_called()
 
     @pytest.mark.parametrize(
@@ -326,12 +326,12 @@ class TestChildDeviceInfo:
 
         device_info = entity._attr_device_info
         assert device_info is not None
-        assert device_info["identifiers"] == {(DOMAIN, f"{_DEVICE_IDENTIFIER}-schedule")}
-        assert device_info["parent_device_id"] == _PARENT_DEVICE_ID
-        assert device_info["name"] == "Zeitplan"
-        assert "via_device_id" not in device_info
+        assert device_info.identifiers == {(DOMAIN, f"{_DEVICE_IDENTIFIER}-schedule")}
+        assert device_info.parent_device_id == _PARENT_DEVICE_ID
+        assert device_info.name == "Zeitplan"
+        assert not hasattr(device_info, "via_device_id")
         parent_info = mock_cu.ensure_parent_device_exists.call_args.kwargs["device_info"]
-        assert parent_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
+        assert parent_info.identifiers == {(DOMAIN, _DEVICE_IDENTIFIER)}
 
     @pytest.mark.parametrize(
         "category",
@@ -352,8 +352,8 @@ class TestChildDeviceInfo:
         device_info = entity._attr_device_info
         assert device_info is not None
         # Entity stays on main device, not a separate schedule child device
-        assert device_info["identifiers"] == {(DOMAIN, _DEVICE_IDENTIFIER)}
-        assert device_info["via_device_id"] == _CENTRAL_DEVICE_ID
+        assert device_info.identifiers == {(DOMAIN, _DEVICE_IDENTIFIER)}
+        assert device_info.via_device_id == _CENTRAL_DEVICE_ID
         mock_cu.ensure_parent_device_exists.assert_not_called()
 
     def test_schedule_wins_over_a_channel_group(self) -> None:
@@ -365,9 +365,9 @@ class TestChildDeviceInfo:
 
         device_info = entity._attr_device_info
         assert device_info is not None
-        assert device_info["identifiers"] == {(DOMAIN, f"{_DEVICE_IDENTIFIER}-schedule")}
-        assert device_info["name"] == "Zeitplan"
-        assert device_info["suggested_area"] is None
+        assert device_info.identifiers == {(DOMAIN, f"{_DEVICE_IDENTIFIER}-schedule")}
+        assert device_info.name == "Zeitplan"
+        assert device_info.suggested_area is None
 
 
 def _create_mock_hub_data_point(
@@ -462,9 +462,9 @@ class TestHubEntityNameWithUndefinedSentinel:
     From HA 2026.12 on, `UndefinedType` and `UNDEFINED` are deprecated
     aliases of the sentinel object `Undefined` (`helpers/typing.py`), no
     longer a class. An `isinstance` check against it raised `TypeError`
-    and every hub entity failed to be added. The test rebuilds that shape
-    on the pinned HA: alias and constant are one non-type object, and the
-    base `Entity.name` answers with it.
+    and every hub entity failed to be added. The name check now tests for
+    `str` and needs neither alias at runtime; the test lets the base
+    `Entity.name` answer with a foreign non-str object, as that sentinel is.
     """
 
     def test_an_undefined_base_name_falls_back_to_the_data_point_name(self) -> None:
@@ -472,9 +472,5 @@ class TestHubEntityNameWithUndefinedSentinel:
         mock_dp = _create_mock_hub_data_point(name="alarm_messages", resolved_name=None)
         entity = _create_hub_entity(mock_dp=mock_dp)
 
-        with (
-            patch("custom_components.homematicip_local.generic_entity.UndefinedType", sentinel, create=True),
-            patch("custom_components.homematicip_local.generic_entity.UNDEFINED", sentinel, create=True),
-            patch.object(Entity, "name", new_callable=PropertyMock, return_value=sentinel),
-        ):
+        with patch.object(Entity, "name", new_callable=PropertyMock, return_value=sentinel):
             assert entity.name == "alarm messages"

@@ -31,7 +31,6 @@ from custom_components.homematicip_local.entity_helpers.descriptions.sensors.air
     NUMBER_CONCENTRATION_CM3,
 )
 from custom_components.homematicip_local.entity_helpers.registry import REGISTRY, EntityDescriptionRule
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     from custom_components.homematicip_local.support import HmGenericDataPointProtocol
@@ -158,7 +157,7 @@ def _get_name_and_translation_key(
     *,
     data_point: HmGenericDataPointProtocol | CustomDataPointProtocol | GenericHubDataPointProtocol,
     entity_desc: EntityDescription,
-) -> tuple[str | UndefinedType | None, str | None]:
+) -> tuple[str | None, str | None]:
     """Get the name and translation_key for an entity."""
     name = data_point.name
 
@@ -166,11 +165,8 @@ def _get_name_and_translation_key(
         return name, entity_desc.translation_key
 
     if isinstance(data_point, (CalculatedDataPointProtocol, CombinedDataPointProtocol, GenericDataPointProtocol)):
-        if isinstance(entity_desc, HmEntityDescription):
-            if entity_desc.name_source == HmNameSource.ENTITY_NAME:
-                return name, name.lower()
-            if entity_desc.name_source == HmNameSource.DEVICE_CLASS:
-                return UNDEFINED, None
+        if isinstance(entity_desc, HmEntityDescription) and entity_desc.name_source == HmNameSource.ENTITY_NAME:
+            return name, name.lower()
 
         tk = data_point.parameter.lower()
         return name, tk if tk in ENTITY_TRANSLATION_KEYS else None

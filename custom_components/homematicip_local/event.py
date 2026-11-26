@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Final, override
+from typing import TYPE_CHECKING, Final, override
 
 from aiohomematic.central.events import DataPointStateChangedEvent, DeviceRemovedEvent, SubscriptionGroup
 from aiohomematic.const import DATA_POINT_EVENTS, DataPointCategory, Parameter
@@ -15,13 +15,15 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UndefinedType
 
 from . import HomematicConfigEntry
 from .const import DOMAIN, EVENT_ADDRESS, EVENT_CHANNEL_NO, EVENT_INTERFACE_ID, EVENT_MODEL
 from .control_unit import ControlUnit, signal_new_data_point
 from .entity_helpers.base import HmEventEntityDescription
 from .entity_helpers.registry import REGISTRY
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import Undefined
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,7 +157,7 @@ class AioHomematicEvent(EventEntity):
         return self._event_group.device.available
 
     @property
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """Return the name of the entity."""
         return self._event_group.name
 
