@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, Final, Generic, override
+from typing import TYPE_CHECKING, Any, Final, Generic, override
 
 from aiohomematic import ccu_translations
 from aiohomematic.central.events import DataPointStateChangedEvent, DeviceRemovedEvent, SubscriptionGroup
@@ -26,7 +26,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import (
     ALARM_DEVICE_IDENTIFIER,
@@ -44,6 +43,9 @@ from .support import (
     HmGenericSysvarDataPointProtocol,
     get_data_point,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import Undefined
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -279,7 +281,7 @@ class AioHomematicGenericEntity(Entity, Generic[HmGenericDataPointProtocol]):
 
     @property
     @override
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """
         Return the name of the entity.
 
@@ -568,7 +570,7 @@ class AioHomematicGenericHubEntity(Entity):
 
     @property
     @override
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """
         Return the name of the entity.
 
@@ -597,9 +599,10 @@ class AioHomematicGenericHubEntity(Entity):
 
         entity_name = self._data_point.name
 
-        # Identity, not isinstance: from HA 2026.12 on, UndefinedType is an
-        # alias of the sentinel object Undefined, no longer a class.
-        if (translated_name := super().name) is not None and translated_name is not UNDEFINED:
+        # A str test, not a sentinel comparison: the base name is None, a str or
+        # HA's undefined sentinel, and HA 2026.12 deprecates the UNDEFINED and
+        # UndefinedType aliases that a runtime comparison would have to import.
+        if isinstance(translated_name := super().name, str):
             entity_name = translated_name
 
         if not self._data_point.channel and entity_name and isinstance(entity_name, str):

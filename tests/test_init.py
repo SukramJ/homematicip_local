@@ -42,7 +42,12 @@ from custom_components.homematicip_local.control_unit import ControlUnit, hub_ke
 from custom_components.homematicip_local.support import get_issue_id, realign_hub_unique_id
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from tests import const
 
@@ -2132,7 +2137,9 @@ class TestDeviceIdentifierMigration:
             name="Gruppe 6",
             parent=daemon_keyed,
         )
-        device_registry.async_update_child_device(child.id, name_by_user="Trommel", area_id="keller")
+        # HA 2026.12 refuses an area id the area registry does not know.
+        keller = ar.async_get(hass).async_create("Keller")
+        device_registry.async_update_child_device(child.id, name_by_user="Trommel", area_id=keller.id)
         entity_registry = er.async_get(hass)
         live = entity_registry.async_get_or_create(
             domain="switch",
@@ -2153,7 +2160,7 @@ class TestDeviceIdentifierMigration:
         assert moved.parent_device_id == older.id
         assert moved.name == "Gruppe 6"
         assert moved.name_by_user == "Trommel"
-        assert moved.area_id == "keller"
+        assert moved.area_id == keller.id
         assert entity_registry.async_get(live.entity_id).device_id == moved.id
 
     async def test_daemon_keyed_child_is_renamed_in_place(

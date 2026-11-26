@@ -84,9 +84,9 @@ class TestAlarmDeviceInfo:
         entity = _create_entity(entity_class, mock_dp=_create_mock_panel())
         device_info = entity._attr_device_info
         assert device_info is not None
-        assert device_info["identifiers"] == {(DOMAIN, ALARM_DEVICE_IDENTIFIER)}
-        assert device_info["name"] == ALARM_DEVICE_NAME
-        assert device_info["manufacturer"] == ALARM_DEVICE_MANUFACTURER
+        assert device_info.identifiers == {(DOMAIN, ALARM_DEVICE_IDENTIFIER)}
+        assert device_info.name == ALARM_DEVICE_NAME
+        assert device_info.manufacturer == ALARM_DEVICE_MANUFACTURER
 
     def test_the_identifier_matches_the_daemons_mqtt_block(self) -> None:
         """

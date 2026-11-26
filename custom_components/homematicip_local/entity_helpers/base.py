@@ -17,7 +17,6 @@ from homeassistant.helpers.entity import EntityDescription
 class HmNameSource(StrEnum):
     """Enum to define the source of a translation."""
 
-    DEVICE_CLASS = "device_class"
     ENTITY_NAME = "entity_name"
     PARAMETER = "parameter"
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Final, override
+from typing import TYPE_CHECKING, Any, Final, override
 
 from aiohomematic.central.events import DataPointStateChangedEvent, DeviceRemovedEvent, SubscriptionGroup
 from aiohomematic.const import CCUType, DataPointCategory, DataPointType
@@ -18,12 +18,14 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UndefinedType
 
 from . import HomematicConfigEntry
 from .const import DOMAIN
 from .control_unit import ControlUnit, signal_new_data_point
 from .support import LOOM_ADMIN_ROLE_HINT, loom_forbidden_error
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import Undefined
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_FIRMWARE_UPDATE_STATE: Final = "firmware_update_state"
@@ -144,7 +146,7 @@ class AioHomematicUpdate(UpdateEntity):
 
     @property
     @override
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """Return the name of the entity."""
         return self._data_point.name
 
@@ -275,7 +277,7 @@ class AioHomematicHubUpdate(UpdateEntity):
 
     @property
     @override
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """Return the name of the entity."""
         return self._data_point.name
 

@@ -130,7 +130,7 @@ homematicip_local/
 
 ### Development Dependencies
 
-- **pytest-homeassistant** (2026.11.3) - Home Assistant's official pytest plugin for custom integrations (HA core `packages/pytest-homeassistant`, pinned to the matching HA release)
+- **pytest-homeassistant** (2026.12.0b0) - Home Assistant's official pytest plugin for custom integrations (HA core `packages/pytest-homeassistant`, pinned to the matching HA release)
 - **mypy** (`<=2.4.1`, a ceiling rather than a pin) - Static type checker (strict mode)
 - **pylint** (4.1.4) - Code linting
 - **ruff** (0.17.6) - Fast Python linter and formatter
