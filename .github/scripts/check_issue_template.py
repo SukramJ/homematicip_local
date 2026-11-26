@@ -78,7 +78,7 @@ AI_POLICY_URL: Final = (
 )
 NEW_ISSUE_URL: Final = "https://github.com/SukramJ/homematicip_local/issues/new/choose"
 DISCUSSIONS_URL: Final = "https://github.com/SukramJ/homematicip_local/discussions"
-DEBUG_DATA_URL: Final = "https://sukramj.github.io/aiohomematic/contributor/testing/debug_data_importance/"
+DEBUG_DATA_URL: Final = "https://sukramj.dev/aiohomematic/contributor/testing/debug_data_importance/"
 
 
 # =============================================================================

@@ -19,7 +19,7 @@ body:
         This includes in particular: **Integration diagnostics (.json file)** and **log file**.
         Issues without this information may be closed without comment.
 
-        📖 **[Why are diagnostics and logs so important?](https://sukramj.github.io/aiohomematic/contributor/testing/debug_data_importance/)** - Please read this to understand what we need and why.
+        📖 **[Why are diagnostics and logs so important?](https://sukramj.dev/aiohomematic/contributor/testing/debug_data_importance/)** - Please read this to understand what we need and why.
 
         🤖 **AI-generated analyses do not help here.** Please attach the raw **diagnostics (.json)** and **log file** — not a summary or diagnosis produced by ChatGPT/Claude/Copilot or similar tools. We run our own analysis on the raw data; pasted AI interpretations are frequently wrong and cannot be acted on. (Using AI to help *you* debug is fine — just give us the underlying files, not its conclusions.)
 
@@ -30,11 +30,11 @@ body:
     attributes:
       label: I agree to the following
       options:
-        - label: I have read the [documentation](https://sukramj.github.io/aiohomematic/user/homeassistant_integration/)
+        - label: I have read the [documentation](https://sukramj.dev/aiohomematic/user/homeassistant_integration/)
           required: true
-        - label: I have read the [troubleshooting documentation](https://sukramj.github.io/aiohomematic/user/troubleshooting/homeassistant_troubleshooting/), and tried to identify/solve the issue by myself.
+        - label: I have read the [troubleshooting documentation](https://sukramj.dev/aiohomematic/user/troubleshooting/homeassistant_troubleshooting/), and tried to identify/solve the issue by myself.
           required: true
-        - label: I have read the [Glossary](https://sukramj.github.io/aiohomematic/reference/glossary/) and understand the difference between Integration, App, and Backend
+        - label: I have read the [Glossary](https://sukramj.dev/aiohomematic/reference/glossary/) and understand the difference between Integration, App, and Backend
           required: true
         - label: I am aware of the latest [release notes](https://github.com/sukramj/homematicip_local/releases)
           required: true

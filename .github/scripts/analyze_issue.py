@@ -54,15 +54,15 @@ DEFAULT_ANALYZER_MODEL: Final = "claude-sonnet-4-5"
 
 # Documentation links
 DOCS_LINKS: Final[dict[str, str]] = {
-    "main_readme": "https://sukramj.github.io/aiohomematic/",
+    "main_readme": "https://sukramj.dev/aiohomematic/",
     "homematicip_local_readme": "https://github.com/sukramj/homematicip_local#homematicip_local",
-    "troubleshooting": "https://sukramj.github.io/aiohomematic/user/troubleshooting/homeassistant_troubleshooting/",
+    "troubleshooting": "https://sukramj.dev/aiohomematic/user/troubleshooting/homeassistant_troubleshooting/",
     "releases": "https://github.com/sukramj/homematicip_local/releases",
-    "architecture": "https://sukramj.github.io/aiohomematic/architecture/",
-    "naming": "https://sukramj.github.io/aiohomematic/contributor/coding/naming/",
-    "unignore": "https://sukramj.github.io/aiohomematic/user/advanced/unignore/",
-    "lifecycle": "https://sukramj.github.io/aiohomematic/developer/homeassistant_lifecycle/",
-    "glossary": "https://sukramj.github.io/aiohomematic/reference/glossary/",
+    "architecture": "https://sukramj.dev/aiohomematic/architecture/",
+    "naming": "https://sukramj.dev/aiohomematic/contributor/coding/naming/",
+    "unignore": "https://sukramj.dev/aiohomematic/user/advanced/unignore/",
+    "lifecycle": "https://sukramj.dev/aiohomematic/developer/homeassistant_lifecycle/",
+    "glossary": "https://sukramj.dev/aiohomematic/reference/glossary/",
     "discussions": "https://github.com/sukramj/homematicip_local/discussions",
 }
 
