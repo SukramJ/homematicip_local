@@ -151,6 +151,8 @@ for which parameters trigger which event. Note that CCU service messages (`CONFI
 
 Community blueprints are welcome via pull request in [blueprints/community](blueprints/community).
 
+<!-- ha-marketplace:exclude-start -->
+
 ## Support and Contributing
 
 | Resource | Link |
@@ -165,6 +167,8 @@ Community blueprints are welcome via pull request in [blueprints/community](blue
 ## Development
 
 Parts of Homematic(IP) Local for OpenCCU are developed with agentic AI assistance, primarily [Claude Code](https://www.anthropic.com/claude-code). Submitted issues are also triaged and analysed with agentic help. Every change is still reviewed by a human maintainer and must pass the project's tests before it lands — AI accelerates the work, it does not replace the review gate. The rules for AI use in contributions are documented in [AI_POLICY.md](AI_POLICY.md).
+
+<!-- ha-marketplace:exclude-end -->
 
 ## License
 
