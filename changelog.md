@@ -111,7 +111,7 @@
 
 - **Fix:** the climate schedule commands of the config panel (`get_climate_schedule`, `set_climate_schedule_weekday`, `set_climate_active_profile`) reach the heating schedule of HmIP-WGT and HmIP-WGTC, which also have a switch schedule
 
-#### Bump openccu-loom-client to [2026.11.11](https://github.com/SukramJ/openccu-loom-client/compare/2026.11.0...2026.11.11)
+#### Bump openccu-loom-client to [2026.11.12](https://github.com/SukramJ/openccu-loom-client/compare/2026.11.0...2026.11.12)
 
 - For the openccu-loom backend (Beta) only; no runtime effect on the direct-CCU backend, where the client is not loaded. Fixes `switch_set_on_time`, `light_set_on_time` and `valve_set_on_time`, which had no effect on that backend, climate entities that were not created there with this release, and device actions, device triggers and the per-device central-link services, which failed there; HmIP-WGT and HmIP-WGTC get their heating schedule with openccu-loom 0.97.1 or newer
 - **Fix:** service messages of enum parameters carry the CCU's value text on the openccu-loom backend too, so the hub
@@ -137,7 +137,7 @@
   transition is left out and the light switches without one
 - **Fix:** `play_sound` on the HmIP-MP3P plays the chosen sound file for the chosen duration and number of
   repetitions on the openccu-loom backend; only the volume and the fade-in reached the device
-- Wire bindings for openccu-loom 0.107.0
+- Wire bindings for openccu-loom 0.108.0
 
 # Version [2.12.3](https://github.com/SukramJ/homematicip_local/compare/2.12.2...2.12.3) (unreleased)
 
