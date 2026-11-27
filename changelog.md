@@ -81,6 +81,16 @@
   allowed up to 18, but the sound players (HmIP-MP3P, HmIP-WRCD) list `REPETITIONS_001` to `REPETITIONS_014`
   and `INFINITE_REPETITIONS` only, so 15 to 18 passed the form and the backend then refused the call. The
   range now ends at 14, matching the device.
+- **Device editor for openccu-loom entries (backend).** The configuration panel is no longer switched off
+  for an openccu-loom entry: the integration now relays the daemon's own device editor component
+  (`<loom-device-editor>`). Two admin-only WebSocket commands, `homematicip_local/loom/editor/manifest` and
+  `homematicip_local/loom/editor/request`, forward the editor's calls to the entry's daemon with the entry's
+  credential, bound to the entry's CCU (resolved by its serial) and recording the Home Assistant user in the
+  daemon's change log; only the calls the daemon's editor manifest lists are forwarded. The editor module is
+  served from Home Assistant under a hash URL, so the browser never reaches the daemon. Needs openccu-loom
+  0.109.0 or newer; with an older daemon the editor stays off for that entry. The panel side follows in
+  homematicip-local-frontend ([#1377](https://github.com/SukramJ/homematicip_local/issues/1377),
+  [#1400](https://github.com/SukramJ/homematicip_local/issues/1400)).
 
 ### Dependencies
 
@@ -111,7 +121,7 @@
 
 - **Fix:** the climate schedule commands of the config panel (`get_climate_schedule`, `set_climate_schedule_weekday`, `set_climate_active_profile`) reach the heating schedule of HmIP-WGT and HmIP-WGTC, which also have a switch schedule
 
-#### Bump openccu-loom-client to [2026.11.12](https://github.com/SukramJ/openccu-loom-client/compare/2026.11.0...2026.11.12)
+#### Bump openccu-loom-client to [2026.11.14](https://github.com/SukramJ/openccu-loom-client/compare/2026.11.0...2026.11.14)
 
 - For the openccu-loom backend (Beta) only; no runtime effect on the direct-CCU backend, where the client is not loaded. Fixes `switch_set_on_time`, `light_set_on_time` and `valve_set_on_time`, which had no effect on that backend, climate entities that were not created there with this release, and device actions, device triggers and the per-device central-link services, which failed there; HmIP-WGT and HmIP-WGTC get their heating schedule with openccu-loom 0.97.1 or newer
 - **Fix:** service messages of enum parameters carry the CCU's value text on the openccu-loom backend too, so the hub
@@ -137,7 +147,9 @@
   transition is left out and the light switches without one
 - **Fix:** `play_sound` on the HmIP-MP3P plays the chosen sound file for the chosen duration and number of
   repetitions on the openccu-loom backend; only the volume and the fade-in reached the device
-- Wire bindings for openccu-loom 0.108.0
+- Wire bindings for openccu-loom 0.109.0
+- Operations for relaying openccu-loom's device editor component (manifest, route check, relay bound to a
+  central, module download, central lookup by CCU serial) and the `X-On-Behalf-Of` label
 
 # Version [2.12.3](https://github.com/SukramJ/homematicip_local/compare/2.12.2...2.12.3) (unreleased)
 

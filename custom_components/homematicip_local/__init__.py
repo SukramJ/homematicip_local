@@ -72,6 +72,7 @@ from .const import (
 )
 from .control_unit import ControlConfig, ControlUnit, get_storage_directory
 from .device_icon import ICON_VIEW_REGISTERED_KEY, DeviceIconView
+from .loom_editor import async_register_loom_editor_view
 from .panel import async_register_cards, async_register_panel, async_unregister_cards, async_unregister_panel
 from .services import async_get_loaded_config_entries, async_setup_services, async_unload_services
 from .support import (
@@ -127,20 +128,17 @@ def _any_entry_has_panel_enabled(*, hass: HomeAssistant) -> bool:
     """
     Return True if any loaded config entry has the config panel enabled.
 
-    Entries on the openccu-loom backend never count. The daemon ships its
-    own Config UI covering everything this panel offers — paramsets,
-    direct links, schedules, change history — and covering it for *every*
-    CCU it serves rather than the one behind a single config entry. 2.9.1
-    already retired the CCU and Integration tabs on that reasoning; this
-    is the same argument applied to what was left.
+    Entries on both backends count. On a CCU entry the panel is the
+    integration's own editor; on an openccu-loom entry it hosts the daemon's
+    device editor component, relayed through this integration (``loom_editor``;
+    the panel side is SukramJ/homematicip-local-frontend#128). A daemon
+    without the component answers the editor manifest with ``available:
+    false``, and the panel keeps that entry's editor off.
 
-    The panel is registered once for all entries, so a mixed installation
-    (one CCU entry, one loom entry) still registers it. The panel's own
-    entry picker drops the loom ones.
+    The panel is registered once for all entries, so one enabled entry is
+    enough.
     """
     for entry in hass.config_entries.async_entries(domain=DOMAIN, include_ignore=False, include_disabled=False):
-        if entry.data.get(CONF_BACKEND) == BACKEND_LOOM:
-            continue
         if entry.data.get(CONF_ADVANCED_CONFIG, {}).get(CONF_DISABLE_CONFIG_PANEL, DEFAULT_DISABLE_CONFIG_PANEL):
             continue
         if hasattr(entry, "runtime_data") and entry.runtime_data:
@@ -308,6 +306,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicConfigEntry) ->
     if not hass.data.get(ICON_VIEW_REGISTERED_KEY):
         hass.http.register_view(DeviceIconView)
         hass.data[ICON_VIEW_REGISTERED_KEY] = True
+
+    # Register the openccu-loom editor module view once
+    if is_loom_backend:
+        async_register_loom_editor_view(hass=hass)
 
     # Register or unregister the panel per config-entry settings and
     # backend — see _any_entry_has_panel_enabled for what counts.
