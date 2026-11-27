@@ -236,8 +236,6 @@ class TestAnyEntryHasPanelEnabled:
         return hass
 
     def test_a_ccu_entry_alongside_a_loom_entry_still_enables_it(self) -> None:
-        # The CCU entry genuinely needs the panel, and registration is
-        # domain-wide. The panel's own entry picker drops the loom one.
         hass = self._hass_with(self._entry(backend=BACKEND_LOOM), self._entry(backend=BACKEND_CCU))
         assert _any_entry_has_panel_enabled(hass=hass) is True
 
@@ -253,11 +251,14 @@ class TestAnyEntryHasPanelEnabled:
         hass = self._hass_with(self._entry(backend=BACKEND_CCU, disable_panel=True))
         assert _any_entry_has_panel_enabled(hass=hass) is False
 
-    def test_loom_entry_alone_does_not(self) -> None:
-        # The daemon ships its own Config UI covering the same ground for
-        # every CCU it serves; a second, narrower one is worse than none.
-        hass = self._hass_with(self._entry(backend=BACKEND_LOOM))
+    def test_explicitly_disabled_loom_entry_does_not(self) -> None:
+        hass = self._hass_with(self._entry(backend=BACKEND_LOOM, disable_panel=True))
         assert _any_entry_has_panel_enabled(hass=hass) is False
+
+    def test_loom_entry_alone_enables_the_panel(self) -> None:
+        # The panel hosts the daemon's own device editor for a loom entry.
+        hass = self._hass_with(self._entry(backend=BACKEND_LOOM))
+        assert _any_entry_has_panel_enabled(hass=hass) is True
 
 
 class TestDeviceConfigurationUrl:

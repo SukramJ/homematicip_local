@@ -42,6 +42,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
+from .loom_editor import ws_loom_editor_manifest, ws_loom_editor_request
 from .permissions import (
     ALL_SCOPES,
     CONF_NON_ADMIN_PERMISSIONS,
@@ -175,6 +176,9 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     async_register_command(hass, ws_acknowledge_service_message)
     async_register_command(hass, ws_get_alarm_messages)
     async_register_command(hass, ws_acknowledge_alarm_message)
+    # openccu-loom device editor relay
+    async_register_command(hass, ws_loom_editor_manifest)
+    async_register_command(hass, ws_loom_editor_request)
 
 
 def _get_control_unit(hass: HomeAssistant, *, entry_id: str) -> ControlUnit | None:
