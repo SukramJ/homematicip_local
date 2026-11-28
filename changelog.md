@@ -109,7 +109,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.11.9](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.9)
+#### Bump aiohomematic to [2026.11.10](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.10)
 
 - **Support for new devices:** thermostats HmIP-WT, KW-STATH, KW-UKETRV, HmIPW-WGT and HmIPW-WGTC, dimmers
   HmIP-WUA, ELV-SH-WUA and HmIP-UDI-PB2
@@ -131,6 +131,9 @@
 - **Fix:** with `use_group_channel_for_cover_state`, a cover command is no longer dropped when only the group channel
   already shows the target, and a blind command for one axis keeps the other axis at the own channel's value
   ([#1393](https://github.com/SukramJ/homematicip_local/issues/1393))
+- **Fix:** a virtual channel of an RF dimmer (e.g. HM-LC-Dim1PWM-CV) shows its own level instead of switching
+  between its level and the output, and `light.turn_on` on it is no longer dropped when the output already has the
+  target level ([#1405](https://github.com/SukramJ/homematicip_local/issues/1405))
 
 #### Bump aiohomematic-config to [2026.11.1](https://github.com/SukramJ/aiohomematic-config/compare/2026.10.1...2026.11.1)
 
