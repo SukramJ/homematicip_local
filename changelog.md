@@ -91,6 +91,13 @@
   0.109.0 or newer; with an older daemon the editor stays off for that entry. The panel side follows in
   homematicip-local-frontend ([#1377](https://github.com/SukramJ/homematicip_local/issues/1377),
   [#1400](https://github.com/SukramJ/homematicip_local/issues/1400)).
+- **The configuration panel opens openccu-loom's device editor.** openccu-loom entries are offered in the
+  panel's entry picker again (to admins, and when the daemon provides the editor). A device of such an entry
+  opens the daemon's own editor — configuration, channels, direct links, schedule, change log — in place of
+  the panel's device pages, in Home Assistant's language and theme. Links to a direct link's profile page or
+  to the link wizard, which the editor does not include yet, open the device's links tab with a notice.
+  Live updates while the editor is open are not relayed yet
+  ([homematicip-local-frontend#128](https://github.com/SukramJ/homematicip-local-frontend/issues/128)).
 
 ### Dependencies
 
