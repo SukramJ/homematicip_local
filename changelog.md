@@ -104,6 +104,8 @@
   aiohomematic entry next to a loom entry keeps its own pages.
 - **One breadcrumb above openccu-loom's device editor.** The panel no longer shows its own breadcrumb
   above the editor, which brings its own with the device's name and a link back to the list.
+- **A reload hint after openccu-loom was updated.** An open browser tab kept the previous device editor
+  after a daemon update; the panel now says so and offers a reload button.
 
 ### Dependencies
 
