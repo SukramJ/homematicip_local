@@ -99,7 +99,8 @@
   Live updates while the editor is open are not relayed yet
   ([homematicip-local-frontend#128](https://github.com/SukramJ/homematicip-local-frontend/issues/128)).
 - **A loom entry keeps the device editor when its permission check fails.** The panel used to fall back to
-  its own device pages for such an entry; it now recognises a loom entry through the editor relay. An
+  its own device pages for such an entry; it now recognises a loom entry through the editor relay, also
+  while its daemon is unreachable. An
   aiohomematic entry next to a loom entry keeps its own pages.
 
 ### Dependencies
