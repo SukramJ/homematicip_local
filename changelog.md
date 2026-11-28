@@ -109,7 +109,7 @@
 
 ### Dependencies
 
-#### Bump aiohomematic to [2026.11.10](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.10)
+#### Bump aiohomematic to [2026.11.10](https://github.com/SukramJ/aiohomematic/compare/2026.11.2...2026.11.11)
 
 - **Support for new devices:** thermostats HmIP-WT, KW-STATH, KW-UKETRV, HmIPW-WGT and HmIPW-WGTC, dimmers
   HmIP-WUA, ELV-SH-WUA and HmIP-UDI-PB2
@@ -134,6 +134,8 @@
 - **Fix:** a virtual channel of an RF dimmer (e.g. HM-LC-Dim1PWM-CV) shows its own level instead of switching
   between its level and the output, and `light.turn_on` on it is no longer dropped when the output already has the
   target level ([#1405](https://github.com/SukramJ/homematicip_local/issues/1405))
+- **Fix:** the first channel of such a dimmer shows the output while another channel keeps the light on, instead of
+  showing off ([#1405](https://github.com/SukramJ/homematicip_local/issues/1405))
 
 #### Bump aiohomematic-config to [2026.11.1](https://github.com/SukramJ/aiohomematic-config/compare/2026.10.1...2026.11.1)
 
