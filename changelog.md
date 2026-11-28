@@ -102,6 +102,8 @@
   its own device pages for such an entry; it now recognises a loom entry through the editor relay, also
   while its daemon is unreachable. An
   aiohomematic entry next to a loom entry keeps its own pages.
+- **One breadcrumb above openccu-loom's device editor.** The panel no longer shows its own breadcrumb
+  above the editor, which brings its own with the device's name and a link back to the list.
 
 ### Dependencies
 
